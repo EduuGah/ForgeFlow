@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom'
 
 function Sidebar({ onClose }) {
   const links = [
+    { name: 'Perfil', path: '/profile' },
     { name: 'Dashboard', path: '/' },
     { name: 'Treinos', path: '/workouts' },
     { name: 'Exercícios', path: '/exercises' },

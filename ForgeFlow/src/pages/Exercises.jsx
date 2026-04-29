@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import defaultExercises from '../data/defaultExercises'
 
@@ -539,7 +540,17 @@ function Exercises() {
                               </p>
                             )}
 
-                            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                              <Link to={`/exercises/${exercise.id}`}>
+                                <Button
+                                  type="button"
+                                  variant="secondary"
+                                  className="w-full"
+                                >
+                                  Ver detalhes
+                                </Button>
+                              </Link>
+
                               <Button
                                 type="button"
                                 variant="ghost"
