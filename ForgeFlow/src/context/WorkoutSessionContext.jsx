@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { isNewPR } from '../utils/prUtils'
+import { getSessionPRTypes } from '../utils/prUtils'
 
 const WorkoutSessionContext = createContext(null)
 
@@ -226,23 +227,22 @@ export function WorkoutSessionProvider({ children }) {
             ...activeSession,
             finishedAt: new Date().toISOString(),
             duration: elapsedSeconds,
-            exercises: activeSession.exercises.map((exercise) => ({
-                ...exercise,
-                sets: exercise.sets.map((set) => {
-                    const hasValidData = set.weight && set.reps && set.completed
+            exercises: activeSession.exercises.map((exercise) => {
+                const { weightPRSetId, volumePRSetId } = getSessionPRTypes(
+                    exercise.exercise.name,
+                    exercise.sets
+                )
 
-                    return {
+                return {
+                    ...exercise,
+                    sets: exercise.sets.map((set) => ({
                         ...set,
-                        isPR: hasValidData
-                            ? isNewPR(
-                                exercise.exercise.name,
-                                set.weight,
-                                set.reps
-                            )
-                            : false,
-                    }
-                }),
-            })),
+                        isWeightPR: set.id === weightPRSetId,
+                        isVolumePR: set.id === volumePRSetId,
+                        isPR: set.id === weightPRSetId || set.id === volumePRSetId,
+                    })),
+                }
+            }),
         }
 
         localStorage.setItem(

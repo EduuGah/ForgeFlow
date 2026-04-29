@@ -1,6 +1,20 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useWorkoutSession } from '../context/WorkoutSessionContext'
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  PolarAngleAxis,
+  PolarGrid,
+  Radar,
+  RadarChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
 
 import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
@@ -8,69 +22,131 @@ import Button from '../components/ui/Button'
 import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
 
+import { useWorkoutSession } from '../context/WorkoutSessionContext'
+
+import {
+  getCompletedSets,
+  getExercisePRs,
+  getHeaviestExercise,
+  getMostTrainedExercise,
+  getMuscleGroupStats,
+  getPRCount,
+  getStorageData,
+  getTotalVolume,
+  getBodyWeightHistory,
+} from '../utils/analyticsUtils'
+
+function formatVolume(value) {
+  return `${value.toLocaleString('pt-BR')} kg`
+}
+
 function Dashboard() {
   const [exercises, setExercises] = useState([])
   const [workouts, setWorkouts] = useState([])
-
-  useEffect(() => {
-    const savedExercises = localStorage.getItem('forgeflow:exercises')
-    const savedWorkouts = localStorage.getItem('forgeflow:workouts')
-
-    if (savedExercises) {
-      setExercises(JSON.parse(savedExercises))
-    }
-
-    if (savedWorkouts) {
-      setWorkouts(JSON.parse(savedWorkouts))
-    }
-  }, [])
-
-  const activeMuscleGroups = useMemo(() => {
-    const groups = exercises.map((exercise) => exercise.muscleGroup)
-    return [...new Set(groups)].filter(Boolean)
-  }, [exercises])
-
-  const totalWorkoutExercises = useMemo(() => {
-    return workouts.reduce(
-      (total, workout) => total + workout.exercises.length,
-      0
-    )
-  }, [workouts])
+  const [history, setHistory] = useState([])
+  const [bodyWeight, setBodyWeight] = useState([])
 
   const navigate = useNavigate()
   const { startSession } = useWorkoutSession()
+
+  useEffect(() => {
+    setExercises(getStorageData('forgeflow:exercises', []))
+    setWorkouts(getStorageData('forgeflow:workouts', []))
+    setHistory(getStorageData('forgeflow:history', []))
+    setBodyWeight(getBodyWeightHistory())
+  }, [])
+
+  const completedSets = useMemo(() => getCompletedSets(history), [history])
+
+  const totalVolume = useMemo(() => {
+    return getTotalVolume(completedSets)
+  }, [completedSets])
+
+  const heaviestExercise = useMemo(() => {
+    return getHeaviestExercise(completedSets)
+  }, [completedSets])
+
+  const mostTrainedExercise = useMemo(() => {
+    return getMostTrainedExercise(completedSets)
+  }, [completedSets])
+
+  const muscleStats = useMemo(() => {
+    return getMuscleGroupStats(completedSets)
+  }, [completedSets])
+
+  const prCount = useMemo(() => {
+    return getPRCount(completedSets)
+  }, [completedSets])
+
+  const exercisePRs = useMemo(() => {
+    return getExercisePRs(completedSets)
+      .sort((a, b) => b.weight - a.weight)
+      .slice(0, 8)
+  }, [completedSets])
+
+  const recentWorkouts = workouts.slice(0, 5)
+
+  const volumeByWorkout = useMemo(() => {
+    return history
+      .slice()
+      .reverse()
+      .slice(-8)
+      .map((session) => {
+        const sets = getCompletedSets([session])
+        const volume = getTotalVolume(sets)
+
+        return {
+          name: session.workoutName,
+          volume,
+        }
+      })
+  }, [history])
+
+  const radarData = useMemo(() => {
+    const mainGroups = {
+      Peito: 0,
+      Costas: 0,
+      Ombros: 0,
+      Braços: 0,
+      Pernas: 0,
+      Core: 0,
+    }
+
+    completedSets.forEach((set) => {
+      if (set.muscleGroup === 'Peito') mainGroups.Peito += 1
+      else if (set.muscleGroup === 'Costas') mainGroups.Costas += 1
+      else if (set.muscleGroup === 'Ombros') mainGroups.Ombros += 1
+      else if (
+        set.muscleGroup === 'Bíceps' ||
+        set.muscleGroup === 'Tríceps' ||
+        set.muscleGroup === 'Antebraço'
+      ) mainGroups.Braços += 1
+      else if (
+        set.muscleGroup === 'Pernas' ||
+        set.muscleGroup === 'Glúteos' ||
+        set.muscleGroup === 'Panturrilhas' ||
+        set.muscleGroup === 'Quadríceps' ||
+        set.muscleGroup === 'Posterior de Coxa'
+      ) mainGroups.Pernas += 1
+      else if (set.muscleGroup === 'Abdômen' || set.muscleGroup === 'Lombar') mainGroups.Core += 1
+    })
+
+    return Object.entries(mainGroups).map(([group, total]) => ({
+      group,
+      total,
+    }))
+  }, [completedSets])
 
   function handleStartWorkout(workout) {
     startSession(workout)
     navigate('/start-workout')
   }
 
-  const recentWorkouts = workouts.slice(0, 3)
-
-  const mostUsedGroups = useMemo(() => {
-    const count = {}
-
-    workouts.forEach((workout) => {
-      workout.exercises.forEach((item) => {
-        const group = item.exercise?.muscleGroup
-
-        if (group) {
-          count[group] = (count[group] || 0) + 1
-        }
-      })
-    })
-
-    return Object.entries(count)
-      .map(([name, total]) => ({ name, total }))
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 5)
-  }, [workouts])
-
   return (
     <>
       <PageHeader
         title="Dashboard"
-        description="Acompanhe sua biblioteca, seus treinos montados e a evolução geral do ForgeFlow."
+        description="Visão geral dos seus treinos, cargas, PRs, frequência e evolução."
         action={
           <Link to="/workouts">
             <Button>
@@ -82,59 +158,29 @@ function Dashboard() {
 
       <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <Card className="p-4">
-          <p className="text-sm text-zinc-500">
-            Exercícios cadastrados
-          </p>
-
-          <h2 className="text-3xl font-bold mt-2">
-            {exercises.length}
-          </h2>
-
-          <p className="text-xs text-violet-400 mt-2">
-            Biblioteca ativa
-          </p>
+          <p className="text-sm text-zinc-500">Treinos concluídos</p>
+          <h2 className="text-3xl font-bold mt-2">{history.length}</h2>
+          <p className="text-xs text-violet-400 mt-2">Histórico real</p>
         </Card>
 
         <Card className="p-4">
-          <p className="text-sm text-zinc-500">
-            Treinos salvos
-          </p>
-
-          <h2 className="text-3xl font-bold mt-2">
-            {workouts.length}
-          </h2>
-
-          <p className="text-xs text-violet-400 mt-2">
-            Rotinas montadas
-          </p>
-        </Card>
-
-        <Card className="p-4">
-          <p className="text-sm text-zinc-500">
-            Grupos musculares
-          </p>
-
-          <h2 className="text-3xl font-bold mt-2">
-            {activeMuscleGroups.length}
-          </h2>
-
-          <p className="text-xs text-violet-400 mt-2">
-            Grupos cadastrados
-          </p>
-        </Card>
-
-        <Card className="p-4">
-          <p className="text-sm text-zinc-500">
-            Exercícios em treinos
-          </p>
-
+          <p className="text-sm text-zinc-500">Volume total</p>
           <h2 className="text-3xl font-bold mt-2 text-violet-400">
-            {totalWorkoutExercises}
+            {formatVolume(totalVolume)}
           </h2>
+          <p className="text-xs text-violet-400 mt-2">Peso × repetições</p>
+        </Card>
 
-          <p className="text-xs text-violet-400 mt-2">
-            Volume planejado
-          </p>
+        <Card className="p-4">
+          <p className="text-sm text-zinc-500">PRs batidos</p>
+          <h2 className="text-3xl font-bold mt-2">🏆 {prCount}</h2>
+          <p className="text-xs text-violet-400 mt-2">Recordes pessoais</p>
+        </Card>
+
+        <Card className="p-4">
+          <p className="text-sm text-zinc-500">Exercícios cadastrados</p>
+          <h2 className="text-3xl font-bold mt-2">{exercises.length}</h2>
+          <p className="text-xs text-violet-400 mt-2">Biblioteca ativa</p>
         </Card>
       </section>
 
@@ -142,30 +188,23 @@ function Dashboard() {
         <Card className="xl:col-span-2">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-xl font-bold">
-                Treinos recentes
-              </h2>
-
+              <h2 className="text-xl font-bold">Treinos salvos</h2>
               <p className="text-sm text-zinc-500 mt-1">
-                Últimos treinos criados no sistema.
+                Inicie rapidamente uma rotina cadastrada.
               </p>
             </div>
 
-            <Badge variant="purple">
-              {workouts.length}
-            </Badge>
+            <Badge variant="purple">{workouts.length}</Badge>
           </div>
 
-          <div className="mt-5 space-y-3">
+          <div className="mt-5 max-h-[420px] overflow-y-auto pr-2 space-y-3">
             {recentWorkouts.length === 0 && (
               <EmptyState
-                title="Nenhum treino criado"
-                description="Crie seu primeiro treino para ele aparecer aqui."
+                title="Nenhum treino salvo"
+                description="Crie um treino para iniciar por aqui."
                 action={
                   <Link to="/workouts">
-                    <Button>
-                      Criar treino
-                    </Button>
+                    <Button>Criar treino</Button>
                   </Link>
                 }
               />
@@ -183,18 +222,16 @@ function Dashboard() {
                   key={workout.id}
                   className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-4 transition hover:border-violet-500/30"
                 >
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div>
-                      <h3 className="font-bold">
-                        {workout.name}
-                      </h3>
+                      <h3 className="font-bold">{workout.name}</h3>
 
                       <p className="text-sm text-zinc-500 mt-1">
-                        {workout.exercises.length} exercícios adicionados
+                        {workout.exercises.length} exercícios
                       </p>
 
                       <div className="mt-3 flex flex-wrap gap-2">
-                        {groups.slice(0, 4).map((group) => (
+                        {groups.slice(0, 5).map((group) => (
                           <Badge key={group} variant="purple">
                             {group}
                           </Badge>
@@ -225,153 +262,244 @@ function Dashboard() {
         </Card>
 
         <Card>
-          <h2 className="text-xl font-bold">
-            Ações rápidas
-          </h2>
-
+          <h2 className="text-xl font-bold">Destaques</h2>
           <p className="text-sm text-zinc-500 mt-1">
-            Atalhos para continuar montando seu sistema.
+            Suas melhores marcas registradas.
           </p>
 
           <div className="mt-5 space-y-3">
-            <Link to="/workouts" className="block">
-              <Button className="w-full">
-                Criar novo treino
-              </Button>
-            </Link>
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+              <p className="text-xs text-zinc-500">Maior carga</p>
 
-            <Link to="/exercises" className="block">
-              <Button variant="secondary" className="w-full">
-                Cadastrar exercício
-              </Button>
-            </Link>
+              {heaviestExercise ? (
+                <>
+                  <h3 className="text-xl font-bold mt-1">
+                    {heaviestExercise.weight}kg
+                  </h3>
 
-            <Link to="/history" className="block">
-              <Button variant="ghost" className="w-full">
-                Ver histórico
-              </Button>
-            </Link>
+                  <p className="text-sm text-zinc-400 mt-1">
+                    {heaviestExercise.exerciseName} × {heaviestExercise.reps} reps
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-zinc-500 mt-2">
+                  Sem registro ainda.
+                </p>
+              )}
+            </div>
+
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+              <p className="text-xs text-zinc-500">Mais treinado</p>
+
+              {mostTrainedExercise ? (
+                <>
+                  <h3 className="text-xl font-bold mt-1">
+                    {mostTrainedExercise.name}
+                  </h3>
+
+                  <p className="text-sm text-zinc-400 mt-1">
+                    {mostTrainedExercise.total} séries feitas
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-zinc-500 mt-2">
+                  Sem registro ainda.
+                </p>
+              )}
+            </div>
+          </div>
+        </Card>
+      </section>
+
+      <section className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
+        <Card>
+          <h2 className="text-xl font-bold">Volume por treino</h2>
+          <p className="text-sm text-zinc-500 mt-1">
+            Soma de peso × repetições dos últimos treinos.
+          </p>
+
+          <div className="mt-5 h-72">
+            {volumeByWorkout.length === 0 ? (
+              <EmptyState
+                title="Sem dados para gráfico"
+                description="Finalize treinos para gerar evolução de volume."
+              />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={volumeByWorkout}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                  <XAxis dataKey="name" stroke="#71717a" />
+                  <YAxis stroke="#71717a" />
+                  <Tooltip
+                    contentStyle={{
+                      background: '#09090b',
+                      border: '1px solid #27272a',
+                      borderRadius: '12px',
+                    }}
+                  />
+                  <Bar dataKey="volume" fill="#8b5cf6" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </Card>
+
+        <Card>
+          <h2 className="text-xl font-bold">Mapa muscular</h2>
+          <p className="text-sm text-zinc-500 mt-1">
+            Distribuição dos grupos mais treinados.
+          </p>
+
+          <div className="mt-5 h-72">
+            {completedSets.length === 0 ? (
+              <EmptyState
+                title="Sem dados musculares"
+                description="Finalize treinos para gerar o gráfico."
+              />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart data={radarData}>
+                  <PolarGrid stroke="#3f3f46" />
+                  <PolarAngleAxis dataKey="group" stroke="#a1a1aa" />
+                  <Radar
+                    name="Séries"
+                    dataKey="total"
+                    stroke="#8b5cf6"
+                    fill="#8b5cf6"
+                    fillOpacity={0.35}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      background: '#09090b',
+                      border: '1px solid #27272a',
+                      borderRadius: '12px',
+                    }}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </Card>
       </section>
 
       <section className="grid grid-cols-1 xl:grid-cols-3 gap-6 mt-6">
         <Card>
-          <h2 className="text-xl font-bold">
-            Grupos mais usados
-          </h2>
-
+          <h2 className="text-xl font-bold">PRs por exercício</h2>
           <p className="text-sm text-zinc-500 mt-1">
-            Baseado nos exercícios adicionados aos treinos.
+            Seus melhores registros salvos.
           </p>
 
-          <div className="mt-5 space-y-3">
-            {mostUsedGroups.length === 0 && (
+          <div className="mt-5 max-h-[420px] overflow-y-auto pr-2 space-y-3">
+            {exercisePRs.length === 0 && (
               <EmptyState
-                title="Sem dados ainda"
-                description="Monte treinos para gerar estatísticas."
+                title="Nenhum PR registrado"
+                description="Conclua séries com peso e reps para gerar PRs."
               />
             )}
 
-            {mostUsedGroups.map((group, index) => (
+            {exercisePRs.map((pr) => (
               <div
-                key={group.name}
+                key={pr.exerciseName}
                 className="rounded-xl border border-zinc-800 bg-zinc-950 p-3"
               >
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="font-semibold">
-                      {group.name}
-                    </p>
-
+                    <p className="font-semibold">{pr.exerciseName}</p>
                     <p className="text-xs text-zinc-500 mt-1">
-                      {group.total} exercícios usados
+                      {pr.muscleGroup}
                     </p>
                   </div>
 
-                  <Badge variant={index === 0 ? 'purple' : 'default'}>
-                    #{index + 1}
-                  </Badge>
-                </div>
-
-                <div className="mt-3 h-2 rounded-full bg-zinc-800 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-violet-500"
-                    style={{
-                      width: `${Math.min(group.total * 15, 100)}%`,
-                    }}
-                  />
+                  <Badge>🏆 {pr.weight}kg × {pr.reps}</Badge>
                 </div>
               </div>
             ))}
           </div>
         </Card>
 
-        <Card className="xl:col-span-2">
-          <h2 className="text-xl font-bold">
-            Próximas melhorias
-          </h2>
-
+        <Card>
+          <h2 className="text-xl font-bold">Grupos treinados</h2>
           <p className="text-sm text-zinc-500 mt-1">
-            O ForgeFlow ainda pode evoluir para registrar treinos reais, cargas e histórico.
+            Ranking por séries concluídas.
           </p>
 
-          <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-              <Badge variant="purple">
-                Em breve
-              </Badge>
+          <div className="mt-5 space-y-3">
+            {muscleStats.length === 0 && (
+              <EmptyState
+                title="Sem dados ainda"
+                description="Finalize treinos para gerar estatísticas."
+              />
+            )}
 
-              <h3 className="font-bold mt-3">
-                Executar treino
-              </h3>
+            {muscleStats
+              .sort((a, b) => b.total - a.total)
+              .slice(0, 8)
+              .map((group, index) => (
+                <div
+                  key={group.group}
+                  className="rounded-xl border border-zinc-800 bg-zinc-950 p-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold">{group.group}</p>
+                      <p className="text-xs text-zinc-500 mt-1">
+                        {group.total} séries
+                      </p>
+                    </div>
 
-              <p className="text-sm text-zinc-500 mt-1">
-                Registrar peso, reps, falha e séries concluídas.
-              </p>
-            </div>
+                    <Badge variant={index === 0 ? 'purple' : 'default'}>
+                      #{index + 1}
+                    </Badge>
+                  </div>
 
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-              <Badge variant="purple">
-                Em breve
-              </Badge>
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-zinc-800">
+                    <div
+                      className="h-full rounded-full bg-violet-500"
+                      style={{
+                        width: `${Math.min(group.total * 10, 100)}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+          </div>
+        </Card>
 
-              <h3 className="font-bold mt-3">
-                Histórico real
-              </h3>
+        <Card>
+          <h2 className="text-xl font-bold">Peso corporal</h2>
+          <p className="text-sm text-zinc-500 mt-1">
+            Evolução registrada no perfil.
+          </p>
 
-              <p className="text-sm text-zinc-500 mt-1">
-                Guardar treinos finalizados e acompanhar evolução.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-              <Badge variant="purple">
-                Em breve
-              </Badge>
-
-              <h3 className="font-bold mt-3">
-                Progressão de carga
-              </h3>
-
-              <p className="text-sm text-zinc-500 mt-1">
-                Comparar pesos usados ao longo das semanas.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-              <Badge variant="purple">
-                Em breve
-              </Badge>
-
-              <h3 className="font-bold mt-3">
-                Dashboard com gráficos
-              </h3>
-
-              <p className="text-sm text-zinc-500 mt-1">
-                Visualizar volume, frequência e grupos treinados.
-              </p>
-            </div>
+          <div className="mt-5 h-64">
+            {bodyWeight.length === 0 ? (
+              <EmptyState
+                title="Sem peso registrado"
+                description="Depois criaremos a área de perfil para registrar peso corporal."
+              />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={bodyWeight}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                  <XAxis dataKey="date" stroke="#71717a" />
+                  <YAxis stroke="#71717a" />
+                  <Tooltip
+                    contentStyle={{
+                      background: '#09090b',
+                      border: '1px solid #27272a',
+                      borderRadius: '12px',
+                    }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="weight"
+                    stroke="#8b5cf6"
+                    strokeWidth={3}
+                    dot
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </Card>
       </section>

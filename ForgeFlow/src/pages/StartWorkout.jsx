@@ -14,8 +14,9 @@ import { useWorkoutSession } from '../context/WorkoutSessionContext'
 
 import {
   getLastExercisePerformance,
-  getBestExercisePerformance,
-  isNewPR,
+  getBestWeightPerformance,
+  getBestVolumePerformance,
+  getSessionPRTypes,
   formatPerformance,
 } from '../utils/prUtils'
 
@@ -58,6 +59,7 @@ function StartWorkout() {
 
   const [exercises, setExercises] = useState([])
   const [replaceExerciseId, setReplaceExerciseId] = useState(null)
+  const [isFinishModalOpen, setIsFinishModalOpen] = useState(false)
 
   useEffect(() => {
     const savedExercises = localStorage.getItem('forgeflow:exercises')
@@ -90,6 +92,18 @@ function StartWorkout() {
     )
   }
 
+  const totalExercises = activeSession.exercises.length
+
+  const skippedExercises = activeSession.exercises.filter(
+    (exercise) => exercise.skipped
+  ).length
+
+  const totalPRs = activeSession.exercises.reduce((total, exercise) => {
+    return total + exercise.sets.filter(
+      (set) => set.isPR || set.isWeightPR || set.isVolumePR
+    ).length
+  }, 0)
+
   return (
     <>
       <PageHeader
@@ -109,11 +123,20 @@ function StartWorkout() {
               sessionExercise.exercise.name
             )
 
-            const bestPerformance = getBestExercisePerformance(
+            const bestWeightPerformance = getBestWeightPerformance(
+              sessionExercise.exercise.name
+            )
+
+            const bestVolumePerformance = getBestVolumePerformance(
               sessionExercise.exercise.name
             )
 
             const lastSet = getFirstCompletedSet(lastPerformance)
+
+            const { weightPRSetId, volumePRSetId } = getSessionPRTypes(
+              sessionExercise.exercise.name,
+              sessionExercise.sets
+            )
 
             return (
               <Card
@@ -153,13 +176,21 @@ function StartWorkout() {
 
                       <div className="rounded-xl border border-violet-500/20 bg-violet-500/10 p-3">
                         <p className="text-xs text-violet-400">
-                          Melhor marca
+                          Melhores marcas
                         </p>
 
                         <p className="text-sm font-semibold text-violet-300 mt-1">
-                          {bestPerformance
-                            ? `${bestPerformance.weight}kg x ${bestPerformance.reps} reps`
-                            : 'Sem PR registrado'}
+                          Peso:{' '}
+                          {bestWeightPerformance
+                            ? `${bestWeightPerformance.weight}kg x ${bestWeightPerformance.reps} reps`
+                            : 'Sem registro'}
+                        </p>
+
+                        <p className="text-sm font-semibold text-violet-300 mt-1">
+                          Volume:{' '}
+                          {bestVolumePerformance
+                            ? `${bestVolumePerformance.volume}kg total`
+                            : 'Sem registro'}
                         </p>
                       </div>
                     </div>
@@ -243,13 +274,8 @@ function StartWorkout() {
 
                     <tbody>
                       {sessionExercise.sets.map((set) => {
-                        const newPR =
-                          set.completed &&
-                          isNewPR(
-                            sessionExercise.exercise.name,
-                            set.weight,
-                            set.reps
-                          )
+                        const isWeightPR = set.id === weightPRSetId
+                        const isVolumePR = set.id === volumePRSetId
 
                         return (
                           <tr
@@ -313,15 +339,25 @@ function StartWorkout() {
                             </td>
 
                             <td className="rounded-r-xl px-3 py-3">
-                              {newPR ? (
-                                <span className="rounded-xl bg-yellow-500/10 border border-yellow-500/30 px-3 py-2 text-xs font-bold text-yellow-400">
-                                  🏆 PR
-                                </span>
-                              ) : (
-                                <span className="text-xs text-zinc-600">
-                                  —
-                                </span>
-                              )}
+                              <div className="flex flex-wrap gap-2">
+                                {isWeightPR && (
+                                  <span className="rounded-xl bg-yellow-500/10 border border-yellow-500/30 px-3 py-2 text-xs font-bold text-yellow-400">
+                                    🏋️ Peso PR
+                                  </span>
+                                )}
+
+                                {isVolumePR && (
+                                  <span className="rounded-xl bg-orange-500/10 border border-orange-500/30 px-3 py-2 text-xs font-bold text-orange-400">
+                                    🔥 Volume PR
+                                  </span>
+                                )}
+
+                                {!isWeightPR && !isVolumePR && (
+                                  <span className="text-xs text-zinc-600">
+                                    —
+                                  </span>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         )
@@ -383,7 +419,7 @@ function StartWorkout() {
             <div className="space-y-3">
               <Button
                 type="button"
-                onClick={finishSession}
+                onClick={() => setIsFinishModalOpen(true)}
                 className="w-full"
               >
                 Finalizar treino
@@ -401,6 +437,120 @@ function StartWorkout() {
           </Card>
         </div>
       </section>
+
+      {isFinishModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-3xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl shadow-violet-950/40">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-violet-400">
+                  Confirmar finalização
+                </p>
+
+                <h2 className="mt-1 text-2xl font-bold text-white">
+                  Finalizar treino?
+                </h2>
+
+                <p className="mt-2 text-sm text-zinc-400">
+                  Confira o resumo antes de salvar este treino no histórico.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsFinishModalOpen(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-900 text-zinc-400 transition hover:bg-zinc-800 hover:text-white"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-3">
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
+                <p className="text-xs text-zinc-500">
+                  Duração
+                </p>
+
+                <p className="mt-1 text-xl font-bold text-violet-400">
+                  {formatTime(elapsedSeconds)}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
+                <p className="text-xs text-zinc-500">
+                  Séries concluídas
+                </p>
+
+                <p className="mt-1 text-xl font-bold">
+                  {completedSets}/{totalSets}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
+                <p className="text-xs text-zinc-500">
+                  Exercícios
+                </p>
+
+                <p className="mt-1 text-xl font-bold">
+                  {totalExercises}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
+                <p className="text-xs text-zinc-500">
+                  Pulados
+                </p>
+
+                <p className="mt-1 text-xl font-bold">
+                  {skippedExercises}
+                </p>
+              </div>
+            </div>
+
+            {totalPRs > 0 && (
+              <div className="mt-4 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4">
+                <p className="text-sm font-bold text-yellow-400">
+                  🏆 {totalPRs} novo(s) PR(s) neste treino
+                </p>
+              </div>
+            )}
+
+            {activeSession.notes && (
+              <div className="mt-4 rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
+                <p className="text-xs text-zinc-500">
+                  Observações
+                </p>
+
+                <p className="mt-2 text-sm text-zinc-300">
+                  {activeSession.notes}
+                </p>
+              </div>
+            )}
+
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setIsFinishModalOpen(false)}
+                className="w-full"
+              >
+                Continuar treino
+              </Button>
+
+              <Button
+                type="button"
+                onClick={() => {
+                  setIsFinishModalOpen(false)
+                  finishSession()
+                }}
+                className="w-full"
+              >
+                Salvar no histórico
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
