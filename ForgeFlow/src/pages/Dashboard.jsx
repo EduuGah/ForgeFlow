@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useWorkoutSession } from '../context/WorkoutSessionContext'
 
 import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
@@ -35,6 +36,14 @@ function Dashboard() {
       0
     )
   }, [workouts])
+
+  const navigate = useNavigate()
+  const { startSession } = useWorkoutSession()
+
+  function handleStartWorkout(workout) {
+    startSession(workout)
+    navigate('/start-workout')
+  }
 
   const recentWorkouts = workouts.slice(0, 3)
 
@@ -193,11 +202,21 @@ function Dashboard() {
                       </div>
                     </div>
 
-                    <Link to="/workouts">
-                      <Button variant="secondary" className="py-2 text-sm">
-                        Ver treino
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        onClick={() => handleStartWorkout(workout)}
+                        className="py-2 text-sm"
+                      >
+                        Iniciar
                       </Button>
-                    </Link>
+
+                      <Link to="/workouts">
+                        <Button variant="secondary" className="py-2 text-sm">
+                          Ver
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 </div>
               )

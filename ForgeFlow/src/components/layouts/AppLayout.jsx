@@ -1,17 +1,19 @@
 import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
+
 import Sidebar from './Sidebar'
+import ActiveWorkoutMini from '../workout/ActiveWorkoutMini'
 
 function AppLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
-      <header className="sticky top-0 z-30 bg-zinc-950/90 backdrop-blur border-b border-zinc-800 px-6 py-4 flex items-center gap-4">
+      <header className="sticky top-0 z-30 flex items-center gap-4 border-b border-zinc-800 bg-zinc-950/90 px-6 py-4 backdrop-blur">
         <button
           type="button"
           onClick={() => setIsSidebarOpen(true)}
-          className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 transition flex items-center justify-center text-xl"
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 text-xl transition hover:bg-zinc-800"
         >
           ☰
         </button>
@@ -33,9 +35,11 @@ function AppLayout() {
         </div>
       )}
 
-      <main className="p-6">
+      <main className="p-6 pb-28">
         <Outlet />
       </main>
+
+      <ActiveWorkoutMini />
     </div>
   )
 }
