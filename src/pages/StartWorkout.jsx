@@ -17,7 +17,9 @@ import {
   getBestWeightPerformance,
   getBestVolumePerformance,
   getSessionPRTypes,
+  getExerciseComparison,
   formatPerformance,
+  formatDiff,
 } from '../utils/prUtils'
 
 function formatTime(seconds) {
@@ -277,6 +279,11 @@ function StartWorkout() {
                         const isWeightPR = set.id === weightPRSetId
                         const isVolumePR = set.id === volumePRSetId
 
+                        const comparison = getExerciseComparison(
+                          sessionExercise.exercise.name,
+                          set
+                        )
+
                         return (
                           <tr
                             key={set.id}
@@ -358,6 +365,22 @@ function StartWorkout() {
                                   </span>
                                 )}
                               </div>
+
+                              {comparison.hasData && comparison.last && set.completed && (
+                                <div className="mt-2 space-y-1 text-[11px] text-zinc-500">
+                                  <p>
+                                    Peso: {formatDiff(comparison.weightDiffFromLast, 'kg')}
+                                  </p>
+
+                                  <p>
+                                    Reps: {formatDiff(comparison.repsDiffFromLast)}
+                                  </p>
+
+                                  <p>
+                                    Volume: {formatDiff(comparison.volumeDiffFromLast, 'kg')}
+                                  </p>
+                                </div>
+                              )}
                             </td>
                           </tr>
                         )

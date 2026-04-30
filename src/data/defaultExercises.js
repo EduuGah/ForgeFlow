@@ -89,7 +89,6 @@ const defaultExercises = [
     "muscleGroup": "Corpo Inteiro",
     "equipment": "Máquina",
     "description": "",
-    "mediaUrl": "",
     "execution": [
       "Mantenha a postura estável durante todo o movimento.",
       "Controle a fase de subida e descida.",
@@ -1076,7 +1075,6 @@ const defaultExercises = [
     "muscleGroup": "Peito",
     "equipment": "Máquina",
     "description": "",
-    "mediaUrl": "",
     "execution": [
       "Mantenha a postura estável durante todo o movimento.",
       "Controle a fase de subida e descida.",
@@ -1097,7 +1095,6 @@ const defaultExercises = [
     "muscleGroup": "Peito",
     "equipment": "Máquina",
     "description": "",
-    "mediaUrl": "",
     "execution": [
       "Mantenha a postura estável durante todo o movimento.",
       "Controle a fase de subida e descida.",
@@ -1118,7 +1115,6 @@ const defaultExercises = [
     "muscleGroup": "Peito",
     "equipment": "Máquina",
     "description": "",
-    "mediaUrl": "",
     "execution": [
       "Mantenha a postura estável durante todo o movimento.",
       "Controle a fase de subida e descida.",
@@ -3008,7 +3004,6 @@ const defaultExercises = [
     "muscleGroup": "Corpo Inteiro",
     "equipment": "Mobilidade",
     "description": "",
-    "mediaUrl": "",
     "execution": [
       "Mantenha a postura estável durante todo o movimento.",
       "Controle a fase de subida e descida.",
@@ -4625,7 +4620,6 @@ const defaultExercises = [
     "muscleGroup": "Corpo Inteiro",
     "equipment": "Mobilidade",
     "description": "",
-    "mediaUrl": "",
     "execution": [
       "Mantenha a postura estável durante todo o movimento.",
       "Controle a fase de subida e descida.",
@@ -6788,7 +6782,6 @@ const defaultExercises = [
     "muscleGroup": "Corpo Inteiro",
     "equipment": "Mobilidade",
     "description": "",
-    "mediaUrl": "",
     "execution": [
       "Mantenha a postura estável durante todo o movimento.",
       "Controle a fase de subida e descida.",
@@ -6809,7 +6802,6 @@ const defaultExercises = [
     "muscleGroup": "Corpo Inteiro",
     "equipment": "Halter",
     "description": "",
-    "mediaUrl": "",
     "execution": [
       "Mantenha a postura estável durante todo o movimento.",
       "Controle a fase de subida e descida.",

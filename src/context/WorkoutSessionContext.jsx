@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import { isNewPR } from '../utils/prUtils'
 import { getSessionPRTypes } from '../utils/prUtils'
 
 const WorkoutSessionContext = createContext(null)

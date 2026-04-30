@@ -10,6 +10,7 @@ import History from './pages/History'
 import StartWorkout from './pages/StartWorkout'
 import Profile from './pages/Profile'
 import ExerciseDetails from './pages/ExerciseDetails'
+import ExerciseProgress from './pages/ExerciseProgress'
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Route element={<AppLayout />}>
             <Route path="/" element={<Dashboard />} />
             <Route path="/exercises" element={<Exercises />} />
+            <Route path="/progress" element={<ExerciseProgress />} />
             <Route path="/exercises/:id" element={<ExerciseDetails />} />
             <Route path="/workouts" element={<Workouts />} />
             <Route path="/history" element={<History />} />

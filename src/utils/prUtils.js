@@ -5,7 +5,11 @@ export function getWorkoutHistory() {
     return []
   }
 
-  return JSON.parse(savedHistory)
+  try {
+    return JSON.parse(savedHistory)
+  } catch {
+    return []
+  }
 }
 
 export function getExerciseHistory(exerciseName) {
@@ -38,122 +42,6 @@ export function getLastExercisePerformance(exerciseName) {
   return history[0]
 }
 
-export function getBestExercisePerformance(exerciseName) {
-  const history = getExerciseHistory(exerciseName)
-
-  let best = null
-
-  history.forEach((record) => {
-    record.sets.forEach((set) => {
-      const weight = Number(set.weight)
-      const reps = Number(set.reps)
-
-      if (!weight || !reps) return
-
-      if (!best) {
-        best = {
-          weight,
-          reps,
-          date: record.date,
-          workoutName: record.workoutName,
-        }
-
-        return
-      }
-
-      const isHigherWeight = weight > best.weight
-      const isSameWeightHigherReps = weight === best.weight && reps > best.reps
-
-      if (isHigherWeight || isSameWeightHigherReps) {
-        best = {
-          weight,
-          reps,
-          date: record.date,
-          workoutName: record.workoutName,
-        }
-      }
-    })
-  })
-
-  return best
-}
-
-export function isNewPR(exerciseName, weight, reps) {
-  const best = getBestExercisePerformance(exerciseName)
-
-  const currentWeight = Number(weight)
-  const currentReps = Number(reps)
-
-  if (!currentWeight || !currentReps) {
-    return false
-  }
-
-  if (!best) {
-    return true
-  }
-
-  return (
-    currentWeight > best.weight ||
-    (currentWeight === best.weight && currentReps > best.reps)
-  )
-}
-
-export function formatPerformance(set) {
-  if (!set?.weight || !set?.reps) {
-    return 'Sem registro'
-  }
-
-  return `${set.weight}kg x ${set.reps} reps`
-}
-
-export function getSessionPRSetId(exerciseName, sets) {
-  const previousBest = getBestExercisePerformance(exerciseName)
-
-  let currentBest = previousBest
-    ? {
-        weight: previousBest.weight,
-        reps: previousBest.reps,
-        setId: null,
-      }
-    : null
-
-  let prSetId = null
-
-  sets.forEach((set) => {
-    const weight = Number(set.weight)
-    const reps = Number(set.reps)
-
-    if (!set.completed || !weight || !reps) return
-
-    if (!currentBest) {
-      currentBest = {
-        weight,
-        reps,
-        setId: set.id,
-      }
-
-      prSetId = set.id
-      return
-    }
-
-    const improvedWeight = weight > currentBest.weight
-    const improvedRepsSameWeight =
-      weight === currentBest.weight && reps > currentBest.reps
-
-    if (improvedWeight || improvedRepsSameWeight) {
-      currentBest = {
-        weight,
-        reps,
-        setId: set.id,
-      }
-
-      prSetId = set.id
-    }
-  })
-
-  return prSetId
-}
-
 export function getBestWeightPerformance(exerciseName) {
   const history = getExerciseHistory(exerciseName)
 
@@ -164,7 +52,7 @@ export function getBestWeightPerformance(exerciseName) {
       const weight = Number(set.weight)
       const reps = Number(set.reps)
 
-      if (!weight || !reps) return
+      if (!weight || !reps || !set.completed) return
 
       if (!best || weight > best.weight) {
         best = {
@@ -192,7 +80,7 @@ export function getBestVolumePerformance(exerciseName) {
       const reps = Number(set.reps)
       const volume = weight * reps
 
-      if (!weight || !reps) return
+      if (!weight || !reps || !set.completed) return
 
       if (!best || volume > best.volume) {
         best = {
@@ -207,6 +95,10 @@ export function getBestVolumePerformance(exerciseName) {
   })
 
   return best
+}
+
+export function getBestExercisePerformance(exerciseName) {
+  return getBestWeightPerformance(exerciseName)
 }
 
 export function getSessionPRTypes(exerciseName, sets) {
@@ -241,4 +133,71 @@ export function getSessionPRTypes(exerciseName, sets) {
     weightPRSetId,
     volumePRSetId,
   }
+}
+
+export function getExerciseComparison(exerciseName, currentSet) {
+  const lastPerformance = getLastExercisePerformance(exerciseName)
+  const bestWeight = getBestWeightPerformance(exerciseName)
+  const bestVolume = getBestVolumePerformance(exerciseName)
+
+  const currentWeight = Number(currentSet.weight)
+  const currentReps = Number(currentSet.reps)
+  const currentVolume = currentWeight * currentReps
+
+  if (!currentWeight || !currentReps) {
+    return {
+      hasData: false,
+      message: 'Informe peso e reps para comparar.',
+    }
+  }
+
+  const lastCompletedSet = lastPerformance?.sets?.find(
+    (set) => set.completed && set.weight && set.reps
+  )
+
+  const lastWeight = Number(lastCompletedSet?.weight) || 0
+  const lastReps = Number(lastCompletedSet?.reps) || 0
+  const lastVolume = lastWeight * lastReps
+
+  return {
+    hasData: true,
+    current: {
+      weight: currentWeight,
+      reps: currentReps,
+      volume: currentVolume,
+    },
+    last: lastCompletedSet
+      ? {
+          weight: lastWeight,
+          reps: lastReps,
+          volume: lastVolume,
+          workoutName: lastPerformance.workoutName,
+          date: lastPerformance.date,
+        }
+      : null,
+    bestWeight,
+    bestVolume,
+    weightDiffFromLast: lastCompletedSet ? currentWeight - lastWeight : null,
+    repsDiffFromLast: lastCompletedSet ? currentReps - lastReps : null,
+    volumeDiffFromLast: lastCompletedSet ? currentVolume - lastVolume : null,
+    isWeightPR: bestWeight ? currentWeight > bestWeight.weight : true,
+    isVolumePR: bestVolume ? currentVolume > bestVolume.volume : true,
+  }
+}
+
+export function formatPerformance(set) {
+  if (!set?.weight || !set?.reps) {
+    return 'Sem registro'
+  }
+
+  return `${set.weight}kg x ${set.reps} reps`
+}
+
+export function formatDiff(value, suffix = '') {
+  if (value === null || value === undefined) return ''
+
+  if (value > 0) return `+${value}${suffix}`
+  if (value < 0) return `${value}${suffix}`
+
+  return `0${suffix}`
 }

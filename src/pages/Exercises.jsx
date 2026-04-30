@@ -19,6 +19,10 @@ function Exercises() {
   const [muscleGroup, setMuscleGroup] = useState('')
   const [equipment, setEquipment] = useState('')
   const [description, setDescription] = useState('')
+  const [mediaUrl, setMediaUrl] = useState('')
+  const [execution, setExecution] = useState('')
+  const [commonMistakes, setCommonMistakes] = useState('')
+  const [variations, setVariations] = useState('')
 
   const [search, setSearch] = useState('')
   const [groupFilter, setGroupFilter] = useState('')
@@ -90,7 +94,13 @@ function Exercises() {
 
   const filteredExercises = useMemo(() => {
     return exercises.filter((exercise) => {
-      const text = `${exercise.name} ${exercise.muscleGroup} ${exercise.equipment} ${exercise.description || ''}`.toLowerCase()
+      const text = `
+        ${exercise.name}
+        ${exercise.muscleGroup}
+        ${exercise.equipment}
+        ${exercise.description || ''}
+        ${exercise.originalName || ''}
+      `.toLowerCase()
 
       const matchesSearch = text.includes(search.toLowerCase())
 
@@ -126,11 +136,30 @@ function Exercises() {
     }))
   }, [exercises])
 
+  function textToList(text) {
+    return text
+      .split('\n')
+      .map((item) => item.trim())
+      .filter(Boolean)
+  }
+
+  function listToText(list) {
+    if (Array.isArray(list)) {
+      return list.join('\n')
+    }
+
+    return list || ''
+  }
+
   function resetForm() {
     setName('')
     setMuscleGroup('')
     setEquipment('')
     setDescription('')
+    setMediaUrl('')
+    setExecution('')
+    setCommonMistakes('')
+    setVariations('')
     setEditingId(null)
   }
 
@@ -152,6 +181,10 @@ function Exercises() {
                 muscleGroup,
                 equipment,
                 description,
+                mediaUrl,
+                execution: textToList(execution),
+                commonMistakes: textToList(commonMistakes),
+                variations: textToList(variations),
                 updatedAt: new Date().toISOString(),
               }
             : exercise
@@ -168,6 +201,10 @@ function Exercises() {
       muscleGroup,
       equipment,
       description,
+      mediaUrl,
+      execution: textToList(execution),
+      commonMistakes: textToList(commonMistakes),
+      variations: textToList(variations),
       createdAt: new Date().toISOString(),
     }
 
@@ -181,6 +218,10 @@ function Exercises() {
     setMuscleGroup(exercise.muscleGroup)
     setEquipment(exercise.equipment)
     setDescription(exercise.description || '')
+    setMediaUrl(exercise.mediaUrl || '')
+    setExecution(listToText(exercise.execution))
+    setCommonMistakes(listToText(exercise.commonMistakes))
+    setVariations(listToText(exercise.variations))
 
     window.scrollTo({
       top: 0,
@@ -189,6 +230,12 @@ function Exercises() {
   }
 
   function handleDelete(id) {
+    const confirmDelete = window.confirm(
+      'Tem certeza que deseja excluir este exercício?'
+    )
+
+    if (!confirmDelete) return
+
     setExercises(exercises.filter((exercise) => exercise.id !== id))
 
     if (editingId === id) {
@@ -211,7 +258,7 @@ function Exercises() {
     <>
       <PageHeader
         title="Biblioteca de Exercícios"
-        description="Organize sua base de exercícios por grupo muscular, equipamento e observações."
+        description="Organize sua base de exercícios por grupo muscular, equipamento, mídia e dicas de execução."
         action={
           <Badge variant="purple">
             {exercises.length} exercícios
@@ -285,6 +332,37 @@ function Exercises() {
                   placeholder="Ex: foco em progressão de carga..."
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
+                  rows={3}
+                />
+
+                <Input
+                  label="URL da imagem / GIF"
+                  placeholder="https://..."
+                  value={mediaUrl}
+                  onChange={(event) => setMediaUrl(event.target.value)}
+                />
+
+                <Textarea
+                  label="Execução correta"
+                  placeholder="Uma dica por linha"
+                  value={execution}
+                  onChange={(event) => setExecution(event.target.value)}
+                  rows={4}
+                />
+
+                <Textarea
+                  label="Erros comuns"
+                  placeholder="Um erro por linha"
+                  value={commonMistakes}
+                  onChange={(event) => setCommonMistakes(event.target.value)}
+                  rows={4}
+                />
+
+                <Textarea
+                  label="Variações"
+                  placeholder="Uma variação por linha"
+                  value={variations}
+                  onChange={(event) => setVariations(event.target.value)}
                   rows={4}
                 />
 
@@ -505,6 +583,12 @@ function Exercises() {
                                 {exercise.name}
                               </h3>
 
+                              {exercise.originalName && exercise.originalName !== exercise.name && (
+                                <p className="text-xs text-zinc-500 mt-1">
+                                  {exercise.originalName}
+                                </p>
+                              )}
+
                               <div className="mt-3 flex flex-wrap gap-2">
                                 <Badge variant="purple">
                                   {exercise.muscleGroup}
@@ -513,6 +597,12 @@ function Exercises() {
                                 <Badge>
                                   {exercise.equipment}
                                 </Badge>
+
+                                {exercise.mediaUrl && (
+                                  <Badge variant="green">
+                                    Com mídia
+                                  </Badge>
+                                )}
                               </div>
                             </div>
 

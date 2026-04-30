@@ -15,6 +15,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
+import Input from '../components/ui/Input'
 
 import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
@@ -58,6 +59,8 @@ function Dashboard() {
 
   const completedSets = useMemo(() => getCompletedSets(history), [history])
 
+  const [prSearch, setPrSearch] = useState('')
+
   const totalVolume = useMemo(() => {
     return getTotalVolume(completedSets)
   }, [completedSets])
@@ -80,9 +83,18 @@ function Dashboard() {
 
   const exercisePRs = useMemo(() => {
     return getExercisePRs(completedSets)
+      .map((pr) => ({
+        ...pr,
+        volume: pr.weight * pr.reps,
+      }))
+      .filter((pr) =>
+        `${pr.exerciseName} ${pr.muscleGroup}`
+          .toLowerCase()
+          .includes(prSearch.toLowerCase())
+      )
       .sort((a, b) => b.weight - a.weight)
-      .slice(0, 8)
-  }, [completedSets])
+      .slice(0, 12)
+  }, [completedSets, prSearch])
 
   const recentWorkouts = workouts.slice(0, 5)
 
@@ -384,33 +396,93 @@ function Dashboard() {
 
       <section className="grid grid-cols-1 xl:grid-cols-3 gap-6 mt-6">
         <Card>
-          <h2 className="text-xl font-bold">PRs por exercício</h2>
-          <p className="text-sm text-zinc-500 mt-1">
-            Seus melhores registros salvos.
-          </p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-bold">Recordes pessoais</h2>
+              <p className="text-sm text-zinc-500 mt-1">
+                Pesquise seus melhores registros por exercício.
+              </p>
+            </div>
 
-          <div className="mt-5 max-h-[420px] overflow-y-auto pr-2 space-y-3">
+            <Badge variant="purple">
+              {exercisePRs.length}
+            </Badge>
+          </div>
+
+          <div className="mt-4">
+            <Input
+              type="text"
+              placeholder="Buscar exercício..."
+              value={prSearch}
+              onChange={(event) => setPrSearch(event.target.value)}
+            />
+          </div>
+
+          <div className="mt-5 max-h-[460px] overflow-y-auto pr-2 space-y-3">
             {exercisePRs.length === 0 && (
               <EmptyState
-                title="Nenhum PR registrado"
-                description="Conclua séries com peso e reps para gerar PRs."
+                title="Nenhum PR encontrado"
+                description="Tente buscar outro exercício ou finalize treinos com peso e reps."
               />
             )}
 
-            {exercisePRs.map((pr) => (
+            {exercisePRs.map((pr, index) => (
               <div
                 key={pr.exerciseName}
-                className="rounded-xl border border-zinc-800 bg-zinc-950 p-3"
+                className="rounded-2xl border border-zinc-800 bg-gradient-to-br from-zinc-950 to-zinc-900/80 p-4 transition hover:border-violet-500/40"
               >
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="font-semibold">{pr.exerciseName}</p>
-                    <p className="text-xs text-zinc-500 mt-1">
-                      {pr.muscleGroup}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-violet-500/20 bg-violet-500/10 text-sm font-bold text-violet-400">
+                        #{index + 1}
+                      </span>
+
+                      <div className="min-w-0">
+                        <p className="font-bold text-white truncate">
+                          {pr.exerciseName}
+                        </p>
+
+                        <p className="text-xs text-zinc-500 mt-1">
+                          {pr.muscleGroup}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Badge variant="purple">
+                    🏆 PR
+                  </Badge>
+                </div>
+
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/10 p-3">
+                    <p className="text-[11px] text-yellow-400">
+                      PR de Peso
+                    </p>
+
+                    <p className="mt-1 text-lg font-bold text-yellow-300">
+                      {pr.weight}kg
+                    </p>
+
+                    <p className="text-xs text-zinc-400 mt-1">
+                      {pr.reps} repetições
                     </p>
                   </div>
 
-                  <Badge>🏆 {pr.weight}kg × {pr.reps}</Badge>
+                  <div className="rounded-xl border border-orange-500/20 bg-orange-500/10 p-3">
+                    <p className="text-[11px] text-orange-400">
+                      PR de Volume
+                    </p>
+
+                    <p className="mt-1 text-lg font-bold text-orange-300">
+                      {pr.volume}kg
+                    </p>
+
+                    <p className="text-xs text-zinc-400 mt-1">
+                      {pr.weight}kg × {pr.reps} reps
+                    </p>
+                  </div>
                 </div>
               </div>
             ))}
