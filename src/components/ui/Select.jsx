@@ -1,14 +1,44 @@
-function Select({ label, children, className = '', ...props }) {
+function Select({
+  label,
+  value,
+  onChange,
+  children,
+  className = '',
+  ...props
+}) {
   return (
-    <div>
+    <div className="w-full">
       {label && (
-        <label className="text-sm font-medium text-zinc-400">
+        <label className="mb-2 block text-sm font-bold text-zinc-300">
           {label}
         </label>
       )}
 
       <select
-        className={`mt-2 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-white outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/10 ${className}`}
+        value={value}
+        onChange={onChange}
+        className={`
+          h-12
+          w-full
+          cursor-pointer
+          rounded-2xl
+          border border-zinc-800
+          bg-[#101014]
+          px-4
+          text-sm
+          font-medium
+          text-white
+          outline-none
+          transition
+          hover:border-zinc-700
+          focus:border-violet-500
+          focus:bg-[#141419]
+          focus:ring-2
+          focus:ring-violet-500/10
+          disabled:cursor-not-allowed
+          disabled:opacity-50
+          ${className}
+        `}
         {...props}
       >
         {children}

@@ -1,20 +1,66 @@
-function Badge({ children, variant = 'default', className = '' }) {
+function Badge({
+  children,
+  variant = 'default',
+  className = '',
+}) {
   const variants = {
-    default:
-      'bg-zinc-800 text-zinc-300 border-zinc-700',
-    purple:
-      'bg-violet-500/10 text-violet-400 border-violet-500/20',
-    green:
-      'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    red:
-      'bg-red-500/10 text-red-400 border-red-500/20',
-    yellow:
-      'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
+    default: `
+      border-zinc-700
+      bg-zinc-900
+      text-zinc-300
+    `,
+
+    purple: `
+      border-violet-500/30
+      bg-violet-500/10
+      text-violet-300
+      shadow-[0_0_14px_rgba(139,92,246,0.16)]
+    `,
+
+    green: `
+      border-emerald-500/30
+      bg-emerald-500/10
+      text-emerald-300
+    `,
+
+    red: `
+      border-red-500/30
+      bg-red-500/10
+      text-red-300
+    `,
+
+    yellow: `
+      border-yellow-500/30
+      bg-yellow-500/10
+      text-yellow-300
+    `,
+
+    orange: `
+      border-orange-500/30
+      bg-orange-500/10
+      text-orange-300
+    `,
   }
 
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${variants[variant]} ${className}`}
+      className={`
+        inline-flex
+        w-fit
+        items-center
+        justify-center
+        gap-1.5
+        rounded-full
+        border
+        px-3
+        py-1
+        text-xs
+        font-bold
+        leading-none
+        whitespace-nowrap
+        ${variants[variant] || variants.default}
+        ${className}
+      `}
     >
       {children}
     </span>

@@ -1,28 +1,30 @@
-function PageHeader({ label = 'ForgeFlow', title, description, action }) {
+function PageHeader({
+  title,
+  description,
+  action,
+}) {
   return (
-    <section className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
       <div>
-        <p className="text-sm font-semibold text-violet-400">
-          {label}
-        </p>
+        <div className="mb-2 h-1 w-12 rounded-full bg-violet-500 shadow-[0_0_16px_rgba(139,92,246,0.6)]" />
 
-        <h1 className="mt-1 text-3xl font-bold tracking-tight text-white">
+        <h1 className="text-3xl font-black tracking-tight text-white md:text-4xl">
           {title}
         </h1>
 
         {description && (
-          <p className="mt-2 max-w-2xl text-sm text-zinc-400">
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-500">
             {description}
           </p>
         )}
       </div>
 
       {action && (
-        <div>
+        <div className="flex shrink-0 items-center gap-2">
           {action}
         </div>
       )}
-    </section>
+    </div>
   )
 }
 
