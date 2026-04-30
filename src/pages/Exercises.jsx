@@ -208,17 +208,17 @@ function Exercises() {
         exercises.map((exercise) =>
           exercise.id === editingId
             ? {
-                ...exercise,
-                name,
-                muscleGroup,
-                equipment,
-                description,
-                mediaUrl,
-                execution: textToList(execution),
-                commonMistakes: textToList(commonMistakes),
-                variations: textToList(variations),
-                updatedAt: new Date().toISOString(),
-              }
+              ...exercise,
+              name,
+              muscleGroup,
+              equipment,
+              description,
+              mediaUrl,
+              execution: textToList(execution),
+              commonMistakes: textToList(commonMistakes),
+              variations: textToList(variations),
+              updatedAt: new Date().toISOString(),
+            }
             : exercise
         )
       )
@@ -288,10 +288,14 @@ function Exercises() {
         title="Exercícios"
         description="Biblioteca de exercícios com grupos musculares, equipamentos, mídia e dicas de execução."
         action={
-          <Button onClick={openCreateModal}>
+          <button
+            type="button"
+            onClick={openCreateModal}
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-violet-600 px-5 text-sm font-bold text-white shadow-[0_0_18px_rgba(139,92,246,0.35)] transition hover:bg-violet-500 hover:shadow-[0_0_26px_rgba(139,92,246,0.55)]"
+          >
             <Plus size={18} />
-            Novo exercício
-          </Button>
+            Adicionar
+          </button>
         }
       />
 
@@ -505,14 +509,14 @@ function Exercises() {
                 </p>
               </div>
 
-              <Button
+              <button
                 type="button"
                 onClick={openCreateModal}
-                className="w-full sm:w-auto"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-violet-600 px-5 text-sm font-bold text-white shadow-[0_0_18px_rgba(139,92,246,0.35)] transition hover:bg-violet-500 hover:shadow-[0_0_26px_rgba(139,92,246,0.55)]"
               >
                 <Plus size={18} />
                 Adicionar
-              </Button>
+              </button>
             </div>
 
             <div className="mt-6 max-h-[760px] overflow-y-auto pr-2">
@@ -615,36 +619,31 @@ function Exercises() {
                             )}
 
                             <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                              <Link to={`/exercises/${exercise.id}`}>
-                                <Button
-                                  type="button"
-                                  variant="secondary"
-                                  className="w-full"
-                                >
-                                  <ExternalLink size={17} />
-                                  Detalhes
-                                </Button>
+                              <Link
+                                to={`/exercises/${exercise.id}`}
+                                className="flex h-12 items-center justify-center gap-2 rounded-2xl border border-zinc-700 bg-zinc-900 text-sm font-bold text-white transition hover:border-violet-500/40 hover:bg-zinc-800"
+                              >
+                                <ExternalLink size={17} />
+                                Detalhes
                               </Link>
 
-                              <Button
+                              <button
                                 type="button"
-                                variant="ghost"
                                 onClick={() => handleEdit(exercise)}
-                                className="w-full"
+                                className="flex h-12 items-center justify-center gap-2 rounded-2xl border border-violet-500/30 bg-violet-500/10 text-sm font-bold text-violet-300 transition hover:border-violet-400 hover:bg-violet-500/20 hover:shadow-[0_0_18px_rgba(139,92,246,0.25)]"
                               >
                                 <Edit3 size={17} />
                                 Editar
-                              </Button>
+                              </button>
 
-                              <Button
+                              <button
                                 type="button"
-                                variant="danger"
                                 onClick={() => handleDelete(exercise.id)}
-                                className="w-full"
+                                className="flex h-12 items-center justify-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 text-sm font-bold text-red-300 transition hover:border-red-400/40 hover:bg-red-500/20"
                               >
                                 <Trash2 size={17} />
                                 Excluir
-                              </Button>
+                              </button>
                             </div>
                           </div>
                         )}
