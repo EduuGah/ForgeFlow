@@ -1,6 +1,7 @@
 import {
   Home,
   ClipboardList,
+  History,
   Dumbbell,
   UserRound,
   Settings,
@@ -20,6 +21,7 @@ function Sidebar({ onClose }) {
     { name: 'Evolução', path: '/progress', icon: TrendingUp },
     { name: 'Perfil', path: '/profile', icon: UserRound },
     { name: 'Definições', path: '/settings', icon: Settings },
+    { name: 'Histórico', path: '/history', icon: History },
   ]
 
   return (
