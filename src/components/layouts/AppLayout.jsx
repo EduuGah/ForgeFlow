@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Menu } from 'lucide-react'
 import { Outlet } from 'react-router-dom'
 
 import Sidebar from './Sidebar'
@@ -8,35 +9,44 @@ function AppLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
-      <header className="sticky top-0 z-30 flex items-center gap-4 border-b border-zinc-800 bg-zinc-950/90 px-6 py-4 backdrop-blur">
-        <button
-          type="button"
-          onClick={() => setIsSidebarOpen(true)}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 text-xl transition hover:bg-zinc-800"
-        >
-          ☰
-        </button>
+    <div className="min-h-screen bg-black text-white">
+      {/* HEADER */}
+      <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-zinc-900 bg-black/80 px-4 backdrop-blur">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setIsSidebarOpen(true)}
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900 text-white hover:bg-zinc-800"
+          >
+            <Menu size={22} />
+          </button>
 
-        <h1 className="font-bold">
-          Forge<span className="text-violet-400">Flow</span>
-        </h1>
+          <h1 className="text-lg font-black">
+            Forge<span className="text-violet-500">Flow</span>
+          </h1>
+        </div>
       </header>
 
+      {/* SIDEBAR (DRAWER) */}
       {isSidebarOpen && (
-        <div className="fixed inset-0 z-40 flex">
+        <div className="fixed inset-0 z-50">
+          {/* overlay */}
           <button
             type="button"
             onClick={() => setIsSidebarOpen(false)}
-            className="absolute inset-0 bg-black/60"
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
           />
 
+          {/* sidebar */}
           <Sidebar onClose={() => setIsSidebarOpen(false)} />
         </div>
       )}
 
-      <main className="p-6 pb-28">
-        <Outlet />
+      {/* CONTEÚDO */}
+      <main className="px-4 py-6 pb-28">
+        <div className="mx-auto max-w-[1200px]">
+          <Outlet />
+        </div>
       </main>
 
       <ActiveWorkoutMini />
