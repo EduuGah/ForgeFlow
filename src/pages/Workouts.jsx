@@ -1,4 +1,19 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import {
+    ArrowLeft,
+    ChevronDown,
+    ClipboardList,
+    Copy,
+    Dumbbell,
+    Edit3,
+    MoreHorizontal,
+    Plus,
+    Save,
+    Search,
+    Trash2,
+    X,
+} from 'lucide-react'
 
 import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
@@ -9,14 +24,14 @@ import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
 
 import { useWorkoutSession } from '../context/WorkoutSessionContext'
-import { useNavigate } from 'react-router-dom'
 
 function Workouts() {
     const [workouts, setWorkouts] = useState([])
     const [exercises, setExercises] = useState([])
 
     const [quickSearch, setQuickSearch] = useState('')
-    const [isQuickAddOpen, setIsQuickAddOpen] = useState(true)
+    const [quickGroupFilter, setQuickGroupFilter] = useState('')
+    const [quickEquipmentFilter, setQuickEquipmentFilter] = useState('')
 
     const [workoutName, setWorkoutName] = useState('')
     const [selectedExercise, setSelectedExercise] = useState('')
@@ -26,21 +41,35 @@ function Workouts() {
 
     const [expandedWorkoutId, setExpandedWorkoutId] = useState(null)
     const [editingWorkoutId, setEditingWorkoutId] = useState(null)
-    const [selectedWorkoutView, setSelectedWorkoutView] = useState(null)
     const [isLoaded, setIsLoaded] = useState(false)
+    const [isBuilderOpen, setIsBuilderOpen] = useState(false)
 
     const { startSession } = useWorkoutSession()
     const navigate = useNavigate()
 
-    function handleStartWorkout(workout) {
-        startSession(workout)
-        navigate('/start-workout')
-    }
+    const muscleGroups = [
+        ...new Set(exercises.map((exercise) => exercise.muscleGroup).filter(Boolean)),
+    ]
+
+    const equipmentList = [
+        ...new Set(exercises.map((exercise) => exercise.equipment).filter(Boolean)),
+    ]
+
+    const [folders, setFolders] = useState([])
+    const [selectedFolderId, setSelectedFolderId] = useState(null)
+    const [isFolderModalOpen, setIsFolderModalOpen] = useState(false)
+    const [folderName, setFolderName] = useState('')
 
     useEffect(() => {
         const savedWorkouts = localStorage.getItem('forgeflow:workouts')
         const savedExercises = localStorage.getItem('forgeflow:exercises')
         const draft = localStorage.getItem('forgeflow:workout-draft')
+
+        const savedFolders = localStorage.getItem('forgeflow:folders')
+
+        if (savedFolders) {
+            setFolders(JSON.parse(savedFolders))
+        }
 
         if (savedWorkouts) {
             setWorkouts(JSON.parse(savedWorkouts))
@@ -63,6 +92,12 @@ function Workouts() {
 
         setIsLoaded(true)
     }, [])
+
+    useEffect(() => {
+        if (!isLoaded) return
+
+        localStorage.setItem('forgeflow:folders', JSON.stringify(folders))
+    }, [folders, isLoaded])
 
     useEffect(() => {
         if (!isLoaded) return
@@ -95,11 +130,21 @@ function Workouts() {
 
     const filteredQuickExercises = useMemo(() => {
         return exercises.filter((exercise) => {
-            const text = `${exercise.name} ${exercise.muscleGroup} ${exercise.equipment}`.toLowerCase()
+            const text = `${exercise.name} ${exercise.muscleGroup} ${exercise.equipment} ${exercise.originalName || ''}`.toLowerCase()
 
-            return text.includes(quickSearch.toLowerCase())
+            const matchesSearch = text.includes(quickSearch.toLowerCase())
+
+            const matchesGroup = quickGroupFilter
+                ? exercise.muscleGroup === quickGroupFilter
+                : true
+
+            const matchesEquipment = quickEquipmentFilter
+                ? exercise.equipment === quickEquipmentFilter
+                : true
+
+            return matchesSearch && matchesGroup && matchesEquipment
         })
-    }, [exercises, quickSearch])
+    }, [exercises, quickSearch, quickGroupFilter, quickEquipmentFilter])
 
     const currentMuscleGroups = useMemo(() => {
         const groups = workoutExercises.map((item) => item.exercise?.muscleGroup)
@@ -111,6 +156,10 @@ function Workouts() {
         return workouts.reduce((total, workout) => total + workout.exercises.length, 0)
     }, [workouts])
 
+    const totalSetsInCurrentWorkout = useMemo(() => {
+        return workoutExercises.reduce((total, item) => total + item.sets.length, 0)
+    }, [workoutExercises])
+
     function getDefaultSets() {
         return [
             { id: crypto.randomUUID(), description: '12 Rep' },
@@ -120,6 +169,20 @@ function Workouts() {
         ]
     }
 
+    function handleCreateFolder() {
+        if (!folderName.trim()) return
+
+        const newFolder = {
+            id: crypto.randomUUID(),
+            name: folderName,
+            createdAt: new Date().toISOString(),
+        }
+
+        setFolders([newFolder, ...folders])
+        setFolderName('')
+        setIsFolderModalOpen(false)
+    }
+
     function resetForm() {
         setWorkoutName('')
         setSelectedExercise('')
@@ -127,7 +190,20 @@ function Workouts() {
         setExerciseSets([])
         setWorkoutExercises([])
         setEditingWorkoutId(null)
+        setQuickSearch('')
+        setQuickGroupFilter('')
+        setQuickEquipmentFilter('')
         localStorage.removeItem('forgeflow:workout-draft')
+    }
+
+    function openCreateBuilder() {
+        resetForm()
+        setIsBuilderOpen(true)
+    }
+
+    function closeBuilder() {
+        resetForm()
+        setIsBuilderOpen(false)
     }
 
     function handleDefaultSets() {
@@ -166,6 +242,8 @@ function Workouts() {
             id: crypto.randomUUID(),
             exercise: exerciseFound,
             sets: getDefaultSets(),
+            note: '',
+            restTimer: 'Desligado',
         }
 
         setWorkoutExercises([...workoutExercises, newWorkoutExercise])
@@ -185,6 +263,8 @@ function Workouts() {
             id: crypto.randomUUID(),
             exercise: exerciseFound,
             sets: exerciseSets,
+            note: '',
+            restTimer: 'Desligado',
         }
 
         setWorkoutExercises([...workoutExercises, newWorkoutExercise])
@@ -197,7 +277,66 @@ function Workouts() {
         setWorkoutExercises(workoutExercises.filter((item) => item.id !== id))
     }
 
+    function handleUpdateExerciseNote(id, value) {
+        setWorkoutExercises(
+            workoutExercises.map((item) =>
+                item.id === id
+                    ? {
+                        ...item,
+                        note: value,
+                    }
+                    : item
+            )
+        )
+    }
+
+    function handleUpdateExerciseRest(id, value) {
+        setWorkoutExercises(
+            workoutExercises.map((item) =>
+                item.id === id
+                    ? {
+                        ...item,
+                        restTimer: value,
+                    }
+                    : item
+            )
+        )
+    }
+
+    function handleAddSetToWorkoutExercise(id) {
+        setWorkoutExercises(
+            workoutExercises.map((item) =>
+                item.id === id
+                    ? {
+                        ...item,
+                        sets: [
+                            ...item.sets,
+                            {
+                                id: crypto.randomUUID(),
+                                description: '8-12 Rep',
+                            },
+                        ],
+                    }
+                    : item
+            )
+        )
+    }
+
+    function handleRemoveSetFromWorkoutExercise(exerciseId, setId) {
+        setWorkoutExercises(
+            workoutExercises.map((item) =>
+                item.id === exerciseId
+                    ? {
+                        ...item,
+                        sets: item.sets.filter((set) => set.id !== setId),
+                    }
+                    : item
+            )
+        )
+    }
+
     function handleSubmit(event) {
+
         event.preventDefault()
 
         if (!workoutName.trim() || workoutExercises.length === 0) {
@@ -212,6 +351,7 @@ function Workouts() {
                         ? {
                             ...workout,
                             name: workoutName,
+                            folderId: selectedFolderId,
                             exercises: workoutExercises,
                             updatedAt: new Date().toISOString(),
                         }
@@ -220,6 +360,7 @@ function Workouts() {
             )
 
             resetForm()
+            setIsBuilderOpen(false)
             return
         }
 
@@ -227,33 +368,32 @@ function Workouts() {
             id: crypto.randomUUID(),
             name: workoutName,
             exercises: workoutExercises,
+            folderId: selectedFolderId,
             createdAt: new Date().toISOString(),
         }
-
-        setWorkouts([newWorkout, ...workouts])
+        folderId: selectedFolderId,
+            setWorkouts([newWorkout, ...workouts])
         resetForm()
+        setIsBuilderOpen(false)
     }
 
     function handleEditWorkout(workout) {
         setEditingWorkoutId(workout.id)
         setWorkoutName(workout.name)
         setWorkoutExercises(workout.exercises || [])
+        setSelectedFolderId(workout.folderId || null)
         setSelectedExercise('')
         setSetDescription('')
         setExerciseSets([])
         setExpandedWorkoutId(null)
-
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth',
-        })
-    }
-
-    function handleCancelEdit() {
-        resetForm()
+        setIsBuilderOpen(true)
     }
 
     function handleDeleteWorkout(id) {
+        const confirmDelete = window.confirm('Tem certeza que deseja excluir este treino?')
+
+        if (!confirmDelete) return
+
         setWorkouts(workouts.filter((workout) => workout.id !== id))
 
         if (editingWorkoutId === id) {
@@ -266,6 +406,7 @@ function Workouts() {
             ...workout,
             id: crypto.randomUUID(),
             name: `${workout.name} - cópia`,
+            folderId: selectedFolderId,
             createdAt: new Date().toISOString(),
             updatedAt: undefined,
         }
@@ -277,526 +418,771 @@ function Workouts() {
         setExpandedWorkoutId(expandedWorkoutId === id ? null : id)
     }
 
+    function handleStartWorkout(workout) {
+        startSession(workout)
+        navigate('/start-workout')
+    }
+
     function getMuscleGroupsFromWorkout(workout) {
         const groups = workout.exercises.map((item) => item.exercise?.muscleGroup)
 
         return [...new Set(groups)].filter(Boolean)
     }
 
+    function getWorkoutExerciseNames(workout) {
+        return workout.exercises
+            .map((item) => `${item.exercise?.name} (${item.exercise?.equipment})`)
+            .join(', ')
+    }
+
     return (
         <>
             <PageHeader
-                title="Construtor de Treinos"
-                description="Monte, edite e organize seus treinos com adição rápida, séries padrão e modo personalizado."
+                title="Treinos"
+                description="Monte treinos, organize exercícios e inicie seus treinos salvos."
                 action={
-                    <Badge variant="purple">
-                        {workouts.length} treinos
-                    </Badge>
+                    <button
+                        type="button"
+                        onClick={openCreateBuilder}
+                        className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-violet-600 px-5 text-sm font-bold text-white shadow-[0_0_18px_rgba(139,92,246,0.35)] transition hover:bg-violet-500 hover:shadow-[0_0_26px_rgba(139,92,246,0.55)]"
+                    >
+                        <Plus size={18} />
+                        Novo treino
+                    </button>
                 }
             />
 
-            <section className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-                <div className="xl:col-span-3 space-y-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <Card className="p-4">
-                            <p className="text-sm text-zinc-500">
-                                Treinos salvos
-                            </p>
+            <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <Card className="p-4">
+                    <p className="text-sm text-zinc-500">Treinos salvas</p>
+                    <h3 className="mt-2 text-3xl font-bold">{workouts.length}</h3>
+                    <p className="mt-2 text-xs text-violet-400">Treinos disponíveis</p>
+                </Card>
 
-                            <h3 className="text-2xl font-bold mt-1">
-                                {workouts.length}
-                            </h3>
-                        </Card>
+                <Card className="p-4">
+                    <p className="text-sm text-zinc-500">Biblioteca</p>
+                    <h3 className="mt-2 text-3xl font-bold">{exercises.length}</h3>
+                    <p className="mt-2 text-xs text-violet-400">Exercícios cadastrados</p>
+                </Card>
 
-                        <Card className="p-4">
-                            <p className="text-sm text-zinc-500">
-                                Exercícios na biblioteca
-                            </p>
+                <Card className="p-4">
+                    <p className="text-sm text-zinc-500">Itens nos Treinos</p>
+                    <h3 className="mt-2 text-3xl font-bold text-violet-400">
+                        {totalExercisesInSavedWorkouts}
+                    </h3>
+                    <p className="mt-2 text-xs text-violet-400">Exercícios usados</p>
+                </Card>
+            </section>
 
-                            <h3 className="text-2xl font-bold mt-1">
-                                {exercises.length}
-                            </h3>
-                        </Card>
+            <div className="mb-5 flex gap-2 overflow-x-auto pb-2">
+                <button
+                    type="button"
+                    onClick={() => setSelectedFolderId(null)}
+                    className={
+                        selectedFolderId === null
+                            ? 'shrink-0 rounded-2xl bg-violet-600 px-4 py-2 text-sm font-bold text-white shadow-[0_0_18px_rgba(139,92,246,0.35)]'
+                            : 'shrink-0 rounded-2xl border border-zinc-800 bg-[#18181b] px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-violet-500/40 hover:text-white'
+                    }
+                >
+                    Todas
+                </button>
 
-                        <Card className="p-4">
-                            <p className="text-sm text-zinc-500">
-                                Itens em treinos
-                            </p>
+                {folders.map((folder) => {
+                    const total = workouts.filter((workout) => workout.folderId === folder.id).length
 
-                            <h3 className="text-2xl font-bold mt-1 text-violet-400">
-                                {totalExercisesInSavedWorkouts}
-                            </h3>
-                        </Card>
-                    </div>
+                    return (
+                        <button
+                            key={folder.id}
+                            type="button"
+                            onClick={() => setSelectedFolderId(folder.id)}
+                            className={
+                                selectedFolderId === folder.id
+                                    ? 'shrink-0 rounded-2xl bg-violet-600 px-4 py-2 text-sm font-bold text-white shadow-[0_0_18px_rgba(139,92,246,0.35)]'
+                                    : 'shrink-0 rounded-2xl border border-zinc-800 bg-[#18181b] px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-violet-500/40 hover:text-white'
+                            }
+                        >
+                            {folder.name}
+                            <span className="ml-2 text-xs opacity-70">
+                                {total}
+                            </span>
+                        </button>
+                    )
+                })}
+            </div>
 
+            <section className="mt-6 grid grid-cols-1 xl:grid-cols-3 gap-6">
+                <div className="xl:col-span-2">
                     <Card>
-                        <form onSubmit={handleSubmit}>
-                            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                                <div>
-                                    <h2 className="text-xl font-bold">
-                                        {editingWorkoutId ? 'Editar treino' : 'Novo treino'}
-                                    </h2>
-
-                                    <p className="text-sm text-zinc-400 mt-1">
-                                        {editingWorkoutId
-                                            ? 'Atualize o treino selecionado e salve as alterações.'
-                                            : 'Crie um treino usando a biblioteca de exercícios.'}
-                                    </p>
-                                </div>
-
-                                <Badge variant="purple">
-                                    {editingWorkoutId ? 'Editando' : 'Auto save'}
-                                </Badge>
-                            </div>
-
-                            <div className="space-y-5">
-                                <Input
-                                    label="Nome do treino"
-                                    type="text"
-                                    placeholder="Ex: Treino A - Peito e tríceps"
-                                    value={workoutName}
-                                    onChange={(event) => setWorkoutName(event.target.value)}
-                                />
-
-                                <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-4">
-                                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                                        <div>
-                                            <h3 className="font-bold">
-                                                Adição rápida
-                                            </h3>
-
-                                            <p className="text-sm text-zinc-500 mt-1">
-                                                Pesquise e clique para adicionar com o padrão 12 / 10-12 / 5-8 / 5-8.
-                                            </p>
-                                        </div>
-
-                                        <Button
-                                            type="button"
-                                            variant="secondary"
-                                            onClick={() => setIsQuickAddOpen(!isQuickAddOpen)}
-                                            className="py-2 text-sm"
-                                        >
-                                            {isQuickAddOpen ? 'Minimizar' : 'Abrir'}
-                                        </Button>
-                                    </div>
-
-                                    {isQuickAddOpen && (
-                                        <div className="mt-4">
-                                            <Input
-                                                type="text"
-                                                placeholder="Pesquisar por nome, grupo ou equipamento..."
-                                                value={quickSearch}
-                                                onChange={(event) => setQuickSearch(event.target.value)}
-                                            />
-
-                                            <div className="mt-4 max-h-64 overflow-y-auto pr-2">
-                                                {exercises.length === 0 && (
-                                                    <EmptyState
-                                                        title="Nenhum exercício cadastrado"
-                                                        description="Cadastre exercícios antes de montar um treino."
-                                                    />
-                                                )}
-
-                                                {exercises.length > 0 && filteredQuickExercises.length === 0 && (
-                                                    <EmptyState
-                                                        title="Nenhum exercício encontrado"
-                                                        description="Tente buscar por outro nome, grupo ou equipamento."
-                                                    />
-                                                )}
-
-                                                {filteredQuickExercises.length > 0 && (
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                                                        {filteredQuickExercises.map((exercise) => {
-                                                            const alreadyAdded = isExerciseAlreadyAdded(exercise.id)
-
-                                                            return (
-                                                                <button
-                                                                    key={exercise.id}
-                                                                    type="button"
-                                                                    onClick={() => handleQuickAddExercise(exercise.id)}
-                                                                    className={
-                                                                        alreadyAdded
-                                                                            ? 'rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-left transition hover:bg-emerald-500/15'
-                                                                            : 'rounded-2xl border border-violet-500/20 bg-violet-600/90 p-3 text-left text-white transition hover:-translate-y-0.5 hover:bg-violet-500 hover:shadow-lg hover:shadow-violet-950/40 active:scale-[0.98]'
-                                                                    }
-                                                                >
-                                                                    <div className="flex items-start justify-between gap-3">
-                                                                        <div className="min-w-0">
-                                                                            <p
-                                                                                className={
-                                                                                    alreadyAdded
-                                                                                        ? 'font-bold text-emerald-400 truncate'
-                                                                                        : 'font-bold text-white truncate'
-                                                                                }
-                                                                            >
-                                                                                {alreadyAdded ? '✓ ' : '+ '}
-                                                                                {exercise.name}
-                                                                            </p>
-
-                                                                            <p
-                                                                                className={
-                                                                                    alreadyAdded
-                                                                                        ? 'text-xs text-emerald-500/80 mt-1'
-                                                                                        : 'text-xs text-violet-100/80 mt-1'
-                                                                                }
-                                                                            >
-                                                                                {exercise.muscleGroup} • {exercise.equipment}
-                                                                            </p>
-                                                                        </div>
-                                                                    </div>
-                                                                </button>
-                                                            )
-                                                        })}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-4">
-                                    <h3 className="font-bold">
-                                        Modo personalizado
-                                    </h3>
-
-                                    <p className="text-sm text-zinc-500 mt-1">
-                                        Use quando quiser definir séries diferentes antes de adicionar o exercício.
-                                    </p>
-
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-                                        <Select
-                                            label="Exercício"
-                                            value={selectedExercise}
-                                            onChange={(event) => setSelectedExercise(event.target.value)}
-                                        >
-                                            <option value="">Selecione</option>
-
-                                            {exercises.map((exercise) => (
-                                                <option key={exercise.id} value={exercise.id}>
-                                                    {exercise.name}
-                                                </option>
-                                            ))}
-                                        </Select>
-
-                                        <Input
-                                            label="Descrição da série"
-                                            type="text"
-                                            placeholder="Ex: 50% da carga - 12 reps"
-                                            value={setDescription}
-                                            onChange={(event) => setSetDescription(event.target.value)}
-                                        />
-                                    </div>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
-                                        <Button
-                                            type="button"
-                                            variant="secondary"
-                                            onClick={handleAddSet}
-                                            className="w-full"
-                                        >
-                                            Adicionar série
-                                        </Button>
-
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            onClick={handleDefaultSets}
-                                            className="w-full"
-                                        >
-                                            Usar padrão
-                                        </Button>
-
-                                        <Button
-                                            type="button"
-                                            onClick={handleAddExercise}
-                                            className="w-full"
-                                        >
-                                            Adicionar ao treino
-                                        </Button>
-                                    </div>
-
-                                    {exerciseSets.length > 0 && (
-                                        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                            {exerciseSets.map((set, index) => (
-                                                <div
-                                                    key={set.id}
-                                                    className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900 p-3"
-                                                >
-                                                    <div>
-                                                        <p className="text-sm font-medium">
-                                                            Série {index + 1}
-                                                        </p>
-
-                                                        <p className="text-xs text-zinc-500">
-                                                            {set.description}
-                                                        </p>
-                                                    </div>
-
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleRemoveSet(set.id)}
-                                                        className="h-8 w-8 rounded-lg bg-red-500/10 text-red-400 transition hover:bg-red-500 hover:text-white"
-                                                    >
-                                                        ×
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="rounded-2xl border border-zinc-800 bg-gradient-to-br from-zinc-950 to-zinc-900/80 p-5">
-                                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                                        <div>
-                                            <h3 className="font-bold">
-                                                Resumo do treino atual
-                                            </h3>
-
-                                            <p className="text-sm text-zinc-500 mt-1">
-                                                {workoutExercises.length} exercícios adicionados
-                                            </p>
-
-                                            {currentMuscleGroups.length > 0 && (
-                                                <div className="mt-3 flex flex-wrap gap-2">
-                                                    {currentMuscleGroups.map((group) => (
-                                                        <Badge key={group} variant="purple">
-                                                            {group}
-                                                        </Badge>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <Badge variant="purple">
-                                            {workoutExercises.length}
-                                        </Badge>
-                                    </div>
-
-                                    {workoutExercises.length === 0 && (
-                                        <div className="mt-4">
-                                            <EmptyState
-                                                title="Nenhum exercício no treino"
-                                                description="Use a adição rápida ou o modo personalizado para montar o treino."
-                                            />
-                                        </div>
-                                    )}
-
-                                    {workoutExercises.length > 0 && (
-                                        <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            {workoutExercises.map((item, index) => (
-                                                <div
-                                                    key={item.id}
-                                                    className="group rounded-2xl border border-zinc-800 bg-zinc-900/90 p-4 transition hover:border-violet-500/40 hover:bg-zinc-900"
-                                                >
-                                                    <div className="flex items-start justify-between gap-3">
-                                                        <div className="min-w-0">
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-500/10 text-xs font-bold text-violet-400 border border-violet-500/20">
-                                                                    {index + 1}
-                                                                </span>
-
-                                                                <p className="font-bold text-white truncate">
-                                                                    {item.exercise.name}
-                                                                </p>
-                                                            </div>
-
-                                                            <div className="mt-3 flex flex-wrap gap-2">
-                                                                <Badge>
-                                                                    {item.exercise.muscleGroup}
-                                                                </Badge>
-
-                                                                <Badge variant="purple">
-                                                                    {item.sets.length} séries
-                                                                </Badge>
-                                                            </div>
-                                                        </div>
-
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleRemoveExercise(item.id)}
-                                                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-500/10 text-red-400 transition hover:bg-red-500 hover:text-white"
-                                                        >
-                                                            ×
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <Button type="submit" className="w-full py-4 text-lg">
-                                        {editingWorkoutId ? 'Salvar alterações' : 'Salvar treino completo'}
-                                    </Button>
-
-                                    {editingWorkoutId && (
-                                        <Button
-                                            type="button"
-                                            variant="secondary"
-                                            onClick={handleCancelEdit}
-                                            className="w-full py-4 text-lg"
-                                        >
-                                            Cancelar edição
-                                        </Button>
-                                    )}
-                                </div>
-                            </div>
-                        </form>
-                    </Card>
-                </div>
-
-                <div className="xl:col-span-1 space-y-6">
-                    <Card>
-                        <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-center justify-between gap-4">
                             <div>
-                                <h2 className="text-xl font-bold">
-                                    Treinos salvos
-                                </h2>
-
-                                <p className="text-xs text-zinc-500 mt-1">
-                                    Total: {workouts.length}
-                                </p>
+                                <div className="flex items-center gap-2 text-zinc-400">
+                                    <ChevronDown size={18} />
+                                    <p className="text-sm">
+                                        Os meus treinos ({workouts.length})
+                                    </p>
+                                </div>
                             </div>
-
-                            <Badge variant="purple">
-                                {workouts.length}
-                            </Badge>
                         </div>
 
-                        <div className="mt-5 max-h-[760px] overflow-y-auto pr-2 space-y-3">
+                        <div className="mt-5 space-y-4">
                             {workouts.length === 0 && (
                                 <EmptyState
                                     title="Nenhum treino cadastrado"
-                                    description="Monte seu primeiro treino usando os exercícios cadastrados."
+                                    description="Crie sueu primeiro treino para começar."
+                                    action={
+                                        <Button onClick={openCreateBuilder}>
+                                            Novo treino
+                                        </Button>
+                                    }
                                 />
                             )}
 
-                            {workouts.map((workout) => {
-                                const isExpanded = expandedWorkoutId === workout.id
-                                const muscleGroups = getMuscleGroupsFromWorkout(workout)
-                                const isSelected = selectedWorkoutView === workout.id
+                            {workouts
+                                .filter(w => selectedFolderId ? w.folderId === selectedFolderId : true)
+                                .map((workout) => {
+                                    const isExpanded = expandedWorkoutId === workout.id
+                                    const muscleGroups = getMuscleGroupsFromWorkout(workout)
 
-                                return (
-                                    <div
-                                        key={workout.id}
-                                        className={
-                                            isSelected
-                                                ? 'overflow-hidden rounded-2xl border border-violet-500/40 bg-violet-500/10 transition'
-                                                : 'overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950/80 transition hover:border-violet-500/30'
-                                        }
-                                    >
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                handleToggleWorkout(workout.id)
-                                                setSelectedWorkoutView(isSelected ? null : workout.id)
-                                            }}
-                                            className="w-full px-4 py-3 text-left transition hover:bg-zinc-900"
+                                    return (
+                                        <div
+                                            key={workout.id}
+                                            className="overflow-hidden rounded-2xl border border-zinc-800 bg-[#18181b] transition hover:border-violet-500/30 hover:bg-[#1f1f23]"
                                         >
-                                            <div className="flex items-start justify-between gap-4">
-                                                <div>
-                                                    <h3 className="font-bold">
-                                                        {workout.name}
-                                                    </h3>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleToggleWorkout(workout.id)}
+                                                className="w-full p-5 text-left"
+                                            >
+                                                <div className="flex items-start justify-between gap-4">
+                                                    <div className="min-w-0">
+                                                        <h3 className="text-lg font-bold text-white">
+                                                            {workout.name}
+                                                        </h3>
 
-                                                    <p className="text-sm text-zinc-500 mt-1">
-                                                        {workout.exercises.length} exercícios
-                                                    </p>
+                                                        <p className="mt-2 truncate text-sm text-zinc-500">
+                                                            {getWorkoutExerciseNames(workout)}
+                                                        </p>
 
-                                                    {muscleGroups.length > 0 && (
-                                                        <div className="mt-2 flex flex-wrap gap-1.5">
-                                                            {muscleGroups.slice(0, 3).map((group) => (
-                                                                <span
-                                                                    key={group}
-                                                                    className="rounded-full bg-violet-500/10 px-2 py-0.5 text-[11px] text-violet-400"
-                                                                >
-                                                                    {group}
-                                                                </span>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                <span className="text-xl text-zinc-500">
-                                                    {isExpanded ? '−' : '+'}
-                                                </span>
-                                            </div>
-                                        </button>
-
-                                        {isExpanded && (
-                                            <div className="border-t border-zinc-800 p-4 space-y-3">
-                                                {workout.exercises.map((item, index) => (
-                                                    <div
-                                                        key={item.id}
-                                                        className="rounded-xl border border-zinc-800 bg-zinc-900 p-3"
-                                                    >
-                                                        <div className="flex items-start gap-2">
-                                                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-violet-500/10 text-xs font-bold text-violet-400">
-                                                                {index + 1}
-                                                            </span>
-
-                                                            <div>
-                                                                <p className="font-medium">
-                                                                    {item.exercise.name}
-                                                                </p>
-
-                                                                <p className="text-xs text-zinc-500 mt-1">
-                                                                    {item.exercise.muscleGroup} • {item.exercise.equipment}
-                                                                </p>
-
-                                                                <div className="mt-2 space-y-1">
-                                                                    {item.sets.map((set, setIndex) => (
-                                                                        <p
-                                                                            key={set.id}
-                                                                            className="text-xs text-zinc-400"
-                                                                        >
-                                                                            Série {setIndex + 1}: {set.description}
-                                                                        </p>
-                                                                    ))}
-                                                                </div>
+                                                        {muscleGroups.length > 0 && (
+                                                            <div className="mt-3 flex flex-wrap gap-2">
+                                                                {muscleGroups.slice(0, 4).map((group) => (
+                                                                    <Badge key={group} variant="purple">
+                                                                        {group}
+                                                                    </Badge>
+                                                                ))}
                                                             </div>
-                                                        </div>
+                                                        )}
                                                     </div>
-                                                ))}
 
-                                                <div className="grid grid-cols-1 gap-2">
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        onClick={() => handleEditWorkout(workout)}
-                                                        className="w-full"
-                                                    >
-                                                        Editar treino
-                                                    </Button>
-
-                                                    <Button
-                                                        type="button"
-                                                        variant="secondary"
-                                                        onClick={() => handleDuplicateWorkout(workout)}
-                                                        className="w-full"
-                                                    >
-                                                        Duplicar treino
-                                                    </Button>
-
-                                                    <Button
-                                                        type="button"
-                                                        variant="danger"
-                                                        onClick={() => handleDeleteWorkout(workout.id)}
-                                                        className="w-full"
-                                                    >
-                                                        Excluir treino
-                                                    </Button>
+                                                    <MoreHorizontal size={22} className="text-zinc-400" />
                                                 </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                )
-                            })}
+                                            </button>
+
+                                            {isExpanded && (
+                                                <div className="border-t border-zinc-800 p-4">
+                                                    <div className="space-y-3">
+                                                        {workout.exercises.map((item, index) => (
+                                                            <div
+                                                                key={item.id}
+                                                                className="flex items-center gap-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-3"
+                                                            >
+                                                                <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-zinc-700 bg-white">
+                                                                    {item.exercise.mediaUrl ? (
+                                                                        <img
+                                                                            src={item.exercise.mediaUrl}
+                                                                            alt={item.exercise.name}
+                                                                            className="h-full w-full object-cover"
+                                                                        />
+                                                                    ) : (
+                                                                        <Dumbbell size={26} className="text-zinc-900" />
+                                                                    )}
+                                                                </div>
+
+                                                                <div className="min-w-0 flex-1">
+                                                                    <p className="font-bold truncate">
+                                                                        {item.sets.length} séries {item.exercise.name}
+                                                                    </p>
+
+                                                                    <p className="text-sm text-zinc-500">
+                                                                        {item.exercise.muscleGroup} • {item.exercise.equipment}
+                                                                    </p>
+                                                                </div>
+
+                                                                <span className="text-sm text-zinc-500">
+                                                                    #{index + 1}
+                                                                </span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+
+                                                    <div className="mt-4 grid grid-cols-1 sm:grid-cols-4 gap-3">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleStartWorkout(workout)}
+                                                            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-violet-600 text-sm font-bold text-white transition hover:bg-violet-500"
+                                                        >
+                                                            <Dumbbell size={17} />
+                                                            Iniciar
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleEditWorkout(workout)}
+                                                            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-violet-500/30 bg-violet-500/10 text-sm font-bold text-violet-300 transition hover:bg-violet-500/20"
+                                                        >
+                                                            <Edit3 size={17} />
+                                                            Editar
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleDuplicateWorkout(workout)}
+                                                            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-zinc-700 bg-zinc-900 text-sm font-bold text-white transition hover:bg-zinc-800"
+                                                        >
+                                                            <Copy size={17} />
+                                                            Duplicar
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleDeleteWorkout(workout.id)}
+                                                            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 text-sm font-bold text-red-300 transition hover:bg-red-500/20"
+                                                        >
+                                                            <Trash2 size={17} />
+                                                            Excluir
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )
+                                })}
+                        </div>
+                    </Card>
+                </div>
+
+                <div className="space-y-6">
+                    <Card className="p-0 overflow-hidden">
+
+                        {/* NOVO TREINO */}
+                        <button
+                            type="button"
+                            onClick={openCreateBuilder}
+                            className="group flex w-full items-center justify-between px-5 py-4 text-left transition hover:bg-[#1f1f23]"
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black text-white transition group-hover:bg-violet-600 group-hover:shadow-[0_0_16px_rgba(139,92,246,0.4)]">
+                                    <ClipboardList size={22} />
+                                </div>
+
+                                <p className="font-bold text-white transition group-hover:text-violet-300">
+                                    Novo treino
+                                </p>
+                            </div>
+
+                            <ChevronDown
+                                className="text-zinc-500 transition group-hover:text-violet-400 group-hover:-translate-x-1"
+                                size={22}
+                            />
+                        </button>
+
+                        {/* DIVISOR */}
+                        <div className="border-t border-zinc-800" />
+
+                        {/* NOVA PASTA */}
+                        <button
+                            type="button"
+                            onClick={() => setIsFolderModalOpen(true)}
+                            className="group flex w-full items-center justify-between px-5 py-4 text-left transition hover:bg-[#1f1f23]"
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black text-white transition group-hover:bg-violet-600 group-hover:shadow-[0_0_16px_rgba(139,92,246,0.4)]">
+                                    <Plus size={22} />
+                                </div>
+
+                                <p className="font-bold text-white transition group-hover:text-violet-300">
+                                    Nova pasta
+                                </p>
+                            </div>
+
+                            <ChevronDown
+                                className="text-zinc-500 transition group-hover:text-violet-400 group-hover:-translate-x-1"
+                                size={22}
+                            />
+                        </button>
+
+                    </Card>
+
+                    <Card>
+                        <h2 className="text-xl font-bold">
+                            Resumo
+                        </h2>
+
+                        <div className="mt-5 grid grid-cols-2 gap-3">
+                            <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+                                <p className="text-xs text-zinc-500">Treinos</p>
+                                <p className="mt-1 text-2xl font-bold text-violet-400">
+                                    {workouts.length}
+                                </p>
+                            </div>
+
+                            <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+                                <p className="text-xs text-zinc-500">Exercícios</p>
+                                <p className="mt-1 text-2xl font-bold">
+                                    {totalExercisesInSavedWorkouts}
+                                </p>
+                            </div>
                         </div>
                     </Card>
                 </div>
             </section>
+            {isFolderModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+                    <div className="w-full max-w-sm rounded-2xl bg-[#121212] p-6 border border-zinc-800">
+
+                        <h2 className="text-lg font-bold mb-4">
+                            Nova pasta
+                        </h2>
+
+                        <Input
+                            placeholder="Nome da pasta"
+                            value={folderName}
+                            onChange={(e) => setFolderName(e.target.value)}
+                        />
+
+                        <div className="mt-4 flex gap-2">
+                            <Button onClick={handleCreateFolder} className="w-full">
+                                Criar
+                            </Button>
+
+                            <Button
+                                variant="secondary"
+                                onClick={() => setIsFolderModalOpen(false)}
+                                className="w-full"
+                            >
+                                Cancelar
+                            </Button>
+                        </div>
+
+                    </div>
+                </div>
+            )}
+
+            {isBuilderOpen && (
+                <div className="fixed inset-0 z-50 overflow-y-auto bg-black">
+                    <div className="mx-auto max-w-[1180px] px-4 py-6">
+                        <form onSubmit={handleSubmit}>
+                            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="flex items-center gap-4">
+                                    <button
+                                        type="button"
+                                        onClick={closeBuilder}
+                                        className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900 text-zinc-400 transition hover:bg-zinc-800 hover:text-white"
+                                    >
+                                        <ArrowLeft size={22} />
+                                    </button>
+
+                                    <h1 className="text-3xl font-black">
+                                        {editingWorkoutId ? 'Editar Treino' : 'Criar Treino'}
+                                    </h1>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-zinc-300 px-5 text-sm font-bold text-zinc-950 transition hover:bg-white"
+                                >
+                                    <Save size={18} />
+                                    Salvar Treino
+                                </button>
+                            </div>
+
+                            <section className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+                                <div className="xl:col-span-3 space-y-6">
+                                    <div>
+                                        <label className="text-sm font-bold">
+                                            Título do Treino
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            placeholder="Título do treino"
+                                            value={workoutName}
+                                            onChange={(event) => setWorkoutName(event.target.value)}
+                                            className="mt-2 h-12 w-full rounded-xl border border-zinc-700 bg-[#18181b] px-4 text-white outline-none transition placeholder:text-zinc-500 focus:border-violet-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-sm font-bold">
+                                            Pasta
+                                        </label>
+
+                                        <select
+                                            value={selectedFolderId || ''}
+                                            onChange={(event) => setSelectedFolderId(event.target.value || null)}
+                                            className="mt-2 h-12 w-full rounded-xl border border-zinc-700 bg-[#18181b] px-4 text-white outline-none transition focus:border-violet-500"
+                                        >
+                                            <option value="">Sem pasta</option>
+
+                                            {folders.map((folder) => (
+                                                <option key={folder.id} value={folder.id}>
+                                                    {folder.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {workoutExercises.length === 0 && (
+                                        <Card className="flex min-h-[290px] items-center justify-center">
+                                            <div className="text-center">
+                                                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl text-zinc-400">
+                                                    <Dumbbell size={42} />
+                                                </div>
+
+                                                <h2 className="mt-4 text-xl font-bold">
+                                                    Nenhum exercício
+                                                </h2>
+
+                                                <p className="mx-auto mt-2 max-w-sm text-sm text-zinc-500">
+                                                    Até agora, não foi adicionado nenhum exercício para esse treino.
+                                                </p>
+                                            </div>
+                                        </Card>
+                                    )}
+
+                                    {workoutExercises.map((item, index) => (
+                                        <Card key={item.id}>
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-xl text-zinc-500">
+                                                    ⋮⋮
+                                                </span>
+
+                                                <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-zinc-700 bg-white">
+                                                    {item.exercise.mediaUrl ? (
+                                                        <img
+                                                            src={item.exercise.mediaUrl}
+                                                            alt={item.exercise.name}
+                                                            className="h-full w-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <Dumbbell size={26} className="text-zinc-900" />
+                                                    )}
+                                                </div>
+
+                                                <div className="min-w-0 flex-1">
+                                                    <h3 className="truncate text-lg font-bold">
+                                                        {item.exercise.name}
+                                                    </h3>
+
+                                                    <p className="text-xs text-zinc-500">
+                                                        {item.exercise.muscleGroup} • {item.exercise.equipment}
+                                                    </p>
+                                                </div>
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveExercise(item.id)}
+                                                    className="flex h-10 w-10 items-center justify-center rounded-xl text-zinc-400 transition hover:bg-red-500/10 hover:text-red-400"
+                                                >
+                                                    <X size={22} />
+                                                </button>
+                                            </div>
+
+                                            <div className="mt-5">
+                                                <label className="text-sm font-bold">
+                                                    Nota
+                                                </label>
+
+                                                <textarea
+                                                    placeholder="Adicionar nota"
+                                                    value={item.note || ''}
+                                                    onChange={(event) =>
+                                                        handleUpdateExerciseNote(item.id, event.target.value)
+                                                    }
+                                                    className="mt-2 min-h-[70px] w-full rounded-xl border border-zinc-700 bg-[#18181b] px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-500 focus:border-violet-500"
+                                                />
+                                            </div>
+
+                                            <div className="mt-5 overflow-x-auto">
+                                                <table className="w-full min-w-[520px] border-separate border-spacing-y-2">
+                                                    <thead>
+                                                        <tr className="text-left text-xs font-bold uppercase text-zinc-400">
+                                                            <th className="px-3">Série</th>
+                                                            <th className="px-3">Reps</th>
+                                                            <th className="px-3">Meta</th>
+                                                            <th className="px-3"></th>
+                                                        </tr>
+                                                    </thead>
+
+                                                    <tbody>
+                                                        {item.sets.map((set, setIndex) => (
+                                                            <tr key={set.id} className="bg-zinc-950">
+                                                                <td className="rounded-l-xl px-3 py-3">
+                                                                    <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-800 bg-[#18181b] font-bold">
+                                                                        {setIndex + 1}
+                                                                    </span>
+                                                                </td>
+
+                                                                <td className="px-3 py-3">
+                                                                    <div className="h-10 rounded-xl border border-zinc-800 bg-[#18181b]" />
+                                                                </td>
+
+                                                                <td className="px-3 py-3">
+                                                                    <div className="h-10 rounded-xl border border-zinc-800 bg-[#18181b]" />
+                                                                </td>
+
+                                                                <td className="px-3 py-3 text-sm text-zinc-400">
+                                                                    {set.description}
+                                                                </td>
+
+                                                                <td className="rounded-r-xl px-3 py-3 text-right">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() =>
+                                                                            handleRemoveSetFromWorkoutExercise(item.id, set.id)
+                                                                        }
+                                                                        className="text-red-400 hover:text-red-300"
+                                                                    >
+                                                                        <Trash2 size={16} />
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => handleAddSetToWorkoutExercise(item.id)}
+                                                className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-zinc-800 text-sm font-bold transition hover:bg-zinc-700"
+                                            >
+                                                <Plus size={18} />
+                                                Adicionar Série
+                                            </button>
+                                        </Card>
+                                    ))}
+                                </div>
+
+                                <div className="xl:col-span-2 space-y-6">
+                                    <Card>
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <h2 className="text-xl font-bold">
+                                                    Resumo
+                                                </h2>
+
+                                                <div className="mt-4 flex gap-8">
+                                                    <div>
+                                                        <p className="text-xs text-zinc-500">Exercícios</p>
+                                                        <p className="mt-1 text-xl font-bold text-violet-400">
+                                                            {workoutExercises.length}
+                                                        </p>
+                                                    </div>
+
+                                                    <div>
+                                                        <p className="text-xs text-zinc-500">Total de séries</p>
+                                                        <p className="mt-1 text-xl font-bold">
+                                                            {totalSetsInCurrentWorkout}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <Dumbbell size={48} className="text-zinc-600" />
+                                        </div>
+                                    </Card>
+
+                                    <Card>
+                                        <div className="mb-5 flex items-center justify-between">
+                                            <h2 className="text-xl font-bold">
+                                                Biblioteca
+                                            </h2>
+
+                                            <button
+                                                type="button"
+                                                className="inline-flex items-center gap-2 text-sm font-bold text-violet-400"
+                                            >
+                                                <Plus size={18} />
+                                                Exercício personalizado
+                                            </button>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            <Select
+                                                value={quickEquipmentFilter}
+                                                onChange={(event) => setQuickEquipmentFilter(event.target.value)}
+                                            >
+                                                <option value="">Todos os equipamentos</option>
+
+                                                {equipmentList.map((item) => (
+                                                    <option key={item} value={item}>
+                                                        {item}
+                                                    </option>
+                                                ))}
+                                            </Select>
+
+                                            <Select
+                                                value={quickGroupFilter}
+                                                onChange={(event) => setQuickGroupFilter(event.target.value)}
+                                            >
+                                                <option value="">Todos os músculos</option>
+
+                                                {muscleGroups.map((group) => (
+                                                    <option key={group} value={group}>
+                                                        {group}
+                                                    </option>
+                                                ))}
+                                            </Select>
+
+                                            <div className="flex h-12 items-center gap-3 rounded-xl bg-[#2a2a2c] px-4 text-zinc-400">
+                                                <Search size={20} />
+
+                                                <input
+                                                    type="text"
+                                                    placeholder="Procurar exercícios"
+                                                    value={quickSearch}
+                                                    onChange={(event) => setQuickSearch(event.target.value)}
+                                                    className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-400"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-5 max-h-[520px] overflow-y-auto pr-2">
+                                            <p className="mb-3 text-sm text-zinc-500">
+                                                Todos os exercícios
+                                            </p>
+
+                                            {filteredQuickExercises.map((exercise) => {
+                                                const alreadyAdded = isExerciseAlreadyAdded(exercise.id)
+
+                                                return (
+                                                    <button
+                                                        key={exercise.id}
+                                                        type="button"
+                                                        onClick={() => handleQuickAddExercise(exercise.id)}
+                                                        className="flex w-full items-center gap-3 rounded-2xl p-3 text-left transition hover:bg-zinc-900"
+                                                    >
+                                                        <span
+                                                            className={
+                                                                alreadyAdded
+                                                                    ? 'flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white'
+                                                                    : 'flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-violet-600 text-white'
+                                                            }
+                                                        >
+                                                            {alreadyAdded ? '✓' : '+'}
+                                                        </span>
+
+                                                        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-zinc-700 bg-white">
+                                                            {exercise.mediaUrl ? (
+                                                                <img
+                                                                    src={exercise.mediaUrl}
+                                                                    alt={exercise.name}
+                                                                    className="h-full w-full object-cover"
+                                                                    loading="lazy"
+                                                                />
+                                                            ) : (
+                                                                <Dumbbell size={24} className="text-zinc-900" />
+                                                            )}
+                                                        </div>
+
+                                                        <div className="min-w-0">
+                                                            <p className="truncate font-bold">
+                                                                {exercise.name}
+                                                            </p>
+
+                                                            <p className="text-sm text-zinc-500">
+                                                                {exercise.muscleGroup}
+                                                            </p>
+                                                        </div>
+                                                    </button>
+                                                )
+                                            })}
+                                        </div>
+
+                                        <div className="mt-5 rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+                                            <h3 className="font-bold">
+                                                Modo personalizado
+                                            </h3>
+
+                                            <div className="mt-4 space-y-3">
+                                                <Select
+                                                    value={selectedExercise}
+                                                    onChange={(event) => setSelectedExercise(event.target.value)}
+                                                >
+                                                    <option value="">Selecione um exercício</option>
+
+                                                    {exercises.map((exercise) => (
+                                                        <option key={exercise.id} value={exercise.id}>
+                                                            {exercise.name}
+                                                        </option>
+                                                    ))}
+                                                </Select>
+
+                                                <Input
+                                                    placeholder="Ex: 50% da carga - 12 reps"
+                                                    value={setDescription}
+                                                    onChange={(event) => setSetDescription(event.target.value)}
+                                                />
+
+                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                                    <Button
+                                                        type="button"
+                                                        variant="secondary"
+                                                        onClick={handleAddSet}
+                                                        className="w-full"
+                                                    >
+                                                        Série
+                                                    </Button>
+
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        onClick={handleDefaultSets}
+                                                        className="w-full"
+                                                    >
+                                                        Padrão
+                                                    </Button>
+
+                                                    <Button
+                                                        type="button"
+                                                        onClick={handleAddExercise}
+                                                        className="w-full"
+                                                    >
+                                                        Adicionar
+                                                    </Button>
+                                                </div>
+
+                                                {exerciseSets.length > 0 && (
+                                                    <div className="space-y-2">
+                                                        {exerciseSets.map((set, index) => (
+                                                            <div
+                                                                key={set.id}
+                                                                className="flex items-center justify-between rounded-xl bg-zinc-900 p-3"
+                                                            >
+                                                                <p className="text-sm">
+                                                                    Série {index + 1}: {set.description}
+                                                                </p>
+
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleRemoveSet(set.id)}
+                                                                    className="text-red-400"
+                                                                >
+                                                                    <X size={16} />
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </Card>
+                                </div>
+                            </section>
+                        </form>
+                    </div>
+                </div>
+            )}
         </>
     )
 }
