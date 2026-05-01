@@ -43,6 +43,12 @@ import {
 function formatShortDate(dateString) {
   if (!dateString) return 'Sem data'
 
+  if (dateString.includes('-')) {
+    const [year, month, day] = dateString.split('-')
+
+    return `${day}/${month}/${year.slice(2)}`
+  }
+
   return new Date(dateString).toLocaleDateString('pt-BR', {
     day: '2-digit',
     month: '2-digit',
@@ -120,6 +126,18 @@ function Profile() {
   const firstWeight = bodyWeight[0]?.weight || null
   const lastWeightRecord = bodyWeight.at(-1) || null
 
+  const bodyWeightChartData = useMemo(() => {
+    const groupedByDate = new Map()
+
+    bodyWeight.forEach((item) => {
+      groupedByDate.set(item.date, item)
+    })
+
+    return Array.from(groupedByDate.values()).sort(
+      (a, b) => new Date(a.date) - new Date(b.date)
+    )
+  }, [bodyWeight])
+
   const weightDifference =
     currentWeight && firstWeight
       ? (currentWeight - firstWeight).toFixed(1)
@@ -146,7 +164,25 @@ function Profile() {
       date: dateInput,
     }
 
-    const updatedWeights = [...bodyWeight, newRecord].sort(
+    const alreadyHasDate = bodyWeight.some((item) => item.date === dateInput)
+
+    let updatedWeights
+
+    if (alreadyHasDate) {
+      const confirmReplace = window.confirm(
+        'Já existe um peso registrado nessa data. Deseja substituir pelo novo valor?'
+      )
+
+      if (!confirmReplace) return
+
+      updatedWeights = bodyWeight.map((item) =>
+        item.date === dateInput ? newRecord : item
+      )
+    } else {
+      updatedWeights = [...bodyWeight, newRecord]
+    }
+
+    updatedWeights = updatedWeights.sort(
       (a, b) => new Date(a.date) - new Date(b.date)
     )
 
@@ -353,7 +389,7 @@ function Profile() {
               Treinos
             </p>
 
-                        <Dumbbell size={20} className="text-violet-400" />
+            <Dumbbell size={20} className="text-violet-400" />
           </div>
 
           <h3 className="mt-2 text-3xl font-black">
@@ -409,20 +445,32 @@ function Profile() {
                 />
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={bodyWeight}>
+                  <LineChart data={bodyWeightChartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                    <XAxis dataKey="date" stroke="#71717a" />
+                    <XAxis
+                      dataKey="date"
+                      stroke="#71717a"
+                      tickFormatter={formatShortDate}
+                    />
                     <YAxis stroke="#71717a" />
                     <Tooltip
+                      labelFormatter={(value) => `Data: ${formatShortDate(value)}`}
+                      formatter={(value) => [`${value}kg`, 'Peso']}
                       contentStyle={{
                         background: '#09090b',
                         border: '1px solid #27272a',
                         borderRadius: '12px',
+                        color: '#fff',
+                      }}
+                      labelStyle={{
+                        color: '#a78bfa',
+                        fontWeight: '700',
                       }}
                     />
                     <Line
                       type="monotone"
                       dataKey="weight"
+                      name="Peso"
                       stroke="#8b5cf6"
                       strokeWidth={3}
                       dot
