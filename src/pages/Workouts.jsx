@@ -429,6 +429,34 @@ function Workouts() {
         return [...new Set(groups)].filter(Boolean)
     }
 
+    function handleDeleteFolder(folderId) {
+        const folder = folders.find((item) => item.id === folderId)
+
+        const confirmDelete = window.confirm(
+            `Deseja excluir a pasta "${folder?.name}"? Os treinos dentro dela não serão apagados, apenas ficarão sem pasta.`
+        )
+
+        if (!confirmDelete) return
+
+        const updatedFolders = folders.filter((item) => item.id !== folderId)
+
+        const updatedWorkouts = workouts.map((workout) =>
+            workout.folderId === folderId
+                ? {
+                    ...workout,
+                    folderId: null,
+                }
+                : workout
+        )
+
+        setFolders(updatedFolders)
+        setWorkouts(updatedWorkouts)
+
+        if (selectedFolderId === folderId) {
+            setSelectedFolderId(null)
+        }
+    }
+
     function getWorkoutExerciseNames(workout) {
         return workout.exercises
             .map((item) => `${item.exercise?.name} (${item.exercise?.equipment})`)
@@ -454,7 +482,7 @@ function Workouts() {
 
             <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <Card className="p-4">
-                    <p className="text-sm text-zinc-500">Treinos salvas</p>
+                    <p className="text-sm text-zinc-500">Treinos salvos</p>
                     <h3 className="mt-2 text-3xl font-bold">{workouts.length}</h3>
                     <p className="mt-2 text-xs text-violet-400">Treinos disponíveis</p>
                 </Card>
@@ -474,40 +502,69 @@ function Workouts() {
                 </Card>
             </section>
 
-            <div className="mb-5 flex gap-2 overflow-x-auto pb-2">
-                <button
-                    type="button"
-                    onClick={() => setSelectedFolderId(null)}
-                    className={
-                        selectedFolderId === null
-                            ? 'shrink-0 rounded-2xl bg-violet-600 px-4 py-2 text-sm font-bold text-white shadow-[0_0_18px_rgba(139,92,246,0.35)]'
-                            : 'shrink-0 rounded-2xl border border-zinc-800 bg-[#18181b] px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-violet-500/40 hover:text-white'
-                    }
-                >
-                    Todas
-                </button>
+            <div className="mt-5 mb-6 rounded-3xl border border-zinc-800 bg-[#18181b] p-3">
+                <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-bold text-zinc-300">
+                        Pastas
+                    </p>
 
-                {folders.map((folder) => {
-                    const total = workouts.filter((workout) => workout.folderId === folder.id).length
+                    <p className="text-xs text-zinc-500">
+                        {folders.length} criadas
+                    </p>
+                </div>
 
-                    return (
-                        <button
-                            key={folder.id}
-                            type="button"
-                            onClick={() => setSelectedFolderId(folder.id)}
-                            className={
-                                selectedFolderId === folder.id
-                                    ? 'shrink-0 rounded-2xl bg-violet-600 px-4 py-2 text-sm font-bold text-white shadow-[0_0_18px_rgba(139,92,246,0.35)]'
-                                    : 'shrink-0 rounded-2xl border border-zinc-800 bg-[#18181b] px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-violet-500/40 hover:text-white'
-                            }
-                        >
-                            {folder.name}
-                            <span className="ml-2 text-xs opacity-70">
-                                {total}
-                            </span>
-                        </button>
-                    )
-                })}
+                <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
+                    <button
+                        type="button"
+                        onClick={() => setSelectedFolderId(null)}
+                        className={
+                            selectedFolderId === null
+                                ? 'shrink-0 rounded-2xl bg-violet-600 px-4 py-2 text-sm font-bold text-white shadow-[0_0_18px_rgba(139,92,246,0.35)]'
+                                : 'shrink-0 rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-violet-500/40 hover:text-white'
+                        }
+                    >
+                        Todas
+                        <span className="ml-2 text-xs opacity-70">
+                            {workouts.length}
+                        </span>
+                    </button>
+
+                    {folders.map((folder) => {
+                        const total = workouts.filter((workout) => workout.folderId === folder.id).length
+
+                        return (
+                            <div
+                                key={folder.id}
+                                className={
+                                    selectedFolderId === folder.id
+                                        ? 'group flex shrink-0 items-center gap-2 rounded-2xl bg-violet-600 px-4 py-2 text-sm font-bold text-white shadow-[0_0_18px_rgba(139,92,246,0.35)]'
+                                        : 'group flex shrink-0 items-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-violet-500/40 hover:text-white'
+                                }
+                            >
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedFolderId(folder.id)}
+                                    className="flex items-center gap-2"
+                                >
+                                    {folder.name}
+
+                                    <span className="text-xs opacity-70">
+                                        {total}
+                                    </span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => handleDeleteFolder(folder.id)}
+                                    className="ml-1 rounded-full p-1 text-zinc-400 opacity-0 transition hover:bg-red-500/20 hover:text-red-300 group-hover:opacity-100"
+                                    title="Excluir pasta"
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        )
+                    })}
+                </div>
             </div>
 
             <section className="mt-6 grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -769,7 +826,7 @@ function Workouts() {
             )}
 
             {isBuilderOpen && (
-                <div className="fixed inset-0 z-50 overflow-y-auto bg-black">
+                <div className="fixed inset-0 z-[999] overflow-y-auto bg-black">
                     <div className="mx-auto max-w-[1180px] px-4 py-6">
                         <form onSubmit={handleSubmit}>
                             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
