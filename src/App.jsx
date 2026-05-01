@@ -11,6 +11,7 @@ import StartWorkout from './pages/StartWorkout'
 import Profile from './pages/Profile'
 import ExerciseDetails from './pages/ExerciseDetails'
 import ExerciseProgress from './pages/ExerciseProgress'
+import Settings from './pages/Settings'
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
             <Route path="/history" element={<History />} />
             <Route path="/start-workout" element={<StartWorkout />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/settings" element={<Settings />} />
           </Route>
         </Routes>
       </BrowserRouter>
