@@ -355,6 +355,7 @@ function StartWorkout() {
 
                           <Input
                             type="number"
+                            min="0"
                             placeholder="kg"
                             value={set.weight}
                             onChange={(event) =>
@@ -370,6 +371,7 @@ function StartWorkout() {
 
                           <Input
                             type="number"
+                            min="1"
                             placeholder="reps"
                             value={set.reps}
                             onChange={(event) =>
