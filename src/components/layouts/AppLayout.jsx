@@ -27,7 +27,10 @@ function AppLayout() {
     <div className="min-h-screen bg-black text-white">
       <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.12),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(124,58,237,0.08),transparent_32%)]" />
 
-      <header className="sticky top-0 z-40 border-b border-zinc-900/90 bg-black/75 backdrop-blur-xl">
+      <header
+        id="app-header"
+        className="sticky top-0 z-40 border-b border-zinc-900/90 bg-black/75 backdrop-blur-xl"
+      >
         <div className="flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <button

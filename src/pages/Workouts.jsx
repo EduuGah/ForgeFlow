@@ -14,6 +14,7 @@ import {
     Trash2,
     X,
 } from 'lucide-react'
+import Textarea from '../components/ui/Textarea'
 
 import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
@@ -32,6 +33,7 @@ function Workouts() {
     const [quickSearch, setQuickSearch] = useState('')
     const [quickGroupFilter, setQuickGroupFilter] = useState('')
     const [quickEquipmentFilter, setQuickEquipmentFilter] = useState('')
+    const [defaultSetModel, setDefaultSetModel] = useState('hypertrophy')
 
     const [workoutName, setWorkoutName] = useState('')
     const [selectedExercise, setSelectedExercise] = useState('')
@@ -60,12 +62,23 @@ function Workouts() {
     const [isFolderModalOpen, setIsFolderModalOpen] = useState(false)
     const [folderName, setFolderName] = useState('')
 
+    const [customSetModels, setCustomSetModels] = useState([])
+    const [isSetModelModalOpen, setIsSetModelModalOpen] = useState(false)
+    const [setModelName, setSetModelName] = useState('')
+    const [setModelLines, setSetModelLines] = useState('')
+
     useEffect(() => {
         const savedWorkouts = localStorage.getItem('forgeflow:workouts')
         const savedExercises = localStorage.getItem('forgeflow:exercises')
         const draft = localStorage.getItem('forgeflow:workout-draft')
 
         const savedFolders = localStorage.getItem('forgeflow:folders')
+
+        const savedSetModels = localStorage.getItem('forgeflow:set-models')
+
+        if (savedSetModels) {
+            setCustomSetModels(JSON.parse(savedSetModels))
+        }
 
         if (savedFolders) {
             setFolders(JSON.parse(savedFolders))
@@ -128,6 +141,22 @@ function Workouts() {
         isLoaded,
     ])
 
+    useEffect(() => {
+        const header = document.getElementById('app-header')
+
+        if (!header) return
+
+        if (isBuilderOpen) {
+            header.style.display = 'none'
+        } else {
+            header.style.display = ''
+        }
+
+        return () => {
+            header.style.display = ''
+        }
+    }, [isBuilderOpen])
+
     const filteredQuickExercises = useMemo(() => {
         return exercises.filter((exercise) => {
             const text = `${exercise.name} ${exercise.muscleGroup} ${exercise.equipment} ${exercise.originalName || ''}`.toLowerCase()
@@ -160,13 +189,35 @@ function Workouts() {
         return workoutExercises.reduce((total, item) => total + item.sets.length, 0)
     }, [workoutExercises])
 
-    function getDefaultSets() {
-        return [
-            { id: crypto.randomUUID(), description: '12 Rep' },
-            { id: crypto.randomUUID(), description: '10-12 Rep' },
-            { id: crypto.randomUUID(), description: '5-8 Rep' },
-            { id: crypto.randomUUID(), description: '5-8 Rep' },
-        ]
+    function getDefaultSets(model = defaultSetModel) {
+        const fixedModels = {
+            hypertrophy: ['12 Rep', '10-12 Rep', '5-8 Rep', '5-8 Rep'],
+            beginner: ['12 Rep', '12 Rep', '12 Rep'],
+            strength: ['5 Rep', '5 Rep', '5 Rep', '5 Rep', '5 Rep'],
+            pyramid: ['15 Rep', '12 Rep', '10 Rep', '8 Rep'],
+            custom: ['8-12 Rep'],
+        }
+
+        const customModel = customSetModels.find((item) => item.id === model)
+
+        const selectedModel = customModel
+            ? customModel.sets
+            : fixedModels[model] || fixedModels.hypertrophy
+
+        return selectedModel.map((description) => {
+            const normalized = description.toLowerCase()
+
+            const isWarmup =
+                normalized.includes('aquecimento') ||
+                normalized.includes('warmup') ||
+                normalized.includes('warm-up')
+
+            return {
+                id: crypto.randomUUID(),
+                description,
+                type: isWarmup ? 'warmup' : 'working',
+            }
+        })
     }
 
     function handleCreateFolder() {
@@ -181,6 +232,47 @@ function Workouts() {
         setFolders([newFolder, ...folders])
         setFolderName('')
         setIsFolderModalOpen(false)
+    }
+
+    function handleDeleteSetModel(modelId) {
+        const model = customSetModels.find((item) => item.id === modelId)
+
+        const confirmDelete = window.confirm(
+            `Deseja excluir o modelo "${model?.name}"?`
+        )
+
+        if (!confirmDelete) return
+
+        setCustomSetModels(customSetModels.filter((item) => item.id !== modelId))
+
+        if (defaultSetModel === modelId) {
+            setDefaultSetModel('hypertrophy')
+        }
+    }
+
+    function handleCreateSetModel() {
+        if (!setModelName.trim() || !setModelLines.trim()) {
+            alert('Informe o nome do modelo e pelo menos uma série.')
+            return
+        }
+
+        const sets = setModelLines
+            .split('\n')
+            .map((line) => line.trim())
+            .filter(Boolean)
+
+        const newModel = {
+            id: crypto.randomUUID(),
+            name: setModelName,
+            sets,
+            createdAt: new Date().toISOString(),
+        }
+
+        setCustomSetModels([newModel, ...customSetModels])
+        setDefaultSetModel(newModel.id)
+        setSetModelName('')
+        setSetModelLines('')
+        setIsSetModelModalOpen(false)
     }
 
     function resetForm() {
@@ -301,6 +393,22 @@ function Workouts() {
                     : item
             )
         )
+    }
+
+    function handleDeleteSetModel(modelId) {
+        const model = customSetModels.find((item) => item.id === modelId)
+
+        const confirmDelete = window.confirm(
+            `Deseja excluir o modelo "${model?.name}"?`
+        )
+
+        if (!confirmDelete) return
+
+        setCustomSetModels(customSetModels.filter((item) => item.id !== modelId))
+
+        if (defaultSetModel === modelId) {
+            setDefaultSetModel('hypertrophy')
+        }
     }
 
     function handleAddSetToWorkoutExercise(id) {
@@ -629,10 +737,32 @@ function Workouts() {
                                                                 ))}
                                                             </div>
                                                         )}
+                                                        <button
+                                                            type="button"
+                                                            onClick={(event) => {
+                                                                event.stopPropagation()
+                                                                handleStartWorkout(workout)
+                                                            }}
+                                                            className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-2xl bg-violet-600 text-sm font-bold text-white transition hover:bg-violet-500 sm:hidden"
+                                                        >
+                                                            Iniciar treino
+                                                        </button>
                                                     </div>
 
-                                                    <MoreHorizontal size={22} className="text-zinc-400" />
-                                                </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={(event) => {
+                                                                event.stopPropagation()
+                                                                handleStartWorkout(workout)
+                                                            }}
+                                                            className="hidden h-10 items-center justify-center rounded-2xl bg-violet-600 px-4 text-sm font-bold text-white transition hover:bg-violet-500 sm:inline-flex"
+                                                        >
+                                                            Iniciar
+                                                        </button>
+
+                                                        <MoreHorizontal size={22} className="text-zinc-400" />
+                                                    </div>                                                </div>
                                             </button>
 
                                             {isExpanded && (
@@ -794,7 +924,7 @@ function Workouts() {
                 </div>
             </section>
             {isFolderModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+                <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 px-4 backdrop-blur-sm">
                     <div className="w-full max-w-sm rounded-2xl bg-[#121212] p-6 border border-zinc-800">
 
                         <h2 className="text-lg font-bold mb-4">
@@ -826,7 +956,7 @@ function Workouts() {
             )}
 
             {isBuilderOpen && (
-                <div className="fixed inset-0 z-[999] overflow-y-auto bg-black">
+                <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black">
                     <div className="mx-auto max-w-[1180px] px-4 py-6">
                         <form onSubmit={handleSubmit}>
                             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -869,14 +999,24 @@ function Workouts() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-sm font-bold">
-                                            Pasta
-                                        </label>
+                                        <div className="mb-2 flex items-center justify-between gap-3">
+                                            <label className="text-sm font-bold">
+                                                Pasta
+                                            </label>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsFolderModalOpen(true)}
+                                                className="text-xs font-bold text-violet-400 transition hover:text-violet-300"
+                                            >
+                                                + Criar pasta
+                                            </button>
+                                        </div>
 
                                         <select
                                             value={selectedFolderId || ''}
                                             onChange={(event) => setSelectedFolderId(event.target.value || null)}
-                                            className="mt-2 h-12 w-full rounded-xl border border-zinc-700 bg-[#18181b] px-4 text-white outline-none transition focus:border-violet-500"
+                                            className="h-12 w-full rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/10"
                                         >
                                             <option value="">Sem pasta</option>
 
@@ -1047,6 +1187,84 @@ function Workouts() {
 
                                             <Dumbbell size={48} className="text-zinc-600" />
                                         </div>
+
+                                        <div className="mt-5">
+                                            <label className="mb-2 block text-sm font-bold text-zinc-300">
+                                                Modelo padrão de séries
+                                            </label>
+
+                                            <div className="mt-5">
+                                                <div className="mb-2 flex items-center justify-between gap-3">
+                                                    <label className="block text-sm font-bold text-zinc-300">
+                                                        Modelo padrão de séries
+                                                    </label>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setIsSetModelModalOpen(true)}
+                                                        className="text-xs font-bold text-violet-400 transition hover:text-violet-300"
+                                                    >
+                                                        + Criar modelo
+                                                    </button>
+                                                </div>
+
+                                                <select
+                                                    value={defaultSetModel}
+                                                    onChange={(event) => setDefaultSetModel(event.target.value)}
+                                                    className="h-12 w-full rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/10"
+                                                >
+                                                    <option value="hypertrophy">Hipertrofia padrão - 4 séries</option>
+                                                    <option value="beginner">Iniciante - 3 séries</option>
+                                                    <option value="strength">Força - 5 séries</option>
+                                                    <option value="pyramid">Pirâmide - 4 séries</option>
+                                                    <option value="custom">Simples - 1 série</option>
+
+                                                    {customSetModels.length > 0 && (
+                                                        <option disabled>
+                                                            ─ Modelos personalizados ─
+                                                        </option>
+                                                    )}
+
+                                                    {customSetModels.map((model) => (
+                                                        <option key={model.id} value={model.id}>
+                                                            {model.name} - {model.sets.length} séries
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                {customSetModels.length > 0 && (
+                                                    <div className="mt-4 space-y-2">
+                                                        <p className="text-xs font-bold uppercase tracking-wide text-zinc-500">
+                                                            Modelos personalizados
+                                                        </p>
+
+                                                        {customSetModels.map((model) => (
+                                                            <div
+                                                                key={model.id}
+                                                                className="flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-950 p-3"
+                                                            >
+                                                                <div>
+                                                                    <p className="text-sm font-bold">
+                                                                        {model.name}
+                                                                    </p>
+
+                                                                    <p className="text-xs text-zinc-500">
+                                                                        {model.sets.length} itens
+                                                                    </p>
+                                                                </div>
+
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleDeleteSetModel(model.id)}
+                                                                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-500/10 text-red-400 transition hover:bg-red-500/20"
+                                                                >
+                                                                    ×
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
                                     </Card>
 
                                     <Card>
@@ -1057,10 +1275,14 @@ function Workouts() {
 
                                             <button
                                                 type="button"
-                                                className="inline-flex items-center gap-2 text-sm font-bold text-violet-400"
+                                                onClick={() => {
+                                                    setIsBuilderOpen(false)
+                                                    navigate('/exercises')
+                                                }}
+                                                className="inline-flex items-center gap-2 text-sm font-bold text-violet-400 transition hover:text-violet-300"
                                             >
                                                 <Plus size={18} />
-                                                Exercício personalizado
+                                                Cadastrar exercício
                                             </button>
                                         </div>
 
@@ -1237,6 +1459,81 @@ function Workouts() {
                                 </div>
                             </section>
                         </form>
+                    </div>
+                </div>
+            )}
+            {isSetModelModalOpen && (
+                <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 px-4 backdrop-blur-sm">
+                    <div className="w-full max-w-md rounded-3xl border border-zinc-800 bg-[#121212] p-6 shadow-2xl shadow-violet-950/30">
+                        <div className="flex items-start justify-between gap-4">
+                            <div>
+                                <p className="text-sm font-bold text-violet-400">
+                                    Novo modelo
+                                </p>
+
+                                <h2 className="mt-1 text-2xl font-black">
+                                    Modelo de séries
+                                </h2>
+
+                                <p className="mt-2 text-sm text-zinc-500">
+                                    Crie um padrão para aplicar automaticamente nos exercícios adicionados.
+                                </p>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => setIsSetModelModalOpen(false)}
+                                className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900 text-zinc-400 transition hover:bg-zinc-800 hover:text-white"
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        <div className="mt-5 space-y-4">
+                            <Input
+                                label="Nome do modelo"
+                                placeholder="Ex: Peito pesado"
+                                value={setModelName}
+                                onChange={(event) => setSetModelName(event.target.value)}
+                            />
+
+                            <Textarea
+                                label="Séries"
+                                placeholder={`Uma série por linha. Ex:\n12 Rep\n10-12 Rep\n8 Rep\n6 Rep`}
+                                rows={6}
+                                value={setModelLines}
+                                onChange={(event) => setSetModelLines(event.target.value)}
+                            />
+
+                            <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+                                <p className="text-xs font-bold text-zinc-400">
+                                    Exemplo
+                                </p>
+
+                                <p className="mt-2 text-sm leading-relaxed text-zinc-500">
+                                    Cada linha vira uma série. Você pode escrever: “12 Rep”, “8-10 Rep”, “Falha”, “Aquecimento”, etc.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <Button
+                                type="button"
+                                onClick={handleCreateSetModel}
+                                className="w-full"
+                            >
+                                Criar modelo
+                            </Button>
+
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                onClick={() => setIsSetModelModalOpen(false)}
+                                className="w-full"
+                            >
+                                Cancelar
+                            </Button>
+                        </div>
                     </div>
                 </div>
             )}
