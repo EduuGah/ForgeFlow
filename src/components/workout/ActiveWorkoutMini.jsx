@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { Activity, ChevronRight, Clock, Dumbbell } from 'lucide-react'
 
 import { useWorkoutSession } from '../../context/WorkoutSessionContext'
@@ -14,10 +14,12 @@ function formatTime(seconds) {
 }
 
 function ActiveWorkoutMini() {
+  const location = useLocation()
   const { activeSession, elapsedSeconds, completedSets, totalSets } =
     useWorkoutSession()
 
   if (!activeSession) return null
+  if (location.pathname === '/start-workout') return null
 
   const progress = totalSets ? Math.min((completedSets / totalSets) * 100, 100) : 0
 

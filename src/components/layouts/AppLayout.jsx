@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Menu } from 'lucide-react'
 import { Outlet } from 'react-router-dom'
 
@@ -22,6 +22,18 @@ function AppLayout() {
       setIsSidebarClosing(false)
     }, 220)
   }
+
+  useEffect(() => {
+    if (isSidebarOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isSidebarOpen])
 
   return (
     <div className="min-h-screen bg-black text-white">

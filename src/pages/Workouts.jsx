@@ -24,6 +24,9 @@ import Select from '../components/ui/Select'
 import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
 
+import ConfirmModal from '../components/ui/ConfirmModal'
+import Toast from '../components/ui/Toast'
+
 import { useWorkoutSession } from '../context/WorkoutSessionContext'
 
 function Workouts() {
@@ -45,6 +48,9 @@ function Workouts() {
     const [editingWorkoutId, setEditingWorkoutId] = useState(null)
     const [isLoaded, setIsLoaded] = useState(false)
     const [isBuilderOpen, setIsBuilderOpen] = useState(false)
+
+    const [confirmModal, setConfirmModal] = useState(null)
+    const [toast, setToast] = useState(null)
 
     const { startSession } = useWorkoutSession()
     const navigate = useNavigate()
@@ -189,6 +195,18 @@ function Workouts() {
         return workoutExercises.reduce((total, item) => total + item.sets.length, 0)
     }, [workoutExercises])
 
+    function showToast(type, title, message = '') {
+        setToast({
+            type,
+            title,
+            message,
+        })
+
+        setTimeout(() => {
+            setToast(null)
+        }, 3000)
+    }
+
     function getDefaultSets(model = defaultSetModel) {
         const fixedModels = {
             hypertrophy: ['12 Rep', '10-12 Rep', '5-8 Rep', '5-8 Rep'],
@@ -237,22 +255,31 @@ function Workouts() {
     function handleDeleteSetModel(modelId) {
         const model = customSetModels.find((item) => item.id === modelId)
 
-        const confirmDelete = window.confirm(
-            `Deseja excluir o modelo "${model?.name}"?`
-        )
+        setConfirmModal({
+            title: 'Excluir modelo?',
+            description: `O modelo "${model?.name || 'selecionado'}" será removido.`,
+            confirmText: 'Excluir',
+            variant: 'danger',
+            onConfirm: () => {
+                setCustomSetModels(customSetModels.filter((item) => item.id !== modelId))
 
-        if (!confirmDelete) return
+                if (defaultSetModel === modelId) {
+                    setDefaultSetModel('hypertrophy')
+                }
 
-        setCustomSetModels(customSetModels.filter((item) => item.id !== modelId))
-
-        if (defaultSetModel === modelId) {
-            setDefaultSetModel('hypertrophy')
-        }
+                setConfirmModal(null)
+                showToast('success', 'Modelo excluído', 'O modelo de séries foi removido.')
+            },
+        })
     }
 
     function handleCreateSetModel() {
         if (!setModelName.trim() || !setModelLines.trim()) {
-            alert('Informe o nome do modelo e pelo menos uma série.')
+            showToast(
+                'error',
+                'Modelo incompleto',
+                'Informe o nome do modelo e pelo menos uma série.'
+            )
             return
         }
 
@@ -273,6 +300,8 @@ function Workouts() {
         setSetModelName('')
         setSetModelLines('')
         setIsSetModelModalOpen(false)
+
+        showToast('success', 'Modelo criado', 'O modelo de séries foi salvo.')
     }
 
     function resetForm() {
@@ -304,10 +333,9 @@ function Workouts() {
 
     function handleAddSet() {
         if (!setDescription.trim()) {
-            alert('Descreva a série.')
+            showToast('error', 'Série vazia', 'Descreva a série antes de adicionar.')
             return
         }
-
         const newSet = {
             id: crypto.randomUUID(),
             description: setDescription,
@@ -343,7 +371,11 @@ function Workouts() {
 
     function handleAddExercise() {
         if (!selectedExercise || exerciseSets.length === 0) {
-            alert('Selecione um exercício e adicione pelo menos uma série.')
+            showToast(
+                'error',
+                'Exercício incompleto',
+                'Selecione um exercício e adicione pelo menos uma série.'
+            )
             return
         }
 
@@ -448,7 +480,11 @@ function Workouts() {
         event.preventDefault()
 
         if (!workoutName.trim() || workoutExercises.length === 0) {
-            alert('Informe o nome do treino e adicione pelo menos um exercício.')
+            showToast(
+                'error',
+                'Treino incompleto',
+                'Informe o nome do treino e adicione pelo menos um exercício.'
+            )
             return
         }
 
@@ -469,6 +505,7 @@ function Workouts() {
 
             resetForm()
             setIsBuilderOpen(false)
+            showToast('success', 'Treino atualizado', 'As alterações foram salvas.')
             return
         }
 
@@ -483,6 +520,7 @@ function Workouts() {
             setWorkouts([newWorkout, ...workouts])
         resetForm()
         setIsBuilderOpen(false)
+        showToast('success', 'Treino criado', 'Sua nova rotina foi salva.')
     }
 
     function handleEditWorkout(workout) {
@@ -498,15 +536,24 @@ function Workouts() {
     }
 
     function handleDeleteWorkout(id) {
-        const confirmDelete = window.confirm('Tem certeza que deseja excluir este treino?')
+        const workout = workouts.find((item) => item.id === id)
 
-        if (!confirmDelete) return
+        setConfirmModal({
+            title: 'Excluir treino?',
+            description: `O treino "${workout?.name || 'selecionado'}" será removido. Essa ação não pode ser desfeita.`,
+            confirmText: 'Excluir',
+            variant: 'danger',
+            onConfirm: () => {
+                setWorkouts(workouts.filter((workout) => workout.id !== id))
 
-        setWorkouts(workouts.filter((workout) => workout.id !== id))
+                if (editingWorkoutId === id) {
+                    resetForm()
+                }
 
-        if (editingWorkoutId === id) {
-            resetForm()
-        }
+                setConfirmModal(null)
+                showToast('success', 'Treino excluído', 'A rotina foi removida.')
+            },
+        })
     }
 
     function handleDuplicateWorkout(workout) {
@@ -540,29 +587,34 @@ function Workouts() {
     function handleDeleteFolder(folderId) {
         const folder = folders.find((item) => item.id === folderId)
 
-        const confirmDelete = window.confirm(
-            `Deseja excluir a pasta "${folder?.name}"? Os treinos dentro dela não serão apagados, apenas ficarão sem pasta.`
-        )
+        setConfirmModal({
+            title: 'Excluir pasta?',
+            description: `A pasta "${folder?.name || 'selecionada'}" será removida. Os treinos dentro dela não serão apagados, apenas ficarão sem pasta.`,
+            confirmText: 'Excluir',
+            variant: 'danger',
+            onConfirm: () => {
+                const updatedFolders = folders.filter((item) => item.id !== folderId)
 
-        if (!confirmDelete) return
+                const updatedWorkouts = workouts.map((workout) =>
+                    workout.folderId === folderId
+                        ? {
+                            ...workout,
+                            folderId: null,
+                        }
+                        : workout
+                )
 
-        const updatedFolders = folders.filter((item) => item.id !== folderId)
+                setFolders(updatedFolders)
+                setWorkouts(updatedWorkouts)
 
-        const updatedWorkouts = workouts.map((workout) =>
-            workout.folderId === folderId
-                ? {
-                    ...workout,
-                    folderId: null,
+                if (selectedFolderId === folderId) {
+                    setSelectedFolderId(null)
                 }
-                : workout
-        )
 
-        setFolders(updatedFolders)
-        setWorkouts(updatedWorkouts)
-
-        if (selectedFolderId === folderId) {
-            setSelectedFolderId(null)
-        }
+                setConfirmModal(null)
+                showToast('success', 'Pasta excluída', 'Os treinos foram movidos para sem pasta.')
+            },
+        })
     }
 
     function getWorkoutExerciseNames(workout) {
@@ -1537,6 +1589,24 @@ function Workouts() {
                     </div>
                 </div>
             )}
+
+            <ConfirmModal
+                open={Boolean(confirmModal)}
+                title={confirmModal?.title}
+                description={confirmModal?.description}
+                confirmText={confirmModal?.confirmText}
+                variant={confirmModal?.variant}
+                onConfirm={confirmModal?.onConfirm}
+                onCancel={() => setConfirmModal(null)}
+            />
+
+            <Toast
+                show={Boolean(toast)}
+                type={toast?.type}
+                title={toast?.title}
+                message={toast?.message}
+                onClose={() => setToast(null)}
+            />
         </>
     )
 }

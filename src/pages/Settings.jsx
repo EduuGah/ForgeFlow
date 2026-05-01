@@ -12,6 +12,8 @@ import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Badge from '../components/ui/Badge'
+import ConfirmModal from '../components/ui/ConfirmModal'
+import Toast from '../components/ui/Toast'
 
 const STORAGE_KEYS = [
   'forgeflow:profile',
@@ -48,6 +50,9 @@ function Settings() {
   const [importStatus, setImportStatus] = useState('')
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
 
+  const [confirmModal, setConfirmModal] = useState(null)
+  const [toast, setToast] = useState(null)
+
   const savedData = STORAGE_KEYS.map((key) => {
     const value = localStorage.getItem(key)
 
@@ -59,6 +64,18 @@ function Settings() {
   })
 
   const totalSize = savedData.reduce((total, item) => total + item.size, 0)
+
+  function showToast(type, title, message = '') {
+    setToast({
+      type,
+      title,
+      message,
+    })
+
+    setTimeout(() => {
+      setToast(null)
+    }, 3000)
+  }
 
   function handleExportBackup() {
     const backup = {
@@ -94,6 +111,7 @@ function Settings() {
     link.click()
 
     URL.revokeObjectURL(url)
+    showToast('success', 'Backup exportado', 'O arquivo JSON foi baixado com sucesso.')
   }
 
   function handleImportClick() {
@@ -112,7 +130,7 @@ function Settings() {
         const backup = JSON.parse(reader.result)
 
         if (!backup?.data) {
-          setImportStatus('Arquivo inválido. Não encontrei dados de backup.')
+          showToast('error', 'Arquivo inválido', 'Não encontrei dados de backup.')
           return
         }
 
@@ -122,9 +140,9 @@ function Settings() {
           localStorage.setItem(key, JSON.stringify(value))
         })
 
-        setImportStatus('Backup importado com sucesso. Recarregue a página para ver os dados.')
+        showToast('success', 'Backup importado', 'Recarregue a página para ver os dados.')
       } catch {
-        setImportStatus('Erro ao importar backup. Verifique se o arquivo é um JSON válido.')
+        showToast('error', 'Erro ao importar', 'Verifique se o arquivo é um JSON válido.')
       }
     }
 
@@ -134,14 +152,25 @@ function Settings() {
   }
 
   function handleClearAllData() {
-    STORAGE_KEYS.forEach((key) => {
-      localStorage.removeItem(key)
+    setConfirmModal({
+      title: 'Apagar todos os dados?',
+      description: 'Isso apaga perfil, treinos, exercícios, histórico, pastas, modelos e sessão ativa. Essa ação não pode ser desfeita.',
+      confirmText: 'Apagar tudo',
+      variant: 'danger',
+      onConfirm: () => {
+        STORAGE_KEYS.forEach((key) => {
+          localStorage.removeItem(key)
+        })
+
+        setConfirmModal(null)
+        showToast('success', 'Dados apagados', 'Todos os dados locais foram removidos.')
+
+        setTimeout(() => {
+          window.location.reload()
+        }, 700)
+      },
     })
-
-    setClearConfirmOpen(false)
-    window.location.reload()
   }
-
   return (
     <>
       <PageHeader
@@ -226,13 +255,7 @@ function Settings() {
             className="hidden"
           />
 
-          {importStatus && (
-            <div className="mt-5 rounded-2xl border border-violet-500/20 bg-violet-500/10 p-4">
-              <p className="text-sm font-bold text-violet-300">
-                {importStatus}
-              </p>
-            </div>
-          )}
+
         </Card>
 
         <Card>
@@ -260,7 +283,7 @@ function Settings() {
             <Button
               type="button"
               variant="danger"
-              onClick={() => setClearConfirmOpen(true)}
+              onClick={handleClearAllData}
               className="mt-4 w-full"
             >
               <Trash2 size={17} />
@@ -313,41 +336,39 @@ function Settings() {
         </Card>
       </section>
 
-      {clearConfirmOpen && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-3xl border border-zinc-800 bg-[#121212] p-6 shadow-2xl shadow-red-950/30">
-            <p className="text-sm font-bold text-red-400">
-              Limpar dados
-            </p>
+      <ConfirmModal
+        open={Boolean(confirmModal)}
+        title={confirmModal?.title}
+        description={confirmModal?.description}
+        confirmText={confirmModal?.confirmText}
+        variant={confirmModal?.variant}
+        onConfirm={confirmModal?.onConfirm}
+        onCancel={() => setConfirmModal(null)}
+      />
 
-            <h2 className="mt-1 text-2xl font-black">
-              Tem certeza?
-            </h2>
+      <Toast
+        show={Boolean(toast)}
+        type={toast?.type}
+        title={toast?.title}
+        message={toast?.message}
+        onClose={() => setToast(null)}
+      /><ConfirmModal
+        open={Boolean(confirmModal)}
+        title={confirmModal?.title}
+        description={confirmModal?.description}
+        confirmText={confirmModal?.confirmText}
+        variant={confirmModal?.variant}
+        onConfirm={confirmModal?.onConfirm}
+        onCancel={() => setConfirmModal(null)}
+      />
 
-            <p className="mt-2 text-sm text-zinc-500">
-              Todos os dados do ForgeFlow serão apagados deste navegador. Essa ação não pode ser desfeita.
-            </p>
-
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => setClearConfirmOpen(false)}
-              >
-                Cancelar
-              </Button>
-
-              <Button
-                type="button"
-                variant="danger"
-                onClick={handleClearAllData}
-              >
-                Apagar tudo
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Toast
+        show={Boolean(toast)}
+        type={toast?.type}
+        title={toast?.title}
+        message={toast?.message}
+        onClose={() => setToast(null)}
+      />
     </>
   )
 }

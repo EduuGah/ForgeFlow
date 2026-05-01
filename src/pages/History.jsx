@@ -18,6 +18,8 @@ import Button from '../components/ui/Button'
 import Badge from '../components/ui/Badge'
 import Input from '../components/ui/Input'
 import EmptyState from '../components/ui/EmptyState'
+import ConfirmModal from '../components/ui/ConfirmModal'
+import Toast from '../components/ui/Toast'
 
 function formatTime(seconds) {
   const hours = Math.floor(seconds / 3600)
@@ -118,8 +120,9 @@ function History() {
   const [history, setHistory] = useState([])
   const [expandedSessionId, setExpandedSessionId] = useState(null)
   const [search, setSearch] = useState('')
-  const [deleteTarget, setDeleteTarget] = useState(null)
-  const [isClearModalOpen, setIsClearModalOpen] = useState(false)
+
+  const [confirmModal, setConfirmModal] = useState(null)
+  const [toast, setToast] = useState(null)
 
   useEffect(() => {
     const savedHistory = localStorage.getItem('forgeflow:history')
@@ -161,19 +164,51 @@ function History() {
       expandedSessionId === id ? null : id
     )
   }
+  function showToast(type, title, message = '') {
+    setToast({
+      type,
+      title,
+      message,
+    })
 
+    setTimeout(() => {
+      setToast(null)
+    }, 3000)
+  }
   function handleClearHistory() {
-    localStorage.removeItem('forgeflow:history')
-    setHistory([])
-    setIsClearModalOpen(false)
+    setConfirmModal({
+      title: 'Limpar histórico?',
+      description: 'Todos os treinos finalizados serão removidos do histórico. Essa ação não pode ser desfeita.',
+      confirmText: 'Limpar tudo',
+      variant: 'danger',
+      onConfirm: () => {
+        localStorage.removeItem('forgeflow:history')
+        setHistory([])
+        setIsClearModalOpen(false)
+        setConfirmModal(null)
+        showToast('success', 'Histórico limpo', 'Todos os treinos foram removidos.')
+      },
+    })
   }
 
   function handleDeleteSession(id) {
-    const updatedHistory = history.filter((session) => session.id !== id)
+    const session = history.find((item) => item.id === id)
 
-    setHistory(updatedHistory)
-    localStorage.setItem('forgeflow:history', JSON.stringify(updatedHistory))
-    setDeleteTarget(null)
+    setConfirmModal({
+      title: 'Excluir treino?',
+      description: `O treino "${session?.workoutName || 'selecionado'}" será removido permanentemente do histórico.`,
+      confirmText: 'Excluir',
+      variant: 'danger',
+      onConfirm: () => {
+        const updatedHistory = history.filter((session) => session.id !== id)
+
+        setHistory(updatedHistory)
+        localStorage.setItem('forgeflow:history', JSON.stringify(updatedHistory))
+        setDeleteTarget(null)
+        setConfirmModal(null)
+        showToast('success', 'Treino excluído', 'O registro foi removido do histórico.')
+      },
+    })
   }
 
   return (
@@ -264,7 +299,7 @@ function History() {
                 <Button
                   type="button"
                   variant="danger"
-                  onClick={() => setIsClearModalOpen(true)}
+                  onClick={handleClearHistory}
                   className="w-full lg:w-auto"
                 >
                   <Trash2 size={17} />
@@ -580,7 +615,7 @@ function History() {
                           <Button
                             type="button"
                             variant="danger"
-                            onClick={() => setDeleteTarget(session)}
+                            onClick={() => handleDeleteSession(session.id)}
                             className="mt-4"
                           >
                             <Trash2 size={17} />
@@ -680,78 +715,23 @@ function History() {
           </Card>
         </div>
       </section>
+      <ConfirmModal
+        open={Boolean(confirmModal)}
+        title={confirmModal?.title}
+        description={confirmModal?.description}
+        confirmText={confirmModal?.confirmText}
+        variant={confirmModal?.variant}
+        onConfirm={confirmModal?.onConfirm}
+        onCancel={() => setConfirmModal(null)}
+      />
 
-      {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-3xl border border-zinc-800 bg-[#121212] p-6 shadow-2xl shadow-red-950/30">
-            <p className="text-sm font-bold text-red-400">
-              Excluir treino
-            </p>
-
-            <h2 className="mt-1 text-2xl font-black">
-              Tem certeza?
-            </h2>
-
-            <p className="mt-2 text-sm text-zinc-500">
-              O treino "{deleteTarget.workoutName}" será removido permanentemente do histórico.
-            </p>
-
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => setDeleteTarget(null)}
-              >
-                Cancelar
-              </Button>
-
-              <Button
-                type="button"
-                variant="danger"
-                onClick={() => handleDeleteSession(deleteTarget.id)}
-              >
-                Excluir
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isClearModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-3xl border border-zinc-800 bg-[#121212] p-6 shadow-2xl shadow-red-950/30">
-            <p className="text-sm font-bold text-red-400">
-              Limpar histórico
-            </p>
-
-            <h2 className="mt-1 text-2xl font-black">
-              Apagar tudo?
-            </h2>
-
-            <p className="mt-2 text-sm text-zinc-500">
-              Essa ação remove todos os treinos salvos no histórico e não pode ser desfeita.
-            </p>
-
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => setIsClearModalOpen(false)}
-              >
-                Cancelar
-              </Button>
-
-              <Button
-                type="button"
-                variant="danger"
-                onClick={handleClearHistory}
-              >
-                Limpar tudo
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Toast
+        show={Boolean(toast)}
+        type={toast?.type}
+        title={toast?.title}
+        message={toast?.message}
+        onClose={() => setToast(null)}
+      />
     </>
   )
 }

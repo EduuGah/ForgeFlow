@@ -31,6 +31,8 @@ import Select from '../components/ui/Select'
 import Textarea from '../components/ui/Textarea'
 import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
+import ConfirmModal from '../components/ui/ConfirmModal'
+import Toast from '../components/ui/Toast'
 
 import {
   getCompletedSets,
@@ -74,6 +76,9 @@ function Profile() {
   const [weightInput, setWeightInput] = useState('')
   const [dateInput, setDateInput] = useState('')
   const [history, setHistory] = useState([])
+
+  const [confirmModal, setConfirmModal] = useState(null)
+  const [toast, setToast] = useState(null)
 
   const dateInputRef = useRef(null)
 
@@ -150,14 +155,25 @@ function Profile() {
     })
   }
 
+  function showToast(type, title, message = '') {
+    setToast({
+      type,
+      title,
+      message,
+    })
+
+    setTimeout(() => {
+      setToast(null)
+    }, 3000)
+  }
+
   function handleAddWeight(event) {
     event.preventDefault()
 
     if (!weightInput || !dateInput) {
-      alert('Informe o peso e a data.')
+      showToast('error', 'Registro incompleto', 'Informe o peso e a data.')
       return
     }
-
     const newRecord = {
       id: crypto.randomUUID(),
       weight: Number(weightInput),
@@ -189,14 +205,38 @@ function Profile() {
     setBodyWeight(updatedWeights)
     setWeightInput('')
     setDateInput('')
+
+    showToast('success', 'Peso registrado', 'O registro foi salvo com sucesso.')
   }
 
   function handleDeleteWeight(id) {
-    const confirmDelete = window.confirm('Deseja excluir este registro de peso?')
+    const record = bodyWeight.find((item) => item.id === id)
 
-    if (!confirmDelete) return
+    setConfirmModal({
+      title: 'Excluir registro?',
+      description: `O peso ${record?.weight || ''}kg será removido do histórico corporal.`,
+      confirmText: 'Excluir',
+      variant: 'danger',
+      onConfirm: () => {
+        setBodyWeight(bodyWeight.filter((item) => item.id !== id))
+        setConfirmModal(null)
+        showToast('success', 'Registro excluído', 'O peso foi removido.')
+      },
+    })
+  } function handleDeleteWeight(id) {
+    const record = bodyWeight.find((item) => item.id === id)
 
-    setBodyWeight(bodyWeight.filter((item) => item.id !== id))
+    setConfirmModal({
+      title: 'Excluir registro?',
+      description: `O peso ${record?.weight || ''}kg será removido do histórico corporal.`,
+      confirmText: 'Excluir',
+      variant: 'danger',
+      onConfirm: () => {
+        setBodyWeight(bodyWeight.filter((item) => item.id !== id))
+        setConfirmModal(null)
+        showToast('success', 'Registro excluído', 'O peso foi removido.')
+      },
+    })
   }
 
   return (
@@ -824,6 +864,23 @@ function Profile() {
           </div>
         </div>
       )}
+      <ConfirmModal
+        open={Boolean(confirmModal)}
+        title={confirmModal?.title}
+        description={confirmModal?.description}
+        confirmText={confirmModal?.confirmText}
+        variant={confirmModal?.variant}
+        onConfirm={confirmModal?.onConfirm}
+        onCancel={() => setConfirmModal(null)}
+      />
+
+      <Toast
+        show={Boolean(toast)}
+        type={toast?.type}
+        title={toast?.title}
+        message={toast?.message}
+        onClose={() => setToast(null)}
+      />
     </>
   )
 }

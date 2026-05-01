@@ -25,7 +25,7 @@ function Sidebar({ onClose }) {
   ]
 
   return (
-    <aside className="fixed left-0 top-0 z-50 flex h-screen w-[282px] max-w-[86vw] flex-col border-r border-zinc-800 bg-[#121212] text-white shadow-2xl shadow-black/60">
+<aside className="fixed left-0 top-0 z-50 flex h-dvh w-[282px] max-w-[86vw] flex-col overflow-hidden border-r border-zinc-800 bg-[#121212] text-white shadow-2xl shadow-black/60">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.18),transparent_36%)]" />
 
       <div className="relative flex h-full flex-col">
@@ -61,7 +61,7 @@ function Sidebar({ onClose }) {
           </div>
         </div>
 
-        <nav className="flex-1 space-y-1 overflow-y-auto px-4 pb-4">
+        <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain px-4 pb-4">
           {links.map((link) => {
             const Icon = link.icon
 

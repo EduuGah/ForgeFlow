@@ -10,6 +10,8 @@ import Select from '../components/ui/Select'
 import Textarea from '../components/ui/Textarea'
 import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
+import ConfirmModal from '../components/ui/ConfirmModal'
+import Toast from '../components/ui/Toast'
 
 import { useWorkoutSession } from '../context/WorkoutSessionContext'
 
@@ -64,6 +66,9 @@ function StartWorkout() {
   const [replaceExerciseId, setReplaceExerciseId] = useState(null)
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false)
   const [restTimer, setRestTimer] = useState(null)
+
+  const [confirmModal, setConfirmModal] = useState(null)
+  const [toast, setToast] = useState(null)
 
   useEffect(() => {
     const savedExercises = localStorage.getItem('forgeflow:exercises')
@@ -141,6 +146,32 @@ function StartWorkout() {
     return Number.isNaN(number) ? 0 : number
   }
 
+  function showToast(type, title, message = '') {
+    setToast({
+      type,
+      title,
+      message,
+    })
+
+    setTimeout(() => {
+      setToast(null)
+    }, 3000)
+  }
+
+  function handleCancelWorkout() {
+    setConfirmModal({
+      title: 'Cancelar treino?',
+      description: 'O treino em andamento será descartado e não será salvo no histórico.',
+      confirmText: 'Cancelar treino',
+      variant: 'danger',
+      onConfirm: () => {
+        cancelSession()
+        setConfirmModal(null)
+        showToast('success', 'Treino cancelado', 'A sessão ativa foi encerrada.')
+      },
+    })
+  }
+
   function handleCompleteSet(sessionExercise, setId) {
     toggleSetCompleted(sessionExercise.id, setId)
 
@@ -204,7 +235,7 @@ function StartWorkout() {
                 key={sessionExercise.id}
                 className={sessionExercise.skipped ? 'opacity-50' : ''}
               >
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-3">
                       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-violet-500/20 bg-violet-500/10 text-sm font-bold text-violet-400">
@@ -222,7 +253,7 @@ function StartWorkout() {
                       </div>
                     </div>
 
-                    <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-2">
                       <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-3">
                         <p className="text-xs text-zinc-500">
                           Último treino
@@ -257,7 +288,7 @@ function StartWorkout() {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 lg:justify-end">
                     <Button
                       type="button"
                       variant="secondary"
@@ -321,7 +352,7 @@ function StartWorkout() {
                 )}
 
                 <div className="mt-5">
-                  <div className="mb-2 hidden grid-cols-[52px_minmax(120px,1fr)_minmax(120px,1fr)_150px_52px] gap-3 px-3 text-xs font-bold uppercase tracking-wide text-zinc-500 md:grid">
+                  <div className="mb-2 hidden grid-cols-[52px_minmax(120px,1fr)_minmax(120px,1fr)_150px_52px] gap-3 px-3 text-xs font-bold uppercase tracking-wide text-zinc-500 lg:grid">
                     <span>Série</span>
                     <span>KG</span>
                     <span>Reps</span>
@@ -344,9 +375,9 @@ function StartWorkout() {
                       return (
                         <div
                           key={set.id}
-                          className={`grid w-full grid-cols-[52px_minmax(120px,1fr)_minmax(120px,1fr)_150px_52px] items-center gap-3 rounded-2xl border p-3 transition max-md:grid-cols-[44px_1fr_1fr_44px] ${set.completed
-                            ? 'border-emerald-500/30 bg-emerald-500/5'
-                            : 'border-zinc-800 bg-zinc-950'
+                          className={`grid w-full grid-cols-[42px_minmax(0,1fr)_minmax(0,1fr)_76px_42px] items-center gap-2 rounded-2xl border p-3 transition lg:grid-cols-[52px_minmax(120px,1fr)_minmax(120px,1fr)_150px_52px] lg:gap-3 ${set.completed
+                              ? 'border-emerald-500/30 bg-emerald-500/5'
+                              : 'border-zinc-800 bg-zinc-950'
                             }`}
                         >
                           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#18181b] font-bold">
@@ -385,26 +416,26 @@ function StartWorkout() {
                             className="h-11 w-full"
                           />
 
-                          <div className="flex min-h-11 flex-col justify-center gap-1 max-md:col-span-4 max-md:flex-row max-md:justify-start">
+                          <div className="flex min-h-11 max-w-[92px] flex-col items-start justify-center gap-1 overflow-hidden lg:max-w-none">
                             {isWarmup && (
-                              <span className="w-fit rounded-lg bg-zinc-700/40 px-2 py-1 text-[10px] font-bold text-zinc-300">
-                                AQUECIMENTO
+                              <span className="w-fit rounded-lg bg-zinc-700/40 px-1.5 py-1 text-[9px] font-bold text-zinc-300 sm:px-2 sm:text-[10px]">
+                                AQUEC.
                               </span>
                             )}
                             {isWeightPR && (
-                              <span className="w-fit rounded-lg bg-violet-500/20 px-2 py-1 text-[10px] font-bold text-violet-300">
-                                PESO PR
+                              <span className="w-fit rounded-lg bg-violet-500/20 px-1.5 py-1 text-[9px] font-bold text-violet-300 sm:px-2 sm:text-[10px]">
+                                PESO
                               </span>
                             )}
 
                             {isVolumePR && (
-                              <span className="w-fit rounded-lg bg-yellow-500/20 px-2 py-1 text-[10px] font-bold text-yellow-300">
-                                VOL PR
+                              <span className="w-fit rounded-lg bg-orange-500/20 px-1.5 py-1 text-[9px] font-bold text-orange-300 sm:px-2 sm:text-[10px]">
+                                VOL
                               </span>
                             )}
 
                             {!isWarmup && !isWeightPR && !isVolumePR && (
-                              <span className="hidden text-xs text-zinc-600 md:block">
+                              <span className="hidden text-xs text-zinc-600 lg:block">
                                 —
                               </span>
                             )}
@@ -504,7 +535,7 @@ function StartWorkout() {
               <Button
                 type="button"
                 variant="danger"
-                onClick={cancelSession}
+                onClick={handleCancelWorkout}
                 className="w-full"
               >
                 Cancelar treino
@@ -683,6 +714,23 @@ function StartWorkout() {
           </div>
         </div>
       )}
+      <ConfirmModal
+        open={Boolean(confirmModal)}
+        title={confirmModal?.title}
+        description={confirmModal?.description}
+        confirmText={confirmModal?.confirmText}
+        variant={confirmModal?.variant}
+        onConfirm={confirmModal?.onConfirm}
+        onCancel={() => setConfirmModal(null)}
+      />
+
+      <Toast
+        show={Boolean(toast)}
+        type={toast?.type}
+        title={toast?.title}
+        message={toast?.message}
+        onClose={() => setToast(null)}
+      />
     </>
   )
 }
