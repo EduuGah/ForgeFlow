@@ -43,10 +43,16 @@ import { useWorkoutSession } from '../context/WorkoutSessionContext'
 import {
   getCompletedSets,
   getExercisePRs,
+  getExerciseVolumePRs,
   getHeaviestExercise,
+  getBestVolumeSet,
   getMostTrainedExercise,
   getMuscleGroupStats,
+  getMuscleGroupVolumeStats,
   getPRCount,
+  getWeightPRCount,
+  getVolumePRCount,
+  getRecentPRs,
   getStorageData,
   getTotalVolume,
   getBodyWeightHistory,
@@ -117,6 +123,77 @@ function Dashboard() {
   const prCount = useMemo(() => {
     return getPRCount(completedSets)
   }, [completedSets])
+
+  const weightPRCount = useMemo(() => {
+    return getWeightPRCount(completedSets)
+  }, [completedSets])
+
+  const volumePRCount = useMemo(() => {
+    return getVolumePRCount(completedSets)
+  }, [completedSets])
+
+  const bestVolumeSet = useMemo(() => {
+    return getBestVolumeSet(completedSets)
+  }, [completedSets])
+
+  const muscleVolumeStats = useMemo(() => {
+    return getMuscleGroupVolumeStats(completedSets)
+  }, [completedSets])
+
+  const recentPRs = useMemo(() => {
+    return getRecentPRs(completedSets, 6)
+  }, [completedSets])
+
+  const volumePRs = useMemo(() => {
+    return getExerciseVolumePRs(completedSets)
+  }, [completedSets])
+
+  const workoutsByWeek = useMemo(() => {
+    const map = new Map()
+
+    history.forEach((session) => {
+      if (!session.finishedAt) return
+
+      const date = new Date(session.finishedAt)
+      const year = date.getFullYear()
+
+      const firstDayOfYear = new Date(year, 0, 1)
+      const pastDaysOfYear = (date - firstDayOfYear) / 86400000
+      const week = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7)
+
+      const key = `Sem ${week}`
+
+      map.set(key, (map.get(key) || 0) + 1)
+    })
+
+    return Array.from(map.entries()).map(([week, total]) => ({
+      week,
+      total,
+    }))
+  }, [history])
+
+  const setsByWorkout = useMemo(() => {
+    return history
+      .slice()
+      .reverse()
+      .slice(-8)
+      .map((session) => {
+        const sets = getCompletedSets([session])
+
+        return {
+          name: session.workoutName,
+          sets: sets.length,
+        }
+      })
+  }, [history])
+
+  const muscleVolumeChartData = useMemo(() => {
+    return muscleVolumeStats
+      .slice()
+      .sort((a, b) => b.volume - a.volume)
+      .slice(0, 8)
+  }, [muscleVolumeStats])
+
 
   const exercisePRs = useMemo(() => {
     const weightPRs = getExercisePRs(completedSets)
@@ -464,6 +541,76 @@ function Dashboard() {
         </Card>
       </section>
 
+      <section className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-zinc-500">
+              PRs de peso
+            </p>
+
+            <Trophy size={20} className="text-violet-400" />
+          </div>
+
+          <h2 className="mt-2 text-3xl font-black text-violet-300">
+            {weightPRCount}
+          </h2>
+
+          <p className="mt-2 text-xs text-zinc-500">
+            Recordes por maior carga
+          </p>
+        </Card>
+
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-zinc-500">
+              PRs de volume
+            </p>
+
+            <Flame size={20} className="text-orange-400" />
+          </div>
+
+          <h2 className="mt-2 text-3xl font-black text-orange-300">
+            {volumePRCount}
+          </h2>
+
+          <p className="mt-2 text-xs text-zinc-500">
+            Recordes por peso × reps
+          </p>
+        </Card>
+
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-zinc-500">
+              Melhor volume em série
+            </p>
+
+            <Weight size={20} className="text-violet-400" />
+          </div>
+
+          {bestVolumeSet ? (
+            <>
+              <h2 className="mt-2 text-2xl font-black text-violet-300">
+                {bestVolumeSet.volume}kg
+              </h2>
+
+              <p className="mt-2 text-xs text-zinc-500">
+                {bestVolumeSet.exerciseName} • {bestVolumeSet.weight}kg × {bestVolumeSet.reps}
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 className="mt-2 text-2xl font-black">
+                --
+              </h2>
+
+              <p className="mt-2 text-xs text-zinc-500">
+                Sem dados ainda
+              </p>
+            </>
+          )}
+        </Card>
+      </section>
+
       <section className="mt-6 grid grid-cols-1 xl:grid-cols-3 gap-6">
         <Card className="xl:col-span-2">
           <div className="flex items-start justify-between gap-4">
@@ -733,6 +880,137 @@ function Dashboard() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2 className="text-xl font-bold">
+                Treinos por semana
+              </h2>
+
+              <p className="mt-1 text-sm text-zinc-500">
+                Frequência semanal registrada no histórico.
+              </p>
+            </div>
+
+            <CalendarDays size={24} className="text-violet-400" />
+          </div>
+
+          <div className="mt-5 h-64">
+            {workoutsByWeek.length === 0 ? (
+              <EmptyState
+                title="Sem frequência"
+                description="Finalize treinos para gerar esse gráfico."
+              />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={workoutsByWeek}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                  <XAxis dataKey="week" stroke="#71717a" />
+                  <YAxis stroke="#71717a" allowDecimals={false} />
+                  <Tooltip
+                    formatter={(value) => [`${value} treino(s)`, 'Treinos']}
+                    contentStyle={{
+                      background: '#09090b',
+                      border: '1px solid #27272a',
+                      borderRadius: '12px',
+                      color: '#fff',
+                    }}
+                  />
+                  <Bar dataKey="total" fill="#8b5cf6" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </Card>
+
+        <Card>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-bold">
+                Séries por treino
+              </h2>
+
+              <p className="mt-1 text-sm text-zinc-500">
+                Quantidade de séries válidas nos últimos treinos.
+              </p>
+            </div>
+
+            <BarChart3 size={24} className="text-violet-400" />
+          </div>
+
+          <div className="mt-5 h-64">
+            {setsByWorkout.length === 0 ? (
+              <EmptyState
+                title="Sem séries"
+                description="Finalize treinos para gerar esse gráfico."
+              />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={setsByWorkout}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                  <XAxis dataKey="name" stroke="#71717a" />
+                  <YAxis stroke="#71717a" allowDecimals={false} />
+                  <Tooltip
+                    formatter={(value) => [`${value} série(s)`, 'Séries']}
+                    contentStyle={{
+                      background: '#09090b',
+                      border: '1px solid #27272a',
+                      borderRadius: '12px',
+                      color: '#fff',
+                    }}
+                  />
+                  <Bar dataKey="sets" fill="#8b5cf6" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </Card>
+
+        <Card>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-bold">
+                Volume por músculo
+              </h2>
+
+              <p className="mt-1 text-sm text-zinc-500">
+                Grupos musculares com maior volume acumulado.
+              </p>
+            </div>
+
+            <Flame size={24} className="text-orange-400" />
+          </div>
+
+          <div className="mt-5 h-64">
+            {muscleVolumeChartData.length === 0 ? (
+              <EmptyState
+                title="Sem volume"
+                description="Finalize treinos para gerar esse gráfico."
+              />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={muscleVolumeChartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                  <XAxis dataKey="group" stroke="#71717a" />
+                  <YAxis stroke="#71717a" />
+                  <Tooltip
+                    formatter={(value) => [`${value.toLocaleString('pt-BR')}kg`, 'Volume']}
+                    contentStyle={{
+                      background: '#09090b',
+                      border: '1px solid #27272a',
+                      borderRadius: '12px',
+                      color: '#fff',
+                    }}
+                  />
+                  <Bar dataKey="volume" fill="#f97316" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </Card>
+      </section>
+
+      <section className="mt-6 grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <Card>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-bold">
                 Recordes pessoais
               </h2>
 
@@ -934,6 +1212,130 @@ function Dashboard() {
                 </LineChart>
               </ResponsiveContainer>
             )}
+          </div>
+        </Card>
+      </section>
+
+      <section className="mt-6 grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <Card>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-bold">
+                PRs recentes
+              </h2>
+
+              <p className="mt-1 text-sm text-zinc-500">
+                Últimos recordes salvos no histórico.
+              </p>
+            </div>
+
+            <Trophy size={24} className="text-yellow-400" />
+          </div>
+
+          <div className="mt-5 space-y-3">
+            {recentPRs.length === 0 && (
+              <EmptyState
+                title="Sem PRs recentes"
+                description="Finalize treinos e bata recordes para aparecerem aqui."
+              />
+            )}
+
+            {recentPRs.map((pr) => (
+              <div
+                key={`${pr.exerciseName}-${pr.date}-${pr.setNumber}-${pr.weight}-${pr.reps}`}
+                className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4"
+              >
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="font-bold">
+                      {pr.exerciseName}
+                    </p>
+
+                    <p className="mt-1 text-xs text-zinc-500">
+                      {pr.workoutName}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {pr.isWeightPR && (
+                      <Badge variant="purple">
+                        PESO PR
+                      </Badge>
+                    )}
+
+                    {pr.isVolumePR && (
+                      <Badge variant="orange">
+                        VOL PR
+                      </Badge>
+                    )}
+
+                    <Badge>
+                      {pr.weight}kg × {pr.reps}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-bold">
+                Top volume por exercício
+              </h2>
+
+              <p className="mt-1 text-sm text-zinc-500">
+                Maiores volumes registrados por exercício.
+              </p>
+            </div>
+
+            <Flame size={24} className="text-orange-400" />
+          </div>
+
+          <div className="mt-5 space-y-3">
+            {volumePRs.length === 0 && (
+              <EmptyState
+                title="Sem volume registrado"
+                description="Finalize treinos com peso e repetições."
+              />
+            )}
+
+            {volumePRs
+              .slice()
+              .sort((a, b) => b.volume - a.volume)
+              .slice(0, 8)
+              .map((pr, index) => (
+                <div
+                  key={pr.exerciseName}
+                  className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-orange-500/20 bg-orange-500/10 text-sm font-bold text-orange-300">
+                          #{index + 1}
+                        </span>
+
+                        <div className="min-w-0">
+                          <p className="truncate font-bold">
+                            {pr.exerciseName}
+                          </p>
+
+                          <p className="mt-1 text-xs text-zinc-500">
+                            {pr.weight}kg × {pr.reps} reps
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Badge variant="orange">
+                      {pr.volume}kg
+                    </Badge>
+                  </div>
+                </div>
+              ))}
           </div>
         </Card>
       </section>
