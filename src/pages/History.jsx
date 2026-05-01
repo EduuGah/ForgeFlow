@@ -64,10 +64,21 @@ function formatHour(dateString) {
   })
 }
 
+function isValidWorkingSet(set) {
+  return (
+    set.type !== 'warmup' &&
+    set.completed &&
+    set.weight &&
+    set.reps &&
+    Number(set.weight) > 0 &&
+    Number(set.reps) > 0
+  )
+}
+
 function getSessionCompletedSets(session) {
   return session.exercises.flatMap((exercise) =>
     exercise.sets
-      .filter((set) => set.completed)
+      .filter(isValidWorkingSet)
       .map((set) => ({
         ...set,
         exerciseName: exercise.exercise?.name,
@@ -317,7 +328,7 @@ function History() {
                     >
                       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div className="min-w-0">
-                                                    <div className="flex flex-wrap items-center gap-3">
+                          <div className="flex flex-wrap items-center gap-3">
                             <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-violet-500/20 bg-violet-500/10 text-sm font-bold text-violet-400">
                               #{history.length - sessionIndex}
                             </span>
@@ -436,7 +447,7 @@ function History() {
 
                                     <div className="mt-2 flex flex-wrap gap-2">
                                       <Badge variant="purple">
-                                        {exercise.sets.filter((set) => set.completed).length} séries
+                                        {exercise.sets.filter(isValidWorkingSet).length} séries
                                       </Badge>
 
                                       <Badge>
@@ -456,7 +467,7 @@ function History() {
                                   </div>
 
                                   <div className="space-y-2">
-                                    {exercise.sets.map((set) => {
+                                    {exercise.sets.filter(isValidWorkingSet).map((set) => {
                                       const weight = Number(set.weight) || 0
                                       const reps = Number(set.reps) || 0
                                       const volume = weight * reps
