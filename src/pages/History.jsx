@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   CalendarDays,
   ChevronDown,
@@ -121,6 +121,12 @@ function History() {
   const [expandedSessionId, setExpandedSessionId] = useState(null)
   const [search, setSearch] = useState('')
 
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+
+  const startDateRef = useRef(null)
+const endDateRef = useRef(null)
+
   const [confirmModal, setConfirmModal] = useState(null)
   const [toast, setToast] = useState(null)
 
@@ -140,9 +146,27 @@ function History() {
 
       const text = `${session.workoutName} ${exerciseNames}`.toLowerCase()
 
-      return text.includes(search.toLowerCase())
+      const matchesSearch = text.includes(search.toLowerCase())
+
+      const sessionDate = session.finishedAt
+        ? new Date(session.finishedAt)
+        : null
+
+      let matchesDate = true
+
+      if (sessionDate && startDate) {
+        const start = new Date(`${startDate}T00:00:00`)
+        matchesDate = matchesDate && sessionDate >= start
+      }
+
+      if (sessionDate && endDate) {
+        const end = new Date(`${endDate}T23:59:59`)
+        matchesDate = matchesDate && sessionDate <= end
+      }
+
+      return matchesSearch && matchesDate
     })
-  }, [history, search])
+  }, [history, search, startDate, endDate])
 
   const totalVolume = useMemo(() => {
     return history.reduce((total, session) => total + getSessionVolume(session), 0)
@@ -291,7 +315,7 @@ function History() {
                 </h2>
 
                 <p className="mt-1 text-sm text-zinc-500">
-                  {filteredHistory.length} registros encontrados
+                  {filteredHistory.length} de {history.length} registros encontrados
                 </p>
               </div>
 
@@ -308,27 +332,83 @@ function History() {
               )}
             </div>
 
-            <div className="mt-5 flex h-12 items-center gap-3 rounded-xl bg-[#2a2a2c] px-4 text-zinc-400">
-              <Search size={20} />
+            <div className="mt-5 grid grid-cols-1 gap-3 xl:grid-cols-[1fr_190px_190px_auto]">
+  <div>
+    <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-zinc-500">
+      Buscar
+    </label>
 
-              <input
-                type="text"
-                placeholder="Buscar por treino ou exercício..."
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-400"
-              />
+    <div className="flex h-12 items-center gap-3 rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-zinc-400">
+      <Search size={20} />
 
-              {search && (
-                <button
-                  type="button"
-                  onClick={() => setSearch('')}
-                  className="text-zinc-500 transition hover:text-white"
-                >
-                  <X size={18} />
-                </button>
-              )}
-            </div>
+      <input
+        type="text"
+        placeholder="Treino ou exercício..."
+        value={search}
+        onChange={(event) => setSearch(event.target.value)}
+        className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-500"
+      />
+
+      {search && (
+        <button
+          type="button"
+          onClick={() => setSearch('')}
+          className="text-zinc-500 transition hover:text-white"
+        >
+          <X size={18} />
+        </button>
+      )}
+    </div>
+  </div>
+
+  <div>
+    <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-zinc-500">
+      Data inicial
+    </label>
+
+    <input
+      ref={startDateRef}
+      type="date"
+      value={startDate}
+      onClick={() => startDateRef.current?.showPicker?.()}
+      onFocus={() => startDateRef.current?.showPicker?.()}
+      onChange={(event) => setStartDate(event.target.value)}
+      className="h-12 w-full cursor-pointer rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/10"
+    />
+  </div>
+
+  <div>
+    <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-zinc-500">
+      Data final
+    </label>
+
+    <input
+      ref={endDateRef}
+      type="date"
+      value={endDate}
+      onClick={() => endDateRef.current?.showPicker?.()}
+      onFocus={() => endDateRef.current?.showPicker?.()}
+      onChange={(event) => setEndDate(event.target.value)}
+      className="h-12 w-full cursor-pointer rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/10"
+    />
+  </div>
+
+  <div className="flex items-end">
+    {(search || startDate || endDate) && (
+      <button
+        type="button"
+        onClick={() => {
+          setSearch('')
+          setStartDate('')
+          setEndDate('')
+        }}
+        className="h-12 w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 text-sm font-bold text-zinc-300 transition hover:border-violet-500/40 hover:text-white"
+      >
+        Limpar
+      </button>
+    )}
+  </div>
+</div>
 
             <div className="mt-6 space-y-4">
               {history.length === 0 && (

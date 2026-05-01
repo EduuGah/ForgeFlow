@@ -188,25 +188,46 @@ function StartWorkout() {
 
   return (
     <>
-      <PageHeader
-        title={activeSession.workoutName}
-        description={`${completedSets}/${totalSets} séries concluídas`}
-        action={
-          <div className="flex items-center gap-2">
-            <Badge variant="purple">
+      <div className="mb-6 rounded-3xl border border-zinc-800 bg-[#18181b] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.22)]">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-xs font-bold uppercase tracking-wide text-violet-400">
+              Treino ativo
+            </p>
+
+            <h1 className="mt-1 truncate text-2xl font-black text-white sm:text-3xl">
+              {activeSession.workoutName}
+            </h1>
+
+            <p className="mt-1 text-sm text-zinc-500">
+              {completedSets}/{totalSets} séries concluídas
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+            <div className="flex h-11 items-center justify-center rounded-2xl border border-violet-500/30 bg-violet-500/10 px-4 text-sm font-black text-violet-300">
               {formatTime(elapsedSeconds)}
-            </Badge>
+            </div>
 
             <button
               type="button"
               onClick={() => setIsFinishModalOpen(true)}
-              className="h-10 rounded-xl bg-violet-600 px-4 text-sm font-bold text-white shadow-[0_0_18px_rgba(139,92,246,0.35)] transition hover:bg-violet-500 hover:shadow-[0_0_24px_rgba(139,92,246,0.55)]"
+              className="h-11 rounded-2xl bg-violet-600 px-4 text-sm font-bold text-white shadow-[0_0_18px_rgba(139,92,246,0.35)] transition hover:bg-violet-500 hover:shadow-[0_0_24px_rgba(139,92,246,0.55)]"
             >
               Finalizar
             </button>
           </div>
-        }
-      />
+        </div>
+
+        <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-800">
+          <div
+            className="h-full rounded-full bg-violet-500 transition-all"
+            style={{
+              width: totalSets ? `${(completedSets / totalSets) * 100}%` : '0%',
+            }}
+          />
+        </div>
+      </div>
 
       <section className="grid grid-cols-1 xl:grid-cols-4 gap-6">
         <div className="xl:col-span-3 space-y-4 pb-32">
@@ -288,10 +309,9 @@ function StartWorkout() {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-2 lg:justify-end">
-                    <Button
+                  <div className="grid grid-cols-3 gap-2 lg:flex lg:justify-end">
+                    <button
                       type="button"
-                      variant="secondary"
                       onClick={() =>
                         setReplaceExerciseId(
                           replaceExerciseId === sessionExercise.id
@@ -299,28 +319,26 @@ function StartWorkout() {
                             : sessionExercise.id
                         )
                       }
-                      className="py-2 text-sm"
+                      className="h-10 rounded-2xl border border-zinc-800 bg-zinc-950 px-3 text-xs font-bold text-zinc-300 transition hover:border-violet-500/40 hover:bg-zinc-900 hover:text-white lg:h-11 lg:px-4 lg:text-sm"
                     >
                       Substituir
-                    </Button>
+                    </button>
 
-                    <Button
+                    <button
                       type="button"
-                      variant="secondary"
                       onClick={() => skipExercise(sessionExercise.id)}
-                      className="py-2 text-sm"
+                      className="h-10 rounded-2xl border border-zinc-800 bg-zinc-950 px-3 text-xs font-bold text-zinc-300 transition hover:border-violet-500/40 hover:bg-zinc-900 hover:text-white lg:h-11 lg:px-4 lg:text-sm"
                     >
                       {sessionExercise.skipped ? 'Retomar' : 'Pular'}
-                    </Button>
+                    </button>
 
-                    <Button
+                    <button
                       type="button"
-                      variant="danger"
                       onClick={() => removeExercise(sessionExercise.id)}
-                      className="py-2 text-sm"
+                      className="h-10 rounded-2xl border border-red-500/20 bg-red-500/10 px-3 text-xs font-bold text-red-300 transition hover:border-red-400/40 hover:bg-red-500/20 lg:h-11 lg:px-4 lg:text-sm"
                     >
                       Excluir
-                    </Button>
+                    </button>
                   </div>
                 </div>
 
@@ -375,12 +393,12 @@ function StartWorkout() {
                       return (
                         <div
                           key={set.id}
-                          className={`grid w-full grid-cols-[42px_minmax(0,1fr)_minmax(0,1fr)_76px_42px] items-center gap-2 rounded-2xl border p-3 transition lg:grid-cols-[52px_minmax(120px,1fr)_minmax(120px,1fr)_150px_52px] lg:gap-3 ${set.completed
-                              ? 'border-emerald-500/30 bg-emerald-500/5'
-                              : 'border-zinc-800 bg-zinc-950'
+                          className={`grid w-full grid-cols-[42px_minmax(0,1fr)_minmax(0,1fr)_74px_42px] items-center gap-2 rounded-2xl border p-2.5 transition sm:grid-cols-[44px_minmax(90px,1fr)_minmax(90px,1fr)_88px_44px] sm:p-3 lg:grid-cols-[52px_minmax(120px,1fr)_minmax(120px,1fr)_150px_52px] lg:gap-3 ${set.completed
+                            ? 'border-emerald-500/30 bg-emerald-500/5'
+                            : 'border-zinc-800 bg-zinc-950'
                             }`}
                         >
-                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#18181b] font-bold">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#18181b] text-sm font-bold lg:h-11 lg:w-11">
                             {isWarmup ? 'A' : set.setNumber}
                           </div>
 
@@ -397,7 +415,7 @@ function StartWorkout() {
                                 event.target.value
                               )
                             }
-                            className="h-11 w-full"
+                            className="h-10 w-full px-2 text-center text-sm lg:h-11 lg:px-3"
                           />
 
                           <Input
@@ -413,15 +431,16 @@ function StartWorkout() {
                                 event.target.value
                               )
                             }
-                            className="h-11 w-full"
+                            className="h-10 w-full px-2 text-center text-sm lg:h-11 lg:px-3"
                           />
 
-                          <div className="flex min-h-11 max-w-[92px] flex-col items-start justify-center gap-1 overflow-hidden lg:max-w-none">
+                          <div className="flex min-h-10 flex-col items-start justify-center gap-1 overflow-hidden">
                             {isWarmup && (
                               <span className="w-fit rounded-lg bg-zinc-700/40 px-1.5 py-1 text-[9px] font-bold text-zinc-300 sm:px-2 sm:text-[10px]">
                                 AQUEC.
                               </span>
                             )}
+
                             {isWeightPR && (
                               <span className="w-fit rounded-lg bg-violet-500/20 px-1.5 py-1 text-[9px] font-bold text-violet-300 sm:px-2 sm:text-[10px]">
                                 PESO
@@ -462,8 +481,8 @@ function StartWorkout() {
                             onClick={() => handleCompleteSet(sessionExercise, set.id)}
                             className={
                               set.completed
-                                ? 'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white'
-                                : 'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 text-zinc-400 transition hover:border-violet-500 hover:text-white'
+                                ? 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white lg:h-11 lg:w-11'
+                                : 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 text-zinc-400 transition hover:border-violet-500 hover:text-white lg:h-11 lg:w-11'
                             }
                           >
                             {set.completed ? '✓' : '○'}
@@ -487,7 +506,7 @@ function StartWorkout() {
         </div>
 
         <div className="xl:col-span-1 space-y-4">
-          <Card>
+          <Card className="hidden xl:block">
             <h2 className="text-xl font-bold">
               Treino ativo
             </h2>
@@ -518,12 +537,12 @@ function StartWorkout() {
               placeholder="Ex: treino pesado, ombro incomodou, aumentei carga no supino..."
               value={activeSession.notes}
               onChange={(event) => updateNotes(event.target.value)}
-              rows={5}
+              rows={4}
             />
           </Card>
 
           <Card>
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-1">
               <Button
                 type="button"
                 onClick={() => setIsFinishModalOpen(true)}
@@ -546,11 +565,11 @@ function StartWorkout() {
       </section>
 
       {restTimer && (
-        <div className="fixed bottom-6 left-1/2 z-50 w-[calc(100%-32px)] max-w-md -translate-x-1/2 rounded-3xl border border-violet-500/30 bg-[#121212] p-4 shadow-2xl shadow-violet-950/50">
-          <div className="flex items-center justify-between gap-4">
+        <div className="fixed bottom-4 left-3 right-3 z-50 rounded-3xl border border-violet-500/30 bg-[#121212]/95 p-3 shadow-2xl shadow-violet-950/50 backdrop-blur-xl sm:left-1/2 sm:right-auto sm:w-[calc(100%-32px)] sm:max-w-md sm:-translate-x-1/2 sm:p-4">
+          <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-400">
-                <Timer size={24} />
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-400 sm:h-12 sm:w-12">
+                <Timer size={22} />
               </div>
 
               <div>
@@ -565,7 +584,7 @@ function StartWorkout() {
             </div>
 
             <div className="flex items-center gap-3">
-              <p className="text-2xl font-black text-violet-400">
+              <p className="text-xl font-black text-violet-400 sm:text-2xl">
                 {formatTime(restTimer.secondsLeft)}
               </p>
 
@@ -579,7 +598,7 @@ function StartWorkout() {
             </div>
           </div>
 
-          <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-800">
+          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-zinc-800 sm:mt-4 sm:h-2">
             <div
               className="h-full rounded-full bg-violet-500 transition-all"
               style={{
