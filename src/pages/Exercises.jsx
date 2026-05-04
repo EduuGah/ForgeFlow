@@ -12,6 +12,7 @@ import {
   ChevronDown,
 } from 'lucide-react'
 import { defaultExercises } from '../data/defaultExercises'
+import { getInitialExercises } from '../utils/exerciseStorage';
 
 import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
@@ -45,6 +46,8 @@ function Exercises() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [visibleCount, setVisibleCount] = useState(80)
 
+  const [exercises, setExercises] = useState(() => getInitialExercises());
+
   const muscleGroups = [
     'Peito',
     'Costas',
@@ -76,38 +79,6 @@ function Exercises() {
 
   useEffect(() => {
     const savedExercises = localStorage.getItem('forgeflow:exercises')
-
-    import defaultExercises from '../data/defaultExercises';
-
-    const EXERCISES_KEY = 'forgeflow:exercises';
-    const EXERCISES_VERSION_KEY = 'forgeflow:exercisesVersion';
-
-    const CURRENT_EXERCISES_VERSION = '3';
-
-    function getInitialExercises() {
-      const savedVersion = localStorage.getItem(EXERCISES_VERSION_KEY);
-
-      if (savedVersion !== CURRENT_EXERCISES_VERSION) {
-        localStorage.setItem(EXERCISES_KEY, JSON.stringify(defaultExercises));
-        localStorage.setItem(EXERCISES_VERSION_KEY, CURRENT_EXERCISES_VERSION);
-
-        return defaultExercises;
-      }
-
-      const savedExercises = localStorage.getItem(EXERCISES_KEY);
-
-      if (!savedExercises) {
-        localStorage.setItem(EXERCISES_KEY, JSON.stringify(defaultExercises));
-        return defaultExercises;
-      }
-
-      try {
-        return JSON.parse(savedExercises);
-      } catch (error) {
-        localStorage.setItem(EXERCISES_KEY, JSON.stringify(defaultExercises));
-        return defaultExercises;
-      }
-    }
 
     if (savedExercises) {
       const parsedExercises = JSON.parse(savedExercises)
