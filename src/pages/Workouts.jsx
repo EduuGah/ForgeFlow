@@ -696,7 +696,8 @@ function Workouts() {
                     <button
                         type="button"
                         onClick={openCreateBuilder}
-                        className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-violet-600 px-5 text-sm font-bold text-white shadow-[0_0_18px_rgba(139,92,246,0.35)] transition hover:bg-violet-500 hover:shadow-[0_0_26px_rgba(139,92,246,0.55)]"
+                        className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-bold text-white shadow-[0_0_20px_var(--ff-accent-shadow)] transition hover:bg-[var(--ff-accent-hover)]
+ hover:shadow-[0_0_20px_var(--ff-accent-shadow)]"
                     >
                         <Plus size={18} />
                         Novo treino
@@ -708,21 +709,25 @@ function Workouts() {
                 <Card className="p-4">
                     <p className="text-sm text-zinc-500">Treinos salvos</p>
                     <h3 className="mt-2 text-3xl font-bold">{workouts.length}</h3>
-                    <p className="mt-2 text-xs text-violet-400">Treinos disponíveis</p>
+                    <p className="mt-2 text-xs text-[var(--ff-accent-text)]
+">Treinos disponíveis</p>
                 </Card>
 
                 <Card className="p-4">
                     <p className="text-sm text-zinc-500">Biblioteca</p>
                     <h3 className="mt-2 text-3xl font-bold">{exercises.length}</h3>
-                    <p className="mt-2 text-xs text-violet-400">Exercícios cadastrados</p>
+                    <p className="mt-2 text-xs text-[var(--ff-accent-text)]
+">Exercícios cadastrados</p>
                 </Card>
 
                 <Card className="p-4">
                     <p className="text-sm text-zinc-500">Itens nos treinos</p>
-                    <h3 className="mt-2 text-3xl font-bold text-violet-400">
+                    <h3 className="mt-2 text-3xl font-bold text-[var(--ff-accent-text)]
+">
                         {totalExercisesInSavedWorkouts}
                     </h3>
-                    <p className="mt-2 text-xs text-violet-400">Exercícios usados</p>
+                    <p className="mt-2 text-xs text-[var(--ff-accent-text)]
+">Exercícios usados</p>
                 </Card>
             </section>
 
@@ -733,7 +738,9 @@ function Workouts() {
                     <button
                         type="button"
                         onClick={() => setIsFolderModalOpen(true)}
-                        className="text-xs font-bold text-violet-400 transition hover:text-violet-300"
+                        className="text-xs font-bold text-[var(--ff-accent-text)]
+ transition hover:text-[var(--ff-accent-text)]
+"
                     >
                         + Nova pasta
                     </button>
@@ -745,8 +752,8 @@ function Workouts() {
                         onClick={() => setSelectedFolderId(null)}
                         className={
                             selectedFolderId === null
-                                ? 'shrink-0 rounded-2xl bg-violet-600 px-4 py-2 text-sm font-bold text-white shadow-[0_0_18px_rgba(139,92,246,0.35)]'
-                                : 'shrink-0 rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-violet-500/40 hover:text-white'
+                                ? 'shrink-0 rounded-2xl bg-[var(--ff-accent)] px-4 py-2 text-sm font-bold text-white shadow-[0_0_20px_var(--ff-accent-shadow)]'
+                                : 'shrink-0 rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-[var(--ff-accent-border)]/40 hover:text-white'
                         }
                     >
                         Todas
@@ -761,8 +768,8 @@ function Workouts() {
                                 key={folder.id}
                                 className={
                                     selectedFolderId === folder.id
-                                        ? 'group flex shrink-0 items-center gap-2 rounded-2xl bg-violet-600 px-4 py-2 text-sm font-bold text-white shadow-[0_0_18px_rgba(139,92,246,0.35)]'
-                                        : 'group flex shrink-0 items-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-violet-500/40 hover:text-white'
+                                        ? 'group flex shrink-0 items-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-4 py-2 text-sm font-bold text-white shadow-[0_0_20px_var(--ff-accent-shadow)]'
+                                        : 'group flex shrink-0 items-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-[var(--ff-accent-border)]/40 hover:text-white'
                                 }
                             >
                                 <button
@@ -795,7 +802,7 @@ function Workouts() {
                         <button
                             type="button"
                             onClick={() => setIsWorkoutsListCollapsed(!isWorkoutsListCollapsed)}
-                            className="flex w-full items-center justify-between gap-4 rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-left transition hover:border-violet-500/40 hover:bg-zinc-900"
+                            className="flex w-full items-center justify-between gap-4 rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-left transition hover:border-[var(--ff-accent-border)]/40 hover:bg-zinc-900"
                         >
                             <div className="flex items-center gap-2 text-zinc-300">
                                 <ChevronDown
@@ -803,7 +810,7 @@ function Workouts() {
                                     className={
                                         isWorkoutsListCollapsed
                                             ? '-rotate-90 text-zinc-500 transition'
-                                            : 'text-violet-400 transition'
+                                            : 'text-[var(--ff-accent-text)] transition'
                                     }
                                 />
 
@@ -833,7 +840,7 @@ function Workouts() {
                                     return (
                                         <div
                                             key={workout.id}
-                                            className="overflow-hidden rounded-3xl border border-zinc-800 bg-[#18181b] transition hover:border-violet-500/30 hover:bg-[#1f1f23]"
+                                            className="overflow-hidden rounded-3xl border border-zinc-800 bg-[#18181b] transition hover:border-[var(--ff-accent-border)]/30 hover:bg-[#1f1f23]"
                                         >
                                             <button
                                                 type="button"
@@ -866,7 +873,8 @@ function Workouts() {
                                                                 event.stopPropagation()
                                                                 handleStartWorkout(workout)
                                                             }}
-                                                            className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-2xl bg-violet-600 text-sm font-bold text-white transition hover:bg-violet-500 sm:hidden"
+                                                            className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-2xl bg-[var(--ff-accent)] text-sm font-bold text-white transition hover:bg-[var(--ff-accent-hover)]
+ sm:hidden"
                                                         >
                                                             Iniciar treino
                                                         </button>
@@ -879,7 +887,8 @@ function Workouts() {
                                                                 event.stopPropagation()
                                                                 handleStartWorkout(workout)
                                                             }}
-                                                            className="h-10 rounded-2xl bg-violet-600 px-4 text-sm font-bold text-white transition hover:bg-violet-500"
+                                                            className="h-10 rounded-2xl bg-[var(--ff-accent)] px-4 text-sm font-bold text-white transition hover:bg-[var(--ff-accent-hover)]
+"
                                                         >
                                                             Iniciar
                                                         </button>
@@ -928,7 +937,8 @@ function Workouts() {
                                                         <button
                                                             type="button"
                                                             onClick={() => handleStartWorkout(workout)}
-                                                            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-violet-600 text-sm font-bold text-white transition hover:bg-violet-500"
+                                                            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] text-sm font-bold text-white transition hover:bg-[var(--ff-accent-hover)]
+"
                                                         >
                                                             <Dumbbell size={17} />
                                                             Iniciar
@@ -937,7 +947,9 @@ function Workouts() {
                                                         <button
                                                             type="button"
                                                             onClick={() => handleEditWorkout(workout)}
-                                                            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-violet-500/30 bg-violet-500/10 text-sm font-bold text-violet-300 transition hover:bg-violet-500/20"
+                                                            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 text-sm font-bold text-[var(--ff-accent-text)]
+ transition hover:bg-[var(--ff-accent-hover)]
+/20"
                                                         >
                                                             <Edit3 size={17} />
                                                             Editar
@@ -991,17 +1003,19 @@ function Workouts() {
                             className="group flex w-full items-center justify-between px-5 py-4 text-left transition hover:bg-[#1f1f23]"
                         >
                             <div className="flex items-center gap-4">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black text-white transition group-hover:bg-violet-600 group-hover:shadow-[0_0_16px_rgba(139,92,246,0.4)]">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black text-white transition group-hover:bg-[var(--ff-accent)] group-hover:shadow-[0_0_20px_var(--ff-accent-shadow)]">
                                     <ClipboardList size={22} />
                                 </div>
 
-                                <p className="font-bold text-white transition group-hover:text-violet-300">
+                                <p className="font-bold text-white transition group-hover:text-[var(--ff-accent-text)]
+">
                                     Novo treino
                                 </p>
                             </div>
 
                             <ChevronDown
-                                className="-rotate-90 text-zinc-500 transition group-hover:text-violet-400 group-hover:translate-x-1"
+                                className="-rotate-90 text-zinc-500 transition group-hover:text-[var(--ff-accent-text)]
+ group-hover:translate-x-1"
                                 size={22}
                             />
                         </button>
@@ -1014,17 +1028,19 @@ function Workouts() {
                             className="group flex w-full items-center justify-between px-5 py-4 text-left transition hover:bg-[#1f1f23]"
                         >
                             <div className="flex items-center gap-4">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black text-white transition group-hover:bg-violet-600 group-hover:shadow-[0_0_16px_rgba(139,92,246,0.4)]">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black text-white transition group-hover:bg-[var(--ff-accent)] group-hover:shadow-[0_0_20px_var(--ff-accent-shadow)]">
                                     <Plus size={22} />
                                 </div>
 
-                                <p className="font-bold text-white transition group-hover:text-violet-300">
+                                <p className="font-bold text-white transition group-hover:text-[var(--ff-accent-text)]
+">
                                     Nova pasta
                                 </p>
                             </div>
 
                             <ChevronDown
-                                className="-rotate-90 text-zinc-500 transition group-hover:text-violet-400 group-hover:translate-x-1"
+                                className="-rotate-90 text-zinc-500 transition group-hover:text-[var(--ff-accent-text)]
+ group-hover:translate-x-1"
                                 size={22}
                             />
                         </button>
@@ -1036,7 +1052,8 @@ function Workouts() {
                         <div className="mt-5 grid grid-cols-2 gap-3">
                             <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
                                 <p className="text-xs text-zinc-500">Treinos</p>
-                                <p className="mt-1 text-2xl font-bold text-violet-400">
+                                <p className="mt-1 text-2xl font-bold text-[var(--ff-accent-text)]
+">
                                     {workouts.length}
                                 </p>
                             </div>
@@ -1068,7 +1085,8 @@ function Workouts() {
                                         </button>
 
                                         <div className="min-w-0">
-                                            <p className="text-xs font-bold uppercase tracking-wide text-violet-400">
+                                            <p className="text-xs font-bold uppercase tracking-wide text-[var(--ff-accent-text)]
+">
                                                 {editingWorkoutId ? 'Editar rotina' : 'Nova rotina'}
                                             </p>
 
@@ -1080,7 +1098,8 @@ function Workouts() {
 
                                     <button
                                         type="submit"
-                                        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-violet-600 px-5 text-sm font-bold text-white transition hover:bg-violet-500 sm:w-auto"
+                                        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-bold text-white transition hover:bg-[var(--ff-accent-hover)]
+ sm:w-auto"
                                     >
                                         <Save size={18} />
                                         Salvar treino
@@ -1108,7 +1127,9 @@ function Workouts() {
                                                     <button
                                                         type="button"
                                                         onClick={() => setIsFolderModalOpen(true)}
-                                                        className="text-xs font-bold text-violet-400 transition hover:text-violet-300"
+                                                        className="text-xs font-bold text-[var(--ff-accent-text)]
+ transition hover:text-[var(--ff-accent-text)]
+"
                                                     >
                                                         + Criar pasta
                                                     </button>
@@ -1117,7 +1138,7 @@ function Workouts() {
                                                 <select
                                                     value={selectedFolderId || ''}
                                                     onChange={(event) => setSelectedFolderId(event.target.value || null)}
-                                                    className="h-12 w-full rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/10"
+                                                    className="h-12 w-full rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-violet-500/10"
                                                 >
                                                     <option value="">Sem pasta</option>
 
@@ -1158,7 +1179,8 @@ function Workouts() {
 
                                                 <div className="min-w-0 flex-1">
                                                     <div className="flex items-center gap-2">
-                                                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-500/10 text-xs font-bold text-violet-400">
+                                                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--ff-accent-soft)]/10 text-xs font-bold text-[var(--ff-accent-text)]
+">
                                                             {index + 1}
                                                         </span>
 
@@ -1261,7 +1283,8 @@ function Workouts() {
                                                 <div className="mt-4 flex gap-8">
                                                     <div>
                                                         <p className="text-xs text-zinc-500">Exercícios</p>
-                                                        <p className="mt-1 text-xl font-bold text-violet-400">
+                                                        <p className="mt-1 text-xl font-bold text-[var(--ff-accent-text)]
+">
                                                             {workoutExercises.length}
                                                         </p>
                                                     </div>
@@ -1287,7 +1310,9 @@ function Workouts() {
                                                 <button
                                                     type="button"
                                                     onClick={() => setIsSetModelModalOpen(true)}
-                                                    className="text-xs font-bold text-violet-400 transition hover:text-violet-300"
+                                                    className="text-xs font-bold text-[var(--ff-accent-text)]
+ transition hover:text-[var(--ff-accent-text)]
+"
                                                 >
                                                     + Criar modelo
                                                 </button>
@@ -1296,7 +1321,7 @@ function Workouts() {
                                             <select
                                                 value={defaultSetModel}
                                                 onChange={(event) => setDefaultSetModel(event.target.value)}
-                                                className="h-12 w-full rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/10"
+                                                className="h-12 w-full rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-violet-500/10"
                                             >
                                                 <option value="hypertrophy">Hipertrofia padrão - 4 séries</option>
                                                 <option value="beginner">Iniciante - 3 séries</option>
@@ -1364,7 +1389,9 @@ function Workouts() {
                                                     setIsBuilderOpen(false)
                                                     navigate('/exercises')
                                                 }}
-                                                className="inline-flex items-center gap-2 text-sm font-bold text-violet-400 transition hover:text-violet-300"
+                                                className="inline-flex items-center gap-2 text-sm font-bold text-[var(--ff-accent-text)]
+ transition hover:text-[var(--ff-accent-text)]
+"
                                             >
                                                 <Plus size={18} />
                                                 Cadastrar
@@ -1443,7 +1470,7 @@ function Workouts() {
                                                             className={
                                                                 alreadyAdded
                                                                     ? 'flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white'
-                                                                    : 'flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-violet-600 text-white'
+                                                                    : 'flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--ff-accent)] text-white'
                                                             }
                                                         >
                                                             {alreadyAdded ? '✓' : '+'}
@@ -1565,10 +1592,11 @@ function Workouts() {
 
             {isFolderModalOpen && (
                 <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 px-4 backdrop-blur-sm">
-                    <div className="w-full max-w-sm rounded-3xl border border-zinc-800 bg-[#121212] p-6 shadow-2xl shadow-violet-950/30">
+                    <div className="w-full max-w-sm rounded-3xl border border-zinc-800 bg-[#121212] p-6 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)]">
                         <div className="flex items-start justify-between gap-4">
                             <div>
-                                <p className="text-sm font-bold text-violet-400">Nova pasta</p>
+                                <p className="text-sm font-bold text-[var(--ff-accent-text)]
+">Nova pasta</p>
 
                                 <h2 className="mt-1 text-2xl font-black">Criar pasta</h2>
 
@@ -1613,10 +1641,11 @@ function Workouts() {
 
             {isSetModelModalOpen && (
                 <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 px-4 backdrop-blur-sm">
-                    <div className="w-full max-w-md rounded-3xl border border-zinc-800 bg-[#121212] p-6 shadow-2xl shadow-violet-950/30">
+                    <div className="w-full max-w-md rounded-3xl border border-zinc-800 bg-[#121212] p-6 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)]">
                         <div className="flex items-start justify-between gap-4">
                             <div>
-                                <p className="text-sm font-bold text-violet-400">
+                                <p className="text-sm font-bold text-[var(--ff-accent-text)]
+">
                                     Novo modelo
                                 </p>
 

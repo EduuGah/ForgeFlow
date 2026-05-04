@@ -252,7 +252,7 @@ function Profile() {
           <button
             type="button"
             onClick={() => setIsEditOpen(true)}
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-violet-600 px-5 text-sm font-bold text-white shadow-[0_0_18px_rgba(139,92,246,0.35)] transition hover:bg-violet-500 hover:shadow-[0_0_26px_rgba(139,92,246,0.55)]"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-bold text-white shadow-[0_0_20px_var(--ff-accent-shadow)] transition hover:bg-[var(--ff-accent-hover)] hover:shadow-[0_0_20px_var(--ff-accent-shadow)]"
           >
             <Pencil size={18} />
             Editar perfil
@@ -261,15 +261,15 @@ function Profile() {
       />
 
       <section className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <Card className="xl:col-span-2 overflow-hidden border-violet-500/20 bg-gradient-to-br from-violet-600/20 via-[#18181b] to-[#121212]">
+        <Card className="xl:col-span-2 overflow-hidden border-[var(--ff-accent-border)]/20 bg-gradient-to-br from-violet-600/20 via-[#18181b] to-[#121212]">
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-5">
-              <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full border border-violet-500/30 bg-violet-500/10 text-violet-300 shadow-[0_0_28px_rgba(139,92,246,0.25)]">
+              <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)] shadow-[0_0_20px_var(--ff-accent-shadow)]">
                 <UserRound size={44} />
               </div>
 
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-xs font-bold text-violet-300">
+                <div className="inline-flex items-center gap-2 rounded-full border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 px-3 py-1 text-xs font-bold text-[var(--ff-accent-text)]">
                   <Medal size={14} />
                   ForgeFlow Athlete
                 </div>
@@ -306,7 +306,7 @@ function Profile() {
                   Peso atual
                 </p>
 
-                <p className="mt-2 text-2xl font-black text-violet-300">
+                <p className="mt-2 text-2xl font-black text-[var(--ff-accent-text)]">
                   {currentWeight ? `${currentWeight}kg` : '--'}
                 </p>
               </div>
@@ -338,7 +338,7 @@ function Profile() {
 
         <Card>
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-400">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
               <Target size={24} />
             </div>
 
@@ -369,7 +369,7 @@ function Profile() {
                 Divisão preferida
               </p>
 
-              <p className="mt-1 font-bold text-violet-300">
+              <p className="mt-1 font-bold text-[var(--ff-accent-text)]">
                 {profile.preferredSplit || 'Não definida'}
               </p>
             </div>
@@ -394,10 +394,10 @@ function Profile() {
               Peso atual
             </p>
 
-            <Scale size={20} className="text-violet-400" />
+            <Scale size={20} className="text-[var(--ff-accent-text)]" />
           </div>
 
-          <h3 className="mt-2 text-3xl font-black text-violet-400">
+          <h3 className="mt-2 text-3xl font-black text-[var(--ff-accent-text)]">
             {currentWeight ? `${currentWeight}kg` : '--'}
           </h3>
 
@@ -415,14 +415,14 @@ function Profile() {
               Altura
             </p>
 
-            <Ruler size={20} className="text-violet-400" />
+            <Ruler size={20} className="text-[var(--ff-accent-text)]" />
           </div>
 
           <h3 className="mt-2 text-3xl font-black">
             {profile.height || '--'}
           </h3>
 
-          <p className="mt-2 text-xs text-violet-400">
+          <p className="mt-2 text-xs text-[var(--ff-accent-text)]">
             Dados do perfil
           </p>
         </Card>
@@ -433,14 +433,14 @@ function Profile() {
               Treinos
             </p>
 
-            <Dumbbell size={20} className="text-violet-400" />
+            <Dumbbell size={20} className="text-[var(--ff-accent-text)]" />
           </div>
 
           <h3 className="mt-2 text-3xl font-black">
             {totalWorkouts}
           </h3>
 
-          <p className="mt-2 text-xs text-violet-400">
+          <p className="mt-2 text-xs text-[var(--ff-accent-text)]">
             Concluídos
           </p>
         </Card>
@@ -458,7 +458,7 @@ function Profile() {
             {prs.length}
           </h3>
 
-          <p className="mt-2 text-xs text-violet-400">
+          <p className="mt-2 text-xs text-[var(--ff-accent-text)]">
             Registrados
           </p>
         </Card>
@@ -478,7 +478,7 @@ function Profile() {
                 </p>
               </div>
 
-              <Weight size={24} className="text-violet-400" />
+              <Weight size={24} className="text-[var(--ff-accent-text)]" />
             </div>
 
             <div className="mt-5 h-72">
@@ -551,7 +551,7 @@ function Profile() {
 
                   {heaviestExercise ? (
                     <>
-                      <h3 className="mt-1 text-2xl font-black text-violet-300">
+                      <h3 className="mt-1 text-2xl font-black text-[var(--ff-accent-text)]">
                         {heaviestExercise.weight}kg
                       </h3>
 
@@ -625,7 +625,7 @@ function Profile() {
                     <div className="flex items-center justify-between gap-3">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-violet-500/20 bg-violet-500/10 text-sm font-bold text-violet-400">
+                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 text-sm font-bold text-[var(--ff-accent-text)]">
                             #{index + 1}
                           </span>
 
@@ -692,7 +692,7 @@ function Profile() {
                     }
                   }}
                   onChange={(event) => setDateInput(event.target.value)}
-                  className="mt-2 w-full cursor-pointer rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-white outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/10"
+                  className="mt-2 w-full cursor-pointer rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-white outline-none transition focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-violet-500/10"
                 />
               </div>
 
@@ -760,10 +760,10 @@ function Profile() {
 
       {isEditOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 px-4 py-6 backdrop-blur-sm">
-          <div className="mx-auto w-full max-w-2xl rounded-3xl border border-zinc-800 bg-[#121212] p-6 shadow-2xl shadow-violet-950/30">
+          <div className="mx-auto w-full max-w-2xl rounded-3xl border border-zinc-800 bg-[#121212] p-6 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)]">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-bold text-violet-400">
+                <p className="text-sm font-bold text-[var(--ff-accent-text)]">
                   Editar perfil
                 </p>
 

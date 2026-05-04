@@ -281,7 +281,7 @@ function ExerciseDetails() {
                 <div className="mt-1 flex items-center gap-2 font-bold">
                   {exercise.mediaUrl ? (
                     <>
-                      <Dumbbell size={18} className="text-violet-400" />
+                      <Dumbbell size={18} className="text-[var(--ff-accent-text)]" />
                       Disponível
                     </>
                   ) : (
@@ -297,7 +297,7 @@ function ExerciseDetails() {
 
           <Card>
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-400">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
                 <Repeat size={22} />
               </div>
 

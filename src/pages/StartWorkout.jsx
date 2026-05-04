@@ -265,7 +265,7 @@ function handleClearBrokenSession() {
       <div className="mb-6 rounded-3xl border border-zinc-800 bg-[#18181b] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.22)]">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-wide text-violet-400">
+            <p className="text-xs font-bold uppercase tracking-wide text-[var(--ff-accent-text)]">
               Treino ativo
             </p>
 
@@ -279,14 +279,14 @@ function handleClearBrokenSession() {
           </div>
 
           <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
-            <div className="flex h-11 items-center justify-center rounded-2xl border border-violet-500/30 bg-violet-500/10 px-4 text-sm font-black text-violet-300">
+            <div className="flex h-11 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 px-4 text-sm font-black text-[var(--ff-accent-text)]">
               {formatTime(elapsedSeconds)}
             </div>
 
             <button
               type="button"
               onClick={() => setIsFinishModalOpen(true)}
-              className="h-11 rounded-2xl bg-violet-600 px-4 text-sm font-bold text-white shadow-[0_0_18px_rgba(139,92,246,0.35)] transition hover:bg-violet-500 hover:shadow-[0_0_24px_rgba(139,92,246,0.55)]"
+              className="h-11 rounded-2xl bg-[var(--ff-accent)] px-4 text-sm font-bold text-white shadow-[0_0_20px_var(--ff-accent-shadow)] transition hover:bg-[var(--ff-accent-hover)] hover:shadow-[0_0_20px_var(--ff-accent-shadow)]"
             >
               Finalizar
             </button>
@@ -295,7 +295,7 @@ function handleClearBrokenSession() {
 
         <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-800">
           <div
-            className="h-full rounded-full bg-violet-500 transition-all"
+            className="h-full rounded-full bg-[var(--ff-accent-soft)] transition-all"
             style={{
               width: totalSets ? `${(completedSets / totalSets) * 100}%` : '0%',
             }}
@@ -343,7 +343,7 @@ function handleClearBrokenSession() {
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-3">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-violet-500/20 bg-violet-500/10 text-sm font-bold text-violet-400">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 text-sm font-bold text-[var(--ff-accent-text)]">
                         {exerciseIndex + 1}
                       </span>
 
@@ -371,19 +371,19 @@ function handleClearBrokenSession() {
                         </p>
                       </div>
 
-                      <div className="rounded-xl border border-violet-500/20 bg-violet-500/10 p-3">
-                        <p className="text-xs text-violet-400">
+                      <div className="rounded-xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 p-3">
+                        <p className="text-xs text-[var(--ff-accent-text)]">
                           Melhores marcas
                         </p>
 
-                        <p className="text-sm font-semibold text-violet-300 mt-1">
+                        <p className="text-sm font-semibold text-[var(--ff-accent-text)] mt-1">
                           Peso:{' '}
                           {bestWeightPerformance
                             ? `${bestWeightPerformance.weight}kg x ${bestWeightPerformance.reps} reps`
                             : 'Sem registro'}
                         </p>
 
-                        <p className="text-sm font-semibold text-violet-300 mt-1">
+                        <p className="text-sm font-semibold text-[var(--ff-accent-text)] mt-1">
                           Volume:{' '}
                           {bestVolumePerformance
                             ? `${bestVolumePerformance.volume}kg total`
@@ -397,7 +397,7 @@ function handleClearBrokenSession() {
                     <button
                       type="button"
                       onClick={() => toggleExerciseCollapse(sessionExercise.id)}
-                      className="h-10 rounded-2xl border border-zinc-800 bg-zinc-950 px-3 text-xs font-bold text-zinc-300 transition hover:border-violet-500/40 hover:bg-zinc-900 hover:text-white lg:h-11 lg:px-4 lg:text-sm"
+                      className="h-10 rounded-2xl border border-zinc-800 bg-zinc-950 px-3 text-xs font-bold text-zinc-300 transition hover:border-[var(--ff-accent-border)]/40 hover:bg-zinc-900 hover:text-white lg:h-11 lg:px-4 lg:text-sm"
                     >
                       {isCollapsed ? 'Abrir' : 'Minimizar'}
                     </button>
@@ -410,7 +410,7 @@ function handleClearBrokenSession() {
                             : sessionExercise.id
                         )
                       }
-                      className="h-10 rounded-2xl border border-zinc-800 bg-zinc-950 px-3 text-xs font-bold text-zinc-300 transition hover:border-violet-500/40 hover:bg-zinc-900 hover:text-white lg:h-11 lg:px-4 lg:text-sm"
+                      className="h-10 rounded-2xl border border-zinc-800 bg-zinc-950 px-3 text-xs font-bold text-zinc-300 transition hover:border-[var(--ff-accent-border)]/40 hover:bg-zinc-900 hover:text-white lg:h-11 lg:px-4 lg:text-sm"
                     >
                       Substituir
                     </button>
@@ -418,7 +418,7 @@ function handleClearBrokenSession() {
                     <button
                       type="button"
                       onClick={() => skipExercise(sessionExercise.id)}
-                      className="h-10 rounded-2xl border border-zinc-800 bg-zinc-950 px-3 text-xs font-bold text-zinc-300 transition hover:border-violet-500/40 hover:bg-zinc-900 hover:text-white lg:h-11 lg:px-4 lg:text-sm"
+                      className="h-10 rounded-2xl border border-zinc-800 bg-zinc-950 px-3 text-xs font-bold text-zinc-300 transition hover:border-[var(--ff-accent-border)]/40 hover:bg-zinc-900 hover:text-white lg:h-11 lg:px-4 lg:text-sm"
                     >
                       {sessionExercise.skipped ? 'Retomar' : 'Pular'}
                     </button>
@@ -449,7 +449,7 @@ function handleClearBrokenSession() {
                       <button
                         type="button"
                         onClick={() => toggleExerciseCollapse(sessionExercise.id)}
-                        className="rounded-2xl bg-violet-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-violet-500"
+                        className="rounded-2xl bg-[var(--ff-accent)] px-4 py-2 text-xs font-bold text-white transition hover:bg-[var(--ff-accent-hover)]"
                       >
                         Ver séries
                       </button>
@@ -457,7 +457,7 @@ function handleClearBrokenSession() {
 
                     <div className="mt-3 h-2 overflow-hidden rounded-full bg-zinc-800">
                       <div
-                        className="h-full rounded-full bg-violet-500 transition-all"
+                        className="h-full rounded-full bg-[var(--ff-accent-soft)] transition-all"
                         style={{
                           width: exerciseTotalSets
                             ? `${(exerciseCompletedSets / exerciseTotalSets) * 100}%`
@@ -569,7 +569,7 @@ function handleClearBrokenSession() {
                               )}
 
                               {isWeightPR && (
-                                <span className="w-fit rounded-lg bg-violet-500/20 px-1.5 py-1 text-[9px] font-bold text-violet-300 sm:px-2 sm:text-[10px]">
+                                <span className="w-fit rounded-lg bg-[var(--ff-accent-soft)]/20 px-1.5 py-1 text-[9px] font-bold text-[var(--ff-accent-text)] sm:px-2 sm:text-[10px]">
                                   PESO
                                 </span>
                               )}
@@ -609,7 +609,7 @@ function handleClearBrokenSession() {
                               className={
                                 set.completed
                                   ? 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white lg:h-11 lg:w-11'
-                                  : 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 text-zinc-400 transition hover:border-violet-500 hover:text-white lg:h-11 lg:w-11'
+                                  : 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 text-zinc-400 transition hover:border-[var(--ff-accent-border)] hover:text-white lg:h-11 lg:w-11'
                               }
                             >
                               {set.completed ? '✓' : '○'}
@@ -640,7 +640,7 @@ function handleClearBrokenSession() {
               Treino ativo
             </h2>
 
-            <p className="mt-2 text-3xl font-bold text-violet-400">
+            <p className="mt-2 text-3xl font-bold text-[var(--ff-accent-text)]">
               {formatTime(elapsedSeconds)}
             </p>
 
@@ -650,7 +650,7 @@ function handleClearBrokenSession() {
 
             <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-800">
               <div
-                className="h-full rounded-full bg-violet-500"
+                className="h-full rounded-full bg-[var(--ff-accent-soft)]"
                 style={{
                   width: totalSets
                     ? `${(completedSets / totalSets) * 100}%`
@@ -694,10 +694,10 @@ function handleClearBrokenSession() {
       </section>
 
       {restTimer && (
-        <div className="fixed bottom-4 left-3 right-3 z-50 rounded-3xl border border-violet-500/30 bg-[#121212]/95 p-3 shadow-2xl shadow-violet-950/50 backdrop-blur-xl sm:left-1/2 sm:right-auto sm:w-[calc(100%-32px)] sm:max-w-md sm:-translate-x-1/2 sm:p-4">
+        <div className="fixed bottom-4 left-3 right-3 z-50 rounded-3xl border border-[var(--ff-accent-border)]/30 bg-[#121212]/95 p-3 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)] backdrop-blur-xl sm:left-1/2 sm:right-auto sm:w-[calc(100%-32px)] sm:max-w-md sm:-translate-x-1/2 sm:p-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-400 sm:h-12 sm:w-12">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)] sm:h-12 sm:w-12">
                 <Timer size={22} />
               </div>
 
@@ -713,7 +713,7 @@ function handleClearBrokenSession() {
             </div>
 
             <div className="flex items-center gap-3">
-              <p className="text-xl font-black text-violet-400 sm:text-2xl">
+              <p className="text-xl font-black text-[var(--ff-accent-text)] sm:text-2xl">
                 {formatTime(restTimer.secondsLeft)}
               </p>
 
@@ -729,7 +729,7 @@ function handleClearBrokenSession() {
 
           <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-zinc-800 sm:mt-4 sm:h-2">
             <div
-              className="h-full rounded-full bg-violet-500 transition-all"
+              className="h-full rounded-full bg-[var(--ff-accent-soft)] transition-all"
               style={{
                 width: `${restTimer.totalSeconds
                   ? ((restTimer.totalSeconds - restTimer.secondsLeft) /
@@ -751,10 +751,10 @@ function handleClearBrokenSession() {
 
       {isFinishModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-3xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl shadow-violet-950/40">
+          <div className="w-full max-w-lg rounded-3xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)]">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold text-violet-400">
+                <p className="text-sm font-semibold text-[var(--ff-accent-text)]">
                   Confirmar finalização
                 </p>
 
@@ -782,7 +782,7 @@ function handleClearBrokenSession() {
                   Duração
                 </p>
 
-                <p className="mt-1 text-xl font-bold text-violet-400">
+                <p className="mt-1 text-xl font-bold text-[var(--ff-accent-text)]">
                   {formatTime(elapsedSeconds)}
                 </p>
               </div>

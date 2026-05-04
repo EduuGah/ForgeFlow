@@ -8,7 +8,7 @@ function EmptyState({
 }) {
   return (
     <div className="flex min-h-[220px] flex-col items-center justify-center rounded-3xl border border-dashed border-zinc-800 bg-[#101014] p-8 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-violet-500/20 bg-violet-500/10 text-violet-400 shadow-[0_0_24px_rgba(139,92,246,0.18)]">
+      <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)] shadow-[0_0_20px_var(--ff-accent-shadow)]">
         <Icon size={30} />
       </div>
 

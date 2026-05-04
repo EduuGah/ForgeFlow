@@ -31,7 +31,7 @@ function Select({
           outline-none
           transition
           hover:border-zinc-700
-          focus:border-violet-500
+          focus:border-[var(--ff-accent-border)]
           focus:bg-[#141419]
           focus:ring-2
           focus:ring-violet-500/10

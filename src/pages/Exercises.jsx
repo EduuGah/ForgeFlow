@@ -291,7 +291,7 @@ function Exercises() {
           <button
             type="button"
             onClick={openCreateModal}
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-violet-600 px-5 text-sm font-bold text-white shadow-[0_0_18px_rgba(139,92,246,0.35)] transition hover:bg-violet-500 hover:shadow-[0_0_26px_rgba(139,92,246,0.55)]"
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-bold text-white shadow-[0_0_20px_var(--ff-accent-shadow)] transition hover:bg-[var(--ff-accent-hover)] hover:shadow-[0_0_20px_var(--ff-accent-shadow)]"
           >
             <Plus size={18} />
             Adicionar
@@ -309,7 +309,7 @@ function Exercises() {
             {exercises.length}
           </h3>
 
-          <p className="text-xs text-violet-400 mt-2">
+          <p className="text-xs text-[var(--ff-accent-text)] mt-2">
             Biblioteca ativa
           </p>
         </Card>
@@ -323,7 +323,7 @@ function Exercises() {
             {groupStats.length}
           </h3>
 
-          <p className="text-xs text-violet-400 mt-2">
+          <p className="text-xs text-[var(--ff-accent-text)] mt-2">
             Categorias musculares
           </p>
         </Card>
@@ -333,11 +333,11 @@ function Exercises() {
             Exibindo
           </p>
 
-          <h3 className="text-3xl font-bold mt-2 text-violet-400">
+          <h3 className="text-3xl font-bold mt-2 text-[var(--ff-accent-text)]">
             {filteredExercises.length}
           </h3>
 
-          <p className="text-xs text-violet-400 mt-2">
+          <p className="text-xs text-[var(--ff-accent-text)] mt-2">
             Resultado atual
           </p>
         </Card>
@@ -351,7 +351,7 @@ function Exercises() {
             {exercises.filter((exercise) => exercise.mediaUrl).length}
           </h3>
 
-          <p className="text-xs text-violet-400 mt-2">
+          <p className="text-xs text-[var(--ff-accent-text)] mt-2">
             Imagem ou GIF
           </p>
         </Card>
@@ -361,7 +361,7 @@ function Exercises() {
         <div className="xl:col-span-1 space-y-6">
           <Card>
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-400">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
                 <Search size={22} />
               </div>
 
@@ -445,12 +445,12 @@ function Exercises() {
                     }
                     className={
                       isSelected
-                        ? 'w-full rounded-2xl border border-violet-500/40 bg-violet-500/10 p-3 text-left shadow-[0_0_14px_rgba(139,92,246,0.25)]'
-                        : 'w-full rounded-2xl border border-zinc-800 bg-[#18181b] p-3 text-left transition hover:border-violet-500/30 hover:bg-[#1f1f23]'
+                        ? 'w-full rounded-2xl border border-[var(--ff-accent-border)]/40 bg-[var(--ff-accent-soft)]/10 p-3 text-left shadow-[0_0_20px_var(--ff-accent-shadow)]'
+                        : 'w-full rounded-2xl border border-zinc-800 bg-[#18181b] p-3 text-left transition hover:border-[var(--ff-accent-border)]/30 hover:bg-[#1f1f23]'
                     }
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <span className={isSelected ? 'font-bold text-violet-300' : 'font-bold text-white'}>
+                      <span className={isSelected ? 'font-bold text-[var(--ff-accent-text)]' : 'font-bold text-white'}>
                         {group.name}
                       </span>
 
@@ -479,8 +479,8 @@ function Exercises() {
                   }
                   className={
                     equipmentFilter === item.name
-                      ? 'rounded-2xl border border-violet-500/40 bg-violet-500/10 p-3 text-left'
-                      : 'rounded-2xl border border-zinc-800 bg-[#18181b] p-3 text-left transition hover:border-violet-500/30'
+                      ? 'rounded-2xl border border-[var(--ff-accent-border)]/40 bg-[var(--ff-accent-soft)]/10 p-3 text-left'
+                      : 'rounded-2xl border border-zinc-800 bg-[#18181b] p-3 text-left transition hover:border-[var(--ff-accent-border)]/30'
                   }
                 >
                   <p className="text-sm font-semibold">
@@ -512,7 +512,7 @@ function Exercises() {
               <button
                 type="button"
                 onClick={openCreateModal}
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-violet-600 px-5 text-sm font-bold text-white shadow-[0_0_18px_rgba(139,92,246,0.35)] transition hover:bg-violet-500 hover:shadow-[0_0_26px_rgba(139,92,246,0.55)]"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-bold text-white shadow-[0_0_20px_var(--ff-accent-shadow)] transition hover:bg-[var(--ff-accent-hover)] hover:shadow-[0_0_20px_var(--ff-accent-shadow)]"
               >
                 <Plus size={18} />
                 Adicionar
@@ -535,7 +535,7 @@ function Exercises() {
                     return (
                       <div
                         key={exercise.id}
-                        className="rounded-2xl border border-zinc-800 bg-[#18181b] transition hover:border-violet-500/40 hover:bg-[#1f1f23]"
+                        className="rounded-2xl border border-zinc-800 bg-[#18181b] transition hover:border-[var(--ff-accent-border)]/40 hover:bg-[#1f1f23]"
                       >
                         <button
                           type="button"
@@ -593,7 +593,7 @@ function Exercises() {
                               size={22}
                               className={
                                 isExpanded
-                                  ? 'shrink-0 rotate-180 text-violet-400 transition'
+                                  ? 'shrink-0 rotate-180 text-[var(--ff-accent-text)] transition'
                                   : 'shrink-0 text-zinc-500 transition'
                               }
                             />
@@ -621,7 +621,7 @@ function Exercises() {
                             <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
                               <Link
                                 to={`/exercises/${exercise.id}`}
-                                className="flex h-12 items-center justify-center gap-2 rounded-2xl border border-zinc-700 bg-zinc-900 text-sm font-bold text-white transition hover:border-violet-500/40 hover:bg-zinc-800"
+                                className="flex h-12 items-center justify-center gap-2 rounded-2xl border border-zinc-700 bg-zinc-900 text-sm font-bold text-white transition hover:border-[var(--ff-accent-border)]/40 hover:bg-zinc-800"
                               >
                                 <ExternalLink size={17} />
                                 Detalhes
@@ -630,7 +630,7 @@ function Exercises() {
                               <button
                                 type="button"
                                 onClick={() => handleEdit(exercise)}
-                                className="flex h-12 items-center justify-center gap-2 rounded-2xl border border-violet-500/30 bg-violet-500/10 text-sm font-bold text-violet-300 transition hover:border-violet-400 hover:bg-violet-500/20 hover:shadow-[0_0_18px_rgba(139,92,246,0.25)]"
+                                className="flex h-12 items-center justify-center gap-2 rounded-2xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 text-sm font-bold text-[var(--ff-accent-text)] transition hover:border-violet-400 hover:bg-[var(--ff-accent-hover)]/20 hover:shadow-[0_0_20px_var(--ff-accent-shadow)]"
                               >
                                 <Edit3 size={17} />
                                 Editar
@@ -672,10 +672,10 @@ function Exercises() {
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-4 backdrop-blur-sm">
-          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-zinc-800 bg-[#121212] p-6 shadow-2xl shadow-violet-950/30">
+          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-zinc-800 bg-[#121212] p-6 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)]">
             <div className="mb-6 flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold text-violet-400">
+                <p className="text-sm font-semibold text-[var(--ff-accent-text)]">
                   {editingId ? 'Editar exercício' : 'Novo exercício'}
                 </p>
 

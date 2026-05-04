@@ -261,7 +261,7 @@ function History() {
             {history.length}
           </h3>
 
-          <p className="mt-2 text-xs text-violet-400">
+          <p className="mt-2 text-xs text-[var(--ff-accent-text)]">
             Finalizados
           </p>
         </Card>
@@ -275,7 +275,7 @@ function History() {
             {totalCompletedSets}
           </h3>
 
-          <p className="mt-2 text-xs text-violet-400">
+          <p className="mt-2 text-xs text-[var(--ff-accent-text)]">
             Registradas
           </p>
         </Card>
@@ -285,11 +285,11 @@ function History() {
             Volume total
           </p>
 
-          <h3 className="mt-2 text-3xl font-bold text-violet-400">
+          <h3 className="mt-2 text-3xl font-bold text-[var(--ff-accent-text)]">
             {totalVolume.toLocaleString('pt-BR')}kg
           </h3>
 
-          <p className="mt-2 text-xs text-violet-400">
+          <p className="mt-2 text-xs text-[var(--ff-accent-text)]">
             Peso × reps
           </p>
         </Card>
@@ -303,7 +303,7 @@ function History() {
             🏆 {totalPRs}
           </h3>
 
-          <p className="mt-2 text-xs text-violet-400">
+          <p className="mt-2 text-xs text-[var(--ff-accent-text)]">
             Recordes batidos
           </p>
         </Card>
@@ -385,7 +385,7 @@ function History() {
                     }
                   }}
                   onChange={(event) => setStartDate(event.target.value)}
-                  className="h-12 w-full cursor-pointer rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/10"
+                  className="h-12 w-full cursor-pointer rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-violet-500/10"
                 />
               </div>
 
@@ -409,7 +409,7 @@ function History() {
                     }
                   }}
                   onChange={(event) => setEndDate(event.target.value)}
-                  className="h-12 w-full cursor-pointer rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/10"
+                  className="h-12 w-full cursor-pointer rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-violet-500/10"
                 />
               </div>
 
@@ -422,7 +422,7 @@ function History() {
                       setStartDate('')
                       setEndDate('')
                     }}
-                    className="h-12 w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 text-sm font-bold text-zinc-300 transition hover:border-violet-500/40 hover:text-white"
+                    className="h-12 w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 text-sm font-bold text-zinc-300 transition hover:border-[var(--ff-accent-border)]/40 hover:text-white"
                   >
                     Limpar
                   </button>
@@ -454,7 +454,7 @@ function History() {
                 return (
                   <div
                     key={session.id}
-                    className="overflow-hidden rounded-3xl border border-zinc-800 bg-[#18181b] transition hover:border-violet-500/30"
+                    className="overflow-hidden rounded-3xl border border-zinc-800 bg-[#18181b] transition hover:border-[var(--ff-accent-border)]/30"
                   >
                     <button
                       type="button"
@@ -464,7 +464,7 @@ function History() {
                       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-3">
-                            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-violet-500/20 bg-violet-500/10 text-sm font-bold text-violet-400">
+                            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 text-sm font-bold text-[var(--ff-accent-text)]">
                               #{history.length - sessionIndex}
                             </span>
 
@@ -485,7 +485,7 @@ function History() {
                                 Duração
                               </p>
 
-                              <p className="mt-1 font-bold text-violet-400">
+                              <p className="mt-1 font-bold text-[var(--ff-accent-text)]">
                                 {formatTime(session.duration || 0)}
                               </p>
                             </div>
@@ -533,7 +533,7 @@ function History() {
                             size={24}
                             className={
                               isExpanded
-                                ? 'rotate-180 text-violet-400 transition'
+                                ? 'rotate-180 text-[var(--ff-accent-text)] transition'
                                 : 'text-zinc-500 transition'
                             }
                           />
@@ -567,7 +567,7 @@ function History() {
 
                                   <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-2">
-                                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-500/10 text-xs font-bold text-violet-400">
+                                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--ff-accent-soft)]/10 text-xs font-bold text-[var(--ff-accent-text)]">
                                         {exerciseIndex + 1}
                                       </span>
 
@@ -658,7 +658,7 @@ function History() {
 
                                           <div className="flex flex-wrap gap-1">
                                             {set.isWeightPR && (
-                                              <span className="rounded-lg bg-violet-500/20 px-2 py-1 text-[10px] font-bold text-violet-300">
+                                              <span className="rounded-lg bg-[var(--ff-accent-soft)]/20 px-2 py-1 text-[10px] font-bold text-[var(--ff-accent-text)]">
                                                 PESO PR
                                               </span>
                                             )}
@@ -739,7 +739,7 @@ function History() {
 
             <div className="mt-5 space-y-3">
               <div className="flex items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-400">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
                   <CalendarDays size={22} />
                 </div>
 

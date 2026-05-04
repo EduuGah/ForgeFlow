@@ -12,7 +12,7 @@ function RecentWorkouts() {
             <p className="font-medium">Peito e tríceps</p>
             <p className="text-sm text-zinc-500">Hoje</p>
           </div>
-          <span className="text-sm text-violet-400">Concluído</span>
+          <span className="text-sm text-[var(--ff-accent-text)]">Concluído</span>
         </div>
 
         <div className="flex items-center justify-between bg-zinc-950 border border-zinc-800 rounded-xl p-4">
@@ -20,7 +20,7 @@ function RecentWorkouts() {
             <p className="font-medium">Costas e bíceps</p>
             <p className="text-sm text-zinc-500">Ontem</p>
           </div>
-          <span className="text-sm text-violet-400">Concluído</span>
+          <span className="text-sm text-[var(--ff-accent-text)]">Concluído</span>
         </div>
       </div>
     </div>

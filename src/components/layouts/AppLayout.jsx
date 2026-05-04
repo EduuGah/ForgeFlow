@@ -56,7 +56,7 @@ function AppLayout() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.12),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(124,58,237,0.08),transparent_32%)]" />
+      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_left,shadow-[0_0_20px_var(--ff-accent-shadow)],transparent_34%),radial-gradient(circle_at_bottom_right,rgba(124,58,237,0.08),transparent_32%)]" />
 
       <header
         id="app-header"
@@ -67,17 +67,17 @@ function AppLayout() {
             <button
               type="button"
               onClick={openSidebar}
-              className="group flex h-11 w-11 items-center justify-center rounded-2xl border border-zinc-800 bg-[#18181b] text-zinc-300 transition hover:border-violet-500/40 hover:bg-zinc-900 hover:text-white"
+              className="group flex h-11 w-11 items-center justify-center rounded-2xl border border-zinc-800 bg-[#18181b] text-zinc-300 transition hover:border-[var(--ff-accent-border)] hover:bg-zinc-900 hover:text-white"
             >
               <Menu
                 size={22}
-                className="transition group-hover:text-violet-400"
+                className="transition group-hover:text-[var(--ff-accent-text)]"
               />
             </button>
 
             <div>
               <h1 className="text-lg font-black tracking-tight">
-                Forge<span className="text-violet-500">Flow</span>
+                Forge<span className="text-[var(--ff-accent)]">Flow</span>
               </h1>
 
               <p className="hidden text-xs text-zinc-500 sm:block">
@@ -86,7 +86,7 @@ function AppLayout() {
             </div>
           </div>
 
-          <div className="hidden rounded-full border border-violet-500/20 bg-violet-500/10 px-3 py-1 text-xs font-bold text-violet-300 sm:block">
+          <div className="hidden rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)] px-3 py-1 text-xs font-bold text-[var(--ff-accent-text)] sm:block">
             Beta
           </div>
         </div>

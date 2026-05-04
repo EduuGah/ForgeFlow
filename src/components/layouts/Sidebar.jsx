@@ -25,14 +25,13 @@ function Sidebar({ onClose }) {
   ]
 
   return (
-<aside className="fixed left-0 top-0 z-50 flex h-dvh w-[282px] max-w-[86vw] flex-col overflow-hidden border-r border-zinc-800 bg-[#121212] text-white shadow-2xl shadow-black/60">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.18),transparent_36%)]" />
-
+    <aside className="fixed left-0 top-0 z-50 flex h-dvh w-[282px] max-w-[86vw] flex-col overflow-hidden border-r border-zinc-800 bg-[#121212] text-white shadow-2xl shadow-black/60">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--ff-accent-soft),transparent_36%)]" />
       <div className="relative flex h-full flex-col">
         <div className="p-4">
           <div className="flex items-center justify-between gap-4 rounded-3xl border border-zinc-800 bg-[#18181b] p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-violet-500/30 bg-violet-500/10 shadow-[0_0_20px_rgba(139,92,246,0.22)]">
+              <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 shadow-[0_0_20px_var(--ff-accent-shadow)]">
                 <img
                   src={forgeflowIcon}
                   alt="ForgeFlow"
@@ -42,7 +41,7 @@ function Sidebar({ onClose }) {
 
               <div>
                 <h1 className="text-xl font-black tracking-tight">
-                  Forge<span className="text-violet-500">Flow</span>
+                  Forge<span className="text-[var(--ff-accent)]">Flow</span>
                 </h1>
 
                 <p className="text-xs text-zinc-500">
@@ -54,7 +53,7 @@ function Sidebar({ onClose }) {
             <button
               type="button"
               onClick={onClose}
-              className="flex h-10 w-10 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-950 text-zinc-400 transition hover:border-violet-500/40 hover:bg-zinc-900 hover:text-white hover:shadow-[0_0_16px_rgba(139,92,246,0.22)]"
+              className="flex h-10 w-10 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-950 text-zinc-400 transition hover:border-[var(--ff-accent-border)]/40 hover:bg-zinc-900 hover:text-white hover:shadow-[0_0_20px_var(--ff-accent-shadow)]"
             >
               <X size={20} />
             </button>
@@ -72,11 +71,11 @@ function Sidebar({ onClose }) {
                 onClick={onClose}
                 className={({ isActive }) =>
                   isActive
-                    ? 'group flex items-center gap-3 rounded-2xl border border-violet-500/30 bg-violet-500/10 px-4 py-3 text-violet-300 shadow-[0_0_18px_rgba(139,92,246,0.22)]'
-                    : 'group flex items-center gap-3 rounded-2xl border border-transparent px-4 py-3 text-zinc-400 transition hover:border-zinc-800 hover:bg-[#18181b] hover:text-white hover:shadow-[0_0_14px_rgba(139,92,246,0.12)]'
+                    ? 'group flex items-center gap-3 rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-4 py-3 text-[var(--ff-accent-text)] shadow-[0_0_18px_var(--ff-accent-shadow)]'
+                    : 'group flex items-center gap-3 rounded-2xl border border-transparent px-4 py-3 text-zinc-400 transition hover:border-zinc-800 hover:bg-[#18181b] hover:text-white hover:shadow-[0_0_20px_var(--ff-accent-shadow)]'
                 }
               >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-zinc-950 text-zinc-400 transition group-hover:bg-violet-500/10 group-hover:text-violet-300">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-zinc-950 text-zinc-400 transition group-hover:bg-[var(--ff-accent-hover)]/10 group-hover:text-[var(--ff-accent-text)]">
                   <Icon size={21} />
                 </span>
 
@@ -91,7 +90,7 @@ function Sidebar({ onClose }) {
         <div className="border-t border-zinc-800 p-4">
           <div className="rounded-3xl border border-zinc-800 bg-[#18181b] p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-violet-500/30 bg-violet-500/10 text-sm font-black text-violet-300">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)]/10 text-sm font-black text-[var(--ff-accent-text)]">
                 CE
               </div>
 
@@ -113,8 +112,8 @@ function Sidebar({ onClose }) {
               </button>
             </div>
 
-            <div className="mt-4 rounded-2xl border border-violet-500/20 bg-violet-500/10 p-3">
-              <p className="text-xs font-bold text-violet-300">
+            <div className="mt-4 rounded-2xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 p-3">
+              <p className="text-xs font-bold text-[var(--ff-accent-text)]">
                 ForgeFlow Beta
               </p>
 

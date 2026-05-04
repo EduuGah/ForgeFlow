@@ -23,7 +23,7 @@ function ConfirmModal({
               className={
                 variant === 'danger'
                   ? 'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-500/10 text-red-400'
-                  : 'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-400'
+                  : 'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]'
               }
             >
               <AlertTriangle size={24} />

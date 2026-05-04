@@ -7,7 +7,7 @@ function SummaryCard({ title, value, description }) {
         {value}
       </h2>
 
-      <p className="text-xs text-violet-400 mt-2">
+      <p className="text-xs text-[var(--ff-accent-text)] mt-2">
         {description}
       </p>
     </div>

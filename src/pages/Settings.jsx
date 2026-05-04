@@ -23,6 +23,7 @@ import Select from '../components/ui/Select'
 import Input from '../components/ui/Input'
 
 import {
+  accentColors,
   defaultSettings,
   getAppSettings,
   saveAppSettings,
@@ -65,7 +66,7 @@ function ToggleSetting({ active, onClick }) {
       onClick={onClick}
       className={
         active
-          ? 'h-8 w-14 rounded-full bg-violet-600 p-1 transition'
+          ? 'h-8 w-14 rounded-full bg-[var(--ff-accent)] p-1 transition'
           : 'h-8 w-14 rounded-full bg-zinc-800 p-1 transition'
       }
     >
@@ -296,7 +297,7 @@ function Settings() {
         <div className="xl:col-span-2 space-y-6">
           <Card>
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-400">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
                 <Palette size={24} />
               </div>
 
@@ -331,11 +332,11 @@ function Settings() {
                   handleUpdateSetting('accentColor', event.target.value)
                 }
               >
-                <option value="purple">Roxo</option>
-                <option value="blue">Azul</option>
-                <option value="green">Verde</option>
-                <option value="orange">Laranja</option>
-                <option value="red">Vermelho</option>
+                {Object.entries(accentColors).map(([key, color]) => (
+                  <option key={key} value={key}>
+                    {color.name}
+                  </option>
+                ))}
               </Select>
 
               <SettingBox
@@ -369,7 +370,7 @@ function Settings() {
 
           <Card>
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-400">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
                 <SlidersHorizontal size={24} />
               </div>
 
@@ -500,7 +501,7 @@ function Settings() {
 
           <Card>
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-400">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
                 <Database size={24} />
               </div>
 
@@ -519,10 +520,10 @@ function Settings() {
               <button
                 type="button"
                 onClick={handleExportBackup}
-                className="group rounded-3xl border border-zinc-800 bg-zinc-950 p-5 text-left transition hover:border-violet-500/40 hover:bg-[#18181b]"
+                className="group rounded-3xl border border-zinc-800 bg-zinc-950 p-5 text-left transition hover:border-[var(--ff-accent-border)]/40 hover:bg-[#18181b]"
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-400 transition group-hover:shadow-[0_0_20px_rgba(139,92,246,0.24)]">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)] transition group-hover:shadow-[0_0_20px_var(--ff-accent-shadow)]">
                     <Download size={24} />
                   </div>
 
@@ -541,10 +542,10 @@ function Settings() {
               <button
                 type="button"
                 onClick={handleImportClick}
-                className="group rounded-3xl border border-zinc-800 bg-zinc-950 p-5 text-left transition hover:border-violet-500/40 hover:bg-[#18181b]"
+                className="group rounded-3xl border border-zinc-800 bg-zinc-950 p-5 text-left transition hover:border-[var(--ff-accent-border)]/40 hover:bg-[#18181b]"
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-400 transition group-hover:shadow-[0_0_20px_rgba(139,92,246,0.24)]">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)] transition group-hover:shadow-[0_0_20px_var(--ff-accent-shadow)]">
                     <Upload size={24} />
                   </div>
 
@@ -584,7 +585,7 @@ function Settings() {
 
               <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-5">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-400">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
                     <Wifi size={24} />
                   </div>
 
@@ -620,7 +621,7 @@ function Settings() {
         <div className="space-y-6">
           <Card>
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-400">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
                 <UserRound size={24} />
               </div>
 
@@ -675,7 +676,7 @@ function Settings() {
 
           <Card>
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-400">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
                 <ShieldCheck size={24} />
               </div>
 
@@ -695,7 +696,7 @@ function Settings() {
                 Total usado
               </p>
 
-              <p className="mt-1 text-2xl font-black text-violet-300">
+              <p className="mt-1 text-2xl font-black text-[var(--ff-accent-text)]">
                 {formatBytes(totalSize)}
               </p>
             </div>

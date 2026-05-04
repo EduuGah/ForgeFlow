@@ -335,7 +335,7 @@ function Dashboard() {
           <Link to="/workouts">
             <button
               type="button"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-violet-600 px-5 text-sm font-bold text-white shadow-[0_0_18px_rgba(139,92,246,0.35)] transition hover:bg-violet-500 hover:shadow-[0_0_26px_rgba(139,92,246,0.55)]"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-bold text-white shadow-[0_0_20px_var(--ff-accent-shadow)] transition hover:bg-[var(--ff-accent-hover)] hover:shadow-[0_0_20px_var(--ff-accent-shadow)]"
             >
               <Play size={18} />
               Novo treino
@@ -345,10 +345,10 @@ function Dashboard() {
       />
 
       <section className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <Card className="xl:col-span-2 overflow-hidden border-violet-500/20 bg-gradient-to-br from-violet-600/20 via-[#18181b] to-[#121212]">
+        <Card className="xl:col-span-2 overflow-hidden border-[var(--ff-accent-border)]/20 bg-gradient-to-br shadow-[0_0_20px_var(--ff-accent-shadow)] via-[#18181b] to-[#121212]">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-xs font-bold text-violet-300">
+              <div className="inline-flex items-center gap-2 rounded-full border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 px-3 py-1 text-xs font-bold text-[var(--ff-accent-text)]">
                 <Activity size={14} />
                 ForgeFlow ativo
               </div>
@@ -375,7 +375,7 @@ function Dashboard() {
                 <Link to="/progress">
                   <button
                     type="button"
-                    className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-zinc-700 bg-zinc-950/70 px-5 text-sm font-bold text-white transition hover:border-violet-500/40 hover:bg-zinc-900"
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-zinc-700 bg-zinc-950/70 px-5 text-sm font-bold text-white transition hover:border-[var(--ff-accent-border)]/40 hover:bg-zinc-900"
                   >
                     <BarChart3 size={18} />
                     Ver evolução
@@ -400,7 +400,7 @@ function Dashboard() {
                   Peso atual
                 </p>
 
-                <p className="mt-2 text-lg font-bold text-violet-300">
+                <p className="mt-2 text-lg font-bold text-[var(--ff-accent-text)]">
                   {currentWeight ? `${currentWeight}kg` : '--'}
                 </p>
               </div>
@@ -422,7 +422,7 @@ function Dashboard() {
 
         <Card>
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-400">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
               <Target size={24} />
             </div>
 
@@ -453,7 +453,7 @@ function Dashboard() {
                 Meta semanal
               </p>
 
-              <p className="mt-1 font-bold text-violet-300">
+              <p className="mt-1 font-bold text-[var(--ff-accent-text)]">
                 {profile?.weeklyTarget || 'Não definida'}
               </p>
             </div>
@@ -461,7 +461,7 @@ function Dashboard() {
             <Link to="/profile">
               <button
                 type="button"
-                className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-zinc-800 bg-[#18181b] text-sm font-bold text-white transition hover:border-violet-500/40 hover:bg-zinc-900"
+                className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-zinc-800 bg-[#18181b] text-sm font-bold text-white transition hover:border-[var(--ff-accent-border)]/40 hover:bg-zinc-900"
               >
                 <UserRound size={18} />
                 Editar perfil
@@ -478,14 +478,14 @@ function Dashboard() {
               Treinos
             </p>
 
-            <CalendarDays size={20} className="text-violet-400" />
+            <CalendarDays size={20} className="text-[var(--ff-accent-text)]" />
           </div>
 
           <h2 className="mt-2 text-3xl font-black">
             {history.length}
           </h2>
 
-          <p className="mt-2 text-xs text-violet-400">
+          <p className="mt-2 text-xs text-[var(--ff-accent-text)]">
             Finalizados
           </p>
         </Card>
@@ -496,14 +496,14 @@ function Dashboard() {
               Volume
             </p>
 
-            <Weight size={20} className="text-violet-400" />
+            <Weight size={20} className="text-[var(--ff-accent-text)]" />
           </div>
 
-          <h2 className="mt-2 text-2xl font-black text-violet-400">
+          <h2 className="mt-2 text-2xl font-black text-[var(--ff-accent-text)]">
             {formatVolume(totalVolume)}
           </h2>
 
-          <p className="mt-2 text-xs text-violet-400">
+          <p className="mt-2 text-xs text-[var(--ff-accent-text)]">
             Peso × reps
           </p>
         </Card>
@@ -521,7 +521,7 @@ function Dashboard() {
             {prCount}
           </h2>
 
-          <p className="mt-2 text-xs text-violet-400">
+          <p className="mt-2 text-xs text-[var(--ff-accent-text)]">
             Recordes
           </p>
         </Card>
@@ -532,14 +532,14 @@ function Dashboard() {
               Exercícios
             </p>
 
-            <Dumbbell size={20} className="text-violet-400" />
+            <Dumbbell size={20} className="text-[var(--ff-accent-text)]" />
           </div>
 
           <h2 className="mt-2 text-3xl font-black">
             {exercises.length}
           </h2>
 
-          <p className="mt-2 text-xs text-violet-400">
+          <p className="mt-2 text-xs text-[var(--ff-accent-text)]">
             Biblioteca
           </p>
         </Card>
@@ -552,10 +552,10 @@ function Dashboard() {
               PRs de peso
             </p>
 
-            <Trophy size={20} className="text-violet-400" />
+            <Trophy size={20} className="text-[var(--ff-accent-text)]" />
           </div>
 
-          <h2 className="mt-2 text-3xl font-black text-violet-300">
+          <h2 className="mt-2 text-3xl font-black text-[var(--ff-accent-text)]">
             {weightPRCount}
           </h2>
 
@@ -588,12 +588,12 @@ function Dashboard() {
               Melhor volume em série
             </p>
 
-            <Weight size={20} className="text-violet-400" />
+            <Weight size={20} className="text-[var(--ff-accent-text)]" />
           </div>
 
           {bestVolumeSet ? (
             <>
-              <h2 className="mt-2 text-2xl font-black text-violet-300">
+              <h2 className="mt-2 text-2xl font-black text-[var(--ff-accent-text)]">
                 {bestVolumeSet.volume}kg
               </h2>
 
@@ -631,7 +631,7 @@ function Dashboard() {
             <Link to="/workouts">
               <button
                 type="button"
-                className="hidden items-center gap-1 text-sm font-bold text-violet-400 transition hover:text-violet-300 sm:flex"
+                className="hidden items-center gap-1 text-sm font-bold text-[var(--ff-accent-text)] transition hover:text-[var(--ff-accent-text)] sm:flex"
               >
                 Ver todas
                 <ChevronRight size={18} />
@@ -664,7 +664,7 @@ function Dashboard() {
               return (
                 <div
                   key={workout.id}
-                  className="rounded-3xl border border-zinc-800 bg-[#18181b] p-4 transition hover:border-violet-500/40 hover:bg-[#1f1f23]"
+                  className="rounded-3xl border border-zinc-800 bg-[#18181b] p-4 transition hover:border-[var(--ff-accent-border)]/40 hover:bg-[#1f1f23]"
                 >
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div className="flex items-center gap-4">
@@ -703,7 +703,7 @@ function Dashboard() {
                       <button
                         type="button"
                         onClick={() => handleStartWorkout(workout)}
-                        className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-violet-600 px-4 text-sm font-bold text-white transition hover:bg-violet-500"
+                        className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-4 text-sm font-bold text-white transition hover:bg-[var(--ff-accent-hover)]"
                       >
                         <Play size={17} />
                         Iniciar
@@ -750,7 +750,7 @@ function Dashboard() {
 
               {heaviestExercise ? (
                 <>
-                  <h3 className="mt-1 text-2xl font-black text-violet-300">
+                  <h3 className="mt-1 text-2xl font-black text-[var(--ff-accent-text)]">
                     {heaviestExercise.weight}kg
                   </h3>
 
@@ -844,7 +844,7 @@ function Dashboard() {
               </p>
             </div>
 
-            <Target size={24} className="text-violet-400" />
+            <Target size={24} className="text-[var(--ff-accent-text)]" />
           </div>
 
           <div className="mt-5 h-72">
@@ -892,7 +892,7 @@ function Dashboard() {
               </p>
             </div>
 
-            <CalendarDays size={24} className="text-violet-400" />
+            <CalendarDays size={24} className="text-[var(--ff-accent-text)]" />
           </div>
 
           <div className="mt-5 h-64">
@@ -935,7 +935,7 @@ function Dashboard() {
               </p>
             </div>
 
-            <BarChart3 size={24} className="text-violet-400" />
+            <BarChart3 size={24} className="text-[var(--ff-accent-text)]" />
           </div>
 
           <div className="mt-5 h-64">
@@ -1061,12 +1061,12 @@ function Dashboard() {
             {exercisePRs.map((pr, index) => (
               <div
                 key={pr.exerciseName}
-                className="rounded-3xl border border-zinc-800 bg-[#18181b] p-4 transition hover:border-violet-500/40"
+                className="rounded-3xl border border-zinc-800 bg-[#18181b] p-4 transition hover:border-[var(--ff-accent-border)]/40"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-violet-500/20 bg-violet-500/10 text-sm font-bold text-violet-400">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 text-sm font-bold text-[var(--ff-accent-text)]">
                         #{index + 1}
                       </span>
 
@@ -1086,8 +1086,8 @@ function Dashboard() {
                 </div>
 
                 <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="rounded-2xl border border-violet-500/20 bg-violet-500/10 p-3">
-                    <p className="text-[11px] font-bold text-violet-300">
+                  <div className="rounded-2xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 p-3">
+                    <p className="text-[11px] font-bold text-[var(--ff-accent-text)]">
                       PESO PR
                     </p>
 
@@ -1166,7 +1166,7 @@ function Dashboard() {
 
                     <div className="mt-3 h-2 overflow-hidden rounded-full bg-zinc-800">
                       <div
-                        className="h-full rounded-full bg-violet-500"
+                        className="h-full rounded-full bg-[var(--ff-accent-soft)]"
                         style={{
                           width: `${percent}%`,
                         }}

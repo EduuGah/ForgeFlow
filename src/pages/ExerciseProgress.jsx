@@ -84,7 +84,7 @@ function ChartTooltip({ active, payload }) {
             Peso
           </p>
 
-          <p className="mt-1 font-bold text-violet-300">
+          <p className="mt-1 font-bold text-[var(--ff-accent-text)]">
             {item.weight}kg
           </p>
         </div>
@@ -425,7 +425,7 @@ function ExerciseProgress() {
         <div className="xl:col-span-2 space-y-6">
           <Card className="xl:sticky xl:top-24">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-400">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
                 <Search size={23} />
               </div>
 
@@ -467,7 +467,7 @@ function ExerciseProgress() {
                 <select
                   value={groupFilter}
                   onChange={(event) => setGroupFilter(event.target.value)}
-                  className="h-12 w-full rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/10"
+                  className="h-12 w-full rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-violet-500/10"
                 >
                   <option value="">Todos os músculos</option>
 
@@ -481,7 +481,7 @@ function ExerciseProgress() {
                 <select
                   value={sortMode}
                   onChange={(event) => setSortMode(event.target.value)}
-                  className="h-12 w-full rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/10"
+                  className="h-12 w-full rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-violet-500/10"
                 >
                   <option value="mostSets">Mais séries feitas</option>
                   <option value="mostWorkouts">Mais treinos feitos</option>
@@ -523,8 +523,8 @@ function ExerciseProgress() {
                           onClick={() => setSelectedExercise(exercise.name)}
                           className={
                             isSelected
-                              ? 'flex w-full items-center gap-3 rounded-3xl border border-violet-500/40 bg-violet-500/10 p-3 text-left shadow-[0_0_20px_rgba(139,92,246,0.22)]'
-                              : 'flex w-full items-center gap-3 rounded-3xl border border-zinc-800 bg-zinc-950 p-3 text-left transition hover:border-violet-500/30 hover:bg-[#18181b]'
+                              ? 'flex w-full items-center gap-3 rounded-3xl border border-[var(--ff-accent-border)]/40 bg-[var(--ff-accent-soft)]/10 p-3 text-left shadow-[0_0_20px_var(--ff-accent-shadow)]'
+                              : 'flex w-full items-center gap-3 rounded-3xl border border-zinc-800 bg-zinc-950 p-3 text-left transition hover:border-[var(--ff-accent-border)]/30 hover:bg-[#18181b]'
                           }
                         >
                           <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-zinc-700 bg-white">
@@ -550,7 +550,7 @@ function ExerciseProgress() {
                             </p>
 
                             <div className="mt-2 flex flex-wrap gap-1">
-                              <span className="rounded-lg bg-violet-500/10 px-2 py-1 text-[10px] font-bold text-violet-300">
+                              <span className="rounded-lg bg-[var(--ff-accent-soft)]/10 px-2 py-1 text-[10px] font-bold text-[var(--ff-accent-text)]">
                                 {exercise.totalSets} séries
                               </span>
 
@@ -588,7 +588,7 @@ function ExerciseProgress() {
 
           {progressData.length > 0 && (
             <>
-              <Card className="overflow-hidden border-violet-500/20 bg-gradient-to-br from-violet-600/20 via-[#18181b] to-[#121212]">
+              <Card className="overflow-hidden border-[var(--ff-accent-border)]/20 bg-gradient-to-br from-violet-600/20 via-[#18181b] to-[#121212]">
                 <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
                   <div className="flex items-center gap-4">
                     <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-zinc-700 bg-white">
@@ -649,10 +649,10 @@ function ExerciseProgress() {
                       Maior peso
                     </p>
 
-                    <Weight size={20} className="text-violet-400" />
+                    <Weight size={20} className="text-[var(--ff-accent-text)]" />
                   </div>
 
-                  <h3 className="mt-2 text-3xl font-black text-violet-300">
+                  <h3 className="mt-2 text-3xl font-black text-[var(--ff-accent-text)]">
                     {bestWeight?.weight}kg
                   </h3>
 
@@ -723,7 +723,7 @@ function ExerciseProgress() {
                       </p>
                     </div>
 
-                    <Weight size={24} className="text-violet-400" />
+                    <Weight size={24} className="text-[var(--ff-accent-text)]" />
                   </div>
 
                   <div className="mt-5 h-72">
@@ -792,7 +792,7 @@ function ExerciseProgress() {
                     </p>
                   </div>
 
-                  <Target size={24} className="text-violet-400" />
+                  <Target size={24} className="text-[var(--ff-accent-text)]" />
                 </div>
 
                 <div className="mt-5 space-y-3">
@@ -887,7 +887,7 @@ function ExerciseProgress() {
 
                                   <div className="flex flex-wrap gap-1">
                                     {set.isWeightPR && (
-                                      <span className="rounded-lg bg-violet-500/20 px-2 py-1 text-[10px] font-bold text-violet-300">
+                                      <span className="rounded-lg bg-[var(--ff-accent-soft)]/20 px-2 py-1 text-[10px] font-bold text-[var(--ff-accent-text)]">
                                         PESO PR
                                       </span>
                                     )}
