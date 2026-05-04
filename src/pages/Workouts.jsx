@@ -71,9 +71,7 @@ function Workouts() {
     const { startSession } = useWorkoutSession()
     const navigate = useNavigate()
 
-    const [showAllWorkouts, setShowAllWorkouts] = useState(false)
-
-    useEffect(() => {
+    useEffect(() => {const [showAllWorkouts, setShowAllWorkouts] = useState(false)
         const settings = getAppSettings()
 
         setAppSettings(settings)
