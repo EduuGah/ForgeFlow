@@ -350,21 +350,6 @@ function Settings() {
                   }
                 />
               </SettingBox>
-
-              <SettingBox
-                title="Mini treino flutuante"
-                description="Mostra um card flutuante quando há treino ativo."
-              >
-                <ToggleSetting
-                  active={settings.showActiveWorkoutMini}
-                  onClick={() =>
-                    handleUpdateSetting(
-                      'showActiveWorkoutMini',
-                      !settings.showActiveWorkoutMini
-                    )
-                  }
-                />
-              </SettingBox>
             </div>
           </Card>
 
@@ -413,17 +398,6 @@ function Settings() {
                 <option value="60s">60 segundos</option>
                 <option value="90s">90 segundos</option>
                 <option value="120s">120 segundos</option>
-              </Select>
-
-              <Select
-                label="Unidade de peso"
-                value={settings.weightUnit}
-                onChange={(event) =>
-                  handleUpdateSetting('weightUnit', event.target.value)
-                }
-              >
-                <option value="kg">kg</option>
-                <option value="lb">lb</option>
               </Select>
 
               <Input
@@ -492,6 +466,81 @@ function Settings() {
                     handleUpdateSetting(
                       'autoOpenCalendar',
                       !settings.autoOpenCalendar
+                    )
+                  }
+                />
+              </SettingBox>
+
+              <SettingBox
+                title="Iniciar descanso automaticamente"
+                description="Quando uma série for concluída, o timer de descanso inicia sozinho."
+              >
+                <ToggleSetting
+                  active={settings.autoStartRestTimer}
+                  onClick={() =>
+                    handleUpdateSetting(
+                      'autoStartRestTimer',
+                      !settings.autoStartRestTimer
+                    )
+                  }
+                />
+              </SettingBox>
+
+              <SettingBox
+                title="Mostrar PRs durante o treino"
+                description="Exibe tags de PR de peso e volume enquanto o treino está ativo."
+              >
+                <ToggleSetting
+                  active={settings.showPRDuringWorkout}
+                  onClick={() =>
+                    handleUpdateSetting(
+                      'showPRDuringWorkout',
+                      !settings.showPRDuringWorkout
+                    )
+                  }
+                />
+              </SettingBox>
+
+              <SettingBox
+                title="Comparar com último treino"
+                description="Mostra diferenças de peso, reps e volume em relação ao último treino."
+              >
+                <ToggleSetting
+                  active={settings.showLastWorkoutComparison}
+                  onClick={() =>
+                    handleUpdateSetting(
+                      'showLastWorkoutComparison',
+                      !settings.showLastWorkoutComparison
+                    )
+                  }
+                />
+              </SettingBox>
+
+              <SettingBox
+                title="Confirmar antes de finalizar treino"
+                description="Abre uma confirmação antes de salvar o treino no histórico."
+              >
+                <ToggleSetting
+                  active={settings.confirmBeforeFinishWorkout}
+                  onClick={() =>
+                    handleUpdateSetting(
+                      'confirmBeforeFinishWorkout',
+                      !settings.confirmBeforeFinishWorkout
+                    )
+                  }
+                />
+              </SettingBox>
+
+              <SettingBox
+                title="Confirmar antes de cancelar treino"
+                description="Pede confirmação antes de descartar uma sessão ativa."
+              >
+                <ToggleSetting
+                  active={settings.confirmBeforeCancelWorkout}
+                  onClick={() =>
+                    handleUpdateSetting(
+                      'confirmBeforeCancelWorkout',
+                      !settings.confirmBeforeCancelWorkout
                     )
                   }
                 />

@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { Activity, ChevronRight, Clock, Dumbbell } from 'lucide-react'
 
 import { useWorkoutSession } from '../../context/WorkoutSessionContext'
-import { getAppSettings } from '../../utils/settingsUtils'
 
 function formatTime(seconds) {
   const hours = Math.floor(seconds / 3600)
@@ -19,25 +18,10 @@ function ActiveWorkoutMini() {
   const location = useLocation()
   const navigate = useNavigate()
 
-  const [settings, setSettings] = useState(getAppSettings())
-
   const { activeSession, elapsedSeconds, completedSets, totalSets } =
     useWorkoutSession()
 
-  useEffect(() => {
-    function handleSettingsChanged(event) {
-      setSettings(event.detail || getAppSettings())
-    }
-
-    window.addEventListener('forgeflow:settings-changed', handleSettingsChanged)
-
-    return () => {
-      window.removeEventListener('forgeflow:settings-changed', handleSettingsChanged)
-    }
-  }, [])
-
   if (!activeSession) return null
-  if (!settings.showActiveWorkoutMini) return null
   if (location.pathname === '/start-workout') return null
 
   const progress = totalSets

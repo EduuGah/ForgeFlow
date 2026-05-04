@@ -85,11 +85,11 @@ function StartWorkout() {
 
   const sessionIsInvalid = activeSession && !isValidActiveSession(activeSession)
 
-function handleClearBrokenSession() {
-  localStorage.removeItem('forgeflow:active-session')
-  cancelSession()
-  window.location.href = '/workouts'
-}
+  function handleClearBrokenSession() {
+    localStorage.removeItem('forgeflow:active-session')
+    cancelSession()
+    window.location.href = '/workouts'
+  }
 
   useEffect(() => {
     function handleSettingsChanged(event) {
@@ -145,29 +145,29 @@ function handleClearBrokenSession() {
   }, [activeSession?.id, appSettings.collapseSeriesByDefault])
 
   if (sessionIsInvalid) {
-  return (
-    <>
-      <PageHeader
-        title="Executar treino"
-        description="Encontramos uma sessão ativa incompleta ou corrompida."
-      />
+    return (
+      <>
+        <PageHeader
+          title="Executar treino"
+          description="Encontramos uma sessão ativa incompleta ou corrompida."
+        />
 
-      <EmptyState
-        title="Sessão de treino inválida"
-        description="Isso pode acontecer após mudanças no formato dos dados. Limpe a sessão ativa e inicie o treino novamente."
-        action={
-          <Button
-            type="button"
-            variant="danger"
-            onClick={handleClearBrokenSession}
-          >
-            Limpar sessão ativa
-          </Button>
-        }
-      />
-    </>
-  )
-}
+        <EmptyState
+          title="Sessão de treino inválida"
+          description="Isso pode acontecer após mudanças no formato dos dados. Limpe a sessão ativa e inicie o treino novamente."
+          action={
+            <Button
+              type="button"
+              variant="danger"
+              onClick={handleClearBrokenSession}
+            >
+              Limpar sessão ativa
+            </Button>
+          }
+        />
+      </>
+    )
+  }
 
   if (!activeSession) {
     return (
@@ -233,6 +233,12 @@ function handleClearBrokenSession() {
   }
 
   function handleCancelWorkout() {
+    if (!appSettings.confirmBeforeCancelWorkout) {
+      cancelSession()
+      showToast('success', 'Treino cancelado', 'A sessão ativa foi encerrada.')
+      return
+    }
+
     setConfirmModal({
       title: 'Cancelar treino?',
       description: 'O treino em andamento será descartado e não será salvo no histórico.',
@@ -249,11 +255,13 @@ function handleClearBrokenSession() {
   function handleCompleteSet(sessionExercise, setId) {
     toggleSetCompleted(sessionExercise.id, setId)
 
+    if (!appSettings.autoStartRestTimer) return
+
     const seconds = getRestSeconds(sessionExercise.restTimer)
 
     if (seconds > 0) {
       setRestTimer({
-        exerciseName: sessionExercise.exercise.name,
+        exerciseName: sessionExercise.exercise?.name || 'Exercício',
         secondsLeft: seconds,
         totalSeconds: seconds,
       })
@@ -285,7 +293,13 @@ function handleClearBrokenSession() {
 
             <button
               type="button"
-              onClick={() => setIsFinishModalOpen(true)}
+              onClick={() => {
+                if (appSettings.confirmBeforeFinishWorkout) {
+                  setIsFinishModalOpen(true)
+                } else {
+                  finishSession()
+                }
+              }}
               className="h-11 rounded-2xl bg-[var(--ff-accent)] px-4 text-sm font-bold text-white shadow-[0_0_20px_var(--ff-accent-shadow)] transition hover:bg-[var(--ff-accent-hover)] hover:shadow-[0_0_20px_var(--ff-accent-shadow)]"
             >
               Finalizar
@@ -509,8 +523,15 @@ function handleClearBrokenSession() {
                       {(sessionExercise.sets || []).map((set) => {
                         const isWarmup = set?.type === 'warmup'
 
-                        const isWeightPR = !isWarmup && set.id === weightPRSetId
-                        const isVolumePR = !isWarmup && set.id === volumePRSetId
+                        const isWeightPR =
+                          appSettings.showPRDuringWorkout &&
+                          !isWarmup &&
+                          set.id === weightPRSetId
+
+                        const isVolumePR =
+                          appSettings.showPRDuringWorkout &&
+                          !isWarmup &&
+                          set.id === volumePRSetId
 
                         const comparison = getExerciseComparison(
                           sessionExercise.exercise.name,
@@ -586,21 +607,24 @@ function handleClearBrokenSession() {
                                 </span>
                               )}
 
-                              {comparison.hasData && comparison.last && set.completed && (
-                                <div className="mt-1 hidden text-[10px] leading-tight text-zinc-500 lg:block">
-                                  <p>
-                                    Peso: {formatDiff(comparison.weightDiffFromLast, appSettings.weightUnit)}
-                                  </p>
+                              {appSettings.showLastWorkoutComparison &&
+                                comparison.hasData &&
+                                comparison.last &&
+                                set.completed && (
+                                  <div className="mt-1 hidden text-[10px] leading-tight text-zinc-500 lg:block">
+                                    <p>
+                                      Peso: {formatDiff(comparison.weightDiffFromLast, appSettings.weightUnit)}
+                                    </p>
 
-                                  <p>
-                                    Reps: {formatDiff(comparison.repsDiffFromLast)}
-                                  </p>
+                                    <p>
+                                      Reps: {formatDiff(comparison.repsDiffFromLast)}
+                                    </p>
 
-                                  <p>
-                                    Volume: {formatDiff(comparison.volumeDiffFromLast, 'kg')}
-                                  </p>
-                                </div>
-                              )}
+                                    <p>
+                                      Volume: {formatDiff(comparison.volumeDiffFromLast, appSettings.weightUnit)}
+                                    </p>
+                                  </div>
+                                )}
                             </div>
 
                             <button
