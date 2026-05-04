@@ -47,6 +47,14 @@ function getFirstCompletedSet(performance) {
   )
 }
 
+function isValidActiveSession(session) {
+  return (
+    session &&
+    Array.isArray(session.exercises) &&
+    session.exercises.length > 0
+  )
+}
+
 function StartWorkout() {
   const {
     activeSession,
@@ -73,6 +81,15 @@ function StartWorkout() {
 
   const [confirmModal, setConfirmModal] = useState(null)
   const [toast, setToast] = useState(null)
+  const [appSettings, setAppSettings] = useState(getAppSettings())
+
+  const sessionIsInvalid = activeSession && !isValidActiveSession(activeSession)
+
+function handleClearBrokenSession() {
+  localStorage.removeItem('forgeflow:active-session')
+  cancelSession()
+  window.location.href = '/workouts'
+}
 
   useEffect(() => {
     function handleSettingsChanged(event) {
@@ -126,6 +143,31 @@ function StartWorkout() {
       setCollapsedExerciseIds(activeSession.exercises.map((exercise) => exercise.id))
     }
   }, [activeSession?.id, appSettings.collapseSeriesByDefault])
+
+  if (sessionIsInvalid) {
+  return (
+    <>
+      <PageHeader
+        title="Executar treino"
+        description="Encontramos uma sessão ativa incompleta ou corrompida."
+      />
+
+      <EmptyState
+        title="Sessão de treino inválida"
+        description="Isso pode acontecer após mudanças no formato dos dados. Limpe a sessão ativa e inicie o treino novamente."
+        action={
+          <Button
+            type="button"
+            variant="danger"
+            onClick={handleClearBrokenSession}
+          >
+            Limpar sessão ativa
+          </Button>
+        }
+      />
+    </>
+  )
+}
 
   if (!activeSession) {
     return (
@@ -263,23 +305,23 @@ function StartWorkout() {
 
       <section className="grid grid-cols-1 xl:grid-cols-4 gap-6">
         <div className="xl:col-span-3 space-y-4 pb-32">
-          {activeSession.exercises.map((sessionExercise, exerciseIndex) => {
+          {(activeSession.exercises || []).map((sessionExercise, exerciseIndex) => {
             const lastPerformance = getLastExercisePerformance(
-              sessionExercise.exercise.name
+              sessionExercise.exercise?.name || 'Exercício sem nome'
             )
 
             const bestWeightPerformance = getBestWeightPerformance(
-              sessionExercise.exercise.name
+              sessionExercise.exercise?.name || 'Exercício sem nome'
             )
 
             const bestVolumePerformance = getBestVolumePerformance(
-              sessionExercise.exercise.name
+              sessionExercise.exercise?.name || 'Exercício sem nome'
             )
 
             const lastSet = getFirstCompletedSet(lastPerformance)
 
             const { weightPRSetId, volumePRSetId } = getSessionPRTypes(
-              sessionExercise.exercise.name,
+              sessionExercise.exercise?.muscleGroup || 'Sem grupo',
               sessionExercise.sets
             )
 
@@ -464,8 +506,8 @@ function StartWorkout() {
                     </div>
 
                     <div className="space-y-3">
-                      {sessionExercise.sets.map((set) => {
-                        const isWarmup = set.type === 'warmup'
+                      {(sessionExercise.sets || []).map((set) => {
+                        const isWarmup = set?.type === 'warmup'
 
                         const isWeightPR = !isWarmup && set.id === weightPRSetId
                         const isVolumePR = !isWarmup && set.id === volumePRSetId

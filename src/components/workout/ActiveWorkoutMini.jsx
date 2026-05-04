@@ -1,8 +1,8 @@
-import { Link, useLocation } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Activity, ChevronRight, Clock, Dumbbell } from 'lucide-react'
 
 import { useWorkoutSession } from '../../context/WorkoutSessionContext'
-
 import { getAppSettings } from '../../utils/settingsUtils'
 
 function formatTime(seconds) {
@@ -17,28 +17,51 @@ function formatTime(seconds) {
 
 function ActiveWorkoutMini() {
   const location = useLocation()
-  const settings = getAppSettings()
-  
+  const navigate = useNavigate()
+
+  const [settings, setSettings] = useState(getAppSettings())
+
   const { activeSession, elapsedSeconds, completedSets, totalSets } =
     useWorkoutSession()
+
+  useEffect(() => {
+    function handleSettingsChanged(event) {
+      setSettings(event.detail || getAppSettings())
+    }
+
+    window.addEventListener('forgeflow:settings-changed', handleSettingsChanged)
+
+    return () => {
+      window.removeEventListener('forgeflow:settings-changed', handleSettingsChanged)
+    }
+  }, [])
 
   if (!activeSession) return null
   if (!settings.showActiveWorkoutMini) return null
   if (location.pathname === '/start-workout') return null
 
-  const progress = totalSets ? Math.min((completedSets / totalSets) * 100, 100) : 0
+  const progress = totalSets
+    ? Math.min((completedSets / totalSets) * 100, 100)
+    : 0
+
+  function handleOpenWorkout() {
+    if (location.pathname === '/start-workout') return
+
+    navigate('/start-workout')
+  }
 
   return (
-    <Link
-      to="/start-workout"
-      className="fixed bottom-4 left-4 right-4 z-50 overflow-hidden rounded-3xl border border-violet-500/30 bg-[#121212]/95 p-4 text-white shadow-2xl shadow-violet-950/50 backdrop-blur-xl transition hover:border-violet-400/60 hover:shadow-[0_0_28px_rgba(139,92,246,0.28)] md:left-auto md:w-[420px]"
+    <button
+      type="button"
+      onClick={handleOpenWorkout}
+      className="fixed bottom-4 left-4 right-4 z-50 overflow-hidden rounded-3xl border border-[var(--ff-accent-border)] bg-[#121212]/95 p-4 text-left text-white shadow-2xl backdrop-blur-xl transition hover:shadow-[0_0_28px_var(--ff-accent-shadow)] md:left-auto md:w-[420px]"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.22),transparent_34%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--ff-accent-soft),transparent_34%)]" />
 
       <div className="relative">
         <div className="flex items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-violet-500/30 bg-violet-500/10 text-violet-300 shadow-[0_0_18px_rgba(139,92,246,0.22)]">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)] shadow-[0_0_18px_var(--ff-accent-shadow)]">
               <Dumbbell size={23} />
             </div>
 
@@ -63,7 +86,7 @@ function ActiveWorkoutMini() {
 
           <div className="flex shrink-0 items-center gap-3">
             <div className="text-right">
-              <div className="flex items-center justify-end gap-1 text-violet-300">
+              <div className="flex items-center justify-end gap-1 text-[var(--ff-accent-text)]">
                 <Clock size={14} />
 
                 <p className="text-sm font-black">
@@ -84,14 +107,15 @@ function ActiveWorkoutMini() {
 
         <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-800">
           <div
-            className="h-full rounded-full bg-violet-500 transition-all"
+            className="h-full rounded-full transition-all"
             style={{
               width: `${progress}%`,
+              backgroundColor: 'var(--ff-accent)',
             }}
           />
         </div>
       </div>
-    </Link>
+    </button>
   )
 }
 
