@@ -33,7 +33,6 @@ import { useWorkoutSession } from '../context/WorkoutSessionContext'
 function Workouts() {
     const [workouts, setWorkouts] = useState([])
     const [exercises, setExercises] = useState([])
-    const [showAllWorkouts, setShowAllWorkouts] = useState(false)
 
     const [quickSearch, setQuickSearch] = useState('')
     const [quickGroupFilter, setQuickGroupFilter] = useState('')
@@ -71,7 +70,9 @@ function Workouts() {
     const { startSession } = useWorkoutSession()
     const navigate = useNavigate()
 
-    useEffect(() => {const [showAllWorkouts, setShowAllWorkouts] = useState(false)
+    const [showAllWorkouts, setShowAllWorkouts] = useState(false)
+
+    useEffect(() => {
         const settings = getAppSettings()
 
         setAppSettings(settings)
