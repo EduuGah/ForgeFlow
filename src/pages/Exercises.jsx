@@ -24,7 +24,6 @@ import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
 
 function Exercises() {
-  const [exercises, setExercises] = useState([])
 
   const [name, setName] = useState('')
   const [muscleGroup, setMuscleGroup] = useState('')
