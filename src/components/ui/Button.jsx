@@ -24,11 +24,7 @@ function Button({
 
   const variants = {
     primary: `
-      bg-violet-600
       text-white
-      shadow-[0_0_18px_rgba(139,92,246,0.28)]
-      hover:bg-violet-500
-      hover:shadow-[0_0_26px_rgba(139,92,246,0.45)]
       active:scale-[0.98]
     `,
 
@@ -37,7 +33,7 @@ function Button({
       border-zinc-700
       bg-zinc-900
       text-white
-      hover:border-violet-500/40
+      hover:border-[var(--ff-accent-border)]
       hover:bg-zinc-800
       active:scale-[0.98]
     `,
@@ -61,12 +57,33 @@ function Button({
     `,
   }
 
+  const primaryStyle =
+    variant === 'primary'
+      ? {
+          backgroundColor: 'var(--ff-accent)',
+          boxShadow: '0 0 18px var(--ff-accent-shadow)',
+        }
+      : undefined
+
   return (
     <button
       type={type}
       onClick={onClick}
       disabled={disabled}
+      style={primaryStyle}
       className={`${baseClasses} ${variants[variant] || variants.primary} ${className}`}
+      onMouseEnter={(event) => {
+        if (variant === 'primary') {
+          event.currentTarget.style.backgroundColor = 'var(--ff-accent-hover)'
+          event.currentTarget.style.boxShadow = '0 0 26px var(--ff-accent-shadow)'
+        }
+      }}
+      onMouseLeave={(event) => {
+        if (variant === 'primary') {
+          event.currentTarget.style.backgroundColor = 'var(--ff-accent)'
+          event.currentTarget.style.boxShadow = '0 0 18px var(--ff-accent-shadow)'
+        }
+      }}
     >
       {children}
     </button>

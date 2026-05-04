@@ -40,6 +40,8 @@ import EmptyState from '../components/ui/EmptyState'
 
 import { useWorkoutSession } from '../context/WorkoutSessionContext'
 
+import { getAppSettings } from '../utils/settingsUtils'
+
 import {
   getCompletedSets,
   getExercisePRs,
@@ -147,6 +149,8 @@ function Dashboard() {
   const volumePRs = useMemo(() => {
     return getExerciseVolumePRs(completedSets)
   }, [completedSets])
+
+  const settings = getAppSettings()
 
   const workoutsByWeek = useMemo(() => {
     const map = new Map()
@@ -1196,15 +1200,19 @@ function Dashboard() {
                   <XAxis dataKey="date" stroke="#71717a" />
                   <YAxis stroke="#71717a" />
                   <Tooltip
-                    contentStyle={{
-                      background: '#09090b',
-                      border: '1px solid #27272a',
-                      borderRadius: '12px',
+                    formatter={(value, name) => {
+                      if (name === "Peso" || name === "weight") {
+                        return [`${value}kg`, "Peso"]
+                      }
+
+                      return [value, name]
                     }}
+                    labelFormatter={(label) => `Data: ${label}`}
                   />
                   <Line
                     type="monotone"
                     dataKey="weight"
+                    name="Peso"
                     stroke="#8b5cf6"
                     strokeWidth={3}
                     dot

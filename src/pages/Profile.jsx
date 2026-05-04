@@ -23,6 +23,8 @@ import {
   YAxis,
 } from 'recharts'
 
+import { getAppSettings } from '../utils/settingsUtils'
+
 import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
@@ -81,6 +83,8 @@ function Profile() {
   const [toast, setToast] = useState(null)
 
   const dateInputRef = useRef(null)
+
+  const settings = getAppSettings()
 
   useEffect(() => {
     const savedProfile = getStorageData('forgeflow:profile', {
@@ -677,8 +681,16 @@ function Profile() {
                   ref={dateInputRef}
                   type="date"
                   value={dateInput}
-                  onClick={() => dateInputRef.current?.showPicker?.()}
-                  onFocus={() => dateInputRef.current?.showPicker?.()}
+                  onClick={() => {
+                    if (settings.autoOpenCalendar) {
+                      dateInputRef.current?.showPicker?.()
+                    }
+                  }}
+                  onFocus={() => {
+                    if (settings.autoOpenCalendar) {
+                      dateInputRef.current?.showPicker?.()
+                    }
+                  }}
                   onChange={(event) => setDateInput(event.target.value)}
                   className="mt-2 w-full cursor-pointer rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-white outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/10"
                 />

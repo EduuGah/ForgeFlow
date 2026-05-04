@@ -2,12 +2,31 @@ import { useEffect, useState } from 'react'
 import { Menu } from 'lucide-react'
 import { Outlet } from 'react-router-dom'
 
+import {
+  applyAppSettingsToDocument,
+  getAppSettings,
+} from '../../utils/settingsUtils'
+
 import Sidebar from './Sidebar'
 import ActiveWorkoutMini from '../workout/ActiveWorkoutMini'
 
 function AppLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isSidebarClosing, setIsSidebarClosing] = useState(false)
+
+  useEffect(() => {
+    applyAppSettingsToDocument(getAppSettings())
+
+    function handleSettingsChanged(event) {
+      applyAppSettingsToDocument(event.detail)
+    }
+
+    window.addEventListener('forgeflow:settings-changed', handleSettingsChanged)
+
+    return () => {
+      window.removeEventListener('forgeflow:settings-changed', handleSettingsChanged)
+    }
+  }, [])
 
   function openSidebar() {
     setIsSidebarClosing(false)

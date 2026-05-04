@@ -11,11 +11,11 @@ function Badge({
     `,
 
     purple: `
-      border-violet-500/30
-      bg-violet-500/10
-      text-violet-300
-      shadow-[0_0_14px_rgba(139,92,246,0.16)]
-    `,
+  border-[var(--ff-accent-border)]
+  bg-[var(--ff-accent-soft)]
+  text-[var(--ff-accent-text)]
+  shadow-[0_0_14px_var(--ff-accent-shadow)]
+`,
 
     green: `
       border-emerald-500/30

@@ -25,6 +25,8 @@ import {
   formatDiff,
 } from '../utils/prUtils'
 
+import { getAppSettings } from '../utils/settingsUtils'
+
 function formatTime(seconds) {
   const hours = Math.floor(seconds / 3600)
   const minutes = Math.floor((seconds % 3600) / 60)
@@ -67,8 +69,22 @@ function StartWorkout() {
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false)
   const [restTimer, setRestTimer] = useState(null)
 
+  const [collapsedExerciseIds, setCollapsedExerciseIds] = useState([])
+
   const [confirmModal, setConfirmModal] = useState(null)
   const [toast, setToast] = useState(null)
+
+  useEffect(() => {
+    function handleSettingsChanged(event) {
+      setAppSettings(event.detail || getAppSettings())
+    }
+
+    window.addEventListener('forgeflow:settings-changed', handleSettingsChanged)
+
+    return () => {
+      window.removeEventListener('forgeflow:settings-changed', handleSettingsChanged)
+    }
+  }, [])
 
   useEffect(() => {
     const savedExercises = localStorage.getItem('forgeflow:exercises')
@@ -102,6 +118,14 @@ function StartWorkout() {
 
     return () => clearInterval(interval)
   }, [restTimer])
+
+  useEffect(() => {
+    if (!activeSession) return
+
+    if (appSettings.collapseSeriesByDefault) {
+      setCollapsedExerciseIds(activeSession.exercises.map((exercise) => exercise.id))
+    }
+  }, [activeSession?.id, appSettings.collapseSeriesByDefault])
 
   if (!activeSession) {
     return (
@@ -144,6 +168,14 @@ function StartWorkout() {
     const number = Number(restTimerText.replace(/\D/g, ''))
 
     return Number.isNaN(number) ? 0 : number
+  }
+
+  function toggleExerciseCollapse(exerciseId) {
+    setCollapsedExerciseIds((current) =>
+      current.includes(exerciseId)
+        ? current.filter((id) => id !== exerciseId)
+        : [...current, exerciseId]
+    )
   }
 
   function showToast(type, title, message = '') {
@@ -251,6 +283,16 @@ function StartWorkout() {
               sessionExercise.sets
             )
 
+            const isCollapsed = collapsedExerciseIds.includes(sessionExercise.id)
+
+            const exerciseCompletedSets = sessionExercise.sets.filter(
+              (set) => set.completed && set.type !== 'warmup'
+            ).length
+
+            const exerciseTotalSets = sessionExercise.sets.filter(
+              (set) => set.type !== 'warmup'
+            ).length
+
             return (
               <Card
                 key={sessionExercise.id}
@@ -309,7 +351,14 @@ function StartWorkout() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 lg:flex lg:justify-end">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:flex lg:justify-end">
+                    <button
+                      type="button"
+                      onClick={() => toggleExerciseCollapse(sessionExercise.id)}
+                      className="h-10 rounded-2xl border border-zinc-800 bg-zinc-950 px-3 text-xs font-bold text-zinc-300 transition hover:border-violet-500/40 hover:bg-zinc-900 hover:text-white lg:h-11 lg:px-4 lg:text-sm"
+                    >
+                      {isCollapsed ? 'Abrir' : 'Minimizar'}
+                    </button>
                     <button
                       type="button"
                       onClick={() =>
@@ -342,6 +391,41 @@ function StartWorkout() {
                   </div>
                 </div>
 
+                {isCollapsed && (
+                  <div className="mt-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-bold text-white">
+                          Séries ocultas
+                        </p>
+
+                        <p className="mt-1 text-xs text-zinc-500">
+                          {exerciseCompletedSets}/{exerciseTotalSets} séries concluídas
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => toggleExerciseCollapse(sessionExercise.id)}
+                        className="rounded-2xl bg-violet-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-violet-500"
+                      >
+                        Ver séries
+                      </button>
+                    </div>
+
+                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-zinc-800">
+                      <div
+                        className="h-full rounded-full bg-violet-500 transition-all"
+                        style={{
+                          width: exerciseTotalSets
+                            ? `${(exerciseCompletedSets / exerciseTotalSets) * 100}%`
+                            : '0%',
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {replaceExerciseId === sessionExercise.id && (
                   <div className="mt-4">
                     <Select
@@ -368,138 +452,141 @@ function StartWorkout() {
                     </Select>
                   </div>
                 )}
+                {!isCollapsed && (
 
-                <div className="mt-5">
-                  <div className="mb-2 hidden grid-cols-[52px_minmax(120px,1fr)_minmax(120px,1fr)_150px_52px] gap-3 px-3 text-xs font-bold uppercase tracking-wide text-zinc-500 lg:grid">
-                    <span>Série</span>
-                    <span>KG</span>
-                    <span>Reps</span>
-                    <span>Recordes</span>
-                    <span>Status</span>
-                  </div>
+                  <div className="mt-5">
+                    <div className="mb-2 hidden grid-cols-[52px_minmax(120px,1fr)_minmax(120px,1fr)_150px_52px] gap-3 px-3 text-xs font-bold uppercase tracking-wide text-zinc-500 lg:grid">
+                      <span>Série</span>
+                      <span>KG</span>
+                      <span>Reps</span>
+                      <span>Recordes</span>
+                      <span>Status</span>
+                    </div>
 
-                  <div className="space-y-3">
-                    {sessionExercise.sets.map((set) => {
-                      const isWarmup = set.type === 'warmup'
+                    <div className="space-y-3">
+                      {sessionExercise.sets.map((set) => {
+                        const isWarmup = set.type === 'warmup'
 
-                      const isWeightPR = !isWarmup && set.id === weightPRSetId
-                      const isVolumePR = !isWarmup && set.id === volumePRSetId
+                        const isWeightPR = !isWarmup && set.id === weightPRSetId
+                        const isVolumePR = !isWarmup && set.id === volumePRSetId
 
-                      const comparison = getExerciseComparison(
-                        sessionExercise.exercise.name,
-                        set
-                      )
+                        const comparison = getExerciseComparison(
+                          sessionExercise.exercise.name,
+                          set
+                        )
 
-                      return (
-                        <div
-                          key={set.id}
-                          className={`grid w-full grid-cols-[42px_minmax(0,1fr)_minmax(0,1fr)_74px_42px] items-center gap-2 rounded-2xl border p-2.5 transition sm:grid-cols-[44px_minmax(90px,1fr)_minmax(90px,1fr)_88px_44px] sm:p-3 lg:grid-cols-[52px_minmax(120px,1fr)_minmax(120px,1fr)_150px_52px] lg:gap-3 ${set.completed
-                            ? 'border-emerald-500/30 bg-emerald-500/5'
-                            : 'border-zinc-800 bg-zinc-950'
-                            }`}
-                        >
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#18181b] text-sm font-bold lg:h-11 lg:w-11">
-                            {isWarmup ? 'A' : set.setNumber}
-                          </div>
-
-                          <Input
-                            type="number"
-                            min="0"
-                            placeholder="kg"
-                            value={set.weight}
-                            onChange={(event) =>
-                              updateSet(
-                                sessionExercise.id,
-                                set.id,
-                                'weight',
-                                event.target.value
-                              )
-                            }
-                            className="h-10 w-full px-2 text-center text-sm lg:h-11 lg:px-3"
-                          />
-
-                          <Input
-                            type="number"
-                            min="1"
-                            placeholder="reps"
-                            value={set.reps}
-                            onChange={(event) =>
-                              updateSet(
-                                sessionExercise.id,
-                                set.id,
-                                'reps',
-                                event.target.value
-                              )
-                            }
-                            className="h-10 w-full px-2 text-center text-sm lg:h-11 lg:px-3"
-                          />
-
-                          <div className="flex min-h-10 flex-col items-start justify-center gap-1 overflow-hidden">
-                            {isWarmup && (
-                              <span className="w-fit rounded-lg bg-zinc-700/40 px-1.5 py-1 text-[9px] font-bold text-zinc-300 sm:px-2 sm:text-[10px]">
-                                AQUEC.
-                              </span>
-                            )}
-
-                            {isWeightPR && (
-                              <span className="w-fit rounded-lg bg-violet-500/20 px-1.5 py-1 text-[9px] font-bold text-violet-300 sm:px-2 sm:text-[10px]">
-                                PESO
-                              </span>
-                            )}
-
-                            {isVolumePR && (
-                              <span className="w-fit rounded-lg bg-orange-500/20 px-1.5 py-1 text-[9px] font-bold text-orange-300 sm:px-2 sm:text-[10px]">
-                                VOL
-                              </span>
-                            )}
-
-                            {!isWarmup && !isWeightPR && !isVolumePR && (
-                              <span className="hidden text-xs text-zinc-600 lg:block">
-                                —
-                              </span>
-                            )}
-
-                            {comparison.hasData && comparison.last && set.completed && (
-                              <div className="mt-1 hidden text-[10px] leading-tight text-zinc-500 lg:block">
-                                <p>
-                                  Peso: {formatDiff(comparison.weightDiffFromLast, 'kg')}
-                                </p>
-
-                                <p>
-                                  Reps: {formatDiff(comparison.repsDiffFromLast)}
-                                </p>
-
-                                <p>
-                                  Volume: {formatDiff(comparison.volumeDiffFromLast, 'kg')}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => handleCompleteSet(sessionExercise, set.id)}
-                            className={
-                              set.completed
-                                ? 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white lg:h-11 lg:w-11'
-                                : 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 text-zinc-400 transition hover:border-violet-500 hover:text-white lg:h-11 lg:w-11'
-                            }
+                        return (
+                          <div
+                            key={set.id}
+                            className={`grid w-full grid-cols-[42px_minmax(0,1fr)_minmax(0,1fr)_74px_42px] items-center gap-2 rounded-2xl border p-2.5 transition sm:grid-cols-[44px_minmax(90px,1fr)_minmax(90px,1fr)_88px_44px] sm:p-3 lg:grid-cols-[52px_minmax(120px,1fr)_minmax(120px,1fr)_150px_52px] lg:gap-3 ${set.completed
+                              ? 'border-emerald-500/30 bg-emerald-500/5'
+                              : 'border-zinc-800 bg-zinc-950'
+                              }`}
                           >
-                            {set.completed ? '✓' : '○'}
-                          </button>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#18181b] text-sm font-bold lg:h-11 lg:w-11">
+                              {isWarmup ? 'A' : set.setNumber}
+                            </div>
 
-                <button
-                  type="button"
-                  onClick={() => addSet(sessionExercise.id)}
-                  className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-zinc-800 text-sm font-bold transition hover:bg-zinc-700"
-                >
-                  + Adicionar Série
-                </button>
+                            <Input
+                              type="number"
+                              min="0"
+                              placeholder={appSettings.weightUnit}
+                              value={set.weight}
+                              onChange={(event) =>
+                                updateSet(
+                                  sessionExercise.id,
+                                  set.id,
+                                  'weight',
+                                  event.target.value
+                                )
+                              }
+                              className="h-10 w-full px-2 text-center text-sm lg:h-11 lg:px-3"
+                            />
+
+                            <Input
+                              type="number"
+                              min="1"
+                              placeholder="reps"
+                              value={set.reps}
+                              onChange={(event) =>
+                                updateSet(
+                                  sessionExercise.id,
+                                  set.id,
+                                  'reps',
+                                  event.target.value
+                                )
+                              }
+                              className="h-10 w-full px-2 text-center text-sm lg:h-11 lg:px-3"
+                            />
+
+                            <div className="flex min-h-10 flex-col items-start justify-center gap-1 overflow-hidden">
+                              {isWarmup && (
+                                <span className="w-fit rounded-lg bg-zinc-700/40 px-1.5 py-1 text-[9px] font-bold text-zinc-300 sm:px-2 sm:text-[10px]">
+                                  AQUEC.
+                                </span>
+                              )}
+
+                              {isWeightPR && (
+                                <span className="w-fit rounded-lg bg-violet-500/20 px-1.5 py-1 text-[9px] font-bold text-violet-300 sm:px-2 sm:text-[10px]">
+                                  PESO
+                                </span>
+                              )}
+
+                              {isVolumePR && (
+                                <span className="w-fit rounded-lg bg-orange-500/20 px-1.5 py-1 text-[9px] font-bold text-orange-300 sm:px-2 sm:text-[10px]">
+                                  VOL
+                                </span>
+                              )}
+
+                              {!isWarmup && !isWeightPR && !isVolumePR && (
+                                <span className="hidden text-xs text-zinc-600 lg:block">
+                                  —
+                                </span>
+                              )}
+
+                              {comparison.hasData && comparison.last && set.completed && (
+                                <div className="mt-1 hidden text-[10px] leading-tight text-zinc-500 lg:block">
+                                  <p>
+                                    Peso: {formatDiff(comparison.weightDiffFromLast, appSettings.weightUnit)}
+                                  </p>
+
+                                  <p>
+                                    Reps: {formatDiff(comparison.repsDiffFromLast)}
+                                  </p>
+
+                                  <p>
+                                    Volume: {formatDiff(comparison.volumeDiffFromLast, 'kg')}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => handleCompleteSet(sessionExercise, set.id)}
+                              className={
+                                set.completed
+                                  ? 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white lg:h-11 lg:w-11'
+                                  : 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 text-zinc-400 transition hover:border-violet-500 hover:text-white lg:h-11 lg:w-11'
+                              }
+                            >
+                              {set.completed ? '✓' : '○'}
+                            </button>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+                {!isCollapsed && (
+                  <button
+                    type="button"
+                    onClick={() => addSet(sessionExercise.id)}
+                    className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-zinc-800 text-sm font-bold transition hover:bg-zinc-700"
+                  >
+                    + Adicionar Série
+                  </button>
+                )}
               </Card>
             )
           })}

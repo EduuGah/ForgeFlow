@@ -12,6 +12,8 @@ import {
   X,
 } from 'lucide-react'
 
+import { getAppSettings } from '../utils/settingsUtils'
+
 import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
@@ -125,10 +127,12 @@ function History() {
   const [endDate, setEndDate] = useState('')
 
   const startDateRef = useRef(null)
-const endDateRef = useRef(null)
+  const endDateRef = useRef(null)
 
   const [confirmModal, setConfirmModal] = useState(null)
   const [toast, setToast] = useState(null)
+
+  const settings = getAppSettings()
 
   useEffect(() => {
     const savedHistory = localStorage.getItem('forgeflow:history')
@@ -333,82 +337,98 @@ const endDateRef = useRef(null)
             </div>
 
             <div className="mt-5 grid grid-cols-1 gap-3 xl:grid-cols-[1fr_190px_190px_auto]">
-  <div>
-    <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-zinc-500">
-      Buscar
-    </label>
+              <div>
+                <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-zinc-500">
+                  Buscar
+                </label>
 
-    <div className="flex h-12 items-center gap-3 rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-zinc-400">
-      <Search size={20} />
+                <div className="flex h-12 items-center gap-3 rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-zinc-400">
+                  <Search size={20} />
 
-      <input
-        type="text"
-        placeholder="Treino ou exercício..."
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
-        className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-500"
-      />
+                  <input
+                    type="text"
+                    placeholder="Treino ou exercício..."
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-500"
+                  />
 
-      {search && (
-        <button
-          type="button"
-          onClick={() => setSearch('')}
-          className="text-zinc-500 transition hover:text-white"
-        >
-          <X size={18} />
-        </button>
-      )}
-    </div>
-  </div>
+                  {search && (
+                    <button
+                      type="button"
+                      onClick={() => setSearch('')}
+                      className="text-zinc-500 transition hover:text-white"
+                    >
+                      <X size={18} />
+                    </button>
+                  )}
+                </div>
+              </div>
 
-  <div>
-    <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-zinc-500">
-      Data inicial
-    </label>
+              <div>
+                <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-zinc-500">
+                  Data inicial
+                </label>
 
-    <input
-      ref={startDateRef}
-      type="date"
-      value={startDate}
-      onClick={() => startDateRef.current?.showPicker?.()}
-      onFocus={() => startDateRef.current?.showPicker?.()}
-      onChange={(event) => setStartDate(event.target.value)}
-      className="h-12 w-full cursor-pointer rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/10"
-    />
-  </div>
+                <input
+                  ref={startDateRef}
+                  type="date"
+                  value={startDate}
+                  onClick={() => {
+                    if (settings.autoOpenCalendar) {
+                      startDateRef.current?.showPicker?.()
+                    }
+                  }}
+                  onFocus={() => {
+                    if (settings.autoOpenCalendar) {
+                      startDateRef.current?.showPicker?.()
+                    }
+                  }}
+                  onChange={(event) => setStartDate(event.target.value)}
+                  className="h-12 w-full cursor-pointer rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/10"
+                />
+              </div>
 
-  <div>
-    <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-zinc-500">
-      Data final
-    </label>
+              <div>
+                <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-zinc-500">
+                  Data final
+                </label>
 
-    <input
-      ref={endDateRef}
-      type="date"
-      value={endDate}
-      onClick={() => endDateRef.current?.showPicker?.()}
-      onFocus={() => endDateRef.current?.showPicker?.()}
-      onChange={(event) => setEndDate(event.target.value)}
-      className="h-12 w-full cursor-pointer rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/10"
-    />
-  </div>
+                <input
+                  ref={endDateRef}
+                  type="date"
+                  value={endDate}
+                  onClick={() => {
+                    if (settings.autoOpenCalendar) {
+                      endDateRef.current?.showPicker?.()
+                    }
+                  }}
+                  onFocus={() => {
+                    if (settings.autoOpenCalendar) {
+                      endDateRef.current?.showPicker?.()
+                    }
+                  }}
+                  onChange={(event) => setEndDate(event.target.value)}
+                  className="h-12 w-full cursor-pointer rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/10"
+                />
+              </div>
 
-  <div className="flex items-end">
-    {(search || startDate || endDate) && (
-      <button
-        type="button"
-        onClick={() => {
-          setSearch('')
-          setStartDate('')
-          setEndDate('')
-        }}
-        className="h-12 w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 text-sm font-bold text-zinc-300 transition hover:border-violet-500/40 hover:text-white"
-      >
-        Limpar
-      </button>
-    )}
-  </div>
-</div>
+              <div className="flex items-end">
+                {(search || startDate || endDate) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearch('')
+                      setStartDate('')
+                      setEndDate('')
+                    }}
+                    className="h-12 w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 text-sm font-bold text-zinc-300 transition hover:border-violet-500/40 hover:text-white"
+                  >
+                    Limpar
+                  </button>
+                )}
+              </div>
+            </div>
 
             <div className="mt-6 space-y-4">
               {history.length === 0 && (

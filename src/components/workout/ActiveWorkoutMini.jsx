@@ -3,6 +3,8 @@ import { Activity, ChevronRight, Clock, Dumbbell } from 'lucide-react'
 
 import { useWorkoutSession } from '../../context/WorkoutSessionContext'
 
+import { getAppSettings } from '../../utils/settingsUtils'
+
 function formatTime(seconds) {
   const hours = Math.floor(seconds / 3600)
   const minutes = Math.floor((seconds % 3600) / 60)
@@ -15,10 +17,13 @@ function formatTime(seconds) {
 
 function ActiveWorkoutMini() {
   const location = useLocation()
+  const settings = getAppSettings()
+  
   const { activeSession, elapsedSeconds, completedSets, totalSets } =
     useWorkoutSession()
 
   if (!activeSession) return null
+  if (!settings.showActiveWorkoutMini) return null
   if (location.pathname === '/start-workout') return null
 
   const progress = totalSets ? Math.min((completedSets / totalSets) * 100, 100) : 0

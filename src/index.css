@@ -95,3 +95,54 @@
             rgba(167, 139, 250, 1),
             rgba(139, 92, 246, 1));
 }
+
+:root {
+  --ff-accent: #8b5cf6;
+  --ff-accent-hover: #a78bfa;
+  --ff-accent-soft: rgba(139, 92, 246, 0.12);
+  --ff-accent-border: rgba(139, 92, 246, 0.32);
+  --ff-accent-text: #c4b5fd;
+  --ff-accent-shadow: rgba(139, 92, 246, 0.35);
+}
+
+/* Tema roxo deixa o fundo um pouco mais colorido */
+:root[data-theme='purple'] body {
+  background:
+    radial-gradient(circle at top left, var(--ff-accent-soft), transparent 32%),
+    #000;
+}
+
+/* Automático segue o sistema, mas mantém dark como base */
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='auto'] body {
+    background: #000;
+    color: #fff;
+  }
+}
+
+/* Modo compacto apenas no celular */
+@media (max-width: 640px) {
+  .ff-compact-mobile .rounded-3xl {
+    border-radius: 1.25rem;
+  }
+
+  .ff-compact-mobile .p-5 {
+    padding: 1rem;
+  }
+
+  .ff-compact-mobile .p-6 {
+    padding: 1rem;
+  }
+
+  .ff-compact-mobile .gap-6 {
+    gap: 1rem;
+  }
+
+  .ff-compact-mobile .mt-6 {
+    margin-top: 1rem;
+  }
+
+  .ff-compact-mobile .text-3xl {
+    font-size: 1.5rem;
+  }
+}
