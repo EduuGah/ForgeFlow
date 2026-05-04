@@ -5,8 +5,12 @@ import {
   Dumbbell,
   AlertTriangle,
   CheckCircle2,
-  Repeat,
+  Lightbulb,
   ImageOff,
+  Target,
+  Layers3,
+  Gauge,
+  Repeat,
 } from 'lucide-react'
 
 import PageHeader from '../components/ui/PageHeader'
@@ -14,6 +18,118 @@ import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
+
+function getExerciseMedia(exercise) {
+  if (exercise?.media?.gif) return exercise.media.gif
+  if (exercise?.media?.image) return exercise.media.image
+  if (exercise?.gifUrl) return exercise.gifUrl
+  if (exercise?.mediaUrl) return exercise.mediaUrl
+
+  return ''
+}
+
+function normalizeList(value) {
+  if (Array.isArray(value)) return value
+  if (typeof value === 'string' && value.trim()) return [value]
+
+  return []
+}
+
+function InfoList({
+  icon: Icon,
+  title,
+  description,
+  items,
+  variant = 'default',
+}) {
+  const normalizedItems = normalizeList(items)
+
+  const styles = {
+    default: {
+      iconBox: 'bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]',
+      number: 'bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]',
+      border: 'border-zinc-800',
+    },
+    success: {
+      iconBox: 'bg-emerald-500/10 text-emerald-400',
+      number: 'bg-emerald-500/10 text-emerald-400',
+      border: 'border-zinc-800',
+    },
+    danger: {
+      iconBox: 'bg-red-500/10 text-red-400',
+      number: 'bg-red-500/10 text-red-400',
+      border: 'border-red-500/20',
+    },
+  }
+
+  const currentStyle = styles[variant] || styles.default
+
+  return (
+    <Card>
+      <div className="flex items-center gap-3">
+        <div
+          className={`flex h-11 w-11 items-center justify-center rounded-2xl ${currentStyle.iconBox}`}
+        >
+          <Icon size={22} />
+        </div>
+
+        <div>
+          <h2 className="text-xl font-bold">
+            {title}
+          </h2>
+
+          <p className="text-sm text-zinc-500">
+            {description}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-5 space-y-2">
+        {normalizedItems.length > 0 ? (
+          normalizedItems.map((item, index) => (
+            <div
+              key={index}
+              className={`flex gap-3 rounded-2xl border ${currentStyle.border} bg-[#18181b] p-4`}
+            >
+              <span
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${currentStyle.number}`}
+              >
+                {variant === 'danger' ? '!' : index + 1}
+              </span>
+
+              <p className="text-sm leading-relaxed text-zinc-300">
+                {item}
+              </p>
+            </div>
+          ))
+        ) : (
+          <EmptyState
+            title={`${title} não cadastrada`}
+            description="Edite o exercício para completar essas informações."
+          />
+        )}
+      </div>
+    </Card>
+  )
+}
+
+function SummaryItem({ label, value, icon: Icon }) {
+  return (
+    <div className="rounded-2xl border border-zinc-800 bg-[#18181b] p-4">
+      <div className="flex items-center gap-2 text-zinc-500">
+        {Icon && <Icon size={16} />}
+
+        <p className="text-xs">
+          {label}
+        </p>
+      </div>
+
+      <p className="mt-1 font-bold text-white">
+        {value || 'Não informado'}
+      </p>
+    </div>
+  )
+}
 
 function ExerciseDetails() {
   const { id } = useParams()
@@ -53,17 +169,18 @@ function ExerciseDetails() {
     )
   }
 
-  const executionList = Array.isArray(exercise.execution)
-    ? exercise.execution
-    : []
+  const media = getExerciseMedia(exercise)
 
-  const mistakesList = Array.isArray(exercise.commonMistakes)
-    ? exercise.commonMistakes
-    : []
+  const instructionsList = normalizeList(
+    exercise.instructions || exercise.execution
+  )
 
-  const variationsList = Array.isArray(exercise.variations)
-    ? exercise.variations
-    : []
+  const tipsList = normalizeList(
+    exercise.tips || exercise.variations
+  )
+
+  const mistakesList = normalizeList(exercise.commonMistakes)
+  const secondaryMuscles = normalizeList(exercise.secondaryMuscles)
 
   return (
     <>
@@ -81,9 +198,9 @@ function ExerciseDetails() {
         <div className="xl:col-span-2 space-y-6">
           <Card className="overflow-hidden p-0">
             <div className="relative min-h-[320px] bg-white">
-              {exercise.mediaUrl ? (
+              {media ? (
                 <img
-                  src={exercise.mediaUrl}
+                  src={media}
                   alt={exercise.name}
                   className="h-[320px] w-full object-contain"
                 />
@@ -99,7 +216,7 @@ function ExerciseDetails() {
                     </p>
 
                     <p className="mt-1 text-xs text-zinc-400">
-                      Adicione uma URL de imagem/GIF depois
+                      Adicione uma imagem ou GIF depois.
                     </p>
                   </div>
                 </div>
@@ -128,7 +245,13 @@ function ExerciseDetails() {
                       {exercise.equipment}
                     </Badge>
 
-                    {exercise.mediaUrl ? (
+                    {exercise.targetMuscle && (
+                      <Badge>
+                        {exercise.targetMuscle}
+                      </Badge>
+                    )}
+
+                    {media ? (
                       <Badge variant="green">
                         Com mídia
                       </Badge>
@@ -161,89 +284,28 @@ function ExerciseDetails() {
             </div>
           </Card>
 
-          <Card>
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400">
-                <CheckCircle2 size={22} />
-              </div>
+          <InfoList
+            icon={CheckCircle2}
+            title="Execução correta"
+            description="Passo a passo para executar melhor."
+            items={instructionsList}
+            variant="success"
+          />
 
-              <div>
-                <h2 className="text-xl font-bold">
-                  Execução correta
-                </h2>
+          <InfoList
+            icon={Lightbulb}
+            title="Dicas"
+            description="Pontos úteis para melhorar a técnica."
+            items={tipsList}
+          />
 
-                <p className="text-sm text-zinc-500">
-                  Pontos importantes para executar melhor.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-5 space-y-2">
-              {executionList.length > 0 ? (
-                executionList.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex gap-3 rounded-2xl border border-zinc-800 bg-[#18181b] p-4"
-                  >
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-xs font-bold text-emerald-400">
-                      {index + 1}
-                    </span>
-
-                    <p className="text-sm text-zinc-300">
-                      {item}
-                    </p>
-                  </div>
-                ))
-              ) : (
-                <EmptyState
-                  title="Nenhuma dica cadastrada"
-                  description="Edite o exercício para adicionar instruções de execução."
-                />
-              )}
-            </div>
-          </Card>
-
-          <Card>
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-red-500/10 text-red-400">
-                <AlertTriangle size={22} />
-              </div>
-
-              <div>
-                <h2 className="text-xl font-bold">
-                  Erros comuns
-                </h2>
-
-                <p className="text-sm text-zinc-500">
-                  Coisas para evitar durante o movimento.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-5 space-y-2">
-              {mistakesList.length > 0 ? (
-                mistakesList.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex gap-3 rounded-2xl border border-zinc-800 bg-[#18181b] p-4"
-                  >
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-red-500/10 text-xs font-bold text-red-400">
-                      !
-                    </span>
-
-                    <p className="text-sm text-zinc-300">
-                      {item}
-                    </p>
-                  </div>
-                ))
-              ) : (
-                <EmptyState
-                  title="Nenhum erro comum cadastrado"
-                  description="Adicione erros comuns para deixar a biblioteca mais completa."
-                />
-              )}
-            </div>
-          </Card>
+          <InfoList
+            icon={AlertTriangle}
+            title="Erros comuns"
+            description="Coisas para evitar durante o movimento."
+            items={mistakesList}
+            variant="danger"
+          />
         </div>
 
         <div className="space-y-6">
@@ -253,33 +315,43 @@ function ExerciseDetails() {
             </h2>
 
             <div className="mt-5 space-y-3">
+              <SummaryItem
+                label="Grupo muscular"
+                value={exercise.muscleGroup}
+                icon={Dumbbell}
+              />
+
+              <SummaryItem
+                label="Músculo alvo"
+                value={exercise.targetMuscle}
+                icon={Target}
+              />
+
+              <SummaryItem
+                label="Equipamento"
+                value={exercise.equipment}
+                icon={Layers3}
+              />
+
+              <SummaryItem
+                label="Dificuldade"
+                value={exercise.difficulty}
+                icon={Gauge}
+              />
+
+              <SummaryItem
+                label="Padrão de movimento"
+                value={exercise.movementPattern}
+                icon={Repeat}
+              />
+
               <div className="rounded-2xl border border-zinc-800 bg-[#18181b] p-4">
-                <p className="text-xs text-zinc-500">
-                  Grupo muscular
-                </p>
-
-                <p className="mt-1 font-bold">
-                  {exercise.muscleGroup}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-zinc-800 bg-[#18181b] p-4">
-                <p className="text-xs text-zinc-500">
-                  Equipamento
-                </p>
-
-                <p className="mt-1 font-bold">
-                  {exercise.equipment}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-zinc-800 bg-[#18181b] p-4">
-                <p className="text-xs text-zinc-500">
+                                <p className="text-xs text-zinc-500">
                   Mídia
                 </p>
 
                 <div className="mt-1 flex items-center gap-2 font-bold">
-                  {exercise.mediaUrl ? (
+                  {media ? (
                     <>
                       <Dumbbell size={18} className="text-[var(--ff-accent-text)]" />
                       Disponível
@@ -296,37 +368,20 @@ function ExerciseDetails() {
           </Card>
 
           <Card>
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
-                <Repeat size={22} />
-              </div>
+            <h2 className="text-xl font-bold">
+              Músculos secundários
+            </h2>
 
-              <div>
-                <h2 className="text-xl font-bold">
-                  Variações
-                </h2>
-
-                <p className="text-sm text-zinc-500">
-                  Alternativas parecidas.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-5 space-y-2">
-              {variationsList.length > 0 ? (
-                variationsList.map((item, index) => (
-                  <div
-                    key={index}
-                    className="rounded-2xl border border-zinc-800 bg-[#18181b] p-4"
-                  >
-                    <p className="text-sm font-semibold text-zinc-300">
-                      {item}
-                    </p>
-                  </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {secondaryMuscles.length > 0 ? (
+                secondaryMuscles.map((muscle) => (
+                  <Badge key={muscle} variant="purple">
+                    {muscle}
+                  </Badge>
                 ))
               ) : (
                 <p className="text-sm text-zinc-500">
-                  Nenhuma variação cadastrada.
+                  Nenhum músculo secundário cadastrado.
                 </p>
               )}
             </div>
@@ -346,9 +401,21 @@ function ExerciseDetails() {
                 {exercise.equipment}
               </Badge>
 
-              {exercise.mediaUrl && (
+              {exercise.targetMuscle && (
+                <Badge>
+                  {exercise.targetMuscle}
+                </Badge>
+              )}
+
+              {media && (
                 <Badge variant="green">
                   GIF
+                </Badge>
+              )}
+
+              {exercise.source && (
+                <Badge>
+                  {exercise.source}
                 </Badge>
               )}
             </div>

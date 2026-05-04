@@ -11,8 +11,7 @@ import {
   ExternalLink,
   ChevronDown,
 } from 'lucide-react'
-
-import defaultExercises from '../data/defaultExercises'
+import { defaultExercises } from '../data/defaultExercises'
 
 import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
@@ -158,6 +157,69 @@ function Exercises() {
     }))
   }, [exercises])
 
+  function getExerciseMedia(exercise) {
+    if (exercise.media?.gif) return exercise.media.gif
+    if (exercise.media?.image) return exercise.media.image
+    if (exercise.gifUrl) return exercise.gifUrl
+    if (exercise.mediaUrl) return exercise.mediaUrl
+
+    return ''
+  }
+
+  function normalizeList(value) {
+    if (Array.isArray(value)) return value
+    if (typeof value === 'string' && value.trim()) return [value]
+
+    return []
+  }
+
+  function renderInfoList(title, items, variant = 'default') {
+    const normalizedItems = normalizeList(items)
+
+    if (normalizedItems.length === 0) return null
+
+    const isDanger = variant === 'danger'
+
+    return (
+      <div
+        className={
+          isDanger
+            ? 'rounded-2xl border border-red-500/20 bg-red-500/5 p-4'
+            : 'rounded-2xl border border-zinc-800 bg-zinc-950 p-4'
+        }
+      >
+        <p
+          className={
+            isDanger
+              ? 'text-xs font-semibold uppercase tracking-wide text-red-300'
+              : 'text-xs font-semibold uppercase tracking-wide text-zinc-500'
+          }
+        >
+          {title}
+        </p>
+
+        <ul className="mt-3 space-y-2">
+          {normalizedItems.map((item, index) => (
+            <li
+              key={`${title}-${index}`}
+              className={
+                isDanger
+                  ? 'text-sm leading-relaxed text-red-100'
+                  : 'text-sm leading-relaxed text-zinc-300'
+              }
+            >
+              <span className="mr-2 font-bold text-[var(--ff-accent-text)]">
+                {index + 1}.
+              </span>
+
+              {item}
+            </li>
+          ))}
+        </ul>
+      </div>
+    )
+  }
+
   function textToList(text) {
     return text
       .split('\n')
@@ -214,9 +276,16 @@ function Exercises() {
               equipment,
               description,
               mediaUrl,
+              instructions: textToList(execution),
               execution: textToList(execution),
+              tips: textToList(variations),
               commonMistakes: textToList(commonMistakes),
               variations: textToList(variations),
+              media: {
+                gif: mediaUrl,
+                image: '',
+              },
+              gifUrl: mediaUrl,
               updatedAt: new Date().toISOString(),
             }
             : exercise
@@ -234,9 +303,16 @@ function Exercises() {
       equipment,
       description,
       mediaUrl,
+      instructions: textToList(execution),
       execution: textToList(execution),
+      tips: textToList(variations),
       commonMistakes: textToList(commonMistakes),
       variations: textToList(variations),
+      media: {
+        gif: mediaUrl,
+        image: '',
+      },
+      gifUrl: mediaUrl,
       createdAt: new Date().toISOString(),
     }
 
@@ -250,10 +326,10 @@ function Exercises() {
     setMuscleGroup(exercise.muscleGroup)
     setEquipment(exercise.equipment)
     setDescription(exercise.description || '')
-    setMediaUrl(exercise.mediaUrl || '')
-    setExecution(listToText(exercise.execution))
+    setMediaUrl(getExerciseMedia(exercise))
+    setExecution(listToText(exercise.instructions || exercise.execution))
     setCommonMistakes(listToText(exercise.commonMistakes))
-    setVariations(listToText(exercise.variations))
+    setVariations(listToText(exercise.tips || exercise.variations))
     setIsModalOpen(true)
   }
 
@@ -348,7 +424,7 @@ function Exercises() {
           </p>
 
           <h3 className="text-3xl font-bold mt-2">
-            {exercises.filter((exercise) => exercise.mediaUrl).length}
+            {exercises.filter((exercise) => getExerciseMedia(exercise)).length}
           </h3>
 
           <p className="text-xs text-[var(--ff-accent-text)] mt-2">
@@ -544,9 +620,9 @@ function Exercises() {
                         >
                           <div className="flex items-center gap-4">
                             <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-zinc-700 bg-white">
-                              {exercise.mediaUrl ? (
+                              {getExerciseMedia(exercise) ? (
                                 <img
-                                  src={exercise.mediaUrl}
+                                  src={getExerciseMedia(exercise)}
                                   alt={exercise.name}
                                   className="h-full w-full object-cover"
                                   loading="lazy"
@@ -577,7 +653,7 @@ function Exercises() {
                                 {exercise.equipment}
                               </Badge>
 
-                              {exercise.mediaUrl ? (
+                              {getExerciseMedia(exercise) ? (
                                 <Badge variant="green">
                                   <ImageIcon size={13} />
                                   Mídia
@@ -617,6 +693,24 @@ function Exercises() {
                                 Sem observações cadastradas.
                               </p>
                             )}
+
+                            <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-3">
+                              {renderInfoList(
+                                'Execução correta',
+                                exercise.instructions || exercise.execution
+                              )}
+
+                              {renderInfoList(
+                                'Dicas',
+                                exercise.tips
+                              )}
+
+                              {renderInfoList(
+                                'Erros comuns',
+                                exercise.commonMistakes,
+                                'danger'
+                              )}
+                            </div>
 
                             <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
                               <Link
@@ -769,8 +863,8 @@ function Exercises() {
                 />
 
                 <Textarea
-                  label="Variações"
-                  placeholder="Uma variação por linha"
+                  label="Dicas"
+                  placeholder="Uma dica por linha"
                   value={variations}
                   onChange={(event) => setVariations(event.target.value)}
                   rows={4}
