@@ -84,7 +84,7 @@ function Exercises() {
 
     const CURRENT_EXERCISES_VERSION = '3';
 
-    export function getInitialExercises() {
+    function getInitialExercises() {
       const savedVersion = localStorage.getItem(EXERCISES_VERSION_KEY);
 
       if (savedVersion !== CURRENT_EXERCISES_VERSION) {
