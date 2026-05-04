@@ -3,7 +3,7 @@ import defaultExercises from '../data/defaultExercises';
 const EXERCISES_KEY = 'forgeflow:exercises';
 const EXERCISES_VERSION_KEY = 'forgeflow:exercisesVersion';
 
-const CURRENT_EXERCISES_VERSION = '3';
+const CURRENT_EXERCISES_VERSION = '10';
 
 export function getInitialExercises() {
   const savedVersion = localStorage.getItem(EXERCISES_VERSION_KEY);
