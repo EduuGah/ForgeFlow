@@ -35,18 +35,15 @@ function requiredEnv(name, value) {
 }
 
 requiredEnv('FRONTEND_URL', FRONTEND_URL)
+requiredEnv('BACKEND_URL', BACKEND_URL)
 requiredEnv('MONGODB_URI', MONGODB_URI)
 requiredEnv('GOOGLE_CLIENT_ID', GOOGLE_CLIENT_ID)
 requiredEnv('GOOGLE_CLIENT_SECRET', GOOGLE_CLIENT_SECRET)
 requiredEnv('JWT_SECRET', JWT_SECRET)
 requiredEnv('SESSION_SECRET', SESSION_SECRET)
 
-requiredEnv('BACKEND_URL', BACKEND_URL)
-
 const normalizedFrontendUrl = FRONTEND_URL.replace(/\/$/, '')
 const normalizedBackendUrl = BACKEND_URL.replace(/\/$/, '')
-
-const normalizedFrontendUrl = FRONTEND_URL.replace(/\/$/, '')
 
 app.use(express.json({ limit: '10mb' }))
 app.use(cookieParser())

@@ -2,20 +2,46 @@ import { useEffect, useState } from 'react'
 import { Menu } from 'lucide-react'
 import { Outlet } from 'react-router-dom'
 
+import { useAuth } from '../../context/AuthContext'
+import { apiFetch } from '../../services/api'
+
 import {
   applyAppSettingsToDocument,
-  getAppSettings,
+  getUserAppSettings,
+  saveUserAppSettings,
 } from '../../utils/settingsUtils'
 
 import Sidebar from './Sidebar'
 import ActiveWorkoutMini from '../workout/ActiveWorkoutMini'
 
 function AppLayout() {
+  const { user } = useAuth()
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isSidebarClosing, setIsSidebarClosing] = useState(false)
 
   useEffect(() => {
-    applyAppSettingsToDocument(getAppSettings())
+    if (!user) return
+
+    const cachedSettings = getUserAppSettings(user)
+    applyAppSettingsToDocument(cachedSettings)
+
+    async function loadAccountSettings() {
+      try {
+        const settingsFromDatabase = await apiFetch('/settings')
+
+        const mergedSettings = saveUserAppSettings(user, {
+          ...cachedSettings,
+          ...settingsFromDatabase,
+        })
+
+        applyAppSettingsToDocument(mergedSettings)
+      } catch {
+        applyAppSettingsToDocument(cachedSettings)
+      }
+    }
+
+    loadAccountSettings()
 
     function handleSettingsChanged(event) {
       applyAppSettingsToDocument(event.detail)
@@ -26,7 +52,7 @@ function AppLayout() {
     return () => {
       window.removeEventListener('forgeflow:settings-changed', handleSettingsChanged)
     }
-  }, [])
+  }, [user])
 
   function openSidebar() {
     setIsSidebarClosing(false)
@@ -56,7 +82,7 @@ function AppLayout() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_left,shadow-[0_0_20px_var(--ff-accent-shadow)],transparent_34%),radial-gradient(circle_at_bottom_right,rgba(124,58,237,0.08),transparent_32%)]" />
+      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_left,var(--ff-accent-shadow),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(124,58,237,0.08),transparent_32%)]" />
 
       <header
         id="app-header"
@@ -86,7 +112,7 @@ function AppLayout() {
             </div>
           </div>
 
-          <div className="hidden rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)] px-3 py-1 text-xs font-bold text-[var(--ff-accent-text)] sm:block">
+          <div className="hidden rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-3 py-1 text-xs font-bold text-[var(--ff-accent-text)] sm:block">
             Beta
           </div>
         </div>

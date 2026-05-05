@@ -17,11 +17,14 @@ import Toast from '../components/ui/Toast'
 import Select from '../components/ui/Select'
 import Input from '../components/ui/Input'
 
+import { useAuth } from '../context/AuthContext'
+import { apiFetch } from '../services/api'
+
 import {
   accentColors,
   defaultSettings,
-  getAppSettings,
-  saveAppSettings,
+  getUserAppSettings,
+  saveUserAppSettings,
 } from '../utils/settingsUtils'
 
 function SectionTitle({ icon: Icon, title, description }) {
@@ -135,13 +138,35 @@ function SettingToggleCard({ title, description, active, onChange }) {
 }
 
 function Settings() {
+  const { user } = useAuth()
+
   const [settings, setSettings] = useState(defaultSettings)
   const [confirmModal, setConfirmModal] = useState(null)
   const [toast, setToast] = useState(null)
 
   useEffect(() => {
-    setSettings(getAppSettings())
-  }, [])
+    if (!user) return
+
+    const cachedSettings = getUserAppSettings(user)
+    setSettings(cachedSettings)
+
+    async function loadSettings() {
+      try {
+        const settingsFromDatabase = await apiFetch('/settings')
+
+        const mergedSettings = saveUserAppSettings(user, {
+          ...cachedSettings,
+          ...settingsFromDatabase,
+        })
+
+        setSettings(mergedSettings)
+      } catch {
+        setSettings(cachedSettings)
+      }
+    }
+
+    loadSettings()
+  }, [user])
 
   function showToast(type, title, message = '') {
     setToast({
@@ -155,16 +180,29 @@ function Settings() {
     }, 3000)
   }
 
-  function handleUpdateSetting(key, value) {
+  async function handleUpdateSetting(key, value) {
     const updatedSettings = {
       ...settings,
       [key]: value,
     }
 
     setSettings(updatedSettings)
-    saveAppSettings(updatedSettings)
+    saveUserAppSettings(user, updatedSettings)
 
-    showToast('success', 'Configuração salva', 'A preferência foi atualizada.')
+    try {
+      await apiFetch('/settings', {
+        method: 'PUT',
+        body: JSON.stringify(updatedSettings),
+      })
+
+      showToast('success', 'Configuração salva', 'A preferência foi salva na sua conta.')
+    } catch {
+      showToast(
+        'error',
+        'Salvo localmente',
+        'A configuração foi aplicada, mas não foi possível sincronizar com a conta.'
+      )
+    }
   }
 
   function handleResetSettings() {
@@ -174,16 +212,29 @@ function Settings() {
         'As preferências do app voltarão para o padrão. Seus dados salvos na conta não serão apagados.',
       confirmText: 'Restaurar',
       variant: 'danger',
-      onConfirm: () => {
+      onConfirm: async () => {
         setSettings(defaultSettings)
-        saveAppSettings(defaultSettings)
+        saveUserAppSettings(user, defaultSettings)
         setConfirmModal(null)
 
-        showToast(
-          'success',
-          'Configurações restauradas',
-          'As preferências voltaram ao padrão.'
-        )
+        try {
+          await apiFetch('/settings', {
+            method: 'PUT',
+            body: JSON.stringify(defaultSettings),
+          })
+
+          showToast(
+            'success',
+            'Configurações restauradas',
+            'As preferências voltaram ao padrão e foram salvas na sua conta.'
+          )
+        } catch {
+          showToast(
+            'error',
+            'Restaurado localmente',
+            'As preferências foram restauradas, mas não sincronizaram com a conta.'
+          )
+        }
       },
     })
   }
