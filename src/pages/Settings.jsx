@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   AlertTriangle,
+  Check,
   Database,
   Download,
+  HardDrive,
   Palette,
   RotateCcw,
   ShieldCheck,
@@ -11,6 +13,7 @@ import {
   Upload,
   UserRound,
   Wifi,
+  X,
 } from 'lucide-react'
 
 import PageHeader from '../components/ui/PageHeader'
@@ -42,6 +45,19 @@ const STORAGE_KEYS = [
   'forgeflow:workout-draft',
 ]
 
+const STORAGE_LABELS = {
+  'forgeflow:settings': 'Configurações',
+  'forgeflow:profile': 'Perfil',
+  'forgeflow:bodyweight': 'Peso corporal',
+  'forgeflow:exercises': 'Exercícios',
+  'forgeflow:workouts': 'Treinos',
+  'forgeflow:folders': 'Pastas',
+  'forgeflow:set-models': 'Modelos de séries',
+  'forgeflow:history': 'Histórico',
+  'forgeflow:active-session': 'Sessão ativa',
+  'forgeflow:workout-draft': 'Rascunho de treino',
+}
+
 function getStorageSize(key) {
   const value = localStorage.getItem(key)
 
@@ -53,53 +69,178 @@ function getStorageSize(key) {
 function formatBytes(bytes) {
   if (bytes === 0) return '0 B'
 
-  const sizes = ['B', 'KB', 'MB']
-  const index = Math.floor(Math.log(bytes) / Math.log(1024))
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const index = Math.min(
+    Math.floor(Math.log(bytes) / Math.log(1024)),
+    sizes.length - 1
+  )
 
   return `${(bytes / Math.pow(1024, index)).toFixed(2)} ${sizes[index]}`
 }
 
-function ToggleSetting({ active, onClick }) {
+function SectionTitle({ icon: Icon, title, description }) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)] shadow-[0_0_22px_var(--ff-accent-shadow)]/20">
+        <Icon size={23} />
+      </div>
+
+      <div>
+        <h2 className="text-xl font-black tracking-tight text-zinc-50">
+          {title}
+        </h2>
+
+        {description && (
+          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-zinc-500">
+            {description}
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function ToggleSwitch({ active, onChange, label }) {
+  const isActive = Boolean(active)
+
   return (
     <button
       type="button"
-      onClick={onClick}
-      className={
-        active
-          ? 'h-8 w-14 rounded-full bg-[var(--ff-accent)] p-1 transition'
-          : 'h-8 w-14 rounded-full bg-zinc-800 p-1 transition'
-      }
+      role="switch"
+      aria-checked={isActive}
+      aria-label={label}
+      onClick={() => onChange(!isActive)}
+      className={[
+        'group inline-flex min-w-[112px] items-center justify-between gap-2 rounded-full border p-1.5 transition-all duration-200',
+        'focus:outline-none focus:ring-2 focus:ring-[var(--ff-accent)]/50 focus:ring-offset-2 focus:ring-offset-zinc-950',
+        isActive
+          ? 'border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)] shadow-[0_0_20px_var(--ff-accent-shadow)]/25'
+          : 'border-zinc-800 bg-zinc-900 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300',
+      ].join(' ')}
     >
       <span
-        className={
-          active
-            ? 'block h-6 w-6 translate-x-6 rounded-full bg-white transition'
-            : 'block h-6 w-6 rounded-full bg-white transition'
-        }
-      />
+        className={[
+          'flex h-7 w-7 items-center justify-center rounded-full transition-all duration-200',
+          isActive
+            ? 'translate-x-[72px] bg-[var(--ff-accent)] text-white'
+            : 'translate-x-0 bg-zinc-700 text-zinc-300',
+        ].join(' ')}
+      >
+        {isActive ? <Check size={15} /> : <X size={15} />}
+      </span>
+
+      <span
+        className={[
+          'pointer-events-none w-[64px] text-center text-xs font-black uppercase tracking-wide transition',
+          isActive ? '-translate-x-8' : 'translate-x-0',
+        ].join(' ')}
+      >
+        {isActive ? 'Ativo' : 'Off'}
+      </span>
     </button>
   )
 }
 
-function SettingBox({ title, description, children }) {
+function SettingToggleCard({ title, description, active, onChange }) {
+  const isActive = Boolean(active)
+
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-      <div className="flex items-center justify-between gap-4">
+    <button
+      type="button"
+      onClick={() => onChange(!isActive)}
+      className={[
+        'group flex min-h-[132px] w-full flex-col justify-between rounded-3xl border p-5 text-left transition-all duration-200',
+        'hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[var(--ff-accent)]/40',
+        isActive
+          ? 'border-[var(--ff-accent-border)]/60 bg-[var(--ff-accent-soft)]/20 shadow-[0_0_26px_var(--ff-accent-shadow)]/15'
+          : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700 hover:bg-zinc-900/70',
+      ].join(' ')}
+    >
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="font-bold">
-            {title}
-          </p>
+          <div className="flex items-center gap-2">
+            <span
+              className={[
+                'h-2.5 w-2.5 rounded-full transition',
+                isActive ? 'bg-[var(--ff-accent)]' : 'bg-zinc-700',
+              ].join(' ')}
+            />
+
+            <p className="font-bold text-zinc-100">
+              {title}
+            </p>
+          </div>
 
           {description && (
-            <p className="mt-1 text-sm text-zinc-500">
+            <p className="mt-2 text-sm leading-relaxed text-zinc-500">
               {description}
             </p>
           )}
         </div>
 
-        {children}
+        <ToggleSwitch
+          active={isActive}
+          label={title}
+          onChange={onChange}
+        />
       </div>
-    </div>
+    </button>
+  )
+}
+
+function ActionCard({
+  icon: Icon,
+  title,
+  description,
+  onClick,
+  variant = 'default',
+  badge,
+}) {
+  const isDanger = variant === 'danger'
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        'group rounded-3xl border p-5 text-left transition-all duration-200 hover:-translate-y-0.5',
+        isDanger
+          ? 'border-red-500/20 bg-red-500/5 hover:border-red-400/40 hover:bg-red-500/10'
+          : 'border-zinc-800 bg-zinc-950 hover:border-[var(--ff-accent-border)]/40 hover:bg-zinc-900/70',
+      ].join(' ')}
+    >
+      <div className="flex items-start gap-4">
+        <div
+          className={[
+            'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition',
+            isDanger
+              ? 'bg-red-500/10 text-red-400'
+              : 'bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)] group-hover:shadow-[0_0_20px_var(--ff-accent-shadow)]/25',
+          ].join(' ')}
+        >
+          <Icon size={23} />
+        </div>
+
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3
+              className={[
+                'font-black',
+                isDanger ? 'text-red-300' : 'text-zinc-100',
+              ].join(' ')}
+            >
+              {title}
+            </h3>
+
+            {badge}
+          </div>
+
+          <p className="mt-1 text-sm leading-relaxed text-zinc-500">
+            {description}
+          </p>
+        </div>
+      </div>
+    </button>
   )
 }
 
@@ -109,6 +250,7 @@ function Settings() {
   const [settings, setSettings] = useState(defaultSettings)
   const [confirmModal, setConfirmModal] = useState(null)
   const [toast, setToast] = useState(null)
+  const [storageRefreshKey, setStorageRefreshKey] = useState(0)
 
   useEffect(() => {
     setSettings(getAppSettings())
@@ -119,12 +261,18 @@ function Settings() {
 
     return {
       key,
+      label: STORAGE_LABELS[key] || key,
       exists: Boolean(value),
       size: getStorageSize(key),
     }
   })
 
   const totalSize = savedData.reduce((total, item) => total + item.size, 0)
+  const usedItems = savedData.filter((item) => item.exists).length
+
+  function refreshStorageInfo() {
+    setStorageRefreshKey((current) => current + 1)
+  }
 
   function showToast(type, title, message = '') {
     setToast({
@@ -146,6 +294,7 @@ function Settings() {
 
     setSettings(updatedSettings)
     saveAppSettings(updatedSettings)
+    refreshStorageInfo()
 
     showToast('success', 'Configuração salva', 'A preferência foi atualizada.')
   }
@@ -160,7 +309,9 @@ function Settings() {
       onConfirm: () => {
         setSettings(defaultSettings)
         saveAppSettings(defaultSettings)
+        refreshStorageInfo()
         setConfirmModal(null)
+
         showToast(
           'success',
           'Configurações restauradas',
@@ -237,6 +388,8 @@ function Settings() {
           localStorage.setItem(key, JSON.stringify(value))
         })
 
+        refreshStorageInfo()
+
         showToast(
           'success',
           'Backup importado',
@@ -267,7 +420,9 @@ function Settings() {
           localStorage.removeItem(key)
         })
 
+        refreshStorageInfo()
         setConfirmModal(null)
+
         showToast(
           'success',
           'Dados apagados',
@@ -285,34 +440,30 @@ function Settings() {
     <>
       <PageHeader
         title="Configurações"
-        description="Controle aparência, treino, dados e informações da conta."
+        description="Controle aparência, preferências de treino, dados locais e informações da conta."
         action={
-          <Badge variant="purple">
-            {formatBytes(totalSize)}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="purple">
+              {formatBytes(totalSize)}
+            </Badge>
+
+            <Badge variant="default">
+              {usedItems}/{STORAGE_KEYS.length} ativos
+            </Badge>
+          </div>
         }
       />
 
-      <section className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2 space-y-6">
+      <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="space-y-6">
           <Card>
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
-                <Palette size={24} />
-              </div>
+            <SectionTitle
+              icon={Palette}
+              title="Aparência"
+              description="Ajuste o visual do ForgeFlow para deixar o app mais confortável no dia a dia."
+            />
 
-              <div>
-                <h2 className="text-xl font-bold">
-                  Aparência
-                </h2>
-
-                <p className="text-sm text-zinc-500">
-                  Personalize o visual e comportamento da interface.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
               <Select
                 label="Tema"
                 value={settings.themeMode}
@@ -339,38 +490,27 @@ function Settings() {
                 ))}
               </Select>
 
-              <SettingBox
-                title="Modo compacto no celular"
-                description="Reduz espaçamentos e deixa os cards mais compactos em telas pequenas."
-              >
-                <ToggleSetting
+              <div className="md:col-span-2">
+                <SettingToggleCard
+                  title="Modo compacto no celular"
+                  description="Reduz espaçamentos e deixa os cards mais compactos em telas pequenas."
                   active={settings.compactMobile}
-                  onClick={() =>
-                    handleUpdateSetting('compactMobile', !settings.compactMobile)
+                  onChange={(value) =>
+                    handleUpdateSetting('compactMobile', value)
                   }
                 />
-              </SettingBox>
+              </div>
             </div>
           </Card>
 
           <Card>
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
-                <SlidersHorizontal size={24} />
-              </div>
+            <SectionTitle
+              icon={SlidersHorizontal}
+              title="Preferências de treino"
+              description="Defina como os treinos, séries, comparações e confirmações devem se comportar."
+            />
 
-              <div>
-                <h2 className="text-xl font-bold">
-                  Treino
-                </h2>
-
-                <p className="text-sm text-zinc-500">
-                  Configure padrões usados na criação e execução dos treinos.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
               <Select
                 label="Modelo padrão de séries"
                 value={settings.defaultSetModel}
@@ -386,7 +526,7 @@ function Settings() {
               </Select>
 
               <Select
-                label="Descanso padrão entre séries"
+                label="Descanso padrão"
                 value={settings.defaultRestTimer}
                 onChange={(event) =>
                   handleUpdateSetting('defaultRestTimer', event.target.value)
@@ -401,7 +541,7 @@ function Settings() {
               </Select>
 
               <Input
-                label="Treinos visíveis inicialmente"
+                label="Treinos visíveis"
                 type="number"
                 min="1"
                 max="20"
@@ -413,234 +553,131 @@ function Settings() {
                   )
                 }
               />
+            </div>
 
-              <SettingBox
-                title="Esconder detalhes das séries por padrão"
+            <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <SettingToggleCard
+                title="Esconder detalhes das séries"
                 description="Ao iniciar treino, os exercícios podem começar com as séries recolhidas."
-              >
-                <ToggleSetting
-                  active={settings.collapseSeriesByDefault}
-                  onClick={() =>
-                    handleUpdateSetting(
-                      'collapseSeriesByDefault',
-                      !settings.collapseSeriesByDefault
-                    )
-                  }
-                />
-              </SettingBox>
+                active={settings.collapseSeriesByDefault}
+                onChange={(value) =>
+                  handleUpdateSetting('collapseSeriesByDefault', value)
+                }
+              />
 
-              <SettingBox
-                title="Minimizar “Meus Treinos” por padrão"
+              <SettingToggleCard
+                title="Minimizar “Meus Treinos”"
                 description="A página Treinos abre com a lista de treinos recolhida."
-              >
-                <ToggleSetting
-                  active={settings.collapseWorkoutsByDefault}
-                  onClick={() =>
-                    handleUpdateSetting(
-                      'collapseWorkoutsByDefault',
-                      !settings.collapseWorkoutsByDefault
-                    )
-                  }
-                />
-              </SettingBox>
+                active={settings.collapseWorkoutsByDefault}
+                onChange={(value) =>
+                  handleUpdateSetting('collapseWorkoutsByDefault', value)
+                }
+              />
 
-              <SettingBox
+              <SettingToggleCard
                 title="Salvar treino automaticamente"
                 description="Mantém um rascunho enquanto você monta ou edita uma rotina."
-              >
-                <ToggleSetting
-                  active={settings.autoSaveWorkout}
-                  onClick={() =>
-                    handleUpdateSetting('autoSaveWorkout', !settings.autoSaveWorkout)
-                  }
-                />
-              </SettingBox>
+                active={settings.autoSaveWorkout}
+                onChange={(value) =>
+                  handleUpdateSetting('autoSaveWorkout', value)
+                }
+              />
 
-              <SettingBox
+              <SettingToggleCard
                 title="Abrir calendário automaticamente"
                 description="Campos de data abrem o calendário ao clicar."
-              >
-                <ToggleSetting
-                  active={settings.autoOpenCalendar}
-                  onClick={() =>
-                    handleUpdateSetting(
-                      'autoOpenCalendar',
-                      !settings.autoOpenCalendar
-                    )
-                  }
-                />
-              </SettingBox>
+                active={settings.autoOpenCalendar}
+                onChange={(value) =>
+                  handleUpdateSetting('autoOpenCalendar', value)
+                }
+              />
 
-              <SettingBox
+              <SettingToggleCard
                 title="Iniciar descanso automaticamente"
                 description="Quando uma série for concluída, o timer de descanso inicia sozinho."
-              >
-                <ToggleSetting
-                  active={settings.autoStartRestTimer}
-                  onClick={() =>
-                    handleUpdateSetting(
-                      'autoStartRestTimer',
-                      !settings.autoStartRestTimer
-                    )
-                  }
-                />
-              </SettingBox>
+                active={settings.autoStartRestTimer}
+                onChange={(value) =>
+                  handleUpdateSetting('autoStartRestTimer', value)
+                }
+              />
 
-              <SettingBox
+              <SettingToggleCard
                 title="Mostrar PRs durante o treino"
                 description="Exibe tags de PR de peso e volume enquanto o treino está ativo."
-              >
-                <ToggleSetting
-                  active={settings.showPRDuringWorkout}
-                  onClick={() =>
-                    handleUpdateSetting(
-                      'showPRDuringWorkout',
-                      !settings.showPRDuringWorkout
-                    )
-                  }
-                />
-              </SettingBox>
+                active={settings.showPRDuringWorkout}
+                onChange={(value) =>
+                  handleUpdateSetting('showPRDuringWorkout', value)
+                }
+              />
 
-              <SettingBox
+              <SettingToggleCard
                 title="Comparar com último treino"
                 description="Mostra diferenças de peso, reps e volume em relação ao último treino."
-              >
-                <ToggleSetting
-                  active={settings.showLastWorkoutComparison}
-                  onClick={() =>
-                    handleUpdateSetting(
-                      'showLastWorkoutComparison',
-                      !settings.showLastWorkoutComparison
-                    )
-                  }
-                />
-              </SettingBox>
+                active={settings.showLastWorkoutComparison}
+                onChange={(value) =>
+                  handleUpdateSetting('showLastWorkoutComparison', value)
+                }
+              />
 
-              <SettingBox
-                title="Confirmar antes de finalizar treino"
+              <SettingToggleCard
+                title="Confirmar antes de finalizar"
                 description="Abre uma confirmação antes de salvar o treino no histórico."
-              >
-                <ToggleSetting
-                  active={settings.confirmBeforeFinishWorkout}
-                  onClick={() =>
-                    handleUpdateSetting(
-                      'confirmBeforeFinishWorkout',
-                      !settings.confirmBeforeFinishWorkout
-                    )
-                  }
-                />
-              </SettingBox>
+                active={settings.confirmBeforeFinishWorkout}
+                onChange={(value) =>
+                  handleUpdateSetting('confirmBeforeFinishWorkout', value)
+                }
+              />
 
-              <SettingBox
-                title="Confirmar antes de cancelar treino"
+              <SettingToggleCard
+                title="Confirmar antes de cancelar"
                 description="Pede confirmação antes de descartar uma sessão ativa."
-              >
-                <ToggleSetting
-                  active={settings.confirmBeforeCancelWorkout}
-                  onClick={() =>
-                    handleUpdateSetting(
-                      'confirmBeforeCancelWorkout',
-                      !settings.confirmBeforeCancelWorkout
-                    )
-                  }
-                />
-              </SettingBox>
+                active={settings.confirmBeforeCancelWorkout}
+                onChange={(value) =>
+                  handleUpdateSetting('confirmBeforeCancelWorkout', value)
+                }
+              />
             </div>
           </Card>
 
           <Card>
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
-                <Database size={24} />
-              </div>
+            <SectionTitle
+              icon={Database}
+              title="Dados e backup"
+              description="Faça backup, importe dados e gerencie o armazenamento local do navegador."
+            />
 
-              <div>
-                <h2 className="text-xl font-bold">
-                  Dados
-                </h2>
-
-                <p className="text-sm text-zinc-500">
-                  Backup, importação e futura sincronização com banco de dados.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <button
-                type="button"
+            <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+              <ActionCard
+                icon={Download}
+                title="Exportar dados"
+                description="Baixa um arquivo JSON com configurações, treinos, exercícios e histórico."
                 onClick={handleExportBackup}
-                className="group rounded-3xl border border-zinc-800 bg-zinc-950 p-5 text-left transition hover:border-[var(--ff-accent-border)]/40 hover:bg-[#18181b]"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)] transition group-hover:shadow-[0_0_20px_var(--ff-accent-shadow)]">
-                    <Download size={24} />
-                  </div>
+              />
 
-                  <div>
-                    <h3 className="font-bold">
-                      Exportar dados do app
-                    </h3>
-
-                    <p className="mt-1 text-sm text-zinc-500">
-                      Baixa um arquivo JSON com seus dados.
-                    </p>
-                  </div>
-                </div>
-              </button>
-
-              <button
-                type="button"
+              <ActionCard
+                icon={Upload}
+                title="Importar backup"
+                description="Restaura dados usando um arquivo JSON exportado anteriormente."
                 onClick={handleImportClick}
-                className="group rounded-3xl border border-zinc-800 bg-zinc-950 p-5 text-left transition hover:border-[var(--ff-accent-border)]/40 hover:bg-[#18181b]"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)] transition group-hover:shadow-[0_0_20px_var(--ff-accent-shadow)]">
-                    <Upload size={24} />
-                  </div>
+              />
 
-                  <div>
-                    <h3 className="font-bold">
-                      Importar backup
-                    </h3>
-
-                    <p className="mt-1 text-sm text-zinc-500">
-                      Restaura dados de um arquivo JSON.
-                    </p>
-                  </div>
-                </div>
-              </button>
-
-              <button
-                type="button"
+              <ActionCard
+                icon={Trash2}
+                title="Limpar dados locais"
+                description="Apaga todos os dados salvos neste navegador. Não pode ser desfeito."
                 onClick={handleClearAllData}
-                className="group rounded-3xl border border-red-500/20 bg-red-500/5 p-5 text-left transition hover:border-red-400/40 hover:bg-red-500/10"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/10 text-red-400">
-                    <Trash2 size={24} />
-                  </div>
-
-                  <div>
-                    <h3 className="font-bold text-red-300">
-                      Limpar dados locais
-                    </h3>
-
-                    <p className="mt-1 text-sm text-zinc-500">
-                      Apaga todos os dados salvos neste navegador.
-                    </p>
-                  </div>
-                </div>
-              </button>
+                variant="danger"
+              />
 
               <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-5">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
-                    <Wifi size={24} />
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">
+                    <Wifi size={23} />
                   </div>
 
                   <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="font-black text-zinc-100">
                         Sincronizar com banco de dados
                       </h3>
 
@@ -649,8 +686,8 @@ function Settings() {
                       </Badge>
                     </div>
 
-                    <p className="mt-1 text-sm text-zinc-500">
-                      Preparado para MongoDB/API quando iniciarmos o backend.
+                    <p className="mt-1 text-sm leading-relaxed text-zinc-500">
+                      Espaço preparado para MongoDB/API quando o backend entrar no projeto.
                     </p>
                   </div>
                 </div>
@@ -667,23 +704,13 @@ function Settings() {
           </Card>
         </div>
 
-        <div className="space-y-6">
+        <aside className="space-y-6">
           <Card>
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
-                <UserRound size={24} />
-              </div>
-
-              <div>
-                <h2 className="text-xl font-bold">
-                  Conta
-                </h2>
-
-                <p className="text-sm text-zinc-500">
-                  Informações básicas do usuário.
-                </p>
-              </div>
-            </div>
+            <SectionTitle
+              icon={UserRound}
+              title="Conta"
+              description="Dados básicos usados para personalizar o app."
+            />
 
             <div className="mt-6 space-y-4">
               <Input
@@ -724,69 +751,88 @@ function Settings() {
           </Card>
 
           <Card>
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
-                <ShieldCheck size={24} />
-              </div>
+            <SectionTitle
+              icon={ShieldCheck}
+              title="Armazenamento"
+              description="Resumo dos dados salvos neste navegador."
+            />
 
-              <div>
-                <h2 className="text-xl font-bold">
-                  Armazenamento
-                </h2>
+            <div
+              key={storageRefreshKey}
+              className="mt-6 rounded-3xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 p-5"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-zinc-950 text-[var(--ff-accent-text)]">
+                  <HardDrive size={21} />
+                </div>
 
-                <p className="text-sm text-zinc-500">
-                  Dados locais do navegador.
-                </p>
+                <div>
+                  <p className="text-sm text-zinc-500">
+                    Total usado
+                  </p>
+
+                  <p className="text-2xl font-black text-[var(--ff-accent-text)]">
+                    {formatBytes(totalSize)}
+                  </p>
+                </div>
               </div>
             </div>
 
-            <div className="mt-5 rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-              <p className="text-sm text-zinc-500">
-                Total usado
-              </p>
-
-              <p className="mt-1 text-2xl font-black text-[var(--ff-accent-text)]">
-                {formatBytes(totalSize)}
-              </p>
-            </div>
-
-            <div className="mt-5 space-y-2">
+            <div className="mt-5 max-h-[430px] space-y-2 overflow-y-auto pr-1">
               {savedData.map((item) => (
                 <div
                   key={item.key}
-                  className="flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-950 p-3"
+                  className="rounded-2xl border border-zinc-800 bg-zinc-950 p-3"
                 >
-                  <div className="min-w-0">
-                    <p className="truncate text-xs font-bold">
-                      {item.key}
-                    </p>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold text-zinc-100">
+                        {item.label}
+                      </p>
 
-                    <p className="mt-1 text-xs text-zinc-500">
-                      {formatBytes(item.size)}
-                    </p>
+                      <p className="mt-0.5 truncate text-xs text-zinc-600">
+                        {item.key}
+                      </p>
+                    </div>
+
+                    <Badge variant={item.exists ? 'purple' : 'default'}>
+                      {item.exists ? 'Salvo' : 'Vazio'}
+                    </Badge>
                   </div>
 
-                  <Badge variant={item.exists ? 'purple' : 'default'}>
-                    {item.exists ? 'Salvo' : 'Vazio'}
-                  </Badge>
+                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-zinc-900">
+                    <div
+                      className="h-full rounded-full bg-[var(--ff-accent)]"
+                      style={{
+                        width:
+                          totalSize > 0
+                            ? `${Math.max((item.size / totalSize) * 100, item.exists ? 4 : 0)}%`
+                            : '0%',
+                      }}
+                    />
+                  </div>
+
+                  <p className="mt-2 text-xs text-zinc-500">
+                    {formatBytes(item.size)}
+                  </p>
                 </div>
               ))}
             </div>
           </Card>
 
           <Card>
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/10 text-red-400">
-                <AlertTriangle size={24} />
+            <div className="flex items-start gap-3">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-500/10 text-red-400">
+                <AlertTriangle size={23} />
               </div>
 
               <div>
-                <h2 className="text-xl font-bold">
-                  Atenção
+                <h2 className="text-xl font-black text-zinc-50">
+                  Área de risco
                 </h2>
 
-                <p className="text-sm text-zinc-500">
-                  Algumas configurações já salvam, mas serão aplicadas no app aos poucos.
+                <p className="mt-1 text-sm leading-relaxed text-zinc-500">
+                  Use apenas quando quiser voltar as preferências para o padrão.
                 </p>
               </div>
             </div>
@@ -801,7 +847,7 @@ function Settings() {
               Restaurar configurações padrão
             </Button>
           </Card>
-        </div>
+        </aside>
       </section>
 
       <ConfirmModal
