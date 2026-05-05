@@ -509,6 +509,69 @@ app.get('/me', authMiddleware, async (req, res) => {
     res.json(user)
 })
 
+app.post('/auth/set-password', authMiddleware, async (req, res) => {
+  const { currentPassword, password, confirmPassword } = req.body
+
+  if (!password?.trim() || !confirmPassword?.trim()) {
+    return res.status(400).json({
+      message: 'Informe a nova senha e a confirmação.',
+    })
+  }
+
+  if (password !== confirmPassword) {
+    return res.status(400).json({
+      message: 'As senhas não conferem.',
+    })
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({
+      message: 'A senha precisa ter pelo menos 6 caracteres.',
+    })
+  }
+
+  const user = await User.findById(req.user.userId)
+
+  if (!user) {
+    return res.status(404).json({
+      message: 'Usuário não encontrado.',
+    })
+  }
+
+  const alreadyHasPassword = Boolean(user.passwordHash)
+
+  if (alreadyHasPassword) {
+    if (!currentPassword?.trim()) {
+      return res.status(400).json({
+        message: 'Informe sua senha atual para alterar a senha.',
+      })
+    }
+
+    const currentPasswordIsValid = await bcrypt.compare(
+      currentPassword,
+      user.passwordHash
+    )
+
+    if (!currentPasswordIsValid) {
+      return res.status(401).json({
+        message: 'Senha atual inválida.',
+      })
+    }
+  }
+
+  user.passwordHash = await bcrypt.hash(password, 10)
+  user.provider = user.googleId ? 'both' : 'credentials'
+
+  await user.save()
+
+  res.json({
+    message: alreadyHasPassword
+      ? 'Senha alterada com sucesso.'
+      : 'Senha criada com sucesso.',
+    user: buildUserResponse(user),
+  })
+})
+
 app.put('/me/profile', authMiddleware, async (req, res) => {
     const {
         name,
