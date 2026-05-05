@@ -1,6 +1,6 @@
-const API_URL = import.meta.env.VITE_API_URL
+const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '')
 
-export function getToken() {
+export function getAuthToken() {
   return localStorage.getItem('forgeflow:token')
 }
 
@@ -8,33 +8,29 @@ export function saveAuthToken(token) {
   localStorage.setItem('forgeflow:token', token)
 }
 
-export function isLoggedIn() {
-  return Boolean(getToken())
-}
-
-export function logout() {
+export function removeAuthToken() {
   localStorage.removeItem('forgeflow:token')
-  window.location.href = '/login'
 }
 
 export async function apiFetch(path, options = {}) {
-  const token = getToken()
+  const token = getAuthToken()
 
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
+      ...(options.headers || {}),
     },
   })
 
+  const data = await response.json().catch(() => null)
+
   if (!response.ok) {
-    const error = await response.json().catch(() => null)
-    throw new Error(error?.message || 'Erro na API')
+    throw new Error(data?.message || 'Erro na requisição.')
   }
 
-  return response.json()
+  return data
 }
 
 export async function getCurrentUser() {
