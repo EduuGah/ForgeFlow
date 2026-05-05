@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Plus,
@@ -17,7 +17,11 @@ import {
   Activity,
   Wrench,
   Info,
-  ShieldAlert,
+  Upload,
+  FileImage,
+  LinkIcon,
+  HelpCircle,
+  ListChecks,
 } from 'lucide-react'
 
 import { getInitialExercises } from '../utils/exerciseStorage'
@@ -249,6 +253,155 @@ function DetailMiniCard({ icon: Icon, title, value, accent = false }) {
   )
 }
 
+function HelperTextarea({
+  label,
+  value,
+  onChange,
+  placeholder,
+  rows = 4,
+  helper,
+  examples = [],
+}) {
+  return (
+    <div>
+      <Textarea
+        label={label}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        rows={rows}
+      />
+
+      <div className="mt-2 rounded-2xl border border-zinc-800 bg-zinc-950/70 p-3">
+        <div className="flex items-start gap-2">
+          <HelpCircle
+            size={16}
+            className="mt-0.5 shrink-0 text-[var(--ff-accent-text)]"
+          />
+
+          <div>
+            <p className="text-xs leading-relaxed text-zinc-400">
+              {helper}
+            </p>
+
+            {examples.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {examples.map((example) => (
+                  <span
+                    key={example}
+                    className="rounded-full border border-zinc-800 bg-zinc-900 px-2.5 py-1 text-[11px] font-semibold text-zinc-400"
+                  >
+                    {example}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function MediaUploader({
+  mediaUrl,
+  uploadedFileName,
+  onUrlChange,
+  onFileChange,
+  onClear,
+}) {
+  return (
+    <div className="md:col-span-2">
+      <label className="mb-2 block text-sm font-semibold text-zinc-300">
+        Imagem ou GIF do exercício
+      </label>
+
+      <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-[160px_minmax(0,1fr)]">
+          <div className="flex h-40 items-center justify-center overflow-hidden rounded-2xl border border-zinc-800 bg-white">
+            {mediaUrl ? (
+              <img
+                src={mediaUrl}
+                alt="Preview do exercício"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="text-center text-zinc-900">
+                <FileImage size={34} className="mx-auto" />
+
+                <p className="mt-2 text-xs font-bold">
+                  Preview
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--ff-accent-border)]/40 bg-[var(--ff-accent-soft)]/10 p-5 text-center transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-accent-soft)]/20">
+              <Upload size={24} className="text-[var(--ff-accent-text)]" />
+
+              <span className="mt-2 text-sm font-bold text-white">
+                Enviar imagem ou GIF
+              </span>
+
+              <span className="mt-1 text-xs leading-relaxed text-zinc-500">
+                Funciona no computador e no celular. Use PNG, JPG, WEBP ou GIF.
+              </span>
+
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                onChange={onFileChange}
+                className="hidden"
+              />
+            </label>
+
+            {uploadedFileName && (
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-3">
+                <p className="text-xs text-zinc-500">
+                  Arquivo selecionado
+                </p>
+
+                <p className="mt-1 truncate text-sm font-bold text-[var(--ff-accent-text)]">
+                  {uploadedFileName}
+                </p>
+              </div>
+            )}
+
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-3">
+              <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                <LinkIcon size={14} />
+                Ou use uma URL
+              </div>
+
+              <Input
+                placeholder="/exercise-media/chest/exemplo.gif ou https://..."
+                value={mediaUrl}
+                onChange={onUrlChange}
+              />
+            </div>
+
+            {mediaUrl && (
+              <button
+                type="button"
+                onClick={onClear}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 text-sm font-bold text-red-300 transition hover:bg-red-500/20"
+              >
+                <X size={16} />
+                Remover mídia
+              </button>
+            )}
+
+            <p className="text-xs leading-relaxed text-zinc-500">
+              Observação: como o app ainda usa localStorage, imagens/GIFs muito grandes podem não salvar. Para arquivos grandes, prefira uma URL ou, futuramente, um banco/storage como Cloudinary, Firebase ou backend próprio.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function Exercises() {
   const [name, setName] = useState('')
   const [muscleGroup, setMuscleGroup] = useState('')
@@ -257,6 +410,8 @@ function Exercises() {
   const [equipment, setEquipment] = useState('')
   const [description, setDescription] = useState('')
   const [mediaUrl, setMediaUrl] = useState('')
+  const [uploadedFileName, setUploadedFileName] = useState('')
+  const fileInputRef = useRef(null)
   const [execution, setExecution] = useState('')
   const [commonMistakes, setCommonMistakes] = useState('')
   const [variations, setVariations] = useState('')
@@ -472,6 +627,7 @@ function Exercises() {
     setEquipment('')
     setDescription('')
     setMediaUrl('')
+    setUploadedFileName('')
     setExecution('')
     setCommonMistakes('')
     setVariations('')
@@ -486,6 +642,54 @@ function Exercises() {
   function closeModal() {
     resetForm()
     setIsModalOpen(false)
+  }
+
+  function handleMediaUpload(event) {
+    const file = event.target.files?.[0]
+
+    if (!file) return
+
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/webp', 'image/gif']
+
+    if (!allowedTypes.includes(file.type)) {
+      alert('Envie apenas arquivos PNG, JPG, WEBP ou GIF.')
+      event.target.value = ''
+      return
+    }
+
+    const maxSizeInMB = 2
+    const maxSizeInBytes = maxSizeInMB * 1024 * 1024
+
+    if (file.size > maxSizeInBytes) {
+      alert(
+        `Esse arquivo tem ${(file.size / 1024 / 1024).toFixed(2)}MB. Para salvar no navegador, use uma imagem/GIF de até ${maxSizeInMB}MB.`
+      )
+
+      event.target.value = ''
+      return
+    }
+
+    const reader = new FileReader()
+
+    reader.onload = () => {
+      setMediaUrl(reader.result)
+      setUploadedFileName(file.name)
+    }
+
+    reader.onerror = () => {
+      alert('Não foi possível carregar esse arquivo.')
+    }
+
+    reader.readAsDataURL(file)
+  }
+
+  function handleClearMedia() {
+    setMediaUrl('')
+    setUploadedFileName('')
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
   }
 
   function handleSubmit(event) {
@@ -504,6 +708,7 @@ function Exercises() {
       equipment: normalizeEquipment(equipment),
       description,
       mediaUrl,
+      uploadedFileName,
       instructions: textToList(execution),
       execution: textToList(execution),
       tips: textToList(variations),
@@ -521,10 +726,10 @@ function Exercises() {
         exercises.map((exercise) =>
           exercise.id === editingId
             ? {
-                ...exercise,
-                ...normalizedPayload,
-                updatedAt: new Date().toISOString(),
-              }
+              ...exercise,
+              ...normalizedPayload,
+              updatedAt: new Date().toISOString(),
+            }
             : exercise
         )
       )
@@ -554,6 +759,7 @@ function Exercises() {
     setEquipment(normalizeEquipment(exercise.equipment))
     setDescription(exercise.description || '')
     setMediaUrl(getExerciseMedia(exercise))
+    setUploadedFileName(exercise.uploadedFileName || '')
     setExecution(listToText(exercise.instructions || exercise.execution))
     setCommonMistakes(listToText(exercise.commonMistakes))
     setVariations(listToText(exercise.tips || exercise.variations))
@@ -1142,11 +1348,15 @@ function Exercises() {
                   onChange={(event) => setName(event.target.value)}
                 />
 
-                <Input
-                  label="URL da imagem / GIF"
-                  placeholder="/exercise-media/chest/exemplo.gif"
-                  value={mediaUrl}
-                  onChange={(event) => setMediaUrl(event.target.value)}
+                <MediaUploader
+                  mediaUrl={mediaUrl}
+                  uploadedFileName={uploadedFileName}
+                  onUrlChange={(event) => {
+                    setMediaUrl(event.target.value)
+                    setUploadedFileName('')
+                  }}
+                  onFileChange={handleMediaUpload}
+                  onClear={handleClearMedia}
                 />
 
                 <Select
@@ -1186,45 +1396,66 @@ function Exercises() {
               </div>
 
               <div className="mt-4 space-y-4">
-                <Textarea
+                <HelperTextarea
                   label="Músculos secundários"
-                  placeholder="Um músculo por linha"
+                  placeholder={`Exemplo:
+Tríceps
+Ombros
+Core`}
                   value={secondaryMusclesText}
                   onChange={(event) => setSecondaryMusclesText(event.target.value)}
-                  rows={3}
+                  rows={4}
+                  helper="Escreva um item em cada linha. Cada linha vira um item separado na tela de detalhes."
+                  examples={['Tríceps', 'Ombros', 'Core']}
                 />
 
                 <Textarea
                   label="Observações"
-                  placeholder="Ex: foco em progressão de carga..."
+                  placeholder="Ex: bom exercício para progressão de carga, ideal para iniciar o treino de peito..."
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
                   rows={3}
                 />
 
-                <Textarea
+                <HelperTextarea
                   label="Execução correta"
-                  placeholder="Uma instrução por linha"
+                  placeholder={`Exemplo:
+Deite no banco com os pés firmes no chão.
+Segure a barra um pouco mais aberta que os ombros.
+Desça a barra com controle até próximo ao peito.
+Empurre a barra para cima sem tirar o quadril do banco.`}
                   value={execution}
                   onChange={(event) => setExecution(event.target.value)}
-                  rows={4}
+                  rows={5}
+                  helper="Escreva o passo a passo da execução. Separe cada etapa em uma nova linha para o app organizar em lista."
+                  examples={['1 etapa por linha', 'passo a passo', 'execução guiada']}
                 />
 
-                <Textarea
+                <HelperTextarea
                   label="Erros comuns"
-                  placeholder="Um erro por linha"
+                  placeholder={`Exemplo:
+Quicar a barra no peito.
+Abrir demais os cotovelos.
+Tirar o quadril do banco.`}
                   value={commonMistakes}
                   onChange={(event) => setCommonMistakes(event.target.value)}
                   rows={4}
+                  helper="Liste os erros que a pessoa deve evitar. Cada erro em uma linha."
+                  examples={['erro por linha', 'evitar', 'alertas']}
                 />
 
-                <Textarea
+                <HelperTextarea
                   label="Dicas"
-                  placeholder="Uma dica por linha"
+                  placeholder={`Exemplo:
+Mantenha as escápulas retraídas.
+Controle a descida.
+Mantenha os pés firmes no chão.`}
                   value={variations}
                   onChange={(event) => setVariations(event.target.value)}
                   rows={4}
-                />
+                  helper="Use este campo para dicas rápidas de melhoria, segurança ou foco muscular. Cada dica em uma linha."
+                  examples={['dica por linha', 'segurança', 'foco muscular']}
+                />  
               </div>
 
               <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">

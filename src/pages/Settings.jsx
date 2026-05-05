@@ -1,18 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   AlertTriangle,
   Check,
-  Database,
-  Download,
-  HardDrive,
   Palette,
   RotateCcw,
-  ShieldCheck,
   SlidersHorizontal,
-  Trash2,
-  Upload,
-  UserRound,
-  Wifi,
   X,
 } from 'lucide-react'
 
@@ -31,52 +23,6 @@ import {
   getAppSettings,
   saveAppSettings,
 } from '../utils/settingsUtils'
-
-const STORAGE_KEYS = [
-  'forgeflow:settings',
-  'forgeflow:profile',
-  'forgeflow:bodyweight',
-  'forgeflow:exercises',
-  'forgeflow:workouts',
-  'forgeflow:folders',
-  'forgeflow:set-models',
-  'forgeflow:history',
-  'forgeflow:active-session',
-  'forgeflow:workout-draft',
-]
-
-const STORAGE_LABELS = {
-  'forgeflow:settings': 'Configurações',
-  'forgeflow:profile': 'Perfil',
-  'forgeflow:bodyweight': 'Peso corporal',
-  'forgeflow:exercises': 'Exercícios',
-  'forgeflow:workouts': 'Treinos',
-  'forgeflow:folders': 'Pastas',
-  'forgeflow:set-models': 'Modelos de séries',
-  'forgeflow:history': 'Histórico',
-  'forgeflow:active-session': 'Sessão ativa',
-  'forgeflow:workout-draft': 'Rascunho de treino',
-}
-
-function getStorageSize(key) {
-  const value = localStorage.getItem(key)
-
-  if (!value) return 0
-
-  return new Blob([value]).size
-}
-
-function formatBytes(bytes) {
-  if (bytes === 0) return '0 B'
-
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const index = Math.min(
-    Math.floor(Math.log(bytes) / Math.log(1024)),
-    sizes.length - 1
-  )
-
-  return `${(bytes / Math.pow(1024, index)).toFixed(2)} ${sizes[index]}`
-}
 
 function SectionTitle({ icon: Icon, title, description }) {
   return (
@@ -188,91 +134,14 @@ function SettingToggleCard({ title, description, active, onChange }) {
   )
 }
 
-function ActionCard({
-  icon: Icon,
-  title,
-  description,
-  onClick,
-  variant = 'default',
-  badge,
-}) {
-  const isDanger = variant === 'danger'
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={[
-        'group rounded-3xl border p-5 text-left transition-all duration-200 hover:-translate-y-0.5',
-        isDanger
-          ? 'border-red-500/20 bg-red-500/5 hover:border-red-400/40 hover:bg-red-500/10'
-          : 'border-zinc-800 bg-zinc-950 hover:border-[var(--ff-accent-border)]/40 hover:bg-zinc-900/70',
-      ].join(' ')}
-    >
-      <div className="flex items-start gap-4">
-        <div
-          className={[
-            'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition',
-            isDanger
-              ? 'bg-red-500/10 text-red-400'
-              : 'bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)] group-hover:shadow-[0_0_20px_var(--ff-accent-shadow)]/25',
-          ].join(' ')}
-        >
-          <Icon size={23} />
-        </div>
-
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3
-              className={[
-                'font-black',
-                isDanger ? 'text-red-300' : 'text-zinc-100',
-              ].join(' ')}
-            >
-              {title}
-            </h3>
-
-            {badge}
-          </div>
-
-          <p className="mt-1 text-sm leading-relaxed text-zinc-500">
-            {description}
-          </p>
-        </div>
-      </div>
-    </button>
-  )
-}
-
 function Settings() {
-  const fileInputRef = useRef(null)
-
   const [settings, setSettings] = useState(defaultSettings)
   const [confirmModal, setConfirmModal] = useState(null)
   const [toast, setToast] = useState(null)
-  const [storageRefreshKey, setStorageRefreshKey] = useState(0)
 
   useEffect(() => {
     setSettings(getAppSettings())
   }, [])
-
-  const savedData = STORAGE_KEYS.map((key) => {
-    const value = localStorage.getItem(key)
-
-    return {
-      key,
-      label: STORAGE_LABELS[key] || key,
-      exists: Boolean(value),
-      size: getStorageSize(key),
-    }
-  })
-
-  const totalSize = savedData.reduce((total, item) => total + item.size, 0)
-  const usedItems = savedData.filter((item) => item.exists).length
-
-  function refreshStorageInfo() {
-    setStorageRefreshKey((current) => current + 1)
-  }
 
   function showToast(type, title, message = '') {
     setToast({
@@ -294,7 +163,6 @@ function Settings() {
 
     setSettings(updatedSettings)
     saveAppSettings(updatedSettings)
-    refreshStorageInfo()
 
     showToast('success', 'Configuração salva', 'A preferência foi atualizada.')
   }
@@ -303,13 +171,12 @@ function Settings() {
     setConfirmModal({
       title: 'Restaurar configurações?',
       description:
-        'As preferências do app voltarão para o padrão, mas seus treinos, exercícios e histórico não serão apagados.',
+        'As preferências do app voltarão para o padrão. Seus dados salvos na conta não serão apagados.',
       confirmText: 'Restaurar',
       variant: 'danger',
       onConfirm: () => {
         setSettings(defaultSettings)
         saveAppSettings(defaultSettings)
-        refreshStorageInfo()
         setConfirmModal(null)
 
         showToast(
@@ -321,136 +188,15 @@ function Settings() {
     })
   }
 
-  function handleExportBackup() {
-    const backup = {
-      app: 'ForgeFlow',
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      data: {},
-    }
-
-    STORAGE_KEYS.forEach((key) => {
-      const value = localStorage.getItem(key)
-
-      if (value) {
-        try {
-          backup.data[key] = JSON.parse(value)
-        } catch {
-          backup.data[key] = value
-        }
-      }
-    })
-
-    const blob = new Blob([JSON.stringify(backup, null, 2)], {
-      type: 'application/json',
-    })
-
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    const date = new Date().toISOString().slice(0, 10)
-
-    link.href = url
-    link.download = `forgeflow-backup-${date}.json`
-    link.click()
-
-    URL.revokeObjectURL(url)
-
-    showToast(
-      'success',
-      'Backup exportado',
-      'O arquivo JSON foi baixado com sucesso.'
-    )
-  }
-
-  function handleImportClick() {
-    fileInputRef.current?.click()
-  }
-
-  function handleImportBackup(event) {
-    const file = event.target.files?.[0]
-
-    if (!file) return
-
-    const reader = new FileReader()
-
-    reader.onload = () => {
-      try {
-        const backup = JSON.parse(reader.result)
-
-        if (!backup?.data) {
-          showToast('error', 'Arquivo inválido', 'Não encontrei dados de backup.')
-          return
-        }
-
-        Object.entries(backup.data).forEach(([key, value]) => {
-          if (!STORAGE_KEYS.includes(key)) return
-
-          localStorage.setItem(key, JSON.stringify(value))
-        })
-
-        refreshStorageInfo()
-
-        showToast(
-          'success',
-          'Backup importado',
-          'Recarregue a página para ver os dados.'
-        )
-      } catch {
-        showToast(
-          'error',
-          'Erro ao importar',
-          'Verifique se o arquivo é um JSON válido.'
-        )
-      }
-    }
-
-    reader.readAsText(file)
-    event.target.value = ''
-  }
-
-  function handleClearAllData() {
-    setConfirmModal({
-      title: 'Apagar todos os dados?',
-      description:
-        'Isso apaga perfil, treinos, exercícios, histórico, pastas, modelos e sessão ativa. Essa ação não pode ser desfeita.',
-      confirmText: 'Apagar tudo',
-      variant: 'danger',
-      onConfirm: () => {
-        STORAGE_KEYS.forEach((key) => {
-          localStorage.removeItem(key)
-        })
-
-        refreshStorageInfo()
-        setConfirmModal(null)
-
-        showToast(
-          'success',
-          'Dados apagados',
-          'Todos os dados locais foram removidos.'
-        )
-
-        setTimeout(() => {
-          window.location.reload()
-        }, 700)
-      },
-    })
-  }
-
   return (
     <>
       <PageHeader
         title="Configurações"
-        description="Controle aparência, preferências de treino, dados locais e informações da conta."
+        description="Controle aparência e preferências de treino do ForgeFlow."
         action={
-          <div className="flex items-center gap-2">
-            <Badge variant="purple">
-              {formatBytes(totalSize)}
-            </Badge>
-
-            <Badge variant="default">
-              {usedItems}/{STORAGE_KEYS.length} ativos
-            </Badge>
-          </div>
+          <Badge variant="purple">
+            Conta sincronizada
+          </Badge>
         }
       />
 
@@ -638,204 +384,15 @@ function Settings() {
               />
             </div>
           </Card>
-
-          <Card>
-            <SectionTitle
-              icon={Database}
-              title="Dados e backup"
-              description="Faça backup, importe dados e gerencie o armazenamento local do navegador."
-            />
-
-            <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-              <ActionCard
-                icon={Download}
-                title="Exportar dados"
-                description="Baixa um arquivo JSON com configurações, treinos, exercícios e histórico."
-                onClick={handleExportBackup}
-              />
-
-              <ActionCard
-                icon={Upload}
-                title="Importar backup"
-                description="Restaura dados usando um arquivo JSON exportado anteriormente."
-                onClick={handleImportClick}
-              />
-
-              <ActionCard
-                icon={Trash2}
-                title="Limpar dados locais"
-                description="Apaga todos os dados salvos neste navegador. Não pode ser desfeito."
-                onClick={handleClearAllData}
-                variant="danger"
-              />
-
-              <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-5">
-                <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">
-                    <Wifi size={23} />
-                  </div>
-
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="font-black text-zinc-100">
-                        Sincronizar com banco de dados
-                      </h3>
-
-                      <Badge variant="purple">
-                        Em breve
-                      </Badge>
-                    </div>
-
-                    <p className="mt-1 text-sm leading-relaxed text-zinc-500">
-                      Espaço preparado para MongoDB/API quando o backend entrar no projeto.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="application/json"
-              onChange={handleImportBackup}
-              className="hidden"
-            />
-          </Card>
         </div>
 
         <aside className="space-y-6">
           <Card>
             <SectionTitle
-              icon={UserRound}
-              title="Conta"
-              description="Dados básicos usados para personalizar o app."
+              icon={AlertTriangle}
+              title="Área de risco"
+              description="Use apenas quando quiser voltar as preferências para o padrão."
             />
-
-            <div className="mt-6 space-y-4">
-              <Input
-                label="Nome do usuário"
-                placeholder="Ex: Carlos Eduardo"
-                value={settings.accountName}
-                onChange={(event) =>
-                  handleUpdateSetting('accountName', event.target.value)
-                }
-              />
-
-              <Input
-                label="Peso corporal atual"
-                type="number"
-                min="0"
-                placeholder="Ex: 72.5"
-                value={settings.currentWeight}
-                onChange={(event) =>
-                  handleUpdateSetting('currentWeight', event.target.value)
-                }
-              />
-
-              <Select
-                label="Meta principal"
-                value={settings.mainGoal}
-                onChange={(event) =>
-                  handleUpdateSetting('mainGoal', event.target.value)
-                }
-              >
-                <option value="">Selecione</option>
-                <option value="Hipertrofia">Hipertrofia</option>
-                <option value="Força">Força</option>
-                <option value="Emagrecimento">Emagrecimento</option>
-                <option value="Recomposição corporal">Recomposição corporal</option>
-                <option value="Condicionamento">Condicionamento</option>
-              </Select>
-            </div>
-          </Card>
-
-          <Card>
-            <SectionTitle
-              icon={ShieldCheck}
-              title="Armazenamento"
-              description="Resumo dos dados salvos neste navegador."
-            />
-
-            <div
-              key={storageRefreshKey}
-              className="mt-6 rounded-3xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 p-5"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-zinc-950 text-[var(--ff-accent-text)]">
-                  <HardDrive size={21} />
-                </div>
-
-                <div>
-                  <p className="text-sm text-zinc-500">
-                    Total usado
-                  </p>
-
-                  <p className="text-2xl font-black text-[var(--ff-accent-text)]">
-                    {formatBytes(totalSize)}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-5 max-h-[430px] space-y-2 overflow-y-auto pr-1">
-              {savedData.map((item) => (
-                <div
-                  key={item.key}
-                  className="rounded-2xl border border-zinc-800 bg-zinc-950 p-3"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-bold text-zinc-100">
-                        {item.label}
-                      </p>
-
-                      <p className="mt-0.5 truncate text-xs text-zinc-600">
-                        {item.key}
-                      </p>
-                    </div>
-
-                    <Badge variant={item.exists ? 'purple' : 'default'}>
-                      {item.exists ? 'Salvo' : 'Vazio'}
-                    </Badge>
-                  </div>
-
-                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-zinc-900">
-                    <div
-                      className="h-full rounded-full bg-[var(--ff-accent)]"
-                      style={{
-                        width:
-                          totalSize > 0
-                            ? `${Math.max((item.size / totalSize) * 100, item.exists ? 4 : 0)}%`
-                            : '0%',
-                      }}
-                    />
-                  </div>
-
-                  <p className="mt-2 text-xs text-zinc-500">
-                    {formatBytes(item.size)}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <Card>
-            <div className="flex items-start gap-3">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-500/10 text-red-400">
-                <AlertTriangle size={23} />
-              </div>
-
-              <div>
-                <h2 className="text-xl font-black text-zinc-50">
-                  Área de risco
-                </h2>
-
-                <p className="mt-1 text-sm leading-relaxed text-zinc-500">
-                  Use apenas quando quiser voltar as preferências para o padrão.
-                </p>
-              </div>
-            </div>
 
             <Button
               type="button"

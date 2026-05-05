@@ -116,7 +116,7 @@ function AppLayout() {
         </div>
       )}
 
-      <main className="relative z-10 px-4 py-6 pb-28">
+      <main className="relative px-4 py-6 pb-28">
         <div className="mx-auto max-w-[1280px]">
           <Outlet />
         </div>

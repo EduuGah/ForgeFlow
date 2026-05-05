@@ -6,14 +6,29 @@ import {
   TrendingUp,
   UserRound,
   Settings,
-  Search,
   X,
   LogOut,
+  AlertCircle,
 } from 'lucide-react'
-import { NavLink } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
+
 import forgeflowIcon from '../../assets/forgeflow-icon.png'
+import { useAuth } from '../../context/AuthContext'
+
+function getInitials(name = '') {
+  const parts = name.trim().split(' ').filter(Boolean)
+
+  if (parts.length === 0) return 'FF'
+
+  const first = parts[0]?.[0] || ''
+  const last = parts.length > 1 ? parts[parts.length - 1]?.[0] : ''
+
+  return `${first}${last}`.toUpperCase()
+}
 
 function Sidebar({ onClose }) {
+  const { user, logout } = useAuth()
+
   const links = [
     { name: 'Dashboard', path: '/', icon: Home },
     { name: 'Treinos', path: '/workouts', icon: ClipboardList },
@@ -24,9 +39,15 @@ function Sidebar({ onClose }) {
     { name: 'Definições', path: '/settings', icon: Settings },
   ]
 
+  function handleLogout() {
+    onClose?.()
+    logout()
+  }
+
   return (
     <aside className="fixed left-0 top-0 z-50 flex h-dvh w-[282px] max-w-[86vw] flex-col overflow-hidden border-r border-zinc-800 bg-[#121212] text-white shadow-2xl shadow-black/60">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--ff-accent-soft),transparent_36%)]" />
+
       <div className="relative flex h-full flex-col">
         <div className="p-4">
           <div className="flex items-center justify-between gap-4 rounded-3xl border border-zinc-800 bg-[#18181b] p-4">
@@ -54,6 +75,7 @@ function Sidebar({ onClose }) {
               type="button"
               onClick={onClose}
               className="flex h-10 w-10 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-950 text-zinc-400 transition hover:border-[var(--ff-accent-border)]/40 hover:bg-zinc-900 hover:text-white hover:shadow-[0_0_20px_var(--ff-accent-shadow)]"
+              aria-label="Fechar menu"
             >
               <X size={20} />
             </button>
@@ -87,40 +109,67 @@ function Sidebar({ onClose }) {
           })}
         </nav>
 
-        <div className="border-t border-zinc-800 p-4">
-          <div className="rounded-3xl border border-zinc-800 bg-[#18181b] p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)]/10 text-sm font-black text-[var(--ff-accent-text)]">
-                CE
-              </div>
+        <div className="border-t border-zinc-800 p-3">
+          <div className="rounded-2xl border border-zinc-800 bg-[#18181b] p-3">
+            <Link
+              to="/profile"
+              onClick={onClose}
+              className="group flex items-center gap-3 rounded-xl transition hover:bg-zinc-950/70"
+            >
+              {user?.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt={user.name || 'Usuário'}
+                  className="h-10 w-10 shrink-0 rounded-xl border border-[var(--ff-accent-border)]/25 object-cover"
+                />
+              ) : (
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)]/10 text-xs font-black text-[var(--ff-accent-text)]">
+                  {getInitials(user?.name)}
+                </div>
+              )}
 
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold">
-                  Carlos Eduardo
+                <p className="truncate text-sm font-bold text-white transition group-hover:text-[var(--ff-accent-text)]">
+                  {user?.name || 'Usuário'}
                 </p>
 
                 <p className="truncate text-xs text-zinc-500">
-                  ForgeFlow user
+                  {user?.email || 'Sem e-mail'}
                 </p>
               </div>
+            </Link>
 
-              <button
-                type="button"
-                className="flex h-10 w-10 items-center justify-center rounded-2xl text-zinc-500 transition hover:bg-zinc-900 hover:text-white"
-              >
-                <LogOut size={20} />
-              </button>
-            </div>
+            {!user?.profileCompleted && (
+              <div className="mt-3 flex items-center justify-between gap-2 rounded-xl border border-yellow-500/20 bg-yellow-500/10 px-3 py-2">
+                <div className="flex min-w-0 items-center gap-2">
+                  <AlertCircle
+                    size={15}
+                    className="shrink-0 text-yellow-400"
+                  />
 
-            <div className="mt-4 rounded-2xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 p-3">
-              <p className="text-xs font-bold text-[var(--ff-accent-text)]">
-                ForgeFlow Beta
-              </p>
+                  <span className="truncate text-xs font-bold text-yellow-300">
+                    Perfil incompleto
+                  </span>
+                </div>
 
-              <p className="mt-1 text-xs leading-relaxed text-zinc-500">
-                Sistema em evolução para controle completo de treinos.
-              </p>
-            </div>
+                <Link
+                  to="/complete-profile"
+                  onClick={onClose}
+                  className="shrink-0 text-xs font-bold text-[var(--ff-accent-text)] transition hover:underline"
+                >
+                  Completar
+                </Link>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 text-xs font-bold text-red-300 transition hover:bg-red-500/20"
+            >
+              <LogOut size={15} />
+              Sair
+            </button>
           </div>
         </div>
       </div>
