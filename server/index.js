@@ -20,6 +20,7 @@ const app = express()
 const {
     PORT = 3001,
     FRONTEND_URL,
+    BACKEND_URL,
     MONGODB_URI,
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
@@ -39,6 +40,11 @@ requiredEnv('GOOGLE_CLIENT_ID', GOOGLE_CLIENT_ID)
 requiredEnv('GOOGLE_CLIENT_SECRET', GOOGLE_CLIENT_SECRET)
 requiredEnv('JWT_SECRET', JWT_SECRET)
 requiredEnv('SESSION_SECRET', SESSION_SECRET)
+
+requiredEnv('BACKEND_URL', BACKEND_URL)
+
+const normalizedFrontendUrl = FRONTEND_URL.replace(/\/$/, '')
+const normalizedBackendUrl = BACKEND_URL.replace(/\/$/, '')
 
 const normalizedFrontendUrl = FRONTEND_URL.replace(/\/$/, '')
 
@@ -327,7 +333,7 @@ passport.use(
         {
             clientID: GOOGLE_CLIENT_ID,
             clientSecret: GOOGLE_CLIENT_SECRET,
-            callbackURL: '/auth/google/callback',
+            callbackURL: `${normalizedBackendUrl}/auth/google/callback`,
         },
         async (accessToken, refreshToken, profile, done) => {
             try {
