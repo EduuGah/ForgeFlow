@@ -40,12 +40,14 @@ requiredEnv('GOOGLE_CLIENT_SECRET', GOOGLE_CLIENT_SECRET)
 requiredEnv('JWT_SECRET', JWT_SECRET)
 requiredEnv('SESSION_SECRET', SESSION_SECRET)
 
+const normalizedFrontendUrl = FRONTEND_URL.replace(/\/$/, '')
+
 app.use(express.json({ limit: '10mb' }))
 app.use(cookieParser())
 
 app.use(
     cors({
-        origin: FRONTEND_URL,
+        origin: normalizedFrontendUrl,
         credentials: true,
     })
 )
@@ -64,6 +66,28 @@ app.use(passport.session())
 await mongoose.connect(MONGODB_URI)
 
 console.log('MongoDB conectado com sucesso.')
+
+const settingsSchema = new mongoose.Schema(
+    {
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+            unique: true,
+            index: true,
+        },
+
+        data: {
+            type: Object,
+            default: {},
+        },
+    },
+    {
+        timestamps: true,
+    }
+)
+
+const AppSettings = mongoose.model('AppSettings', settingsSchema)
 
 const userSchema = new mongoose.Schema(
     {
@@ -343,6 +367,32 @@ passport.use(
     )
 )
 
+app.get('/settings', authMiddleware, async (req, res) => {
+    const settings = await AppSettings.findOne({
+        userId: req.user.userId,
+    })
+
+    res.json(settings?.data || {})
+})
+
+app.put('/settings', authMiddleware, async (req, res) => {
+    const settings = await AppSettings.findOneAndUpdate(
+        {
+            userId: req.user.userId,
+        },
+        {
+            userId: req.user.userId,
+            data: req.body,
+        },
+        {
+            new: true,
+            upsert: true,
+        }
+    )
+
+    res.json(settings.data)
+})
+
 app.get('/health', (req, res) => {
     res.json({
         ok: true,
@@ -360,13 +410,13 @@ app.get(
 app.get(
     '/auth/google/callback',
     passport.authenticate('google', {
-        failureRedirect: `${FRONTEND_URL}/login?error=google`,
+        failureRedirect: `${normalizedFrontendUrl}/login?error=google`,
         session: false,
     }),
     (req, res) => {
         const token = createToken(req.user)
 
-        res.redirect(`${FRONTEND_URL}/auth/callback?token=${token}`)
+        res.redirect(`${normalizedFrontendUrl}/auth/callback?token=${token}`)
     }
 )
 
@@ -510,66 +560,66 @@ app.get('/me', authMiddleware, async (req, res) => {
 })
 
 app.post('/auth/set-password', authMiddleware, async (req, res) => {
-  const { currentPassword, password, confirmPassword } = req.body
+    const { currentPassword, password, confirmPassword } = req.body
 
-  if (!password?.trim() || !confirmPassword?.trim()) {
-    return res.status(400).json({
-      message: 'Informe a nova senha e a confirmação.',
-    })
-  }
-
-  if (password !== confirmPassword) {
-    return res.status(400).json({
-      message: 'As senhas não conferem.',
-    })
-  }
-
-  if (password.length < 6) {
-    return res.status(400).json({
-      message: 'A senha precisa ter pelo menos 6 caracteres.',
-    })
-  }
-
-  const user = await User.findById(req.user.userId)
-
-  if (!user) {
-    return res.status(404).json({
-      message: 'Usuário não encontrado.',
-    })
-  }
-
-  const alreadyHasPassword = Boolean(user.passwordHash)
-
-  if (alreadyHasPassword) {
-    if (!currentPassword?.trim()) {
-      return res.status(400).json({
-        message: 'Informe sua senha atual para alterar a senha.',
-      })
+    if (!password?.trim() || !confirmPassword?.trim()) {
+        return res.status(400).json({
+            message: 'Informe a nova senha e a confirmação.',
+        })
     }
 
-    const currentPasswordIsValid = await bcrypt.compare(
-      currentPassword,
-      user.passwordHash
-    )
-
-    if (!currentPasswordIsValid) {
-      return res.status(401).json({
-        message: 'Senha atual inválida.',
-      })
+    if (password !== confirmPassword) {
+        return res.status(400).json({
+            message: 'As senhas não conferem.',
+        })
     }
-  }
 
-  user.passwordHash = await bcrypt.hash(password, 10)
-  user.provider = user.googleId ? 'both' : 'credentials'
+    if (password.length < 6) {
+        return res.status(400).json({
+            message: 'A senha precisa ter pelo menos 6 caracteres.',
+        })
+    }
 
-  await user.save()
+    const user = await User.findById(req.user.userId)
 
-  res.json({
-    message: alreadyHasPassword
-      ? 'Senha alterada com sucesso.'
-      : 'Senha criada com sucesso.',
-    user: buildUserResponse(user),
-  })
+    if (!user) {
+        return res.status(404).json({
+            message: 'Usuário não encontrado.',
+        })
+    }
+
+    const alreadyHasPassword = Boolean(user.passwordHash)
+
+    if (alreadyHasPassword) {
+        if (!currentPassword?.trim()) {
+            return res.status(400).json({
+                message: 'Informe sua senha atual para alterar a senha.',
+            })
+        }
+
+        const currentPasswordIsValid = await bcrypt.compare(
+            currentPassword,
+            user.passwordHash
+        )
+
+        if (!currentPasswordIsValid) {
+            return res.status(401).json({
+                message: 'Senha atual inválida.',
+            })
+        }
+    }
+
+    user.passwordHash = await bcrypt.hash(password, 10)
+    user.provider = user.googleId ? 'both' : 'credentials'
+
+    await user.save()
+
+    res.json({
+        message: alreadyHasPassword
+            ? 'Senha alterada com sucesso.'
+            : 'Senha criada com sucesso.',
+        user: buildUserResponse(user),
+    })
 })
 
 app.put('/me/profile', authMiddleware, async (req, res) => {
