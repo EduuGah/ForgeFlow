@@ -23,9 +23,9 @@ import CompleteProfile from './pages/CompleteProfile'
 
 function App() {
   return (
-    <WorkoutSessionProvider>
-      <BrowserRouter>
-        <AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <WorkoutSessionProvider>
           <Routes>
             <Route
               path="/login"
@@ -66,9 +66,9 @@ function App() {
               <Route path="/complete-profile" element={<CompleteProfile />} />
             </Route>
           </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </WorkoutSessionProvider>
+        </WorkoutSessionProvider>
+      </AuthProvider>
+    </BrowserRouter>
   )
 }
 

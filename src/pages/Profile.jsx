@@ -5,10 +5,12 @@ import {
   Medal,
   Pencil,
   Ruler,
+  Save,
   Scale,
   Target,
   Trash2,
   Trophy,
+  Upload,
   UserRound,
   Weight,
 } from 'lucide-react'
@@ -34,16 +36,20 @@ import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
 import ConfirmModal from '../components/ui/ConfirmModal'
 import Toast from '../components/ui/Toast'
+import AccountSecurityCard from '../components/profile/AccountSecurityCard'
 
 import { useAuth } from '../context/AuthContext'
 import { apiFetch } from '../services/api'
+import {
+  getUserStorageData,
+  saveUserStorageData,
+} from '../utils/userStorage'
 
 import {
   getCompletedSets,
   getExercisePRs,
   getHeaviestExercise,
   getMostTrainedExercise,
-  getStorageData,
 } from '../utils/analyticsUtils'
 
 function getTodayDateInputValue() {
@@ -57,8 +63,6 @@ function getTodayDateInputValue() {
 
 function isFutureDate(dateString) {
   if (!dateString) return false
-
-  // Como input type="date" vem em YYYY-MM-DD, comparação textual funciona corretamente.
   return dateString > getTodayDateInputValue()
 }
 
@@ -76,7 +80,6 @@ function formatShortDate(dateString) {
 
   if (dateString.includes('-')) {
     const [year, month, day] = dateString.split('-')
-
     return `${day}/${month}/${year.slice(2)}`
   }
 
@@ -87,8 +90,8 @@ function formatShortDate(dateString) {
   })
 }
 
-function getSafeBodyWeightList() {
-  const savedWeights = getStorageData('forgeflow:bodyweight', [])
+function getSafeBodyWeightList(user) {
+  const savedWeights = getUserStorageData(user, 'bodyweight', [])
 
   return savedWeights
     .filter((item) => item?.date && !isFutureDate(item.date))
@@ -141,8 +144,8 @@ function Profile() {
       notes: userProfile.notes || '',
     })
 
-    setBodyWeight(getSafeBodyWeightList())
-    setHistory(getStorageData('forgeflow:history', []))
+    setBodyWeight(getSafeBodyWeightList(user))
+    setHistory(getUserStorageData(user, 'history', []))
     setIsProfileLoaded(true)
   }, [user])
 
@@ -150,9 +153,8 @@ function Profile() {
     if (!isProfileLoaded) return
 
     const safeWeights = bodyWeight.filter((item) => !isFutureDate(item.date))
-
-    localStorage.setItem('forgeflow:bodyweight', JSON.stringify(safeWeights))
-  }, [bodyWeight, isProfileLoaded])
+    saveUserStorageData(user, 'bodyweight', safeWeights)
+  }, [bodyWeight, isProfileLoaded, user])
 
   const completedSets = useMemo(() => getCompletedSets(history), [history])
 
@@ -180,7 +182,7 @@ function Profile() {
     const groupedByDate = new Map()
 
     bodyWeight
-      .filter((item) => !isFutureDate(item.date))
+      .filter((item) => item?.date && !isFutureDate(item.date))
       .forEach((item) => {
         groupedByDate.set(item.date, item)
       })
@@ -214,20 +216,43 @@ function Profile() {
     }, 3000)
   }
 
-  function handleDateChange(value) {
-    if (isFutureDate(value)) {
-      setDateInput('')
+  function handleAvatarUpload(event) {
+    const file = event.target.files?.[0]
 
-      showToast(
-        'error',
-        'Data inválida',
-        'Não é possível registrar peso em uma data futura.'
-      )
+    if (!file) return
 
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/webp']
+
+    if (!allowedTypes.includes(file.type)) {
+      showToast('error', 'Arquivo inválido', 'Use PNG, JPG ou WEBP.')
+      event.target.value = ''
       return
     }
 
-    setDateInput(value)
+    const maxSizeInMB = 1
+    const maxSizeInBytes = maxSizeInMB * 1024 * 1024
+
+    if (file.size > maxSizeInBytes) {
+      showToast(
+        'error',
+        'Imagem muito grande',
+        `Use uma imagem de até ${maxSizeInMB}MB.`
+      )
+      event.target.value = ''
+      return
+    }
+
+    const reader = new FileReader()
+
+    reader.onload = () => {
+      updateProfileField('avatarUrl', reader.result)
+    }
+
+    reader.onerror = () => {
+      showToast('error', 'Erro ao carregar imagem', 'Tente escolher outra imagem.')
+    }
+
+    reader.readAsDataURL(file)
   }
 
   async function syncProfileWithAccount(nextProfile) {
@@ -255,46 +280,6 @@ function Profile() {
     return updatedUser
   }
 
-  function handleAvatarUpload(event) {
-    const file = event.target.files?.[0]
-
-    if (!file) return
-
-    const allowedTypes = ['image/png', 'image/jpeg', 'image/webp']
-
-    if (!allowedTypes.includes(file.type)) {
-      showToast('error', 'Arquivo inválido', 'Use PNG, JPG ou WEBP.')
-      event.target.value = ''
-      return
-    }
-
-    const maxSizeInMB = 1
-    const maxSizeInBytes = maxSizeInMB * 1024 * 1024
-
-    if (file.size > maxSizeInBytes) {
-      showToast(
-        'error',
-        'Imagem muito grande',
-        `Use uma imagem de até ${maxSizeInMB}MB.`
-      )
-
-      event.target.value = ''
-      return
-    }
-
-    const reader = new FileReader()
-
-    reader.onload = () => {
-      updateProfileField('avatarUrl', reader.result)
-    }
-
-    reader.onerror = () => {
-      showToast('error', 'Erro ao carregar imagem', 'Tente escolher outra imagem.')
-    }
-
-    reader.readAsDataURL(file)
-  }
-
   async function handleSaveProfile() {
     try {
       await syncProfileWithAccount(profile)
@@ -306,17 +291,31 @@ function Profile() {
     }
   }
 
+  function handleDateChange(value) {
+    if (isFutureDate(value)) {
+      setDateInput('')
+
+      showToast(
+        'error',
+        'Data inválida',
+        'Não é possível registrar peso em uma data futura.'
+      )
+
+      return
+    }
+
+    setDateInput(value)
+  }
+
   async function handleAddWeight(event) {
     event.preventDefault()
-
-    const today = getTodayDateInputValue()
 
     if (!weightInput || !dateInput) {
       showToast('error', 'Registro incompleto', 'Informe o peso e a data.')
       return
     }
 
-    if (dateInput > today) {
+    if (isFutureDate(dateInput)) {
       setDateInput('')
 
       showToast(
@@ -427,12 +426,12 @@ function Profile() {
         <Card className="overflow-hidden border-[var(--ff-accent-border)]/20 bg-gradient-to-br from-violet-600/20 via-[#18181b] to-[#121212] xl:col-span-2">
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-5">
-              <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)] shadow-[0_0_20px_var(--ff-accent-shadow)]">
+              <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)] shadow-[0_0_20px_var(--ff-accent-shadow)]">
                 {profile.avatarUrl ? (
                   <img
                     src={profile.avatarUrl}
                     alt={profile.name || 'Usuário'}
-                    className="h-full w-full rounded-full object-cover"
+                    className="h-full w-full object-cover"
                   />
                 ) : (
                   <UserRound size={44} />
@@ -876,8 +875,7 @@ function Profile() {
 
                     if (isFutureDate(selectedDate)) {
                       event.currentTarget.value = ''
-                      setDateInput('')
-
+                      handleDateChange('')
                       showToast(
                         'error',
                         'Data inválida',
@@ -885,36 +883,13 @@ function Profile() {
                       )
                     }
                   }}
-                  onChange={(event) => {
-                    const selectedDate = event.target.value
-
-                    if (isFutureDate(selectedDate)) {
-                      event.target.value = ''
-                      setDateInput('')
-
-                      showToast(
-                        'error',
-                        'Data inválida',
-                        'Não é possível registrar peso em uma data futura.'
-                      )
-
-                      return
-                    }
-
-                    setDateInput(selectedDate)
-                  }}
+                  onChange={(event) => handleDateChange(event.target.value)}
                   onBlur={(event) => {
                     const selectedDate = event.target.value
 
                     if (isFutureDate(selectedDate)) {
                       event.target.value = ''
-                      setDateInput('')
-
-                      showToast(
-                        'error',
-                        'Data inválida',
-                        'Não é possível registrar peso em uma data futura.'
-                      )
+                      handleDateChange('')
                     }
                   }}
                   className="mt-2 w-full cursor-pointer rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-white outline-none transition focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-violet-500/10"
@@ -986,6 +961,8 @@ function Profile() {
               </p>
             </Card>
           )}
+
+          <AccountSecurityCard />
         </div>
       </section>
 
@@ -1016,56 +993,57 @@ function Profile() {
               </button>
             </div>
 
-            <div className="md:col-span-2 rounded-3xl border border-zinc-800 bg-zinc-950 p-4">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-3xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
-                  {profile.avatarUrl ? (
-                    <img
-                      src={profile.avatarUrl}
-                      alt={profile.name || 'Foto de perfil'}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <UserRound size={34} />
-                  )}
-                </div>
-
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-zinc-200">
-                    Foto de perfil
-                  </p>
-
-                  <p className="mt-1 text-xs leading-relaxed text-zinc-500">
-                    Envie uma imagem PNG, JPG ou WEBP de até 1MB.
-                  </p>
-
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <label className="inline-flex h-10 cursor-pointer items-center justify-center rounded-2xl bg-[var(--ff-accent)] px-4 text-xs font-bold text-white transition hover:bg-[var(--ff-accent-hover)]">
-                      Escolher imagem
-
-                      <input
-                        type="file"
-                        accept="image/png,image/jpeg,image/webp"
-                        onChange={handleAvatarUpload}
-                        className="hidden"
+            <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-4 md:col-span-2">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                  <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-3xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
+                    {profile.avatarUrl ? (
+                      <img
+                        src={profile.avatarUrl}
+                        alt={profile.name || 'Foto de perfil'}
+                        className="h-full w-full object-cover"
                       />
-                    </label>
-
-                    {profile.avatarUrl && (
-                      <button
-                        type="button"
-                        onClick={() => updateProfileField('avatarUrl', '')}
-                        className="inline-flex h-10 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10 px-4 text-xs font-bold text-red-300 transition hover:bg-red-500/20"
-                      >
-                        Remover foto
-                      </button>
+                    ) : (
+                      <UserRound size={34} />
                     )}
+                  </div>
+
+                  <div className="flex-1">
+                    <p className="text-sm font-bold text-zinc-200">
+                      Foto de perfil
+                    </p>
+
+                    <p className="mt-1 text-xs leading-relaxed text-zinc-500">
+                      Envie uma imagem PNG, JPG ou WEBP de até 1MB.
+                    </p>
+
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <label className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-4 text-xs font-bold text-white transition hover:bg-[var(--ff-accent-hover)]">
+                        <Upload size={15} />
+                        Escolher imagem
+
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp"
+                          onChange={handleAvatarUpload}
+                          className="hidden"
+                        />
+                      </label>
+
+                      {profile.avatarUrl && (
+                        <button
+                          type="button"
+                          onClick={() => updateProfileField('avatarUrl', '')}
+                          className="inline-flex h-10 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10 px-4 text-xs font-bold text-red-300 transition hover:bg-red-500/20"
+                        >
+                          Remover foto
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
               <Input
                 label="Nome"
                 placeholder="Seu nome"
@@ -1168,6 +1146,7 @@ function Profile() {
                 onClick={handleSaveProfile}
                 className="w-full"
               >
+                <Save size={17} />
                 Salvar alterações
               </Button>
 

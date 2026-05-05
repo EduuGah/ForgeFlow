@@ -8,12 +8,16 @@ import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
 import Select from '../components/ui/Select'
 import Textarea from '../components/ui/Textarea'
-import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
 import ConfirmModal from '../components/ui/ConfirmModal'
 import Toast from '../components/ui/Toast'
 
 import { useWorkoutSession } from '../context/WorkoutSessionContext'
+import { useAuth } from '../context/AuthContext'
+import {
+  getUserStorageData,
+  removeUserStorageData,
+} from '../utils/userStorage'
 
 import {
   getLastExercisePerformance,
@@ -56,6 +60,8 @@ function isValidActiveSession(session) {
 }
 
 function StartWorkout() {
+  const { user } = useAuth()
+
   const {
     activeSession,
     elapsedSeconds,
@@ -86,7 +92,7 @@ function StartWorkout() {
   const sessionIsInvalid = activeSession && !isValidActiveSession(activeSession)
 
   function handleClearBrokenSession() {
-    localStorage.removeItem('forgeflow:active-session')
+    removeUserStorageData(user, 'active-session')
     cancelSession()
     window.location.href = '/workouts'
   }
@@ -104,12 +110,8 @@ function StartWorkout() {
   }, [])
 
   useEffect(() => {
-    const savedExercises = localStorage.getItem('forgeflow:exercises')
-
-    if (savedExercises) {
-      setExercises(JSON.parse(savedExercises))
-    }
-  }, [])
+    setExercises(getUserStorageData(user, 'exercises', []))
+  }, [user])
 
   useEffect(() => {
     if (!restTimer) return
@@ -321,22 +323,26 @@ function StartWorkout() {
         <div className="xl:col-span-3 space-y-4 pb-32">
           {(activeSession.exercises || []).map((sessionExercise, exerciseIndex) => {
             const lastPerformance = getLastExercisePerformance(
-              sessionExercise.exercise?.name || 'Exercício sem nome'
+              sessionExercise.exercise?.name || 'Exercício sem nome',
+              user
             )
 
             const bestWeightPerformance = getBestWeightPerformance(
-              sessionExercise.exercise?.name || 'Exercício sem nome'
+              sessionExercise.exercise?.name || 'Exercício sem nome',
+              user
             )
 
             const bestVolumePerformance = getBestVolumePerformance(
-              sessionExercise.exercise?.name || 'Exercício sem nome'
+              sessionExercise.exercise?.name || 'Exercício sem nome',
+              user
             )
 
             const lastSet = getFirstCompletedSet(lastPerformance)
 
             const { weightPRSetId, volumePRSetId } = getSessionPRTypes(
-              sessionExercise.exercise?.muscleGroup || 'Sem grupo',
-              sessionExercise.sets
+              sessionExercise.exercise?.name || 'Exercício sem nome',
+              sessionExercise.sets,
+              user
             )
 
             const isCollapsed = collapsedExerciseIds.includes(sessionExercise.id)
@@ -535,7 +541,8 @@ function StartWorkout() {
 
                         const comparison = getExerciseComparison(
                           sessionExercise.exercise.name,
-                          set
+                          set,
+                          user
                         )
 
                         return (
@@ -886,6 +893,7 @@ function StartWorkout() {
           </div>
         </div>
       )}
+
       <ConfirmModal
         open={Boolean(confirmModal)}
         title={confirmModal?.title}

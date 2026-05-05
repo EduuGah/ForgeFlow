@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 
 import { getAppSettings } from '../utils/settingsUtils'
+import { getInitialExercises } from '../utils/exerciseStorage'
 
 import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
@@ -29,6 +30,12 @@ import ConfirmModal from '../components/ui/ConfirmModal'
 import Toast from '../components/ui/Toast'
 
 import { useWorkoutSession } from '../context/WorkoutSessionContext'
+import { useAuth } from '../context/AuthContext'
+import {
+    getUserStorageData,
+    saveUserStorageData,
+    removeUserStorageData,
+} from '../utils/userStorage'
 
 function Workouts() {
     const [workouts, setWorkouts] = useState([])
@@ -68,6 +75,7 @@ function Workouts() {
     const [toast, setToast] = useState(null)
 
     const { startSession } = useWorkoutSession()
+    const { user } = useAuth()
     const navigate = useNavigate()
 
     const [showAllWorkouts, setShowAllWorkouts] = useState(false)
@@ -97,69 +105,65 @@ function Workouts() {
     }, [])
 
     useEffect(() => {
-        const savedWorkouts = localStorage.getItem('forgeflow:workouts')
-        const savedExercises = localStorage.getItem('forgeflow:exercises')
-        const savedFolders = localStorage.getItem('forgeflow:folders')
-        const savedSetModels = localStorage.getItem('forgeflow:set-models')
-        const draft = localStorage.getItem('forgeflow:workout-draft')
+        if (!user) return
 
-        if (savedWorkouts) {
-            setWorkouts(JSON.parse(savedWorkouts))
-        }
+        setIsLoaded(false)
 
-        if (savedExercises) {
-            setExercises(JSON.parse(savedExercises))
-        }
+        const savedWorkouts = getUserStorageData(user, 'workouts', [])
+        const savedExercises = getUserStorageData(user, 'exercises', null)
+        const savedFolders = getUserStorageData(user, 'folders', [])
+        const savedSetModels = getUserStorageData(user, 'set-models', [])
+        const draft = getUserStorageData(user, 'workout-draft', null)
 
-        if (savedFolders) {
-            setFolders(JSON.parse(savedFolders))
-        }
+        const initialExercises =
+            Array.isArray(savedExercises) && savedExercises.length > 0
+                ? savedExercises
+                : getInitialExercises()
 
-        if (savedSetModels) {
-            setCustomSetModels(JSON.parse(savedSetModels))
-        }
+        setWorkouts(savedWorkouts)
+        setExercises(initialExercises)
+        setFolders(savedFolders)
+        setCustomSetModels(savedSetModels)
 
         if (draft) {
-            const parsedDraft = JSON.parse(draft)
-
-            setWorkoutName(parsedDraft.workoutName || '')
-            setSelectedExercise(parsedDraft.selectedExercise || '')
-            setSetDescription(parsedDraft.setDescription || '')
-            setExerciseSets(parsedDraft.exerciseSets || [])
-            setWorkoutExercises(parsedDraft.workoutExercises || [])
-            setEditingWorkoutId(parsedDraft.editingWorkoutId || null)
-            setSelectedFolderId(parsedDraft.selectedFolderId || null)
+            setWorkoutName(draft.workoutName || '')
+            setSelectedExercise(draft.selectedExercise || '')
+            setSetDescription(draft.setDescription || '')
+            setExerciseSets(draft.exerciseSets || [])
+            setWorkoutExercises(draft.workoutExercises || [])
+            setEditingWorkoutId(draft.editingWorkoutId || null)
+            setSelectedFolderId(draft.selectedFolderId || null)
             setDefaultSetModel(
-                parsedDraft.defaultSetModel || getAppSettings().defaultSetModel
+                draft.defaultSetModel || getAppSettings().defaultSetModel
             )
         }
 
         setIsLoaded(true)
-    }, [])
+    }, [user])
 
     useEffect(() => {
-        if (!isLoaded) return
+        if (!isLoaded || !user) return
 
-        localStorage.setItem('forgeflow:workouts', JSON.stringify(workouts))
-    }, [workouts, isLoaded])
-
-    useEffect(() => {
-        if (!isLoaded) return
-
-        localStorage.setItem('forgeflow:folders', JSON.stringify(folders))
-    }, [folders, isLoaded])
+        saveUserStorageData(user, 'workouts', workouts)
+    }, [workouts, isLoaded, user])
 
     useEffect(() => {
-        if (!isLoaded) return
+        if (!isLoaded || !user) return
 
-        localStorage.setItem('forgeflow:set-models', JSON.stringify(customSetModels))
-    }, [customSetModels, isLoaded])
+        saveUserStorageData(user, 'folders', folders)
+    }, [folders, isLoaded, user])
 
     useEffect(() => {
-        if (!isLoaded) return
+        if (!isLoaded || !user) return
+
+        saveUserStorageData(user, 'set-models', customSetModels)
+    }, [customSetModels, isLoaded, user])
+
+    useEffect(() => {
+        if (!isLoaded || !user) return
 
         if (!appSettings.autoSaveWorkout) {
-            localStorage.removeItem('forgeflow:workout-draft')
+            removeUserStorageData(user, 'workout-draft')
             return
         }
 
@@ -174,7 +178,7 @@ function Workouts() {
             defaultSetModel,
         }
 
-        localStorage.setItem('forgeflow:workout-draft', JSON.stringify(draft))
+        saveUserStorageData(user, 'workout-draft', draft)
     }, [
         workoutName,
         selectedExercise,
@@ -186,6 +190,7 @@ function Workouts() {
         defaultSetModel,
         isLoaded,
         appSettings.autoSaveWorkout,
+        user,
     ])
 
     useEffect(() => {
@@ -314,7 +319,7 @@ function Workouts() {
         setQuickSearch('')
         setQuickGroupFilter('')
         setQuickEquipmentFilter('')
-        localStorage.removeItem('forgeflow:workout-draft')
+        if (user) removeUserStorageData(user, 'workout-draft')
     }
 
     function openCreateBuilder() {

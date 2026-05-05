@@ -20,12 +20,10 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Line,
-  LineChart,
-  PolarAngleAxis,
-  PolarGrid,
   Radar,
   RadarChart,
+  PolarAngleAxis,
+  PolarGrid,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -39,8 +37,8 @@ import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
 
 import { useWorkoutSession } from '../context/WorkoutSessionContext'
-
-import { getAppSettings } from '../utils/settingsUtils'
+import { useAuth } from '../context/AuthContext'
+import { getUserStorageData } from '../utils/userStorage'
 
 import {
   getCompletedSets,
@@ -55,13 +53,11 @@ import {
   getWeightPRCount,
   getVolumePRCount,
   getRecentPRs,
-  getStorageData,
   getTotalVolume,
-  getBodyWeightHistory,
 } from '../utils/analyticsUtils'
 
 function formatVolume(value) {
-  return `${value.toLocaleString('pt-BR')} kg`
+  return `${Number(value || 0).toLocaleString('pt-BR')} kg`
 }
 
 function formatShortDate(dateString) {
@@ -86,6 +82,8 @@ function getValidSetValue(set) {
 }
 
 function Dashboard() {
+  const { user } = useAuth()
+
   const [exercises, setExercises] = useState([])
   const [workouts, setWorkouts] = useState([])
   const [history, setHistory] = useState([])
@@ -97,60 +95,41 @@ function Dashboard() {
   const { startSession } = useWorkoutSession()
 
   useEffect(() => {
-    setExercises(getStorageData('forgeflow:exercises', []))
-    setWorkouts(getStorageData('forgeflow:workouts', []))
-    setHistory(getStorageData('forgeflow:history', []))
-    setBodyWeight(getBodyWeightHistory())
-    setProfile(getStorageData('forgeflow:profile', {}))
-  }, [])
+    setExercises(getUserStorageData(user, 'exercises', []))
+    setWorkouts(getUserStorageData(user, 'workouts', []))
+    setHistory(getUserStorageData(user, 'history', []))
+    setBodyWeight(getUserStorageData(user, 'bodyweight', []))
+
+    const userProfile = user?.profile || {}
+
+    setProfile({
+      name: user?.name || '',
+      avatarUrl: user?.avatarUrl || '',
+      height: userProfile.height || '',
+      currentWeight: userProfile.currentWeight || '',
+      goal: userProfile.mainGoal || '',
+      experience: userProfile.trainingLevel || '',
+      weeklyTarget: userProfile.trainingFrequency
+        ? `${userProfile.trainingFrequency} treinos`
+        : '',
+      preferredSplit: userProfile.preferredSplit || '',
+      notes: userProfile.notes || '',
+    })
+  }, [user])
 
   const completedSets = useMemo(() => getCompletedSets(history), [history])
 
-  const totalVolume = useMemo(() => {
-    return getTotalVolume(completedSets)
-  }, [completedSets])
-
-  const heaviestExercise = useMemo(() => {
-    return getHeaviestExercise(completedSets)
-  }, [completedSets])
-
-  const mostTrainedExercise = useMemo(() => {
-    return getMostTrainedExercise(completedSets)
-  }, [completedSets])
-
-  const muscleStats = useMemo(() => {
-    return getMuscleGroupStats(completedSets)
-  }, [completedSets])
-
-  const prCount = useMemo(() => {
-    return getPRCount(completedSets)
-  }, [completedSets])
-
-  const weightPRCount = useMemo(() => {
-    return getWeightPRCount(completedSets)
-  }, [completedSets])
-
-  const volumePRCount = useMemo(() => {
-    return getVolumePRCount(completedSets)
-  }, [completedSets])
-
-  const bestVolumeSet = useMemo(() => {
-    return getBestVolumeSet(completedSets)
-  }, [completedSets])
-
-  const muscleVolumeStats = useMemo(() => {
-    return getMuscleGroupVolumeStats(completedSets)
-  }, [completedSets])
-
-  const recentPRs = useMemo(() => {
-    return getRecentPRs(completedSets, 6)
-  }, [completedSets])
-
-  const volumePRs = useMemo(() => {
-    return getExerciseVolumePRs(completedSets)
-  }, [completedSets])
-
-  const settings = getAppSettings()
+  const totalVolume = useMemo(() => getTotalVolume(completedSets), [completedSets])
+  const heaviestExercise = useMemo(() => getHeaviestExercise(completedSets), [completedSets])
+  const mostTrainedExercise = useMemo(() => getMostTrainedExercise(completedSets), [completedSets])
+  const muscleStats = useMemo(() => getMuscleGroupStats(completedSets), [completedSets])
+  const prCount = useMemo(() => getPRCount(completedSets), [completedSets])
+  const weightPRCount = useMemo(() => getWeightPRCount(completedSets), [completedSets])
+  const volumePRCount = useMemo(() => getVolumePRCount(completedSets), [completedSets])
+  const bestVolumeSet = useMemo(() => getBestVolumeSet(completedSets), [completedSets])
+  const muscleVolumeStats = useMemo(() => getMuscleGroupVolumeStats(completedSets), [completedSets])
+  const recentPRs = useMemo(() => getRecentPRs(completedSets, 6), [completedSets])
+  const volumePRs = useMemo(() => getExerciseVolumePRs(completedSets), [completedSets])
 
   const workoutsByWeek = useMemo(() => {
     const map = new Map()
@@ -160,11 +139,9 @@ function Dashboard() {
 
       const date = new Date(session.finishedAt)
       const year = date.getFullYear()
-
       const firstDayOfYear = new Date(year, 0, 1)
       const pastDaysOfYear = (date - firstDayOfYear) / 86400000
       const week = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7)
-
       const key = `Sem ${week}`
 
       map.set(key, (map.get(key) || 0) + 1)
@@ -198,10 +175,8 @@ function Dashboard() {
       .slice(0, 8)
   }, [muscleVolumeStats])
 
-
   const exercisePRs = useMemo(() => {
     const weightPRs = getExercisePRs(completedSets)
-
     const volumeMap = new Map()
 
     completedSets.forEach((set) => {
@@ -254,10 +229,8 @@ function Dashboard() {
   }, [completedSets, prSearch])
 
   const recentWorkouts = workouts.slice(0, 5)
-
   const lastSession = history[0] || null
-
-  const currentWeight = bodyWeight.at(-1)?.weight || null
+  const currentWeight = bodyWeight.at(-1)?.weight || profile.currentWeight || null
 
   const volumeByWorkout = useMemo(() => {
     return history
@@ -300,7 +273,8 @@ function Dashboard() {
         set.muscleGroup === 'Glúteos' ||
         set.muscleGroup === 'Panturrilhas' ||
         set.muscleGroup === 'Quadríceps' ||
-        set.muscleGroup === 'Posterior de Coxa'
+        set.muscleGroup === 'Posterior de Coxa' ||
+        set.muscleGroup === 'Posterior de coxa'
       ) {
         mainGroups.Pernas += 1
       } else if (
@@ -344,8 +318,8 @@ function Dashboard() {
         }
       />
 
-      <section className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <Card className="xl:col-span-2 overflow-hidden border-[var(--ff-accent-border)]/20 bg-gradient-to-br shadow-[0_0_20px_var(--ff-accent-shadow)] via-[#18181b] to-[#121212]">
+      <section className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <Card className="overflow-hidden border-[var(--ff-accent-border)]/20 bg-gradient-to-br from-[var(--ff-accent-soft)]/20 via-[#18181b] to-[#121212] xl:col-span-2">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 px-3 py-1 text-xs font-bold text-[var(--ff-accent-text)]">
@@ -386,30 +360,21 @@ function Dashboard() {
 
             <div className="grid grid-cols-2 gap-3 lg:w-[320px]">
               <div className="rounded-3xl border border-zinc-800 bg-black/30 p-4">
-                <p className="text-xs text-zinc-500">
-                  Último treino
-                </p>
-
+                <p className="text-xs text-zinc-500">Último treino</p>
                 <p className="mt-2 text-lg font-bold">
                   {lastSession ? formatShortDate(lastSession.finishedAt) : '--'}
                 </p>
               </div>
 
               <div className="rounded-3xl border border-zinc-800 bg-black/30 p-4">
-                <p className="text-xs text-zinc-500">
-                  Peso atual
-                </p>
-
+                <p className="text-xs text-zinc-500">Peso atual</p>
                 <p className="mt-2 text-lg font-bold text-[var(--ff-accent-text)]">
                   {currentWeight ? `${currentWeight}kg` : '--'}
                 </p>
               </div>
 
               <div className="col-span-2 rounded-3xl border border-zinc-800 bg-black/30 p-4">
-                <p className="text-xs text-zinc-500">
-                  Grupo mais treinado
-                </p>
-
+                <p className="text-xs text-zinc-500">Grupo mais treinado</p>
                 <p className="mt-2 text-lg font-bold">
                   {strongestMuscleGroup
                     ? `${strongestMuscleGroup.group} • ${strongestMuscleGroup.total} séries`
@@ -427,32 +392,19 @@ function Dashboard() {
             </div>
 
             <div>
-              <h2 className="text-xl font-bold">
-                Meta atual
-              </h2>
-
-              <p className="text-sm text-zinc-500">
-                Dados do perfil
-              </p>
+              <h2 className="text-xl font-bold">Meta atual</h2>
+              <p className="text-sm text-zinc-500">Dados do perfil</p>
             </div>
           </div>
 
           <div className="mt-5 space-y-3">
             <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-              <p className="text-xs text-zinc-500">
-                Objetivo
-              </p>
-
-              <p className="mt-1 font-bold">
-                {profile?.goal || 'Não definido'}
-              </p>
+              <p className="text-xs text-zinc-500">Objetivo</p>
+              <p className="mt-1 font-bold">{profile?.goal || 'Não definido'}</p>
             </div>
 
             <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-              <p className="text-xs text-zinc-500">
-                Meta semanal
-              </p>
-
+              <p className="text-xs text-zinc-500">Meta semanal</p>
               <p className="mt-1 font-bold text-[var(--ff-accent-text)]">
                 {profile?.weeklyTarget || 'Não definida'}
               </p>
@@ -471,123 +423,72 @@ function Dashboard() {
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-2 xl:grid-cols-4 gap-4">
+      <section className="mt-6 grid grid-cols-2 gap-4 xl:grid-cols-4">
         <Card className="p-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-zinc-500">
-              Treinos
-            </p>
-
+            <p className="text-sm text-zinc-500">Treinos</p>
             <CalendarDays size={20} className="text-[var(--ff-accent-text)]" />
           </div>
-
-          <h2 className="mt-2 text-3xl font-black">
-            {history.length}
-          </h2>
-
-          <p className="mt-2 text-xs text-[var(--ff-accent-text)]">
-            Finalizados
-          </p>
+          <h2 className="mt-2 text-3xl font-black">{history.length}</h2>
+          <p className="mt-2 text-xs text-[var(--ff-accent-text)]">Finalizados</p>
         </Card>
 
         <Card className="p-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-zinc-500">
-              Volume
-            </p>
-
+            <p className="text-sm text-zinc-500">Volume</p>
             <Weight size={20} className="text-[var(--ff-accent-text)]" />
           </div>
-
           <h2 className="mt-2 text-2xl font-black text-[var(--ff-accent-text)]">
             {formatVolume(totalVolume)}
           </h2>
-
-          <p className="mt-2 text-xs text-[var(--ff-accent-text)]">
-            Peso × reps
-          </p>
+          <p className="mt-2 text-xs text-[var(--ff-accent-text)]">Peso × reps</p>
         </Card>
 
         <Card className="p-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-zinc-500">
-              PRs
-            </p>
-
+            <p className="text-sm text-zinc-500">PRs</p>
             <Trophy size={20} className="text-yellow-400" />
           </div>
-
-          <h2 className="mt-2 text-3xl font-black">
-            {prCount}
-          </h2>
-
-          <p className="mt-2 text-xs text-[var(--ff-accent-text)]">
-            Recordes
-          </p>
+          <h2 className="mt-2 text-3xl font-black">{prCount}</h2>
+          <p className="mt-2 text-xs text-[var(--ff-accent-text)]">Recordes</p>
         </Card>
 
         <Card className="p-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-zinc-500">
-              Exercícios
-            </p>
-
+            <p className="text-sm text-zinc-500">Exercícios</p>
             <Dumbbell size={20} className="text-[var(--ff-accent-text)]" />
           </div>
-
-          <h2 className="mt-2 text-3xl font-black">
-            {exercises.length}
-          </h2>
-
-          <p className="mt-2 text-xs text-[var(--ff-accent-text)]">
-            Biblioteca
-          </p>
+          <h2 className="mt-2 text-3xl font-black">{exercises.length}</h2>
+          <p className="mt-2 text-xs text-[var(--ff-accent-text)]">Biblioteca</p>
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card className="p-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-zinc-500">
-              PRs de peso
-            </p>
-
+            <p className="text-sm text-zinc-500">PRs de peso</p>
             <Trophy size={20} className="text-[var(--ff-accent-text)]" />
           </div>
-
           <h2 className="mt-2 text-3xl font-black text-[var(--ff-accent-text)]">
             {weightPRCount}
           </h2>
-
-          <p className="mt-2 text-xs text-zinc-500">
-            Recordes por maior carga
-          </p>
+          <p className="mt-2 text-xs text-zinc-500">Recordes por maior carga</p>
         </Card>
 
         <Card className="p-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-zinc-500">
-              PRs de volume
-            </p>
-
+            <p className="text-sm text-zinc-500">PRs de volume</p>
             <Flame size={20} className="text-orange-400" />
           </div>
-
           <h2 className="mt-2 text-3xl font-black text-orange-300">
             {volumePRCount}
           </h2>
-
-          <p className="mt-2 text-xs text-zinc-500">
-            Recordes por peso × reps
-          </p>
+          <p className="mt-2 text-xs text-zinc-500">Recordes por peso × reps</p>
         </Card>
 
         <Card className="p-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-zinc-500">
-              Melhor volume em série
-            </p>
-
+            <p className="text-sm text-zinc-500">Melhor volume em série</p>
             <Weight size={20} className="text-[var(--ff-accent-text)]" />
           </div>
 
@@ -596,33 +497,24 @@ function Dashboard() {
               <h2 className="mt-2 text-2xl font-black text-[var(--ff-accent-text)]">
                 {bestVolumeSet.volume}kg
               </h2>
-
               <p className="mt-2 text-xs text-zinc-500">
                 {bestVolumeSet.exerciseName} • {bestVolumeSet.weight}kg × {bestVolumeSet.reps}
               </p>
             </>
           ) : (
             <>
-              <h2 className="mt-2 text-2xl font-black">
-                --
-              </h2>
-
-              <p className="mt-2 text-xs text-zinc-500">
-                Sem dados ainda
-              </p>
+              <h2 className="mt-2 text-2xl font-black">--</h2>
+              <p className="mt-2 text-xs text-zinc-500">Sem dados ainda</p>
             </>
           )}
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
         <Card className="xl:col-span-2">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-black">
-                Rotinas rápidas
-              </h2>
-
+              <h2 className="text-2xl font-black">Rotinas rápidas</h2>
               <p className="mt-1 text-sm text-zinc-500">
                 Inicie uma rotina salva em poucos segundos.
               </p>
@@ -660,6 +552,7 @@ function Dashboard() {
               ].filter(Boolean)
 
               const firstExercise = workout.exercises[0]?.exercise
+              const media = firstExercise?.media?.gif || firstExercise?.mediaUrl || firstExercise?.gifUrl || ''
 
               return (
                 <div
@@ -669,10 +562,10 @@ function Dashboard() {
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div className="flex items-center gap-4">
                       <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-zinc-700 bg-white">
-                        {firstExercise?.mediaUrl ? (
+                        {media ? (
                           <img
-                            src={firstExercise.mediaUrl}
-                            alt={firstExercise.name}
+                            src={media}
+                            alt={firstExercise?.name}
                             className="h-full w-full object-cover"
                           />
                         ) : (
@@ -684,7 +577,6 @@ function Dashboard() {
                         <h3 className="truncate text-lg font-bold text-white">
                           {workout.name}
                         </h3>
-
                         <p className="mt-1 text-sm text-zinc-500">
                           {workout.exercises.length} exercícios
                         </p>
@@ -732,77 +624,58 @@ function Dashboard() {
             </div>
 
             <div>
-              <h2 className="text-xl font-bold">
-                Destaques
-              </h2>
-
-              <p className="text-sm text-zinc-500">
-                Melhores marcas
-              </p>
+              <h2 className="text-xl font-bold">Destaques</h2>
+              <p className="text-sm text-zinc-500">Melhores marcas</p>
             </div>
           </div>
 
           <div className="mt-5 space-y-3">
             <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-              <p className="text-xs text-zinc-500">
-                Maior carga
-              </p>
+              <p className="text-xs text-zinc-500">Maior carga</p>
 
               {heaviestExercise ? (
                 <>
                   <h3 className="mt-1 text-2xl font-black text-[var(--ff-accent-text)]">
                     {heaviestExercise.weight}kg
                   </h3>
-
                   <p className="mt-1 text-sm text-zinc-400">
                     {heaviestExercise.exerciseName} × {heaviestExercise.reps} reps
                   </p>
                 </>
               ) : (
-                <p className="mt-2 text-sm text-zinc-500">
-                  Sem registro ainda.
-                </p>
+                <p className="mt-2 text-sm text-zinc-500">Sem registro ainda.</p>
               )}
             </div>
 
             <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-              <p className="text-xs text-zinc-500">
-                Mais treinado
-              </p>
+              <p className="text-xs text-zinc-500">Mais treinado</p>
 
               {mostTrainedExercise ? (
                 <>
                   <h3 className="mt-1 text-lg font-bold">
                     {mostTrainedExercise.name}
                   </h3>
-
                   <p className="mt-1 text-sm text-zinc-400">
                     {mostTrainedExercise.total} séries feitas
                   </p>
                 </>
               ) : (
-                <p className="mt-2 text-sm text-zinc-500">
-                  Sem registro ainda.
-                </p>
+                <p className="mt-2 text-sm text-zinc-500">Sem registro ainda.</p>
               )}
             </div>
           </div>
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
         <Card>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-xl font-bold">
-                Volume por treino
-              </h2>
-
+              <h2 className="text-xl font-bold">Volume por treino</h2>
               <p className="mt-1 text-sm text-zinc-500">
                 Soma de peso × repetições nos últimos treinos.
               </p>
             </div>
-
             <Flame size={24} className="text-orange-400" />
           </div>
 
@@ -835,15 +708,11 @@ function Dashboard() {
         <Card>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-xl font-bold">
-                Mapa muscular
-              </h2>
-
+              <h2 className="text-xl font-bold">Mapa muscular</h2>
               <p className="mt-1 text-sm text-zinc-500">
                 Distribuição dos grupos mais treinados.
               </p>
             </div>
-
             <Target size={24} className="text-[var(--ff-accent-text)]" />
           </div>
 
@@ -879,19 +748,15 @@ function Dashboard() {
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
         <Card>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-xl font-bold">
-                Treinos por semana
-              </h2>
-
+              <h2 className="text-xl font-bold">Treinos por semana</h2>
               <p className="mt-1 text-sm text-zinc-500">
                 Frequência semanal registrada no histórico.
               </p>
             </div>
-
             <CalendarDays size={24} className="text-[var(--ff-accent-text)]" />
           </div>
 
@@ -926,15 +791,11 @@ function Dashboard() {
         <Card>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-xl font-bold">
-                Séries por treino
-              </h2>
-
+              <h2 className="text-xl font-bold">Séries por treino</h2>
               <p className="mt-1 text-sm text-zinc-500">
                 Quantidade de séries válidas nos últimos treinos.
               </p>
             </div>
-
             <BarChart3 size={24} className="text-[var(--ff-accent-text)]" />
           </div>
 
@@ -969,15 +830,11 @@ function Dashboard() {
         <Card>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-xl font-bold">
-                Volume por músculo
-              </h2>
-
+              <h2 className="text-xl font-bold">Volume por músculo</h2>
               <p className="mt-1 text-sm text-zinc-500">
                 Grupos musculares com maior volume acumulado.
               </p>
             </div>
-
             <Flame size={24} className="text-orange-400" />
           </div>
 
@@ -1010,27 +867,20 @@ function Dashboard() {
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
         <Card>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-xl font-bold">
-                Recordes pessoais
-              </h2>
-
+              <h2 className="text-xl font-bold">Recordes pessoais</h2>
               <p className="mt-1 text-sm text-zinc-500">
                 Peso PR e Volume PR por exercício.
               </p>
             </div>
-
-            <Badge variant="purple">
-              {exercisePRs.length}
-            </Badge>
+            <Badge variant="purple">{exercisePRs.length}</Badge>
           </div>
 
           <div className="mt-4 flex h-12 items-center gap-3 rounded-xl bg-[#2a2a2c] px-4 text-zinc-400">
             <Search size={20} />
-
             <input
               type="text"
               placeholder="Buscar exercício..."
@@ -1038,7 +888,6 @@ function Dashboard() {
               onChange={(event) => setPrSearch(event.target.value)}
               className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-400"
             />
-
             {prSearch && (
               <button
                 type="button"
@@ -1050,7 +899,7 @@ function Dashboard() {
             )}
           </div>
 
-          <div className="mt-5 max-h-[520px] overflow-y-auto pr-2 space-y-3">
+          <div className="mt-5 max-h-[520px] space-y-3 overflow-y-auto pr-2">
             {exercisePRs.length === 0 && (
               <EmptyState
                 title="Nenhum PR encontrado"
@@ -1071,46 +920,36 @@ function Dashboard() {
                       </span>
 
                       <div className="min-w-0">
-                        <p className="truncate font-bold text-white">
+                        <h3 className="truncate font-bold text-white">
                           {pr.exerciseName}
-                        </p>
-
+                        </h3>
                         <p className="mt-1 text-xs text-zinc-500">
                           {pr.muscleGroup}
                         </p>
                       </div>
                     </div>
                   </div>
-
-                  <Trophy size={20} className="text-yellow-400" />
                 </div>
 
-                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="rounded-2xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 p-3">
-                    <p className="text-[11px] font-bold text-[var(--ff-accent-text)]">
-                      PESO PR
+                    <p className="text-xs font-bold text-[var(--ff-accent-text)]">
+                      Peso PR
                     </p>
-
-                    <p className="mt-1 text-lg font-black text-violet-200">
-                      {pr.weightPR.weight}kg
-                    </p>
-
-                    <p className="mt-1 text-xs text-zinc-400">
-                      {pr.weightPR.reps} reps
+                    <p className="mt-1 text-lg font-black">
+                      {pr.weightPR.weight}kg × {pr.weightPR.reps}
                     </p>
                   </div>
 
                   <div className="rounded-2xl border border-orange-500/20 bg-orange-500/10 p-3">
-                    <p className="text-[11px] font-bold text-orange-300">
-                      VOLUME PR
+                    <p className="text-xs font-bold text-orange-300">
+                      Volume PR
                     </p>
-
-                    <p className="mt-1 text-lg font-black text-orange-200">
+                    <p className="mt-1 text-lg font-black">
                       {pr.volumePR.volume}kg
                     </p>
-
-                    <p className="mt-1 text-xs text-zinc-400">
-                      {pr.volumePR.weight}kg × {pr.volumePR.reps} reps
+                    <p className="mt-1 text-xs text-zinc-500">
+                      {pr.volumePR.weight}kg × {pr.volumePR.reps}
                     </p>
                   </div>
                 </div>
@@ -1120,230 +959,40 @@ function Dashboard() {
         </Card>
 
         <Card>
-          <h2 className="text-xl font-bold">
-            Grupos treinados
-          </h2>
-
+          <h2 className="text-xl font-bold">PRs recentes</h2>
           <p className="mt-1 text-sm text-zinc-500">
-            Ranking por séries concluídas.
+            Últimos recordes registrados durante os treinos.
           </p>
 
-          <div className="mt-5 space-y-3">
-            {muscleStats.length === 0 && (
-              <EmptyState
-                title="Sem dados ainda"
-                description="Finalize treinos para gerar estatísticas."
-              />
-            )}
-
-            {muscleStats
-              .sort((a, b) => b.total - a.total)
-              .slice(0, 8)
-              .map((group, index) => {
-                const maxTotal = Math.max(...muscleStats.map((item) => item.total))
-                const percent = maxTotal ? (group.total / maxTotal) * 100 : 0
-
-                return (
-                  <div
-                    key={group.group}
-                    className="rounded-2xl border border-zinc-800 bg-zinc-950 p-3"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="font-bold">
-                          {group.group}
-                        </p>
-
-                        <p className="mt-1 text-xs text-zinc-500">
-                          {group.total} séries
-                        </p>
-                      </div>
-
-                      <Badge variant={index === 0 ? 'purple' : 'default'}>
-                        #{index + 1}
-                      </Badge>
-                    </div>
-
-                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-zinc-800">
-                      <div
-                        className="h-full rounded-full bg-[var(--ff-accent-soft)]"
-                        style={{
-                          width: `${percent}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                )
-              })}
-          </div>
-        </Card>
-
-        <Card>
-          <h2 className="text-xl font-bold">
-            Peso corporal
-          </h2>
-
-          <p className="mt-1 text-sm text-zinc-500">
-            Evolução registrada no perfil.
-          </p>
-
-          <div className="mt-5 h-64">
-            {bodyWeight.length === 0 ? (
-              <EmptyState
-                title="Sem peso registrado"
-                description="Registre seu peso na página de perfil para gerar o gráfico."
-              />
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={bodyWeight}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                  <XAxis dataKey="date" stroke="#71717a" />
-                  <YAxis stroke="#71717a" />
-                  <Tooltip
-                    formatter={(value, name) => {
-                      if (name === "Peso" || name === "weight") {
-                        return [`${value}kg`, "Peso"]
-                      }
-
-                      return [value, name]
-                    }}
-                    labelFormatter={(label) => `Data: ${label}`}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="weight"
-                    name="Peso"
-                    stroke="#8b5cf6"
-                    strokeWidth={3}
-                    dot
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </Card>
-      </section>
-
-      <section className="mt-6 grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <Card>
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-bold">
-                PRs recentes
-              </h2>
-
-              <p className="mt-1 text-sm text-zinc-500">
-                Últimos recordes salvos no histórico.
-              </p>
-            </div>
-
-            <Trophy size={24} className="text-yellow-400" />
-          </div>
-
-          <div className="mt-5 space-y-3">
+          <div className="mt-5 max-h-[520px] space-y-3 overflow-y-auto pr-2">
             {recentPRs.length === 0 && (
               <EmptyState
-                title="Sem PRs recentes"
-                description="Finalize treinos e bata recordes para aparecerem aqui."
+                title="Nenhum PR recente"
+                description="Finalize treinos com peso e reps para gerar recordes."
               />
             )}
 
-            {recentPRs.map((pr) => (
+            {recentPRs.map((pr, index) => (
               <div
-                key={`${pr.exerciseName}-${pr.date}-${pr.setNumber}-${pr.weight}-${pr.reps}`}
+                key={`${pr.exerciseName}-${index}`}
                 className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4"
               >
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="font-bold">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-bold text-white">
                       {pr.exerciseName}
                     </p>
-
                     <p className="mt-1 text-xs text-zinc-500">
-                      {pr.workoutName}
+                      {pr.muscleGroup || 'Sem grupo'}
                     </p>
                   </div>
 
-                  <div className="flex flex-wrap gap-2">
-                    {pr.isWeightPR && (
-                      <Badge variant="purple">
-                        PESO PR
-                      </Badge>
-                    )}
-
-                    {pr.isVolumePR && (
-                      <Badge variant="orange">
-                        VOL PR
-                      </Badge>
-                    )}
-
-                    <Badge>
-                      {pr.weight}kg × {pr.reps}
-                    </Badge>
-                  </div>
+                  <Badge>
+                    {pr.weight}kg × {pr.reps}
+                  </Badge>
                 </div>
               </div>
             ))}
-          </div>
-        </Card>
-
-        <Card>
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-bold">
-                Top volume por exercício
-              </h2>
-
-              <p className="mt-1 text-sm text-zinc-500">
-                Maiores volumes registrados por exercício.
-              </p>
-            </div>
-
-            <Flame size={24} className="text-orange-400" />
-          </div>
-
-          <div className="mt-5 space-y-3">
-            {volumePRs.length === 0 && (
-              <EmptyState
-                title="Sem volume registrado"
-                description="Finalize treinos com peso e repetições."
-              />
-            )}
-
-            {volumePRs
-              .slice()
-              .sort((a, b) => b.volume - a.volume)
-              .slice(0, 8)
-              .map((pr, index) => (
-                <div
-                  key={pr.exerciseName}
-                  className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-orange-500/20 bg-orange-500/10 text-sm font-bold text-orange-300">
-                          #{index + 1}
-                        </span>
-
-                        <div className="min-w-0">
-                          <p className="truncate font-bold">
-                            {pr.exerciseName}
-                          </p>
-
-                          <p className="mt-1 text-xs text-zinc-500">
-                            {pr.weight}kg × {pr.reps} reps
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <Badge variant="orange">
-                      {pr.volume}kg
-                    </Badge>
-                  </div>
-                </div>
-              ))}
           </div>
         </Card>
       </section>

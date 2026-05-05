@@ -25,6 +25,11 @@ import {
 } from 'lucide-react'
 
 import { getInitialExercises } from '../utils/exerciseStorage'
+import { useAuth } from '../context/AuthContext'
+import {
+  getUserStorageData,
+  saveUserStorageData,
+} from '../utils/userStorage'
 
 import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
@@ -35,7 +40,6 @@ import Textarea from '../components/ui/Textarea'
 import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
 
-const EXERCISES_KEY = 'forgeflow:exercises'
 
 const muscleGroupOrder = [
   'Peito',
@@ -393,7 +397,7 @@ function MediaUploader({
             )}
 
             <p className="text-xs leading-relaxed text-zinc-500">
-              Observação: como o app ainda usa localStorage, imagens/GIFs muito grandes podem não salvar. Para arquivos grandes, prefira uma URL ou, futuramente, um banco/storage como Cloudinary, Firebase ou backend próprio.
+              Observação: imagens/GIFs muito grandes podem não salvar bem no navegador. Para arquivos grandes, prefira uma URL ou, futuramente, um storage como Cloudinary, Firebase ou backend próprio.
             </p>
           </div>
         </div>
@@ -403,6 +407,8 @@ function MediaUploader({
 }
 
 function Exercises() {
+  const { user } = useAuth()
+
   const [name, setName] = useState('')
   const [muscleGroup, setMuscleGroup] = useState('')
   const [targetMuscle, setTargetMuscle] = useState('')
@@ -429,16 +435,29 @@ function Exercises() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [visibleCount, setVisibleCount] = useState(80)
 
-  const [exercises, setExercises] = useState(() => getInitialExercises())
+  const [exercises, setExercises] = useState([])
 
   useEffect(() => {
+    if (!user) return
+
+    setIsLoaded(false)
+
+    const savedExercises = getUserStorageData(user, 'exercises', null)
+
+    setExercises(
+      Array.isArray(savedExercises)
+        ? savedExercises
+        : getInitialExercises()
+    )
+
     setIsLoaded(true)
-  }, [])
+  }, [user])
 
   useEffect(() => {
-    if (!isLoaded) return
-    localStorage.setItem(EXERCISES_KEY, JSON.stringify(exercises))
-  }, [exercises, isLoaded])
+    if (!isLoaded || !user) return
+
+    saveUserStorageData(user, 'exercises', exercises)
+  }, [exercises, isLoaded, user])
 
   useEffect(() => {
     setVisibleCount(80)

@@ -19,6 +19,9 @@ import Button from '../components/ui/Button'
 import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
 
+import { useAuth } from '../context/AuthContext'
+import { getUserStorageData } from '../utils/userStorage'
+
 function getExerciseMedia(exercise) {
   if (exercise?.media?.gif) return exercise.media.gif
   if (exercise?.media?.image) return exercise.media.image
@@ -133,18 +136,15 @@ function SummaryItem({ label, value, icon: Icon }) {
 
 function ExerciseDetails() {
   const { id } = useParams()
+  const { user } = useAuth()
   const [exercise, setExercise] = useState(null)
 
   useEffect(() => {
-    const savedExercises = localStorage.getItem('forgeflow:exercises')
-
-    if (!savedExercises) return
-
-    const exercises = JSON.parse(savedExercises)
-    const foundExercise = exercises.find((item) => item.id === id)
+    const exercises = getUserStorageData(user, 'exercises', [])
+    const foundExercise = exercises.find((item) => String(item.id) === String(id))
 
     setExercise(foundExercise || null)
-  }, [id])
+  }, [id, user])
 
   if (!exercise) {
     return (
@@ -194,8 +194,8 @@ function ExerciseDetails() {
         </Link>
       </div>
 
-      <section className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2 space-y-6">
+      <section className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <div className="space-y-6 xl:col-span-2">
           <Card className="overflow-hidden p-0">
             <div className="relative min-h-[320px] bg-white">
               {media ? (
@@ -346,7 +346,7 @@ function ExerciseDetails() {
               />
 
               <div className="rounded-2xl border border-zinc-800 bg-[#18181b] p-4">
-                                <p className="text-xs text-zinc-500">
+                <p className="text-xs text-zinc-500">
                   Mídia
                 </p>
 

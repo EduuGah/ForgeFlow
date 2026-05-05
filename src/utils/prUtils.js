@@ -1,4 +1,10 @@
-export function getWorkoutHistory() {
+import { getUserStorageData } from './userStorage'
+
+export function getWorkoutHistory(user) {
+  if (user) {
+    return getUserStorageData(user, 'history', [])
+  }
+
   const savedHistory = localStorage.getItem('forgeflow:history')
 
   if (!savedHistory) {
@@ -12,9 +18,8 @@ export function getWorkoutHistory() {
   }
 }
 
-export function getExerciseHistory(exerciseName) {
-  const history = getWorkoutHistory()
-
+export function getExerciseHistory(exerciseName, user) {
+  const history = getWorkoutHistory(user)
   const exerciseHistory = []
 
   history.forEach((session) => {
@@ -32,8 +37,8 @@ export function getExerciseHistory(exerciseName) {
   return exerciseHistory
 }
 
-export function getLastExercisePerformance(exerciseName) {
-  const history = getExerciseHistory(exerciseName)
+export function getLastExercisePerformance(exerciseName, user) {
+  const history = getExerciseHistory(exerciseName, user)
 
   if (history.length === 0) {
     return null
@@ -42,9 +47,8 @@ export function getLastExercisePerformance(exerciseName) {
   return history[0]
 }
 
-export function getBestWeightPerformance(exerciseName) {
-  const history = getExerciseHistory(exerciseName)
-
+export function getBestWeightPerformance(exerciseName, user) {
+  const history = getExerciseHistory(exerciseName, user)
   let best = null
 
   history.forEach((record) => {
@@ -69,9 +73,8 @@ export function getBestWeightPerformance(exerciseName) {
   return best
 }
 
-export function getBestVolumePerformance(exerciseName) {
-  const history = getExerciseHistory(exerciseName)
-
+export function getBestVolumePerformance(exerciseName, user) {
+  const history = getExerciseHistory(exerciseName, user)
   let best = null
 
   history.forEach((record) => {
@@ -97,13 +100,13 @@ export function getBestVolumePerformance(exerciseName) {
   return best
 }
 
-export function getBestExercisePerformance(exerciseName) {
-  return getBestWeightPerformance(exerciseName)
+export function getBestExercisePerformance(exerciseName, user) {
+  return getBestWeightPerformance(exerciseName, user)
 }
 
-export function getSessionPRTypes(exerciseName, sets) {
-  const previousBestWeight = getBestWeightPerformance(exerciseName)
-  const previousBestVolume = getBestVolumePerformance(exerciseName)
+export function getSessionPRTypes(exerciseName, sets, user) {
+  const previousBestWeight = getBestWeightPerformance(exerciseName, user)
+  const previousBestVolume = getBestVolumePerformance(exerciseName, user)
 
   let bestWeight = previousBestWeight?.weight || 0
   let bestVolume = previousBestVolume?.volume || 0
@@ -135,10 +138,10 @@ export function getSessionPRTypes(exerciseName, sets) {
   }
 }
 
-export function getExerciseComparison(exerciseName, currentSet) {
-  const lastPerformance = getLastExercisePerformance(exerciseName)
-  const bestWeight = getBestWeightPerformance(exerciseName)
-  const bestVolume = getBestVolumePerformance(exerciseName)
+export function getExerciseComparison(exerciseName, currentSet, user) {
+  const lastPerformance = getLastExercisePerformance(exerciseName, user)
+  const bestWeight = getBestWeightPerformance(exerciseName, user)
+  const bestVolume = getBestVolumePerformance(exerciseName, user)
 
   const currentWeight = Number(currentSet.weight)
   const currentReps = Number(currentSet.reps)

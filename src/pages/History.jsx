@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   CalendarDays,
   ChevronDown,
-  Clock,
   Dumbbell,
   Flame,
   Medal,
@@ -18,10 +17,16 @@ import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Badge from '../components/ui/Badge'
-import Input from '../components/ui/Input'
 import EmptyState from '../components/ui/EmptyState'
 import ConfirmModal from '../components/ui/ConfirmModal'
 import Toast from '../components/ui/Toast'
+
+import { useAuth } from '../context/AuthContext'
+import {
+  getUserStorageData,
+  saveUserStorageData,
+  removeUserStorageData,
+} from '../utils/userStorage'
 
 function formatTime(seconds) {
   const hours = Math.floor(seconds / 3600)
@@ -119,6 +124,8 @@ function getExerciseVolume(exercise) {
 }
 
 function History() {
+  const { user } = useAuth()
+
   const [history, setHistory] = useState([])
   const [expandedSessionId, setExpandedSessionId] = useState(null)
   const [search, setSearch] = useState('')
@@ -135,12 +142,8 @@ function History() {
   const settings = getAppSettings()
 
   useEffect(() => {
-    const savedHistory = localStorage.getItem('forgeflow:history')
-
-    if (savedHistory) {
-      setHistory(JSON.parse(savedHistory))
-    }
-  }, [])
+    setHistory(getUserStorageData(user, 'history', []))
+  }, [user])
 
   const filteredHistory = useMemo(() => {
     return history.filter((session) => {
@@ -192,6 +195,7 @@ function History() {
       expandedSessionId === id ? null : id
     )
   }
+
   function showToast(type, title, message = '') {
     setToast({
       type,
@@ -203,6 +207,7 @@ function History() {
       setToast(null)
     }, 3000)
   }
+
   function handleClearHistory() {
     setConfirmModal({
       title: 'Limpar histórico?',
@@ -210,9 +215,8 @@ function History() {
       confirmText: 'Limpar tudo',
       variant: 'danger',
       onConfirm: () => {
-        localStorage.removeItem('forgeflow:history')
+        removeUserStorageData(user, 'history')
         setHistory([])
-        setIsClearModalOpen(false)
         setConfirmModal(null)
         showToast('success', 'Histórico limpo', 'Todos os treinos foram removidos.')
       },
@@ -231,8 +235,7 @@ function History() {
         const updatedHistory = history.filter((session) => session.id !== id)
 
         setHistory(updatedHistory)
-        localStorage.setItem('forgeflow:history', JSON.stringify(updatedHistory))
-        setDeleteTarget(null)
+        saveUserStorageData(user, 'history', updatedHistory)
         setConfirmModal(null)
         showToast('success', 'Treino excluído', 'O registro foi removido do histórico.')
       },
@@ -251,7 +254,7 @@ function History() {
         }
       />
 
-      <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <Card className="p-4">
           <p className="text-sm text-zinc-500">
             Treinos
@@ -309,7 +312,7 @@ function History() {
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 xl:grid-cols-4 gap-6">
+      <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-4">
         <div className="xl:col-span-3">
           <Card>
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -447,7 +450,6 @@ function History() {
 
               {filteredHistory.map((session, sessionIndex) => {
                 const isExpanded = expandedSessionId === session.id
-                const completedSessionSets = getSessionCompletedSets(session)
                 const sessionVolume = getSessionVolume(session)
                 const sessionPRs = getSessionPRs(session)
 
@@ -479,7 +481,7 @@ function History() {
                             </div>
                           </div>
 
-                          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
+                          <div className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-4">
                             <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-3">
                               <p className="text-xs text-zinc-500">
                                 Duração
@@ -815,6 +817,7 @@ function History() {
           </Card>
         </div>
       </section>
+
       <ConfirmModal
         open={Boolean(confirmModal)}
         title={confirmModal?.title}
