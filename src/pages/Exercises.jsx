@@ -470,8 +470,26 @@ function Exercises() {
           ? exercisesFromApi.map(normalizeExerciseFromApi)
           : []
 
-        const finalExercises =
-          normalizedFromApi.length > 0 ? normalizedFromApi : fallbackExercises
+        const mergedExercisesMap = new Map()
+
+        fallbackExercises.forEach((exercise) => {
+          mergedExercisesMap.set(String(exercise.id), {
+            ...exercise,
+            isFavorite: Boolean(exercise.isFavorite),
+          })
+        })
+
+        normalizedFromApi.forEach((exercise) => {
+          const originalLocalId = exercise.originalLocalId || exercise.localId
+
+          if (originalLocalId && mergedExercisesMap.has(String(originalLocalId))) {
+            mergedExercisesMap.delete(String(originalLocalId))
+          }
+
+          mergedExercisesMap.set(String(exercise.id), exercise)
+        })
+
+        const finalExercises = Array.from(mergedExercisesMap.values())
 
         setExercises(finalExercises)
         saveUserStorageData(user, 'exercises', finalExercises)
@@ -893,6 +911,8 @@ function Exercises() {
         method: 'POST',
         body: JSON.stringify({
           ...exercise,
+          localId: exercise.id,
+          originalLocalId: exercise.id,
           isFavorite: true,
           source: exercise.source || 'ForgeFlow',
           originalName: exercise.originalName || exercise.name,

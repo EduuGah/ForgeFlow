@@ -169,12 +169,29 @@ function Workouts() {
 
                 setWorkouts(normalizedWorkouts)
 
-                if (normalizedExercises.length > 0) {
-                    setExercises(normalizedExercises)
-                    saveUserStorageData(user, 'exercises', normalizedExercises)
-                } else {
-                    setExercises(initialExercises)
-                }
+                const mergedExercisesMap = new Map()
+
+                initialExercises.forEach((exercise) => {
+                    mergedExercisesMap.set(String(exercise.id), {
+                        ...exercise,
+                        isFavorite: Boolean(exercise.isFavorite),
+                    })
+                })
+
+                normalizedExercises.forEach((exercise) => {
+                    const originalLocalId = exercise.originalLocalId || exercise.localId
+
+                    if (originalLocalId && mergedExercisesMap.has(String(originalLocalId))) {
+                        mergedExercisesMap.delete(String(originalLocalId))
+                    }
+
+                    mergedExercisesMap.set(String(exercise.id), exercise)
+                })
+
+                const finalExercises = Array.from(mergedExercisesMap.values())
+
+                setExercises(finalExercises)
+                saveUserStorageData(user, 'exercises', finalExercises)
 
                 saveUserStorageData(user, 'workouts', normalizedWorkouts)
             } catch (error) {
