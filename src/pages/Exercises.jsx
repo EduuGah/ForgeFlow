@@ -472,10 +472,6 @@ function Exercises() {
 
       const defaultExercises = getInitialExercises()
 
-      const cachedExercises = Array.isArray(savedExercises)
-        ? savedExercises
-        : []
-
       const fallbackExercises = [
         ...defaultExercises,
         ...cachedExercises,
