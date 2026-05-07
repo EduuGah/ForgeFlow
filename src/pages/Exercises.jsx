@@ -459,9 +459,27 @@ function Exercises() {
 
       const savedExercises = getUserStorageData(user, 'exercises', null)
 
-      const fallbackExercises = Array.isArray(savedExercises)
+      const defaultExercises = getInitialExercises()
+
+      const cachedExercises = Array.isArray(savedExercises)
         ? savedExercises
-        : getInitialExercises()
+        : []
+
+      const initialExercises = [
+        ...defaultExercises,
+        ...cachedExercises,
+      ]
+
+      const defaultExercises = getInitialExercises()
+
+      const cachedExercises = Array.isArray(savedExercises)
+        ? savedExercises
+        : []
+
+      const fallbackExercises = [
+        ...defaultExercises,
+        ...cachedExercises,
+      ]
 
       try {
         const exercisesFromApi = await apiFetch('/exercises')
