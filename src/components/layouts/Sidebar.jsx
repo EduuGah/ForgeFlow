@@ -9,6 +9,7 @@ import {
   X,
   LogOut,
   AlertCircle,
+  CalendarDays,
 } from 'lucide-react'
 import { Link, NavLink } from 'react-router-dom'
 
@@ -30,14 +31,15 @@ function Sidebar({ onClose }) {
   const { user, logout } = useAuth()
 
   const links = [
-    { name: 'Dashboard', path: '/', icon: Home },
-    { name: 'Treinos', path: '/workouts', icon: ClipboardList },
-    { name: 'Exercícios', path: '/exercises', icon: Dumbbell },
-    { name: 'Histórico', path: '/history', icon: History },
-    { name: 'Evolução', path: '/progress', icon: TrendingUp },
-    { name: 'Perfil', path: '/profile', icon: UserRound },
-    { name: 'Definições', path: '/settings', icon: Settings },
-  ]
+  { name: 'Dashboard', path: '/', icon: Home },
+  { name: 'Treinos', path: '/workouts', icon: ClipboardList },
+  { name: 'Exercícios', path: '/exercises', icon: Dumbbell },
+  { name: 'Histórico', path: '/history', icon: History },
+  { name: 'Calendário', path: '/calendar', icon: CalendarDays },
+  { name: 'Evolução', path: '/progress', icon: TrendingUp },
+  { name: 'Perfil', path: '/profile', icon: UserRound },
+  { name: 'Definições', path: '/settings', icon: Settings },
+]
 
   function handleLogout() {
     onClose?.()

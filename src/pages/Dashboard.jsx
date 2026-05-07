@@ -276,6 +276,14 @@ function Dashboard() {
   const [loadingDashboard, setLoadingDashboard] = useState(true)
   const [dashboardSource, setDashboardSource] = useState('local')
   const [chartAccentColor, setChartAccentColor] = useState('#8b5cf6')
+  const [consistencyStats, setConsistencyStats] = useState({
+    currentStreak: 0,
+    bestStreak: 0,
+    workoutsLast7Days: 0,
+    workoutsLast30Days: 0,
+    totalWorkoutDays: 0,
+    lastWorkoutDate: null,
+  })
 
   const navigate = useNavigate()
   const { startSession } = useWorkoutSession()
@@ -308,13 +316,19 @@ function Dashboard() {
       })
 
       try {
-        const [workoutsFromApi, historyFromApi, exercisesFromApi, bodyWeightFromApi] =
-          await Promise.all([
-            apiFetch('/workouts'),
-            apiFetch('/workout-history'),
-            apiFetch('/exercises'),
-            apiFetch('/body-weight'),
-          ])
+        const [
+          workoutsFromApi,
+          historyFromApi,
+          exercisesFromApi,
+          bodyWeightFromApi,
+          consistencyFromApi,
+        ] = await Promise.all([
+          apiFetch('/workouts'),
+          apiFetch('/workout-history'),
+          apiFetch('/exercises'),
+          apiFetch('/body-weight'),
+          apiFetch('/stats/consistency'),
+        ])
 
         const normalizedWorkouts = Array.isArray(workoutsFromApi)
           ? workoutsFromApi.map(normalizeWorkoutFromApi)
@@ -332,6 +346,15 @@ function Dashboard() {
           ? bodyWeightFromApi.map(normalizeBodyWeightFromApi)
           : []
 
+        const normalizedConsistency = {
+          currentStreak: Number(consistencyFromApi?.currentStreak) || 0,
+          bestStreak: Number(consistencyFromApi?.bestStreak) || 0,
+          workoutsLast7Days: Number(consistencyFromApi?.workoutsLast7Days) || 0,
+          workoutsLast30Days: Number(consistencyFromApi?.workoutsLast30Days) || 0,
+          totalWorkoutDays: Number(consistencyFromApi?.totalWorkoutDays) || 0,
+          lastWorkoutDate: consistencyFromApi?.lastWorkoutDate || null,
+        }
+
         const finalExercises =
           userExercises.length > 0 ? userExercises : cachedExercises
 
@@ -339,6 +362,7 @@ function Dashboard() {
         setHistory(normalizedHistory)
         setExercises(finalExercises)
         setBodyWeight(normalizedBodyWeight.length > 0 ? normalizedBodyWeight : cachedBodyWeight)
+        setConsistencyStats(normalizedConsistency)
 
         saveUserStorageData(user, 'workouts', normalizedWorkouts)
         saveUserStorageData(user, 'history', normalizedHistory)
@@ -359,6 +383,14 @@ function Dashboard() {
         setWorkouts(cachedWorkouts)
         setHistory(cachedHistory)
         setBodyWeight(cachedBodyWeight)
+        setConsistencyStats({
+          currentStreak: 0,
+          bestStreak: 0,
+          workoutsLast7Days: 0,
+          workoutsLast30Days: 0,
+          totalWorkoutDays: 0,
+          lastWorkoutDate: null,
+        })
         setDashboardSource('local')
       } finally {
         setLoadingDashboard(false)
@@ -956,11 +988,11 @@ function Dashboard() {
           </div>
 
           <h2 className="mt-2 text-2xl font-black text-orange-300">
-            {currentStreak}
+            {consistencyStats.currentStreak}
           </h2>
 
           <p className="mt-2 text-xs text-zinc-500">
-            {currentStreak === 1 ? 'dia seguido' : 'dias seguidos'}
+            {consistencyStats.currentStreak === 1 ? 'dia seguido' : 'dias seguidos'}
           </p>
         </Card>
 
@@ -971,7 +1003,7 @@ function Dashboard() {
           </div>
 
           <h2 className="mt-2 text-2xl font-black">
-            {workoutsLast7Days}
+            {consistencyStats.workoutsLast7Days}
           </h2>
 
           <p className="mt-2 text-xs text-zinc-500">
@@ -1124,7 +1156,7 @@ function Dashboard() {
 
           <div className="mt-5 flex items-end gap-3">
             <span className="text-5xl font-black text-[var(--ff-accent-text)]">
-              {workoutsLast30Days}
+              {consistencyStats.workoutsLast30Days}
             </span>
 
             <span className="pb-2 text-sm font-bold text-zinc-400">
@@ -1140,10 +1172,26 @@ function Dashboard() {
             </p>
           </div>
 
+          <div className="mt-3 rounded-2xl border border-orange-500/20 bg-orange-500/10 p-4">
+            <p className="text-xs text-orange-100/70">
+              Melhor sequência
+            </p>
+
+            <p className="mt-1 text-lg font-black text-orange-300">
+              {consistencyStats.bestStreak} dia(s)
+            </p>
+          </div>
+
+          {consistencyStats.lastWorkoutDate && (
+            <p className="mt-3 text-xs text-zinc-500">
+              Último treino em {formatShortDate(consistencyStats.lastWorkoutDate)}
+            </p>
+          )}
+
           <p className="mt-4 text-sm text-zinc-500">
             {profile?.weeklyTarget
               ? `Sua meta atual é ${profile.weeklyTarget.toLowerCase()} por semana.`
-              : workoutsLast30Days > 0
+              : consistencyStats.workoutsLast30Days > 0
                 ? 'Continue registrando seus treinos para acompanhar sua consistência.'
                 : 'Finalize seus primeiros treinos para começar a medir consistência.'}
           </p>

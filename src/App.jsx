@@ -20,6 +20,7 @@ import Login from './pages/Login'
 import AuthCallback from './pages/AuthCallback'
 import Register from './pages/Register'
 import CompleteProfile from './pages/CompleteProfile'
+import WorkoutCalendar from './pages/WorkoutCalendar'
 
 function App() {
   return (
@@ -64,6 +65,7 @@ function App() {
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/complete-profile" element={<CompleteProfile />} />
+              <Route path="/calendar" element={<WorkoutCalendar />} />
             </Route>
           </Routes>
         </WorkoutSessionProvider>

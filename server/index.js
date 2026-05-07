@@ -34,6 +34,116 @@ function requiredEnv(name, value) {
     }
 }
 
+function getDateKeyFromDate(date) {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+
+    return `${year}-${month}-${day}`
+}
+
+function getUniqueWorkoutDaysFromHistory(history = []) {
+    const daysMap = new Map()
+
+    history.forEach((session) => {
+        const rawDate = session.finishedAt || session.createdAt
+
+        if (!rawDate) return
+
+        const date = new Date(rawDate)
+
+        if (Number.isNaN(date.getTime())) return
+
+        const key = getDateKeyFromDate(date)
+
+        daysMap.set(key, date)
+    })
+
+    return Array.from(daysMap.values()).sort((a, b) => b - a)
+}
+
+function getDaysDiff(dateA, dateB) {
+    const start = new Date(dateA.getFullYear(), dateA.getMonth(), dateA.getDate())
+    const end = new Date(dateB.getFullYear(), dateB.getMonth(), dateB.getDate())
+
+    return Math.round((start - end) / 86400000)
+}
+
+function calculateCurrentStreak(history = []) {
+    const workoutDays = getUniqueWorkoutDaysFromHistory(history)
+
+    if (workoutDays.length === 0) return 0
+
+    const today = new Date()
+    const firstDay = workoutDays[0]
+    const diffFromToday = getDaysDiff(today, firstDay)
+
+    if (diffFromToday > 1) return 0
+
+    let streak = 1
+    let previousDay = firstDay
+
+    for (let index = 1; index < workoutDays.length; index += 1) {
+        const currentDay = workoutDays[index]
+        const diff = getDaysDiff(previousDay, currentDay)
+
+        if (diff === 1) {
+            streak += 1
+            previousDay = currentDay
+        } else if (diff > 1) {
+            break
+        }
+    }
+
+    return streak
+}
+
+function calculateBestStreak(history = []) {
+    const workoutDays = getUniqueWorkoutDaysFromHistory(history)
+        .slice()
+        .sort((a, b) => a - b)
+
+    if (workoutDays.length === 0) return 0
+
+    let bestStreak = 1
+    let currentStreak = 1
+
+    for (let index = 1; index < workoutDays.length; index += 1) {
+        const previousDay = workoutDays[index - 1]
+        const currentDay = workoutDays[index]
+        const diff = getDaysDiff(currentDay, previousDay)
+
+        if (diff === 1) {
+            currentStreak += 1
+        } else if (diff > 1) {
+            currentStreak = 1
+        }
+
+        if (currentStreak > bestStreak) {
+            bestStreak = currentStreak
+        }
+    }
+
+    return bestStreak
+}
+
+function countWorkoutsInLastDays(history = [], days = 7) {
+    const now = new Date()
+    const limit = new Date()
+
+    limit.setDate(now.getDate() - days)
+
+    return history.filter((session) => {
+        const rawDate = session.finishedAt || session.createdAt
+
+        if (!rawDate) return false
+
+        const date = new Date(rawDate)
+
+        return date >= limit && date <= now
+    }).length
+}
+
 requiredEnv('FRONTEND_URL', FRONTEND_URL)
 requiredEnv('BACKEND_URL', BACKEND_URL)
 requiredEnv('MONGODB_URI', MONGODB_URI)
@@ -1506,6 +1616,42 @@ app.delete('/body-weight/:id', authMiddleware, async (req, res) => {
 
         res.status(500).json({
             message: 'Erro ao remover peso corporal.',
+        })
+    }
+})
+
+app.get('/stats/consistency', authMiddleware, async (req, res) => {
+    try {
+        const history = await WorkoutHistory.find({
+            userId: req.user.userId,
+        }).sort({
+            finishedAt: -1,
+            createdAt: -1,
+        })
+
+        const currentStreak = calculateCurrentStreak(history)
+        const bestStreak = calculateBestStreak(history)
+
+        const workoutsLast7Days = countWorkoutsInLastDays(history, 7)
+        const workoutsLast30Days = countWorkoutsInLastDays(history, 30)
+
+        const uniqueWorkoutDays = getUniqueWorkoutDaysFromHistory(history)
+
+        const lastWorkoutDate = uniqueWorkoutDays[0] || null
+
+        res.json({
+            currentStreak,
+            bestStreak,
+            workoutsLast7Days,
+            workoutsLast30Days,
+            totalWorkoutDays: uniqueWorkoutDays.length,
+            lastWorkoutDate,
+        })
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao buscar estatísticas de consistência.',
         })
     }
 })
