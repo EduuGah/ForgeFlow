@@ -229,6 +229,11 @@ const exerciseSchema = new mongoose.Schema(
         variations: [String],
         commonMistakes: [String],
 
+        isFavorite: {
+            type: Boolean,
+            default: false,
+        },
+
         source: {
             type: String,
             default: 'User',
@@ -1017,6 +1022,33 @@ function calculateWorkoutHistorySummary(exercises = []) {
     }
 }
 
+app.patch('/workouts/:id/favorite', authMiddleware, async (req, res) => {
+    try {
+        const workout = await Workout.findOne({
+            _id: req.params.id,
+            userId: req.user.userId,
+        })
+
+        if (!workout) {
+            return res.status(404).json({
+                message: 'Treino não encontrado.',
+            })
+        }
+
+        workout.isFavorite = !workout.isFavorite
+
+        await workout.save()
+
+        res.json(workout)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao atualizar favorito.',
+        })
+    }
+})
+
 app.get('/workouts', authMiddleware, async (req, res) => {
     try {
         const workouts = await Workout.find({
@@ -1482,6 +1514,8 @@ app.get('/exercises', authMiddleware, async (req, res) => {
     const exercises = await Exercise.find({
         userId: req.user.userId,
     }).sort({
+        isFavorite: -1,
+        updatedAt: -1,
         createdAt: -1,
     })
 
@@ -1516,6 +1550,33 @@ app.put('/exercises/:id', authMiddleware, async (req, res) => {
     }
 
     res.json(exercise)
+})
+
+app.patch('/exercises/:id/favorite', authMiddleware, async (req, res) => {
+    try {
+        const exercise = await Exercise.findOne({
+            _id: req.params.id,
+            userId: req.user.userId,
+        })
+
+        if (!exercise) {
+            return res.status(404).json({
+                message: 'Exercício não encontrado.',
+            })
+        }
+
+        exercise.isFavorite = !exercise.isFavorite
+
+        await exercise.save()
+
+        res.json(exercise)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao atualizar favorito do exercício.',
+        })
+    }
 })
 
 app.delete('/exercises/:id', authMiddleware, async (req, res) => {

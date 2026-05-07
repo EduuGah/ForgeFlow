@@ -338,7 +338,7 @@ function Dashboard() {
         setHistory(normalizedHistory)
         setExercises(finalExercises)
         setBodyWeight(normalizedBodyWeight.length > 0 ? normalizedBodyWeight : cachedBodyWeight)
-        
+
         saveUserStorageData(user, 'workouts', normalizedWorkouts)
         saveUserStorageData(user, 'history', normalizedHistory)
 
@@ -531,15 +531,24 @@ function Dashboard() {
       .slice(0, 12)
   }, [completedSets, prSearch])
 
-  const recentWorkouts = workouts
-    .slice()
-    .sort((a, b) => {
-      const dateA = new Date(a.lastStartedAt || a.updatedAt || a.createdAt || 0)
-      const dateB = new Date(b.lastStartedAt || b.updatedAt || b.createdAt || 0)
+  const favoriteWorkouts = useMemo(() => {
+    return workouts.filter((workout) => workout.isFavorite)
+  }, [workouts])
 
-      return dateB - dateA
-    })
-    .slice(0, 5)
+  const recentWorkouts = useMemo(() => {
+    return workouts
+      .slice()
+      .sort((a, b) => {
+        if (a.isFavorite && !b.isFavorite) return -1
+        if (!a.isFavorite && b.isFavorite) return 1
+
+        const dateA = new Date(a.lastStartedAt || a.updatedAt || a.createdAt || 0)
+        const dateB = new Date(b.lastStartedAt || b.updatedAt || b.createdAt || 0)
+
+        return dateB - dateA
+      })
+      .slice(0, 5)
+  }, [workouts])
 
   const lastSession = history[0] || null
   const currentWeight = bodyWeight.at(-1)?.weight || profile.currentWeight || null
@@ -980,18 +989,18 @@ function Dashboard() {
           </p>
         </Card>
 
-        <Card className="p-5">
+        <Card className="p-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-zinc-500">Biblioteca</p>
-            <Dumbbell size={20} className="text-[var(--ff-accent-text)]" />
+            <p className="text-sm text-zinc-500">Favoritos</p>
+            <Trophy size={20} className="text-yellow-400" />
           </div>
 
-          <h2 className="mt-2 text-2xl font-black">
-            {exercises.length}
+          <h2 className="mt-2 text-3xl font-black text-yellow-300">
+            {favoriteWorkouts.length}
           </h2>
 
           <p className="mt-2 text-xs text-zinc-500">
-            exercícios cadastrados
+            treinos marcados
           </p>
         </Card>
       </section>
@@ -1142,7 +1151,7 @@ function Dashboard() {
             <div>
               <h2 className="text-2xl font-black">Rotinas rápidas</h2>
               <p className="mt-1 text-sm text-zinc-500">
-                Inicie uma rotina salva em poucos segundos.
+                Favoritos aparecem primeiro para você iniciar mais rápido.
               </p>
             </div>
 
@@ -1157,11 +1166,23 @@ function Dashboard() {
             </Link>
           </div>
 
+          {favoriteWorkouts.length > 0 && (
+            <div className="mt-5 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4">
+              <p className="text-sm font-bold text-yellow-300">
+                ⭐ {favoriteWorkouts.length} treino(s) favorito(s)
+              </p>
+
+              <p className="mt-1 text-xs leading-relaxed text-yellow-100/70">
+                Eles aparecem primeiro nesta lista para facilitar o início do treino.
+              </p>
+            </div>
+          )}
+
           <div className="mt-5 space-y-3">
             {recentWorkouts.length === 0 && (
               <EmptyState
                 title="Nenhuma rotina salva"
-                description="Crie um treino para iniciar por aqui."
+                description="Crie um treino e marque seus favoritos para aparecerem aqui."
                 action={
                   <Link to="/workouts">
                     <Button>Criar treino</Button>
@@ -1211,6 +1232,13 @@ function Dashboard() {
                         <h3 className="line-clamp-2 text-lg font-bold leading-snug text-white">
                           {workout.name}
                         </h3>
+                        {workout.isFavorite && (
+                          <div className="mt-2">
+                            <Badge>
+                              ⭐ Favorito
+                            </Badge>
+                          </div>
+                        )}
 
                         <p className="mt-1 text-sm text-zinc-500">
                           {lastStartedLabel}

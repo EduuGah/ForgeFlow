@@ -22,10 +22,12 @@ import {
   LinkIcon,
   HelpCircle,
   ListChecks,
+  Star,
 } from 'lucide-react'
 
 import { getInitialExercises } from '../utils/exerciseStorage'
 import { useAuth } from '../context/AuthContext'
+import { apiFetch } from '../services/api'
 import {
   getUserStorageData,
   saveUserStorageData,
@@ -100,6 +102,17 @@ function normalizeMuscleGroup(group) {
   }
 
   return aliases[normalized] || normalized
+}
+
+function normalizeExerciseFromApi(exercise) {
+  return {
+    ...exercise,
+    id: exercise._id || exercise.id,
+    normalizedGroup: normalizeMuscleGroup(exercise.muscleGroup),
+    normalizedEquipment: normalizeEquipment(exercise.equipment),
+    subgroup: getSubgroup(exercise),
+    isFavorite: Boolean(exercise.isFavorite),
+  }
 }
 
 function normalizeEquipment(equipment) {
@@ -426,6 +439,7 @@ function Exercises() {
   const [groupFilter, setGroupFilter] = useState('')
   const [subgroupFilter, setSubgroupFilter] = useState('')
   const [equipmentFilter, setEquipmentFilter] = useState('')
+  const [showOnlyFavorites, setShowOnlyFavorites] = useState(false)
   const [groupSearch, setGroupSearch] = useState('')
   const [subgroupSearch, setSubgroupSearch] = useState('')
 
@@ -440,17 +454,36 @@ function Exercises() {
   useEffect(() => {
     if (!user) return
 
-    setIsLoaded(false)
+    async function loadExercises() {
+      setIsLoaded(false)
 
-    const savedExercises = getUserStorageData(user, 'exercises', null)
+      const savedExercises = getUserStorageData(user, 'exercises', null)
 
-    setExercises(
-      Array.isArray(savedExercises)
+      const fallbackExercises = Array.isArray(savedExercises)
         ? savedExercises
         : getInitialExercises()
-    )
 
-    setIsLoaded(true)
+      try {
+        const exercisesFromApi = await apiFetch('/exercises')
+
+        const normalizedFromApi = Array.isArray(exercisesFromApi)
+          ? exercisesFromApi.map(normalizeExerciseFromApi)
+          : []
+
+        const finalExercises =
+          normalizedFromApi.length > 0 ? normalizedFromApi : fallbackExercises
+
+        setExercises(finalExercises)
+        saveUserStorageData(user, 'exercises', finalExercises)
+      } catch (error) {
+        console.error(error)
+        setExercises(fallbackExercises)
+      } finally {
+        setIsLoaded(true)
+      }
+    }
+
+    loadExercises()
   }, [user])
 
   useEffect(() => {
@@ -462,7 +495,7 @@ function Exercises() {
   useEffect(() => {
     setVisibleCount(80)
     setExpandedExerciseId(null)
-  }, [search, groupFilter, subgroupFilter, equipmentFilter])
+  }, [search, groupFilter, subgroupFilter, equipmentFilter, showOnlyFavorites])
 
   const normalizedExercises = useMemo(() => {
     return exercises.map((exercise) => {
@@ -505,16 +538,16 @@ function Exercises() {
   const filteredExercises = useMemo(() => {
     const normalizedSearch = search.toLowerCase().trim()
 
-    return normalizedExercises.filter((exercise) => {
+    const filtered = normalizedExercises.filter((exercise) => {
       const text = `
-        ${exercise.name || ''}
-        ${exercise.originalName || ''}
-        ${exercise.normalizedGroup || ''}
-        ${exercise.subgroup || ''}
-        ${exercise.normalizedEquipment || ''}
-        ${exercise.description || ''}
-        ${normalizeList(exercise.secondaryMuscles).join(' ')}
-      `.toLowerCase()
+      ${exercise.name || ''}
+      ${exercise.originalName || ''}
+      ${exercise.normalizedGroup || ''}
+      ${exercise.subgroup || ''}
+      ${exercise.normalizedEquipment || ''}
+      ${exercise.description || ''}
+      ${normalizeList(exercise.secondaryMuscles).join(' ')}
+    `.toLowerCase()
 
       const matchesSearch = normalizedSearch
         ? text.includes(normalizedSearch)
@@ -532,9 +565,36 @@ function Exercises() {
         ? exercise.normalizedEquipment === equipmentFilter
         : true
 
-      return matchesSearch && matchesGroup && matchesSubgroup && matchesEquipment
+      const matchesFavorite = showOnlyFavorites
+        ? exercise.isFavorite === true
+        : true
+
+      return (
+        matchesSearch &&
+        matchesGroup &&
+        matchesSubgroup &&
+        matchesEquipment &&
+        matchesFavorite
+      )
     })
-  }, [normalizedExercises, search, groupFilter, subgroupFilter, equipmentFilter])
+
+    return filtered.sort((a, b) => {
+      if (a.isFavorite && !b.isFavorite) return -1
+      if (!a.isFavorite && b.isFavorite) return 1
+
+      const dateA = new Date(a.updatedAt || a.createdAt || 0)
+      const dateB = new Date(b.updatedAt || b.createdAt || 0)
+
+      return dateB - dateA
+    })
+  }, [
+    normalizedExercises,
+    search,
+    groupFilter,
+    subgroupFilter,
+    equipmentFilter,
+    showOnlyFavorites,
+  ])
 
   const displayedExercises = useMemo(() => {
     return filteredExercises.slice(0, visibleCount)
@@ -799,6 +859,55 @@ function Exercises() {
     }
   }
 
+  function isMongoId(value) {
+    return typeof value === 'string' && /^[a-f\d]{24}$/i.test(value)
+  }
+
+  async function handleToggleFavorite(exercise, event) {
+    event?.stopPropagation()
+
+    const updatedExercisesLocal = exercises.map((item) =>
+      item.id === exercise.id
+        ? {
+          ...item,
+          isFavorite: !item.isFavorite,
+        }
+        : item
+    )
+
+    const saveLocalFavorite = () => {
+      setExercises(updatedExercisesLocal)
+      saveUserStorageData(user, 'exercises', updatedExercisesLocal)
+    }
+
+    if (!isMongoId(exercise.id)) {
+      saveLocalFavorite()
+      return
+    }
+
+    try {
+      const updatedExerciseFromApi = await apiFetch(
+        `/exercises/${exercise.id}/favorite`,
+        {
+          method: 'PATCH',
+        }
+      )
+
+      const updatedExercise = normalizeExerciseFromApi(updatedExerciseFromApi)
+
+      const updatedExercises = exercises.map((item) =>
+        item.id === exercise.id ? updatedExercise : item
+      )
+
+      setExercises(updatedExercises)
+      saveUserStorageData(user, 'exercises', updatedExercises)
+    } catch (error) {
+      console.error(error)
+
+      saveLocalFavorite()
+    }
+  }
+
   function handleToggleExercise(id) {
     setExpandedExerciseId(expandedExerciseId === id ? null : id)
   }
@@ -808,7 +917,12 @@ function Exercises() {
     setGroupFilter('')
     setSubgroupFilter('')
     setEquipmentFilter('')
+    setShowOnlyFavorites(false)
   }
+
+  const favoriteExercisesCount = normalizedExercises.filter(
+    (exercise) => exercise.isFavorite
+  ).length
 
   return (
     <>
@@ -850,10 +964,10 @@ function Exercises() {
         />
 
         <StatCard
-          title="Resultados"
-          value={filteredExercises.length}
-          description="Exercícios filtrados agora"
-          icon={Activity}
+          title="Favoritos"
+          value={favoriteExercisesCount}
+          description="Exercícios marcados"
+          icon={Star}
         />
       </section>
 
@@ -984,6 +1098,22 @@ function Exercises() {
                 onChange={(event) => setSearch(event.target.value)}
               />
 
+              <button
+                type="button"
+                onClick={() => setShowOnlyFavorites((current) => !current)}
+                className={
+                  showOnlyFavorites
+                    ? 'flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-yellow-500/30 bg-yellow-500/10 text-sm font-bold text-yellow-300 transition hover:bg-yellow-500/20'
+                    : 'flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-950 text-sm font-bold text-zinc-300 transition hover:border-yellow-500/30 hover:text-yellow-300'
+                }
+              >
+                <Star
+                  size={17}
+                  fill={showOnlyFavorites ? 'currentColor' : 'none'}
+                />
+                Somente favoritos
+              </button>
+
               <Select
                 value={groupFilter}
                 onChange={(event) => setGroupFilter(event.target.value)}
@@ -1023,7 +1153,7 @@ function Exercises() {
                 ))}
               </Select>
 
-              {(search || groupFilter || subgroupFilter || equipmentFilter) && (
+              {(search || groupFilter || subgroupFilter || equipmentFilter || showOnlyFavorites) && (
                 <Button
                   type="button"
                   variant="secondary"
@@ -1195,8 +1325,33 @@ function Exercises() {
                                     Sem mídia
                                   </Badge>
                                 )}
+                                {exercise.isFavorite && (
+                                  <Badge>
+                                    ⭐ Favorito
+                                  </Badge>
+                                )}
                               </div>
                             </div>
+
+                            <button
+                              type="button"
+                              onClick={(event) => handleToggleFavorite(exercise, event)}
+                              title={
+                                exercise.isFavorite
+                                  ? 'Remover dos favoritos'
+                                  : 'Adicionar aos favoritos'
+                              }
+                              className={
+                                exercise.isFavorite
+                                  ? 'flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-yellow-500/30 bg-yellow-500/10 text-yellow-300 transition hover:bg-yellow-500/20'
+                                  : 'flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-950 text-zinc-500 transition hover:border-yellow-500/30 hover:bg-yellow-500/10 hover:text-yellow-300'
+                              }
+                            >
+                              <Star
+                                size={18}
+                                fill={exercise.isFavorite ? 'currentColor' : 'none'}
+                              />
+                            </button>
 
                             <ChevronDown
                               size={22}
@@ -1474,7 +1629,7 @@ Mantenha os pés firmes no chão.`}
                   rows={4}
                   helper="Use este campo para dicas rápidas de melhoria, segurança ou foco muscular. Cada dica em uma linha."
                   examples={['dica por linha', 'segurança', 'foco muscular']}
-                />  
+                />
               </div>
 
               <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">

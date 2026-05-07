@@ -11,6 +11,7 @@ import {
     Plus,
     Save,
     Search,
+    Star,
     Trash2,
     X,
 } from 'lucide-react'
@@ -297,9 +298,19 @@ function Workouts() {
     }, [workoutExercises])
 
     const filteredWorkouts = useMemo(() => {
-        return workouts.filter((workout) =>
-            selectedFolderId ? workout.folderId === selectedFolderId : true
-        )
+        return workouts
+            .filter((workout) =>
+                selectedFolderId ? workout.folderId === selectedFolderId : true
+            )
+            .sort((a, b) => {
+                if (a.isFavorite && !b.isFavorite) return -1
+                if (!a.isFavorite && b.isFavorite) return 1
+
+                const dateA = new Date(a.updatedAt || a.createdAt || 0)
+                const dateB = new Date(b.updatedAt || b.createdAt || 0)
+
+                return dateB - dateA
+            })
     }, [workouts, selectedFolderId])
 
     const visibleWorkouts = useMemo(() => {
@@ -729,6 +740,40 @@ function Workouts() {
         })
     }
 
+    async function handleToggleFavorite(workout) {
+        const workoutId = getWorkoutId(workout)
+
+        try {
+            const updatedWorkoutFromApi = await apiFetch(`/workouts/${workoutId}/favorite`, {
+                method: 'PATCH',
+            })
+
+            const updatedWorkout = normalizeWorkoutFromApi(updatedWorkoutFromApi)
+
+            setWorkouts(
+                workouts.map((item) =>
+                    getWorkoutId(item) === workoutId ? updatedWorkout : item
+                )
+            )
+
+            showToast(
+                'success',
+                updatedWorkout.isFavorite ? 'Favorito adicionado' : 'Favorito removido',
+                updatedWorkout.isFavorite
+                    ? 'O treino foi marcado como favorito.'
+                    : 'O treino foi removido dos favoritos.'
+            )
+        } catch (error) {
+            console.error(error)
+
+            showToast(
+                'error',
+                'Erro ao favoritar',
+                error.message || 'Não foi possível atualizar o favorito.'
+            )
+        }
+    }
+
     async function handleDuplicateWorkout(workout) {
         try {
             const payload = {
@@ -956,6 +1001,13 @@ function Workouts() {
                                                         <h3 className="truncate text-lg font-bold text-white">
                                                             {workout.name}
                                                         </h3>
+                                                        {workout.isFavorite && (
+                                                            <div className="mt-2">
+                                                                <Badge>
+                                                                    ⭐ Favorito
+                                                                </Badge>
+                                                            </div>
+                                                        )}
 
                                                         <p className="mt-2 line-clamp-2 text-sm text-zinc-500 sm:truncate">
                                                             {getWorkoutExerciseNames(workout)}
@@ -971,20 +1023,58 @@ function Workouts() {
                                                             </div>
                                                         )}
 
+                                                        <div className="mt-4 grid grid-cols-[44px_1fr] gap-2 sm:hidden">
+                                                            <button
+                                                                type="button"
+                                                                onClick={(event) => {
+                                                                    event.stopPropagation()
+                                                                    handleToggleFavorite(workout)
+                                                                }}
+                                                                title={workout.isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+                                                                className={
+                                                                    workout.isFavorite
+                                                                        ? 'flex h-10 items-center justify-center rounded-2xl border border-yellow-500/30 bg-yellow-500/10 text-yellow-300'
+                                                                        : 'flex h-10 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-950 text-zinc-500'
+                                                                }
+                                                            >
+                                                                <Star
+                                                                    size={18}
+                                                                    fill={workout.isFavorite ? 'currentColor' : 'none'}
+                                                                />
+                                                            </button>
+
+                                                            <button
+                                                                type="button"
+                                                                onClick={(event) => {
+                                                                    event.stopPropagation()
+                                                                    handleStartWorkout(workout)
+                                                                }}
+                                                                className="inline-flex h-10 w-full items-center justify-center rounded-2xl bg-[var(--ff-accent)] text-sm font-bold text-white transition hover:bg-[var(--ff-accent-hover)]"
+                                                            >
+                                                                Iniciar treino
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="hidden items-center gap-2 sm:flex">
                                                         <button
                                                             type="button"
                                                             onClick={(event) => {
                                                                 event.stopPropagation()
-                                                                handleStartWorkout(workout)
+                                                                handleToggleFavorite(workout)
                                                             }}
-                                                            className="mt-4 inline-flex h-10 w-full items-center justify-center rounded-2xl bg-[var(--ff-accent)] text-sm font-bold text-white transition hover:bg-[var(--ff-accent-hover)]
- sm:hidden"
+                                                            title={workout.isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+                                                            className={
+                                                                workout.isFavorite
+                                                                    ? 'flex h-10 w-10 items-center justify-center rounded-2xl border border-yellow-500/30 bg-yellow-500/10 text-yellow-300 transition hover:bg-yellow-500/20'
+                                                                    : 'flex h-10 w-10 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-950 text-zinc-500 transition hover:border-yellow-500/30 hover:bg-yellow-500/10 hover:text-yellow-300'
+                                                            }
                                                         >
-                                                            Iniciar treino
+                                                            <Star
+                                                                size={18}
+                                                                fill={workout.isFavorite ? 'currentColor' : 'none'}
+                                                            />
                                                         </button>
-                                                    </div>
-
-                                                    <div className="hidden items-center gap-2 sm:flex">
                                                         <button
                                                             type="button"
                                                             onClick={(event) => {
