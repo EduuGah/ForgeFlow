@@ -10,7 +10,6 @@ import {
   Target,
   Trash2,
   Trophy,
-  Upload,
   UserRound,
   Weight,
 } from 'lucide-react'
@@ -59,6 +58,29 @@ function getTodayDateInputValue() {
   const day = String(today.getDate()).padStart(2, '0')
 
   return `${year}-${month}-${day}`
+}
+
+function normalizeBodyWeightFromApi(item) {
+  const rawDate = item.date || item.createdAt
+
+  return {
+    ...item,
+    id: item._id || item.id,
+    weight: Number(item.weight) || 0,
+    date: rawDate ? String(rawDate).slice(0, 10) : '',
+    note: item.note || '',
+  }
+}
+
+function normalizeHistoryFromApi(session) {
+  return {
+    ...session,
+    id: session._id || session.id,
+    duration: session.durationSeconds ?? session.duration ?? 0,
+    workoutName: session.workoutName || session.name || 'Treino',
+    exercises: Array.isArray(session.exercises) ? session.exercises : [],
+    finishedAt: session.finishedAt || session.createdAt,
+  }
 }
 
 function isFutureDate(dateString) {
@@ -128,25 +150,64 @@ function Profile() {
   const settings = getAppSettings()
 
   useEffect(() => {
-    const userProfile = user?.profile || {}
+    if (!user) return
 
-    setProfile({
-      name: user?.name || '',
-      avatarUrl: user?.avatarUrl || '',
-      height: userProfile.height || '',
-      currentWeight: userProfile.currentWeight || '',
-      goal: userProfile.mainGoal || '',
-      experience: userProfile.trainingLevel || '',
-      weeklyTarget: userProfile.trainingFrequency
-        ? `${userProfile.trainingFrequency} treinos`
-        : '',
-      preferredSplit: userProfile.preferredSplit || '',
-      notes: userProfile.notes || '',
-    })
+    async function loadProfileData() {
+      const userProfile = user?.profile || {}
 
-    setBodyWeight(getSafeBodyWeightList(user))
-    setHistory(getUserStorageData(user, 'history', []))
-    setIsProfileLoaded(true)
+      setProfile({
+        name: user?.name || '',
+        avatarUrl: user?.avatarUrl || '',
+        height: userProfile.height || '',
+        currentWeight: userProfile.currentWeight || '',
+        goal: userProfile.mainGoal || '',
+        experience: userProfile.trainingLevel || '',
+        weeklyTarget: userProfile.trainingFrequency
+          ? `${userProfile.trainingFrequency} treinos`
+          : '',
+        preferredSplit: userProfile.preferredSplit || '',
+        notes: userProfile.notes || '',
+      })
+
+      const cachedBodyWeight = getSafeBodyWeightList(user)
+      const cachedHistory = getUserStorageData(user, 'history', [])
+
+      try {
+        const [bodyWeightFromApi, historyFromApi] = await Promise.all([
+          apiFetch('/body-weight'),
+          apiFetch('/workout-history'),
+        ])
+
+        const normalizedBodyWeight = Array.isArray(bodyWeightFromApi)
+          ? bodyWeightFromApi.map(normalizeBodyWeightFromApi)
+          : []
+
+        const normalizedHistory = Array.isArray(historyFromApi)
+          ? historyFromApi.map(normalizeHistoryFromApi)
+          : []
+
+        setBodyWeight(normalizedBodyWeight)
+        setHistory(normalizedHistory)
+
+        saveUserStorageData(user, 'bodyweight', normalizedBodyWeight)
+        saveUserStorageData(user, 'history', normalizedHistory)
+      } catch (error) {
+        console.error(error)
+
+        setBodyWeight(cachedBodyWeight)
+        setHistory(cachedHistory)
+
+        showToast(
+          'error',
+          'Usando dados locais',
+          'Não foi possível carregar seus dados do servidor.'
+        )
+      }
+
+      setIsProfileLoaded(true)
+    }
+
+    loadProfileData()
   }, [user])
 
   useEffect(() => {
@@ -216,45 +277,6 @@ function Profile() {
     }, 3000)
   }
 
-  function handleAvatarUpload(event) {
-    const file = event.target.files?.[0]
-
-    if (!file) return
-
-    const allowedTypes = ['image/png', 'image/jpeg', 'image/webp']
-
-    if (!allowedTypes.includes(file.type)) {
-      showToast('error', 'Arquivo inválido', 'Use PNG, JPG ou WEBP.')
-      event.target.value = ''
-      return
-    }
-
-    const maxSizeInMB = 1
-    const maxSizeInBytes = maxSizeInMB * 1024 * 1024
-
-    if (file.size > maxSizeInBytes) {
-      showToast(
-        'error',
-        'Imagem muito grande',
-        `Use uma imagem de até ${maxSizeInMB}MB.`
-      )
-      event.target.value = ''
-      return
-    }
-
-    const reader = new FileReader()
-
-    reader.onload = () => {
-      updateProfileField('avatarUrl', reader.result)
-    }
-
-    reader.onerror = () => {
-      showToast('error', 'Erro ao carregar imagem', 'Tente escolher outra imagem.')
-    }
-
-    reader.readAsDataURL(file)
-  }
-
   async function syncProfileWithAccount(nextProfile) {
     const trainingFrequencyNumber = nextProfile.weeklyTarget
       ? Number(String(nextProfile.weeklyTarget).replace(/\D/g, ''))
@@ -285,9 +307,17 @@ function Profile() {
       await syncProfileWithAccount(profile)
 
       setIsEditOpen(false)
-      showToast('success', 'Perfil atualizado', 'As alterações foram salvas na sua conta.')
+      showToast(
+        'success',
+        'Perfil atualizado',
+        'As alterações foram salvas na sua conta.'
+      )
     } catch (error) {
-      showToast('error', 'Erro ao salvar perfil', error.message)
+      showToast(
+        'error',
+        'Erro ao salvar perfil',
+        error.message || 'Não foi possível salvar o perfil.'
+      )
     }
   }
 
@@ -338,53 +368,78 @@ function Profile() {
       return
     }
 
-    const newRecord = {
-      id: crypto.randomUUID(),
-      weight: parsedWeight,
-      date: dateInput,
-    }
-
-    const alreadyHasDate = bodyWeight.some((item) => item.date === dateInput)
-
-    let updatedWeights
-
-    if (alreadyHasDate) {
-      const confirmReplace = window.confirm(
-        'Já existe um peso registrado nessa data. Deseja substituir pelo novo valor?'
-      )
-
-      if (!confirmReplace) return
-
-      updatedWeights = bodyWeight.map((item) =>
-        item.date === dateInput ? newRecord : item
-      )
-    } else {
-      updatedWeights = [...bodyWeight, newRecord]
-    }
-
-    updatedWeights = updatedWeights
-      .filter((item) => !isFutureDate(item.date))
-      .sort((a, b) => new Date(a.date) - new Date(b.date))
-
-    setBodyWeight(updatedWeights)
-    setWeightInput('')
-    setDateInput('')
-
-    const nextProfile = {
-      ...profile,
-      currentWeight: parsedWeight,
-    }
-
-    setProfile(nextProfile)
+    const alreadyHasDate = bodyWeight.find((item) => item.date === dateInput)
 
     try {
-      await syncProfileWithAccount(nextProfile)
-      showToast('success', 'Peso registrado', 'O registro foi salvo com sucesso.')
-    } catch {
+      let savedRecord
+
+      if (alreadyHasDate?.id) {
+        const confirmReplace = window.confirm(
+          'Já existe um peso registrado nessa data. Deseja substituir pelo novo valor?'
+        )
+
+        if (!confirmReplace) return
+
+        const updatedRecordFromApi = await apiFetch(
+          `/body-weight/${alreadyHasDate.id}`,
+          {
+            method: 'PUT',
+            body: JSON.stringify({
+              weight: parsedWeight,
+              date: dateInput,
+            }),
+          }
+        )
+
+        savedRecord = normalizeBodyWeightFromApi(updatedRecordFromApi)
+      } else {
+        const savedRecordFromApi = await apiFetch('/body-weight', {
+          method: 'POST',
+          body: JSON.stringify({
+            weight: parsedWeight,
+            date: dateInput,
+          }),
+        })
+
+        savedRecord = normalizeBodyWeightFromApi(savedRecordFromApi)
+      }
+
+      const updatedWeights = [
+        ...bodyWeight.filter((item) => item.date !== dateInput),
+        savedRecord,
+      ]
+        .filter((item) => !isFutureDate(item.date))
+        .sort((a, b) => new Date(a.date) - new Date(b.date))
+
+      setBodyWeight(updatedWeights)
+      saveUserStorageData(user, 'bodyweight', updatedWeights)
+
+      setWeightInput('')
+      setDateInput('')
+
+      const nextProfile = {
+        ...profile,
+        currentWeight: parsedWeight,
+      }
+
+      setProfile(nextProfile)
+
+      setUser((currentUser) => ({
+        ...currentUser,
+        profile: {
+          ...currentUser?.profile,
+          currentWeight: parsedWeight,
+        },
+      }))
+
+      showToast('success', 'Peso registrado', 'O registro foi salvo na sua conta.')
+    } catch (error) {
+      console.error(error)
+
       showToast(
         'error',
-        'Peso salvo localmente',
-        'O gráfico foi atualizado, mas não foi possível sincronizar com a conta.'
+        'Erro ao salvar peso',
+        error.message || 'Não foi possível salvar o peso no servidor.'
       )
     }
   }
@@ -397,10 +452,33 @@ function Profile() {
       description: `O peso ${record?.weight || ''}kg será removido do histórico corporal.`,
       confirmText: 'Excluir',
       variant: 'danger',
-      onConfirm: () => {
-        setBodyWeight(bodyWeight.filter((item) => item.id !== id))
-        setConfirmModal(null)
-        showToast('success', 'Registro excluído', 'O peso foi removido.')
+      onConfirm: async () => {
+        try {
+          await apiFetch(`/body-weight/${id}`, {
+            method: 'DELETE',
+          })
+
+          const updatedWeights = bodyWeight.filter((item) => item.id !== id)
+
+          setBodyWeight(updatedWeights)
+          saveUserStorageData(user, 'bodyweight', updatedWeights)
+
+          setConfirmModal(null)
+
+          showToast(
+            'success',
+            'Registro excluído',
+            'O peso foi removido da sua conta.'
+          )
+        } catch (error) {
+          console.error(error)
+
+          showToast(
+            'error',
+            'Erro ao excluir',
+            error.message || 'Não foi possível remover o registro.'
+          )
+        }
       },
     })
   }
@@ -423,7 +501,7 @@ function Profile() {
       />
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <Card className="overflow-hidden border-[var(--ff-accent-border)]/20 bg-gradient-to-br from-violet-600/20 via-[#18181b] to-[#121212] xl:col-span-2">
+        <Card className="overflow-hidden border-[var(--ff-accent-border)]/20 bg-gradient-to-br from-[var(--ff-accent-soft)]/20 via-[#18181b] to-[#121212] xl:col-span-2">
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-5">
               <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)] shadow-[0_0_20px_var(--ff-accent-shadow)]">
@@ -449,7 +527,8 @@ function Profile() {
                 </h1>
 
                 <p className="mt-2 text-sm text-zinc-400">
-                  {profile.goal || 'Objetivo não definido'} • {profile.experience || 'Nível não definido'}
+                  {profile.goal || 'Objetivo não definido'} •{' '}
+                  {profile.experience || 'Nível não definido'}
                 </p>
 
                 <div className="mt-4 flex flex-wrap gap-2">
@@ -498,7 +577,9 @@ function Profile() {
 
                 <p className="mt-2 text-sm font-bold">
                   {lastWeightRecord
-                    ? `${lastWeightRecord.weight} kg em ${formatShortDate(lastWeightRecord.date)}`
+                    ? `${lastWeightRecord.weight} kg em ${formatShortDate(
+                        lastWeightRecord.date
+                      )}`
                     : 'Nenhum registro no gráfico'}
                 </p>
               </div>
@@ -557,7 +638,7 @@ function Profile() {
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-2 gap-4 xl:grid-cols-4">
+      <section className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <p className="text-sm text-zinc-500">
@@ -668,7 +749,9 @@ function Profile() {
                     />
                     <YAxis stroke="#71717a" />
                     <Tooltip
-                      labelFormatter={(value) => `Data: ${formatShortDate(value)}`}
+                      labelFormatter={(value) =>
+                        `Data: ${formatShortDate(value)}`
+                      }
                       formatter={(value) => [`${value} kg`, 'Peso']}
                       contentStyle={{
                         background: '#09090b',
@@ -677,7 +760,7 @@ function Profile() {
                         color: '#fff',
                       }}
                       labelStyle={{
-                        color: '#a78bfa',
+                        color: 'var(--ff-accent-text)',
                         fontWeight: '700',
                       }}
                     />
@@ -685,7 +768,7 @@ function Profile() {
                       type="monotone"
                       dataKey="weight"
                       name="Peso"
-                      stroke="#8b5cf6"
+                      stroke="var(--ff-accent)"
                       strokeWidth={3}
                       dot
                     />
@@ -726,7 +809,8 @@ function Profile() {
                       </h3>
 
                       <p className="mt-1 text-sm text-zinc-400">
-                        {heaviestExercise.exerciseName} × {heaviestExercise.reps} reps
+                        {heaviestExercise.exerciseName} ×{' '}
+                        {heaviestExercise.reps} reps
                       </p>
                     </>
                   ) : (
@@ -764,7 +848,8 @@ function Profile() {
                   </p>
 
                   <p className="mt-2 text-sm text-zinc-400">
-                    {totalWorkouts} treinos concluídos • {totalSets} séries concluídas
+                    {totalWorkouts} treinos concluídos • {totalSets} séries
+                    concluídas
                   </p>
                 </div>
               </div>
@@ -892,7 +977,7 @@ function Profile() {
                       handleDateChange('')
                     }
                   }}
-                  className="mt-2 w-full cursor-pointer rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-white outline-none transition focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-violet-500/10"
+                  className="mt-2 w-full cursor-pointer rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-white outline-none transition focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-[var(--ff-accent)]/10"
                 />
               </div>
 
@@ -903,7 +988,8 @@ function Profile() {
 
             <div className="mt-4 rounded-2xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 p-3">
               <p className="text-xs leading-relaxed text-zinc-400">
-                Esse registro atualiza o gráfico e também usa o último peso como peso atual do perfil.
+                Esse registro atualiza o gráfico e também usa o último peso como
+                peso atual do perfil.
               </p>
             </div>
           </Card>
@@ -1014,32 +1100,30 @@ function Profile() {
                     </p>
 
                     <p className="mt-1 text-xs leading-relaxed text-zinc-500">
-                      Envie uma imagem PNG, JPG ou WEBP de até 1MB.
+                      Use uma URL de imagem. Upload próprio será adicionado
+                      depois com Cloudinary/S3.
                     </p>
 
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <label className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-4 text-xs font-bold text-white transition hover:bg-[var(--ff-accent-hover)]">
-                        <Upload size={15} />
-                        Escolher imagem
-
-                        <input
-                          type="file"
-                          accept="image/png,image/jpeg,image/webp"
-                          onChange={handleAvatarUpload}
-                          className="hidden"
-                        />
-                      </label>
-
-                      {profile.avatarUrl && (
-                        <button
-                          type="button"
-                          onClick={() => updateProfileField('avatarUrl', '')}
-                          className="inline-flex h-10 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10 px-4 text-xs font-bold text-red-300 transition hover:bg-red-500/20"
-                        >
-                          Remover foto
-                        </button>
-                      )}
+                    <div className="mt-3">
+                      <Input
+                        label="URL da foto de perfil"
+                        placeholder="https://..."
+                        value={profile.avatarUrl}
+                        onChange={(event) =>
+                          updateProfileField('avatarUrl', event.target.value)
+                        }
+                      />
                     </div>
+
+                    {profile.avatarUrl && (
+                      <button
+                        type="button"
+                        onClick={() => updateProfileField('avatarUrl', '')}
+                        className="mt-3 inline-flex h-10 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10 px-4 text-xs font-bold text-red-300 transition hover:bg-red-500/20"
+                      >
+                        Remover foto
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1048,7 +1132,9 @@ function Profile() {
                 label="Nome"
                 placeholder="Seu nome"
                 value={profile.name}
-                onChange={(event) => updateProfileField('name', event.target.value)}
+                onChange={(event) =>
+                  updateProfileField('name', event.target.value)
+                }
               />
 
               <div>
@@ -1079,14 +1165,17 @@ function Profile() {
                 />
 
                 <p className="mt-2 text-xs text-zinc-500">
-                  Esse é o peso atual do perfil. Para alimentar o gráfico, use o card “Registrar peso”.
+                  Esse é o peso atual do perfil. Para alimentar o gráfico, use o
+                  card “Registrar peso”.
                 </p>
               </div>
 
               <Select
                 label="Objetivo"
                 value={profile.goal}
-                onChange={(event) => updateProfileField('goal', event.target.value)}
+                onChange={(event) =>
+                  updateProfileField('goal', event.target.value)
+                }
               >
                 <option value="">Selecione</option>
                 <option value="Bulking">Bulking</option>
@@ -1101,7 +1190,9 @@ function Profile() {
               <Select
                 label="Nível"
                 value={profile.experience}
-                onChange={(event) => updateProfileField('experience', event.target.value)}
+                onChange={(event) =>
+                  updateProfileField('experience', event.target.value)
+                }
               >
                 <option value="">Selecione</option>
                 <option value="Iniciante">Iniciante</option>
@@ -1112,7 +1203,9 @@ function Profile() {
               <Select
                 label="Meta semanal"
                 value={profile.weeklyTarget}
-                onChange={(event) => updateProfileField('weeklyTarget', event.target.value)}
+                onChange={(event) =>
+                  updateProfileField('weeklyTarget', event.target.value)
+                }
               >
                 <option value="">Selecione</option>
                 <option value="2 treinos">2 treinos</option>
@@ -1126,7 +1219,9 @@ function Profile() {
                 label="Divisão preferida"
                 placeholder="Ex: Push Pull Legs"
                 value={profile.preferredSplit}
-                onChange={(event) => updateProfileField('preferredSplit', event.target.value)}
+                onChange={(event) =>
+                  updateProfileField('preferredSplit', event.target.value)
+                }
               />
             </div>
 
@@ -1136,7 +1231,9 @@ function Profile() {
                 placeholder="Ex: foco em força no supino, melhorar cardio, evitar dor no ombro..."
                 rows={4}
                 value={profile.notes}
-                onChange={(event) => updateProfileField('notes', event.target.value)}
+                onChange={(event) =>
+                  updateProfileField('notes', event.target.value)
+                }
               />
             </div>
 

@@ -314,6 +314,37 @@ const workoutSchema = new mongoose.Schema(
     }
 )
 
+const bodyWeightSchema = new mongoose.Schema(
+    {
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+            index: true,
+        },
+
+        weight: {
+            type: Number,
+            required: true,
+        },
+
+        date: {
+            type: Date,
+            default: Date.now,
+            index: true,
+        },
+
+        note: {
+            type: String,
+            default: '',
+        },
+    },
+    {
+        timestamps: true,
+    }
+)
+
+
 const workoutHistorySchema = new mongoose.Schema(
     {
         userId: {
@@ -389,6 +420,7 @@ const User = mongoose.model('User', userSchema)
 const Exercise = mongoose.model('Exercise', exerciseSchema)
 const Workout = mongoose.model('Workout', workoutSchema)
 const WorkoutHistory = mongoose.model('WorkoutHistory', workoutHistorySchema)
+const BodyWeight = mongoose.model('BodyWeight', bodyWeightSchema)
 
 function createToken(user) {
     return jwt.sign(
@@ -1317,6 +1349,131 @@ app.delete('/workout-history', authMiddleware, async (req, res) => {
 
         res.status(500).json({
             message: 'Erro ao limpar histórico.',
+        })
+    }
+})
+
+app.get('/body-weight', authMiddleware, async (req, res) => {
+    try {
+        const records = await BodyWeight.find({
+            userId: req.user.userId,
+        }).sort({
+            date: 1,
+            createdAt: 1,
+        })
+
+        res.json(records)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao buscar registros de peso.',
+        })
+    }
+})
+
+app.post('/body-weight', authMiddleware, async (req, res) => {
+    try {
+        const { weight, date, note = '' } = req.body
+
+        const parsedWeight = Number(String(weight).replace(',', '.'))
+
+        if (!Number.isFinite(parsedWeight) || parsedWeight <= 0) {
+            return res.status(400).json({
+                message: 'Informe um peso válido.',
+            })
+        }
+
+        const record = await BodyWeight.create({
+            userId: req.user.userId,
+            weight: parsedWeight,
+            date: date || new Date(),
+            note: String(note || '').trim().slice(0, 300),
+        })
+
+        const user = await User.findById(req.user.userId)
+
+        if (user) {
+            user.profile.currentWeight = parsedWeight
+            user.profileCompleted = buildProfileCompletion(user.profile)
+            await user.save()
+        }
+
+        res.status(201).json(record)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao salvar peso corporal.',
+        })
+    }
+})
+
+app.put('/body-weight/:id', authMiddleware, async (req, res) => {
+    try {
+        const { weight, date, note = '' } = req.body
+
+        const parsedWeight = Number(String(weight).replace(',', '.'))
+
+        if (!Number.isFinite(parsedWeight) || parsedWeight <= 0) {
+            return res.status(400).json({
+                message: 'Informe um peso válido.',
+            })
+        }
+
+        const record = await BodyWeight.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                userId: req.user.userId,
+            },
+            {
+                weight: parsedWeight,
+                date: date || new Date(),
+                note: String(note || '').trim().slice(0, 300),
+            },
+            {
+                new: true,
+            }
+        )
+
+        if (!record) {
+            return res.status(404).json({
+                message: 'Registro de peso não encontrado.',
+            })
+        }
+
+        res.json(record)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao atualizar peso corporal.',
+        })
+    }
+})
+
+app.delete('/body-weight/:id', authMiddleware, async (req, res) => {
+    try {
+        const record = await BodyWeight.findOneAndDelete({
+            _id: req.params.id,
+            userId: req.user.userId,
+        })
+
+        if (!record) {
+            return res.status(404).json({
+                message: 'Registro de peso não encontrado.',
+            })
+        }
+
+        res.json({
+            ok: true,
+            message: 'Registro de peso removido.',
+        })
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao remover peso corporal.',
         })
     }
 })

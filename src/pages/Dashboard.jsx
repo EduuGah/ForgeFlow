@@ -86,6 +86,18 @@ function formatDuration(seconds) {
   return `${minutes}min`
 }
 
+function normalizeBodyWeightFromApi(item) {
+  const rawDate = item.date || item.createdAt
+
+  return {
+    ...item,
+    id: item._id || item.id,
+    weight: Number(item.weight) || 0,
+    date: rawDate ? String(rawDate).slice(0, 10) : '',
+    note: item.note || '',
+  }
+}
+
 function shortenChartLabel(value, maxLength = 12) {
   if (!value) return ''
 
@@ -295,11 +307,12 @@ function Dashboard() {
       })
 
       try {
-        const [workoutsFromApi, historyFromApi, exercisesFromApi] =
+        const [workoutsFromApi, historyFromApi, exercisesFromApi, bodyWeightFromApi] =
           await Promise.all([
             apiFetch('/workouts'),
             apiFetch('/workout-history'),
             apiFetch('/exercises'),
+            apiFetch('/body-weight'),
           ])
 
         const normalizedWorkouts = Array.isArray(workoutsFromApi)
@@ -314,16 +327,24 @@ function Dashboard() {
           ? exercisesFromApi.map(normalizeExerciseFromApi)
           : []
 
+        const normalizedBodyWeight = Array.isArray(bodyWeightFromApi)
+          ? bodyWeightFromApi.map(normalizeBodyWeightFromApi)
+          : []
+
         const finalExercises =
           userExercises.length > 0 ? userExercises : cachedExercises
 
         setWorkouts(normalizedWorkouts)
         setHistory(normalizedHistory)
         setExercises(finalExercises)
-        setBodyWeight(cachedBodyWeight)
-
+        setBodyWeight(normalizedBodyWeight.length > 0 ? normalizedBodyWeight : cachedBodyWeight)
+        
         saveUserStorageData(user, 'workouts', normalizedWorkouts)
         saveUserStorageData(user, 'history', normalizedHistory)
+
+        if (normalizedBodyWeight.length > 0) {
+          saveUserStorageData(user, 'bodyweight', normalizedBodyWeight)
+        }
 
         if (userExercises.length > 0) {
           saveUserStorageData(user, 'exercises', userExercises)
