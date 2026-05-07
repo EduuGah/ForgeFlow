@@ -314,9 +314,81 @@ const workoutSchema = new mongoose.Schema(
     }
 )
 
+const workoutHistorySchema = new mongoose.Schema(
+    {
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+            index: true,
+        },
+
+        workoutId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Workout',
+            default: null,
+        },
+
+        workoutName: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+
+        exercises: {
+            type: Array,
+            default: [],
+        },
+
+        durationSeconds: {
+            type: Number,
+            default: 0,
+        },
+
+        startedAt: {
+            type: Date,
+            default: null,
+        },
+
+        finishedAt: {
+            type: Date,
+            default: Date.now,
+        },
+
+        totalVolume: {
+            type: Number,
+            default: 0,
+        },
+
+        totalSets: {
+            type: Number,
+            default: 0,
+        },
+
+        totalReps: {
+            type: Number,
+            default: 0,
+        },
+
+        prs: {
+            type: Array,
+            default: [],
+        },
+
+        notes: {
+            type: String,
+            default: '',
+        },
+    },
+    {
+        timestamps: true,
+    }
+)
+
 const User = mongoose.model('User', userSchema)
 const Exercise = mongoose.model('Exercise', exerciseSchema)
 const Workout = mongoose.model('Workout', workoutSchema)
+const WorkoutHistory = mongoose.model('WorkoutHistory', workoutHistorySchema)
 
 function createToken(user) {
     return jwt.sign(
@@ -878,6 +950,41 @@ app.put('/me/profile', authMiddleware, async (req, res) => {
     res.json(buildUserResponse(user))
 })
 
+function calculateWorkoutHistorySummary(exercises = []) {
+    let totalVolume = 0
+    let totalSets = 0
+    let totalReps = 0
+
+    for (const item of exercises) {
+        const sets = Array.isArray(item.sets) ? item.sets : []
+
+        for (const set of sets) {
+            const isCompleted =
+                set.completed === true ||
+                set.isCompleted === true ||
+                set.done === true
+
+            if (!isCompleted) continue
+
+            const weight = Number(set.weight || set.load || 0)
+            const reps = Number(set.reps || 0)
+
+            totalSets += 1
+            totalReps += Number.isFinite(reps) ? reps : 0
+
+            if (Number.isFinite(weight) && Number.isFinite(reps)) {
+                totalVolume += weight * reps
+            }
+        }
+    }
+
+    return {
+        totalVolume,
+        totalSets,
+        totalReps,
+    }
+}
+
 app.get('/workouts', authMiddleware, async (req, res) => {
     try {
         const workouts = await Workout.find({
@@ -1057,6 +1164,159 @@ app.post('/workouts/:id/start', authMiddleware, async (req, res) => {
 
         res.status(500).json({
             message: 'Erro ao iniciar treino.',
+        })
+    }
+})
+
+app.get('/workout-history', authMiddleware, async (req, res) => {
+    try {
+        const history = await WorkoutHistory.find({
+            userId: req.user.userId,
+        }).sort({
+            finishedAt: -1,
+            createdAt: -1,
+        })
+
+        res.json(history)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao buscar histórico de treinos.',
+        })
+    }
+})
+
+app.get('/workout-history/:id', authMiddleware, async (req, res) => {
+    try {
+        const historyItem = await WorkoutHistory.findOne({
+            _id: req.params.id,
+            userId: req.user.userId,
+        })
+
+        if (!historyItem) {
+            return res.status(404).json({
+                message: 'Treino do histórico não encontrado.',
+            })
+        }
+
+        res.json(historyItem)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao buscar treino do histórico.',
+        })
+    }
+})
+
+app.post('/workout-history', authMiddleware, async (req, res) => {
+    try {
+        const {
+            workoutId = null,
+            workoutName,
+            name,
+            exercises = [],
+            durationSeconds = 0,
+            startedAt = null,
+            finishedAt = new Date(),
+            prs = [],
+            notes = '',
+        } = req.body
+
+        const finalWorkoutName = workoutName || name
+
+        if (!finalWorkoutName?.trim()) {
+            return res.status(400).json({
+                message: 'Informe o nome do treino finalizado.',
+            })
+        }
+
+        const summary = calculateWorkoutHistorySummary(exercises)
+
+        const historyItem = await WorkoutHistory.create({
+            userId: req.user.userId,
+            workoutId: workoutId || null,
+            workoutName: finalWorkoutName.trim(),
+            exercises,
+            durationSeconds: Number(durationSeconds) || 0,
+            startedAt: startedAt || null,
+            finishedAt: finishedAt || new Date(),
+            totalVolume: summary.totalVolume,
+            totalSets: summary.totalSets,
+            totalReps: summary.totalReps,
+            prs: Array.isArray(prs) ? prs : [],
+            notes,
+        })
+
+        if (workoutId) {
+            await Workout.findOneAndUpdate(
+                {
+                    _id: workoutId,
+                    userId: req.user.userId,
+                },
+                {
+                    $set: {
+                        lastFinishedAt: new Date(),
+                    },
+                    $inc: {
+                        totalTimesFinished: 1,
+                    },
+                }
+            )
+        }
+
+        res.status(201).json(historyItem)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao salvar treino no histórico.',
+        })
+    }
+})
+
+app.delete('/workout-history/:id', authMiddleware, async (req, res) => {
+    try {
+        const historyItem = await WorkoutHistory.findOneAndDelete({
+            _id: req.params.id,
+            userId: req.user.userId,
+        })
+
+        if (!historyItem) {
+            return res.status(404).json({
+                message: 'Treino do histórico não encontrado.',
+            })
+        }
+
+        res.json({
+            ok: true,
+            message: 'Treino removido do histórico.',
+        })
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao remover treino do histórico.',
+        })
+    }
+})
+
+app.delete('/workout-history', authMiddleware, async (req, res) => {
+    try {
+        await WorkoutHistory.deleteMany({
+            userId: req.user.userId,
+        })
+
+        res.json({
+            ok: true,
+            message: 'Histórico limpo com sucesso.',
+        })
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao limpar histórico.',
         })
     }
 })

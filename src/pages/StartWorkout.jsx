@@ -85,6 +85,7 @@ function StartWorkout() {
 
   const [collapsedExerciseIds, setCollapsedExerciseIds] = useState([])
 
+  const [savingWorkout, setSavingWorkout] = useState(false)
   const [confirmModal, setConfirmModal] = useState(null)
   const [toast, setToast] = useState(null)
   const [appSettings, setAppSettings] = useState(getAppSettings())
@@ -95,6 +96,60 @@ function StartWorkout() {
     removeUserStorageData(user, 'active-session')
     cancelSession()
     window.location.href = '/workouts'
+  }
+
+  async function handleFinishWorkout() {
+    if (savingWorkout) return
+
+    setSavingWorkout(true)
+
+    try {
+      await finishSession()
+
+      setIsFinishModalOpen(false)
+
+      showToast(
+        'success',
+        'Treino salvo',
+        'O treino foi salvo no histórico.'
+      )
+    } catch (error) {
+      console.error(error)
+
+      showToast(
+        'error',
+        'Erro ao finalizar',
+        'Não foi possível finalizar o treino.'
+      )
+    } finally {
+      setSavingWorkout(false)
+    }
+  } async function handleFinishWorkout() {
+    if (savingWorkout) return
+
+    setSavingWorkout(true)
+
+    try {
+      await finishSession()
+
+      setIsFinishModalOpen(false)
+
+      showToast(
+        'success',
+        'Treino salvo',
+        'O treino foi salvo no histórico.'
+      )
+    } catch (error) {
+      console.error(error)
+
+      showToast(
+        'error',
+        'Erro ao finalizar',
+        'Não foi possível finalizar o treino.'
+      )
+    } finally {
+      setSavingWorkout(false)
+    }
   }
 
   useEffect(() => {
@@ -299,7 +354,7 @@ function StartWorkout() {
                 if (appSettings.confirmBeforeFinishWorkout) {
                   setIsFinishModalOpen(true)
                 } else {
-                  finishSession()
+                  handleFinishWorkout()
                 }
               }}
               className="h-11 rounded-2xl bg-[var(--ff-accent)] px-4 text-sm font-bold text-white shadow-[0_0_20px_var(--ff-accent-shadow)] transition hover:bg-[var(--ff-accent-hover)] hover:shadow-[0_0_20px_var(--ff-accent-shadow)]"
@@ -881,13 +936,11 @@ function StartWorkout() {
 
               <Button
                 type="button"
-                onClick={() => {
-                  setIsFinishModalOpen(false)
-                  finishSession()
-                }}
+                onClick={handleFinishWorkout}
+                disabled={savingWorkout}
                 className="w-full"
               >
-                Salvar no histórico
+                {savingWorkout ? 'Salvando...' : 'Salvar no histórico'}
               </Button>
             </div>
           </div>

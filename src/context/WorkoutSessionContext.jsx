@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { useAuth } from './AuthContext'
 import { getSessionPRTypes } from '../utils/prUtils'
+import { apiFetch } from '../services/api'
 import {
   getUserStorageData,
   saveUserStorageData,
@@ -15,6 +16,32 @@ export function WorkoutSessionProvider({ children }) {
   const [activeSession, setActiveSession] = useState(null)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [isLoaded, setIsLoaded] = useState(false)
+
+  function isMongoId(value) {
+    return typeof value === 'string' && /^[a-f\d]{24}$/i.test(value)
+  }
+
+  function normalizeHistoryFromApi(session) {
+    return {
+      ...session,
+      id: session._id || session.id,
+      duration: session.durationSeconds ?? session.duration ?? 0,
+      workoutName: session.workoutName || session.name || 'Treino',
+      exercises: Array.isArray(session.exercises) ? session.exercises : [],
+    }
+  }
+
+  function getSessionPrs(session) {
+    return session.exercises.flatMap((exercise) =>
+      exercise.sets
+        .filter((set) => set.isPR || set.isWeightPR || set.isVolumePR)
+        .map((set) => ({
+          ...set,
+          exerciseName: exercise.exercise?.name,
+          muscleGroup: exercise.exercise?.muscleGroup,
+        }))
+    )
+  }
 
   useEffect(() => {
     const savedSession = getUserStorageData(user, 'active-session', null)
@@ -130,16 +157,16 @@ export function WorkoutSessionProvider({ children }) {
         exercises: current.exercises.map((exercise) =>
           exercise.id === exerciseId
             ? {
-                ...exercise,
-                sets: exercise.sets.map((set) =>
-                  set.id === setId
-                    ? {
-                        ...set,
-                        [field]: safeValue,
-                      }
-                    : set
-                ),
-              }
+              ...exercise,
+              sets: exercise.sets.map((set) =>
+                set.id === setId
+                  ? {
+                    ...set,
+                    [field]: safeValue,
+                  }
+                  : set
+              ),
+            }
             : exercise
         ),
       }
@@ -155,16 +182,16 @@ export function WorkoutSessionProvider({ children }) {
         exercises: current.exercises.map((exercise) =>
           exercise.id === exerciseId
             ? {
-                ...exercise,
-                sets: exercise.sets.map((set) =>
-                  set.id === setId
-                    ? {
-                        ...set,
-                        completed: !set.completed,
-                      }
-                    : set
-                ),
-              }
+              ...exercise,
+              sets: exercise.sets.map((set) =>
+                set.id === setId
+                  ? {
+                    ...set,
+                    completed: !set.completed,
+                  }
+                  : set
+              ),
+            }
             : exercise
         ),
       }
@@ -228,9 +255,9 @@ export function WorkoutSessionProvider({ children }) {
         exercises: current.exercises.map((exercise) =>
           exercise.id === exerciseId
             ? {
-                ...exercise,
-                skipped: !exercise.skipped,
-              }
+              ...exercise,
+              skipped: !exercise.skipped,
+            }
             : exercise
         ),
       }
@@ -246,10 +273,10 @@ export function WorkoutSessionProvider({ children }) {
         exercises: current.exercises.map((exercise) =>
           exercise.id === sessionExerciseId
             ? {
-                ...exercise,
-                originalExerciseId: newExercise.id,
-                exercise: newExercise,
-              }
+              ...exercise,
+              originalExerciseId: newExercise.id,
+              exercise: newExercise,
+            }
             : exercise
         ),
       }
@@ -272,8 +299,8 @@ export function WorkoutSessionProvider({ children }) {
     removeUserStorageData(user, 'active-session')
   }
 
-  function finishSession() {
-    if (!activeSession) return
+  async function finishSession() {
+    if (!activeSession) return null
 
     const history = getUserStorageData(user, 'history', [])
 
@@ -281,6 +308,7 @@ export function WorkoutSessionProvider({ children }) {
       ...activeSession,
       finishedAt: new Date().toISOString(),
       duration: elapsedSeconds,
+      durationSeconds: elapsedSeconds,
       exercises: activeSession.exercises.map((exercise) => {
         const workingSets = exercise.sets.filter((set) => isWorkingSet(set))
 
@@ -308,10 +336,43 @@ export function WorkoutSessionProvider({ children }) {
       }),
     }
 
-    saveUserStorageData(user, 'history', [finishedSession, ...history])
+    try {
+      const payload = {
+        workoutId: isMongoId(finishedSession.workoutId)
+          ? finishedSession.workoutId
+          : null,
+        workoutName: finishedSession.workoutName,
+        exercises: finishedSession.exercises,
+        durationSeconds: finishedSession.durationSeconds,
+        startedAt: finishedSession.startedAt,
+        finishedAt: finishedSession.finishedAt,
+        prs: getSessionPrs(finishedSession),
+        notes: finishedSession.notes || '',
+      }
 
-    setActiveSession(null)
-    removeUserStorageData(user, 'active-session')
+      const savedSessionFromApi = await apiFetch('/workout-history', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      })
+
+      const savedSession = normalizeHistoryFromApi(savedSessionFromApi)
+
+      saveUserStorageData(user, 'history', [savedSession, ...history])
+
+      setActiveSession(null)
+      removeUserStorageData(user, 'active-session')
+
+      return savedSession
+    } catch (error) {
+      console.error(error)
+
+      saveUserStorageData(user, 'history', [finishedSession, ...history])
+
+      setActiveSession(null)
+      removeUserStorageData(user, 'active-session')
+
+      return finishedSession
+    }
   }
 
   const completedSets = useMemo(() => {

@@ -22,11 +22,23 @@ import ConfirmModal from '../components/ui/ConfirmModal'
 import Toast from '../components/ui/Toast'
 
 import { useAuth } from '../context/AuthContext'
+import { apiFetch } from '../services/api'
 import {
   getUserStorageData,
   saveUserStorageData,
   removeUserStorageData,
 } from '../utils/userStorage'
+
+function normalizeHistoryFromApi(session) {
+  return {
+    ...session,
+    id: session._id || session.id,
+    duration: session.durationSeconds ?? session.duration ?? 0,
+    workoutName: session.workoutName || session.name || 'Treino',
+    exercises: Array.isArray(session.exercises) ? session.exercises : [],
+    finishedAt: session.finishedAt || session.createdAt,
+  }
+}
 
 function formatTime(seconds) {
   const hours = Math.floor(seconds / 3600)
@@ -142,7 +154,34 @@ function History() {
   const settings = getAppSettings()
 
   useEffect(() => {
-    setHistory(getUserStorageData(user, 'history', []))
+    if (!user) return
+
+    async function loadHistory() {
+      const cachedHistory = getUserStorageData(user, 'history', [])
+
+      try {
+        const historyFromApi = await apiFetch('/workout-history')
+
+        const normalizedHistory = Array.isArray(historyFromApi)
+          ? historyFromApi.map(normalizeHistoryFromApi)
+          : []
+
+        setHistory(normalizedHistory)
+        saveUserStorageData(user, 'history', normalizedHistory)
+      } catch (error) {
+        console.error(error)
+
+        setHistory(cachedHistory)
+
+        showToast(
+          'error',
+          'Usando histórico local',
+          'Não foi possível carregar o histórico do servidor.'
+        )
+      }
+    }
+
+    loadHistory()
   }, [user])
 
   const filteredHistory = useMemo(() => {
@@ -214,11 +253,30 @@ function History() {
       description: 'Todos os treinos finalizados serão removidos do histórico. Essa ação não pode ser desfeita.',
       confirmText: 'Limpar tudo',
       variant: 'danger',
-      onConfirm: () => {
-        removeUserStorageData(user, 'history')
-        setHistory([])
-        setConfirmModal(null)
-        showToast('success', 'Histórico limpo', 'Todos os treinos foram removidos.')
+      onConfirm: async () => {
+        try {
+          await apiFetch('/workout-history', {
+            method: 'DELETE',
+          })
+
+          removeUserStorageData(user, 'history')
+          setHistory([])
+          setConfirmModal(null)
+
+          showToast(
+            'success',
+            'Histórico limpo',
+            'Todos os treinos foram removidos.'
+          )
+        } catch (error) {
+          console.error(error)
+
+          showToast(
+            'error',
+            'Erro ao limpar',
+            error.message || 'Não foi possível limpar o histórico.'
+          )
+        }
       },
     })
   }
@@ -231,13 +289,32 @@ function History() {
       description: `O treino "${session?.workoutName || 'selecionado'}" será removido permanentemente do histórico.`,
       confirmText: 'Excluir',
       variant: 'danger',
-      onConfirm: () => {
-        const updatedHistory = history.filter((session) => session.id !== id)
+      onConfirm: async () => {
+        try {
+          await apiFetch(`/workout-history/${id}`, {
+            method: 'DELETE',
+          })
 
-        setHistory(updatedHistory)
-        saveUserStorageData(user, 'history', updatedHistory)
-        setConfirmModal(null)
-        showToast('success', 'Treino excluído', 'O registro foi removido do histórico.')
+          const updatedHistory = history.filter((session) => session.id !== id)
+
+          setHistory(updatedHistory)
+          saveUserStorageData(user, 'history', updatedHistory)
+          setConfirmModal(null)
+
+          showToast(
+            'success',
+            'Treino excluído',
+            'O registro foi removido do histórico.'
+          )
+        } catch (error) {
+          console.error(error)
+
+          showToast(
+            'error',
+            'Erro ao excluir',
+            error.message || 'Não foi possível excluir o treino.'
+          )
+        }
       },
     })
   }
