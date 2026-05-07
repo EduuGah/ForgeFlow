@@ -260,6 +260,7 @@ function normalizeExerciseFromApi(exercise) {
   return {
     ...exercise,
     id: exercise._id || exercise.id,
+    isFavorite: Boolean(exercise.isFavorite),
   }
 }
 

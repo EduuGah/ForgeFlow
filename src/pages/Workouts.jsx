@@ -150,13 +150,32 @@ function Workouts() {
             setCustomSetModels(savedSetModels)
 
             try {
-                const workoutsFromApi = await apiFetch('/workouts')
+                const [workoutsFromApi, exercisesFromApi] = await Promise.all([
+                    apiFetch('/workouts'),
+                    apiFetch('/exercises'),
+                ])
 
                 const normalizedWorkouts = Array.isArray(workoutsFromApi)
                     ? workoutsFromApi.map(normalizeWorkoutFromApi)
                     : []
 
+                const normalizedExercises = Array.isArray(exercisesFromApi)
+                    ? exercisesFromApi.map((exercise) => ({
+                        ...exercise,
+                        id: exercise._id || exercise.id,
+                        isFavorite: Boolean(exercise.isFavorite),
+                    }))
+                    : []
+
                 setWorkouts(normalizedWorkouts)
+
+                if (normalizedExercises.length > 0) {
+                    setExercises(normalizedExercises)
+                    saveUserStorageData(user, 'exercises', normalizedExercises)
+                } else {
+                    setExercises(initialExercises)
+                }
+
                 saveUserStorageData(user, 'workouts', normalizedWorkouts)
             } catch (error) {
                 console.error(error)

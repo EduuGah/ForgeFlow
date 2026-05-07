@@ -1526,6 +1526,7 @@ app.post('/exercises', authMiddleware, async (req, res) => {
     const exercise = await Exercise.create({
         ...req.body,
         userId: req.user.userId,
+        isFavorite: Boolean(req.body.isFavorite),
     })
 
     res.status(201).json(exercise)

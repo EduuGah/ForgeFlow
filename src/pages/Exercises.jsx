@@ -863,40 +863,46 @@ function Exercises() {
     return typeof value === 'string' && /^[a-f\d]{24}$/i.test(value)
   }
 
+  function isMongoId(value) {
+    return typeof value === 'string' && /^[a-f\d]{24}$/i.test(value)
+  }
+
   async function handleToggleFavorite(exercise, event) {
     event?.stopPropagation()
 
-    const updatedExercisesLocal = exercises.map((item) =>
-      item.id === exercise.id
-        ? {
-          ...item,
-          isFavorite: !item.isFavorite,
-        }
-        : item
-    )
-
-    const saveLocalFavorite = () => {
-      setExercises(updatedExercisesLocal)
-      saveUserStorageData(user, 'exercises', updatedExercisesLocal)
-    }
-
-    if (!isMongoId(exercise.id)) {
-      saveLocalFavorite()
-      return
-    }
-
     try {
-      const updatedExerciseFromApi = await apiFetch(
-        `/exercises/${exercise.id}/favorite`,
-        {
+      // Se o exercício já existe no MongoDB, só alterna o favorito.
+      if (isMongoId(exercise.id)) {
+        const updatedExerciseFromApi = await apiFetch(`/exercises/${exercise.id}/favorite`, {
           method: 'PATCH',
-        }
-      )
+        })
 
-      const updatedExercise = normalizeExerciseFromApi(updatedExerciseFromApi)
+        const updatedExercise = normalizeExerciseFromApi(updatedExerciseFromApi)
+
+        const updatedExercises = exercises.map((item) =>
+          item.id === exercise.id ? updatedExercise : item
+        )
+
+        setExercises(updatedExercises)
+        saveUserStorageData(user, 'exercises', updatedExercises)
+        return
+      }
+
+      // Se é exercício padrão/local, cria uma cópia no MongoDB já favoritada.
+      const createdExerciseFromApi = await apiFetch('/exercises', {
+        method: 'POST',
+        body: JSON.stringify({
+          ...exercise,
+          isFavorite: true,
+          source: exercise.source || 'ForgeFlow',
+          originalName: exercise.originalName || exercise.name,
+        }),
+      })
+
+      const createdExercise = normalizeExerciseFromApi(createdExerciseFromApi)
 
       const updatedExercises = exercises.map((item) =>
-        item.id === exercise.id ? updatedExercise : item
+        item.id === exercise.id ? createdExercise : item
       )
 
       setExercises(updatedExercises)
@@ -904,7 +910,10 @@ function Exercises() {
     } catch (error) {
       console.error(error)
 
-      saveLocalFavorite()
+      alert(
+        error.message ||
+        'Não foi possível salvar o favorito no servidor.'
+      )
     }
   }
 
