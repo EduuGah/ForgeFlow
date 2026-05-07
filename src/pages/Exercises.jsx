@@ -470,8 +470,6 @@ function Exercises() {
         ...cachedExercises,
       ]
 
-      const defaultExercises = getInitialExercises()
-
       const fallbackExercises = [
         ...defaultExercises,
         ...cachedExercises,
