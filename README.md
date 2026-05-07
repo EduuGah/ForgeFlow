@@ -1,211 +1,316 @@
 # ForgeFlow
 
-ForgeFlow é uma aplicação web completa para organização de treinos de academia, acompanhamento de progressão de carga, controle de PRs (Personal Records), histórico de treino e evolução física, com uma interface moderna, responsiva e inspirada em plataformas como Hevy e Strong.
+ForgeFlow é um app web para organizar treinos de academia, registrar cargas, acompanhar evolução e manter um histórico real do que foi feito em cada sessão.
 
-O projeto nasceu como estudo prático de React + JavaScript + Tailwind CSS, mas evoluiu para um sistema real, escalável e com estrutura pensada para produção futura.
+Comecei o projeto como uma forma de praticar React, JavaScript e Tailwind CSS, mas ele acabou evoluindo para uma aplicação mais completa, com estrutura de frontend, backend, autenticação, banco de dados e deploy separados.
 
----
-
-## Deploy Online
-
-Acesse a versão online:
-
-🔗 **(https://forge-flow-five.vercel.app/)**
+🔗 **Deploy:** https://forge-flow-five.vercel.app/
 
 ---
 
-## Objetivo do Projeto
+## Sobre o projeto
 
-O objetivo do ForgeFlow é centralizar toda a rotina de treinos em um único sistema:
+A ideia do ForgeFlow é simples: facilitar o controle de treino sem depender de planilha ou anotação solta.
 
-* cadastro inteligente de exercícios
-* criação de treinos personalizados
-* execução real de treinos com timer ativo
-* controle de séries, repetições e carga
-* acompanhamento de progressão
-* PR de peso e volume
-* histórico completo de treinos
-* evolução física e peso corporal
-* dashboard analítico com gráficos
-* perfil do atleta com métrtricas pessoais
+Com ele, é possível cadastrar exercícios, montar treinos, iniciar uma sessão, registrar séries, peso e repetições, visualizar histórico e acompanhar PRs de peso e volume.
 
-A proposta é transformar o ForgeFlow em uma plataforma fitness premium, com backend próprio, autenticação e sincronização em nuvem.
+Além da parte visual, o projeto também está sendo usado como laboratório para praticar organização de código, componentização, persistência de dados, API própria e integração com banco de dados.
 
 ---
 
-## Tecnologias Utilizadas
+## Status atual
+
+O projeto já possui uma boa parte da estrutura principal funcionando:
+
+- frontend em React com Vite;
+- layout responsivo com Tailwind CSS;
+- navegação com React Router;
+- dashboard com métricas e gráficos;
+- biblioteca de exercícios;
+- criação e edição de treinos;
+- execução de treino com cronômetro;
+- histórico de treinos finalizados;
+- controle de PRs;
+- página de perfil;
+- página de configurações;
+- backend separado em Node.js/Express;
+- conexão preparada com MongoDB Atlas;
+- estrutura de autenticação com Google OAuth;
+- variáveis de ambiente separadas para desenvolvimento e produção;
+- deploy do frontend na Vercel;
+- deploy da API no Render.
+
+---
+
+## Tecnologias utilizadas
 
 ### Frontend
 
-* React
-* JavaScript
-* Tailwind CSS
-* React Router DOM
-* Recharts
-* Vite
+- React
+- JavaScript
+- Vite
+- Tailwind CSS
+- React Router DOM
+- Recharts
+- Lucide React
+- LocalStorage
 
-### Persistência Atual
+### Backend
 
-* LocalStorage
+- Node.js
+- Express
+- MongoDB Atlas
+- Mongoose
+- Dotenv
+- CORS
+- Google OAuth
 
-### Futuramente
+### Deploy
 
-* Node.js
-* Express
-* MongoDB Atlas
-* API própria
-* autenticação JWT
-* backup em nuvem
-* sincronização multi-dispositivo
-
----
-
-## Funcionalidades Atuais
-
----
-
-## Dashboard PRO
-
-* resumo geral dos treinos
-* treinos concluídos
-* volume total levantado
-* total de PRs batidos
-* exercícios cadastrados
-* treinos salvos com início rápido
-* gráfico de volume por treino
-* radar chart de grupos musculares
-* ranking de grupos mais treinados
-* exercício com maior carga
-* exercício mais treinado
-* PRs por exercício
-* gráfico de peso corporal
+- Vercel para o frontend
+- Render para a API
+- MongoDB Atlas para o banco
 
 ---
 
-## Biblioteca de Exercícios
+## Funcionalidades
 
-* importação massiva baseada na API do Hevy
-* biblioteca com centenas de exercícios
-* tradução automática para PT-BR
-* filtros por:
+### Dashboard
 
-  * nome
-  * grupo muscular
-  * equipamento
-* agrupamento por grupo muscular
-* expansão retrátil dos cards
-* observações por exercício
-* edição de exercícios
-* exclusão de exercícios
-* criação manual de novos exercícios
-* página individual de detalhes
-* suporte futuro para GIFs e mídia
+O dashboard mostra um resumo geral do uso do app, com informações como:
 
----
+- total de treinos concluídos;
+- volume total levantado;
+- quantidade de PRs;
+- exercícios cadastrados;
+- treinos salvos;
+- evolução de volume;
+- distribuição por grupos musculares;
+- PRs por exercício;
+- gráfico de evolução de peso corporal.
 
-## Sistema de Treinos
-
-* criação de treinos personalizados
-* edição avançada de treinos
-* duplicação de treino
-* exclusão de treino
-* adição rápida de exercícios
-* exercícios recentes
-* favoritos (estrutura preparada)
-* sistema de séries padrão
-* sistema de séries customizadas
-* rascunho automático
-* persistência automática
+A ideia é que o dashboard funcione como uma visão rápida da evolução do usuário.
 
 ---
 
-## Execução Real de Treino
+### Biblioteca de exercícios
 
-* iniciar treino salvo
-* cronômetro persistente
-* manter treino aberto entre páginas
-* popup de treino ativo (estrutura preparada)
-* registro de:
+A página de exercícios permite consultar, criar e gerenciar exercícios usados nos treinos.
 
-  * peso
-  * repetições
-  * conclusão de série
-* botão de:
+Atualmente ela conta com:
 
-  * substituir exercício
-  * excluir exercício
-  * pular exercício
-  * adicionar série
-* exibição do treino anterior
-* comparação com treino passado
-* PR de peso
-* PR de volume
-* modal de confirmação ao finalizar
-* resumo do treino antes de salvar
+- lista de exercícios padrão;
+- exercícios organizados por grupos musculares;
+- busca por nome;
+- filtros por músculo e equipamento;
+- detalhes individuais do exercício;
+- criação manual de exercícios;
+- edição de exercícios;
+- exclusão de exercícios;
+- suporte para imagens e GIFs;
+- dicas, instruções e observações por exercício;
+- salvamento local dos dados.
+
+A base de exercícios ainda está sendo refinada, principalmente na parte de mídia, tradução, dicas e padronização das informações.
 
 ---
 
-## Histórico Completo
+### Treinos
 
-* salvar treino finalizado
-* visualização detalhada por treino
-* data destacada
-* PRs destacados
-* exclusão individual
-* limpar histórico com confirmação
-* base pronta para evolução de carga
+A área de treinos permite montar rotinas personalizadas de acordo com os exercícios cadastrados.
 
----
+Funcionalidades atuais:
 
-## Perfil do Atleta
-
-* nome
-* altura
-* objetivo principal
-* nível de experiência
-* meta semanal
-* divisão preferida
-* notas pessoais
-* acompanhamento de peso corporal
-* gráfico de evolução física
-* resumo pessoal
-* PRs individuais
-* destaques físicos
+- criar treino;
+- editar treino;
+- excluir treino;
+- duplicar treino;
+- adicionar exercícios ao treino;
+- organizar séries;
+- definir peso e repetições;
+- salvar rascunhos;
+- iniciar treino salvo;
+- manter estrutura pronta para favoritos e recentes.
 
 ---
 
-## Layout Premium
+### Execução de treino
 
-* sidebar retrátil
-* menu lateral profissional
-* design escuro premium
-* identidade visual roxa sofisticada
-* componentes reutilizáveis
-* UX inspirada em SaaS profissional
-* foco em mobile future-ready
+Durante uma sessão de treino, o usuário consegue registrar o treino de forma mais próxima do uso real.
+
+O sistema possui:
+
+- cronômetro de treino;
+- registro de peso e repetições;
+- marcação de série concluída;
+- adição de novas séries;
+- remoção de exercícios;
+- substituição de exercícios;
+- comparação com treino anterior;
+- identificação de PR de peso;
+- identificação de PR de volume;
+- resumo antes de finalizar;
+- salvamento do treino no histórico.
+
+Essa parte é uma das principais do projeto, porque concentra a lógica real de treino e progressão.
 
 ---
 
-## Estrutura de Pastas
+### Histórico
+
+O histórico salva os treinos finalizados e permite revisar o que foi feito em cada dia.
+
+Inclui:
+
+- lista de treinos concluídos;
+- data e duração do treino;
+- exercícios feitos;
+- séries, cargas e repetições;
+- destaques de PR;
+- detalhes por treino;
+- exclusão individual;
+- opção para limpar o histórico.
+
+---
+
+### Perfil
+
+A página de perfil concentra informações do usuário e algumas métricas pessoais.
+
+Atualmente possui campos como:
+
+- nome;
+- altura;
+- objetivo principal;
+- nível de experiência;
+- meta semanal;
+- divisão de treino preferida;
+- notas pessoais;
+- peso corporal;
+- evolução física;
+- resumo de PRs.
+
+A ideia é transformar essa área em uma visão mais completa da evolução do atleta dentro do app.
+
+---
+
+### Configurações
+
+A página de configurações começou a ser estruturada para funcionar de verdade no app, e não apenas como tela visual.
+
+Ela deve concentrar opções como:
+
+- preferências de aparência;
+- cor principal do app;
+- dados locais;
+- limpeza de LocalStorage;
+- configurações da conta;
+- integração futura com backend.
+
+---
+
+## Backend
+
+O backend foi separado em uma pasta própria e está sendo preparado para substituir aos poucos a dependência do LocalStorage.
+
+A API usa Node.js com Express e variáveis de ambiente para separar os dados sensíveis do código.
+
+Exemplo de variáveis usadas no servidor:
+
+```env
+PORT=5000
+BACKEND_URL=http://localhost:5000
+FRONTEND_URL=http://localhost:5173
+MONGO_URI=sua_string_do_mongodb
+GOOGLE_CLIENT_ID=sua_client_id
+GOOGLE_CLIENT_SECRET=sua_client_secret
+GOOGLE_CALLBACK_URL=http://localhost:5000/auth/google/callback
+```
+
+Em produção, essas URLs são trocadas pelas URLs reais da Vercel e Render.
+
+---
+
+## Como rodar localmente
+
+### 1. Clonar o repositório
+
+```bash
+git clone https://github.com/seu-usuario/forgeflow.git
+```
+
+### 2. Entrar na pasta do projeto
+
+```bash
+cd forgeflow
+```
+
+### 3. Instalar dependências do frontend
+
+```bash
+npm install
+```
+
+### 4. Criar o arquivo `.env` do frontend
+
+Exemplo:
+
+```env
+VITE_API_URL=http://localhost:5000
+```
+
+### 5. Rodar o frontend
+
+```bash
+npm run dev
+```
+
+---
+
+## Rodando a API
+
+### 1. Entrar na pasta do servidor
+
+```bash
+cd server
+```
+
+### 2. Instalar dependências
+
+```bash
+npm install
+```
+
+### 3. Criar o `.env` do servidor
+
+Exemplo:
+
+```env
+PORT=5000
+BACKEND_URL=http://localhost:5000
+FRONTEND_URL=http://localhost:5173
+MONGO_URI=sua_string_do_mongodb
+GOOGLE_CLIENT_ID=sua_client_id
+GOOGLE_CLIENT_SECRET=sua_client_secret
+GOOGLE_CALLBACK_URL=http://localhost:5000/auth/google/callback
+```
+
+### 4. Rodar em desenvolvimento
+
+```bash
+npm run dev
+```
+
+---
+
+## Estrutura geral
 
 ```bash
 src/
-│
 ├── components/
 │   ├── layouts/
-│   │   ├── AppLayout.jsx
-│   │   └── Sidebar.jsx
-│   │
-│   └── ui/
-│       ├── Badge.jsx
-│       ├── Button.jsx
-│       ├── Card.jsx
-│       ├── EmptyState.jsx
-│       ├── Input.jsx
-│       ├── Modal.jsx
-│       ├── PageHeader.jsx
-│       ├── Select.jsx
-│       └── Textarea.jsx
+│   ├── ui/
+│   └── workout/
 │
 ├── context/
 │   └── WorkoutSessionContext.jsx
@@ -219,147 +324,107 @@ src/
 │   ├── ExerciseDetails.jsx
 │   ├── History.jsx
 │   ├── Profile.jsx
+│   ├── Settings.jsx
 │   ├── StartWorkout.jsx
 │   └── Workouts.jsx
 │
 ├── utils/
 │   ├── analyticsUtils.js
-│   └── prUtils.js
+│   ├── prUtils.js
+│   └── settingsUtils.js
 │
 ├── App.jsx
 └── main.jsx
 ```
 
----
-
-## Como Rodar o Projeto
-
-### 1. Clonar o repositório
-
 ```bash
-git clone https://github.com/seu-usuario/forgeflow.git
+server/
+├── index.js
+├── package.json
+└── .env
 ```
 
 ---
 
-### 2. Entrar na pasta
+## LocalStorage e banco de dados
 
-```bash
-cd forgeflow
-```
+No momento, boa parte dos dados ainda pode ser salva no LocalStorage, principalmente para facilitar testes e desenvolvimento rápido.
 
----
+A ideia é migrar gradualmente para o banco de dados, mantendo os exercícios padrão no projeto e salvando no banco apenas os dados do usuário, como:
 
-### 3. Instalar dependências
+- exercícios criados manualmente;
+- treinos personalizados;
+- histórico;
+- perfil;
+- peso corporal;
+- configurações;
+- preferências da conta.
 
-```bash
-npm install
-```
-
----
-
-### 4. Rodar o projeto
-
-```bash
-npm run dev
-```
+Com isso, o app deixa de depender do navegador e passa a funcionar com login e sincronização em nuvem.
 
 ---
 
-## Roadmap Futuro
+## Roadmap
 
-### Próximas grandes features
+Algumas melhorias planejadas:
 
-* sistema de streak de consistência
-* recuperação muscular visual
-* calendário de treinos
-* templates completos:
-
-  * PPL
-  * Upper Lower
-  * Hipertrofia
-  * Força
-  * Powerbuilding
-* drag and drop de exercícios
-* favoritos reais
-* exercícios recentes inteligentes
-* exportação:
-
-  * PDF
-  * JSON
-  * Excel
-* importação de treino
-* backup em nuvem
-* sincronização com MongoDB
-* autenticação de usuários
-* sistema de progresso corporal completo
-* fotos de evolução
-* métricas avançadas
-* ranking pessoal
-* social/share futuramente
+- finalizar integração completa com MongoDB;
+- salvar treinos, perfil e histórico no backend;
+- autenticação completa com Google;
+- login tradicional com e-mail e senha;
+- favoritos reais;
+- exercícios recentes inteligentes;
+- calendário de treinos;
+- streak de consistência;
+- recuperação muscular;
+- templates de treino;
+- drag and drop de exercícios;
+- importação e exportação de dados;
+- exportação em PDF/JSON/Excel;
+- fotos de evolução;
+- gráficos mais avançados;
+- versão mobile mais refinada;
+- página pública ou social futuramente.
 
 ---
 
-## Diferencial do Projeto
+## O que estou praticando com esse projeto
 
-ForgeFlow não é apenas um CRUD de academia.
+Esse projeto está servindo para treinar várias partes importantes do desenvolvimento web:
 
-Ele está sendo construído com mentalidade de produto real:
-
-* UX de aplicação premium
-* estrutura escalável
-* backend-ready
-* foco real em progressão de treino
-* preparado para SaaS futuro
-
-A meta é transformar isso em algo superior ao Hevy para uso próprio e portfólio profissional.
-
----
-
-## Aprendizados
-
-Esse projeto está sendo usado como laboratório real para aprofundar:
-
-* arquitetura React
-* componentização profissional
-* persistência de dados
-* UX/UI moderna
-* organização escalável
-* gerenciamento de estado
-* performance de frontend
-* preparação para backend real
-* modelagem de produto SaaS
+- React na prática;
+- organização de componentes;
+- criação de layout responsivo;
+- gerenciamento de estado;
+- persistência local;
+- consumo de API;
+- criação de backend;
+- autenticação;
+- uso de variáveis de ambiente;
+- deploy de frontend e backend;
+- integração com banco de dados;
+- estruturação de um produto real.
 
 ---
 
 ## Autor
 
-## Carlos Eduardo
+**Carlos Eduardo**
 
-Desenvolvedor Fullstack em formação
+Desenvolvedor Fullstack em formação, estudando e construindo projetos práticos com foco em:
 
-Focado em:
-
-* React
-* JavaScript
-* Python
-* Java
-* SQL
-* automação de processos
-* sistemas internos
-* produtividade empresarial
-
-Projeto desenvolvido com foco em portfólio profissional, evolução técnica e construção de produto real.
+- React
+- JavaScript
+- Tailwind CSS
+- Node.js
+- Python
+- Java
+- SQL
+- automação de processos
+- sistemas internos
 
 ---
 
 ## Licença
 
-Este projeto está sendo desenvolvido para fins de:
-
-* estudo
-* portfólio
-* evolução profissional
-* laboratório real de desenvolvimento
-
-Uso livre para fins educacionais.
+Projeto desenvolvido para estudo, portfólio e evolução profissional.
