@@ -45,7 +45,7 @@ requiredEnv('SESSION_SECRET', SESSION_SECRET)
 const normalizedFrontendUrl = FRONTEND_URL.replace(/\/$/, '')
 const normalizedBackendUrl = BACKEND_URL.replace(/\/$/, '')
 
-app.use(express.json({ limit: '10mb' }))
+app.use(express.json({ limit: '1mb' }))
 app.use(cookieParser())
 
 app.use(
@@ -239,8 +239,79 @@ const exerciseSchema = new mongoose.Schema(
     }
 )
 
+const workoutSchema = new mongoose.Schema(
+    {
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+            index: true,
+        },
+
+        name: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+
+        description: {
+            type: String,
+            default: '',
+        },
+
+        folderName: {
+            type: String,
+            default: '',
+        },
+
+        color: {
+            type: String,
+            default: '',
+        },
+
+        isFavorite: {
+            type: Boolean,
+            default: false,
+        },
+
+        exercises: {
+            type: Array,
+            default: [],
+        },
+
+        estimatedDuration: {
+            type: Number,
+            default: null,
+        },
+
+        lastStartedAt: {
+            type: Date,
+            default: null,
+        },
+
+        lastFinishedAt: {
+            type: Date,
+            default: null,
+        },
+
+        totalTimesStarted: {
+            type: Number,
+            default: 0,
+        },
+
+        totalTimesFinished: {
+            type: Number,
+            default: 0,
+        },
+    },
+    {
+        timestamps: true,
+    }
+)
+
 const User = mongoose.model('User', userSchema)
 const Exercise = mongoose.model('Exercise', exerciseSchema)
+const Workout = mongoose.model('Workout', workoutSchema)
 
 function createToken(user) {
     return jwt.sign(
@@ -251,7 +322,7 @@ function createToken(user) {
         },
         JWT_SECRET,
         {
-            expiresIn: '7d',
+            expiresIn: '1d',
         }
     )
 }
@@ -263,6 +334,7 @@ function buildUserResponse(user) {
         email: user.email,
         avatarUrl: user.avatarUrl,
         provider: user.provider,
+        hasPassword: Boolean(user.passwordHash),
         profile: user.profile,
         profileCompleted: user.profileCompleted,
         createdAt: user.createdAt,
@@ -378,14 +450,46 @@ app.get('/settings', authMiddleware, async (req, res) => {
     res.json(settings?.data || {})
 })
 
+const allowedSettingsKeys = [
+    'themeMode',
+    'accentColor',
+    'compactMobile',
+    'defaultSetModel',
+    'defaultRestTimer',
+    'workoutsVisibleLimit',
+    'collapseSeriesByDefault',
+    'collapseWorkoutsByDefault',
+    'autoSaveWorkout',
+    'autoOpenCalendar',
+    'autoStartRestTimer',
+    'showPRDuringWorkout',
+    'showLastWorkoutComparison',
+    'confirmBeforeFinishWorkout',
+    'confirmBeforeCancelWorkout',
+]
+
+function sanitizeSettings(input) {
+    const output = {}
+
+    for (const key of allowedSettingsKeys) {
+        if (Object.prototype.hasOwnProperty.call(input, key)) {
+            output[key] = input[key]
+        }
+    }
+
+    return output
+}
+
 app.put('/settings', authMiddleware, async (req, res) => {
+    const safeSettings = sanitizeSettings(req.body)
+
     const settings = await AppSettings.findOneAndUpdate(
         {
             userId: req.user.userId,
         },
         {
             userId: req.user.userId,
-            data: req.body,
+            data: safeSettings,
         },
         {
             new: true,
@@ -528,12 +632,18 @@ app.post('/auth/login', async (req, res) => {
         email: normalizedEmail,
     })
 
-    if (!user || !user.passwordHash) {
+    if (!user) {
         return res.status(401).json({
             message: 'E-mail ou senha inválidos.',
         })
     }
 
+    if (!user.passwordHash) {
+        return res.status(400).json({
+            message:
+                'Essa conta foi criada com Google. Entre com Google e crie uma senha nas configurações para usar login tradicional.',
+        })
+    }
     const passwordIsValid = await bcrypt.compare(password, user.passwordHash)
 
     if (!passwordIsValid) {
@@ -551,7 +661,7 @@ app.post('/auth/login', async (req, res) => {
 })
 
 app.get('/me', authMiddleware, async (req, res) => {
-    const user = await User.findById(req.user.userId).select('-passwordHash -__v')
+    const user = await User.findById(req.user.userId)
 
     if (!user) {
         return res.status(404).json({
@@ -559,9 +669,8 @@ app.get('/me', authMiddleware, async (req, res) => {
         })
     }
 
-    res.json(user)
+    res.json(buildUserResponse(user))
 })
-
 app.post('/auth/set-password', authMiddleware, async (req, res) => {
     const { currentPassword, password, confirmPassword } = req.body
 
@@ -625,6 +734,77 @@ app.post('/auth/set-password', authMiddleware, async (req, res) => {
     })
 })
 
+function sanitizeText(value, maxLength = 120) {
+    if (typeof value !== 'string') return ''
+
+    return value
+        .trim()
+        .replace(/[<>]/g, '')
+        .slice(0, maxLength)
+}
+
+function validateAvatarUrl(value) {
+    if (value === undefined) {
+        return {
+            valid: true,
+            value: undefined,
+        }
+    }
+
+    if (value === null || value === '') {
+        return {
+            valid: true,
+            value: '',
+        }
+    }
+
+    if (typeof value !== 'string') {
+        return {
+            valid: false,
+            message: 'Foto de perfil inválida.',
+        }
+    }
+
+    const trimmed = value.trim()
+
+    if (trimmed.length > 500) {
+        return {
+            valid: false,
+            message: 'A URL da foto de perfil é muito grande.',
+        }
+    }
+
+    if (trimmed.startsWith('data:') || trimmed.includes('base64,')) {
+        return {
+            valid: false,
+            message: 'Imagem em Base64 não é permitida como foto de perfil.',
+        }
+    }
+
+    try {
+        const url = new URL(trimmed)
+
+        const allowedProtocols = ['http:', 'https:']
+
+        if (!allowedProtocols.includes(url.protocol)) {
+            return {
+                valid: false,
+                message: 'A foto de perfil precisa ser uma URL HTTP ou HTTPS.',
+            }
+        }
+
+        return {
+            valid: true,
+            value: trimmed,
+        }
+    } catch {
+        return {
+            valid: false,
+            message: 'URL da foto de perfil inválida.',
+        }
+    }
+}
+
 app.put('/me/profile', authMiddleware, async (req, res) => {
     const {
         name,
@@ -641,33 +821,48 @@ app.put('/me/profile', authMiddleware, async (req, res) => {
         notes,
     } = req.body
 
+    const avatarValidation = validateAvatarUrl(avatarUrl)
+
+    if (!avatarValidation.valid) {
+        return res.status(400).json({
+            message: avatarValidation.message,
+        })
+    }
+
+    const safeName = sanitizeText(name, 80)
+
     const profile = {
-        gender: gender || '',
-        birthDate: birthDate || '',
+        gender: sanitizeText(gender, 30),
+        birthDate: sanitizeText(birthDate, 20),
         height: parseDecimal(height),
         currentWeight: parseDecimal(currentWeight),
         trainingFrequency: parseDecimal(trainingFrequency),
-        mainGoal: mainGoal || '',
-        trainingLevel: trainingLevel || '',
-        preferredUnit,
-        preferredSplit: preferredSplit || '',
-        notes: notes || '',
+        mainGoal: sanitizeText(mainGoal, 80),
+        trainingLevel: sanitizeText(trainingLevel, 60),
+        preferredUnit: preferredUnit === 'lb' ? 'lb' : 'kg',
+        preferredSplit: sanitizeText(preferredSplit, 80),
+        notes: sanitizeText(notes, 500),
     }
 
     const profileCompleted = buildProfileCompletion(profile)
 
+    const updateData = {
+        ...(safeName ? { name: safeName } : {}),
+        profile,
+        profileCompleted,
+    }
+
+    if (avatarValidation.value !== undefined) {
+        updateData.avatarUrl = avatarValidation.value
+    }
+
     const user = await User.findByIdAndUpdate(
         req.user.userId,
-        {
-            ...(name ? { name: name.trim() } : {}),
-            ...(avatarUrl !== undefined ? { avatarUrl } : {}),
-            profile,
-            profileCompleted,
-        },
+        updateData,
         {
             new: true,
         }
-    ).select('-passwordHash -__v')
+    )
 
     if (!user) {
         return res.status(404).json({
@@ -675,7 +870,186 @@ app.put('/me/profile', authMiddleware, async (req, res) => {
         })
     }
 
-    res.json(user)
+    res.json(buildUserResponse(user))
+})
+
+app.get('/workouts', authMiddleware, async (req, res) => {
+    try {
+        const workouts = await Workout.find({
+            userId: req.user.userId,
+        }).sort({
+            updatedAt: -1,
+        })
+
+        res.json(workouts)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao buscar treinos.',
+        })
+    }
+})
+
+app.post('/workouts', authMiddleware, async (req, res) => {
+    try {
+        const {
+            name,
+            description = '',
+            folderName = '',
+            color = '',
+            exercises = [],
+            estimatedDuration = null,
+        } = req.body
+
+        if (!name?.trim()) {
+            return res.status(400).json({
+                message: 'Informe o nome do treino.',
+            })
+        }
+
+        const workout = await Workout.create({
+            userId: req.user.userId,
+            name: name.trim(),
+            description,
+            folderName,
+            color,
+            exercises,
+            estimatedDuration,
+        })
+
+        res.status(201).json(workout)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao criar treino.',
+        })
+    }
+})
+
+app.put('/workouts/:id', authMiddleware, async (req, res) => {
+    try {
+        const {
+            name,
+            description,
+            folderName,
+            color,
+            exercises,
+            estimatedDuration,
+            isFavorite,
+        } = req.body
+
+        const updateData = {}
+
+        if (name !== undefined) {
+            if (!name?.trim()) {
+                return res.status(400).json({
+                    message: 'Informe o nome do treino.',
+                })
+            }
+
+            updateData.name = name.trim()
+        }
+
+        if (description !== undefined) updateData.description = description
+        if (folderName !== undefined) updateData.folderName = folderName
+        if (color !== undefined) updateData.color = color
+        if (exercises !== undefined) updateData.exercises = exercises
+        if (estimatedDuration !== undefined) {
+            updateData.estimatedDuration = estimatedDuration
+        }
+        if (isFavorite !== undefined) {
+            updateData.isFavorite = Boolean(isFavorite)
+        }
+
+        const workout = await Workout.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                userId: req.user.userId,
+            },
+            updateData,
+            {
+                new: true,
+            }
+        )
+
+        if (!workout) {
+            return res.status(404).json({
+                message: 'Treino não encontrado.',
+            })
+        }
+
+        res.json(workout)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao atualizar treino.',
+        })
+    }
+})
+
+app.delete('/workouts/:id', authMiddleware, async (req, res) => {
+    try {
+        const workout = await Workout.findOneAndDelete({
+            _id: req.params.id,
+            userId: req.user.userId,
+        })
+
+        if (!workout) {
+            return res.status(404).json({
+                message: 'Treino não encontrado.',
+            })
+        }
+
+        res.json({
+            ok: true,
+            message: 'Treino removido com sucesso.',
+        })
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao remover treino.',
+        })
+    }
+})
+
+app.post('/workouts/:id/start', authMiddleware, async (req, res) => {
+    try {
+        const workout = await Workout.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                userId: req.user.userId,
+            },
+            {
+                $set: {
+                    lastStartedAt: new Date(),
+                },
+                $inc: {
+                    totalTimesStarted: 1,
+                },
+            },
+            {
+                new: true,
+            }
+        )
+
+        if (!workout) {
+            return res.status(404).json({
+                message: 'Treino não encontrado.',
+            })
+        }
+
+        res.json(workout)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao iniciar treino.',
+        })
+    }
 })
 
 app.get('/exercises', authMiddleware, async (req, res) => {

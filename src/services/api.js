@@ -1,19 +1,21 @@
-const API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, '')
+const API_URL = import.meta.env.VITE_API_URL
 
-export function getAuthToken() {
-  return localStorage.getItem('forgeflow:token')
+const TOKEN_KEY = 'forgeflow:token'
+
+export function getToken() {
+  return localStorage.getItem(TOKEN_KEY)
 }
 
 export function saveAuthToken(token) {
-  localStorage.setItem('forgeflow:token', token)
+  localStorage.setItem(TOKEN_KEY, token)
 }
 
-export function removeAuthToken() {
-  localStorage.removeItem('forgeflow:token')
+export function logout() {
+  localStorage.removeItem(TOKEN_KEY)
 }
 
 export async function apiFetch(path, options = {}) {
-  const token = getAuthToken()
+  const token = getToken()
 
   const response = await fetch(`${API_URL}${path}`, {
     ...options,

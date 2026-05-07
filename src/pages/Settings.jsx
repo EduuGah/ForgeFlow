@@ -138,11 +138,19 @@ function SettingToggleCard({ title, description, active, onChange }) {
 }
 
 function Settings() {
-  const { user } = useAuth()
+  const { user, setUser } = useAuth()
 
   const [settings, setSettings] = useState(defaultSettings)
   const [confirmModal, setConfirmModal] = useState(null)
   const [toast, setToast] = useState(null)
+
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    password: '',
+    confirmPassword: '',
+  })
+
+  const [savingPassword, setSavingPassword] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -178,6 +186,50 @@ function Settings() {
     setTimeout(() => {
       setToast(null)
     }, 3000)
+  }
+
+  async function handleSetPassword(event) {
+    event.preventDefault()
+
+    setSavingPassword(true)
+
+    try {
+      const payload = {
+        password: passwordForm.password,
+        confirmPassword: passwordForm.confirmPassword,
+      }
+
+      if (user?.hasPassword) {
+        payload.currentPassword = passwordForm.currentPassword
+      }
+
+      const data = await apiFetch('/auth/set-password', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      })
+
+      setUser(data.user)
+
+      setPasswordForm({
+        currentPassword: '',
+        password: '',
+        confirmPassword: '',
+      })
+
+      showToast(
+        'success',
+        user?.hasPassword ? 'Senha alterada' : 'Senha criada',
+        data.message
+      )
+    } catch (err) {
+      showToast(
+        'error',
+        'Erro ao salvar senha',
+        err.message || 'Não foi possível atualizar sua senha.'
+      )
+    } finally {
+      setSavingPassword(false)
+    }
   }
 
   async function handleUpdateSetting(key, value) {
@@ -251,8 +303,93 @@ function Settings() {
         }
       />
 
+      {user?.provider === 'google' && !user?.hasPassword && (
+        <div className="mb-6 rounded-3xl border border-amber-500/25 bg-amber-500/10 p-5 text-amber-100 shadow-lg shadow-amber-950/20">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-300">
+              <AlertTriangle size={22} />
+            </div>
+
+            <div className="flex-1">
+              <h2 className="text-base font-black text-amber-100">
+                Crie uma senha para acessar sua conta também pelo login tradicional
+              </h2>
+
+              <p className="mt-1 text-sm leading-relaxed text-amber-100/75">
+                Sua conta foi criada usando o Google. Para entrar com e-mail e senha no futuro,
+                defina uma senha de acesso abaixo.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-6">
+
+          <Card>
+            <SectionTitle
+              icon={SlidersHorizontal}
+              title={user?.hasPassword ? 'Alterar senha' : 'Criar senha de acesso'}
+              description={
+                user?.hasPassword
+                  ? 'Atualize sua senha usada no login tradicional.'
+                  : 'Sua conta foi criada com Google. Crie uma senha para também entrar usando e-mail e senha.'
+              }
+            />
+
+            <form onSubmit={handleSetPassword} className="mt-6 space-y-4">
+              {user?.hasPassword && (
+                <Input
+                  label="Senha atual"
+                  type="password"
+                  value={passwordForm.currentPassword}
+                  onChange={(event) =>
+                    setPasswordForm((prev) => ({
+                      ...prev,
+                      currentPassword: event.target.value,
+                    }))
+                  }
+                  placeholder="Digite sua senha atual"
+                />
+              )}
+
+              <Input
+                label="Nova senha"
+                type="password"
+                value={passwordForm.password}
+                onChange={(event) =>
+                  setPasswordForm((prev) => ({
+                    ...prev,
+                    password: event.target.value,
+                  }))
+                }
+                placeholder="Mínimo 6 caracteres"
+              />
+
+              <Input
+                label="Confirmar nova senha"
+                type="password"
+                value={passwordForm.confirmPassword}
+                onChange={(event) =>
+                  setPasswordForm((prev) => ({
+                    ...prev,
+                    confirmPassword: event.target.value,
+                  }))
+                }
+                placeholder="Repita a nova senha"
+              />
+
+              <Button type="submit" disabled={savingPassword}>
+                {savingPassword
+                  ? 'Salvando...'
+                  : user?.hasPassword
+                    ? 'Alterar senha'
+                    : 'Criar senha'}
+              </Button>
+            </form>
+          </Card>
+
           <Card>
             <SectionTitle
               icon={Palette}
