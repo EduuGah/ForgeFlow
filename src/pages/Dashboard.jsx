@@ -535,6 +535,10 @@ function Dashboard() {
     return workouts.filter((workout) => workout.isFavorite)
   }, [workouts])
 
+  const favoriteExercises = useMemo(() => {
+    return exercises.filter((exercise) => exercise.isFavorite)
+  }, [exercises])
+
   const recentWorkouts = useMemo(() => {
     return workouts
       .slice()
@@ -996,11 +1000,11 @@ function Dashboard() {
           </div>
 
           <h2 className="mt-2 text-3xl font-black text-yellow-300">
-            {favoriteWorkouts.length}
+            {favoriteWorkouts.length + favoriteExercises.length}
           </h2>
 
           <p className="mt-2 text-xs text-zinc-500">
-            treinos marcados
+            {favoriteWorkouts.length} treinos • {favoriteExercises.length} exercícios
           </p>
         </Card>
       </section>
@@ -1328,6 +1332,131 @@ function Dashboard() {
                 <p className="mt-2 text-sm text-zinc-500">Sem registro ainda.</p>
               )}
             </div>
+          </div>
+        </Card>
+      </section>
+
+      <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <Card className="xl:col-span-2">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-bold">
+                Exercícios favoritos
+              </h2>
+
+              <p className="mt-1 text-sm text-zinc-500">
+                Atalhos para os exercícios que você mais usa na montagem de treino.
+              </p>
+            </div>
+
+            <Badge>
+              ⭐ {favoriteExercises.length}
+            </Badge>
+          </div>
+
+          <div className="mt-5">
+            {favoriteExercises.length === 0 ? (
+              <EmptyState
+                title="Nenhum exercício favorito"
+                description="Marque exercícios como favoritos na biblioteca para aparecerem aqui."
+                action={
+                  <Link to="/exercises">
+                    <Button variant="secondary">
+                      Ver exercícios
+                    </Button>
+                  </Link>
+                }
+              />
+            ) : (
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                {favoriteExercises.slice(0, 6).map((exercise) => {
+                  const media =
+                    exercise.media?.gif ||
+                    exercise.media?.image ||
+                    exercise.mediaUrl ||
+                    exercise.gifUrl ||
+                    ''
+
+                  return (
+                    <Link
+                      key={exercise.id}
+                      to={`/exercises/${exercise.id}`}
+                      className="rounded-3xl border border-zinc-800 bg-[#18181b] p-4 transition hover:-translate-y-0.5 hover:border-yellow-500/30 hover:bg-[#1f1f23]"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-zinc-700 bg-white">
+                          {media ? (
+                            <img
+                              src={media}
+                              alt={exercise.name}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <Dumbbell size={24} className="text-zinc-900" />
+                          )}
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <h3 className="line-clamp-2 font-bold leading-snug text-white">
+                            {exercise.name}
+                          </h3>
+
+                          <p className="mt-1 text-xs text-zinc-500">
+                            {exercise.muscleGroup || 'Sem grupo'} • {exercise.equipment || 'Sem equipamento'}
+                          </p>
+                        </div>
+
+                        <span className="text-yellow-300">
+                          ⭐
+                        </span>
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </Card>
+
+        <Card>
+          <h2 className="text-xl font-bold">
+            Biblioteca
+          </h2>
+
+          <p className="mt-1 text-sm text-zinc-500">
+            Resumo dos exercícios cadastrados.
+          </p>
+
+          <div className="mt-5 space-y-3">
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+              <p className="text-xs text-zinc-500">
+                Total de exercícios
+              </p>
+
+              <p className="mt-1 text-2xl font-black">
+                {exercises.length}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4">
+              <p className="text-xs text-yellow-200/70">
+                Favoritos
+              </p>
+
+              <p className="mt-1 text-2xl font-black text-yellow-300">
+                {favoriteExercises.length}
+              </p>
+            </div>
+
+            <Link to="/exercises">
+              <button
+                type="button"
+                className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-zinc-800 bg-[#18181b] text-sm font-bold text-white transition hover:border-[var(--ff-accent-border)]/40 hover:bg-zinc-900"
+              >
+                <Dumbbell size={18} />
+                Abrir biblioteca
+              </button>
+            </Link>
           </div>
         </Card>
       </section>

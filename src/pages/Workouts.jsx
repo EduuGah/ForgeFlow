@@ -45,6 +45,7 @@ function Workouts() {
 
     const [quickSearch, setQuickSearch] = useState('')
     const [quickGroupFilter, setQuickGroupFilter] = useState('')
+    const [quickFavoritesOnly, setQuickFavoritesOnly] = useState(false)
     const [quickEquipmentFilter, setQuickEquipmentFilter] = useState('')
     const [appSettings, setAppSettings] = useState(getAppSettings())
     const [defaultSetModel, setDefaultSetModel] = useState(getAppSettings().defaultSetModel)
@@ -270,8 +271,12 @@ function Workouts() {
         ].sort()
     }, [exercises])
 
+    const favoriteExercisesCount = useMemo(() => {
+        return exercises.filter((exercise) => exercise.isFavorite).length
+    }, [exercises])
+
     const filteredQuickExercises = useMemo(() => {
-        return exercises.filter((exercise) => {
+        const filtered = exercises.filter((exercise) => {
             const text =
                 `${exercise.name} ${exercise.muscleGroup} ${exercise.equipment} ${exercise.originalName || ''}`.toLowerCase()
 
@@ -285,9 +290,31 @@ function Workouts() {
                 ? exercise.equipment === quickEquipmentFilter
                 : true
 
-            return matchesSearch && matchesGroup && matchesEquipment
+            const matchesFavorite = quickFavoritesOnly
+                ? exercise.isFavorite === true
+                : true
+
+            return (
+                matchesSearch &&
+                matchesGroup &&
+                matchesEquipment &&
+                matchesFavorite
+            )
         })
-    }, [exercises, quickSearch, quickGroupFilter, quickEquipmentFilter])
+
+        return filtered.sort((a, b) => {
+            if (a.isFavorite && !b.isFavorite) return -1
+            if (!a.isFavorite && b.isFavorite) return 1
+
+            return String(a.name || '').localeCompare(String(b.name || ''))
+        })
+    }, [
+        exercises,
+        quickSearch,
+        quickGroupFilter,
+        quickEquipmentFilter,
+        quickFavoritesOnly,
+    ])
 
     const totalExercisesInSavedWorkouts = useMemo(() => {
         return workouts.reduce((total, workout) => total + workout.exercises.length, 0)
@@ -375,6 +402,8 @@ function Workouts() {
         setQuickSearch('')
         setQuickGroupFilter('')
         setQuickEquipmentFilter('')
+        setQuickFavoritesOnly(false)
+
         if (user) removeUserStorageData(user, 'workout-draft')
     }
 
@@ -1573,8 +1602,29 @@ function Workouts() {
                                                 <h2 className="text-xl font-bold">Biblioteca</h2>
 
                                                 <p className="mt-1 text-sm text-zinc-500">
-                                                    Adicione exercícios rapidamente.
+                                                    Favoritos aparecem primeiro para montar treinos mais rápido.
                                                 </p>
+
+                                                <div>
+                                                    <h2 className="text-xl font-bold">Biblioteca</h2>
+
+                                                    <p className="mt-1 text-sm text-zinc-500">
+                                                        Favoritos aparecem primeiro para montar treinos mais rápido.
+                                                    </p>
+
+                                                    <div className="mt-2 flex flex-wrap gap-2">
+                                                        <Badge>
+                                                            {filteredQuickExercises.length} encontrados
+                                                        </Badge>
+
+                                                        {favoriteExercisesCount > 0 && (
+                                                            <Badge>
+                                                                ⭐ {favoriteExercisesCount} favoritos
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                </div>
+
                                             </div>
 
                                             <button
@@ -1593,6 +1643,21 @@ function Workouts() {
                                         </div>
 
                                         <div className="space-y-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => setQuickFavoritesOnly((current) => !current)}
+                                                className={
+                                                    quickFavoritesOnly
+                                                        ? 'flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-yellow-500/30 bg-yellow-500/10 text-sm font-bold text-yellow-300 transition hover:bg-yellow-500/20'
+                                                        : 'flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-950 text-sm font-bold text-zinc-300 transition hover:border-yellow-500/30 hover:text-yellow-300'
+                                                }
+                                            >
+                                                <Star
+                                                    size={17}
+                                                    fill={quickFavoritesOnly ? 'currentColor' : 'none'}
+                                                />
+                                                Somente favoritos
+                                            </button>
                                             <Select
                                                 value={quickEquipmentFilter}
                                                 onChange={(event) => setQuickEquipmentFilter(event.target.value)}
@@ -1658,7 +1723,11 @@ function Workouts() {
                                                         key={exercise.id}
                                                         type="button"
                                                         onClick={() => handleQuickAddExercise(exercise.id)}
-                                                        className="flex w-full items-center gap-3 rounded-2xl p-3 text-left transition hover:bg-zinc-900"
+                                                        className={
+                                                            exercise.isFavorite
+                                                                ? 'flex w-full items-center gap-3 rounded-2xl border border-yellow-500/20 bg-yellow-500/5 p-3 text-left transition hover:bg-yellow-500/10'
+                                                                : 'flex w-full items-center gap-3 rounded-2xl p-3 text-left transition hover:bg-zinc-900'
+                                                        }
                                                     >
                                                         <span
                                                             className={
@@ -1683,10 +1752,18 @@ function Workouts() {
                                                             )}
                                                         </div>
 
-                                                        <div className="min-w-0">
-                                                            <p className="truncate font-bold">
-                                                                {exercise.name}
-                                                            </p>
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="flex items-center gap-2">
+                                                                <p className="truncate font-bold">
+                                                                    {exercise.name}
+                                                                </p>
+
+                                                                {exercise.isFavorite && (
+                                                                    <span className="shrink-0 text-yellow-300">
+                                                                        ⭐
+                                                                    </span>
+                                                                )}
+                                                            </div>
 
                                                             <p className="text-sm text-zinc-500">
                                                                 {exercise.muscleGroup}
@@ -1711,11 +1788,19 @@ function Workouts() {
                                                 >
                                                     <option value="">Selecione um exercício</option>
 
-                                                    {exercises.map((exercise) => (
-                                                        <option key={exercise.id} value={exercise.id}>
-                                                            {exercise.name}
-                                                        </option>
-                                                    ))}
+                                                    {exercises
+                                                        .slice()
+                                                        .sort((a, b) => {
+                                                            if (a.isFavorite && !b.isFavorite) return -1
+                                                            if (!a.isFavorite && b.isFavorite) return 1
+
+                                                            return String(a.name || '').localeCompare(String(b.name || ''))
+                                                        })
+                                                        .map((exercise) => (
+                                                            <option key={exercise.id} value={exercise.id}>
+                                                                {exercise.isFavorite ? '⭐ ' : ''}{exercise.name}
+                                                            </option>
+                                                        ))}
                                                 </Select>
 
                                                 <Input
