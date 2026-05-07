@@ -264,6 +264,11 @@ const workoutSchema = new mongoose.Schema(
             default: '',
         },
 
+        folderId: {
+            type: String,
+            default: null,
+        },
+
         color: {
             type: String,
             default: '',
@@ -897,6 +902,7 @@ app.post('/workouts', authMiddleware, async (req, res) => {
             name,
             description = '',
             folderName = '',
+            folderId = null,
             color = '',
             exercises = [],
             estimatedDuration = null,
@@ -913,6 +919,7 @@ app.post('/workouts', authMiddleware, async (req, res) => {
             name: name.trim(),
             description,
             folderName,
+            folderId,
             color,
             exercises,
             estimatedDuration,
@@ -934,6 +941,7 @@ app.put('/workouts/:id', authMiddleware, async (req, res) => {
             name,
             description,
             folderName,
+            folderId,
             color,
             exercises,
             estimatedDuration,
@@ -953,6 +961,7 @@ app.put('/workouts/:id', authMiddleware, async (req, res) => {
         }
 
         if (description !== undefined) updateData.description = description
+        if (folderId !== undefined) updateData.folderId = folderId
         if (folderName !== undefined) updateData.folderName = folderName
         if (color !== undefined) updateData.color = color
         if (exercises !== undefined) updateData.exercises = exercises

@@ -31,6 +31,7 @@ import Toast from '../components/ui/Toast'
 
 import { useWorkoutSession } from '../context/WorkoutSessionContext'
 import { useAuth } from '../context/AuthContext'
+import { apiFetch } from '../services/api'
 import {
     getUserStorageData,
     saveUserStorageData,
@@ -78,6 +79,27 @@ function Workouts() {
     const { user } = useAuth()
     const navigate = useNavigate()
 
+    function getWorkoutId(workout) {
+        return workout?._id || workout?.id
+    }
+
+    function normalizeWorkoutFromApi(workout) {
+        return {
+            ...workout,
+            id: workout._id || workout.id,
+            folderId: workout.folderId || null,
+            exercises: Array.isArray(workout.exercises) ? workout.exercises : [],
+        }
+    }
+
+    function buildWorkoutPayload() {
+        return {
+            name: workoutName.trim(),
+            folderId: selectedFolderId,
+            exercises: workoutExercises,
+        }
+    }
+
     const [showAllWorkouts, setShowAllWorkouts] = useState(false)
 
     useEffect(() => {
@@ -107,38 +129,61 @@ function Workouts() {
     useEffect(() => {
         if (!user) return
 
-        setIsLoaded(false)
+        async function loadWorkoutsData() {
+            setIsLoaded(false)
 
-        const savedWorkouts = getUserStorageData(user, 'workouts', [])
-        const savedExercises = getUserStorageData(user, 'exercises', null)
-        const savedFolders = getUserStorageData(user, 'folders', [])
-        const savedSetModels = getUserStorageData(user, 'set-models', [])
-        const draft = getUserStorageData(user, 'workout-draft', null)
+            const cachedWorkouts = getUserStorageData(user, 'workouts', [])
+            const savedExercises = getUserStorageData(user, 'exercises', null)
+            const savedFolders = getUserStorageData(user, 'folders', [])
+            const savedSetModels = getUserStorageData(user, 'set-models', [])
+            const draft = getUserStorageData(user, 'workout-draft', null)
 
-        const initialExercises =
-            Array.isArray(savedExercises) && savedExercises.length > 0
-                ? savedExercises
-                : getInitialExercises()
+            const initialExercises =
+                Array.isArray(savedExercises) && savedExercises.length > 0
+                    ? savedExercises
+                    : getInitialExercises()
 
-        setWorkouts(savedWorkouts)
-        setExercises(initialExercises)
-        setFolders(savedFolders)
-        setCustomSetModels(savedSetModels)
+            setExercises(initialExercises)
+            setFolders(savedFolders)
+            setCustomSetModels(savedSetModels)
 
-        if (draft) {
-            setWorkoutName(draft.workoutName || '')
-            setSelectedExercise(draft.selectedExercise || '')
-            setSetDescription(draft.setDescription || '')
-            setExerciseSets(draft.exerciseSets || [])
-            setWorkoutExercises(draft.workoutExercises || [])
-            setEditingWorkoutId(draft.editingWorkoutId || null)
-            setSelectedFolderId(draft.selectedFolderId || null)
-            setDefaultSetModel(
-                draft.defaultSetModel || getAppSettings().defaultSetModel
-            )
+            try {
+                const workoutsFromApi = await apiFetch('/workouts')
+
+                const normalizedWorkouts = Array.isArray(workoutsFromApi)
+                    ? workoutsFromApi.map(normalizeWorkoutFromApi)
+                    : []
+
+                setWorkouts(normalizedWorkouts)
+                saveUserStorageData(user, 'workouts', normalizedWorkouts)
+            } catch (error) {
+                console.error(error)
+                setWorkouts(cachedWorkouts)
+
+                showToast(
+                    'error',
+                    'Usando dados locais',
+                    'Não foi possível carregar seus treinos do servidor.'
+                )
+            }
+
+            if (draft) {
+                setWorkoutName(draft.workoutName || '')
+                setSelectedExercise(draft.selectedExercise || '')
+                setSetDescription(draft.setDescription || '')
+                setExerciseSets(draft.exerciseSets || [])
+                setWorkoutExercises(draft.workoutExercises || [])
+                setEditingWorkoutId(draft.editingWorkoutId || null)
+                setSelectedFolderId(draft.selectedFolderId || null)
+                setDefaultSetModel(
+                    draft.defaultSetModel || getAppSettings().defaultSetModel
+                )
+            }
+
+            setIsLoaded(true)
         }
 
-        setIsLoaded(true)
+        loadWorkoutsData()
     }, [user])
 
     useEffect(() => {
@@ -578,7 +623,7 @@ function Workouts() {
         )
     }
 
-    function handleSubmit(event) {
+    async function handleSubmit(event) {
         event.preventDefault()
 
         if (!workoutName.trim() || workoutExercises.length === 0) {
@@ -590,43 +635,55 @@ function Workouts() {
             return
         }
 
-        if (editingWorkoutId) {
-            setWorkouts(
-                workouts.map((workout) =>
-                    workout.id === editingWorkoutId
-                        ? {
-                            ...workout,
-                            name: workoutName.trim(),
-                            folderId: selectedFolderId,
-                            exercises: workoutExercises,
-                            updatedAt: new Date().toISOString(),
-                        }
-                        : workout
-                )
-            )
+        try {
+            const payload = buildWorkoutPayload()
 
+            if (editingWorkoutId) {
+                const updatedWorkoutFromApi = await apiFetch(`/workouts/${editingWorkoutId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(payload),
+                })
+
+                const updatedWorkout = normalizeWorkoutFromApi(updatedWorkoutFromApi)
+
+                setWorkouts(
+                    workouts.map((workout) =>
+                        getWorkoutId(workout) === editingWorkoutId
+                            ? updatedWorkout
+                            : workout
+                    )
+                )
+
+                resetForm()
+                setIsBuilderOpen(false)
+                showToast('success', 'Treino atualizado', 'As alterações foram salvas no banco.')
+                return
+            }
+
+            const createdWorkoutFromApi = await apiFetch('/workouts', {
+                method: 'POST',
+                body: JSON.stringify(payload),
+            })
+
+            const createdWorkout = normalizeWorkoutFromApi(createdWorkoutFromApi)
+
+            setWorkouts([createdWorkout, ...workouts])
             resetForm()
             setIsBuilderOpen(false)
-            showToast('success', 'Treino atualizado', 'As alterações foram salvas.')
-            return
-        }
+            showToast('success', 'Treino criado', 'Sua nova rotina foi salva no banco.')
+        } catch (error) {
+            console.error(error)
 
-        const newWorkout = {
-            id: crypto.randomUUID(),
-            name: workoutName.trim(),
-            exercises: workoutExercises,
-            folderId: selectedFolderId,
-            createdAt: new Date().toISOString(),
+            showToast(
+                'error',
+                'Erro ao salvar treino',
+                error.message || 'Não foi possível salvar o treino no servidor.'
+            )
         }
-
-        setWorkouts([newWorkout, ...workouts])
-        resetForm()
-        setIsBuilderOpen(false)
-        showToast('success', 'Treino criado', 'Sua nova rotina foi salva.')
     }
 
     function handleEditWorkout(workout) {
-        setEditingWorkoutId(workout.id)
+        setEditingWorkoutId(getWorkoutId(workout))
         setWorkoutName(workout.name)
         setWorkoutExercises(workout.exercises || [])
         setSelectedFolderId(workout.folderId || null)
@@ -638,44 +695,85 @@ function Workouts() {
     }
 
     function handleDeleteWorkout(id) {
-        const workout = workouts.find((item) => item.id === id)
+        const workout = workouts.find((item) => getWorkoutId(item) === id)
 
         setConfirmModal({
             title: 'Excluir treino?',
             description: `O treino "${workout?.name || 'selecionado'}" será removido. Essa ação não pode ser desfeita.`,
             confirmText: 'Excluir',
             variant: 'danger',
-            onConfirm: () => {
-                setWorkouts(workouts.filter((workout) => workout.id !== id))
+            onConfirm: async () => {
+                try {
+                    await apiFetch(`/workouts/${id}`, {
+                        method: 'DELETE',
+                    })
 
-                if (editingWorkoutId === id) {
-                    resetForm()
+                    setWorkouts(workouts.filter((workout) => getWorkoutId(workout) !== id))
+
+                    if (editingWorkoutId === id) {
+                        resetForm()
+                    }
+
+                    setConfirmModal(null)
+                    showToast('success', 'Treino excluído', 'A rotina foi removida do banco.')
+                } catch (error) {
+                    console.error(error)
+
+                    showToast(
+                        'error',
+                        'Erro ao excluir',
+                        error.message || 'Não foi possível excluir o treino.'
+                    )
                 }
-
-                setConfirmModal(null)
-                showToast('success', 'Treino excluído', 'A rotina foi removida.')
             },
         })
     }
 
-    function handleDuplicateWorkout(workout) {
-        const duplicatedWorkout = {
-            ...workout,
-            id: crypto.randomUUID(),
-            name: `${workout.name} - cópia`,
-            createdAt: new Date().toISOString(),
-            updatedAt: undefined,
-        }
+    async function handleDuplicateWorkout(workout) {
+        try {
+            const payload = {
+                name: `${workout.name} - cópia`,
+                folderId: workout.folderId || null,
+                exercises: workout.exercises || [],
+            }
 
-        setWorkouts([duplicatedWorkout, ...workouts])
-        showToast('success', 'Treino duplicado', 'Uma cópia foi criada.')
+            const duplicatedWorkoutFromApi = await apiFetch('/workouts', {
+                method: 'POST',
+                body: JSON.stringify(payload),
+            })
+
+            const duplicatedWorkout = normalizeWorkoutFromApi(duplicatedWorkoutFromApi)
+
+            setWorkouts([duplicatedWorkout, ...workouts])
+            showToast('success', 'Treino duplicado', 'Uma cópia foi salva no banco.')
+        } catch (error) {
+            console.error(error)
+
+            showToast(
+                'error',
+                'Erro ao duplicar',
+                error.message || 'Não foi possível duplicar o treino.'
+            )
+        }
     }
 
     function handleToggleWorkout(id) {
         setExpandedWorkoutId(expandedWorkoutId === id ? null : id)
     }
 
-    function handleStartWorkout(workout) {
+    async function handleStartWorkout(workout) {
+        const workoutId = getWorkoutId(workout)
+
+        try {
+            if (workoutId) {
+                await apiFetch(`/workouts/${workoutId}/start`, {
+                    method: 'POST',
+                })
+            }
+        } catch (error) {
+            console.error(error)
+        }
+
         startSession(workout)
         navigate('/start-workout')
     }
@@ -839,17 +937,18 @@ function Workouts() {
                                 )}
 
                                 {visibleWorkouts.map((workout) => {
-                                    const isExpanded = expandedWorkoutId === workout.id
+                                    const workoutId = getWorkoutId(workout)
+                                    const isExpanded = expandedWorkoutId === workoutId
                                     const workoutMuscleGroups = getMuscleGroupsFromWorkout(workout)
 
                                     return (
                                         <div
-                                            key={workout.id}
+                                            key={workoutId}
                                             className="overflow-hidden rounded-3xl border border-zinc-800 bg-[#18181b] transition hover:border-[var(--ff-accent-border)]/30 hover:bg-[#1f1f23]"
                                         >
                                             <button
                                                 type="button"
-                                                onClick={() => handleToggleWorkout(workout.id)}
+                                                onClick={() => handleToggleWorkout(workoutId)}
                                                 className="w-full p-4 text-left sm:p-5"
                                             >
                                                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -971,7 +1070,7 @@ function Workouts() {
 
                                                         <button
                                                             type="button"
-                                                            onClick={() => handleDeleteWorkout(workout.id)}
+                                                            onClick={() => handleDeleteWorkout(workoutId)}
                                                             className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 text-sm font-bold text-red-300 transition hover:bg-red-500/20"
                                                         >
                                                             <Trash2 size={17} />
