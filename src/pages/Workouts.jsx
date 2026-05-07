@@ -42,6 +42,7 @@ import {
 function Workouts() {
     const [workouts, setWorkouts] = useState([])
     const [exercises, setExercises] = useState([])
+    const [history, setHistory] = useState([])
 
     const [quickSearch, setQuickSearch] = useState('')
     const [quickGroupFilter, setQuickGroupFilter] = useState('')
@@ -83,6 +84,17 @@ function Workouts() {
 
     function getWorkoutId(workout) {
         return workout?._id || workout?.id
+    }
+
+    function normalizeHistoryFromApi(session) {
+        return {
+            ...session,
+            id: session._id || session.id,
+            duration: session.durationSeconds ?? session.duration ?? 0,
+            workoutName: session.workoutName || session.name || 'Treino',
+            exercises: Array.isArray(session.exercises) ? session.exercises : [],
+            finishedAt: session.finishedAt || session.createdAt,
+        }
     }
 
     function normalizeWorkoutFromApi(workout) {
@@ -135,6 +147,7 @@ function Workouts() {
             setIsLoaded(false)
 
             const cachedWorkouts = getUserStorageData(user, 'workouts', [])
+            const cachedHistory = getUserStorageData(user, 'history', [])
             const savedExercises = getUserStorageData(user, 'exercises', null)
             const savedFolders = getUserStorageData(user, 'folders', [])
             const savedSetModels = getUserStorageData(user, 'set-models', [])
@@ -150,9 +163,10 @@ function Workouts() {
             setCustomSetModels(savedSetModels)
 
             try {
-                const [workoutsFromApi, exercisesFromApi] = await Promise.all([
+                const [workoutsFromApi, exercisesFromApi, historyFromApi] = await Promise.all([
                     apiFetch('/workouts'),
                     apiFetch('/exercises'),
+                    apiFetch('/workout-history'),
                 ])
 
                 const normalizedWorkouts = Array.isArray(workoutsFromApi)
@@ -167,7 +181,12 @@ function Workouts() {
                     }))
                     : []
 
+                const normalizedHistory = Array.isArray(historyFromApi)
+                    ? historyFromApi.map(normalizeHistoryFromApi)
+                    : []
+
                 setWorkouts(normalizedWorkouts)
+                setHistory(normalizedHistory)
 
                 const mergedExercisesMap = new Map()
 
@@ -194,9 +213,11 @@ function Workouts() {
                 saveUserStorageData(user, 'exercises', finalExercises)
 
                 saveUserStorageData(user, 'workouts', normalizedWorkouts)
+                saveUserStorageData(user, 'history', normalizedHistory)
             } catch (error) {
                 console.error(error)
                 setWorkouts(cachedWorkouts)
+                setHistory(cachedHistory)
 
                 showToast(
                     'error',
@@ -311,6 +332,67 @@ function Workouts() {
         return exercises.filter((exercise) => exercise.isFavorite).length
     }, [exercises])
 
+    const recentExerciseMap = useMemo(() => {
+        const map = new Map()
+
+        history.forEach((session) => {
+            const finishedAt = session.finishedAt || session.createdAt
+
+            session.exercises?.forEach((item) => {
+                const exercise = item.exercise
+
+                if (!exercise?.name) return
+
+                const key = String(exercise.id || exercise._id || exercise.name)
+                const current = map.get(key)
+
+                const totalUses = (current?.totalUses || 0) + 1
+                const currentDate = current?.lastUsedAt
+                    ? new Date(current.lastUsedAt)
+                    : null
+                const nextDate = finishedAt ? new Date(finishedAt) : null
+
+                map.set(key, {
+                    totalUses,
+                    lastUsedAt:
+                        !currentDate || (nextDate && nextDate > currentDate)
+                            ? finishedAt
+                            : current?.lastUsedAt,
+                })
+
+                const nameKey = String(exercise.name).toLowerCase()
+                const currentByName = map.get(nameKey)
+
+                map.set(nameKey, {
+                    totalUses: (currentByName?.totalUses || 0) + 1,
+                    lastUsedAt:
+                        !currentByName?.lastUsedAt ||
+                        (nextDate && nextDate > new Date(currentByName.lastUsedAt))
+                            ? finishedAt
+                            : currentByName.lastUsedAt,
+                })
+            })
+        })
+
+        return map
+    }, [history])
+
+    function getRecentExerciseInfo(exercise) {
+        const byId = recentExerciseMap.get(String(exercise.id || exercise._id))
+        const byName = recentExerciseMap.get(String(exercise.name || '').toLowerCase())
+
+        return byId || byName || null
+    }
+
+    function formatRecentExerciseDate(dateString) {
+        if (!dateString) return ''
+
+        return new Date(dateString).toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+        })
+    }
+
     const filteredQuickExercises = useMemo(() => {
         const filtered = exercises.filter((exercise) => {
             const text =
@@ -342,6 +424,16 @@ function Workouts() {
             if (a.isFavorite && !b.isFavorite) return -1
             if (!a.isFavorite && b.isFavorite) return 1
 
+            const recentA = getRecentExerciseInfo(a)
+            const recentB = getRecentExerciseInfo(b)
+
+            if (recentA?.lastUsedAt && !recentB?.lastUsedAt) return -1
+            if (!recentA?.lastUsedAt && recentB?.lastUsedAt) return 1
+
+            if (recentA?.lastUsedAt && recentB?.lastUsedAt) {
+                return new Date(recentB.lastUsedAt) - new Date(recentA.lastUsedAt)
+            }
+
             return String(a.name || '').localeCompare(String(b.name || ''))
         })
     }, [
@@ -350,6 +442,7 @@ function Workouts() {
         quickGroupFilter,
         quickEquipmentFilter,
         quickFavoritesOnly,
+        recentExerciseMap,
     ])
 
     const totalExercisesInSavedWorkouts = useMemo(() => {
@@ -1539,7 +1632,7 @@ function Workouts() {
                                             <div>
                                                 <h2 className="text-xl font-bold">Resumo</h2>
 
-                                                <div className="mt-4 flex gap-8">
+                                                <div className="mt-4 grid grid-cols-3 gap-4">
                                                     <div>
                                                         <p className="text-xs text-zinc-500">Exercícios</p>
                                                         <p className="mt-1 text-xl font-bold text-[var(--ff-accent-text)]
@@ -1552,6 +1645,13 @@ function Workouts() {
                                                         <p className="text-xs text-zinc-500">Total de séries</p>
                                                         <p className="mt-1 text-xl font-bold">
                                                             {totalSetsInCurrentWorkout}
+                                                        </p>
+                                                    </div>
+
+                                                    <div>
+                                                        <p className="text-xs text-zinc-500">Favoritos</p>
+                                                        <p className="mt-1 text-xl font-bold text-yellow-300">
+                                                            {favoriteExercisesCount}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -1638,29 +1738,20 @@ function Workouts() {
                                                 <h2 className="text-xl font-bold">Biblioteca</h2>
 
                                                 <p className="mt-1 text-sm text-zinc-500">
-                                                    Favoritos aparecem primeiro para montar treinos mais rápido.
+                                                    Favoritos e exercícios recentes aparecem primeiro para montar treinos mais rápido.
                                                 </p>
 
-                                                <div>
-                                                    <h2 className="text-xl font-bold">Biblioteca</h2>
+                                                <div className="mt-2 flex flex-wrap gap-2">
+                                                    <Badge>
+                                                        {filteredQuickExercises.length} encontrados
+                                                    </Badge>
 
-                                                    <p className="mt-1 text-sm text-zinc-500">
-                                                        Favoritos aparecem primeiro para montar treinos mais rápido.
-                                                    </p>
-
-                                                    <div className="mt-2 flex flex-wrap gap-2">
+                                                    {favoriteExercisesCount > 0 && (
                                                         <Badge>
-                                                            {filteredQuickExercises.length} encontrados
+                                                            ⭐ {favoriteExercisesCount} favoritos
                                                         </Badge>
-
-                                                        {favoriteExercisesCount > 0 && (
-                                                            <Badge>
-                                                                ⭐ {favoriteExercisesCount} favoritos
-                                                            </Badge>
-                                                        )}
-                                                    </div>
+                                                    )}
                                                 </div>
-
                                             </div>
 
                                             <button
@@ -1753,6 +1844,7 @@ function Workouts() {
 
                                             {filteredQuickExercises.map((exercise) => {
                                                 const alreadyAdded = isExerciseAlreadyAdded(exercise.id)
+                                                const recentInfo = getRecentExerciseInfo(exercise)
 
                                                 return (
                                                     <button
@@ -1804,6 +1896,20 @@ function Workouts() {
                                                             <p className="text-sm text-zinc-500">
                                                                 {exercise.muscleGroup}
                                                             </p>
+
+                                                            <div className="mt-1 flex flex-wrap gap-1.5">
+                                                                {exercise.isFavorite && (
+                                                                    <span className="rounded-full bg-yellow-500/10 px-2 py-0.5 text-[10px] font-bold text-yellow-300">
+                                                                        ⭐ Favorito
+                                                                    </span>
+                                                                )}
+
+                                                                {recentInfo?.lastUsedAt && (
+                                                                    <span className="rounded-full bg-[var(--ff-accent-soft)]/10 px-2 py-0.5 text-[10px] font-bold text-[var(--ff-accent-text)]">
+                                                                        Recente • {formatRecentExerciseDate(recentInfo.lastUsedAt)}
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </button>
                                                 )
