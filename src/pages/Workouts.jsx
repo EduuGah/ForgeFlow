@@ -39,6 +39,8 @@ import {
     removeUserStorageData,
 } from '../utils/userStorage'
 
+import defaultExercises from '../data/defaultExercises'
+
 function Workouts() {
     const [workouts, setWorkouts] = useState([])
     const [exercises, setExercises] = useState([])
@@ -97,6 +99,42 @@ function Workouts() {
             workoutName: session.workoutName || session.name || 'Treino',
             exercises: Array.isArray(session.exercises) ? session.exercises : [],
             finishedAt: session.finishedAt || session.createdAt,
+        }
+    }
+
+    async function handleImportDefaultExercises() {
+        try {
+            const result = await apiFetch('/exercises/import-defaults', {
+                method: 'POST',
+                body: JSON.stringify({
+                    exercises: defaultExercises,
+                }),
+            })
+
+            const importedExercises = Array.isArray(result?.exercises)
+                ? result.exercises.map((exercise) => ({
+                    ...exercise,
+                    id: exercise._id || exercise.id,
+                    isFavorite: Boolean(exercise.isFavorite),
+                }))
+                : []
+
+            setExercises(importedExercises)
+            saveUserStorageData(user, 'exercises', importedExercises)
+
+            showToast(
+                'success',
+                'Biblioteca importada',
+                result?.message || `${result?.imported || 0} exercícios importados.`
+            )
+        } catch (error) {
+            console.error(error)
+
+            showToast(
+                'error',
+                'Erro ao importar',
+                error.message || 'Não foi possível importar a biblioteca padrão.'
+            )
         }
     }
 
@@ -379,6 +417,10 @@ function Workouts() {
 
     const favoriteExercisesCount = useMemo(() => {
         return exercises.filter((exercise) => exercise.isFavorite).length
+    }, [exercises])
+
+    const hasImportedLibrary = useMemo(() => {
+        return exercises.some((exercise) => exercise.source === 'ForgeFlow')
     }, [exercises])
 
     const sortedWorkoutTemplates = useMemo(() => {
@@ -1837,6 +1879,15 @@ function Workouts() {
                                     {totalExercisesInSavedWorkouts}
                                 </p>
                             </div>
+
+                            <button
+                                type="button"
+                                onClick={handleImportDefaultExercises}
+                                className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 text-sm font-bold text-[var(--ff-accent-text)] transition hover:bg-[var(--ff-accent-soft)]/20"
+                            >
+                                <Dumbbell size={18} />
+                                {hasImportedLibrary ? 'Atualizar biblioteca padrão' : 'Importar biblioteca padrão'}
+                            </button>
                         </div>
                     </Card>
                 </div>

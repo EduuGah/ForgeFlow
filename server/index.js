@@ -2640,6 +2640,116 @@ app.post('/exercises', authMiddleware, async (req, res) => {
     res.status(201).json(exercise)
 })
 
+app.post('/exercises/import-defaults', authMiddleware, async (req, res) => {
+    try {
+        const { exercises = [] } = req.body
+
+        if (!Array.isArray(exercises) || exercises.length === 0) {
+            return res.status(400).json({
+                message: 'Nenhum exercício enviado para importação.',
+            })
+        }
+
+        const existingExercises = await Exercise.find({
+            userId: req.user.userId,
+        })
+
+        const existingKeys = new Set(
+            existingExercises.map((exercise) => {
+                const name = String(exercise.name || '').trim().toLowerCase()
+                const group = String(exercise.muscleGroup || '').trim().toLowerCase()
+                const equipment = String(exercise.equipment || '').trim().toLowerCase()
+
+                return `${name}|${group}|${equipment}`
+            })
+        )
+
+        const safeExercises = exercises
+            .filter((exercise) => exercise?.name)
+            .map((exercise) => {
+                const name = String(exercise.name || '').trim()
+                const muscleGroup = String(exercise.muscleGroup || '').trim()
+                const equipment = String(exercise.equipment || '').trim()
+
+                const key = `${name.toLowerCase()}|${muscleGroup.toLowerCase()}|${equipment.toLowerCase()}`
+
+                return {
+                    key,
+                    data: {
+                        userId: req.user.userId,
+                        name,
+                        originalName: exercise.originalName || '',
+                        muscleGroup,
+                        targetMuscle: exercise.targetMuscle || '',
+                        secondaryMuscles: Array.isArray(exercise.secondaryMuscles)
+                            ? exercise.secondaryMuscles
+                            : [],
+                        equipment,
+                        difficulty: exercise.difficulty || '',
+                        movementPattern: exercise.movementPattern || '',
+                        description: exercise.description || '',
+                        mediaUrl: exercise.mediaUrl || '',
+                        gifUrl: exercise.gifUrl || '',
+                        uploadedFileName: exercise.uploadedFileName || '',
+                        media: {
+                            gif: exercise.media?.gif || '',
+                            image: exercise.media?.image || '',
+                        },
+                        instructions: Array.isArray(exercise.instructions)
+                            ? exercise.instructions
+                            : [],
+                        execution: Array.isArray(exercise.execution)
+                            ? exercise.execution
+                            : [],
+                        tips: Array.isArray(exercise.tips)
+                            ? exercise.tips
+                            : [],
+                        variations: Array.isArray(exercise.variations)
+                            ? exercise.variations
+                            : [],
+                        commonMistakes: Array.isArray(exercise.commonMistakes)
+                            ? exercise.commonMistakes
+                            : [],
+                        isFavorite: Boolean(exercise.isFavorite),
+                        source: exercise.source || 'ForgeFlow',
+                    },
+                }
+            })
+            .filter((item) => !existingKeys.has(item.key))
+
+        const exercisesToCreate = safeExercises.map((item) => item.data)
+
+        const createdExercises =
+            exercisesToCreate.length > 0
+                ? await Exercise.insertMany(exercisesToCreate)
+                : []
+
+        const allExercises = await Exercise.find({
+            userId: req.user.userId,
+        }).sort({
+            isFavorite: -1,
+            updatedAt: -1,
+            createdAt: -1,
+        })
+
+        res.status(201).json({
+            imported: createdExercises.length,
+            skipped: exercises.length - createdExercises.length,
+            exercises: allExercises,
+            message:
+                createdExercises.length > 0
+                    ? 'Biblioteca padrão importada com sucesso.'
+                    : 'Nenhum exercício novo para importar.',
+        })
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao importar biblioteca padrão.',
+        })
+    }
+})
+
 app.put('/exercises/:id', authMiddleware, async (req, res) => {
     const exercise = await Exercise.findOneAndUpdate(
         {
