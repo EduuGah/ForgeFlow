@@ -156,7 +156,7 @@ requiredEnv('SESSION_SECRET', SESSION_SECRET)
 const normalizedFrontendUrl = FRONTEND_URL.replace(/\/$/, '')
 const normalizedBackendUrl = BACKEND_URL.replace(/\/$/, '')
 
-app.use(express.json({ limit: '1mb' }))
+app.use(express.json({ limit: '10mb' }))
 app.use(cookieParser())
 
 app.use(
@@ -913,6 +913,77 @@ function parseDecimal(value) {
     const number = Number(normalized)
 
     return Number.isFinite(number) ? number : null
+}
+
+
+function cleanMongoFields(item = {}) {
+    const {
+        _id,
+        id,
+        userId,
+        createdAt,
+        updatedAt,
+        __v,
+        ...rest
+    } = item
+
+    return rest
+}
+
+function cleanArrayForImport(items = [], userId) {
+    if (!Array.isArray(items)) return []
+
+    return items.map((item) => ({
+        ...cleanMongoFields(item),
+        userId,
+    }))
+}
+
+function escapeCsv(value) {
+    if (value === null || value === undefined) return ''
+
+    const text = String(value).replace(/"/g, '""')
+
+    return `"${text}"`
+}
+
+function getHistoryRows(history = []) {
+    const rows = []
+
+    history.forEach((session) => {
+        const exercises = Array.isArray(session.exercises)
+            ? session.exercises
+            : []
+
+        exercises.forEach((item) => {
+            const exercise = item.exercise || {}
+            const sets = Array.isArray(item.sets) ? item.sets : []
+
+            sets.forEach((set, index) => {
+                const weight = Number(set.weight || set.load || 0)
+                const reps = Number(set.reps || 0)
+                const volume = weight * reps
+
+                rows.push({
+                    date: session.finishedAt || session.createdAt,
+                    workoutName: session.workoutName,
+                    exerciseName: exercise.name || '',
+                    muscleGroup: exercise.muscleGroup || '',
+                    equipment: exercise.equipment || '',
+                    setNumber: index + 1,
+                    setType: set.type || 'working',
+                    completed: Boolean(set.completed || set.isCompleted || set.done),
+                    weight,
+                    reps,
+                    volume,
+                    durationSeconds: session.durationSeconds || 0,
+                    notes: session.notes || '',
+                })
+            })
+        })
+    })
+
+    return rows
 }
 
 function authMiddleware(req, res, next) {
@@ -2311,6 +2382,390 @@ app.get('/dashboard', authMiddleware, async (req, res) => {
 
         res.status(500).json({
             message: 'Erro ao carregar dashboard.',
+        })
+    }
+})
+
+
+app.get('/export-data', authMiddleware, async (req, res) => {
+    try {
+        const userId = req.user.userId
+
+        const [
+            user,
+            settings,
+            exercises,
+            workouts,
+            workoutHistory,
+            bodyWeight,
+            workoutTemplates,
+        ] = await Promise.all([
+            User.findById(userId),
+            AppSettings.findOne({ userId }),
+            Exercise.find({ userId }).sort({ createdAt: 1 }),
+            Workout.find({ userId }).sort({ createdAt: 1 }),
+            WorkoutHistory.find({ userId }).sort({ finishedAt: 1, createdAt: 1 }),
+            BodyWeight.find({ userId }).sort({ date: 1, createdAt: 1 }),
+            WorkoutTemplate.find({ userId }).sort({ createdAt: 1 }),
+        ])
+
+        if (!user) {
+            return res.status(404).json({
+                message: 'Usuário não encontrado.',
+            })
+        }
+
+        const backup = {
+            app: 'ForgeFlow',
+            version: 1,
+            exportedAt: new Date().toISOString(),
+            user: {
+                name: user.name,
+                email: user.email,
+                avatarUrl: user.avatarUrl,
+                profile: user.profile,
+                profileCompleted: user.profileCompleted,
+            },
+            settings: settings?.data || {},
+            data: {
+                exercises,
+                workouts,
+                workoutHistory,
+                bodyWeight,
+                workoutTemplates,
+            },
+        }
+
+        res.setHeader(
+            'Content-Disposition',
+            `attachment; filename="forgeflow-backup-${new Date()
+                .toISOString()
+                .slice(0, 10)}.json"`
+        )
+
+        res.json(backup)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao exportar dados.',
+        })
+    }
+})
+
+app.post('/import-data', authMiddleware, async (req, res) => {
+    try {
+        const { backup, mode = 'merge' } = req.body
+
+        if (!backup || backup.app !== 'ForgeFlow' || !backup.data) {
+            return res.status(400).json({
+                message: 'Arquivo de backup inválido.',
+            })
+        }
+
+        const userId = req.user.userId
+
+        const {
+            exercises = [],
+            workouts = [],
+            workoutHistory = [],
+            bodyWeight = [],
+            workoutTemplates = [],
+        } = backup.data
+
+        const imported = {
+            exercises: 0,
+            workouts: 0,
+            workoutHistory: 0,
+            bodyWeight: 0,
+            workoutTemplates: 0,
+        }
+
+        if (mode === 'replace') {
+            await Promise.all([
+                Exercise.deleteMany({ userId }),
+                Workout.deleteMany({ userId }),
+                WorkoutHistory.deleteMany({ userId }),
+                BodyWeight.deleteMany({ userId }),
+                WorkoutTemplate.deleteMany({ userId }),
+            ])
+        }
+
+        const exercisesToCreate = cleanArrayForImport(exercises, userId)
+        const workoutsToCreate = cleanArrayForImport(workouts, userId)
+        const historyToCreate = cleanArrayForImport(workoutHistory, userId)
+        const bodyWeightToCreate = cleanArrayForImport(bodyWeight, userId)
+        const templatesToCreate = cleanArrayForImport(workoutTemplates, userId)
+
+        if (exercisesToCreate.length > 0) {
+            const created = await Exercise.insertMany(exercisesToCreate, {
+                ordered: false,
+            })
+
+            imported.exercises = created.length
+        }
+
+        if (workoutsToCreate.length > 0) {
+            const created = await Workout.insertMany(workoutsToCreate, {
+                ordered: false,
+            })
+
+            imported.workouts = created.length
+        }
+
+        if (historyToCreate.length > 0) {
+            const created = await WorkoutHistory.insertMany(historyToCreate, {
+                ordered: false,
+            })
+
+            imported.workoutHistory = created.length
+        }
+
+        if (bodyWeightToCreate.length > 0) {
+            const created = await BodyWeight.insertMany(bodyWeightToCreate, {
+                ordered: false,
+            })
+
+            imported.bodyWeight = created.length
+        }
+
+        if (templatesToCreate.length > 0) {
+            const created = await WorkoutTemplate.insertMany(templatesToCreate, {
+                ordered: false,
+            })
+
+            imported.workoutTemplates = created.length
+        }
+
+        if (backup.user?.profile) {
+            const user = await User.findById(userId)
+
+            if (user) {
+                user.profile = {
+                    ...user.profile,
+                    ...backup.user.profile,
+                }
+
+                user.profileCompleted = buildProfileCompletion(user.profile)
+
+                if (backup.user.name) {
+                    user.name = backup.user.name
+                }
+
+                if (backup.user.avatarUrl) {
+                    user.avatarUrl = backup.user.avatarUrl
+                }
+
+                await user.save()
+            }
+        }
+
+        if (backup.settings) {
+            await AppSettings.findOneAndUpdate(
+                { userId },
+                {
+                    userId,
+                    data: backup.settings,
+                },
+                {
+                    new: true,
+                    upsert: true,
+                }
+            )
+        }
+
+        res.json({
+            ok: true,
+            mode,
+            imported,
+            message: 'Backup importado com sucesso.',
+        })
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao importar backup.',
+        })
+    }
+})
+
+app.get('/export/workout-history.csv', authMiddleware, async (req, res) => {
+    try {
+        const history = await WorkoutHistory.find({
+            userId: req.user.userId,
+        }).sort({
+            finishedAt: 1,
+            createdAt: 1,
+        })
+
+        const rows = getHistoryRows(history)
+
+        const headers = [
+            'Data',
+            'Treino',
+            'Exercício',
+            'Grupo muscular',
+            'Equipamento',
+            'Série',
+            'Tipo',
+            'Concluída',
+            'Peso',
+            'Reps',
+            'Volume',
+            'Duração segundos',
+            'Notas',
+        ]
+
+        const csvLines = [
+            headers.map(escapeCsv).join(';'),
+            ...rows.map((row) =>
+                [
+                    row.date ? new Date(row.date).toLocaleDateString('pt-BR') : '',
+                    row.workoutName,
+                    row.exerciseName,
+                    row.muscleGroup,
+                    row.equipment,
+                    row.setNumber,
+                    row.setType,
+                    row.completed ? 'Sim' : 'Não',
+                    row.weight,
+                    row.reps,
+                    row.volume,
+                    row.durationSeconds,
+                    row.notes,
+                ]
+                    .map(escapeCsv)
+                    .join(';')
+            ),
+        ]
+
+        const csv = `\uFEFF${csvLines.join('\n')}`
+
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8')
+        res.setHeader(
+            'Content-Disposition',
+            `attachment; filename="forgeflow-historico-${new Date()
+                .toISOString()
+                .slice(0, 10)}.csv"`
+        )
+
+        res.send(csv)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao exportar histórico em CSV.',
+        })
+    }
+})
+
+app.get('/export/report.pdf', authMiddleware, async (req, res) => {
+    try {
+        let PDFDocument
+
+        try {
+            const pdfkit = await import('pdfkit')
+            PDFDocument = pdfkit.default
+        } catch {
+            return res.status(500).json({
+                message: 'Para exportar PDF, instale a dependência pdfkit no backend: npm install pdfkit',
+            })
+        }
+
+        const userId = req.user.userId
+
+        const [user, workouts, history, bodyWeight] = await Promise.all([
+            User.findById(userId),
+            Workout.find({ userId }),
+            WorkoutHistory.find({ userId }).sort({
+                finishedAt: -1,
+                createdAt: -1,
+            }),
+            BodyWeight.find({ userId }).sort({
+                date: 1,
+                createdAt: 1,
+            }),
+        ])
+
+        const totalWorkouts = history.length
+        const totalVolume = history.reduce((total, session) => total + Number(session.totalVolume || 0), 0)
+        const totalSets = history.reduce((total, session) => total + Number(session.totalSets || 0), 0)
+        const totalDuration = history.reduce((total, session) => total + Number(session.durationSeconds || 0), 0)
+
+        const doc = new PDFDocument({
+            margin: 50,
+            size: 'A4',
+        })
+
+        res.setHeader('Content-Type', 'application/pdf')
+        res.setHeader(
+            'Content-Disposition',
+            `attachment; filename="forgeflow-relatorio-${new Date()
+                .toISOString()
+                .slice(0, 10)}.pdf"`
+        )
+
+        doc.pipe(res)
+
+        doc
+            .fontSize(22)
+            .text('ForgeFlow - Relatório de Evolução', {
+                align: 'center',
+            })
+
+        doc.moveDown()
+
+        doc
+            .fontSize(12)
+            .text(`Usuário: ${user?.name || 'Usuário'}`)
+            .text(`E-mail: ${user?.email || ''}`)
+            .text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`)
+
+        doc.moveDown()
+        doc.fontSize(16).text('Resumo geral')
+        doc.moveDown(0.5)
+
+        doc
+            .fontSize(12)
+            .text(`Treinos salvos: ${workouts.length}`)
+            .text(`Treinos finalizados: ${totalWorkouts}`)
+            .text(`Volume total: ${totalVolume.toLocaleString('pt-BR')} kg`)
+            .text(`Séries concluídas: ${totalSets}`)
+            .text(`Tempo total: ${Math.round(totalDuration / 60)} min`)
+
+        if (bodyWeight.length > 0) {
+            const first = bodyWeight[0]
+            const last = bodyWeight[bodyWeight.length - 1]
+
+            doc.moveDown()
+            doc.fontSize(16).text('Peso corporal')
+            doc.moveDown(0.5)
+            doc
+                .fontSize(12)
+                .text(`Primeiro registro: ${Number(first.weight || 0).toLocaleString('pt-BR')} kg`)
+                .text(`Último registro: ${Number(last.weight || 0).toLocaleString('pt-BR')} kg`)
+        }
+
+        doc.moveDown()
+        doc.fontSize(16).text('Últimos treinos')
+        doc.moveDown(0.5)
+
+        history.slice(0, 10).forEach((session) => {
+            const date = session.finishedAt || session.createdAt
+
+            doc
+                .fontSize(11)
+                .text(
+                    `${date ? new Date(date).toLocaleDateString('pt-BR') : '-'} - ${session.workoutName || 'Treino'} | Volume: ${Number(session.totalVolume || 0).toLocaleString('pt-BR')} kg | Séries: ${session.totalSets || 0}`
+                )
+        })
+
+        doc.end()
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao exportar relatório em PDF.',
         })
     }
 })

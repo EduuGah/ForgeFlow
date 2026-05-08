@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react'
 import {
   AlertTriangle,
   Check,
+  Download,
+  FileJson,
+  FileSpreadsheet,
+  FileText,
   Palette,
   RotateCcw,
   SlidersHorizontal,
@@ -18,7 +22,7 @@ import Select from '../components/ui/Select'
 import Input from '../components/ui/Input'
 
 import { useAuth } from '../context/AuthContext'
-import { apiFetch } from '../services/api'
+import { apiDownload, apiFetch } from '../services/api'
 
 import {
   accentColors,
@@ -291,6 +295,125 @@ function Settings() {
     })
   }
 
+
+  async function handleExportJson() {
+    try {
+      const date = new Date().toISOString().slice(0, 10)
+
+      await apiDownload('/export-data', `forgeflow-backup-${date}.json`)
+
+      showToast(
+        'success',
+        'Backup exportado',
+        'Seus dados foram baixados em JSON.'
+      )
+    } catch (error) {
+      console.error(error)
+
+      showToast(
+        'error',
+        'Erro ao exportar',
+        error.message || 'Não foi possível exportar seus dados.'
+      )
+    }
+  }
+
+  async function handleExportCsv() {
+    try {
+      const date = new Date().toISOString().slice(0, 10)
+
+      await apiDownload(
+        '/export/workout-history.csv',
+        `forgeflow-historico-${date}.csv`
+      )
+
+      showToast(
+        'success',
+        'Histórico exportado',
+        'O arquivo CSV foi baixado.'
+      )
+    } catch (error) {
+      console.error(error)
+
+      showToast(
+        'error',
+        'Erro ao exportar',
+        error.message || 'Não foi possível exportar o CSV.'
+      )
+    }
+  }
+
+  async function handleExportPdf() {
+    try {
+      const date = new Date().toISOString().slice(0, 10)
+
+      await apiDownload(
+        '/export/report.pdf',
+        `forgeflow-relatorio-${date}.pdf`
+      )
+
+      showToast(
+        'success',
+        'Relatório exportado',
+        'O PDF foi baixado.'
+      )
+    } catch (error) {
+      console.error(error)
+
+      showToast(
+        'error',
+        'Erro ao exportar PDF',
+        error.message || 'Não foi possível exportar o PDF.'
+      )
+    }
+  }
+
+  async function handleImportJson(event) {
+    const file = event.target.files?.[0]
+
+    if (!file) return
+
+    const confirmed = window.confirm(
+      'Deseja importar este backup? Os dados do arquivo serão adicionados à sua conta.'
+    )
+
+    if (!confirmed) {
+      event.target.value = ''
+      return
+    }
+
+    try {
+      const text = await file.text()
+      const backup = JSON.parse(text)
+
+      const result = await apiFetch('/import-data', {
+        method: 'POST',
+        body: JSON.stringify({
+          backup,
+          mode: 'merge',
+        }),
+      })
+
+      showToast(
+        'success',
+        'Backup importado',
+        result?.message || 'Os dados foram importados.'
+      )
+
+      event.target.value = ''
+    } catch (error) {
+      console.error(error)
+
+      showToast(
+        'error',
+        'Erro ao importar',
+        error.message || 'Não foi possível importar o backup.'
+      )
+
+      event.target.value = ''
+    }
+  }
+
   return (
     <>
       <PageHeader
@@ -388,6 +511,54 @@ function Settings() {
                     : 'Criar senha'}
               </Button>
             </form>
+          </Card>
+
+
+          <Card>
+            <SectionTitle
+              icon={FileJson}
+              title="Backup e exportação"
+              description="Exporte seus dados do ForgeFlow, importe um backup JSON e baixe seu histórico em formatos úteis."
+            />
+
+            <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2">
+              <Button type="button" onClick={handleExportJson}>
+                <Download size={17} />
+                Exportar backup JSON
+              </Button>
+
+              <Button type="button" variant="secondary" onClick={handleExportCsv}>
+                <FileSpreadsheet size={17} />
+                Exportar histórico CSV/Excel
+              </Button>
+
+              <Button type="button" variant="secondary" onClick={handleExportPdf}>
+                <FileText size={17} />
+                Exportar relatório PDF
+              </Button>
+
+              <label className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-950 px-5 text-sm font-bold text-zinc-200 transition hover:border-[var(--ff-accent-border)] hover:text-white">
+                <FileJson size={17} />
+                Importar backup JSON
+                <input
+                  type="file"
+                  accept="application/json,.json"
+                  onChange={handleImportJson}
+                  className="hidden"
+                />
+              </label>
+            </div>
+
+            <div className="mt-5 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4">
+              <p className="text-sm font-bold text-yellow-300">
+                Importação em modo adicionar
+              </p>
+
+              <p className="mt-1 text-xs leading-relaxed text-yellow-100/75">
+                Por segurança, o backup importado adiciona dados à sua conta sem apagar os dados atuais.
+                Depois podemos criar uma opção separada para substituir tudo.
+              </p>
+            </div>
           </Card>
 
           <Card>
