@@ -2283,6 +2283,483 @@ function getMuscleRecoveryStatus(lastTrainedAt) {
     }
 }
 
+function getWeekKey(dateInput) {
+    const date = new Date(dateInput)
+
+    if (Number.isNaN(date.getTime())) return 'Sem semana'
+
+    const year = date.getFullYear()
+    const firstDayOfYear = new Date(year, 0, 1)
+    const pastDaysOfYear = Math.floor((date - firstDayOfYear) / 86400000)
+    const week = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7)
+
+    return `${year}-S${String(week).padStart(2, '0')}`
+}
+
+function getMonthKey(dateInput) {
+    const date = new Date(dateInput)
+
+    if (Number.isNaN(date.getTime())) return 'Sem mês'
+
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+
+    return `${year}-${month}`
+}
+
+function getProgressExerciseName(item) {
+    return (
+        item?.exercise?.name ||
+        item?.name ||
+        item?.exerciseName ||
+        'Sem nome'
+    )
+}
+
+function getProgressMuscleGroup(item) {
+    return (
+        item?.exercise?.muscleGroup ||
+        item?.exercise?.normalizedGroup ||
+        item?.muscleGroup ||
+        'Sem grupo'
+    )
+}
+
+function getValidProgressSets(item) {
+    const sets = Array.isArray(item?.sets) ? item.sets : []
+
+    return sets.filter((set) => {
+        const isWarmup = set.type === 'warmup'
+        const hasCompletionFlag =
+            set.completed !== undefined ||
+            set.isCompleted !== undefined ||
+            set.done !== undefined
+
+        const isCompleted = hasCompletionFlag
+            ? set.completed === true || set.isCompleted === true || set.done === true
+            : true
+
+        const weight = Number(set.weight || set.load || 0)
+        const reps = Number(set.reps || 0)
+
+        return !isWarmup && isCompleted && weight > 0 && reps > 0
+    })
+}
+
+function getSetVolumeValue(set) {
+    const weight = Number(set.weight || set.load || 0)
+    const reps = Number(set.reps || 0)
+
+    return weight * reps
+}
+
+function summarizeProgressHistorySession(session) {
+    const exercises = Array.isArray(session.exercises)
+        ? session.exercises
+        : []
+
+    let totalVolume = 0
+    let totalSets = 0
+    let totalReps = 0
+
+    exercises.forEach((item) => {
+        const sets = getValidProgressSets(item)
+
+        sets.forEach((set) => {
+            const reps = Number(set.reps || 0)
+
+            totalSets += 1
+            totalReps += reps
+            totalVolume += getSetVolumeValue(set)
+        })
+    })
+
+    return {
+        totalVolume,
+        totalSets,
+        totalReps,
+    }
+}
+
+function buildBodyWeightProgress(bodyWeight = []) {
+    return bodyWeight
+        .filter((item) => item.weight && item.date)
+        .map((item) => ({
+            id: item._id || item.id,
+            date: item.date,
+            label: new Date(item.date).toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+            }),
+            weight: Number(item.weight) || 0,
+            note: item.note || '',
+        }))
+}
+
+function buildWeeklyTrainingProgress(history = []) {
+    const weekMap = new Map()
+
+    history.forEach((session) => {
+        const date = session.finishedAt || session.createdAt
+
+        if (!date) return
+
+        const key = getWeekKey(date)
+        const summary = summarizeProgressHistorySession(session)
+
+        const current = weekMap.get(key) || {
+            week: key,
+            workouts: 0,
+            volume: 0,
+            sets: 0,
+            reps: 0,
+            durationSeconds: 0,
+        }
+
+        weekMap.set(key, {
+            ...current,
+            workouts: current.workouts + 1,
+            volume: current.volume + summary.totalVolume,
+            sets: current.sets + summary.totalSets,
+            reps: current.reps + summary.totalReps,
+            durationSeconds:
+                current.durationSeconds + Number(session.durationSeconds || session.duration || 0),
+        })
+    })
+
+    return Array.from(weekMap.values())
+        .sort((a, b) => a.week.localeCompare(b.week))
+        .map((item) => ({
+            ...item,
+            averageDurationSeconds:
+                item.workouts > 0
+                    ? Math.round(item.durationSeconds / item.workouts)
+                    : 0,
+        }))
+}
+
+function buildMonthlyTrainingProgress(history = []) {
+    const monthMap = new Map()
+
+    history.forEach((session) => {
+        const date = session.finishedAt || session.createdAt
+
+        if (!date) return
+
+        const key = getMonthKey(date)
+        const summary = summarizeProgressHistorySession(session)
+
+        const current = monthMap.get(key) || {
+            month: key,
+            workouts: 0,
+            volume: 0,
+            sets: 0,
+            reps: 0,
+            durationSeconds: 0,
+        }
+
+        monthMap.set(key, {
+            ...current,
+            workouts: current.workouts + 1,
+            volume: current.volume + summary.totalVolume,
+            sets: current.sets + summary.totalSets,
+            reps: current.reps + summary.totalReps,
+            durationSeconds:
+                current.durationSeconds + Number(session.durationSeconds || session.duration || 0),
+        })
+    })
+
+    return Array.from(monthMap.values())
+        .sort((a, b) => a.month.localeCompare(b.month))
+        .map((item) => ({
+            ...item,
+            averageDurationSeconds:
+                item.workouts > 0
+                    ? Math.round(item.durationSeconds / item.workouts)
+                    : 0,
+        }))
+}
+
+function buildMuscleGroupProgress(history = []) {
+    const groupMap = new Map()
+
+    history.forEach((session) => {
+        const exercises = Array.isArray(session.exercises)
+            ? session.exercises
+            : []
+
+        exercises.forEach((item) => {
+            const group = getProgressMuscleGroup(item)
+            const sets = getValidProgressSets(item)
+            const volume = sets.reduce((total, set) => total + getSetVolumeValue(set), 0)
+
+            const current = groupMap.get(group) || {
+                muscleGroup: group,
+                sets: 0,
+                volume: 0,
+                sessions: 0,
+            }
+
+            groupMap.set(group, {
+                ...current,
+                sets: current.sets + sets.length,
+                volume: current.volume + volume,
+                sessions: current.sessions + 1,
+            })
+        })
+    })
+
+    return Array.from(groupMap.values())
+        .sort((a, b) => b.volume - a.volume)
+}
+
+function buildExercisePrProgress(history = []) {
+    const prMap = new Map()
+
+    history.forEach((session) => {
+        const date = session.finishedAt || session.createdAt
+        const workoutName = session.workoutName || 'Treino'
+        const exercises = Array.isArray(session.exercises)
+            ? session.exercises
+            : []
+
+        exercises.forEach((item) => {
+            const exerciseName = getProgressExerciseName(item)
+            const muscleGroup = getProgressMuscleGroup(item)
+            const sets = getValidProgressSets(item)
+
+            sets.forEach((set) => {
+                const weight = Number(set.weight || set.load || 0)
+                const reps = Number(set.reps || 0)
+                const volume = weight * reps
+
+                const current = prMap.get(exerciseName) || {
+                    exerciseName,
+                    muscleGroup,
+                    bestWeight: 0,
+                    bestWeightReps: 0,
+                    bestWeightDate: null,
+                    bestWeightWorkoutName: '',
+                    bestVolume: 0,
+                    bestVolumeWeight: 0,
+                    bestVolumeReps: 0,
+                    bestVolumeDate: null,
+                    bestVolumeWorkoutName: '',
+                }
+
+                if (
+                    weight > current.bestWeight ||
+                    (weight === current.bestWeight && reps > current.bestWeightReps)
+                ) {
+                    current.bestWeight = weight
+                    current.bestWeightReps = reps
+                    current.bestWeightDate = date
+                    current.bestWeightWorkoutName = workoutName
+                }
+
+                if (volume > current.bestVolume) {
+                    current.bestVolume = volume
+                    current.bestVolumeWeight = weight
+                    current.bestVolumeReps = reps
+                    current.bestVolumeDate = date
+                    current.bestVolumeWorkoutName = workoutName
+                }
+
+                prMap.set(exerciseName, current)
+            })
+        })
+    })
+
+    return Array.from(prMap.values())
+        .sort((a, b) => b.bestWeight - a.bestWeight)
+}
+
+function buildExerciseTimeline(history = [], exerciseName = '') {
+    if (!exerciseName) return []
+
+    const timeline = []
+
+    history.forEach((session) => {
+        const date = session.finishedAt || session.createdAt
+        const workoutName = session.workoutName || 'Treino'
+        const exercises = Array.isArray(session.exercises)
+            ? session.exercises
+            : []
+
+        exercises.forEach((item) => {
+            const currentName = getProgressExerciseName(item)
+
+            if (currentName !== exerciseName) return
+
+            const sets = getValidProgressSets(item)
+
+            if (sets.length === 0) return
+
+            const bestSet = sets.reduce((best, current) => {
+                const bestWeight = Number(best.weight || best.load || 0)
+                const bestReps = Number(best.reps || 0)
+                const currentWeight = Number(current.weight || current.load || 0)
+                const currentReps = Number(current.reps || 0)
+
+                if (currentWeight > bestWeight) return current
+
+                if (currentWeight === bestWeight && currentReps > bestReps) {
+                    return current
+                }
+
+                return best
+            }, sets[0])
+
+            const totalVolume = sets.reduce((total, set) => total + getSetVolumeValue(set), 0)
+
+            timeline.push({
+                date,
+                label: new Date(date).toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                }),
+                workoutName,
+                bestWeight: Number(bestSet.weight || bestSet.load || 0),
+                bestReps: Number(bestSet.reps || 0),
+                volume: totalVolume,
+                sets: sets.length,
+            })
+        })
+    })
+
+    return timeline.sort((a, b) => new Date(a.date) - new Date(b.date))
+}
+
+app.get('/stats/progress', authMiddleware, async (req, res) => {
+    try {
+        const userId = req.user.userId
+        const exerciseName = req.query.exerciseName || ''
+
+        const [
+            user,
+            workouts,
+            history,
+            bodyWeight,
+            progressPhotos,
+        ] = await Promise.all([
+            User.findById(userId),
+            Workout.find({ userId }).sort({ updatedAt: -1 }),
+            WorkoutHistory.find({ userId }).sort({
+                finishedAt: 1,
+                createdAt: 1,
+            }),
+            BodyWeight.find({ userId }).sort({
+                date: 1,
+                createdAt: 1,
+            }),
+            ProgressPhoto.find({ userId }).sort({
+                date: -1,
+                createdAt: -1,
+            }).limit(8),
+        ])
+
+        if (!user) {
+            return res.status(404).json({
+                message: 'Usuário não encontrado.',
+            })
+        }
+
+        const totalWorkouts = history.length
+        const sessionSummaries = history.map((session) => summarizeProgressHistorySession(session))
+
+        const totalVolume = sessionSummaries.reduce((total, item) => total + item.totalVolume, 0)
+        const totalSets = sessionSummaries.reduce((total, item) => total + item.totalSets, 0)
+        const totalReps = sessionSummaries.reduce((total, item) => total + item.totalReps, 0)
+
+        const totalDurationSeconds = history.reduce((total, session) => {
+            return total + Number(session.durationSeconds || session.duration || 0)
+        }, 0)
+
+        const weightProgress = buildBodyWeightProgress(bodyWeight)
+        const firstWeight = weightProgress[0]?.weight || null
+        const currentWeight =
+            weightProgress[weightProgress.length - 1]?.weight ||
+            user.profile?.currentWeight ||
+            null
+
+        const weightChange =
+            firstWeight && currentWeight
+                ? Number((currentWeight - firstWeight).toFixed(2))
+                : 0
+
+        const weeklyProgress = buildWeeklyTrainingProgress(history)
+        const monthlyProgress = buildMonthlyTrainingProgress(history)
+        const muscleGroups = buildMuscleGroupProgress(history)
+        const exercisePrs = buildExercisePrProgress(history)
+        const selectedExerciseTimeline = buildExerciseTimeline(history, exerciseName)
+
+        const bestWeek = weeklyProgress
+            .slice()
+            .sort((a, b) => b.volume - a.volume)[0] || null
+
+        const mostTrainedMuscle = muscleGroups[0] || null
+
+        const bestWeightPr = exercisePrs
+            .slice()
+            .sort((a, b) => b.bestWeight - a.bestWeight)[0] || null
+
+        const bestVolumePr = exercisePrs
+            .slice()
+            .sort((a, b) => b.bestVolume - a.bestVolume)[0] || null
+
+        res.json({
+            summary: {
+                totalSavedWorkouts: workouts.length,
+                totalFinishedWorkouts: totalWorkouts,
+                totalVolume,
+                totalSets,
+                totalReps,
+                totalDurationSeconds,
+                averageVolumePerWorkout:
+                    totalWorkouts > 0
+                        ? Math.round(totalVolume / totalWorkouts)
+                        : 0,
+                averageDurationSeconds:
+                    totalWorkouts > 0
+                        ? Math.round(totalDurationSeconds / totalWorkouts)
+                        : 0,
+                firstWeight,
+                currentWeight,
+                weightChange,
+                progressPhotoCount: progressPhotos.length,
+            },
+
+            insights: {
+                bestWeek,
+                mostTrainedMuscle,
+                bestWeightPr,
+                bestVolumePr,
+            },
+
+            charts: {
+                bodyWeight: weightProgress,
+                weeklyProgress,
+                monthlyProgress,
+                muscleGroups,
+                exercisePrs,
+                selectedExerciseTimeline,
+            },
+
+            recent: {
+                workouts: history.slice(-8).reverse(),
+                progressPhotos,
+            },
+        })
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao carregar estatísticas de evolução.',
+        })
+    }
+})
+
+
 app.get('/stats/muscle-recovery', authMiddleware, async (req, res) => {
     try {
         const history = await WorkoutHistory.find({
