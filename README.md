@@ -1,7 +1,3 @@
-Com base no README atual que você enviou, atualizei o texto para refletir tudo que já foi implementado recentemente no ForgeFlow: MongoDB mais completo, autenticação, favoritos sincronizados, calendário, streak, recuperação muscular, templates, importação/exportação, fotos, metas, notificações e preparação mobile. 
-
-Pode substituir o README inteiro por este:
-
 ````md
 # ForgeFlow
 
