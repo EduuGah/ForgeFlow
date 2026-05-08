@@ -556,7 +556,6 @@ function Settings() {
 
               <p className="mt-1 text-xs leading-relaxed text-yellow-100/75">
                 Por segurança, o backup importado adiciona dados à sua conta sem apagar os dados atuais.
-                Depois podemos criar uma opção separada para substituir tudo.
               </p>
             </div>
           </Card>

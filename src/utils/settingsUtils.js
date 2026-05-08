@@ -1,9 +1,10 @@
 const SETTINGS_KEY = 'forgeflow:settings'
+const THEME_STYLE_ID = 'forgeflow-theme-style'
 
 export const defaultSettings = {
   // Aparência
   themeMode: 'dark',
-  accentColor: 'purple',
+  accentColor: 'violet',
   compactMobile: false,
 
   // Treino
@@ -14,221 +15,132 @@ export const defaultSettings = {
   collapseWorkoutsByDefault: false,
   workoutsVisibleLimit: 5,
   autoSaveWorkout: true,
-  autoOpenCalendar: true,
-  autoStartRestTimer: true,
-  showPRDuringWorkout: true,
-  showLastWorkoutComparison: true,
   confirmBeforeFinishWorkout: true,
   confirmBeforeCancelWorkout: true,
 
-  // Dados
+  // Mantidos por compatibilidade com versões antigas do app.
+  autoOpenCalendar: false,
+  autoStartRestTimer: false,
+  showPRDuringWorkout: true,
+  showLastWorkoutComparison: true,
   syncWithDatabase: false,
-
-  // Conta
   accountName: '',
   currentWeight: '',
   mainGoal: '',
 }
 
 export const accentColors = {
-  purple: {
-    name: 'Roxo',
-    primary: '#8b5cf6',
-    primaryHover: '#a78bfa',
-    soft: 'rgba(139, 92, 246, 0.12)',
-    border: 'rgba(139, 92, 246, 0.32)',
-    text: '#c4b5fd',
-    shadow: 'rgba(139, 92, 246, 0.35)',
-  },
-
   violet: {
     name: 'Violeta',
-    primary: '#7c3aed',
-    primaryHover: '#8b5cf6',
-    soft: 'rgba(124, 58, 237, 0.12)',
-    border: 'rgba(124, 58, 237, 0.32)',
-    text: '#ddd6fe',
-    shadow: 'rgba(124, 58, 237, 0.35)',
-  },
-
-  indigo: {
-    name: 'Índigo',
-    primary: '#6366f1',
-    primaryHover: '#818cf8',
-    soft: 'rgba(99, 102, 241, 0.12)',
-    border: 'rgba(99, 102, 241, 0.32)',
-    text: '#a5b4fc',
-    shadow: 'rgba(99, 102, 241, 0.35)',
+    description: 'Padrão ForgeFlow',
+    primary: '#8b5cf6',
+    primaryHover: '#a78bfa',
+    soft: 'rgba(139, 92, 246, 0.14)',
+    border: 'rgba(139, 92, 246, 0.36)',
+    text: '#c4b5fd',
+    shadow: 'rgba(139, 92, 246, 0.36)',
+    lightText: '#6d28d9',
+    lightSoft: 'rgba(139, 92, 246, 0.10)',
+    lightBorder: 'rgba(139, 92, 246, 0.24)',
   },
 
   blue: {
     name: 'Azul',
-    primary: '#3b82f6',
-    primaryHover: '#60a5fa',
-    soft: 'rgba(59, 130, 246, 0.12)',
-    border: 'rgba(59, 130, 246, 0.32)',
+    description: 'Limpo e profissional',
+    primary: '#2563eb',
+    primaryHover: '#3b82f6',
+    soft: 'rgba(37, 99, 235, 0.14)',
+    border: 'rgba(37, 99, 235, 0.34)',
     text: '#93c5fd',
-    shadow: 'rgba(59, 130, 246, 0.35)',
-  },
-
-  sky: {
-    name: 'Azul Céu',
-    primary: '#0ea5e9',
-    primaryHover: '#38bdf8',
-    soft: 'rgba(14, 165, 233, 0.12)',
-    border: 'rgba(14, 165, 233, 0.32)',
-    text: '#7dd3fc',
-    shadow: 'rgba(14, 165, 233, 0.35)',
+    shadow: 'rgba(37, 99, 235, 0.32)',
+    lightText: '#1d4ed8',
+    lightSoft: 'rgba(37, 99, 235, 0.09)',
+    lightBorder: 'rgba(37, 99, 235, 0.22)',
   },
 
   cyan: {
     name: 'Ciano',
-    primary: '#06b6d4',
-    primaryHover: '#22d3ee',
-    soft: 'rgba(6, 182, 212, 0.12)',
-    border: 'rgba(6, 182, 212, 0.32)',
+    description: 'Tecnológico',
+    primary: '#0891b2',
+    primaryHover: '#06b6d4',
+    soft: 'rgba(8, 145, 178, 0.14)',
+    border: 'rgba(8, 145, 178, 0.34)',
     text: '#67e8f9',
-    shadow: 'rgba(6, 182, 212, 0.35)',
-  },
-
-  teal: {
-    name: 'Turquesa',
-    primary: '#14b8a6',
-    primaryHover: '#2dd4bf',
-    soft: 'rgba(20, 184, 166, 0.12)',
-    border: 'rgba(20, 184, 166, 0.32)',
-    text: '#5eead4',
-    shadow: 'rgba(20, 184, 166, 0.35)',
-  },
-
-  green: {
-    name: 'Verde',
-    primary: '#10b981',
-    primaryHover: '#34d399',
-    soft: 'rgba(16, 185, 129, 0.12)',
-    border: 'rgba(16, 185, 129, 0.32)',
-    text: '#6ee7b7',
-    shadow: 'rgba(16, 185, 129, 0.35)',
+    shadow: 'rgba(8, 145, 178, 0.30)',
+    lightText: '#0e7490',
+    lightSoft: 'rgba(8, 145, 178, 0.09)',
+    lightBorder: 'rgba(8, 145, 178, 0.22)',
   },
 
   emerald: {
     name: 'Esmeralda',
+    description: 'Saúde e evolução',
     primary: '#059669',
     primaryHover: '#10b981',
-    soft: 'rgba(5, 150, 105, 0.12)',
-    border: 'rgba(5, 150, 105, 0.32)',
+    soft: 'rgba(5, 150, 105, 0.14)',
+    border: 'rgba(5, 150, 105, 0.34)',
     text: '#6ee7b7',
-    shadow: 'rgba(5, 150, 105, 0.35)',
-  },
-
-  lime: {
-    name: 'Limão',
-    primary: '#84cc16',
-    primaryHover: '#a3e635',
-    soft: 'rgba(132, 204, 22, 0.12)',
-    border: 'rgba(132, 204, 22, 0.32)',
-    text: '#bef264',
-    shadow: 'rgba(132, 204, 22, 0.35)',
-  },
-
-  yellow: {
-    name: 'Amarelo',
-    primary: '#eab308',
-    primaryHover: '#facc15',
-    soft: 'rgba(234, 179, 8, 0.12)',
-    border: 'rgba(234, 179, 8, 0.32)',
-    text: '#fde047',
-    shadow: 'rgba(234, 179, 8, 0.35)',
+    shadow: 'rgba(5, 150, 105, 0.30)',
+    lightText: '#047857',
+    lightSoft: 'rgba(5, 150, 105, 0.09)',
+    lightBorder: 'rgba(5, 150, 105, 0.22)',
   },
 
   amber: {
     name: 'Âmbar',
-    primary: '#f59e0b',
-    primaryHover: '#fbbf24',
-    soft: 'rgba(245, 158, 11, 0.12)',
-    border: 'rgba(245, 158, 11, 0.32)',
+    description: 'Quente e energético',
+    primary: '#d97706',
+    primaryHover: '#f59e0b',
+    soft: 'rgba(217, 119, 6, 0.14)',
+    border: 'rgba(217, 119, 6, 0.34)',
     text: '#fcd34d',
-    shadow: 'rgba(245, 158, 11, 0.35)',
-  },
-
-  orange: {
-    name: 'Laranja',
-    primary: '#f97316',
-    primaryHover: '#fb923c',
-    soft: 'rgba(249, 115, 22, 0.12)',
-    border: 'rgba(249, 115, 22, 0.32)',
-    text: '#fdba74',
-    shadow: 'rgba(249, 115, 22, 0.35)',
+    shadow: 'rgba(217, 119, 6, 0.30)',
+    lightText: '#b45309',
+    lightSoft: 'rgba(217, 119, 6, 0.10)',
+    lightBorder: 'rgba(217, 119, 6, 0.24)',
   },
 
   rose: {
-    name: 'Rosa',
-    primary: '#f43f5e',
-    primaryHover: '#fb7185',
-    soft: 'rgba(244, 63, 94, 0.12)',
-    border: 'rgba(244, 63, 94, 0.32)',
+    name: 'Rose',
+    description: 'Forte e moderno',
+    primary: '#e11d48',
+    primaryHover: '#f43f5e',
+    soft: 'rgba(225, 29, 72, 0.14)',
+    border: 'rgba(225, 29, 72, 0.34)',
     text: '#fda4af',
-    shadow: 'rgba(244, 63, 94, 0.35)',
-  },
-
-  pink: {
-    name: 'Pink',
-    primary: '#ec4899',
-    primaryHover: '#f472b6',
-    soft: 'rgba(236, 72, 153, 0.12)',
-    border: 'rgba(236, 72, 153, 0.32)',
-    text: '#f9a8d4',
-    shadow: 'rgba(236, 72, 153, 0.35)',
-  },
-
-  fuchsia: {
-    name: 'Fúcsia',
-    primary: '#d946ef',
-    primaryHover: '#e879f9',
-    soft: 'rgba(217, 70, 239, 0.12)',
-    border: 'rgba(217, 70, 239, 0.32)',
-    text: '#f0abfc',
-    shadow: 'rgba(217, 70, 239, 0.35)',
-  },
-
-  red: {
-    name: 'Vermelho',
-    primary: '#ef4444',
-    primaryHover: '#f87171',
-    soft: 'rgba(239, 68, 68, 0.12)',
-    border: 'rgba(239, 68, 68, 0.32)',
-    text: '#fca5a5',
-    shadow: 'rgba(239, 68, 68, 0.35)',
-  },
-
-  crimson: {
-    name: 'Carmesim',
-    primary: '#dc2626',
-    primaryHover: '#ef4444',
-    soft: 'rgba(220, 38, 38, 0.12)',
-    border: 'rgba(220, 38, 38, 0.32)',
-    text: '#fca5a5',
-    shadow: 'rgba(220, 38, 38, 0.35)',
+    shadow: 'rgba(225, 29, 72, 0.30)',
+    lightText: '#be123c',
+    lightSoft: 'rgba(225, 29, 72, 0.09)',
+    lightBorder: 'rgba(225, 29, 72, 0.22)',
   },
 
   slate: {
     name: 'Grafite',
-    primary: '#64748b',
-    primaryHover: '#94a3b8',
-    soft: 'rgba(100, 116, 139, 0.12)',
-    border: 'rgba(100, 116, 139, 0.32)',
+    description: 'Neutro premium',
+    primary: '#475569',
+    primaryHover: '#64748b',
+    soft: 'rgba(71, 85, 105, 0.14)',
+    border: 'rgba(71, 85, 105, 0.34)',
     text: '#cbd5e1',
-    shadow: 'rgba(100, 116, 139, 0.35)',
+    shadow: 'rgba(71, 85, 105, 0.28)',
+    lightText: '#334155',
+    lightSoft: 'rgba(71, 85, 105, 0.08)',
+    lightBorder: 'rgba(71, 85, 105, 0.18)',
   },
+}
 
-  zinc: {
-    name: 'Cinza',
-    primary: '#71717a',
-    primaryHover: '#a1a1aa',
-    soft: 'rgba(113, 113, 122, 0.12)',
-    border: 'rgba(113, 113, 122, 0.32)',
-    text: '#d4d4d8',
-    shadow: 'rgba(113, 113, 122, 0.35)',
+export const themeOptions = {
+  light: {
+    name: 'Claro',
+    description: 'Mais limpo para usar durante o dia.',
+  },
+  dark: {
+    name: 'Escuro',
+    description: 'Visual padrão com fundo preto.',
+  },
+  system: {
+    name: 'Sistema',
+    description: 'Segue o tema do dispositivo.',
   },
 }
 
@@ -240,10 +152,49 @@ export function getUserSettingsKey(user) {
   return `forgeflow:${getUserId(user)}:settings`
 }
 
+function normalizeThemeMode(themeMode) {
+  if (themeMode === 'auto') return 'system'
+  if (themeMode === 'purple') return 'dark'
+  if (['light', 'dark', 'system'].includes(themeMode)) return themeMode
+
+  return defaultSettings.themeMode
+}
+
+function normalizeAccentColor(accentColor) {
+  if (accentColors[accentColor]) return accentColor
+
+  const legacyAccentMap = {
+    purple: 'violet',
+    pink: 'rose',
+    fuchsia: 'rose',
+    green: 'emerald',
+    teal: 'cyan',
+    sky: 'cyan',
+    orange: 'amber',
+    yellow: 'amber',
+    lime: 'emerald',
+    red: 'rose',
+    crimson: 'rose',
+    zinc: 'slate',
+    indigo: 'violet',
+  }
+
+  return legacyAccentMap[accentColor] || defaultSettings.accentColor
+}
+
 export function normalizeSettings(settings = {}) {
   return {
     ...defaultSettings,
     ...settings,
+    themeMode: normalizeThemeMode(settings.themeMode),
+    accentColor: normalizeAccentColor(settings.accentColor),
+    workoutsVisibleLimit: Number(settings.workoutsVisibleLimit || defaultSettings.workoutsVisibleLimit),
+    compactMobile: Boolean(settings.compactMobile),
+    collapseSeriesByDefault: Boolean(settings.collapseSeriesByDefault),
+    collapseWorkoutsByDefault: Boolean(settings.collapseWorkoutsByDefault),
+    autoSaveWorkout: settings.autoSaveWorkout !== false,
+    confirmBeforeFinishWorkout: settings.confirmBeforeFinishWorkout !== false,
+    confirmBeforeCancelWorkout: settings.confirmBeforeCancelWorkout !== false,
   }
 }
 
@@ -263,6 +214,7 @@ export function saveAppSettings(settings) {
   const updatedSettings = normalizeSettings(settings)
 
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(updatedSettings))
+  applyAppSettingsToDocument(updatedSettings)
 
   window.dispatchEvent(
     new CustomEvent('forgeflow:settings-changed', {
@@ -291,9 +243,9 @@ export function saveUserAppSettings(user, settings) {
   const updatedSettings = normalizeSettings(settings)
 
   localStorage.setItem(key, JSON.stringify(updatedSettings))
-
-  // Mantém também a última configuração local para telas públicas como login/register.
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(updatedSettings))
+
+  applyAppSettingsToDocument(updatedSettings)
 
   window.dispatchEvent(
     new CustomEvent('forgeflow:settings-changed', {
@@ -331,26 +283,173 @@ export function updateUserAppSetting(user, key, value) {
 }
 
 export function getAccentColor(settings = getAppSettings()) {
-  return accentColors[settings.accentColor] || accentColors.purple
+  return accentColors[settings.accentColor] || accentColors.violet
 }
 
-export function applyAppSettingsToDocument(settings = getAppSettings()) {
-  const accent = getAccentColor(settings)
-  const root = document.documentElement
+export function getResolvedThemeMode(settings = getAppSettings()) {
+  const normalizedTheme = normalizeThemeMode(settings.themeMode)
+
+  if (normalizedTheme !== 'system') return normalizedTheme
+
+  if (typeof window === 'undefined') return 'dark'
+
+  return window.matchMedia('(prefers-color-scheme: light)').matches
+    ? 'light'
+    : 'dark'
+}
+
+function ensureThemeStyleElement() {
+  if (typeof document === 'undefined') return null
+
+  let styleElement = document.getElementById(THEME_STYLE_ID)
+
+  if (!styleElement) {
+    styleElement = document.createElement('style')
+    styleElement.id = THEME_STYLE_ID
+    document.head.appendChild(styleElement)
+  }
+
+  return styleElement
+}
+
+function applyThemeVariables(root, resolvedTheme, accent) {
+  const isLight = resolvedTheme === 'light'
 
   root.style.setProperty('--ff-accent', accent.primary)
   root.style.setProperty('--ff-accent-hover', accent.primaryHover)
-  root.style.setProperty('--ff-accent-soft', accent.soft)
-  root.style.setProperty('--ff-accent-border', accent.border)
-  root.style.setProperty('--ff-accent-text', accent.text)
+  root.style.setProperty('--ff-accent-soft', isLight ? accent.lightSoft : accent.soft)
+  root.style.setProperty('--ff-accent-border', isLight ? accent.lightBorder : accent.border)
+  root.style.setProperty('--ff-accent-text', isLight ? accent.lightText : accent.text)
   root.style.setProperty('--ff-accent-shadow', accent.shadow)
 
-  root.dataset.theme = settings.themeMode
-  root.dataset.accent = settings.accentColor
+  root.style.setProperty('--ff-bg', isLight ? '#f8fafc' : '#050505')
+  root.style.setProperty('--ff-surface', isLight ? '#ffffff' : '#18181b')
+  root.style.setProperty('--ff-surface-2', isLight ? '#f1f5f9' : '#101014')
+  root.style.setProperty('--ff-border', isLight ? '#e2e8f0' : '#27272a')
+  root.style.setProperty('--ff-text', isLight ? '#0f172a' : '#fafafa')
+  root.style.setProperty('--ff-muted', isLight ? '#64748b' : '#71717a')
+}
 
-  if (settings.compactMobile) {
+function injectThemeOverrides() {
+  const styleElement = ensureThemeStyleElement()
+
+  if (!styleElement) return
+
+  styleElement.textContent = `
+    html[data-resolved-theme='light'] {
+      color-scheme: light;
+      background: var(--ff-bg);
+    }
+
+    html[data-resolved-theme='dark'] {
+      color-scheme: dark;
+      background: var(--ff-bg);
+    }
+
+    html[data-resolved-theme='light'] body {
+      background: var(--ff-bg) !important;
+      color: var(--ff-text) !important;
+    }
+
+    html[data-resolved-theme='light'] .bg-black,
+    html[data-resolved-theme='light'] .bg-zinc-950,
+    html[data-resolved-theme='light'] .bg-\[\#101014\],
+    html[data-resolved-theme='light'] .bg-\[\#18181b\] {
+      background-color: var(--ff-surface) !important;
+    }
+
+    html[data-resolved-theme='light'] .bg-zinc-900,
+    html[data-resolved-theme='light'] .bg-zinc-800,
+    html[data-resolved-theme='light'] .hover\:bg-zinc-900\/70:hover,
+    html[data-resolved-theme='light'] .hover\:bg-zinc-900:hover,
+    html[data-resolved-theme='light'] .hover\:bg-\[\#1f1f23\]:hover {
+      background-color: var(--ff-surface-2) !important;
+    }
+
+    html[data-resolved-theme='light'] .border-zinc-900,
+    html[data-resolved-theme='light'] .border-zinc-800,
+    html[data-resolved-theme='light'] .border-zinc-700 {
+      border-color: var(--ff-border) !important;
+    }
+
+    html[data-resolved-theme='light'] .text-white,
+    html[data-resolved-theme='light'] .text-zinc-50,
+    html[data-resolved-theme='light'] .text-zinc-100,
+    html[data-resolved-theme='light'] .text-zinc-200,
+    html[data-resolved-theme='light'] .text-zinc-300 {
+      color: var(--ff-text) !important;
+    }
+
+    html[data-resolved-theme='light'] .text-zinc-400,
+    html[data-resolved-theme='light'] .text-zinc-500,
+    html[data-resolved-theme='light'] .text-zinc-600 {
+      color: var(--ff-muted) !important;
+    }
+
+    html[data-resolved-theme='light'] input,
+    html[data-resolved-theme='light'] textarea,
+    html[data-resolved-theme='light'] select {
+      background-color: #ffffff !important;
+      color: var(--ff-text) !important;
+      border-color: var(--ff-border) !important;
+    }
+
+    html[data-resolved-theme='light'] input::placeholder,
+    html[data-resolved-theme='light'] textarea::placeholder {
+      color: #94a3b8 !important;
+    }
+
+    html.ff-compact-mobile body {
+      --ff-mobile-density: 0.88;
+    }
+
+    @media (max-width: 640px) {
+      html.ff-compact-mobile .rounded-3xl {
+        border-radius: 1rem !important;
+      }
+
+      html.ff-compact-mobile .p-5,
+      html.ff-compact-mobile .p-6 {
+        padding: 1rem !important;
+      }
+
+      html.ff-compact-mobile .gap-6 {
+        gap: 1rem !important;
+      }
+    }
+  `
+}
+
+export function applyAppSettingsToDocument(settings = getAppSettings()) {
+  if (typeof document === 'undefined') return
+
+  const normalizedSettings = normalizeSettings(settings)
+  const accent = getAccentColor(normalizedSettings)
+  const resolvedTheme = getResolvedThemeMode(normalizedSettings)
+  const root = document.documentElement
+
+  injectThemeOverrides()
+  applyThemeVariables(root, resolvedTheme, accent)
+
+  root.dataset.theme = normalizedSettings.themeMode
+  root.dataset.resolvedTheme = resolvedTheme
+  root.dataset.accent = normalizedSettings.accentColor
+
+  if (normalizedSettings.compactMobile) {
     root.classList.add('ff-compact-mobile')
   } else {
     root.classList.remove('ff-compact-mobile')
   }
+}
+
+if (typeof window !== 'undefined') {
+  const media = window.matchMedia('(prefers-color-scheme: light)')
+
+  media.addEventListener?.('change', () => {
+    const settings = getAppSettings()
+
+    if (settings.themeMode === 'system') {
+      applyAppSettingsToDocument(settings)
+    }
+  })
 }
