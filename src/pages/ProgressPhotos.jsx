@@ -781,12 +781,22 @@ function ProgressPhotos() {
                         <Card
                           key={photo.id}
                           className={[
-                            'overflow-hidden p-0 transition',
+                            'relative overflow-hidden p-0 transition duration-200',
                             isSelectedForCompare
-                              ? 'border-[var(--ff-accent-border)] shadow-[0_0_24px_var(--ff-accent-shadow)]'
-                              : '',
+                              ? 'border-[var(--ff-accent)] ring-4 ring-[var(--ff-accent)]/25 shadow-[0_0_34px_var(--ff-accent-shadow)] scale-[1.01]'
+                              : 'hover:border-[var(--ff-accent-border)]/50 hover:shadow-[0_0_22px_var(--ff-accent-shadow)]/10',
                           ].join(' ')}
                         >
+                          {isSelectedForCompare && (
+                            <div className="pointer-events-none absolute inset-0 z-20 rounded-[inherit] border-2 border-[var(--ff-accent)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.25)]" />
+                          )}
+
+                          {isSelectedForCompare && (
+                            <div className="pointer-events-none absolute right-3 top-3 z-30 flex h-11 w-11 items-center justify-center rounded-2xl border border-white/30 bg-[var(--ff-accent)] text-base font-black text-white shadow-[0_0_22px_var(--ff-accent-shadow)]">
+                              ✓
+                            </div>
+                          )}
+
                           <button
                             type="button"
                             onClick={() =>
@@ -799,10 +809,17 @@ function ProgressPhotos() {
                             <img
                               src={photo.imageUrl}
                               alt={`Foto de evolução - ${getAngleLabel(photo.angle)}`}
-                              className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                              className={[
+                                'h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]',
+                                isSelectedForCompare ? 'brightness-[0.82] saturate-110' : '',
+                              ].join(' ')}
                             />
 
-                            <div className="absolute left-3 top-3 flex flex-wrap gap-2">
+                            {isSelectedForCompare && (
+                              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--ff-accent-soft),transparent_62%)]" />
+                            )}
+
+                            <div className="absolute left-3 top-3 z-30 flex flex-wrap gap-2 pr-14">
                               <Badge variant="purple">
                                 {getAngleLabel(photo.angle)}
                               </Badge>
@@ -810,16 +827,24 @@ function ProgressPhotos() {
                               {compareMode && (
                                 <span
                                   className={[
-                                    'rounded-full border px-2.5 py-1 text-[11px] font-black',
+                                    'rounded-full border px-2.5 py-1 text-[11px] font-black shadow-sm backdrop-blur',
                                     isSelectedForCompare
-                                      ? 'border-[var(--ff-accent-border)] bg-[var(--ff-accent)] text-white'
-                                      : 'border-white/30 bg-black/45 text-white backdrop-blur',
+                                      ? 'border-white/30 bg-[var(--ff-accent)] text-white shadow-[0_0_18px_var(--ff-accent-shadow)]'
+                                      : 'border-white/30 bg-black/45 text-white',
                                   ].join(' ')}
                                 >
-                                  {isSelectedForCompare ? 'Selecionada' : 'Comparar'}
+                                  {isSelectedForCompare
+                                    ? `Selecionada ${selectedCompareIds.indexOf(photo.id) + 1}/2`
+                                    : 'Selecionar'}
                                 </span>
                               )}
                             </div>
+
+                            {compareMode && !isSelectedForCompare && (
+                              <div className="absolute inset-x-3 bottom-3 rounded-2xl border border-white/20 bg-black/50 px-3 py-2 text-center text-xs font-black text-white opacity-0 backdrop-blur transition group-hover:opacity-100">
+                                Clique para comparar
+                              </div>
+                            )}
 
                             {!compareMode && (
                               <div className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-2xl border border-white/20 bg-black/45 text-white opacity-0 backdrop-blur transition group-hover:opacity-100">
