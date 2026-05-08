@@ -63,6 +63,8 @@ function Workouts() {
 
     const [expandedWorkoutId, setExpandedWorkoutId] = useState(null)
     const [editingWorkoutId, setEditingWorkoutId] = useState(null)
+    const [editingTemplateId, setEditingTemplateId] = useState(null)
+    const [builderMode, setBuilderMode] = useState('workout')
     const [isLoaded, setIsLoaded] = useState(false)
     const [isBuilderOpen, setIsBuilderOpen] = useState(false)
 
@@ -254,6 +256,8 @@ function Workouts() {
                 setExerciseSets(draft.exerciseSets || [])
                 setWorkoutExercises(draft.workoutExercises || [])
                 setEditingWorkoutId(draft.editingWorkoutId || null)
+                setEditingTemplateId(draft.editingTemplateId || null)
+                setBuilderMode(draft.builderMode || 'workout')
                 setSelectedFolderId(draft.selectedFolderId || null)
                 setDefaultSetModel(
                     draft.defaultSetModel || getAppSettings().defaultSetModel
@@ -313,6 +317,8 @@ function Workouts() {
             exerciseSets,
             workoutExercises,
             editingWorkoutId,
+            editingTemplateId,
+            builderMode,
             selectedFolderId,
             defaultSetModel,
         }
@@ -325,6 +331,8 @@ function Workouts() {
         exerciseSets,
         workoutExercises,
         editingWorkoutId,
+        editingTemplateId,
+        builderMode,
         selectedFolderId,
         defaultSetModel,
         isLoaded,
@@ -582,6 +590,8 @@ function Workouts() {
         setExerciseSets([])
         setWorkoutExercises([])
         setEditingWorkoutId(null)
+        setEditingTemplateId(null)
+        setBuilderMode('workout')
         setSelectedFolderId(null)
         setQuickSearch('')
         setQuickGroupFilter('')
@@ -593,6 +603,7 @@ function Workouts() {
 
     function openCreateBuilder() {
         resetForm()
+        setBuilderMode('workout')
         setIsBuilderOpen(true)
     }
 
@@ -850,6 +861,11 @@ function Workouts() {
     async function handleSubmit(event) {
         event.preventDefault()
 
+        if (builderMode === 'template') {
+            await handleSubmitTemplate()
+            return
+        }
+
         if (!workoutName.trim() || workoutExercises.length === 0) {
             showToast(
                 'error',
@@ -907,10 +923,26 @@ function Workouts() {
     }
 
     function handleEditWorkout(workout) {
+        setBuilderMode('workout')
+        setEditingTemplateId(null)
         setEditingWorkoutId(getWorkoutId(workout))
         setWorkoutName(workout.name)
         setWorkoutExercises(workout.exercises || [])
         setSelectedFolderId(workout.folderId || null)
+        setSelectedExercise('')
+        setSetDescription('')
+        setExerciseSets([])
+        setExpandedWorkoutId(null)
+        setIsBuilderOpen(true)
+    }
+
+    function handleEditTemplate(template) {
+        setBuilderMode('template')
+        setEditingTemplateId(template.id)
+        setEditingWorkoutId(null)
+        setWorkoutName(template.name || '')
+        setWorkoutExercises(template.exercises || [])
+        setSelectedFolderId(null)
         setSelectedExercise('')
         setSetDescription('')
         setExerciseSets([])
@@ -1130,6 +1162,98 @@ function Workouts() {
                 }
             },
         })
+    }
+
+    async function handleSubmitTemplate() {
+        if (!workoutName.trim() || workoutExercises.length === 0) {
+            showToast(
+                'error',
+                'Template incompleto',
+                'Informe o nome do template e adicione pelo menos um exercício.'
+            )
+            return
+        }
+
+        try {
+            if (editingTemplateId) {
+                const currentTemplate = workoutTemplates.find(
+                    (item) => item.id === editingTemplateId
+                )
+
+                const updatedTemplateFromApi = await apiFetch(
+                    `/workout-templates/${editingTemplateId}`,
+                    {
+                        method: 'PUT',
+                        body: JSON.stringify({
+                            name: workoutName.trim(),
+                            description: currentTemplate?.description || '',
+                            category: currentTemplate?.category || 'Personalizado',
+                            goal: currentTemplate?.goal || '',
+                            difficulty: currentTemplate?.difficulty || '',
+                            estimatedDuration: currentTemplate?.estimatedDuration || null,
+                            exercises: workoutExercises,
+                            source: currentTemplate?.source || 'User',
+                        }),
+                    }
+                )
+
+                const updatedTemplate =
+                    normalizeWorkoutTemplateFromApi(updatedTemplateFromApi)
+
+                setWorkoutTemplates(
+                    workoutTemplates.map((item) =>
+                        item.id === editingTemplateId ? updatedTemplate : item
+                    )
+                )
+
+                resetForm()
+                setIsBuilderOpen(false)
+
+                showToast(
+                    'success',
+                    'Template atualizado',
+                    'As alterações foram salvas no template.'
+                )
+
+                return
+            }
+
+            const createdTemplateFromApi = await apiFetch('/workout-templates', {
+                method: 'POST',
+                body: JSON.stringify({
+                    name: workoutName.trim(),
+                    description: '',
+                    category: 'Personalizado',
+                    goal: '',
+                    difficulty: '',
+                    estimatedDuration: null,
+                    exercises: workoutExercises,
+                    source: 'User',
+                }),
+            })
+
+            const createdTemplate =
+                normalizeWorkoutTemplateFromApi(createdTemplateFromApi)
+
+            setWorkoutTemplates([createdTemplate, ...workoutTemplates])
+
+            resetForm()
+            setIsBuilderOpen(false)
+
+            showToast(
+                'success',
+                'Template criado',
+                'O template foi salvo com sucesso.'
+            )
+        } catch (error) {
+            console.error(error)
+
+            showToast(
+                'error',
+                'Erro ao salvar template',
+                error.message || 'Não foi possível salvar o template.'
+            )
+        }
     }
 
     async function handleSaveCurrentWorkoutAsTemplate() {
@@ -1358,141 +1482,6 @@ function Workouts() {
                     })}
                 </div>
             </div>
-
-            <section className="mt-6">
-                <Card>
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                        <div>
-                            <h2 className="text-2xl font-black">
-                                Templates de treino
-                            </h2>
-
-                            <p className="mt-1 text-sm text-zinc-500">
-                                Use modelos prontos para criar treinos mais rápido.
-                            </p>
-                        </div>
-
-                        <Badge>
-                            {workoutTemplates.length} template(s)
-                        </Badge>
-                    </div>
-
-                    <div className="mt-5">
-                        {sortedWorkoutTemplates.length === 0 ? (
-                            <EmptyState
-                                title="Nenhum template salvo"
-                                description="Crie templates próprios ou gere alguns modelos padrão do ForgeFlow."
-                                action={
-                                    <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center sm:justify-center">
-                                        <Button onClick={handleSeedDefaultTemplates}>
-                                            Gerar templates padrão
-                                        </Button>
-
-                                        <Button variant="secondary" onClick={openCreateBuilder}>
-                                            Criar treino
-                                        </Button>
-                                    </div>
-                                }
-                            />
-                        ) : (
-                            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-                                {sortedWorkoutTemplates.slice(0, 4).map((template) => (
-                                    <div
-                                        key={template.id}
-                                        className="rounded-3xl border border-zinc-800 bg-[#18181b] p-4 transition hover:border-[var(--ff-accent-border)]/40 hover:bg-[#1f1f23]"
-                                    >
-                                        <div className="flex items-start justify-between gap-3">
-                                            <div className="min-w-0">
-                                                <div className="flex flex-wrap items-center gap-2">
-                                                    <h3 className="line-clamp-2 text-lg font-black text-white">
-                                                        {template.name}
-                                                    </h3>
-
-                                                    {template.isFavorite && (
-                                                        <Badge>
-                                                            ⭐ Favorito
-                                                        </Badge>
-                                                    )}
-                                                </div>
-
-                                                <p className="mt-2 text-sm text-zinc-500">
-                                                    {template.category || 'Personalizado'} • {template.exercises.length} exercício(s)
-                                                </p>
-                                            </div>
-
-                                            <button
-                                                type="button"
-                                                onClick={() => handleToggleTemplateFavorite(template)}
-                                                title={
-                                                    template.isFavorite
-                                                        ? 'Remover dos favoritos'
-                                                        : 'Adicionar aos favoritos'
-                                                }
-                                                className={
-                                                    template.isFavorite
-                                                        ? 'flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-yellow-500/30 bg-yellow-500/10 text-yellow-300 transition hover:bg-yellow-500/20'
-                                                        : 'flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-950 text-zinc-500 transition hover:border-yellow-500/30 hover:bg-yellow-500/10 hover:text-yellow-300'
-                                                }
-                                            >
-                                                <Star
-                                                    size={18}
-                                                    fill={template.isFavorite ? 'currentColor' : 'none'}
-                                                />
-                                            </button>
-                                        </div>
-
-                                        {template.description && (
-                                            <p className="mt-3 line-clamp-2 text-sm text-zinc-500">
-                                                {template.description}
-                                            </p>
-                                        )}
-
-                                        <div className="mt-4 flex flex-wrap gap-2">
-                                            {template.goal && (
-                                                <Badge variant="purple">
-                                                    {template.goal}
-                                                </Badge>
-                                            )}
-
-                                            {template.difficulty && (
-                                                <Badge>
-                                                    {template.difficulty}
-                                                </Badge>
-                                            )}
-
-                                            {template.source === 'ForgeFlow' && (
-                                                <Badge>
-                                                    ForgeFlow
-                                                </Badge>
-                                            )}
-                                        </div>
-
-                                        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => handleCreateWorkoutFromTemplate(template)}
-                                                className="flex h-11 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] text-sm font-bold text-white transition hover:bg-[var(--ff-accent-hover)]"
-                                            >
-                                                <Plus size={17} />
-                                                Usar template
-                                            </button>
-
-                                            <button
-                                                type="button"
-                                                onClick={() => handleDeleteTemplate(template.id)}
-                                                className="flex h-11 items-center justify-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 text-sm font-bold text-red-300 transition hover:bg-red-500/20"
-                                            >
-                                                <Trash2 size={17} />
-                                                Excluir
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                </Card>
-            </section>
 
             <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
                 <div className="xl:col-span-2">
@@ -1813,6 +1802,160 @@ function Workouts() {
                 </div>
             </section>
 
+
+            <section className="mt-6">
+                <Card>
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                            <h2 className="text-2xl font-black">
+                                Templates de treino
+                            </h2>
+
+                            <p className="mt-1 text-sm text-zinc-500">
+                                Use modelos prontos para criar treinos mais rápido.
+                            </p>
+                        </div>
+
+                        <Badge>
+                            {workoutTemplates.length} template(s)
+                        </Badge>
+                    </div>
+
+                    <div className="mt-5">
+                        {sortedWorkoutTemplates.length === 0 ? (
+                            <EmptyState
+                                title="Nenhum template salvo"
+                                description="Crie templates próprios ou gere alguns modelos padrão do ForgeFlow."
+                                action={
+                                    <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center sm:justify-center">
+                                        <Button onClick={handleSeedDefaultTemplates}>
+                                            Gerar templates padrão
+                                        </Button>
+
+                                        <Button variant="secondary" onClick={openCreateBuilder}>
+                                            Criar treino
+                                        </Button>
+                                    </div>
+                                }
+                            />
+                        ) : (
+                            <div className="grid max-h-[760px] grid-cols-1 gap-3 overflow-y-auto pr-1 lg:grid-cols-2">
+                                {sortedWorkoutTemplates.map((template) => (
+                                    <div
+                                        key={template.id}
+                                        className="rounded-3xl border border-zinc-800 bg-[#18181b] p-4 transition hover:border-[var(--ff-accent-border)]/40 hover:bg-[#1f1f23]"
+                                    >
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="min-w-0">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <h3 className="line-clamp-2 text-lg font-black text-white">
+                                                        {template.name}
+                                                    </h3>
+
+                                                    {template.isFavorite && (
+                                                        <Badge>
+                                                            ⭐ Favorito
+                                                        </Badge>
+                                                    )}
+                                                </div>
+
+                                                <p className="mt-2 text-sm text-zinc-500">
+                                                    {template.category || 'Personalizado'} •{' '}
+                                                    {template.exercises.length > 0
+                                                        ? `${template.exercises.length} exercício(s)`
+                                                        : 'sem exercícios'}
+                                                </p>
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => handleToggleTemplateFavorite(template)}
+                                                title={
+                                                    template.isFavorite
+                                                        ? 'Remover dos favoritos'
+                                                        : 'Adicionar aos favoritos'
+                                                }
+                                                className={
+                                                    template.isFavorite
+                                                        ? 'flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-yellow-500/30 bg-yellow-500/10 text-yellow-300 transition hover:bg-yellow-500/20'
+                                                        : 'flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-950 text-zinc-500 transition hover:border-yellow-500/30 hover:bg-yellow-500/10 hover:text-yellow-300'
+                                                }
+                                            >
+                                                <Star
+                                                    size={18}
+                                                    fill={template.isFavorite ? 'currentColor' : 'none'}
+                                                />
+                                            </button>
+                                        </div>
+
+                                        {template.description && (
+                                            <p className="mt-3 line-clamp-2 text-sm text-zinc-500">
+                                                {template.description}
+                                            </p>
+                                        )}
+
+                                        <div className="mt-4 flex flex-wrap gap-2">
+                                            {template.goal && (
+                                                <Badge variant="purple">
+                                                    {template.goal}
+                                                </Badge>
+                                            )}
+
+                                            {template.difficulty && (
+                                                <Badge>
+                                                    {template.difficulty}
+                                                </Badge>
+                                            )}
+
+                                            {template.source === 'ForgeFlow' && (
+                                                <Badge>
+                                                    ForgeFlow
+                                                </Badge>
+                                            )}
+                                        </div>
+
+                                        {template.exercises.length === 0 && (
+                                            <p className="mt-3 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-3 text-xs font-bold text-yellow-300">
+                                                Template vazio. Clique em editar para adicionar exercícios.
+                                            </p>
+                                        )}
+
+                                        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleCreateWorkoutFromTemplate(template)}
+                                                className="flex h-11 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] text-sm font-bold text-white transition hover:bg-[var(--ff-accent-hover)]"
+                                            >
+                                                <Plus size={17} />
+                                                Usar
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => handleEditTemplate(template)}
+                                                className="flex h-11 items-center justify-center gap-2 rounded-2xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 text-sm font-bold text-[var(--ff-accent-text)] transition hover:bg-[var(--ff-accent-soft)]/20"
+                                            >
+                                                <Edit3 size={17} />
+                                                Editar
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDeleteTemplate(template.id)}
+                                                className="flex h-11 items-center justify-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 text-sm font-bold text-red-300 transition hover:bg-red-500/20"
+                                            >
+                                                <Trash2 size={17} />
+                                                Excluir
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </Card>
+            </section>
+
             {isBuilderOpen && (
                 <div className="fixed inset-0 z-[9999] overflow-y-auto overscroll-contain bg-black">
                     <div className="mx-auto max-w-[1180px] px-4 py-4 sm:py-6">
@@ -1831,31 +1974,45 @@ function Workouts() {
                                         <div className="min-w-0">
                                             <p className="text-xs font-bold uppercase tracking-wide text-[var(--ff-accent-text)]
 ">
-                                                {editingWorkoutId ? 'Editar rotina' : 'Nova rotina'}
+                                                {builderMode === 'template'
+                                                    ? editingTemplateId
+                                                        ? 'Editar template'
+                                                        : 'Novo template'
+                                                    : editingWorkoutId
+                                                        ? 'Editar rotina'
+                                                        : 'Nova rotina'}
                                             </p>
 
                                             <h1 className="truncate text-2xl font-black sm:text-3xl">
-                                                {editingWorkoutId ? 'Editar treino' : 'Criar treino'}
+                                                {builderMode === 'template'
+                                                    ? editingTemplateId
+                                                        ? 'Editar template'
+                                                        : 'Criar template'
+                                                    : editingWorkoutId
+                                                        ? 'Editar treino'
+                                                        : 'Criar treino'}
                                             </h1>
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center">
-                                        <button
-                                            type="button"
-                                            onClick={handleSaveCurrentWorkoutAsTemplate}
-                                            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 px-5 text-sm font-bold text-yellow-300 transition hover:bg-yellow-500/20 sm:w-auto"
-                                        >
-                                            <Star size={18} />
-                                            Salvar template
-                                        </button>
+                                        {builderMode === 'workout' && (
+                                            <button
+                                                type="button"
+                                                onClick={handleSaveCurrentWorkoutAsTemplate}
+                                                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 px-5 text-sm font-bold text-yellow-300 transition hover:bg-yellow-500/20 sm:w-auto"
+                                            >
+                                                <Star size={18} />
+                                                Salvar template
+                                            </button>
+                                        )}
 
                                         <button
                                             type="submit"
                                             className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-bold text-white transition hover:bg-[var(--ff-accent-hover)] sm:w-auto"
                                         >
                                             <Save size={18} />
-                                            Salvar treino
+                                            {builderMode === 'template' ? 'Salvar template' : 'Salvar treino'}
                                         </button>
                                     </div>
                                 </div>
@@ -1866,43 +2023,55 @@ function Workouts() {
                                     <Card>
                                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                             <Input
-                                                label="Título do treino"
-                                                placeholder="Ex: Push A, Costas pesado..."
+                                                label={builderMode === 'template' ? 'Título do template' : 'Título do treino'}
+                                                placeholder={builderMode === 'template' ? 'Ex: Push, Pull, Upper...' : 'Ex: Push A, Costas pesado...'}
                                                 value={workoutName}
                                                 onChange={(event) => setWorkoutName(event.target.value)}
                                             />
 
-                                            <div>
-                                                <div className="mb-2 flex items-center justify-between gap-3">
-                                                    <label className="block text-sm font-bold text-zinc-300">
-                                                        Pasta
-                                                    </label>
+                                            {builderMode === 'workout' ? (
+                                                <div>
+                                                    <div className="mb-2 flex items-center justify-between gap-3">
+                                                        <label className="block text-sm font-bold text-zinc-300">
+                                                            Pasta
+                                                        </label>
 
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setIsFolderModalOpen(true)}
-                                                        className="text-xs font-bold text-[var(--ff-accent-text)]
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setIsFolderModalOpen(true)}
+                                                            className="text-xs font-bold text-[var(--ff-accent-text)]
  transition hover:text-[var(--ff-accent-text)]
 "
+                                                        >
+                                                            + Criar pasta
+                                                        </button>
+                                                    </div>
+
+                                                    <select
+                                                        value={selectedFolderId || ''}
+                                                        onChange={(event) => setSelectedFolderId(event.target.value || null)}
+                                                        className="h-12 w-full rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-violet-500/10"
                                                     >
-                                                        + Criar pasta
-                                                    </button>
+                                                        <option value="">Sem pasta</option>
+
+                                                        {folders.map((folder) => (
+                                                            <option key={folder.id} value={folder.id}>
+                                                                {folder.name}
+                                                            </option>
+                                                        ))}
+                                                    </select>
                                                 </div>
+                                            ) : (
+                                                <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4">
+                                                    <p className="text-sm font-bold text-yellow-300">
+                                                        Editando template
+                                                    </p>
 
-                                                <select
-                                                    value={selectedFolderId || ''}
-                                                    onChange={(event) => setSelectedFolderId(event.target.value || null)}
-                                                    className="h-12 w-full rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-violet-500/10"
-                                                >
-                                                    <option value="">Sem pasta</option>
-
-                                                    {folders.map((folder) => (
-                                                        <option key={folder.id} value={folder.id}>
-                                                            {folder.name}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
+                                                    <p className="mt-1 text-xs text-yellow-100/70">
+                                                        Templates não usam pasta. Adicione os exercícios e salve o modelo.
+                                                    </p>
+                                                </div>
+                                            )}
                                         </div>
                                     </Card>
 
