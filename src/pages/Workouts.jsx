@@ -395,6 +395,16 @@ function Workouts() {
             })
     }, [workoutTemplates])
 
+
+    const hasEmptyDefaultTemplates = useMemo(() => {
+        return workoutTemplates.some((template) => {
+            return (
+                template.source === 'ForgeFlow' &&
+                (!template.exercises || template.exercises.length === 0)
+            )
+        })
+    }, [workoutTemplates])
+
     const recentExerciseMap = useMemo(() => {
         const map = new Map()
 
@@ -1044,6 +1054,36 @@ function Workouts() {
                 'error',
                 'Erro ao criar templates',
                 error.message || 'Não foi possível criar os templates padrão.'
+            )
+        }
+    }
+
+
+    async function handleFillDefaultTemplates() {
+        try {
+            const result = await apiFetch('/workout-templates/fill-defaults', {
+                method: 'POST',
+            })
+
+            const templatesFromApi = Array.isArray(result?.templates)
+                ? result.templates.map(normalizeWorkoutTemplateFromApi)
+                : []
+
+            setWorkoutTemplates(templatesFromApi)
+            saveUserStorageData(user, 'workout-templates', templatesFromApi)
+
+            showToast(
+                'success',
+                'Templates preenchidos',
+                result?.message || 'Os templates padrão receberam exercícios sugeridos.'
+            )
+        } catch (error) {
+            console.error(error)
+
+            showToast(
+                'error',
+                'Erro ao preencher templates',
+                error.message || 'Não foi possível preencher os templates padrão.'
             )
         }
     }
@@ -1820,6 +1860,27 @@ function Workouts() {
                             {workoutTemplates.length} template(s)
                         </Badge>
                     </div>
+
+                    {hasEmptyDefaultTemplates && (
+                        <div className="mt-5 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                    <p className="text-sm font-bold text-yellow-300">
+                                        Existem templates padrão vazios
+                                    </p>
+
+                                    <p className="mt-1 text-xs text-yellow-100/70">
+                                        O ForgeFlow pode preencher esses modelos automaticamente usando os exercícios da sua biblioteca.
+                                    </p>
+                                </div>
+
+                                <Button onClick={handleFillDefaultTemplates}>
+                                    Preencher templates
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
 
                     <div className="mt-5">
                         {sortedWorkoutTemplates.length === 0 ? (

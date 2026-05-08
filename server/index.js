@@ -493,6 +493,209 @@ const DEFAULT_WORKOUT_TEMPLATES = [
     },
 ]
 
+
+function normalizeTemplateGroupName(group) {
+    if (!group) return ''
+
+    const normalized = String(group).trim().toLowerCase()
+
+    const aliases = {
+        peito: 'peito',
+        peitoral: 'peito',
+        chest: 'peito',
+
+        costas: 'costas',
+        dorsal: 'costas',
+        back: 'costas',
+
+        ombro: 'ombros',
+        ombros: 'ombros',
+        deltoide: 'ombros',
+        deltoides: 'ombros',
+        shoulder: 'ombros',
+        shoulders: 'ombros',
+
+        biceps: 'bíceps',
+        bíceps: 'bíceps',
+
+        triceps: 'tríceps',
+        tríceps: 'tríceps',
+
+        quadriceps: 'quadríceps',
+        quadríceps: 'quadríceps',
+        pernas: 'quadríceps',
+        quads: 'quadríceps',
+
+        posterior: 'posterior de coxa',
+        posteriores: 'posterior de coxa',
+        hamstrings: 'posterior de coxa',
+        'posterior de coxa': 'posterior de coxa',
+
+        gluteos: 'glúteos',
+        glúteos: 'glúteos',
+        glutes: 'glúteos',
+
+        panturrilha: 'panturrilhas',
+        panturrilhas: 'panturrilhas',
+        calves: 'panturrilhas',
+
+        abdomen: 'abdômen',
+        abdômen: 'abdômen',
+        abs: 'abdômen',
+        core: 'abdômen',
+
+        lombar: 'lombar',
+        cardio: 'cardio',
+        'corpo inteiro': 'corpo inteiro',
+        fullbody: 'corpo inteiro',
+        'full body': 'corpo inteiro',
+    }
+
+    return aliases[normalized] || normalized
+}
+
+function getExerciseGroupForTemplate(exercise) {
+    return normalizeTemplateGroupName(
+        exercise.muscleGroup ||
+        exercise.normalizedGroup ||
+        exercise.group ||
+        exercise.targetMuscle
+    )
+}
+
+function createTemplateExerciseItem(exercise, setDescriptions = ['12 Rep', '10-12 Rep', '8-10 Rep']) {
+    const plainExercise = typeof exercise.toObject === 'function'
+        ? exercise.toObject()
+        : exercise
+
+    return {
+        id: new mongoose.Types.ObjectId().toString(),
+        exercise: {
+            ...plainExercise,
+            id: exercise._id?.toString() || exercise.id,
+        },
+        sets: setDescriptions.map((description) => ({
+            id: new mongoose.Types.ObjectId().toString(),
+            description,
+            type: 'working',
+        })),
+        note: '',
+        restTimer: 'Desligado',
+    }
+}
+
+function pickExercisesByGroups(exercises = [], groups = [], limit = 6) {
+    const normalizedGroups = groups.map(normalizeTemplateGroupName)
+
+    const selected = []
+    const usedIds = new Set()
+
+    for (const group of normalizedGroups) {
+        const found = exercises.find((exercise) => {
+            const exerciseId = exercise._id?.toString() || exercise.id
+
+            return (
+                !usedIds.has(exerciseId) &&
+                getExerciseGroupForTemplate(exercise) === group
+            )
+        })
+
+        if (found) {
+            const exerciseId = found._id?.toString() || found.id
+
+            usedIds.add(exerciseId)
+            selected.push(found)
+        }
+    }
+
+    if (selected.length >= limit) {
+        return selected.slice(0, limit)
+    }
+
+    for (const exercise of exercises) {
+        const exerciseId = exercise._id?.toString() || exercise.id
+
+        if (usedIds.has(exerciseId)) continue
+
+        const group = getExerciseGroupForTemplate(exercise)
+
+        if (normalizedGroups.includes(group)) {
+            usedIds.add(exerciseId)
+            selected.push(exercise)
+        }
+
+        if (selected.length >= limit) break
+    }
+
+    return selected
+}
+
+function buildDefaultTemplateExercises(templateName, exercises = []) {
+    const lowerName = String(templateName).toLowerCase()
+
+    if (lowerName.includes('push')) {
+        return pickExercisesByGroups(
+            exercises,
+            ['Peito', 'Peito', 'Ombros', 'Ombros', 'Tríceps', 'Tríceps'],
+            6
+        ).map((exercise) =>
+            createTemplateExerciseItem(exercise, ['12 Rep', '10-12 Rep', '8-10 Rep'])
+        )
+    }
+
+    if (lowerName.includes('pull')) {
+        return pickExercisesByGroups(
+            exercises,
+            ['Costas', 'Costas', 'Costas', 'Bíceps', 'Bíceps', 'Ombros'],
+            6
+        ).map((exercise) =>
+            createTemplateExerciseItem(exercise, ['12 Rep', '10-12 Rep', '8-10 Rep'])
+        )
+    }
+
+    if (lowerName.includes('legs')) {
+        return pickExercisesByGroups(
+            exercises,
+            ['Quadríceps', 'Quadríceps', 'Posterior de coxa', 'Glúteos', 'Panturrilhas'],
+            5
+        ).map((exercise) =>
+            createTemplateExerciseItem(exercise, ['12 Rep', '10-12 Rep', '8-10 Rep'])
+        )
+    }
+
+    if (lowerName.includes('upper')) {
+        return pickExercisesByGroups(
+            exercises,
+            ['Peito', 'Costas', 'Ombros', 'Bíceps', 'Tríceps'],
+            5
+        ).map((exercise) =>
+            createTemplateExerciseItem(exercise, ['12 Rep', '10-12 Rep', '8-10 Rep'])
+        )
+    }
+
+    if (lowerName.includes('lower')) {
+        return pickExercisesByGroups(
+            exercises,
+            ['Quadríceps', 'Posterior de coxa', 'Glúteos', 'Panturrilhas', 'Abdômen'],
+            5
+        ).map((exercise) =>
+            createTemplateExerciseItem(exercise, ['12 Rep', '10-12 Rep', '8-10 Rep'])
+        )
+    }
+
+    if (lowerName.includes('full body') || lowerName.includes('corpo inteiro')) {
+        return pickExercisesByGroups(
+            exercises,
+            ['Peito', 'Costas', 'Quadríceps', 'Ombros', 'Abdômen'],
+            5
+        ).map((exercise) =>
+            createTemplateExerciseItem(exercise, ['12 Rep', '10 Rep', '8 Rep'])
+        )
+    }
+
+    return []
+}
+
 const workoutTemplateSchema = new mongoose.Schema(
     {
         userId: {
@@ -2190,9 +2393,18 @@ app.post('/workout-templates/seed-defaults', authMiddleware, async (req, res) =>
             })
         }
 
+        const userExercises = await Exercise.find({
+            userId: req.user.userId,
+        }).sort({
+            isFavorite: -1,
+            updatedAt: -1,
+            createdAt: -1,
+        })
+
         const templatesToCreate = DEFAULT_WORKOUT_TEMPLATES.map((template) => ({
             ...template,
             userId: req.user.userId,
+            exercises: buildDefaultTemplateExercises(template.name, userExercises),
         }))
 
         const createdTemplates = await WorkoutTemplate.insertMany(templatesToCreate)
@@ -2207,6 +2419,55 @@ app.post('/workout-templates/seed-defaults', authMiddleware, async (req, res) =>
 
         res.status(500).json({
             message: 'Erro ao criar templates padrão.',
+        })
+    }
+})
+
+
+app.post('/workout-templates/fill-defaults', authMiddleware, async (req, res) => {
+    try {
+        const userExercises = await Exercise.find({
+            userId: req.user.userId,
+        }).sort({
+            isFavorite: -1,
+            updatedAt: -1,
+            createdAt: -1,
+        })
+
+        const templates = await WorkoutTemplate.find({
+            userId: req.user.userId,
+            source: 'ForgeFlow',
+        })
+
+        const updatedTemplates = []
+        let filledCount = 0
+
+        for (const template of templates) {
+            const shouldFill = !Array.isArray(template.exercises) || template.exercises.length === 0
+
+            if (!shouldFill) {
+                updatedTemplates.push(template)
+                continue
+            }
+
+            template.exercises = buildDefaultTemplateExercises(template.name, userExercises)
+
+            await template.save()
+
+            filledCount += 1
+            updatedTemplates.push(template)
+        }
+
+        res.json({
+            updated: filledCount,
+            templates: updatedTemplates,
+            message: 'Templates padrão preenchidos com exercícios sugeridos.',
+        })
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao preencher templates padrão.',
         })
     }
 })
