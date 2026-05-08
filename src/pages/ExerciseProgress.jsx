@@ -71,14 +71,22 @@ function ChartTooltip({ active, payload }) {
   const item = payload[0].payload
 
   return (
-    <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 shadow-2xl">
-      <p className="text-sm font-bold text-[var(--ff-text)]">
-        {item.workoutName}
-      </p>
+    <div className="max-w-[280px] rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 shadow-2xl">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-bold text-[var(--ff-text)]">
+            {item.workoutName}
+          </p>
 
-      <p className="mt-1 text-xs text-[var(--ff-muted)]">
-        {formatLongDate(item.fullDate)}
-      </p>
+          <p className="mt-1 text-xs text-[var(--ff-muted)]">
+            {formatLongDate(item.fullDate)}
+          </p>
+        </div>
+
+        <span className="shrink-0 rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-2.5 py-1 text-[11px] font-black text-[var(--ff-accent-text)]">
+          Série {item.setNumber}
+        </span>
+      </div>
 
       <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
         <div className="rounded-xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-2">
@@ -106,18 +114,18 @@ function ChartTooltip({ active, payload }) {
             Volume
           </p>
 
-          <p className="mt-1 font-bold text-orange-300">
+          <p className="mt-1 font-bold text-[var(--ff-accent-text)]">
             {item.volume}kg
           </p>
         </div>
 
         <div className="rounded-xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-2">
           <p className="text-[var(--ff-muted)]">
-            Série
+            Ordem
           </p>
 
           <p className="mt-1 font-bold text-[var(--ff-text)]">
-            {item.setNumber}
+            #{item.chartIndex}
           </p>
         </div>
       </div>
@@ -243,22 +251,31 @@ function ExerciseProgress() {
     const data = []
 
     history.forEach((session) => {
-      session.exercises.forEach((item) => {
+      const sessionExercises = Array.isArray(session.exercises)
+        ? session.exercises
+        : []
+
+      sessionExercises.forEach((item) => {
         const exercise = item.exercise
 
         if (exercise?.name !== selectedExercise) return
 
-        item.sets.filter(isValidWorkingSet).forEach((set) => {
+        const validSets = Array.isArray(item.sets)
+          ? item.sets.filter(isValidWorkingSet)
+          : []
+
+        validSets.forEach((set, setIndex) => {
           const weight = Number(set.weight)
           const reps = Number(set.reps)
           const volume = weight * reps
+          const setNumber = Number(set.setNumber || set.order || setIndex + 1)
 
           data.push({
-            id: `${session.id}-${item.id}-${set.id}`,
-            workoutName: session.workoutName,
-            fullDate: session.finishedAt,
-            date: formatDate(session.finishedAt),
-            setNumber: set.setNumber,
+            id: `${session.id || session._id || session.finishedAt}-${item.id || item._id || exercise.name}-${set.id || set._id || setIndex}`,
+            workoutName: session.workoutName || session.name || 'Treino',
+            fullDate: session.finishedAt || session.createdAt,
+            date: formatDate(session.finishedAt || session.createdAt),
+            setNumber,
             weight,
             reps,
             volume,
@@ -267,7 +284,19 @@ function ExerciseProgress() {
       })
     })
 
-    return data.sort((a, b) => new Date(a.fullDate) - new Date(b.fullDate))
+    return data
+      .sort((a, b) => {
+        const dateDiff = new Date(a.fullDate) - new Date(b.fullDate)
+
+        if (dateDiff !== 0) return dateDiff
+
+        return a.setNumber - b.setNumber
+      })
+      .map((item, index) => ({
+        ...item,
+        chartIndex: index + 1,
+        axisLabel: `S${item.setNumber}`,
+      }))
   }, [history, selectedExercise])
 
   const bestWeight = useMemo(() => {
@@ -285,6 +314,32 @@ function ExerciseProgress() {
   const totalVolume = useMemo(() => {
     return chartData.reduce((total, item) => total + item.volume, 0)
   }, [chartData])
+
+  const chartTicks = useMemo(() => {
+    if (chartData.length <= 12) {
+      return chartData.map((item) => item.chartIndex)
+    }
+
+    const step = Math.ceil(chartData.length / 8)
+
+    return chartData
+      .filter((_, index) => index % step === 0 || index === chartData.length - 1)
+      .map((item) => item.chartIndex)
+  }, [chartData])
+
+  const chartDomain = useMemo(() => {
+    if (chartData.length <= 1) return [0.5, 1.5]
+
+    return [1, chartData.length]
+  }, [chartData])
+
+  function formatChartTick(value) {
+    const item = chartData.find((point) => point.chartIndex === value)
+
+    if (!item) return ''
+
+    return chartData.length <= 8 ? `${item.date} S${item.setNumber}` : item.date
+  }
 
   return (
     <>
@@ -580,19 +635,43 @@ function ExerciseProgress() {
                     />
                   ) : (
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={chartData}>
+                      <LineChart
+                        data={chartData}
+                        margin={{ top: 24, right: 18, left: 0, bottom: 8 }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
-                        <XAxis dataKey="date" stroke="var(--ff-muted)" />
-                        <YAxis stroke="var(--ff-muted)" />
-                        <Tooltip content={<ChartTooltip />} />
+                        <XAxis
+                          dataKey="chartIndex"
+                          type="number"
+                          domain={chartDomain}
+                          ticks={chartTicks}
+                          tickFormatter={formatChartTick}
+                          stroke="var(--ff-muted)"
+                          tick={{ fontSize: 11, fill: 'var(--ff-muted)', fontWeight: 700 }}
+                          tickLine={false}
+                          axisLine={false}
+                        />
+                        <YAxis
+                          stroke="var(--ff-muted)"
+                          tick={{ fontSize: 11, fill: 'var(--ff-muted)' }}
+                          tickLine={false}
+                          axisLine={false}
+                          allowDecimals={false}
+                        />
+                        <Tooltip
+                          content={<ChartTooltip />}
+                          cursor={{ stroke: 'var(--ff-accent)', strokeWidth: 1, strokeDasharray: '4 4' }}
+                          wrapperStyle={{ outline: 'none', pointerEvents: 'none' }}
+                        />
                         <Line
-                          type="monotone"
+                          type="linear"
                           dataKey="weight"
                           name="Peso"
                           stroke="var(--ff-accent)"
                           strokeWidth={3}
-                          dot={{ r: 5, strokeWidth: 2, fill: 'var(--ff-card)', stroke: 'var(--ff-accent)' }}
-                          activeDot={{ r: 8, strokeWidth: 3, fill: 'var(--ff-accent)', stroke: 'var(--ff-card)' }}
+                          isAnimationActive={false}
+                          dot={{ r: 6, strokeWidth: 3, fill: 'var(--ff-card)', stroke: 'var(--ff-accent)' }}
+                          activeDot={{ r: 10, strokeWidth: 4, fill: 'var(--ff-accent)', stroke: 'var(--ff-card)' }}
                         >
                           <LabelList
                             dataKey="weight"
@@ -630,18 +709,43 @@ function ExerciseProgress() {
                     />
                   ) : (
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={chartData}>
+                      <LineChart
+                        data={chartData}
+                        margin={{ top: 18, right: 18, left: 0, bottom: 8 }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
-                        <XAxis dataKey="date" stroke="var(--ff-muted)" />
-                        <YAxis stroke="var(--ff-muted)" />
-                        <Tooltip content={<ChartTooltip />} />
+                        <XAxis
+                          dataKey="chartIndex"
+                          type="number"
+                          domain={chartDomain}
+                          ticks={chartTicks}
+                          tickFormatter={formatChartTick}
+                          stroke="var(--ff-muted)"
+                          tick={{ fontSize: 11, fill: 'var(--ff-muted)', fontWeight: 700 }}
+                          tickLine={false}
+                          axisLine={false}
+                        />
+                        <YAxis
+                          stroke="var(--ff-muted)"
+                          tick={{ fontSize: 11, fill: 'var(--ff-muted)' }}
+                          tickLine={false}
+                          axisLine={false}
+                          allowDecimals={false}
+                        />
+                        <Tooltip
+                          content={<ChartTooltip />}
+                          cursor={{ stroke: 'var(--ff-accent)', strokeWidth: 1, strokeDasharray: '4 4' }}
+                          wrapperStyle={{ outline: 'none', pointerEvents: 'none' }}
+                        />
                         <Line
-                          type="monotone"
+                          type="linear"
                           dataKey="volume"
                           name="Volume"
-                          stroke="#f97316"
+                          stroke="var(--ff-accent)"
                           strokeWidth={3}
-                          dot
+                          isAnimationActive={false}
+                          dot={{ r: 6, strokeWidth: 3, fill: 'var(--ff-card)', stroke: 'var(--ff-accent)' }}
+                          activeDot={{ r: 10, strokeWidth: 4, fill: 'var(--ff-accent)', stroke: 'var(--ff-card)' }}
                         />
                       </LineChart>
                     </ResponsiveContainer>
@@ -672,21 +776,25 @@ function ExerciseProgress() {
                     .map((item) => (
                       <div
                         key={item.id}
-                        className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4"
+                        className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4"
                       >
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                           <div>
-                            <p className="font-bold text-white">
+                            <p className="font-bold text-[var(--ff-text)]">
                               {item.workoutName}
                             </p>
 
-                            <p className="mt-1 flex items-center gap-2 text-xs text-zinc-500">
+                            <p className="mt-1 flex items-center gap-2 text-xs text-[var(--ff-muted)]">
                               <CalendarDays size={14} />
                               {formatLongDate(item.fullDate)}
                             </p>
                           </div>
 
                           <div className="flex flex-wrap gap-2">
+                            <Badge variant="purple">
+                              Série {item.setNumber}
+                            </Badge>
+
                             <Badge variant="purple">
                               {item.weight}kg
                             </Badge>
