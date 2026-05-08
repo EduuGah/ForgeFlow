@@ -1620,54 +1620,110 @@ app.delete('/body-weight/:id', authMiddleware, async (req, res) => {
     }
 })
 
-function getMuscleRecoveryStatus(lastTrainedAt) {
-    if (!lastTrainedAt) {
-        return {
-            status: 'Sem dados',
-            level: 'unknown',
-            recoveryPercent: 100,
-            message: 'Ainda não há histórico suficiente.',
-        }
+const MAIN_MUSCLE_GROUPS = [
+    'Peito',
+    'Costas',
+    'Ombros',
+    'Bíceps',
+    'Tríceps',
+    'Antebraço',
+    'Abdômen',
+    'Lombar',
+    'Glúteos',
+    'Quadríceps',
+    'Posterior de coxa',
+    'Panturrilhas',
+    'Adutores',
+    'Abdutores',
+    'Cardio',
+    'Mobilidade',
+    'Alongamento',
+    'Corpo inteiro',
+]
+
+function normalizeRecoveryMuscleGroup(group) {
+    if (!group) return null
+
+    const normalized = String(group).trim()
+
+    const aliases = {
+        Peitoral: 'Peito',
+        Chest: 'Peito',
+
+        Dorsal: 'Costas',
+        Costas: 'Costas',
+        Back: 'Costas',
+        Trapézio: 'Costas',
+        Trapezio: 'Costas',
+
+        Ombro: 'Ombros',
+        Ombros: 'Ombros',
+        Shoulder: 'Ombros',
+        Shoulders: 'Ombros',
+        Deltoide: 'Ombros',
+        Deltoides: 'Ombros',
+
+        Biceps: 'Bíceps',
+        Bíceps: 'Bíceps',
+
+        Triceps: 'Tríceps',
+        Tríceps: 'Tríceps',
+
+        Abdomen: 'Abdômen',
+        Abdômen: 'Abdômen',
+        Abs: 'Abdômen',
+        Core: 'Abdômen',
+        Oblíquos: 'Abdômen',
+        Obliquos: 'Abdômen',
+
+        Lombar: 'Lombar',
+        LowerBack: 'Lombar',
+        'Lower Back': 'Lombar',
+
+        Gluteos: 'Glúteos',
+        Glúteos: 'Glúteos',
+        Glutes: 'Glúteos',
+
+        Quadriceps: 'Quadríceps',
+        Quadríceps: 'Quadríceps',
+        Quads: 'Quadríceps',
+        Pernas: 'Quadríceps',
+
+        Posterior: 'Posterior de coxa',
+        Hamstrings: 'Posterior de coxa',
+        'Posterior de Coxa': 'Posterior de coxa',
+        'Posterior de coxa': 'Posterior de coxa',
+
+        Panturrilha: 'Panturrilhas',
+        Panturrilhas: 'Panturrilhas',
+        Calves: 'Panturrilhas',
+
+        Adutor: 'Adutores',
+        Adutores: 'Adutores',
+
+        Abdutor: 'Abdutores',
+        Abdutores: 'Abdutores',
+
+        Cardio: 'Cardio',
+        Mobilidade: 'Mobilidade',
+        Alongamento: 'Alongamento',
+        'Corpo Inteiro': 'Corpo inteiro',
+        'Corpo inteiro': 'Corpo inteiro',
+        FullBody: 'Corpo inteiro',
+        'Full Body': 'Corpo inteiro',
     }
 
-    const now = new Date()
-    const lastDate = new Date(lastTrainedAt)
+    return aliases[normalized] || normalized
+}
 
-    const diffHours = Math.floor((now - lastDate) / 1000 / 60 / 60)
+function getExerciseMainMuscleGroup(item) {
+    const exercise = item.exercise || {}
 
-    if (diffHours < 24) {
-        return {
-            status: 'Recuperando',
-            level: 'low',
-            recoveryPercent: 35,
-            message: 'Treinado há menos de 24h.',
-        }
-    }
-
-    if (diffHours < 48) {
-        return {
-            status: 'Parcial',
-            level: 'medium',
-            recoveryPercent: 65,
-            message: 'Ainda pode estar em recuperação.',
-        }
-    }
-
-    if (diffHours < 72) {
-        return {
-            status: 'Quase pronto',
-            level: 'good',
-            recoveryPercent: 85,
-            message: 'Provavelmente já está quase recuperado.',
-        }
-    }
-
-    return {
-        status: 'Recuperado',
-        level: 'ready',
-        recoveryPercent: 100,
-        message: 'Boa janela para treinar novamente.',
-    }
+    return normalizeRecoveryMuscleGroup(
+        exercise.muscleGroup ||
+        exercise.normalizedGroup ||
+        exercise.group
+    )
 }
 
 function getExerciseMuscleGroupsFromHistoryExercise(item) {
@@ -1686,12 +1742,24 @@ app.get('/stats/muscle-recovery', authMiddleware, async (req, res) => {
     try {
         const history = await WorkoutHistory.find({
             userId: req.user.userId,
-        }).sort({
-            finishedAt: -1,
-            createdAt: -1,
-        }).limit(80)
+        })
+            .sort({
+                finishedAt: -1,
+                createdAt: -1,
+            })
+            .limit(100)
 
         const muscleMap = new Map()
+
+        MAIN_MUSCLE_GROUPS.forEach((group) => {
+            muscleMap.set(group, {
+                muscleGroup: group,
+                lastTrainedAt: null,
+                totalSessions: 0,
+                totalSets: 0,
+                totalVolume: 0,
+            })
+        })
 
         history.forEach((session) => {
             const trainedAt = session.finishedAt || session.createdAt
@@ -1702,51 +1770,71 @@ app.get('/stats/muscle-recovery', authMiddleware, async (req, res) => {
 
             if (Number.isNaN(sessionDate.getTime())) return
 
+            const groupsInThisSession = new Set()
+
             session.exercises?.forEach((item) => {
-                const groups = getExerciseMuscleGroupsFromHistoryExercise(item)
+                const group = getExerciseMainMuscleGroup(item)
 
-                groups.forEach((group) => {
-                    const current = muscleMap.get(group)
+                if (!group) return
 
-                    const completedSets = Array.isArray(item.sets)
-                        ? item.sets.filter((set) => {
-                            return (
-                                set.type !== 'warmup' &&
-                                set.completed &&
-                                Number(set.weight || 0) > 0 &&
-                                Number(set.reps || 0) > 0
-                            )
-                        })
-                        : []
-
-                    const volume = completedSets.reduce((total, set) => {
-                        return total + Number(set.weight || 0) * Number(set.reps || 0)
-                    }, 0)
-
-                    if (!current) {
-                        muscleMap.set(group, {
-                            muscleGroup: group,
-                            lastTrainedAt: trainedAt,
-                            totalSessions: 1,
-                            totalSets: completedSets.length,
-                            totalVolume: volume,
-                        })
-
-                        return
-                    }
-
-                    const currentDate = new Date(current.lastTrainedAt)
-
+                if (!muscleMap.has(group)) {
                     muscleMap.set(group, {
-                        ...current,
-                        lastTrainedAt:
-                            sessionDate > currentDate
-                                ? trainedAt
-                                : current.lastTrainedAt,
-                        totalSessions: current.totalSessions + 1,
-                        totalSets: current.totalSets + completedSets.length,
-                        totalVolume: current.totalVolume + volume,
+                        muscleGroup: group,
+                        lastTrainedAt: null,
+                        totalSessions: 0,
+                        totalSets: 0,
+                        totalVolume: 0,
                     })
+                }
+
+                const current = muscleMap.get(group)
+
+                const sets = Array.isArray(item.sets) ? item.sets : []
+
+                const validSets = sets.filter((set) => {
+                    const isWarmup = set.type === 'warmup'
+                    const isCompleted =
+                        set.completed === true ||
+                        set.isCompleted === true ||
+                        set.done === true
+
+                    return !isWarmup && isCompleted
+                })
+
+                const fallbackSets = validSets.length > 0
+                    ? validSets
+                    : sets.filter((set) => set.type !== 'warmup')
+
+                const volume = fallbackSets.reduce((total, set) => {
+                    const weight = Number(set.weight || set.load || 0)
+                    const reps = Number(set.reps || 0)
+
+                    return total + weight * reps
+                }, 0)
+
+                const currentDate = current.lastTrainedAt
+                    ? new Date(current.lastTrainedAt)
+                    : null
+
+                muscleMap.set(group, {
+                    ...current,
+                    lastTrainedAt:
+                        !currentDate || sessionDate > currentDate
+                            ? trainedAt
+                            : current.lastTrainedAt,
+                    totalSets: current.totalSets + fallbackSets.length,
+                    totalVolume: current.totalVolume + volume,
+                })
+
+                groupsInThisSession.add(group)
+            })
+
+            groupsInThisSession.forEach((group) => {
+                const current = muscleMap.get(group)
+
+                muscleMap.set(group, {
+                    ...current,
+                    totalSessions: current.totalSessions + 1,
                 })
             })
         })
@@ -1761,6 +1849,9 @@ app.get('/stats/muscle-recovery', authMiddleware, async (req, res) => {
                 }
             })
             .sort((a, b) => {
+                if (a.level === 'unknown' && b.level !== 'unknown') return 1
+                if (a.level !== 'unknown' && b.level === 'unknown') return -1
+
                 return a.recoveryPercent - b.recoveryPercent
             })
 

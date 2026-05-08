@@ -374,7 +374,7 @@ function Dashboard() {
           exercisesResult,
           bodyWeightResult,
           consistencyResult,
-          muscleRecoveryFromApi,
+          muscleRecoveryResult,
         ] = await Promise.allSettled([
           apiFetch('/workouts'),
           apiFetch('/workout-history'),
@@ -384,43 +384,34 @@ function Dashboard() {
           apiFetch('/stats/muscle-recovery'),
         ])
 
-        if (workoutsResult.status === 'fulfilled') {
-          const normalizedWorkouts = Array.isArray(workoutsResult.value)
+        const normalizedWorkouts =
+          workoutsResult.status === 'fulfilled' &&
+            Array.isArray(workoutsResult.value)
             ? workoutsResult.value.map(normalizeWorkoutFromApi)
-            : []
+            : cachedWorkouts
 
-          setWorkouts(normalizedWorkouts)
-          saveUserStorageData(user, 'workouts', normalizedWorkouts)
-        } else {
-          setWorkouts(getUserStorageData(user, 'workouts', []))
-        }
-
-        if (historyResult.status === 'fulfilled') {
-          const normalizedHistory = Array.isArray(historyResult.value)
+        const normalizedHistory =
+          historyResult.status === 'fulfilled' &&
+            Array.isArray(historyResult.value)
             ? historyResult.value.map(normalizeHistoryFromApi)
-            : []
+            : cachedHistory
 
-          setHistory(normalizedHistory)
-          saveUserStorageData(user, 'history', normalizedHistory)
-        } else {
-          setHistory(getUserStorageData(user, 'history', []))
-        }
+        const userExercises =
+          exercisesResult.status === 'fulfilled' &&
+            Array.isArray(exercisesResult.value)
+            ? exercisesResult.value.map(normalizeExerciseFromApi)
+            : cachedExercises
 
-        const normalizedWorkouts = Array.isArray(workoutsFromApi)
-          ? workoutsFromApi.map(normalizeWorkoutFromApi)
-          : []
+        const normalizedBodyWeight =
+          bodyWeightResult.status === 'fulfilled' &&
+            Array.isArray(bodyWeightResult.value)
+            ? bodyWeightResult.value.map(normalizeBodyWeightFromApi)
+            : cachedBodyWeight
 
-        const normalizedHistory = Array.isArray(historyFromApi)
-          ? historyFromApi.map(normalizeHistoryFromApi)
-          : []
-
-        const userExercises = Array.isArray(exercisesFromApi)
-          ? exercisesFromApi.map(normalizeExerciseFromApi)
-          : []
-
-        const normalizedBodyWeight = Array.isArray(bodyWeightFromApi)
-          ? bodyWeightFromApi.map(normalizeBodyWeightFromApi)
-          : []
+        const consistencyFromApi =
+          consistencyResult.status === 'fulfilled'
+            ? consistencyResult.value
+            : null
 
         const normalizedConsistency = {
           currentStreak: Number(consistencyFromApi?.currentStreak) || 0,
@@ -431,32 +422,39 @@ function Dashboard() {
           lastWorkoutDate: consistencyFromApi?.lastWorkoutDate || null,
         }
 
-        const normalizedMuscleRecovery = Array.isArray(muscleRecoveryFromApi?.recovery)
+        const muscleRecoveryFromApi =
+          muscleRecoveryResult.status === 'fulfilled'
+            ? muscleRecoveryResult.value
+            : null
+
+        const normalizedMuscleRecovery = Array.isArray(
+          muscleRecoveryFromApi?.recovery
+        )
           ? muscleRecoveryFromApi.recovery
           : []
 
-        const finalExercises =
-          userExercises.length > 0 ? userExercises : cachedExercises
-
         setWorkouts(normalizedWorkouts)
         setHistory(normalizedHistory)
-        setExercises(finalExercises)
-        setBodyWeight(normalizedBodyWeight.length > 0 ? normalizedBodyWeight : cachedBodyWeight)
+        setExercises(userExercises)
+        setBodyWeight(normalizedBodyWeight)
         setConsistencyStats(normalizedConsistency)
         setMuscleRecovery(normalizedMuscleRecovery)
 
         saveUserStorageData(user, 'workouts', normalizedWorkouts)
         saveUserStorageData(user, 'history', normalizedHistory)
+        saveUserStorageData(user, 'exercises', userExercises)
+        saveUserStorageData(user, 'bodyweight', normalizedBodyWeight)
 
-        if (normalizedBodyWeight.length > 0) {
-          saveUserStorageData(user, 'bodyweight', normalizedBodyWeight)
-        }
+        const hasAnyApiSuccess = [
+          workoutsResult,
+          historyResult,
+          exercisesResult,
+          bodyWeightResult,
+          consistencyResult,
+          muscleRecoveryResult,
+        ].some((result) => result.status === 'fulfilled')
 
-        if (userExercises.length > 0) {
-          saveUserStorageData(user, 'exercises', userExercises)
-        }
-
-        setDashboardSource('database')
+        setDashboardSource(hasAnyApiSuccess ? 'database' : 'local')
       } catch (error) {
         console.error(error)
 
@@ -464,6 +462,7 @@ function Dashboard() {
         setWorkouts(cachedWorkouts)
         setHistory(cachedHistory)
         setBodyWeight(cachedBodyWeight)
+
         setConsistencyStats({
           currentStreak: 0,
           bestStreak: 0,
@@ -472,6 +471,7 @@ function Dashboard() {
           totalWorkoutDays: 0,
           lastWorkoutDate: null,
         })
+
         setMuscleRecovery([])
         setDashboardSource('local')
       } finally {
@@ -1036,74 +1036,77 @@ function Dashboard() {
           </div>
 
           <div className="mt-5">
-            {muscleRecovery.length === 0 ? (
+            {muscleRecovery.filter((item) => item.level !== 'unknown').length === 0 ? (
               <EmptyState
                 title="Sem dados de recuperação"
                 description="Finalize alguns treinos para calcular a recuperação dos grupos musculares."
               />
             ) : (
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                {muscleRecovery.slice(0, 8).map((item) => {
-                  const style = getRecoveryStyle(item.level)
+                {muscleRecovery
+                  .filter((item) => item.level !== 'unknown')
+                  .slice(0, 8)
+                  .map((item) => {
+                    const style = getRecoveryStyle(item.level)
 
-                  return (
-                    <div
-                      key={item.muscleGroup}
-                      className={`rounded-3xl border ${style.border} ${style.bg} p-4`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h3 className="font-black text-white">
-                            {item.muscleGroup}
-                          </h3>
+                    return (
+                      <div
+                        key={item.muscleGroup}
+                        className={`rounded-3xl border ${style.border} ${style.bg} p-4`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <h3 className="font-black text-white">
+                              {item.muscleGroup}
+                            </h3>
 
-                          <p className={`mt-1 text-xs font-bold ${style.text}`}>
-                            {item.status}
-                          </p>
+                            <p className={`mt-1 text-xs font-bold ${style.text}`}>
+                              {item.status}
+                            </p>
+                          </div>
+
+                          <span className={`text-lg font-black ${style.text}`}>
+                            {item.recoveryPercent}%
+                          </span>
                         </div>
 
-                        <span className={`text-lg font-black ${style.text}`}>
-                          {item.recoveryPercent}%
-                        </span>
-                      </div>
-
-                      <div className="mt-4 h-2 overflow-hidden rounded-full bg-black/30">
-                        <div
-                          className={`h-full rounded-full ${style.bar}`}
-                          style={{
-                            width: `${item.recoveryPercent}%`,
-                          }}
-                        />
-                      </div>
-
-                      <div className="mt-4 grid grid-cols-2 gap-2">
-                        <div className="rounded-2xl border border-black/20 bg-black/20 p-3">
-                          <p className="text-xs text-zinc-500">
-                            Último treino
-                          </p>
-
-                          <p className="mt-1 text-sm font-bold">
-                            {formatRecoveryDate(item.lastTrainedAt)}
-                          </p>
+                        <div className="mt-4 h-2 overflow-hidden rounded-full bg-black/30">
+                          <div
+                            className={`h-full rounded-full ${style.bar}`}
+                            style={{
+                              width: `${item.recoveryPercent}%`,
+                            }}
+                          />
                         </div>
 
-                        <div className="rounded-2xl border border-black/20 bg-black/20 p-3">
-                          <p className="text-xs text-zinc-500">
-                            Séries
-                          </p>
+                        <div className="mt-4 grid grid-cols-2 gap-2">
+                          <div className="rounded-2xl border border-black/20 bg-black/20 p-3">
+                            <p className="text-xs text-zinc-500">
+                              Último treino
+                            </p>
 
-                          <p className="mt-1 text-sm font-bold">
-                            {item.totalSets}
-                          </p>
+                            <p className="mt-1 text-sm font-bold">
+                              {formatRecoveryDate(item.lastTrainedAt)}
+                            </p>
+                          </div>
+
+                          <div className="rounded-2xl border border-black/20 bg-black/20 p-3">
+                            <p className="text-xs text-zinc-500">
+                              Séries
+                            </p>
+
+                            <p className="mt-1 text-sm font-bold">
+                              {item.totalSets}
+                            </p>
+                          </div>
                         </div>
-                      </div>
 
-                      <p className="mt-3 text-xs leading-relaxed text-zinc-400">
-                        {item.message}
-                      </p>
-                    </div>
-                  )
-                })}
+                        <p className="mt-3 text-xs leading-relaxed text-zinc-400">
+                          {item.message}
+                        </p>
+                      </div>
+                    )
+                  })}
               </div>
             )}
           </div>
