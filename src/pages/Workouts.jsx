@@ -166,6 +166,276 @@ function Workouts() {
 
     const [showAllWorkouts, setShowAllWorkouts] = useState(false)
 
+
+    const SMART_DEFAULT_TEMPLATE_BLUEPRINTS = [
+        {
+            kind: 'push',
+            name: 'Push - Peito, Ombros e Tríceps',
+            description: 'Treino pronto de empurrar com exercícios para peito, ombros e tríceps.',
+            category: 'Push Pull Legs',
+            goal: 'Hipertrofia',
+            difficulty: 'Intermediário',
+            estimatedDuration: 60,
+            groups: ['Peito', 'Peito', 'Ombros', 'Ombros', 'Tríceps', 'Tríceps'],
+            fallbackKeywords: ['supino', 'peito', 'chest', 'desenvolvimento', 'ombro', 'triceps', 'tríceps'],
+            limit: 6,
+        },
+        {
+            kind: 'pull',
+            name: 'Pull - Costas e Bíceps',
+            description: 'Treino pronto de puxar com exercícios para costas, bíceps e posterior de ombro.',
+            category: 'Push Pull Legs',
+            goal: 'Hipertrofia',
+            difficulty: 'Intermediário',
+            estimatedDuration: 60,
+            groups: ['Costas', 'Costas', 'Costas', 'Bíceps', 'Bíceps', 'Ombros'],
+            fallbackKeywords: ['puxada', 'remada', 'costas', 'back', 'rosca', 'bíceps', 'biceps', 'face pull'],
+            limit: 6,
+        },
+        {
+            kind: 'legs',
+            name: 'Legs - Pernas completo',
+            description: 'Treino pronto de pernas com foco em quadríceps, posterior, glúteos e panturrilhas.',
+            category: 'Push Pull Legs',
+            goal: 'Hipertrofia',
+            difficulty: 'Intermediário',
+            estimatedDuration: 70,
+            groups: ['Quadríceps', 'Quadríceps', 'Posterior de coxa', 'Glúteos', 'Panturrilhas', 'Abdômen'],
+            fallbackKeywords: ['agachamento', 'leg press', 'cadeira', 'mesa', 'posterior', 'panturrilha', 'gluteo', 'glúteo', 'perna'],
+            limit: 6,
+        },
+        {
+            kind: 'upper',
+            name: 'Upper - Superiores',
+            description: 'Treino pronto para membros superiores em divisão Upper/Lower.',
+            category: 'Upper Lower',
+            goal: 'Força e hipertrofia',
+            difficulty: 'Intermediário',
+            estimatedDuration: 65,
+            groups: ['Peito', 'Costas', 'Ombros', 'Bíceps', 'Tríceps'],
+            fallbackKeywords: ['supino', 'puxada', 'remada', 'desenvolvimento', 'rosca', 'triceps', 'tríceps'],
+            limit: 5,
+        },
+        {
+            kind: 'lower',
+            name: 'Lower - Inferiores',
+            description: 'Treino pronto para membros inferiores em divisão Upper/Lower.',
+            category: 'Upper Lower',
+            goal: 'Força e hipertrofia',
+            difficulty: 'Intermediário',
+            estimatedDuration: 65,
+            groups: ['Quadríceps', 'Posterior de coxa', 'Glúteos', 'Panturrilhas', 'Abdômen'],
+            fallbackKeywords: ['agachamento', 'leg press', 'posterior', 'panturrilha', 'gluteo', 'glúteo', 'abdomen', 'abdômen'],
+            limit: 5,
+        },
+        {
+            kind: 'full-body',
+            name: 'Full Body - Corpo inteiro',
+            description: 'Treino pronto de corpo inteiro misturando os principais grupos musculares.',
+            category: 'Full Body',
+            goal: 'Condicionamento geral',
+            difficulty: 'Iniciante',
+            estimatedDuration: 50,
+            groups: ['Peito', 'Costas', 'Quadríceps', 'Ombros', 'Abdômen'],
+            fallbackKeywords: ['supino', 'remada', 'agachamento', 'desenvolvimento', 'prancha', 'abdomen', 'abdômen'],
+            limit: 5,
+        },
+    ]
+
+    function normalizeSmartText(value) {
+        return String(value || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .trim()
+    }
+
+    function normalizeSmartGroup(group) {
+        const normalized = normalizeSmartText(group)
+
+        const aliases = {
+            peito: 'peito',
+            peitoral: 'peito',
+            chest: 'peito',
+            costas: 'costas',
+            dorsal: 'costas',
+            back: 'costas',
+            ombro: 'ombros',
+            ombros: 'ombros',
+            deltoide: 'ombros',
+            deltoides: 'ombros',
+            shoulder: 'ombros',
+            shoulders: 'ombros',
+            biceps: 'bíceps',
+            triceps: 'tríceps',
+            quadriceps: 'quadríceps',
+            pernas: 'quadríceps',
+            perna: 'quadríceps',
+            quads: 'quadríceps',
+            posterior: 'posterior de coxa',
+            posteriores: 'posterior de coxa',
+            hamstrings: 'posterior de coxa',
+            posterior_de_coxa: 'posterior de coxa',
+            gluteos: 'glúteos',
+            glutes: 'glúteos',
+            panturrilha: 'panturrilhas',
+            panturrilhas: 'panturrilhas',
+            calves: 'panturrilhas',
+            abdomen: 'abdômen',
+            abdomem: 'abdômen',
+            abdome: 'abdômen',
+            abs: 'abdômen',
+            core: 'abdômen',
+            lombar: 'lombar',
+            lowerback: 'lombar',
+            cardio: 'cardio',
+            corpo_inteiro: 'corpo inteiro',
+            fullbody: 'corpo inteiro',
+        }
+
+        return aliases[normalized.replace(/\s+/g, '_')] || aliases[normalized] || normalized
+    }
+
+    function getSmartExerciseGroup(exercise) {
+        return normalizeSmartGroup(
+            exercise?.muscleGroup ||
+            exercise?.normalizedGroup ||
+            exercise?.group ||
+            exercise?.targetMuscle ||
+            exercise?.bodyPart
+        )
+    }
+
+    function getSmartTemplateKind(templateName) {
+        const name = normalizeSmartText(templateName)
+
+        if (name.includes('push')) return 'push'
+        if (name.includes('pull')) return 'pull'
+        if (name.includes('legs')) return 'legs'
+        if (name.includes('upper')) return 'upper'
+        if (name.includes('lower')) return 'lower'
+        if (name.includes('full body') || name.includes('corpo inteiro')) return 'full-body'
+
+        return ''
+    }
+
+    function getExerciseUniqueKey(exercise) {
+        return String(
+            exercise?._id ||
+            exercise?.id ||
+            `${exercise?.name || ''}-${exercise?.muscleGroup || ''}-${exercise?.equipment || ''}`
+        )
+    }
+
+    function normalizeExerciseForTemplate(exercise) {
+        const id = exercise?._id || exercise?.id || crypto.randomUUID()
+
+        return {
+            ...exercise,
+            id: String(id),
+            _id: exercise?._id,
+            isFavorite: Boolean(exercise?.isFavorite),
+        }
+    }
+
+    function createSmartTemplateExerciseItem(exercise) {
+        return {
+            id: crypto.randomUUID(),
+            exercise: normalizeExerciseForTemplate(exercise),
+            sets: ['12 Rep', '10-12 Rep', '8-10 Rep'].map((description) => ({
+                id: crypto.randomUUID(),
+                description,
+                type: 'working',
+            })),
+            note: '',
+            restTimer: appSettings.defaultRestTimer || 'Desligado',
+        }
+    }
+
+    function buildSmartExerciseLibrary() {
+        const map = new Map()
+        const localDefaults = Array.isArray(defaultExercises) ? defaultExercises : []
+
+        ;[...exercises, ...localDefaults].forEach((exercise) => {
+            if (!exercise?.name) return
+
+            const key = getExerciseUniqueKey(exercise)
+
+            if (!map.has(key)) {
+                map.set(key, normalizeExerciseForTemplate(exercise))
+            }
+        })
+
+        return Array.from(map.values())
+    }
+
+    function pickSmartExercisesForTemplate(blueprint, library) {
+        const selected = []
+        const usedKeys = new Set()
+        const targetGroups = blueprint.groups.map(normalizeSmartGroup)
+
+        function addExercise(exercise) {
+            if (!exercise || selected.length >= blueprint.limit) return
+
+            const key = getExerciseUniqueKey(exercise)
+
+            if (usedKeys.has(key)) return
+
+            usedKeys.add(key)
+            selected.push(exercise)
+        }
+
+        targetGroups.forEach((group) => {
+            const found = library.find((exercise) => {
+                return !usedKeys.has(getExerciseUniqueKey(exercise)) && getSmartExerciseGroup(exercise) === group
+            })
+
+            addExercise(found)
+        })
+
+        if (selected.length < blueprint.limit) {
+            const keywords = blueprint.fallbackKeywords.map(normalizeSmartText)
+
+            library.forEach((exercise) => {
+                if (selected.length >= blueprint.limit) return
+                if (usedKeys.has(getExerciseUniqueKey(exercise))) return
+
+                const searchable = normalizeSmartText(
+                    `${exercise.name} ${exercise.originalName || ''} ${exercise.muscleGroup || ''} ${exercise.targetMuscle || ''} ${exercise.equipment || ''}`
+                )
+
+                if (keywords.some((keyword) => searchable.includes(keyword))) {
+                    addExercise(exercise)
+                }
+            })
+        }
+
+        if (selected.length < blueprint.limit) {
+            library.forEach((exercise) => {
+                if (selected.length >= blueprint.limit) return
+                addExercise(exercise)
+            })
+        }
+
+        return selected.slice(0, blueprint.limit)
+    }
+
+    function buildSmartDefaultTemplatePayloads() {
+        const library = buildSmartExerciseLibrary()
+
+        return SMART_DEFAULT_TEMPLATE_BLUEPRINTS.map((blueprint) => ({
+            kind: blueprint.kind,
+            name: blueprint.name,
+            description: blueprint.description,
+            category: blueprint.category,
+            goal: blueprint.goal,
+            difficulty: blueprint.difficulty,
+            estimatedDuration: blueprint.estimatedDuration,
+            source: 'ForgeFlow',
+            exercises: pickSmartExercisesForTemplate(blueprint, library).map(createSmartTemplateExerciseItem),
+        }))
+    }
+
     useEffect(() => {
         const settings = getAppSettings()
 
@@ -445,6 +715,11 @@ function Workouts() {
                 (!template.exercises || template.exercises.length === 0)
             )
         })
+    }, [workoutTemplates])
+
+
+    const hasDefaultTemplates = useMemo(() => {
+        return workoutTemplates.some((template) => template.source === 'ForgeFlow')
     }, [workoutTemplates])
 
     const recentExerciseMap = useMemo(() => {
@@ -1101,31 +1376,75 @@ function Workouts() {
     }
 
 
-    async function handleFillDefaultTemplates() {
-        try {
-            const result = await apiFetch('/workout-templates/fill-defaults', {
-                method: 'POST',
-            })
+    async function handleRebuildDefaultTemplates() {
+        const templatePayloads = buildSmartDefaultTemplatePayloads()
+        const totalExercisesSuggested = templatePayloads.reduce(
+            (total, template) => total + template.exercises.length,
+            0
+        )
 
-            const templatesFromApi = Array.isArray(result?.templates)
-                ? result.templates.map(normalizeWorkoutTemplateFromApi)
+        if (totalExercisesSuggested === 0) {
+            showToast(
+                'error',
+                'Biblioteca vazia',
+                'Importe ou cadastre exercícios antes de criar templates prontos.'
+            )
+            return
+        }
+
+        try {
+            for (const payload of templatePayloads) {
+                const existingTemplate = workoutTemplates.find((template) => {
+                    return (
+                        template.source === 'ForgeFlow' &&
+                        getSmartTemplateKind(template.name) === payload.kind
+                    )
+                })
+
+                const body = JSON.stringify({
+                    name: payload.name,
+                    description: payload.description,
+                    category: payload.category,
+                    goal: payload.goal,
+                    difficulty: payload.difficulty,
+                    estimatedDuration: payload.estimatedDuration,
+                    exercises: payload.exercises,
+                    source: 'ForgeFlow',
+                })
+
+                if (existingTemplate) {
+                    await apiFetch(`/workout-templates/${existingTemplate.id}`, {
+                        method: 'PUT',
+                        body,
+                    })
+                } else {
+                    await apiFetch('/workout-templates', {
+                        method: 'POST',
+                        body,
+                    })
+                }
+            }
+
+            const templatesFromApi = await apiFetch('/workout-templates')
+            const normalizedTemplates = Array.isArray(templatesFromApi)
+                ? templatesFromApi.map(normalizeWorkoutTemplateFromApi)
                 : []
 
-            setWorkoutTemplates(templatesFromApi)
-            saveUserStorageData(user, 'workout-templates', templatesFromApi)
+            setWorkoutTemplates(normalizedTemplates)
+            saveUserStorageData(user, 'workout-templates', normalizedTemplates)
 
             showToast(
                 'success',
-                'Templates preenchidos',
-                result?.message || 'Os templates padrão receberam exercícios sugeridos.'
+                'Templates corrigidos',
+                'Os 6 templates padrão foram recriados com exercícios sugeridos.'
             )
         } catch (error) {
             console.error(error)
 
             showToast(
                 'error',
-                'Erro ao preencher templates',
-                error.message || 'Não foi possível preencher os templates padrão.'
+                'Erro ao corrigir templates',
+                error.message || 'Não foi possível recriar os templates padrão.'
             )
         }
     }
@@ -1907,26 +2226,32 @@ function Workouts() {
                             </p>
                         </div>
 
-                        <Badge>
-                            {workoutTemplates.length} template(s)
-                        </Badge>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Badge>
+                                {workoutTemplates.length} template(s)
+                            </Badge>
+
+                            <Button variant="secondary" onClick={handleRebuildDefaultTemplates}>
+                                Recriar padrões
+                            </Button>
+                        </div>
                     </div>
 
-                    {hasEmptyDefaultTemplates && (
+                    {(hasEmptyDefaultTemplates || !hasDefaultTemplates) && (
                         <div className="mt-5 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4">
                             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                 <div>
                                     <p className="text-sm font-bold text-yellow-300">
-                                        Existem templates padrão vazios
+                                        Templates padrão precisam ser corrigidos
                                     </p>
 
                                     <p className="mt-1 text-xs text-yellow-100/70">
-                                        O ForgeFlow pode preencher esses modelos automaticamente usando os exercícios da sua biblioteca.
+                                        Use esta opção para criar ou recriar os 6 modelos padrão já com exercícios sugeridos. Ela corrige templates vazios ou incompletos.
                                     </p>
                                 </div>
 
-                                <Button onClick={handleFillDefaultTemplates}>
-                                    Preencher templates
+                                <Button onClick={handleRebuildDefaultTemplates}>
+                                    Corrigir templates padrão
                                 </Button>
                             </div>
                         </div>
@@ -1940,8 +2265,8 @@ function Workouts() {
                                 description="Crie templates próprios ou gere alguns modelos padrão do ForgeFlow."
                                 action={
                                     <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center sm:justify-center">
-                                        <Button onClick={handleSeedDefaultTemplates}>
-                                            Gerar templates padrão
+                                        <Button onClick={handleRebuildDefaultTemplates}>
+                                            Criar templates prontos
                                         </Button>
 
                                         <Button variant="secondary" onClick={openCreateBuilder}>
@@ -2028,7 +2353,7 @@ function Workouts() {
 
                                         {template.exercises.length === 0 && (
                                             <p className="mt-3 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-3 text-xs font-bold text-yellow-300">
-                                                Template vazio. Clique em editar para adicionar exercícios.
+                                                Template vazio ou incompleto. Use "Corrigir templates padrão" para preencher automaticamente.
                                             </p>
                                         )}
 

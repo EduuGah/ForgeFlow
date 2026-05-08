@@ -2385,14 +2385,6 @@ app.post('/workout-templates/seed-defaults', authMiddleware, async (req, res) =>
             source: 'ForgeFlow',
         })
 
-        if (existingTemplates.length > 0) {
-            return res.json({
-                created: 0,
-                templates: existingTemplates,
-                message: 'Templates padrão já existem.',
-            })
-        }
-
         const userExercises = await Exercise.find({
             userId: req.user.userId,
         }).sort({
@@ -2400,6 +2392,38 @@ app.post('/workout-templates/seed-defaults', authMiddleware, async (req, res) =>
             updatedAt: -1,
             createdAt: -1,
         })
+
+        if (existingTemplates.length > 0) {
+            const updatedTemplates = []
+
+            for (const defaultTemplate of DEFAULT_WORKOUT_TEMPLATES) {
+                const existingTemplate = existingTemplates.find((template) => {
+                    return String(template.name || '').toLowerCase().split(' ')[0] ===
+                        String(defaultTemplate.name || '').toLowerCase().split(' ')[0]
+                })
+
+                if (!existingTemplate) continue
+
+                existingTemplate.name = defaultTemplate.name
+                existingTemplate.description = defaultTemplate.description
+                existingTemplate.category = defaultTemplate.category
+                existingTemplate.goal = defaultTemplate.goal
+                existingTemplate.difficulty = defaultTemplate.difficulty
+                existingTemplate.estimatedDuration = defaultTemplate.estimatedDuration
+                existingTemplate.source = 'ForgeFlow'
+                existingTemplate.exercises = buildDefaultTemplateExercises(defaultTemplate.name, userExercises)
+
+                await existingTemplate.save()
+                updatedTemplates.push(existingTemplate)
+            }
+
+            return res.json({
+                created: 0,
+                updated: updatedTemplates.length,
+                templates: updatedTemplates.length > 0 ? updatedTemplates : existingTemplates,
+                message: 'Templates padrão já existiam e foram atualizados.',
+            })
+        }
 
         const templatesToCreate = DEFAULT_WORKOUT_TEMPLATES.map((template) => ({
             ...template,
@@ -2434,34 +2458,47 @@ app.post('/workout-templates/fill-defaults', authMiddleware, async (req, res) =>
             createdAt: -1,
         })
 
-        const templates = await WorkoutTemplate.find({
+        const existingTemplates = await WorkoutTemplate.find({
             userId: req.user.userId,
             source: 'ForgeFlow',
         })
 
         const updatedTemplates = []
-        let filledCount = 0
 
-        for (const template of templates) {
-            const shouldFill = !Array.isArray(template.exercises) || template.exercises.length === 0
+        for (const defaultTemplate of DEFAULT_WORKOUT_TEMPLATES) {
+            const existingTemplate = existingTemplates.find((template) => {
+                return String(template.name || '').toLowerCase().split(' ')[0] ===
+                    String(defaultTemplate.name || '').toLowerCase().split(' ')[0]
+            })
 
-            if (!shouldFill) {
-                updatedTemplates.push(template)
-                continue
+            const templateData = {
+                ...defaultTemplate,
+                userId: req.user.userId,
+                exercises: buildDefaultTemplateExercises(defaultTemplate.name, userExercises),
             }
 
-            template.exercises = buildDefaultTemplateExercises(template.name, userExercises)
+            if (existingTemplate) {
+                existingTemplate.name = templateData.name
+                existingTemplate.description = templateData.description
+                existingTemplate.category = templateData.category
+                existingTemplate.goal = templateData.goal
+                existingTemplate.difficulty = templateData.difficulty
+                existingTemplate.estimatedDuration = templateData.estimatedDuration
+                existingTemplate.source = 'ForgeFlow'
+                existingTemplate.exercises = templateData.exercises
 
-            await template.save()
-
-            filledCount += 1
-            updatedTemplates.push(template)
+                await existingTemplate.save()
+                updatedTemplates.push(existingTemplate)
+            } else {
+                const createdTemplate = await WorkoutTemplate.create(templateData)
+                updatedTemplates.push(createdTemplate)
+            }
         }
 
         res.json({
-            updated: filledCount,
+            updated: updatedTemplates.length,
             templates: updatedTemplates,
-            message: 'Templates padrão preenchidos com exercícios sugeridos.',
+            message: 'Templates padrão recriados com exercícios sugeridos.',
         })
     } catch (error) {
         console.error(error)
