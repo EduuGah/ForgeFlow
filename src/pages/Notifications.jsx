@@ -1,15 +1,21 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import {
   Archive,
   Bell,
+  BellRing,
+  Camera,
   CheckCheck,
   CheckCircle2,
+  Clock3,
   Dumbbell,
+  Eye,
+  EyeOff,
   Flag,
-  ImagePlus,
+  Info,
   RefreshCcw,
   Search,
+  Target,
   Trash2,
   Weight,
   X,
@@ -30,20 +36,24 @@ import {
   saveUserStorageData,
 } from '../utils/userStorage'
 
-function normalizeNotification(item) {
+function normalizeNotificationFromApi(notification = {}) {
   return {
-    ...item,
-    id: item._id || item.id,
-    title: item.title || 'Notificação',
-    message: item.message || '',
-    type: item.type || 'info',
-    status: item.status || 'unread',
-    actionUrl: item.actionUrl || '',
-    createdAt: item.createdAt || new Date().toISOString(),
+    ...notification,
+    id: notification._id || notification.id,
+    title: notification.title || 'Notificação',
+    message: notification.message || '',
+    type: notification.type || 'info',
+    status: notification.status || 'unread',
+    actionUrl: notification.actionUrl || '',
+    source: notification.source || 'system',
+    dedupeKey: notification.dedupeKey || '',
+    readAt: notification.readAt || null,
+    createdAt: notification.createdAt || new Date().toISOString(),
+    updatedAt: notification.updatedAt || notification.createdAt || new Date().toISOString(),
   }
 }
 
-function formatDate(dateString) {
+function formatDateTime(dateString) {
   if (!dateString) return 'Sem data'
 
   return new Date(dateString).toLocaleString('pt-BR', {
@@ -55,263 +65,603 @@ function formatDate(dateString) {
   })
 }
 
-function getNotificationIcon(type) {
-  const icons = {
-    goal: Flag,
-    success: CheckCircle2,
-    workout: Dumbbell,
-    weight: Weight,
-    photo: ImagePlus,
-    warning: Bell,
-    danger: Bell,
-    recovery: Bell,
-    info: Bell,
-  }
+function formatLongDateTime(dateString) {
+  if (!dateString) return 'Sem data'
 
-  return icons[type] || Bell
+  return new Date(dateString).toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
-function getNotificationLabel(type) {
-  const labels = {
-    goal: 'Meta',
-    success: 'Conquista',
-    workout: 'Treino',
-    weight: 'Peso',
-    photo: 'Foto',
-    warning: 'Aviso',
-    danger: 'Atenção',
-    recovery: 'Recuperação',
-    info: 'Info',
+function getNotificationMeta(type) {
+  const metas = {
+    success: {
+      label: 'Sucesso',
+      icon: CheckCircle2,
+      tone: 'text-[var(--ff-success-text)]',
+      bg: 'bg-emerald-500/10',
+      border: 'border-emerald-500/25',
+    },
+    warning: {
+      label: 'Atenção',
+      icon: Info,
+      tone: 'text-[var(--ff-warning-text)]',
+      bg: 'bg-yellow-500/10',
+      border: 'border-yellow-500/25',
+    },
+    danger: {
+      label: 'Importante',
+      icon: Info,
+      tone: 'text-[var(--ff-danger-text)]',
+      bg: 'bg-red-500/10',
+      border: 'border-red-500/25',
+    },
+    goal: {
+      label: 'Meta',
+      icon: Target,
+      tone: 'text-[var(--ff-accent-text)]',
+      bg: 'bg-[var(--ff-accent-soft)]',
+      border: 'border-[var(--ff-accent-border)]',
+    },
+    workout: {
+      label: 'Treino',
+      icon: Dumbbell,
+      tone: 'text-[var(--ff-accent-text)]',
+      bg: 'bg-[var(--ff-accent-soft)]',
+      border: 'border-[var(--ff-accent-border)]',
+    },
+    weight: {
+      label: 'Peso',
+      icon: Weight,
+      tone: 'text-[var(--ff-accent-text)]',
+      bg: 'bg-[var(--ff-accent-soft)]',
+      border: 'border-[var(--ff-accent-border)]',
+    },
+    photo: {
+      label: 'Foto',
+      icon: Camera,
+      tone: 'text-[var(--ff-accent-text)]',
+      bg: 'bg-[var(--ff-accent-soft)]',
+      border: 'border-[var(--ff-accent-border)]',
+    },
+    recovery: {
+      label: 'Recuperação',
+      icon: Flag,
+      tone: 'text-[var(--ff-accent-text)]',
+      bg: 'bg-[var(--ff-accent-soft)]',
+      border: 'border-[var(--ff-accent-border)]',
+    },
+    info: {
+      label: 'Informação',
+      icon: Bell,
+      tone: 'text-[var(--ff-accent-text)]',
+      bg: 'bg-[var(--ff-accent-soft)]',
+      border: 'border-[var(--ff-accent-border)]',
+    },
   }
 
-  return labels[type] || 'Info'
+  return metas[type] || metas.info
+}
+
+function getStatusLabel(status) {
+  if (status === 'unread') return 'Não lida'
+  if (status === 'read') return 'Lida'
+  if (status === 'archived') return 'Arquivada'
+
+  return 'Notificação'
+}
+
+function getStatusDescription(status) {
+  if (status === 'unread') return 'Você ainda não abriu essa notificação.'
+  if (status === 'read') return 'Você já abriu essa notificação.'
+  if (status === 'archived') return 'Essa notificação está arquivada.'
+
+  return ''
+}
+
+function NotificationStatusPill({ status }) {
+  const isUnread = status === 'unread'
+  const isRead = status === 'read'
+  const isArchived = status === 'archived'
+
+  return (
+    <span
+      className={
+        isUnread
+          ? 'inline-flex items-center gap-1.5 rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent)] px-2.5 py-1 text-[11px] font-black text-white shadow-[0_0_16px_var(--ff-accent-shadow)]'
+          : isRead
+            ? 'inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-black text-[var(--ff-success-text)]'
+            : 'inline-flex items-center gap-1.5 rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-2.5 py-1 text-[11px] font-black text-[var(--ff-muted)]'
+      }
+    >
+      {isUnread && <BellRing size={12} />}
+      {isRead && <Eye size={12} />}
+      {isArchived && <Archive size={12} />}
+      {getStatusLabel(status)}
+    </span>
+  )
+}
+
+function NotificationDetailModal({
+  notification,
+  onClose,
+  onArchive,
+  onDelete,
+  onOpenAction,
+}) {
+  if (!notification) return null
+
+  const meta = getNotificationMeta(notification.type)
+  const Icon = meta.icon
+
+  return (
+    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-2xl overflow-hidden rounded-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] shadow-2xl">
+        <div className="flex items-start justify-between gap-4 border-b border-[var(--ff-border)] p-5">
+          <div className="flex min-w-0 items-start gap-4">
+            <div
+              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${meta.border} ${meta.bg} ${meta.tone}`}
+            >
+              <Icon size={24} />
+            </div>
+
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge>{meta.label}</Badge>
+                <NotificationStatusPill status={notification.status} />
+              </div>
+
+              <h2 className="mt-3 text-2xl font-black text-[var(--ff-text)]">
+                {notification.title}
+              </h2>
+
+              <p className="mt-1 text-sm text-[var(--ff-muted)]">
+                Criada em {formatLongDateTime(notification.createdAt)}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-muted)] transition hover:text-[var(--ff-text)]"
+            aria-label="Fechar detalhes"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="space-y-5 p-5">
+          <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+            <p className="text-xs font-black uppercase tracking-wide text-[var(--ff-muted)]">
+              Mensagem completa
+            </p>
+
+            <p className="mt-3 whitespace-pre-line text-base leading-relaxed text-[var(--ff-text)]">
+              {notification.message || 'Essa notificação não possui mensagem detalhada.'}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+              <p className="text-xs font-black uppercase tracking-wide text-[var(--ff-muted)]">
+                Status
+              </p>
+
+              <div className="mt-2">
+                <NotificationStatusPill status={notification.status} />
+              </div>
+
+              <p className="mt-2 text-xs leading-relaxed text-[var(--ff-muted)]">
+                {getStatusDescription(notification.status)}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+              <p className="text-xs font-black uppercase tracking-wide text-[var(--ff-muted)]">
+                Leitura
+              </p>
+
+              <p className="mt-2 font-bold text-[var(--ff-text)]">
+                {notification.readAt
+                  ? formatLongDateTime(notification.readAt)
+                  : 'Ainda não tinha sido lida'}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+              <p className="text-xs font-black uppercase tracking-wide text-[var(--ff-muted)]">
+                Origem
+              </p>
+
+              <p className="mt-2 font-bold text-[var(--ff-text)]">
+                {notification.source || 'system'}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+              <p className="text-xs font-black uppercase tracking-wide text-[var(--ff-muted)]">
+                Destino sugerido
+              </p>
+
+              <p className="mt-2 font-bold text-[var(--ff-text)]">
+                {notification.actionUrl || 'Nenhum'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+            {notification.actionUrl && (
+              <Button
+                type="button"
+                onClick={() => onOpenAction(notification)}
+              >
+                Abrir destino
+              </Button>
+            )}
+
+            {notification.status !== 'archived' && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => onArchive(notification.id)}
+              >
+                <Archive size={16} />
+                Arquivar
+              </Button>
+            )}
+
+            <Button
+              type="button"
+              variant="danger"
+              onClick={() => onDelete(notification.id)}
+            >
+              <Trash2 size={16} />
+              Excluir
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function Notifications() {
   const { user } = useAuth()
+  const navigate = useNavigate()
 
   const [notifications, setNotifications] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
+  const [statusFilter, setStatusFilter] = useState('')
+  const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [source, setSource] = useState('local')
-  const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [confirmModal, setConfirmModal] = useState(null)
   const [toast, setToast] = useState(null)
-  const [refreshKey, setRefreshKey] = useState(0)
-
-  useEffect(() => {
-    if (!user) return
-
-    async function loadNotifications() {
-      setLoading(true)
-
-      const cachedNotifications = getUserStorageData(user, 'notifications', [])
-
-      try {
-        const data = await apiFetch('/notifications?limit=50')
-
-        const normalized = Array.isArray(data?.notifications)
-          ? data.notifications.map(normalizeNotification)
-          : []
-
-        setNotifications(normalized)
-        setUnreadCount(Number(data?.unreadCount) || 0)
-        saveUserStorageData(user, 'notifications', normalized)
-        setSource('database')
-      } catch (error) {
-        console.error(error)
-
-        const normalized = Array.isArray(cachedNotifications)
-          ? cachedNotifications.map(normalizeNotification)
-          : []
-
-        setNotifications(normalized)
-        setUnreadCount(normalized.filter((item) => item.status === 'unread').length)
-        setSource('local')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadNotifications()
-  }, [user, refreshKey])
+  const [confirmModal, setConfirmModal] = useState(null)
+  const [selectedNotification, setSelectedNotification] = useState(null)
 
   function showToast(type, title, message = '') {
-    setToast({ type, title, message })
-    setTimeout(() => setToast(null), 3200)
+    setToast({
+      type,
+      title,
+      message,
+    })
+
+    setTimeout(() => {
+      setToast(null)
+    }, 3200)
   }
+
+  async function loadNotifications(filter = statusFilter) {
+    if (!user) return
+
+    setLoading(true)
+
+    const cachedNotifications = getUserStorageData(user, 'notifications', [])
+
+    try {
+      const query = filter ? `?status=${filter}&limit=60` : '?limit=60'
+      const data = await apiFetch(`/notifications${query}`)
+
+      const normalizedNotifications = Array.isArray(data?.notifications)
+        ? data.notifications.map(normalizeNotificationFromApi)
+        : []
+
+      setNotifications(normalizedNotifications)
+      setUnreadCount(Number(data?.unreadCount) || 0)
+      saveUserStorageData(user, 'notifications', normalizedNotifications)
+      setSource('database')
+    } catch (error) {
+      console.error(error)
+
+      const normalizedCached = Array.isArray(cachedNotifications)
+        ? cachedNotifications.map(normalizeNotificationFromApi)
+        : []
+
+      setNotifications(normalizedCached)
+      setUnreadCount(
+        normalizedCached.filter((item) => item.status === 'unread').length
+      )
+      setSource('local')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadNotifications()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, statusFilter])
+
+  const stats = useMemo(() => {
+    const unread = notifications.filter((item) => item.status === 'unread').length
+    const read = notifications.filter((item) => item.status === 'read').length
+    const archived = notifications.filter((item) => item.status === 'archived').length
+
+    return {
+      unread,
+      read,
+      archived,
+      total: notifications.length,
+    }
+  }, [notifications])
 
   const filteredNotifications = useMemo(() => {
     const term = search.toLowerCase().trim()
 
-    return notifications
-      .filter((notification) => {
-        const matchesStatus = statusFilter === 'all'
-          ? notification.status !== 'archived'
-          : notification.status === statusFilter
+    if (!term) return notifications
 
-        const matchesSearch = term
-          ? `${notification.title} ${notification.message} ${notification.type}`
-              .toLowerCase()
-              .includes(term)
-          : true
+    return notifications.filter((notification) => {
+      return `${notification.title} ${notification.message} ${notification.type} ${notification.status}`
+        .toLowerCase()
+        .includes(term)
+    })
+  }, [notifications, search])
 
-        return matchesStatus && matchesSearch
-      })
-      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
-  }, [notifications, search, statusFilter])
-
-  async function handleGenerate() {
+  async function handleGenerateNotifications() {
     try {
       const data = await apiFetch('/notifications/generate', {
         method: 'POST',
       })
 
-      const normalized = Array.isArray(data?.notifications)
-        ? data.notifications.map(normalizeNotification)
+      const normalizedNotifications = Array.isArray(data?.notifications)
+        ? data.notifications.map(normalizeNotificationFromApi)
         : []
 
-      setNotifications(normalized)
+      setNotifications(normalizedNotifications)
       setUnreadCount(Number(data?.unreadCount) || 0)
-      saveUserStorageData(user, 'notifications', normalized)
+      saveUserStorageData(user, 'notifications', normalizedNotifications)
 
       showToast(
         'success',
-        'Notificações atualizadas',
+        'Notificações verificadas',
         data?.created > 0
           ? `${data.created} nova(s) notificação(ões) criada(s).`
-          : 'Nenhuma nova notificação necessária agora.'
+          : 'Nenhuma nova notificação no momento.'
       )
     } catch (error) {
       console.error(error)
-      showToast('error', 'Erro ao gerar notificações', error.message || 'Tente novamente.')
+
+      showToast(
+        'error',
+        'Erro ao verificar',
+        error.message || 'Não foi possível gerar notificações.'
+      )
     }
   }
 
-  async function handleRead(notification) {
-    if (notification.status !== 'unread') return
+  async function markNotificationAsRead(notificationId) {
+    const notification = notifications.find((item) => item.id === notificationId)
+
+    if (!notification || notification.status !== 'unread') {
+      return notification || null
+    }
 
     try {
-      const itemFromApi = await apiFetch(`/notifications/${notification.id}/read`, {
+      const updatedFromApi = await apiFetch(`/notifications/${notificationId}/read`, {
         method: 'PATCH',
       })
 
-      const normalized = normalizeNotification(itemFromApi)
-      const updated = notifications.map((item) => item.id === normalized.id ? normalized : item)
+      const updatedNotification = normalizeNotificationFromApi(updatedFromApi)
 
-      setNotifications(updated)
-      setUnreadCount(Math.max(0, unreadCount - 1))
-      saveUserStorageData(user, 'notifications', updated)
+      setNotifications((current) => {
+        const updated = current.map((item) =>
+          item.id === notificationId ? updatedNotification : item
+        )
+
+        saveUserStorageData(user, 'notifications', updated)
+
+        return updated
+      })
+
+      setUnreadCount((current) => Math.max(0, current - 1))
+
+      return updatedNotification
     } catch (error) {
       console.error(error)
-      showToast('error', 'Erro ao marcar como lida', error.message || 'Tente novamente.')
+      showToast(
+        'error',
+        'Erro ao marcar como lida',
+        error.message || 'Não foi possível marcar a notificação como lida.'
+      )
+
+      return notification
     }
   }
 
-  async function handleReadAll() {
+  async function handleOpenNotification(notification) {
+    const updatedNotification = await markNotificationAsRead(notification.id)
+
+    setSelectedNotification(updatedNotification || notification)
+  }
+
+  async function handleMarkAsRead(notificationId) {
+    const updatedNotification = await markNotificationAsRead(notificationId)
+
+    if (updatedNotification) {
+      showToast('success', 'Notificação lida', 'A notificação foi marcada como lida.')
+    }
+  }
+
+  async function handleMarkAllAsRead() {
     try {
       await apiFetch('/notifications/read-all', {
         method: 'PATCH',
       })
 
-      const updated = notifications.map((item) => ({
+      const updatedNotifications = notifications.map((item) => ({
         ...item,
         status: item.status === 'unread' ? 'read' : item.status,
+        readAt: item.status === 'unread' ? new Date().toISOString() : item.readAt,
       }))
 
-      setNotifications(updated)
+      setNotifications(updatedNotifications)
+      saveUserStorageData(user, 'notifications', updatedNotifications)
       setUnreadCount(0)
-      saveUserStorageData(user, 'notifications', updated)
-      showToast('success', 'Tudo lido', 'Todas as notificações foram marcadas como lidas.')
+
+      if (selectedNotification?.status === 'unread') {
+        setSelectedNotification({
+          ...selectedNotification,
+          status: 'read',
+          readAt: new Date().toISOString(),
+        })
+      }
+
+      showToast(
+        'success',
+        'Notificações lidas',
+        'Todas as notificações foram marcadas como lidas.'
+      )
     } catch (error) {
       console.error(error)
-      showToast('error', 'Erro ao marcar tudo', error.message || 'Tente novamente.')
+
+      showToast(
+        'error',
+        'Erro ao marcar todas',
+        error.message || 'Não foi possível marcar todas como lidas.'
+      )
     }
   }
 
-  function handleArchive(notification) {
-    setConfirmModal({
-      title: 'Arquivar notificação?',
-      description: `A notificação "${notification.title}" será movida para arquivadas.`,
-      confirmText: 'Arquivar',
-      onConfirm: async () => {
-        try {
-          const itemFromApi = await apiFetch(`/notifications/${notification.id}/archive`, {
-            method: 'PATCH',
-          })
+  async function handleArchiveNotification(notificationId) {
+    try {
+      const notificationBeforeUpdate = notifications.find((item) => item.id === notificationId)
 
-          const normalized = normalizeNotification(itemFromApi)
-          const updated = notifications.map((item) => item.id === normalized.id ? normalized : item)
-
-          setNotifications(updated)
-          setUnreadCount(updated.filter((item) => item.status === 'unread').length)
-          saveUserStorageData(user, 'notifications', updated)
-          setConfirmModal(null)
-          showToast('success', 'Notificação arquivada', 'Ela saiu da lista principal.')
-        } catch (error) {
-          console.error(error)
-          showToast('error', 'Erro ao arquivar', error.message || 'Tente novamente.')
+      const updatedFromApi = await apiFetch(
+        `/notifications/${notificationId}/archive`,
+        {
+          method: 'PATCH',
         }
-      },
-    })
+      )
+
+      const updatedNotification = normalizeNotificationFromApi(updatedFromApi)
+
+      setNotifications((current) => {
+        const updated = current.map((item) =>
+          item.id === notificationId ? updatedNotification : item
+        )
+
+        saveUserStorageData(user, 'notifications', updated)
+
+        return updated
+      })
+
+      setSelectedNotification((current) =>
+        current?.id === notificationId ? updatedNotification : current
+      )
+
+      if (notificationBeforeUpdate?.status === 'unread') {
+        setUnreadCount((current) => Math.max(0, current - 1))
+      }
+
+      showToast('success', 'Notificação arquivada', 'A notificação foi arquivada.')
+    } catch (error) {
+      console.error(error)
+
+      showToast(
+        'error',
+        'Erro ao arquivar',
+        error.message || 'Não foi possível arquivar a notificação.'
+      )
+    }
   }
 
-  function handleDelete(notification) {
+  function handleDeleteNotification(notificationId) {
+    const notification = notifications.find((item) => item.id === notificationId)
+
     setConfirmModal({
       title: 'Excluir notificação?',
-      description: `A notificação "${notification.title}" será removida permanentemente.`,
+      description: `A notificação "${notification?.title || 'selecionada'}" será removida.`,
       confirmText: 'Excluir',
       variant: 'danger',
       onConfirm: async () => {
         try {
-          await apiFetch(`/notifications/${notification.id}`, {
+          await apiFetch(`/notifications/${notificationId}`, {
             method: 'DELETE',
           })
 
-          const updated = notifications.filter((item) => item.id !== notification.id)
+          const updatedNotifications = notifications.filter(
+            (item) => item.id !== notificationId
+          )
 
-          setNotifications(updated)
-          setUnreadCount(updated.filter((item) => item.status === 'unread').length)
-          saveUserStorageData(user, 'notifications', updated)
+          setNotifications(updatedNotifications)
+          saveUserStorageData(user, 'notifications', updatedNotifications)
+          setUnreadCount(
+            updatedNotifications.filter((item) => item.status === 'unread').length
+          )
+          setSelectedNotification((current) =>
+            current?.id === notificationId ? null : current
+          )
           setConfirmModal(null)
-          showToast('success', 'Notificação excluída', 'Ela foi removida.')
+
+          showToast(
+            'success',
+            'Notificação excluída',
+            'A notificação foi removida.'
+          )
         } catch (error) {
           console.error(error)
-          showToast('error', 'Erro ao excluir', error.message || 'Tente novamente.')
+
+          showToast(
+            'error',
+            'Erro ao excluir',
+            error.message || 'Não foi possível excluir a notificação.'
+          )
         }
       },
     })
   }
 
-  const stats = useMemo(() => {
-    return {
-      unread: notifications.filter((item) => item.status === 'unread').length,
-      read: notifications.filter((item) => item.status === 'read').length,
-      archived: notifications.filter((item) => item.status === 'archived').length,
-      total: notifications.length,
-    }
-  }, [notifications])
+  function handleOpenAction(notification) {
+    if (!notification?.actionUrl) return
+
+    setSelectedNotification(null)
+    navigate(notification.actionUrl)
+  }
 
   return (
     <>
       <PageHeader
         title="Notificações"
-        description="Alertas internos inteligentes sobre metas, treinos, peso corporal e fotos."
+        description="Acompanhe alertas inteligentes sobre treino, metas, peso e evolução."
         action={
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant={source === 'database' ? 'purple' : 'default'}>
               {loading ? 'Carregando...' : source === 'database' ? 'Sincronizado' : 'Local'}
             </Badge>
 
-            <Button type="button" variant="secondary" onClick={() => setRefreshKey((key) => key + 1)}>
+            <Button type="button" variant="secondary" onClick={() => loadNotifications()}>
               <RefreshCcw size={16} />
               Atualizar
             </Button>
 
-            <Button type="button" onClick={handleGenerate}>
-              <Bell size={16} />
-              Gerar alertas
+            <Button type="button" onClick={handleGenerateNotifications}>
+              <BellRing size={16} />
+              Verificar agora
             </Button>
           </div>
         }
@@ -319,27 +669,39 @@ function Notifications() {
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card className="p-4">
-          <p className="text-sm text-[var(--ff-muted)]">Não lidas</p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-[var(--ff-muted)]">Não lidas</p>
+            <BellRing size={20} className="text-[var(--ff-accent-text)]" />
+          </div>
           <h2 className="mt-2 text-3xl font-black text-[var(--ff-accent-text)]">{stats.unread}</h2>
-          <p className="mt-2 text-xs text-[var(--ff-muted)]">pedem atenção</p>
+          <p className="mt-2 text-xs text-[var(--ff-muted)]">precisam da sua atenção</p>
         </Card>
 
         <Card className="p-4">
-          <p className="text-sm text-[var(--ff-muted)]">Lidas</p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-[var(--ff-muted)]">Lidas</p>
+            <Eye size={20} className="text-[var(--ff-success-text)]" />
+          </div>
           <h2 className="mt-2 text-3xl font-black text-[var(--ff-text)]">{stats.read}</h2>
-          <p className="mt-2 text-xs text-[var(--ff-muted)]">já visualizadas</p>
+          <p className="mt-2 text-xs text-[var(--ff-muted)]">já foram abertas</p>
         </Card>
 
         <Card className="p-4">
-          <p className="text-sm text-[var(--ff-muted)]">Arquivadas</p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-[var(--ff-muted)]">Arquivadas</p>
+            <Archive size={20} className="text-[var(--ff-muted)]" />
+          </div>
           <h2 className="mt-2 text-3xl font-black text-[var(--ff-text)]">{stats.archived}</h2>
           <p className="mt-2 text-xs text-[var(--ff-muted)]">guardadas</p>
         </Card>
 
         <Card className="p-4">
-          <p className="text-sm text-[var(--ff-muted)]">Total</p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-[var(--ff-muted)]">Total exibido</p>
+            <Bell size={20} className="text-[var(--ff-accent-text)]" />
+          </div>
           <h2 className="mt-2 text-3xl font-black text-[var(--ff-text)]">{stats.total}</h2>
-          <p className="mt-2 text-xs text-[var(--ff-muted)]">criadas pelo app</p>
+          <p className="mt-2 text-xs text-[var(--ff-muted)]">no filtro atual</p>
         </Card>
       </section>
 
@@ -351,7 +713,7 @@ function Notifications() {
               type="text"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Buscar por título, mensagem ou tipo..."
+              placeholder="Buscar por título, mensagem, tipo ou status..."
               className="w-full bg-transparent text-sm text-[var(--ff-text)] outline-none placeholder:text-[var(--ff-muted)]"
             />
             {search && (
@@ -366,15 +728,15 @@ function Notifications() {
             onChange={(event) => setStatusFilter(event.target.value)}
             className="h-12 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-sm font-bold text-[var(--ff-text)] outline-none"
           >
-            <option value="all">Todas principais</option>
+            <option value="">Todas</option>
             <option value="unread">Não lidas</option>
             <option value="read">Lidas</option>
             <option value="archived">Arquivadas</option>
           </select>
 
-          <Button type="button" variant="secondary" onClick={handleReadAll}>
+          <Button type="button" variant="secondary" onClick={handleMarkAllAsRead}>
             <CheckCheck size={16} />
-            Marcar tudo lido
+            Marcar todas como lidas
           </Button>
         </div>
       </Card>
@@ -384,101 +746,143 @@ function Notifications() {
           <Card>
             <EmptyState
               title="Nenhuma notificação encontrada"
-              description="Gere alertas inteligentes ou ajuste os filtros para visualizar outras notificações."
+              description="Clique em verificar agora ou altere o filtro para ver outros alertas."
               action={
-                <Button type="button" onClick={handleGenerate}>
-                  <Bell size={16} />
-                  Gerar alertas
+                <Button type="button" onClick={handleGenerateNotifications}>
+                  <BellRing size={16} />
+                  Verificar agora
                 </Button>
               }
             />
           </Card>
         ) : (
           filteredNotifications.map((notification) => {
-            const Icon = getNotificationIcon(notification.type)
+            const meta = getNotificationMeta(notification.type)
+            const Icon = meta.icon
             const isUnread = notification.status === 'unread'
 
             return (
-              <Card key={notification.id} className={isUnread ? 'border-[var(--ff-accent-border)]/50' : ''}>
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="flex min-w-0 gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">
-                      <Icon size={22} />
-                    </div>
+              <article
+                key={notification.id}
+                className={
+                  isUnread
+                    ? 'group relative overflow-hidden rounded-3xl border border-[var(--ff-accent-border)] bg-[var(--ff-card)] p-4 shadow-[0_0_28px_var(--ff-accent-shadow)] transition hover:-translate-y-0.5 hover:bg-[var(--ff-card-hover)]'
+                    : 'group relative overflow-hidden rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 opacity-80 transition hover:-translate-y-0.5 hover:opacity-100 hover:bg-[var(--ff-card-hover)]'
+                }
+              >
+                {isUnread && (
+                  <div className="absolute left-0 top-0 h-full w-1.5 bg-[var(--ff-accent)]" />
+                )}
 
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge variant={isUnread ? 'purple' : 'default'}>
-                          {isUnread ? 'Não lida' : notification.status === 'archived' ? 'Arquivada' : 'Lida'}
-                        </Badge>
+                <button
+                  type="button"
+                  onClick={() => handleOpenNotification(notification)}
+                  className="flex w-full flex-col gap-4 text-left sm:flex-row sm:items-start"
+                >
+                  <div
+                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${meta.border} ${meta.bg} ${meta.tone}`}
+                  >
+                    <Icon size={23} />
+                  </div>
 
-                        <Badge>{getNotificationLabel(notification.type)}</Badge>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <NotificationStatusPill status={notification.status} />
 
-                        <span className="text-xs font-bold text-[var(--ff-muted)]">
-                          {formatDate(notification.createdAt)}
+                      <Badge>{meta.label}</Badge>
+
+                      {isUnread && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-[var(--ff-accent-soft)] px-2.5 py-1 text-[11px] font-black text-[var(--ff-accent-text)]">
+                          <EyeOff size={12} />
+                          Clique para abrir
                         </span>
-                      </div>
-
-                      <h2 className="mt-3 text-xl font-black text-[var(--ff-text)]">
-                        {notification.title}
-                      </h2>
-
-                      {notification.message && (
-                        <p className="mt-2 text-sm leading-relaxed text-[var(--ff-muted)]">
-                          {notification.message}
-                        </p>
                       )}
+                    </div>
 
-                      {notification.actionUrl && (
-                        <Link
-                          to={notification.actionUrl}
-                          onClick={() => handleRead(notification)}
-                          className="mt-3 inline-flex text-sm font-black text-[var(--ff-accent-text)] transition hover:underline"
-                        >
-                          Abrir relacionado
-                        </Link>
+                    <h2
+                      className={
+                        isUnread
+                          ? 'mt-3 text-lg font-black text-[var(--ff-text)]'
+                          : 'mt-3 text-lg font-bold text-[var(--ff-text)]'
+                      }
+                    >
+                      {notification.title}
+                    </h2>
+
+                    <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-[var(--ff-muted)]">
+                      {notification.message || 'Sem mensagem detalhada.'}
+                    </p>
+
+                    <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-[var(--ff-muted)]">
+                      <span className="inline-flex items-center gap-1">
+                        <Clock3 size={13} />
+                        {formatDateTime(notification.createdAt)}
+                      </span>
+
+                      {notification.readAt && (
+                        <span className="inline-flex items-center gap-1">
+                          <Eye size={13} />
+                          Lida em {formatDateTime(notification.readAt)}
+                        </span>
                       )}
                     </div>
                   </div>
+                </button>
 
-                  <div className="flex shrink-0 flex-wrap gap-2">
-                    {isUnread && (
-                      <button
-                        type="button"
-                        onClick={() => handleRead(notification)}
-                        className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-muted)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)]"
-                        title="Marcar como lida"
-                      >
-                        <CheckCircle2 size={17} />
-                      </button>
-                    )}
-
-                    {notification.status !== 'archived' && (
-                      <button
-                        type="button"
-                        onClick={() => handleArchive(notification)}
-                        className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-muted)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)]"
-                        title="Arquivar"
-                      >
-                        <Archive size={17} />
-                      </button>
-                    )}
-
-                    <button
+                <div className="mt-4 flex flex-wrap justify-end gap-2 border-t border-[var(--ff-border)] pt-4">
+                  {notification.status === 'unread' && (
+                    <Button
                       type="button"
-                      onClick={() => handleDelete(notification)}
-                      className="flex h-10 w-10 items-center justify-center rounded-2xl border border-red-500/25 bg-red-500/10 text-[var(--ff-danger-text)] transition hover:bg-red-500/15"
-                      title="Excluir"
+                      variant="secondary"
+                      onClick={() => handleMarkAsRead(notification.id)}
                     >
-                      <Trash2 size={17} />
-                    </button>
-                  </div>
+                      <Eye size={16} />
+                      Marcar como lida
+                    </Button>
+                  )}
+
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => handleOpenNotification(notification)}
+                  >
+                    <Info size={16} />
+                    Detalhes
+                  </Button>
+
+                  {notification.status !== 'archived' && (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => handleArchiveNotification(notification.id)}
+                    >
+                      <Archive size={16} />
+                      Arquivar
+                    </Button>
+                  )}
+
+                  <Button
+                    type="button"
+                    variant="danger"
+                    onClick={() => handleDeleteNotification(notification.id)}
+                  >
+                    <Trash2 size={16} />
+                    Excluir
+                  </Button>
                 </div>
-              </Card>
+              </article>
             )
           })
         )}
       </section>
+
+      <NotificationDetailModal
+        notification={selectedNotification}
+        onClose={() => setSelectedNotification(null)}
+        onArchive={handleArchiveNotification}
+        onDelete={handleDeleteNotification}
+        onOpenAction={handleOpenAction}
+      />
 
       <ConfirmModal
         open={Boolean(confirmModal)}
