@@ -20,70 +20,49 @@ function Button({
     duration-200
     disabled:cursor-not-allowed
     disabled:opacity-50
+    active:scale-[0.98]
   `
 
   const variants = {
     primary: `
+      bg-[var(--ff-accent)]
       text-white
-      active:scale-[0.98]
+      shadow-[0_0_18px_var(--ff-accent-shadow)]
+      hover:bg-[var(--ff-accent-hover)]
     `,
 
     secondary: `
       border
-      border-zinc-700
-      bg-zinc-900
-      text-white
+      border-[var(--ff-border)]
+      bg-[var(--ff-surface-2)]
+      text-[var(--ff-text)]
       hover:border-[var(--ff-accent-border)]
-      hover:bg-zinc-800
-      active:scale-[0.98]
+      hover:bg-[var(--ff-card-hover)]
     `,
 
     ghost: `
       bg-transparent
-      text-zinc-300
-      hover:bg-zinc-800
-      hover:text-white
-      active:scale-[0.98]
+      text-[var(--ff-muted)]
+      hover:bg-[var(--ff-surface-2)]
+      hover:text-[var(--ff-text)]
     `,
 
     danger: `
       border
-      border-red-500/20
+      border-red-500/25
       bg-red-500/10
-      text-red-300
-      hover:border-red-400/40
-      hover:bg-red-500/20
-      active:scale-[0.98]
+      text-[var(--ff-danger-text)]
+      hover:border-red-500/40
+      hover:bg-red-500/15
     `,
   }
-
-  const primaryStyle =
-    variant === 'primary'
-      ? {
-          backgroundColor: 'var(--ff-accent)',
-          boxShadow: '0 0 18px var(--ff-accent-shadow)',
-        }
-      : undefined
 
   return (
     <button
       type={type}
       onClick={onClick}
       disabled={disabled}
-      style={primaryStyle}
       className={`${baseClasses} ${variants[variant] || variants.primary} ${className}`}
-      onMouseEnter={(event) => {
-        if (variant === 'primary') {
-          event.currentTarget.style.backgroundColor = 'var(--ff-accent-hover)'
-          event.currentTarget.style.boxShadow = '0 0 26px var(--ff-accent-shadow)'
-        }
-      }}
-      onMouseLeave={(event) => {
-        if (variant === 'primary') {
-          event.currentTarget.style.backgroundColor = 'var(--ff-accent)'
-          event.currentTarget.style.boxShadow = '0 0 18px var(--ff-accent-shadow)'
-        }
-      }}
     >
       {children}
     </button>

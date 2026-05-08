@@ -1,40 +1,30 @@
-function Select({
-  label,
-  value,
-  onChange,
-  children,
-  className = '',
-  ...props
-}) {
+function Select({ label, children, className = '', ...props }) {
   return (
-    <div className="w-full">
+    <div>
       {label && (
-        <label className="mb-2 block text-sm font-bold text-zinc-300">
+        <label className="mb-2 block text-sm font-bold text-[var(--ff-text-soft)]">
           {label}
         </label>
       )}
 
       <select
-        value={value}
-        onChange={onChange}
         className={`
           h-12
           w-full
-          cursor-pointer
           rounded-2xl
-          border border-zinc-800
-          bg-[#101014]
+          border
+          border-[var(--ff-border)]
+          bg-[var(--ff-input)]
           px-4
           text-sm
-          font-medium
-          text-white
+          font-bold
+          text-[var(--ff-text)]
           outline-none
           transition
-          hover:border-zinc-700
+          hover:border-[var(--ff-border-strong)]
           focus:border-[var(--ff-accent-border)]
-          focus:bg-[#141419]
           focus:ring-2
-          focus:ring-violet-500/10
+          focus:ring-[var(--ff-accent)]/10
           disabled:cursor-not-allowed
           disabled:opacity-50
           ${className}

@@ -1,44 +1,40 @@
-function Badge({
-  children,
-  variant = 'default',
-  className = '',
-}) {
+function Badge({ children, variant = 'default', className = '' }) {
   const variants = {
     default: `
-      border-zinc-700
-      bg-zinc-900
-      text-zinc-300
+      border-[var(--ff-border)]
+      bg-[var(--ff-surface-2)]
+      text-[var(--ff-muted)]
     `,
 
     purple: `
-  border-[var(--ff-accent-border)]
-  bg-[var(--ff-accent-soft)]
-  text-[var(--ff-accent-text)]
-  shadow-[0_0_14px_var(--ff-accent-shadow)]
-`,
+      border-[var(--ff-accent-border)]
+      bg-[var(--ff-accent-soft)]
+      text-[var(--ff-accent-text)]
+      shadow-[0_0_14px_var(--ff-accent-shadow)]
+    `,
 
     green: `
       border-emerald-500/30
       bg-emerald-500/10
-      text-emerald-300
+      text-[var(--ff-success-text)]
     `,
 
     red: `
       border-red-500/30
       bg-red-500/10
-      text-red-300
+      text-[var(--ff-danger-text)]
     `,
 
     yellow: `
       border-yellow-500/30
       bg-yellow-500/10
-      text-yellow-300
+      text-[var(--ff-warning-text)]
     `,
 
     orange: `
       border-orange-500/30
       bg-orange-500/10
-      text-orange-300
+      text-orange-500
     `,
   }
 

@@ -1,11 +1,10 @@
 import { AlertTriangle, X } from 'lucide-react'
-
 import Button from './Button'
 
 function ConfirmModal({
   open,
-  title = 'Confirmar ação',
-  description = 'Tem certeza que deseja continuar?',
+  title,
+  description,
   confirmText = 'Confirmar',
   cancelText = 'Cancelar',
   variant = 'danger',
@@ -14,56 +13,52 @@ function ConfirmModal({
 }) {
   if (!open) return null
 
+  const isDanger = variant === 'danger'
+
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 px-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-3xl border border-zinc-800 bg-[#121212] p-6 shadow-2xl shadow-black/50">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex gap-3">
-            <div
-              className={
-                variant === 'danger'
-                  ? 'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-500/10 text-red-400'
-                  : 'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]'
-              }
-            >
-              <AlertTriangle size={24} />
-            </div>
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-[var(--ff-overlay)] px-4 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-6 text-[var(--ff-text)] shadow-2xl shadow-black/20">
+        <div className="flex items-start gap-4">
+          <div
+            className={
+              isDanger
+                ? 'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-500/10 text-[var(--ff-danger-text)]'
+                : 'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]'
+            }
+          >
+            <AlertTriangle size={24} />
+          </div>
 
-            <div>
-              <h2 className="text-xl font-black text-white">
-                {title}
-              </h2>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-xl font-black text-[var(--ff-text)]">
+              {title}
+            </h2>
 
-              <p className="mt-2 text-sm leading-relaxed text-zinc-500">
+            {description && (
+              <p className="mt-2 text-sm leading-relaxed text-[var(--ff-muted)]">
                 {description}
               </p>
-            </div>
+            )}
           </div>
 
           <button
             type="button"
             onClick={onCancel}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-900 text-zinc-400 transition hover:bg-zinc-800 hover:text-white"
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--ff-surface-2)] text-[var(--ff-muted)] transition hover:bg-[var(--ff-card-hover)] hover:text-[var(--ff-text)]"
           >
             <X size={18} />
           </button>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={onCancel}
-            className="w-full"
-          >
+        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Button type="button" variant="secondary" onClick={onCancel}>
             {cancelText}
           </Button>
 
           <Button
             type="button"
-            variant={variant}
+            variant={isDanger ? 'danger' : 'primary'}
             onClick={onConfirm}
-            className="w-full"
           >
             {confirmText}
           </Button>

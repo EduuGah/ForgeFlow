@@ -1,50 +1,51 @@
 function Textarea({
   label,
-  placeholder = '',
-  value,
-  onChange,
   rows = 4,
   className = '',
+  error = '',
   ...props
 }) {
   return (
-    <div className="w-full">
+    <div>
       {label && (
-        <label className="mb-2 block text-sm font-bold text-zinc-300">
+        <label className="mb-2 block text-sm font-bold text-[var(--ff-text-soft)]">
           {label}
         </label>
       )}
 
       <textarea
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
         rows={rows}
         className={`
           w-full
           resize-none
           rounded-2xl
-          border border-zinc-800
-          bg-[#101014]
+          border
+          border-[var(--ff-border)]
+          bg-[var(--ff-input)]
           px-4
           py-3
           text-sm
           font-medium
-          text-white
+          text-[var(--ff-text)]
           outline-none
           transition
-          placeholder:text-zinc-600
-          hover:border-zinc-700
+          placeholder:text-[var(--ff-muted-2)]
+          hover:border-[var(--ff-border-strong)]
           focus:border-[var(--ff-accent-border)]
-          focus:bg-[#141419]
           focus:ring-2
-          focus:ring-violet-500/10
+          focus:ring-[var(--ff-accent)]/10
           disabled:cursor-not-allowed
           disabled:opacity-50
           ${className}
         `}
         {...props}
       />
+
+      {error && (
+        <p className="mt-2 text-xs font-bold text-[var(--ff-danger-text)]">
+          {error}
+        </p>
+      )}
     </div>
   )
 }

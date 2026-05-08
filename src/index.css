@@ -1,23 +1,13 @@
 @import "tailwindcss";
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes fadeOut {
-  from {
-    opacity: 1;
-  }
-
-  to {
-    opacity: 0;
-  }
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 @keyframes slideInLeft {
@@ -54,26 +44,69 @@
 
   --ff-bg: #000000;
   --ff-bg-soft: #09090b;
+  --ff-card: #18181b;
+  --ff-card-hover: #1f1f23;
   --ff-surface: #18181b;
   --ff-surface-2: #101014;
   --ff-surface-3: #27272a;
-  --ff-header: rgba(0, 0, 0, 0.75);
-  --ff-border: #27272a;
-  --ff-border-strong: #3f3f46;
+  --ff-input: #101014;
+  --ff-header: rgba(0, 0, 0, 0.78);
+  --ff-sidebar: #121212;
+  --ff-border: rgba(63, 63, 70, 0.9);
+  --ff-border-soft: rgba(39, 39, 42, 0.9);
+  --ff-border-strong: #52525b;
   --ff-text: #ffffff;
   --ff-text-soft: #e4e4e7;
-  --ff-muted: #71717a;
-  --ff-muted-2: #52525b;
+  --ff-muted: #a1a1aa;
+  --ff-muted-2: #71717a;
   --ff-overlay: rgba(0, 0, 0, 0.75);
   --ff-scroll-track: rgba(24, 24, 27, 0.65);
 
+  --ff-success-text: #34d399;
+  --ff-danger-text: #f87171;
+  --ff-warning-text: #facc15;
+  --ff-warning-muted: rgba(254, 240, 138, 0.82);
+
   color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --ff-bg: #f7f7fb;
+  --ff-bg-soft: #ffffff;
+  --ff-card: #ffffff;
+  --ff-card-hover: #f4f4f7;
+  --ff-surface: #ffffff;
+  --ff-surface-2: #f4f4f7;
+  --ff-surface-3: #e7e7ee;
+  --ff-input: #ffffff;
+  --ff-header: rgba(255, 255, 255, 0.84);
+  --ff-sidebar: #ffffff;
+  --ff-border: rgba(24, 24, 27, 0.14);
+  --ff-border-soft: rgba(24, 24, 27, 0.1);
+  --ff-border-strong: rgba(24, 24, 27, 0.24);
+  --ff-text: #18181b;
+  --ff-text-soft: #27272a;
+  --ff-muted: #52525b;
+  --ff-muted-2: #71717a;
+  --ff-overlay: rgba(24, 24, 27, 0.45);
+  --ff-scroll-track: rgba(228, 228, 231, 0.9);
+
+  --ff-success-text: #047857;
+  --ff-danger-text: #dc2626;
+  --ff-warning-text: #92400e;
+  --ff-warning-muted: rgba(120, 53, 15, 0.78);
+
+  color-scheme: light;
 }
 
 html,
 body,
 #root {
   min-height: 100%;
+}
+
+html {
+  background: var(--ff-bg);
 }
 
 body {
@@ -87,7 +120,14 @@ body {
     color 0.25s ease;
 }
 
-/* Scrollbar global ForgeFlow */
+button,
+a,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--ff-accent) var(--ff-scroll-track);
@@ -104,11 +144,7 @@ body {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: linear-gradient(
-    180deg,
-    var(--ff-accent-hover),
-    var(--ff-accent)
-  );
+  background: linear-gradient(180deg, var(--ff-accent-hover), var(--ff-accent));
   border-radius: 999px;
   border: 2px solid var(--ff-scroll-track);
 }
@@ -117,57 +153,57 @@ body {
   background: var(--ff-accent-hover);
 }
 
-/*
-  Compatibilidade com componentes antigos.
-  Muitas telas ainda usam classes Tailwind fixas como bg-black, bg-zinc-950,
-  text-white e border-zinc-800. Esses overrides fazem o modo claro funcionar
-  sem precisar reescrever todas as páginas de uma vez.
-*/
+/* Compatibilidade com telas antigas ainda presas em classes dark do Tailwind. */
 :root[data-theme='light'] .bg-black,
 :root[data-theme='light'] .bg-zinc-950,
-:root[data-theme='light'] .bg-\[\#101014\],
-:root[data-theme='light'] .bg-\[\#18181b\] {
-  background-color: var(--ff-surface) !important;
-}
-
 :root[data-theme='light'] .bg-zinc-900,
 :root[data-theme='light'] .bg-zinc-800,
+:root[data-theme='light'] .bg-\[\#000\],
+:root[data-theme='light'] .bg-\[\#09090b\],
+:root[data-theme='light'] .bg-\[\#101014\],
+:root[data-theme='light'] .bg-\[\#121212\],
+:root[data-theme='light'] .bg-\[\#121216\],
+:root[data-theme='light'] .bg-\[\#141419\],
+:root[data-theme='light'] .bg-\[\#18181b\],
 :root[data-theme='light'] .bg-\[\#1f1f23\] {
-  background-color: var(--ff-surface-2) !important;
+  background-color: var(--ff-card) !important;
+}
+
+:root[data-theme='light'] .hover\:bg-zinc-950:hover,
+:root[data-theme='light'] .hover\:bg-zinc-900:hover,
+:root[data-theme='light'] .hover\:bg-zinc-800:hover,
+:root[data-theme='light'] .hover\:bg-zinc-700:hover,
+:root[data-theme='light'] .hover\:bg-\[\#1f1f23\]:hover {
+  background-color: var(--ff-card-hover) !important;
 }
 
 :root[data-theme='light'] .text-white,
 :root[data-theme='light'] .text-zinc-50,
 :root[data-theme='light'] .text-zinc-100,
 :root[data-theme='light'] .text-zinc-200,
-:root[data-theme='light'] .text-zinc-300 {
+:root[data-theme='light'] .text-zinc-300,
+:root[data-theme='light'] .text-zinc-400 {
   color: var(--ff-text) !important;
 }
 
-:root[data-theme='light'] .text-zinc-400,
 :root[data-theme='light'] .text-zinc-500,
-:root[data-theme='light'] .text-zinc-600 {
+:root[data-theme='light'] .text-zinc-600,
+:root[data-theme='light'] .text-zinc-700 {
   color: var(--ff-muted) !important;
 }
 
 :root[data-theme='light'] .border-zinc-950,
 :root[data-theme='light'] .border-zinc-900,
 :root[data-theme='light'] .border-zinc-800,
-:root[data-theme='light'] .border-zinc-700 {
+:root[data-theme='light'] .border-zinc-700,
+:root[data-theme='light'] .border-zinc-600 {
   border-color: var(--ff-border) !important;
-}
-
-:root[data-theme='light'] .hover\:bg-zinc-900:hover,
-:root[data-theme='light'] .hover\:bg-zinc-800:hover,
-:root[data-theme='light'] .hover\:bg-zinc-700:hover,
-:root[data-theme='light'] .hover\:bg-\[\#1f1f23\]:hover {
-  background-color: var(--ff-surface-2) !important;
 }
 
 :root[data-theme='light'] input,
 :root[data-theme='light'] textarea,
 :root[data-theme='light'] select {
-  background-color: var(--ff-surface) !important;
+  background-color: var(--ff-input) !important;
   border-color: var(--ff-border) !important;
   color: var(--ff-text) !important;
 }
@@ -177,16 +213,47 @@ body {
   color: var(--ff-muted-2) !important;
 }
 
+:root[data-theme='light'] .text-yellow-100,
+:root[data-theme='light'] .text-yellow-200,
+:root[data-theme='light'] .text-yellow-300,
+:root[data-theme='light'] .text-yellow-400,
+:root[data-theme='light'] .text-amber-100,
+:root[data-theme='light'] .text-amber-200,
+:root[data-theme='light'] .text-amber-300,
+:root[data-theme='light'] .text-amber-400 {
+  color: var(--ff-warning-text) !important;
+}
+
+:root[data-theme='light'] .text-yellow-100\/70,
+:root[data-theme='light'] .text-yellow-100\/75,
+:root[data-theme='light'] .text-amber-100\/70,
+:root[data-theme='light'] .text-amber-100\/75 {
+  color: var(--ff-warning-muted) !important;
+}
+
+:root[data-theme='light'] .text-emerald-300,
+:root[data-theme='light'] .text-emerald-400 {
+  color: var(--ff-success-text) !important;
+}
+
+:root[data-theme='light'] .text-red-300,
+:root[data-theme='light'] .text-red-400 {
+  color: var(--ff-danger-text) !important;
+}
+
+:root[data-theme='light'] .shadow-black\/50,
+:root[data-theme='light'] .shadow-black\/60 {
+  --tw-shadow-color: rgba(24, 24, 27, 0.12) !important;
+  --tw-shadow: var(--tw-shadow-colored) !important;
+}
+
 /* Modo compacto apenas no celular */
 @media (max-width: 640px) {
   .ff-compact-mobile .rounded-3xl {
     border-radius: 1.25rem;
   }
 
-  .ff-compact-mobile .p-5 {
-    padding: 1rem;
-  }
-
+  .ff-compact-mobile .p-5,
   .ff-compact-mobile .p-6 {
     padding: 1rem;
   }

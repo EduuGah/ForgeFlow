@@ -3,12 +3,14 @@ function Card({ children, className = '' }) {
     <div
       className={`
         rounded-3xl
-        border border-zinc-800/90
-        bg-[#18181b]
+        border
+        border-[var(--ff-border)]
+        bg-[var(--ff-card)]
         p-5
-        text-white
-        shadow-[0_18px_45px_rgba(0,0,0,0.22)]
-        transition
+        text-[var(--ff-text)]
+        shadow-sm
+        shadow-black/5
+        transition-colors
         duration-200
         ${className}
       `}

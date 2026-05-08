@@ -1,32 +1,28 @@
-import { Inbox } from 'lucide-react'
+import { Dumbbell } from 'lucide-react'
 
 function EmptyState({
+  icon: Icon = Dumbbell,
   title = 'Nada encontrado',
-  description = 'Não há dados para exibir no momento.',
+  description = 'Ainda não há dados para mostrar.',
   action,
-  icon: Icon = Inbox,
 }) {
   return (
-    <div className="flex min-h-[220px] flex-col items-center justify-center rounded-3xl border border-dashed border-zinc-800 bg-[#101014] p-8 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)] shadow-[0_0_20px_var(--ff-accent-shadow)]">
-        <Icon size={30} />
+    <div className="flex min-h-[220px] flex-col items-center justify-center rounded-3xl border border-dashed border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-8 text-center">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)] shadow-[0_0_20px_var(--ff-accent-shadow)]/20">
+        <Icon size={28} />
       </div>
 
-      <h3 className="mt-5 text-lg font-black text-white">
+      <h3 className="mt-5 text-lg font-black text-[var(--ff-text)]">
         {title}
       </h3>
 
       {description && (
-        <p className="mt-2 max-w-md text-sm leading-relaxed text-zinc-500">
+        <p className="mt-2 max-w-md text-sm leading-relaxed text-[var(--ff-muted)]">
           {description}
         </p>
       )}
 
-      {action && (
-        <div className="mt-5">
-          {action}
-        </div>
-      )}
+      {action && <div className="mt-5">{action}</div>}
     </div>
   )
 }
