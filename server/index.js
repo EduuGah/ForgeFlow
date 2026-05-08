@@ -962,6 +962,77 @@ const goalSchema = new mongoose.Schema(
     }
 )
 
+
+const notificationSchema = new mongoose.Schema(
+    {
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+            index: true,
+        },
+
+        title: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+
+        message: {
+            type: String,
+            default: '',
+        },
+
+        type: {
+            type: String,
+            enum: [
+                'info',
+                'success',
+                'warning',
+                'danger',
+                'goal',
+                'workout',
+                'weight',
+                'photo',
+                'recovery',
+            ],
+            default: 'info',
+            index: true,
+        },
+
+        status: {
+            type: String,
+            enum: ['unread', 'read', 'archived'],
+            default: 'unread',
+            index: true,
+        },
+
+        actionUrl: {
+            type: String,
+            default: '',
+        },
+
+        source: {
+            type: String,
+            default: 'system',
+        },
+
+        dedupeKey: {
+            type: String,
+            default: '',
+            index: true,
+        },
+
+        readAt: {
+            type: Date,
+            default: null,
+        },
+    },
+    {
+        timestamps: true,
+    }
+)
+
 const workoutHistorySchema = new mongoose.Schema(
     {
         userId: {
@@ -1041,6 +1112,7 @@ const WorkoutHistory = mongoose.model('WorkoutHistory', workoutHistorySchema)
 const BodyWeight = mongoose.model('BodyWeight', bodyWeightSchema)
 const ProgressPhoto = mongoose.model('ProgressPhoto', progressPhotoSchema)
 const Goal = mongoose.model('Goal', goalSchema)
+const Notification = mongoose.model('Notification', notificationSchema)
 
 function createToken(user) {
     return jwt.sign(
@@ -1935,6 +2007,385 @@ async function enrichGoalWithProgress(goal, userId) {
         isCompleted,
     }
 }
+
+
+async function createNotificationIfNotExists({
+    userId,
+    title,
+    message = '',
+    type = 'info',
+    actionUrl = '',
+    source = 'system',
+    dedupeKey = '',
+}) {
+    if (dedupeKey) {
+        const existingNotification = await Notification.findOne({
+            userId,
+            dedupeKey,
+            status: {
+                $ne: 'archived',
+            },
+        })
+
+        if (existingNotification) {
+            return {
+                notification: existingNotification,
+                created: false,
+            }
+        }
+    }
+
+    const notification = await Notification.create({
+        userId,
+        title,
+        message,
+        type,
+        actionUrl,
+        source,
+        dedupeKey,
+    })
+
+    return {
+        notification,
+        created: true,
+    }
+}
+
+app.get('/notifications', authMiddleware, async (req, res) => {
+    try {
+        const {
+            status = '',
+            limit = 30,
+        } = req.query
+
+        const query = {
+            userId: req.user.userId,
+        }
+
+        if (status) {
+            query.status = status
+        }
+
+        const notifications = await Notification.find(query)
+            .sort({
+                createdAt: -1,
+            })
+            .limit(Number(limit) || 30)
+
+        const unreadCount = await Notification.countDocuments({
+            userId: req.user.userId,
+            status: 'unread',
+        })
+
+        res.json({
+            notifications,
+            unreadCount,
+        })
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao buscar notificações.',
+        })
+    }
+})
+
+app.post('/notifications/generate', authMiddleware, async (req, res) => {
+    try {
+        const userId = req.user.userId
+        const createdNotifications = []
+
+        const [
+            goals,
+            history,
+            bodyWeight,
+            progressPhotos,
+        ] = await Promise.all([
+            Goal.find({ userId, status: 'active' }),
+            WorkoutHistory.find({ userId }).sort({
+                finishedAt: -1,
+                createdAt: -1,
+            }),
+            BodyWeight.find({ userId }).sort({
+                date: -1,
+                createdAt: -1,
+            }),
+            ProgressPhoto.find({ userId }).sort({
+                date: -1,
+                createdAt: -1,
+            }),
+        ])
+
+        const now = new Date()
+        const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+
+        for (const goal of goals) {
+            const enrichedGoal = await enrichGoalWithProgress(goal, userId)
+            const progressPercent = Number(enrichedGoal?.progressPercent || 0)
+
+            if (progressPercent >= 80 && progressPercent < 100) {
+                const result = await createNotificationIfNotExists({
+                    userId,
+                    title: 'Meta quase concluída',
+                    message: `Você já atingiu ${progressPercent}% da meta "${goal.title}".`,
+                    type: 'goal',
+                    actionUrl: '/goals',
+                    dedupeKey: `goal-near-${goal._id}-${currentMonthKey}`,
+                })
+
+                if (result.created) {
+                    createdNotifications.push(result.notification)
+                }
+            }
+
+            if (progressPercent >= 100) {
+                const result = await createNotificationIfNotExists({
+                    userId,
+                    title: 'Meta alcançada',
+                    message: `Você alcançou a meta "${goal.title}".`,
+                    type: 'success',
+                    actionUrl: '/goals',
+                    dedupeKey: `goal-completed-${goal._id}`,
+                })
+
+                if (result.created) {
+                    createdNotifications.push(result.notification)
+                }
+            }
+        }
+
+        const lastWorkout = history[0]
+        const lastWorkoutDate = lastWorkout?.finishedAt || lastWorkout?.createdAt
+
+        if (lastWorkoutDate) {
+            const diffDays = Math.floor((now - new Date(lastWorkoutDate)) / 1000 / 60 / 60 / 24)
+
+            if (diffDays >= 3) {
+                const result = await createNotificationIfNotExists({
+                    userId,
+                    title: 'Você está há alguns dias sem treinar',
+                    message: `Seu último treino foi há ${diffDays} dias. Que tal retomar hoje?`,
+                    type: 'workout',
+                    actionUrl: '/workouts',
+                    dedupeKey: `no-workout-${currentMonthKey}`,
+                })
+
+                if (result.created) {
+                    createdNotifications.push(result.notification)
+                }
+            }
+        } else {
+            const result = await createNotificationIfNotExists({
+                userId,
+                title: 'Comece seu primeiro treino',
+                message: 'Crie ou inicie um treino para começar a gerar seu histórico.',
+                type: 'workout',
+                actionUrl: '/workouts',
+                dedupeKey: 'first-workout',
+            })
+
+            if (result.created) {
+                createdNotifications.push(result.notification)
+            }
+        }
+
+        const lastWeight = bodyWeight[0]
+        const lastWeightDate = lastWeight?.date || lastWeight?.createdAt
+
+        if (lastWeightDate) {
+            const diffDays = Math.floor((now - new Date(lastWeightDate)) / 1000 / 60 / 60 / 24)
+
+            if (diffDays >= 7) {
+                const result = await createNotificationIfNotExists({
+                    userId,
+                    title: 'Hora de atualizar seu peso',
+                    message: `Seu último peso foi registrado há ${diffDays} dias.`,
+                    type: 'weight',
+                    actionUrl: '/profile',
+                    dedupeKey: `weight-missing-${currentMonthKey}`,
+                })
+
+                if (result.created) {
+                    createdNotifications.push(result.notification)
+                }
+            }
+        } else {
+            const result = await createNotificationIfNotExists({
+                userId,
+                title: 'Registre seu peso corporal',
+                message: 'Adicionar seu peso ajuda a acompanhar sua evolução.',
+                type: 'weight',
+                actionUrl: '/profile',
+                dedupeKey: 'first-weight',
+            })
+
+            if (result.created) {
+                createdNotifications.push(result.notification)
+            }
+        }
+
+        const hasPhotoThisMonth = progressPhotos.some((photo) => {
+            const rawDate = photo.date || photo.createdAt
+
+            if (!rawDate) return false
+
+            const date = new Date(rawDate)
+
+            return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth()
+        })
+
+        if (!hasPhotoThisMonth) {
+            const result = await createNotificationIfNotExists({
+                userId,
+                title: 'Foto de evolução pendente',
+                message: 'Você ainda não registrou uma foto de evolução neste mês.',
+                type: 'photo',
+                actionUrl: '/progress-photos',
+                dedupeKey: `photo-missing-${currentMonthKey}`,
+            })
+
+            if (result.created) {
+                createdNotifications.push(result.notification)
+            }
+        }
+
+        const notifications = await Notification.find({ userId })
+            .sort({ createdAt: -1 })
+            .limit(30)
+
+        const unreadCount = await Notification.countDocuments({
+            userId,
+            status: 'unread',
+        })
+
+        res.json({
+            created: createdNotifications.length,
+            notifications,
+            unreadCount,
+        })
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao gerar notificações.',
+        })
+    }
+})
+
+app.patch('/notifications/read-all', authMiddleware, async (req, res) => {
+    try {
+        await Notification.updateMany(
+            {
+                userId: req.user.userId,
+                status: 'unread',
+            },
+            {
+                status: 'read',
+                readAt: new Date(),
+            }
+        )
+
+        res.json({
+            ok: true,
+            message: 'Todas as notificações foram marcadas como lidas.',
+        })
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao marcar notificações como lidas.',
+        })
+    }
+})
+
+app.patch('/notifications/:id/read', authMiddleware, async (req, res) => {
+    try {
+        const notification = await Notification.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                userId: req.user.userId,
+            },
+            {
+                status: 'read',
+                readAt: new Date(),
+            },
+            {
+                new: true,
+            }
+        )
+
+        if (!notification) {
+            return res.status(404).json({
+                message: 'Notificação não encontrada.',
+            })
+        }
+
+        res.json(notification)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao marcar notificação como lida.',
+        })
+    }
+})
+
+app.patch('/notifications/:id/archive', authMiddleware, async (req, res) => {
+    try {
+        const notification = await Notification.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                userId: req.user.userId,
+            },
+            {
+                status: 'archived',
+            },
+            {
+                new: true,
+            }
+        )
+
+        if (!notification) {
+            return res.status(404).json({
+                message: 'Notificação não encontrada.',
+            })
+        }
+
+        res.json(notification)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao arquivar notificação.',
+        })
+    }
+})
+
+app.delete('/notifications/:id', authMiddleware, async (req, res) => {
+    try {
+        const notification = await Notification.findOneAndDelete({
+            _id: req.params.id,
+            userId: req.user.userId,
+        })
+
+        if (!notification) {
+            return res.status(404).json({
+                message: 'Notificação não encontrada.',
+            })
+        }
+
+        res.json({
+            ok: true,
+            message: 'Notificação removida.',
+        })
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao remover notificação.',
+        })
+    }
+})
 
 app.get('/goals', authMiddleware, async (req, res) => {
     try {
@@ -3544,6 +3995,8 @@ app.get('/export-data', authMiddleware, async (req, res) => {
             bodyWeight,
             workoutTemplates,
             progressPhotos,
+            goals,
+            notifications,
         ] = await Promise.all([
             User.findById(userId),
             AppSettings.findOne({ userId }),
@@ -3554,6 +4007,7 @@ app.get('/export-data', authMiddleware, async (req, res) => {
             WorkoutTemplate.find({ userId }).sort({ createdAt: 1 }),
             ProgressPhoto.find({ userId }).sort({ date: 1, createdAt: 1 }),
             Goal.find({ userId }).sort({ createdAt: 1 }),
+            Notification.find({ userId }).sort({ createdAt: 1 }),
         ])
 
         if (!user) {
@@ -3581,6 +4035,8 @@ app.get('/export-data', authMiddleware, async (req, res) => {
                 bodyWeight,
                 workoutTemplates,
                 progressPhotos,
+                goals,
+                notifications,
             },
         }
 
@@ -3621,6 +4077,7 @@ app.post('/import-data', authMiddleware, async (req, res) => {
             workoutTemplates = [],
             progressPhotos = [],
             goals = [],
+            notifications = [],
         } = backup.data
 
         const imported = {
@@ -3631,6 +4088,7 @@ app.post('/import-data', authMiddleware, async (req, res) => {
             workoutTemplates: 0,
             progressPhotos: 0,
             goals: 0,
+            notifications: 0,
         }
 
         if (mode === 'replace') {
@@ -3642,6 +4100,7 @@ app.post('/import-data', authMiddleware, async (req, res) => {
                 WorkoutTemplate.deleteMany({ userId }),
                 ProgressPhoto.deleteMany({ userId }),
                 Goal.deleteMany({ userId }),
+                Notification.deleteMany({ userId }),
             ])
         }
 
@@ -3652,6 +4111,7 @@ app.post('/import-data', authMiddleware, async (req, res) => {
         const templatesToCreate = cleanArrayForImport(workoutTemplates, userId)
         const progressPhotosToCreate = cleanArrayForImport(progressPhotos, userId)
         const goalsToCreate = cleanArrayForImport(goals, userId)
+        const notificationsToCreate = cleanArrayForImport(notifications, userId)
 
         if (exercisesToCreate.length > 0) {
             const created = await Exercise.insertMany(exercisesToCreate, {
@@ -3707,6 +4167,14 @@ app.post('/import-data', authMiddleware, async (req, res) => {
             })
 
             imported.goals = created.length
+        }
+
+        if (notificationsToCreate.length > 0) {
+            const created = await Notification.insertMany(notificationsToCreate, {
+                ordered: false,
+            })
+
+            imported.notifications = created.length
         }
 
         if (backup.user?.profile) {
