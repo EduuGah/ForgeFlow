@@ -314,7 +314,7 @@ const chartData = useMemo(() => {
 
   const data = []
 
-  history.forEach((session) => {
+  history.forEach((session, sessionIndex) => {
     const sessionExercises = Array.isArray(session.exercises)
       ? session.exercises
       : []
