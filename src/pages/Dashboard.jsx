@@ -839,7 +839,7 @@ function Dashboard() {
       />
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(320px,0.8fr)]">
-        <Card className="overflow-hidden border-[var(--ff-accent-border)]/20 bg-gradient-to-br from-[var(--ff-accent-soft)]/20 via-[#18181b] to-[#121212]">
+        <Card className="overflow-hidden border-[var(--ff-accent-border)]/20 bg-gradient-to-br from-[var(--ff-accent-soft)]/20 via-[var(--ff-card)] to-[var(--ff-surface-2)]">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_330px] lg:items-center">
             <div className="min-w-0">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -881,7 +881,7 @@ function Dashboard() {
                 <Link to="/workouts">
                   <button
                     type="button"
-                    className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-white px-5 text-sm font-bold text-zinc-950 transition hover:-translate-y-0.5 hover:bg-zinc-200 sm:w-auto"
+                    className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] px-5 text-sm font-bold text-[var(--ff-text)] shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-card-hover)] sm:w-auto"
                   >
                     <Dumbbell size={18} />
                     Iniciar treino
@@ -891,7 +891,7 @@ function Dashboard() {
                 <Link to="/history">
                   <button
                     type="button"
-                    className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-zinc-700 bg-zinc-950/70 px-5 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:border-[var(--ff-accent-border)]/40 hover:bg-zinc-900 sm:w-auto"
+                    className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-5 text-sm font-bold text-[var(--ff-text)] transition hover:-translate-y-0.5 hover:border-[var(--ff-accent-border)]/50 hover:bg-[var(--ff-card-hover)] sm:w-auto"
                   >
                     <CalendarDays size={18} />
                     Ver histórico
@@ -901,7 +901,7 @@ function Dashboard() {
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1">
-              <div className="rounded-3xl border border-zinc-800 bg-black/30 p-4">
+              <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
                 <p className="text-xs text-zinc-500">Último treino</p>
 
                 <p className="mt-2 text-lg font-bold leading-snug text-white">
@@ -915,7 +915,7 @@ function Dashboard() {
                 </p>
               </div>
 
-              <div className="rounded-3xl border border-zinc-800 bg-black/30 p-4">
+              <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
                 <p className="text-xs text-zinc-500">Peso atual</p>
 
                 <p className="mt-2 text-lg font-bold text-[var(--ff-accent-text)]">
@@ -927,7 +927,7 @@ function Dashboard() {
                 </p>
               </div>
 
-              <div className="rounded-3xl border border-zinc-800 bg-black/30 p-4 sm:col-span-2 lg:col-span-1">
+              <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4 sm:col-span-2 lg:col-span-1">
                 <p className="text-xs text-zinc-500">Melhor destaque</p>
 
                 <p className="mt-2 text-lg font-bold leading-snug text-white">
@@ -1123,7 +1123,7 @@ function Dashboard() {
 
           <div className="mt-5 space-y-4">
             <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
-              <p className="text-xs font-bold text-emerald-200/70">
+              <p className="text-xs font-bold text-[var(--ff-success-text)]">
                 Mais recuperados
               </p>
 
@@ -1143,7 +1143,7 @@ function Dashboard() {
             </div>
 
             <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4">
-              <p className="text-xs font-bold text-yellow-200/70">
+              <p className="text-xs font-bold text-[var(--ff-warning-text)]">
                 Ainda recuperando
               </p>
 
@@ -1279,7 +1279,7 @@ function Dashboard() {
             <Trophy size={20} className="text-yellow-400" />
           </div>
 
-          <h2 className="mt-2 text-3xl font-black text-yellow-300">
+          <h2 className="mt-2 text-3xl font-black text-[var(--ff-warning-text)]">
             {favoriteWorkouts.length + favoriteExercises.length}
           </h2>
 
@@ -1420,11 +1420,11 @@ function Dashboard() {
           </div>
 
           <div className="mt-3 rounded-2xl border border-orange-500/20 bg-orange-500/10 p-4">
-            <p className="text-xs text-orange-100/70">
+            <p className="text-xs font-bold text-[var(--ff-warning-text)]">
               Melhor sequência
             </p>
 
-            <p className="mt-1 text-lg font-black text-orange-300">
+            <p className="mt-1 text-lg font-black text-[var(--ff-warning-text)]">
               {consistencyStats.bestStreak} dia(s)
             </p>
           </div>
@@ -1468,11 +1468,11 @@ function Dashboard() {
 
           {favoriteWorkouts.length > 0 && (
             <div className="mt-5 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4">
-              <p className="text-sm font-bold text-yellow-300">
+              <p className="text-sm font-bold text-[var(--ff-warning-text)]">
                 ⭐ {favoriteWorkouts.length} treino(s) favorito(s)
               </p>
 
-              <p className="mt-1 text-xs leading-relaxed text-yellow-100/70">
+              <p className="mt-1 text-xs leading-relaxed text-[var(--ff-muted)]">
                 Eles aparecem primeiro nesta lista para facilitar o início do treino.
               </p>
             </div>
@@ -2101,7 +2101,7 @@ function Dashboard() {
             </Badge>
           </div>
 
-          <div className="mt-4 flex h-12 items-center gap-3 rounded-xl bg-[#2a2a2c] px-4 text-zinc-400">
+          <div className="mt-4 flex h-12 items-center gap-3 rounded-xl border border-[var(--ff-border)] bg-[var(--ff-input)] px-4 text-[var(--ff-muted)]">
             <Search size={20} />
 
             <input
@@ -2109,7 +2109,7 @@ function Dashboard() {
               placeholder="Buscar exercício..."
               value={prSearch}
               onChange={(event) => setPrSearch(event.target.value)}
-              className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-400"
+              className="w-full bg-transparent text-sm text-[var(--ff-text)] outline-none placeholder:text-[var(--ff-muted-2)]"
             />
 
             {prSearch && (

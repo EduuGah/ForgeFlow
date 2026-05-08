@@ -1,18 +1,15 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { apiFetch, saveAuthToken } from '../services/api'
 import { useAuth } from '../context/AuthContext'
+import forgeflowIcon from '../assets/forgeflow-icon.png'
+import { applyAppSettingsToDocument, getAppSettings } from '../utils/settingsUtils'
 
 const API_URL = import.meta.env.VITE_API_URL
 
 function GoogleIcon() {
     return (
-        <svg
-            width="20"
-            height="20"
-            viewBox="0 0 48 48"
-            aria-hidden="true"
-        >
+        <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
             <path
                 fill="#FFC107"
                 d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"
@@ -42,6 +39,10 @@ function Login() {
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
 
+    useEffect(() => {
+        applyAppSettingsToDocument(getAppSettings())
+    }, [])
+
     function handleGoogleLogin() {
         window.location.href = `${API_URL}/auth/google`
     }
@@ -55,15 +56,10 @@ function Login() {
         try {
             const data = await apiFetch('/auth/login', {
                 method: 'POST',
-                body: JSON.stringify({
-                    email,
-                    password,
-                }),
+                body: JSON.stringify({ email, password }),
             })
 
             saveAuthToken(data.token)
-            setUser(data.user)
-
             setUser(data.user)
 
             if (!data.user?.profileCompleted) {
@@ -80,10 +76,14 @@ function Login() {
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4 text-white">
-            <div className="w-full max-w-md rounded-3xl border border-zinc-800 bg-[#121216] p-8 shadow-2xl">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)] shadow-[0_0_30px_var(--ff-accent-shadow)]/30">
-                    <span className="text-2xl font-black">F</span>
+        <div className="flex min-h-screen items-center justify-center bg-[var(--ff-bg)] px-4 text-[var(--ff-text)]">
+            <div className="w-full max-w-md rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-8 shadow-2xl">
+                <div className="login-logo-card mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-3xl bg-white">
+                    <img
+                        src={forgeflowIcon}
+                        alt="ForgeFlow"
+                        className="h-full w-full object-cover"
+                    />
                 </div>
 
                 <div className="mt-6 text-center">
@@ -95,14 +95,14 @@ function Login() {
                         Entrar na sua conta
                     </h1>
 
-                    <p className="mt-3 text-sm leading-relaxed text-zinc-400">
+                    <p className="mt-3 text-sm leading-relaxed text-[var(--ff-muted)]">
                         Entre para salvar seus exercícios, treinos e histórico no banco de dados.
                     </p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="mt-7 space-y-4">
                     <div>
-                        <label className="mb-2 block text-sm font-bold text-zinc-300">
+                        <label className="mb-2 block text-sm font-bold text-[var(--ff-text)]">
                             E-mail
                         </label>
 
@@ -111,12 +111,12 @@ function Login() {
                             value={email}
                             onChange={(event) => setEmail(event.target.value)}
                             placeholder="voce@email.com"
-                            className="h-12 w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 text-sm text-white outline-none transition focus:border-[var(--ff-accent-border)]"
+                            className="h-12 w-full rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-input)] px-4 text-sm text-[var(--ff-text)] outline-none transition placeholder:text-[var(--ff-muted-2)] focus:border-[var(--ff-accent-border)]"
                         />
                     </div>
 
                     <div>
-                        <label className="mb-2 block text-sm font-bold text-zinc-300">
+                        <label className="mb-2 block text-sm font-bold text-[var(--ff-text)]">
                             Senha
                         </label>
 
@@ -125,7 +125,7 @@ function Login() {
                             value={password}
                             onChange={(event) => setPassword(event.target.value)}
                             placeholder="Sua senha"
-                            className="h-12 w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 text-sm text-white outline-none transition focus:border-[var(--ff-accent-border)]"
+                            className="h-12 w-full rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-input)] px-4 text-sm text-[var(--ff-text)] outline-none transition placeholder:text-[var(--ff-muted-2)] focus:border-[var(--ff-accent-border)]"
                         />
                     </div>
 
@@ -145,17 +145,17 @@ function Login() {
                 </form>
 
                 <div className="my-6 flex items-center gap-3">
-                    <div className="h-px flex-1 bg-zinc-800" />
-                    <span className="text-xs font-bold uppercase tracking-wide text-zinc-600">
+                    <div className="h-px flex-1 bg-[var(--ff-border)]" />
+                    <span className="text-xs font-bold uppercase tracking-wide text-[var(--ff-muted-2)]">
                         ou
                     </span>
-                    <div className="h-px flex-1 bg-zinc-800" />
+                    <div className="h-px flex-1 bg-[var(--ff-border)]" />
                 </div>
 
                 <button
                     type="button"
                     onClick={handleGoogleLogin}
-                    className="group flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-zinc-700 bg-zinc-950 text-sm font-black text-zinc-100 shadow-lg shadow-black/20 transition-all duration-200 hover:-translate-y-0.5 hover:border-zinc-500 hover:bg-zinc-900 hover:shadow-xl hover:shadow-black/30 active:translate-y-0"
+                    className="group flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-sm font-black text-[var(--ff-text)] shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-card-hover)] active:translate-y-0"
                 >
                     <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white shadow-sm transition group-hover:scale-105">
                         <GoogleIcon />
@@ -164,7 +164,7 @@ function Login() {
                     <span>Entrar com Google</span>
                 </button>
 
-                <p className="mt-5 text-center text-sm text-zinc-500">
+                <p className="mt-5 text-center text-sm text-[var(--ff-muted)]">
                     Não tem conta?{' '}
                     <Link
                         to="/register"
