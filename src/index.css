@@ -247,6 +247,89 @@ textarea {
   --tw-shadow: var(--tw-shadow-colored) !important;
 }
 
+
+
+/* Ajustes finos do modo claro para telas antigas com gradientes/cartões escuros. */
+:root[data-theme='light'] .bg-gradient-to-br,
+:root[data-theme='light'] .bg-gradient-to-b,
+:root[data-theme='light'] .bg-gradient-to-r,
+:root[data-theme='light'] .bg-gradient-to-l,
+:root[data-theme='light'] .bg-gradient-to-t {
+  background-image: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(248,250,252,0.94)) !important;
+  background-color: var(--ff-card) !important;
+}
+
+:root[data-theme='light'] .bg-black\/10,
+:root[data-theme='light'] .bg-black\/20,
+:root[data-theme='light'] .bg-black\/30,
+:root[data-theme='light'] .bg-black\/40,
+:root[data-theme='light'] .bg-black\/50,
+:root[data-theme='light'] .bg-zinc-950\/60,
+:root[data-theme='light'] .bg-zinc-900\/60,
+:root[data-theme='light'] .bg-zinc-900\/70 {
+  background-color: rgba(255,255,255,0.76) !important;
+}
+
+:root[data-theme='light'] .border-black\/10,
+:root[data-theme='light'] .border-black\/20,
+:root[data-theme='light'] .border-black\/30 {
+  border-color: var(--ff-border) !important;
+}
+
+:root[data-theme='light'] .text-black\/40,
+:root[data-theme='light'] .text-black\/50,
+:root[data-theme='light'] .text-black\/60,
+:root[data-theme='light'] .text-black\/70 {
+  color: var(--ff-muted) !important;
+}
+
+:root[data-theme='light'] .text-lime-300,
+:root[data-theme='light'] .text-lime-400,
+:root[data-theme='light'] .text-green-300,
+:root[data-theme='light'] .text-green-400 {
+  color: #4d7c0f !important;
+}
+
+:root[data-theme='light'] .text-blue-300,
+:root[data-theme='light'] .text-blue-400 {
+  color: #2563eb !important;
+}
+
+:root[data-theme='light'] .text-violet-300,
+:root[data-theme='light'] .text-violet-400,
+:root[data-theme='light'] .text-purple-300,
+:root[data-theme='light'] .text-purple-400 {
+  color: var(--ff-accent-text) !important;
+}
+
+:root[data-theme='light'] .bg-lime-500\/10,
+:root[data-theme='light'] .bg-green-500\/10,
+:root[data-theme='light'] .bg-emerald-500\/10,
+:root[data-theme='light'] .bg-yellow-500\/10,
+:root[data-theme='light'] .bg-amber-500\/10,
+:root[data-theme='light'] .bg-red-500\/10,
+:root[data-theme='light'] .bg-orange-500\/10,
+:root[data-theme='light'] .bg-blue-500\/10 {
+  background-color: color-mix(in srgb, currentColor 8%, transparent) !important;
+}
+
+:root[data-theme='light'] .shadow-2xl,
+:root[data-theme='light'] .shadow-xl,
+:root[data-theme='light'] .shadow-lg {
+  --tw-shadow-color: rgba(15, 23, 42, 0.10) !important;
+}
+
+:root[data-theme='light'] .recharts-cartesian-grid line,
+:root[data-theme='light'] .recharts-cartesian-axis-line,
+:root[data-theme='light'] .recharts-cartesian-axis-tick-line {
+  stroke: rgba(24, 24, 27, 0.16) !important;
+}
+
+:root[data-theme='light'] .recharts-text,
+:root[data-theme='light'] .recharts-label {
+  fill: var(--ff-muted) !important;
+}
+
 /* Modo compacto apenas no celular */
 @media (max-width: 640px) {
   .ff-compact-mobile .rounded-3xl {

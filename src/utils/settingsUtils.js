@@ -365,6 +365,34 @@ export function getEffectiveTheme(settings = getAppSettings()) {
   return themeMode === 'system' ? getSystemTheme() : themeMode
 }
 
+
+function getLightAccentText(accentKey, accent) {
+  const readableAccentText = {
+    purple: '#7c3aed',
+    violet: '#6d28d9',
+    indigo: '#4f46e5',
+    blue: '#2563eb',
+    sky: '#0369a1',
+    cyan: '#0e7490',
+    teal: '#0f766e',
+    green: '#047857',
+    emerald: '#047857',
+    lime: '#4d7c0f',
+    yellow: '#a16207',
+    amber: '#b45309',
+    orange: '#c2410c',
+    rose: '#be123c',
+    pink: '#be185d',
+    fuchsia: '#a21caf',
+    red: '#dc2626',
+    crimson: '#b91c1c',
+    slate: '#475569',
+    zinc: '#52525b',
+  }
+
+  return readableAccentText[accentKey] || accent.primary
+}
+
 export function applyAppSettingsToDocument(settings = getAppSettings()) {
   const normalizedSettings = normalizeSettings(settings)
   const accent = getAccentColor(normalizedSettings)
