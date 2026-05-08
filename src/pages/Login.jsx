@@ -87,9 +87,14 @@ function Login() {
                 </div>
 
                 <div className="mt-6 text-center">
-                    <p className="text-sm font-bold text-[var(--ff-accent-text)]">
-                        ForgeFlow
-                    </p>
+                    <div className="flex items-center justify-center gap-1">
+                        <span className="text-lg font-black tracking-tight text-[var(--ff-text)]">
+                            Forge
+                        </span>
+                        <span className="text-lg font-black tracking-tight text-[var(--ff-accent)] drop-shadow-[0_0_16px_var(--ff-accent-shadow)]">
+                            Flow
+                        </span>
+                    </div>
 
                     <h1 className="mt-2 text-3xl font-black">
                         Entrar na sua conta

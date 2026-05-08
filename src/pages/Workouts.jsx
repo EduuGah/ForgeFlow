@@ -2202,7 +2202,7 @@ function Workouts() {
                             <button
                                 type="button"
                                 onClick={handleImportDefaultExercises}
-                                className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 text-sm font-bold text-[var(--ff-accent-text)] transition hover:bg-[var(--ff-accent-soft)]/20"
+                                className="ff-theme-button-fix mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-[var(--ff-accent-border)]/35 bg-[var(--ff-accent-soft)] px-4 py-3 text-sm font-black text-[var(--ff-accent)] transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-accent-soft)]/80 md:col-span-2"
                             >
                                 <Dumbbell size={18} />
                                 {hasImportedLibrary ? 'Atualizar biblioteca padrão' : 'Importar biblioteca padrão'}

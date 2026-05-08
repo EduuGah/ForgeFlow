@@ -1768,7 +1768,7 @@ function Dashboard() {
               </p>
             </div>
 
-            <Flame size={24} className="text-orange-400" />
+            <BarChart3 size={24} className="text-[var(--ff-accent-text)]" />
           </div>
 
           <div className={`mt-5 h-[280px] sm:h-72 ${chartFocusFixClass}`}>
@@ -1780,11 +1780,11 @@ function Dashboard() {
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={volumeByWorkout}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
 
                   <XAxis
                     dataKey="name"
-                    stroke="#71717a"
+                    stroke="var(--ff-muted)"
                     tick={{
                       fontSize: 11,
                     }}
@@ -1792,7 +1792,7 @@ function Dashboard() {
                   />
 
                   <YAxis
-                    stroke="#71717a"
+                    stroke="var(--ff-muted)"
                     tick={{
                       fontSize: 11,
                     }}
@@ -1902,11 +1902,11 @@ function Dashboard() {
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={workoutsByWeek}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                  <XAxis dataKey="week" stroke="#71717a" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
+                  <XAxis dataKey="week" stroke="var(--ff-muted)" />
 
                   <YAxis
-                    stroke="#71717a"
+                    stroke="var(--ff-muted)"
                     allowDecimals={false}
                     tick={{
                       fontSize: 11,
@@ -1925,7 +1925,7 @@ function Dashboard() {
                       color: '#fff',
                     }}
                     labelStyle={{
-                      color: '#fff',
+                      color: 'var(--ff-text)',
                       fontWeight: 700,
                     }}
                   />
@@ -1967,11 +1967,11 @@ function Dashboard() {
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={setsByWorkout}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
 
                   <XAxis
                     dataKey="name"
-                    stroke="#71717a"
+                    stroke="var(--ff-muted)"
                     tick={{
                       fontSize: 11,
                     }}
@@ -1979,7 +1979,7 @@ function Dashboard() {
                   />
 
                   <YAxis
-                    stroke="#71717a"
+                    stroke="var(--ff-muted)"
                     allowDecimals={false}
                     tick={{
                       fontSize: 11,
@@ -2000,7 +2000,7 @@ function Dashboard() {
                       color: '#fff',
                     }}
                     labelStyle={{
-                      color: '#fff',
+                      color: 'var(--ff-text)',
                       fontWeight: 700,
                     }}
                   />
@@ -2030,7 +2030,7 @@ function Dashboard() {
               </p>
             </div>
 
-            <Flame size={24} className="text-orange-400" />
+            <BarChart3 size={24} className="text-[var(--ff-accent-text)]" />
           </div>
 
           <div className={`mt-5 h-[260px] ${chartFocusFixClass}`}>
@@ -2042,11 +2042,11 @@ function Dashboard() {
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={muscleVolumeChartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                  <XAxis dataKey="group" stroke="#71717a" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
+                  <XAxis dataKey="group" stroke="var(--ff-muted)" />
 
                   <YAxis
-                    stroke="#71717a"
+                    stroke="var(--ff-muted)"
                     tick={{
                       fontSize: 11,
                     }}
@@ -2064,14 +2064,14 @@ function Dashboard() {
                       color: '#fff',
                     }}
                     labelStyle={{
-                      color: '#fff',
+                      color: 'var(--ff-text)',
                       fontWeight: 700,
                     }}
                   />
 
                   <Bar
                     dataKey="volume"
-                    fill="#f97316"
+                    fill={chartAccentColor}
                     radius={[8, 8, 0, 0]}
                     activeBar={{
                       fill: chartAccentColor,

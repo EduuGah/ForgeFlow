@@ -12,6 +12,7 @@ import {
   X,
 } from 'lucide-react'
 import {
+  LabelList,
   Line,
   LineChart,
   CartesianGrid,
@@ -70,18 +71,18 @@ function ChartTooltip({ active, payload }) {
   const item = payload[0].payload
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-[#101014] p-4 shadow-2xl">
-      <p className="text-sm font-bold text-white">
+    <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 shadow-2xl">
+      <p className="text-sm font-bold text-[var(--ff-text)]">
         {item.workoutName}
       </p>
 
-      <p className="mt-1 text-xs text-zinc-500">
+      <p className="mt-1 text-xs text-[var(--ff-muted)]">
         {formatLongDate(item.fullDate)}
       </p>
 
       <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-        <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-2">
-          <p className="text-zinc-500">
+        <div className="rounded-xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-2">
+          <p className="text-[var(--ff-muted)]">
             Peso
           </p>
 
@@ -90,18 +91,18 @@ function ChartTooltip({ active, payload }) {
           </p>
         </div>
 
-        <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-2">
-          <p className="text-zinc-500">
+        <div className="rounded-xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-2">
+          <p className="text-[var(--ff-muted)]">
             Reps
           </p>
 
-          <p className="mt-1 font-bold text-white">
+          <p className="mt-1 font-bold text-[var(--ff-text)]">
             {item.reps}
           </p>
         </div>
 
-        <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-2">
-          <p className="text-zinc-500">
+        <div className="rounded-xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-2">
+          <p className="text-[var(--ff-muted)]">
             Volume
           </p>
 
@@ -110,12 +111,12 @@ function ChartTooltip({ active, payload }) {
           </p>
         </div>
 
-        <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-2">
-          <p className="text-zinc-500">
+        <div className="rounded-xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-2">
+          <p className="text-[var(--ff-muted)]">
             Série
           </p>
 
-          <p className="mt-1 font-bold text-white">
+          <p className="mt-1 font-bold text-[var(--ff-text)]">
             {item.setNumber}
           </p>
         </div>
@@ -580,18 +581,26 @@ function ExerciseProgress() {
                   ) : (
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                        <XAxis dataKey="date" stroke="#71717a" />
-                        <YAxis stroke="#71717a" />
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
+                        <XAxis dataKey="date" stroke="var(--ff-muted)" />
+                        <YAxis stroke="var(--ff-muted)" />
                         <Tooltip content={<ChartTooltip />} />
                         <Line
                           type="monotone"
                           dataKey="weight"
                           name="Peso"
-                          stroke="#8b5cf6"
+                          stroke="var(--ff-accent)"
                           strokeWidth={3}
-                          dot
-                        />
+                          dot={{ r: 5, strokeWidth: 2, fill: 'var(--ff-card)', stroke: 'var(--ff-accent)' }}
+                          activeDot={{ r: 8, strokeWidth: 3, fill: 'var(--ff-accent)', stroke: 'var(--ff-card)' }}
+                        >
+                          <LabelList
+                            dataKey="weight"
+                            position="top"
+                            formatter={(value) => `${value}kg`}
+                            style={{ fill: 'var(--ff-text)', fontSize: 12, fontWeight: 800 }}
+                          />
+                        </Line>
                       </LineChart>
                     </ResponsiveContainer>
                   )}
@@ -622,9 +631,9 @@ function ExerciseProgress() {
                   ) : (
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                        <XAxis dataKey="date" stroke="#71717a" />
-                        <YAxis stroke="#71717a" />
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
+                        <XAxis dataKey="date" stroke="var(--ff-muted)" />
+                        <YAxis stroke="var(--ff-muted)" />
                         <Tooltip content={<ChartTooltip />} />
                         <Line
                           type="monotone"

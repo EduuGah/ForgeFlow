@@ -693,15 +693,15 @@ function Exercises() {
       <div
         className={
           isDanger
-            ? 'rounded-2xl border border-red-500/20 bg-red-500/5 p-4'
-            : 'rounded-2xl border border-zinc-800 bg-zinc-950 p-4'
+            ? 'ff-danger-panel rounded-2xl border p-4'
+            : 'rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4'
         }
       >
         <p
           className={
             isDanger
-              ? 'text-xs font-semibold uppercase tracking-wide text-red-300'
-              : 'text-xs font-semibold uppercase tracking-wide text-zinc-500'
+              ? 'ff-danger-title text-xs font-semibold uppercase tracking-wide'
+              : 'text-xs font-semibold uppercase tracking-wide text-[var(--ff-muted)]'
           }
         >
           {title}
@@ -713,11 +713,11 @@ function Exercises() {
               key={`${title}-${index}`}
               className={
                 isDanger
-                  ? 'text-sm leading-relaxed text-red-100'
-                  : 'text-sm leading-relaxed text-zinc-300'
+                  ? 'text-sm font-medium leading-relaxed'
+                  : 'text-sm leading-relaxed text-[var(--ff-text)]'
               }
             >
-              <span className="mr-2 font-bold text-[var(--ff-accent-text)]">
+              <span className={isDanger ? 'ff-danger-index mr-2 font-black' : 'mr-2 font-bold text-[var(--ff-accent-text)]'}>
                 {index + 1}.
               </span>
               {item}
