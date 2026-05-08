@@ -16,6 +16,7 @@ import Profile from './pages/Profile'
 import ExerciseDetails from './pages/ExerciseDetails'
 import Progress from './pages/Progress'
 import ExerciseProgress from './pages/ExerciseProgress'
+import Goals from './pages/Goals'
 import Settings from './pages/Settings'
 import Login from './pages/Login'
 import AuthCallback from './pages/AuthCallback'
@@ -72,6 +73,7 @@ function App() {
               <Route path="/progress" element={<Progress />} />
               <Route path="/exercise-progress" element={<ExerciseProgress />} />
               <Route path="/progress-photos" element={<ProgressPhotos />} />
+              <Route path="/goals" element={<Goals />} />
             </Route>
           </Routes>
         </WorkoutSessionProvider>

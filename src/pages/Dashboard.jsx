@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Dumbbell,
   Flame,
+  Flag,
   Medal,
   Play,
   Search,
@@ -328,6 +329,7 @@ function Dashboard() {
   const [dashboardSource, setDashboardSource] = useState('local')
   const [chartAccentColor, setChartAccentColor] = useState('#8b5cf6')
   const [muscleRecovery, setMuscleRecovery] = useState([])
+  const [goals, setGoals] = useState([])
   const [consistencyStats, setConsistencyStats] = useState({
     currentStreak: 0,
     bestStreak: 0,
@@ -350,6 +352,7 @@ function Dashboard() {
       const cachedWorkouts = getUserStorageData(user, 'workouts', [])
       const cachedHistory = getUserStorageData(user, 'history', [])
       const cachedBodyWeight = getUserStorageData(user, 'bodyweight', [])
+      const cachedGoals = getUserStorageData(user, 'goals', [])
 
       const userProfile = user?.profile || {}
 
@@ -375,6 +378,7 @@ function Dashboard() {
           bodyWeightResult,
           consistencyResult,
           muscleRecoveryResult,
+          goalsResult,
         ] = await Promise.allSettled([
           apiFetch('/workouts'),
           apiFetch('/workout-history'),
@@ -382,6 +386,7 @@ function Dashboard() {
           apiFetch('/body-weight'),
           apiFetch('/stats/consistency'),
           apiFetch('/stats/muscle-recovery'),
+          apiFetch('/goals'),
         ])
 
         const normalizedWorkouts =
@@ -433,17 +438,28 @@ function Dashboard() {
           ? muscleRecoveryFromApi.recovery
           : []
 
+        const normalizedGoals =
+          goalsResult.status === 'fulfilled' && Array.isArray(goalsResult.value)
+            ? goalsResult.value.map((goal) => ({
+                ...goal,
+                id: goal._id || goal.id,
+                progressPercent: Number(goal.progressPercent) || 0,
+              }))
+            : cachedGoals
+
         setWorkouts(normalizedWorkouts)
         setHistory(normalizedHistory)
         setExercises(userExercises)
         setBodyWeight(normalizedBodyWeight)
         setConsistencyStats(normalizedConsistency)
         setMuscleRecovery(normalizedMuscleRecovery)
+        setGoals(normalizedGoals)
 
         saveUserStorageData(user, 'workouts', normalizedWorkouts)
         saveUserStorageData(user, 'history', normalizedHistory)
         saveUserStorageData(user, 'exercises', userExercises)
         saveUserStorageData(user, 'bodyweight', normalizedBodyWeight)
+        saveUserStorageData(user, 'goals', normalizedGoals)
 
         const hasAnyApiSuccess = [
           workoutsResult,
@@ -452,6 +468,7 @@ function Dashboard() {
           bodyWeightResult,
           consistencyResult,
           muscleRecoveryResult,
+          goalsResult,
         ].some((result) => result.status === 'fulfilled')
 
         setDashboardSource(hasAnyApiSuccess ? 'database' : 'local')
@@ -473,6 +490,7 @@ function Dashboard() {
         })
 
         setMuscleRecovery([])
+        setGoals(cachedGoals)
         setDashboardSource('local')
       } finally {
         setLoadingDashboard(false)
@@ -791,6 +809,13 @@ function Dashboard() {
     return muscleStats.slice().sort((a, b) => b.total - a.total)[0] || null
   }, [muscleStats])
 
+  const dashboardGoals = useMemo(() => {
+    return goals
+      .filter((goal) => goal.status !== 'archived')
+      .sort((a, b) => Number(b.progressPercent || 0) - Number(a.progressPercent || 0))
+      .slice(0, 3)
+  }, [goals])
+
   async function handleStartWorkout(workout) {
     try {
       if (workout?.id) {
@@ -837,6 +862,87 @@ function Dashboard() {
           </div>
         }
       />
+
+
+      <section className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
+        <Card className="p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-3 py-1 text-xs font-black text-[var(--ff-accent-text)]">
+                <Target size={14} />
+                Metas ativas
+              </div>
+
+              <h2 className="mt-3 text-xl font-black text-[var(--ff-text)]">
+                Seus próximos objetivos
+              </h2>
+
+              <p className="mt-1 text-sm text-[var(--ff-muted)]">
+                Acompanhe metas automáticas como treinos semanais, volume mensal, peso corporal e PRs.
+              </p>
+            </div>
+
+            <Link to="/goals">
+              <Button variant="secondary">
+                Ver metas
+                <ChevronRight size={16} />
+              </Button>
+            </Link>
+          </div>
+
+          <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
+            {dashboardGoals.length === 0 ? (
+              <div className="md:col-span-3 rounded-2xl border border-dashed border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4 text-sm text-[var(--ff-muted)]">
+                Nenhuma meta criada ainda. Crie metas para treinar, evoluir peso, bater PRs ou registrar fotos.
+              </div>
+            ) : (
+              dashboardGoals.map((goal) => (
+                <Link
+                  key={goal.id || goal._id}
+                  to="/goals"
+                  className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4 transition hover:-translate-y-0.5 hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-card-hover)]"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="line-clamp-1 font-black text-[var(--ff-text)]">
+                        {goal.title}
+                      </p>
+
+                      <p className="mt-1 text-xs text-[var(--ff-muted)]">
+                        {Number(goal.currentValue || 0).toLocaleString('pt-BR')}
+                        {goal.unit || ''} / {Number(goal.targetValue || 0).toLocaleString('pt-BR')}
+                        {goal.unit || ''}
+                      </p>
+                    </div>
+
+                    <Badge variant="purple">
+                      {Math.min(100, Number(goal.progressPercent || 0))}%
+                    </Badge>
+                  </div>
+
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--ff-border)]">
+                    <div
+                      className="h-full rounded-full bg-[var(--ff-accent)]"
+                      style={{ width: `${Math.min(100, Number(goal.progressPercent || 0))}%` }}
+                    />
+                  </div>
+                </Link>
+              ))
+            )}
+          </div>
+        </Card>
+
+        <Link
+          to="/goals"
+          className="flex min-h-[150px] flex-col justify-between rounded-3xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] p-5 text-[var(--ff-accent-text)] transition hover:-translate-y-0.5 hover:shadow-[0_0_22px_var(--ff-accent-shadow)]"
+        >
+          <Flag size={26} />
+          <div>
+            <p className="text-3xl font-black">{goals.filter((goal) => goal.status === 'active').length}</p>
+            <p className="text-sm font-bold">metas ativas</p>
+          </div>
+        </Link>
+      </section>
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(320px,0.8fr)]">
         <Card className="overflow-hidden border-[var(--ff-accent-border)]/20 bg-gradient-to-br from-[var(--ff-accent-soft)]/20 via-[var(--ff-card)] to-[var(--ff-surface-2)]">

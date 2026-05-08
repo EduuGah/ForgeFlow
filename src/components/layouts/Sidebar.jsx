@@ -13,6 +13,7 @@ import {
   HeartPulse,
   Camera,
   LineChart,
+  Flag,
 } from 'lucide-react'
 import { Link, NavLink } from 'react-router-dom'
 
@@ -43,6 +44,7 @@ function Sidebar({ onClose }) {
     { name: 'Evolução', path: '/progress', icon: TrendingUp },
     { name: 'Por exercício', path: '/exercise-progress', icon: LineChart },
     { name: 'Fotos', path: '/progress-photos', icon: Camera },
+    { name: 'Metas', path: '/goals', icon: Flag },
     { name: 'Perfil', path: '/profile', icon: UserRound },
     { name: 'Definições', path: '/settings', icon: Settings },
   ]

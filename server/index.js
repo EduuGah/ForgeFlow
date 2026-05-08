@@ -867,6 +867,101 @@ const progressPhotoSchema = new mongoose.Schema(
     }
 )
 
+
+const goalSchema = new mongoose.Schema(
+    {
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+            index: true,
+        },
+
+        title: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+
+        description: {
+            type: String,
+            default: '',
+        },
+
+        type: {
+            type: String,
+            enum: [
+                'weekly_workouts',
+                'monthly_workouts',
+                'body_weight',
+                'exercise_pr_weight',
+                'monthly_volume',
+                'progress_photos',
+                'custom',
+            ],
+            default: 'custom',
+            index: true,
+        },
+
+        targetValue: {
+            type: Number,
+            required: true,
+        },
+
+        currentValue: {
+            type: Number,
+            default: 0,
+        },
+
+        unit: {
+            type: String,
+            default: '',
+        },
+
+        exerciseName: {
+            type: String,
+            default: '',
+        },
+
+        direction: {
+            type: String,
+            enum: ['increase', 'decrease', 'reach'],
+            default: 'increase',
+        },
+
+        period: {
+            type: String,
+            enum: ['none', 'weekly', 'monthly'],
+            default: 'none',
+        },
+
+        deadline: {
+            type: Date,
+            default: null,
+        },
+
+        status: {
+            type: String,
+            enum: ['active', 'completed', 'archived'],
+            default: 'active',
+            index: true,
+        },
+
+        completedAt: {
+            type: Date,
+            default: null,
+        },
+
+        color: {
+            type: String,
+            default: '',
+        },
+    },
+    {
+        timestamps: true,
+    }
+)
+
 const workoutHistorySchema = new mongoose.Schema(
     {
         userId: {
@@ -945,6 +1040,7 @@ const WorkoutTemplate = mongoose.model('WorkoutTemplate', workoutTemplateSchema)
 const WorkoutHistory = mongoose.model('WorkoutHistory', workoutHistorySchema)
 const BodyWeight = mongoose.model('BodyWeight', bodyWeightSchema)
 const ProgressPhoto = mongoose.model('ProgressPhoto', progressPhotoSchema)
+const Goal = mongoose.model('Goal', goalSchema)
 
 function createToken(user) {
     return jwt.sign(
@@ -1629,6 +1725,474 @@ function calculateWorkoutHistorySummary(exercises = []) {
         totalReps,
     }
 }
+
+
+function getStartOfWeek(date = new Date()) {
+    const current = new Date(date)
+    const day = current.getDay()
+    const diff = current.getDate() - day
+
+    current.setDate(diff)
+    current.setHours(0, 0, 0, 0)
+
+    return current
+}
+
+function getStartOfMonth(date = new Date()) {
+    return new Date(date.getFullYear(), date.getMonth(), 1)
+}
+
+function calculateGoalPercent(currentValue, targetValue, direction = 'increase') {
+    const current = Number(currentValue) || 0
+    const target = Number(targetValue) || 0
+
+    if (target <= 0) return 0
+
+    if (direction === 'decrease') {
+        if (current <= target) return 100
+
+        return Math.max(0, Math.min(100, Math.round((target / current) * 100)))
+    }
+
+    return Math.max(0, Math.min(100, Math.round((current / target) * 100)))
+}
+
+function getLatestBodyWeight(bodyWeight = []) {
+    if (!Array.isArray(bodyWeight) || bodyWeight.length === 0) return null
+
+    const sorted = bodyWeight
+        .slice()
+        .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))
+
+    return sorted[0]?.weight || null
+}
+
+function getMonthlyVolumeFromHistory(history = []) {
+    const startOfMonth = getStartOfMonth(new Date())
+
+    return history.reduce((total, session) => {
+        const rawDate = session.finishedAt || session.createdAt
+
+        if (!rawDate) return total
+
+        const date = new Date(rawDate)
+
+        if (date < startOfMonth) return total
+
+        if (session.totalVolume) {
+            return total + Number(session.totalVolume || 0)
+        }
+
+        const summary = calculateWorkoutHistorySummary(session.exercises || [])
+
+        return total + Number(summary.totalVolume || 0)
+    }, 0)
+}
+
+function getWeeklyWorkoutCount(history = []) {
+    const startOfWeek = getStartOfWeek(new Date())
+
+    return history.filter((session) => {
+        const rawDate = session.finishedAt || session.createdAt
+
+        if (!rawDate) return false
+
+        return new Date(rawDate) >= startOfWeek
+    }).length
+}
+
+function getMonthlyWorkoutCount(history = []) {
+    const startOfMonth = getStartOfMonth(new Date())
+
+    return history.filter((session) => {
+        const rawDate = session.finishedAt || session.createdAt
+
+        if (!rawDate) return false
+
+        return new Date(rawDate) >= startOfMonth
+    }).length
+}
+
+function getMonthlyProgressPhotoCount(progressPhotos = []) {
+    const startOfMonth = getStartOfMonth(new Date())
+
+    return progressPhotos.filter((photo) => {
+        const rawDate = photo.date || photo.createdAt
+
+        if (!rawDate) return false
+
+        return new Date(rawDate) >= startOfMonth
+    }).length
+}
+
+function getExerciseBestWeight(history = [], exerciseName = '') {
+    if (!exerciseName) return 0
+
+    let bestWeight = 0
+
+    history.forEach((session) => {
+        const exercises = Array.isArray(session.exercises) ? session.exercises : []
+
+        exercises.forEach((item) => {
+            const currentName =
+                item.exercise?.name ||
+                item.name ||
+                item.exerciseName ||
+                ''
+
+            if (currentName !== exerciseName) return
+
+            const sets = Array.isArray(item.sets) ? item.sets : []
+
+            sets.forEach((set) => {
+                const hasCompletionFlag =
+                    set.completed !== undefined ||
+                    set.isCompleted !== undefined ||
+                    set.done !== undefined
+
+                const isCompleted = hasCompletionFlag
+                    ? set.completed === true || set.isCompleted === true || set.done === true
+                    : true
+
+                if (!isCompleted || set.type === 'warmup') return
+
+                const weight = Number(set.weight || set.load || 0)
+
+                if (weight > bestWeight) {
+                    bestWeight = weight
+                }
+            })
+        })
+    })
+
+    return bestWeight
+}
+
+async function calculateGoalCurrentValue(goal, userId) {
+    const type = goal.type
+
+    if (type === 'custom') {
+        return Number(goal.currentValue || 0)
+    }
+
+    if (type === 'weekly_workouts') {
+        const history = await WorkoutHistory.find({ userId })
+
+        return getWeeklyWorkoutCount(history)
+    }
+
+    if (type === 'monthly_workouts') {
+        const history = await WorkoutHistory.find({ userId })
+
+        return getMonthlyWorkoutCount(history)
+    }
+
+    if (type === 'body_weight') {
+        const bodyWeight = await BodyWeight.find({ userId }).sort({
+            date: -1,
+            createdAt: -1,
+        })
+
+        return getLatestBodyWeight(bodyWeight) || 0
+    }
+
+    if (type === 'exercise_pr_weight') {
+        const history = await WorkoutHistory.find({ userId })
+
+        return getExerciseBestWeight(history, goal.exerciseName)
+    }
+
+    if (type === 'monthly_volume') {
+        const history = await WorkoutHistory.find({ userId })
+
+        return getMonthlyVolumeFromHistory(history)
+    }
+
+    if (type === 'progress_photos') {
+        const progressPhotos = await ProgressPhoto.find({ userId })
+
+        return getMonthlyProgressPhotoCount(progressPhotos)
+    }
+
+    return Number(goal.currentValue || 0)
+}
+
+async function enrichGoalWithProgress(goal, userId) {
+    const currentValue = await calculateGoalCurrentValue(goal, userId)
+    const progressPercent = calculateGoalPercent(
+        currentValue,
+        goal.targetValue,
+        goal.direction
+    )
+
+    const isCompleted = progressPercent >= 100
+
+    return {
+        ...goal.toObject(),
+        id: goal._id,
+        currentValue,
+        progressPercent,
+        isCompleted,
+    }
+}
+
+app.get('/goals', authMiddleware, async (req, res) => {
+    try {
+        const goals = await Goal.find({
+            userId: req.user.userId,
+        }).sort({
+            status: 1,
+            deadline: 1,
+            updatedAt: -1,
+        })
+
+        const enrichedGoals = await Promise.all(
+            goals.map((goal) => enrichGoalWithProgress(goal, req.user.userId))
+        )
+
+        res.json(enrichedGoals)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao buscar metas.',
+        })
+    }
+})
+
+app.post('/goals', authMiddleware, async (req, res) => {
+    try {
+        const {
+            title,
+            description = '',
+            type = 'custom',
+            targetValue,
+            currentValue = 0,
+            unit = '',
+            exerciseName = '',
+            direction = 'increase',
+            period = 'none',
+            deadline = null,
+            color = '',
+        } = req.body
+
+        if (!title?.trim()) {
+            return res.status(400).json({
+                message: 'Informe o título da meta.',
+            })
+        }
+
+        const parsedTarget = Number(targetValue)
+
+        if (!Number.isFinite(parsedTarget) || parsedTarget <= 0) {
+            return res.status(400).json({
+                message: 'Informe um valor alvo válido.',
+            })
+        }
+
+        const goal = await Goal.create({
+            userId: req.user.userId,
+            title: title.trim(),
+            description,
+            type,
+            targetValue: parsedTarget,
+            currentValue: Number(currentValue) || 0,
+            unit,
+            exerciseName,
+            direction,
+            period,
+            deadline: deadline || null,
+            color,
+        })
+
+        const enrichedGoal = await enrichGoalWithProgress(goal, req.user.userId)
+
+        res.status(201).json(enrichedGoal)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao criar meta.',
+        })
+    }
+})
+
+app.put('/goals/:id', authMiddleware, async (req, res) => {
+    try {
+        const {
+            title,
+            description,
+            type,
+            targetValue,
+            currentValue,
+            unit,
+            exerciseName,
+            direction,
+            period,
+            deadline,
+            status,
+            color,
+        } = req.body
+
+        const updateData = {}
+
+        if (title !== undefined) {
+            if (!title?.trim()) {
+                return res.status(400).json({
+                    message: 'Informe o título da meta.',
+                })
+            }
+
+            updateData.title = title.trim()
+        }
+
+        if (description !== undefined) updateData.description = description
+        if (type !== undefined) updateData.type = type
+        if (unit !== undefined) updateData.unit = unit
+        if (exerciseName !== undefined) updateData.exerciseName = exerciseName
+        if (direction !== undefined) updateData.direction = direction
+        if (period !== undefined) updateData.period = period
+        if (deadline !== undefined) updateData.deadline = deadline || null
+        if (status !== undefined) updateData.status = status
+        if (color !== undefined) updateData.color = color
+
+        if (targetValue !== undefined) {
+            const parsedTarget = Number(targetValue)
+
+            if (!Number.isFinite(parsedTarget) || parsedTarget <= 0) {
+                return res.status(400).json({
+                    message: 'Informe um valor alvo válido.',
+                })
+            }
+
+            updateData.targetValue = parsedTarget
+        }
+
+        if (currentValue !== undefined) {
+            updateData.currentValue = Number(currentValue) || 0
+        }
+
+        const goal = await Goal.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                userId: req.user.userId,
+            },
+            updateData,
+            {
+                new: true,
+            }
+        )
+
+        if (!goal) {
+            return res.status(404).json({
+                message: 'Meta não encontrada.',
+            })
+        }
+
+        const enrichedGoal = await enrichGoalWithProgress(goal, req.user.userId)
+
+        res.json(enrichedGoal)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao atualizar meta.',
+        })
+    }
+})
+
+app.patch('/goals/:id/complete', authMiddleware, async (req, res) => {
+    try {
+        const goal = await Goal.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                userId: req.user.userId,
+            },
+            {
+                status: 'completed',
+                completedAt: new Date(),
+            },
+            {
+                new: true,
+            }
+        )
+
+        if (!goal) {
+            return res.status(404).json({
+                message: 'Meta não encontrada.',
+            })
+        }
+
+        const enrichedGoal = await enrichGoalWithProgress(goal, req.user.userId)
+
+        res.json(enrichedGoal)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao concluir meta.',
+        })
+    }
+})
+
+app.patch('/goals/:id/archive', authMiddleware, async (req, res) => {
+    try {
+        const goal = await Goal.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                userId: req.user.userId,
+            },
+            {
+                status: 'archived',
+            },
+            {
+                new: true,
+            }
+        )
+
+        if (!goal) {
+            return res.status(404).json({
+                message: 'Meta não encontrada.',
+            })
+        }
+
+        const enrichedGoal = await enrichGoalWithProgress(goal, req.user.userId)
+
+        res.json(enrichedGoal)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao arquivar meta.',
+        })
+    }
+})
+
+app.delete('/goals/:id', authMiddleware, async (req, res) => {
+    try {
+        const goal = await Goal.findOneAndDelete({
+            _id: req.params.id,
+            userId: req.user.userId,
+        })
+
+        if (!goal) {
+            return res.status(404).json({
+                message: 'Meta não encontrada.',
+            })
+        }
+
+        res.json({
+            ok: true,
+            message: 'Meta removida com sucesso.',
+        })
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao remover meta.',
+        })
+    }
+})
 
 app.patch('/workouts/:id/favorite', authMiddleware, async (req, res) => {
     try {
@@ -2641,6 +3205,7 @@ app.get('/stats/progress', authMiddleware, async (req, res) => {
             history,
             bodyWeight,
             progressPhotos,
+            goals,
         ] = await Promise.all([
             User.findById(userId),
             Workout.find({ userId }).sort({ updatedAt: -1 }),
@@ -2748,6 +3313,7 @@ app.get('/stats/progress', authMiddleware, async (req, res) => {
             recent: {
                 workouts: history.slice(-8).reverse(),
                 progressPhotos,
+                goals,
             },
         })
     } catch (error) {
@@ -2930,11 +3496,12 @@ app.get('/dashboard', authMiddleware, async (req, res) => {
     try {
         const userId = req.user.userId
 
-        const [workouts, history, exercises, bodyWeight] = await Promise.all([
+        const [workouts, history, exercises, bodyWeight, goals] = await Promise.all([
             Workout.find({ userId }).sort({ updatedAt: -1 }).limit(20),
             WorkoutHistory.find({ userId }).sort({ finishedAt: -1, createdAt: -1 }).limit(50),
             Exercise.find({ userId }).sort({ isFavorite: -1, updatedAt: -1 }).limit(100),
             BodyWeight.find({ userId }).sort({ date: 1, createdAt: 1 }).limit(100),
+            Goal.find({ userId, status: { $ne: 'archived' } }).sort({ deadline: 1, updatedAt: -1 }).limit(5),
         ])
 
         const consistency = {
@@ -2951,6 +3518,7 @@ app.get('/dashboard', authMiddleware, async (req, res) => {
             history,
             exercises,
             bodyWeight,
+            goals,
             consistency,
         })
     } catch (error) {
@@ -2985,6 +3553,7 @@ app.get('/export-data', authMiddleware, async (req, res) => {
             BodyWeight.find({ userId }).sort({ date: 1, createdAt: 1 }),
             WorkoutTemplate.find({ userId }).sort({ createdAt: 1 }),
             ProgressPhoto.find({ userId }).sort({ date: 1, createdAt: 1 }),
+            Goal.find({ userId }).sort({ createdAt: 1 }),
         ])
 
         if (!user) {
@@ -3051,6 +3620,7 @@ app.post('/import-data', authMiddleware, async (req, res) => {
             bodyWeight = [],
             workoutTemplates = [],
             progressPhotos = [],
+            goals = [],
         } = backup.data
 
         const imported = {
@@ -3060,6 +3630,7 @@ app.post('/import-data', authMiddleware, async (req, res) => {
             bodyWeight: 0,
             workoutTemplates: 0,
             progressPhotos: 0,
+            goals: 0,
         }
 
         if (mode === 'replace') {
@@ -3070,6 +3641,7 @@ app.post('/import-data', authMiddleware, async (req, res) => {
                 BodyWeight.deleteMany({ userId }),
                 WorkoutTemplate.deleteMany({ userId }),
                 ProgressPhoto.deleteMany({ userId }),
+                Goal.deleteMany({ userId }),
             ])
         }
 
@@ -3079,6 +3651,7 @@ app.post('/import-data', authMiddleware, async (req, res) => {
         const bodyWeightToCreate = cleanArrayForImport(bodyWeight, userId)
         const templatesToCreate = cleanArrayForImport(workoutTemplates, userId)
         const progressPhotosToCreate = cleanArrayForImport(progressPhotos, userId)
+        const goalsToCreate = cleanArrayForImport(goals, userId)
 
         if (exercisesToCreate.length > 0) {
             const created = await Exercise.insertMany(exercisesToCreate, {
@@ -3126,6 +3699,14 @@ app.post('/import-data', authMiddleware, async (req, res) => {
             })
 
             imported.progressPhotos = created.length
+        }
+
+        if (goalsToCreate.length > 0) {
+            const created = await Goal.insertMany(goalsToCreate, {
+                ordered: false,
+            })
+
+            imported.goals = created.length
         }
 
         if (backup.user?.profile) {
