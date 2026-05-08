@@ -154,6 +154,77 @@ function getExerciseMedia(exercise) {
   return ''
 }
 
+function getExerciseIdentityKey(exercise = {}) {
+  const possibleId = exercise.originalLocalId || exercise.localId
+
+  if (possibleId) {
+    return `local:${String(possibleId)}`
+  }
+
+  const name = String(exercise.originalName || exercise.name || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+
+  const group = String(exercise.muscleGroup || exercise.normalizedGroup || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+
+  const equipment = String(exercise.equipment || exercise.normalizedEquipment || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+
+  if (name) {
+    return `exercise:${name}:${group}:${equipment}`
+  }
+
+  return `id:${String(exercise.id || exercise._id || crypto.randomUUID())}`
+}
+
+function isApiExercise(exercise = {}) {
+  return typeof (exercise._id || exercise.id) === 'string' && /^[a-f\d]{24}$/i.test(exercise._id || exercise.id)
+}
+
+function mergeExercisesWithoutDuplicates(...lists) {
+  const merged = new Map()
+
+  lists.flat().filter(Boolean).forEach((exercise) => {
+    const normalized = {
+      ...exercise,
+      id: exercise._id || exercise.id,
+      isFavorite: Boolean(exercise.isFavorite),
+    }
+
+    const identityKey = getExerciseIdentityKey(normalized)
+    const current = merged.get(identityKey)
+
+    if (!current) {
+      merged.set(identityKey, normalized)
+      return
+    }
+
+    const shouldReplace =
+      isApiExercise(normalized) ||
+      (!isApiExercise(current) && new Date(normalized.updatedAt || 0) > new Date(current.updatedAt || 0)) ||
+      (normalized.isFavorite && !current.isFavorite)
+
+    if (shouldReplace) {
+      merged.set(identityKey, {
+        ...current,
+        ...normalized,
+        isFavorite: Boolean(current.isFavorite || normalized.isFavorite),
+      })
+    }
+  })
+
+  return Array.from(merged.values())
+}
+
 function normalizeList(value) {
   if (Array.isArray(value)) return value
   if (typeof value === 'string' && value.trim()) return [value]
@@ -465,15 +536,10 @@ function Exercises() {
         ? savedExercises
         : []
 
-      const initialExercises = [
-        ...defaultExercises,
-        ...cachedExercises,
-      ]
-
-      const fallbackExercises = [
-        ...defaultExercises,
-        ...cachedExercises,
-      ]
+      const fallbackExercises = mergeExercisesWithoutDuplicates(
+        defaultExercises,
+        cachedExercises
+      )
 
       try {
         const exercisesFromApi = await apiFetch('/exercises')
@@ -482,32 +548,18 @@ function Exercises() {
           ? exercisesFromApi.map(normalizeExerciseFromApi)
           : []
 
-        const mergedExercisesMap = new Map()
-
-        fallbackExercises.forEach((exercise) => {
-          mergedExercisesMap.set(String(exercise.id), {
-            ...exercise,
-            isFavorite: Boolean(exercise.isFavorite),
-          })
-        })
-
-        normalizedFromApi.forEach((exercise) => {
-          const originalLocalId = exercise.originalLocalId || exercise.localId
-
-          if (originalLocalId && mergedExercisesMap.has(String(originalLocalId))) {
-            mergedExercisesMap.delete(String(originalLocalId))
-          }
-
-          mergedExercisesMap.set(String(exercise.id), exercise)
-        })
-
-        const finalExercises = Array.from(mergedExercisesMap.values())
+        const finalExercises = mergeExercisesWithoutDuplicates(
+          defaultExercises,
+          cachedExercises,
+          normalizedFromApi
+        )
 
         setExercises(finalExercises)
         saveUserStorageData(user, 'exercises', finalExercises)
       } catch (error) {
         console.error(error)
         setExercises(fallbackExercises)
+        saveUserStorageData(user, 'exercises', fallbackExercises)
       } finally {
         setIsLoaded(true)
       }
@@ -887,10 +939,6 @@ function Exercises() {
     if (editingId === id) {
       resetForm()
     }
-  }
-
-  function isMongoId(value) {
-    return typeof value === 'string' && /^[a-f\d]{24}$/i.test(value)
   }
 
   function isMongoId(value) {

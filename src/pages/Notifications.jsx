@@ -356,6 +356,11 @@ function Notifications() {
     }, 3200)
   }
 
+
+  function notifyBellToRefresh() {
+    window.dispatchEvent(new CustomEvent('forgeflow:notifications-changed'))
+  }
+
   async function loadNotifications(filter = statusFilter) {
     if (!user) return
 
@@ -374,6 +379,7 @@ function Notifications() {
       setNotifications(normalizedNotifications)
       setUnreadCount(Number(data?.unreadCount) || 0)
       saveUserStorageData(user, 'notifications', normalizedNotifications)
+      notifyBellToRefresh()
       setSource('database')
     } catch (error) {
       console.error(error)
@@ -435,6 +441,7 @@ function Notifications() {
       setNotifications(normalizedNotifications)
       setUnreadCount(Number(data?.unreadCount) || 0)
       saveUserStorageData(user, 'notifications', normalizedNotifications)
+      notifyBellToRefresh()
 
       showToast(
         'success',
@@ -479,6 +486,7 @@ function Notifications() {
       })
 
       setUnreadCount((current) => Math.max(0, current - 1))
+      notifyBellToRefresh()
 
       return updatedNotification
     } catch (error) {
@@ -522,6 +530,7 @@ function Notifications() {
       setNotifications(updatedNotifications)
       saveUserStorageData(user, 'notifications', updatedNotifications)
       setUnreadCount(0)
+      notifyBellToRefresh()
 
       if (selectedNotification?.status === 'unread') {
         setSelectedNotification({
@@ -578,6 +587,8 @@ function Notifications() {
         setUnreadCount((current) => Math.max(0, current - 1))
       }
 
+      notifyBellToRefresh()
+
       showToast('success', 'Notificação arquivada', 'A notificação foi arquivada.')
     } catch (error) {
       console.error(error)
@@ -613,6 +624,7 @@ function Notifications() {
           setUnreadCount(
             updatedNotifications.filter((item) => item.status === 'unread').length
           )
+          notifyBellToRefresh()
           setSelectedNotification((current) =>
             current?.id === notificationId ? null : current
           )

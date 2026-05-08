@@ -4,55 +4,55 @@ import { Link } from 'react-router-dom'
 
 import { useAuth } from '../../context/AuthContext'
 import { apiFetch } from '../../services/api'
-import {
-  getUserStorageData,
-  saveUserStorageData,
-} from '../../utils/userStorage'
+import { getUserStorageData } from '../../utils/userStorage'
+
+function getUnreadCountFromCache(user) {
+  const cachedNotifications = getUserStorageData(user, 'notifications', [])
+
+  return Array.isArray(cachedNotifications)
+    ? cachedNotifications.filter((item) => item.status === 'unread').length
+    : 0
+}
 
 function NotificationBell() {
   const { user } = useAuth()
   const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
-    if (!user) return
+    if (!user) return undefined
 
-    let cancelled = false
+    let isMounted = true
 
     async function loadNotificationsCount() {
-      const cachedNotifications = getUserStorageData(user, 'notifications', [])
-
-      if (!cancelled) {
-        setUnreadCount(
-          cachedNotifications.filter((item) => item.status === 'unread').length
-        )
-      }
+      setUnreadCount(getUnreadCountFromCache(user))
 
       try {
-        const data = await apiFetch('/notifications?status=unread&limit=10')
+        const data = await apiFetch('/notifications?status=unread&limit=1')
 
-        const notifications = Array.isArray(data?.notifications)
-          ? data.notifications.map((item) => ({
-              ...item,
-              id: item._id || item.id,
-            }))
-          : []
+        if (!isMounted) return
 
-        if (!cancelled) {
-          setUnreadCount(Number(data?.unreadCount) || 0)
-          saveUserStorageData(user, 'notifications', notifications)
-        }
+        setUnreadCount(Number(data?.unreadCount) || 0)
       } catch (error) {
         console.error(error)
       }
     }
 
+    function handleNotificationsChanged() {
+      loadNotificationsCount()
+    }
+
     loadNotificationsCount()
 
-    const interval = window.setInterval(loadNotificationsCount, 60000)
+    window.addEventListener('focus', handleNotificationsChanged)
+    window.addEventListener('forgeflow:notifications-changed', handleNotificationsChanged)
+
+    const intervalId = window.setInterval(loadNotificationsCount, 60000)
 
     return () => {
-      cancelled = true
-      window.clearInterval(interval)
+      isMounted = false
+      window.removeEventListener('focus', handleNotificationsChanged)
+      window.removeEventListener('forgeflow:notifications-changed', handleNotificationsChanged)
+      window.clearInterval(intervalId)
     }
   }, [user])
 

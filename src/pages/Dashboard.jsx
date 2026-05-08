@@ -900,149 +900,6 @@ function Dashboard() {
       />
 
 
-      <section className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
-        <Card className="p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-3 py-1 text-xs font-black text-[var(--ff-accent-text)]">
-                <Target size={14} />
-                Metas ativas
-              </div>
-
-              <h2 className="mt-3 text-xl font-black text-[var(--ff-text)]">
-                Seus próximos objetivos
-              </h2>
-
-              <p className="mt-1 text-sm text-[var(--ff-muted)]">
-                Acompanhe metas automáticas como treinos semanais, volume mensal, peso corporal e PRs.
-              </p>
-            </div>
-
-            <Link to="/goals">
-              <Button variant="secondary">
-                Ver metas
-                <ChevronRight size={16} />
-              </Button>
-            </Link>
-          </div>
-
-          <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
-            {dashboardGoals.length === 0 ? (
-              <div className="md:col-span-3 rounded-2xl border border-dashed border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4 text-sm text-[var(--ff-muted)]">
-                Nenhuma meta criada ainda. Crie metas para treinar, evoluir peso, bater PRs ou registrar fotos.
-              </div>
-            ) : (
-              dashboardGoals.map((goal) => (
-                <Link
-                  key={goal.id || goal._id}
-                  to="/goals"
-                  className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4 transition hover:-translate-y-0.5 hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-card-hover)]"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="line-clamp-1 font-black text-[var(--ff-text)]">
-                        {goal.title}
-                      </p>
-
-                      <p className="mt-1 text-xs text-[var(--ff-muted)]">
-                        {Number(goal.currentValue || 0).toLocaleString('pt-BR')}
-                        {goal.unit || ''} / {Number(goal.targetValue || 0).toLocaleString('pt-BR')}
-                        {goal.unit || ''}
-                      </p>
-                    </div>
-
-                    <Badge variant="purple">
-                      {Math.min(100, Number(goal.progressPercent || 0))}%
-                    </Badge>
-                  </div>
-
-                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--ff-border)]">
-                    <div
-                      className="h-full rounded-full bg-[var(--ff-accent)]"
-                      style={{ width: `${Math.min(100, Number(goal.progressPercent || 0))}%` }}
-                    />
-                  </div>
-                </Link>
-              ))
-            )}
-          </div>
-        </Card>
-
-        <Link
-          to="/goals"
-          className="flex min-h-[150px] flex-col justify-between rounded-3xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] p-5 text-[var(--ff-accent-text)] transition hover:-translate-y-0.5 hover:shadow-[0_0_22px_var(--ff-accent-shadow)]"
-        >
-          <Flag size={26} />
-          <div>
-            <p className="text-3xl font-black">{goals.filter((goal) => goal.status === 'active').length}</p>
-            <p className="text-sm font-bold">metas ativas</p>
-          </div>
-        </Link>
-      </section>
-
-
-      <section className="mb-6">
-        <Card className="p-5">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-3 py-1 text-xs font-black text-[var(--ff-accent-text)]">
-                <Bell size={14} />
-                {unreadNotificationsCount > 0
-                  ? `${unreadNotificationsCount} não lida(s)`
-                  : 'Tudo em dia'}
-              </div>
-
-              <h2 className="mt-3 text-xl font-black text-[var(--ff-text)]">
-                Notificações inteligentes
-              </h2>
-
-              <p className="mt-1 text-sm text-[var(--ff-muted)]">
-                Alertas sobre metas, treino, peso corporal e fotos de evolução.
-              </p>
-            </div>
-
-            <Link to="/notifications">
-              <Button variant="secondary">
-                Ver notificações
-                <ChevronRight size={16} />
-              </Button>
-            </Link>
-          </div>
-
-          <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
-            {dashboardNotifications.length === 0 ? (
-              <div className="md:col-span-3 rounded-2xl border border-dashed border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4 text-sm text-[var(--ff-muted)]">
-                Nenhuma notificação por enquanto. O ForgeFlow vai avisar quando encontrar algo importante.
-              </div>
-            ) : (
-              dashboardNotifications.map((notification) => (
-                <Link
-                  key={notification.id || notification._id}
-                  to={notification.actionUrl || '/notifications'}
-                  className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4 transition hover:-translate-y-0.5 hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-card-hover)]"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="line-clamp-1 font-black text-[var(--ff-text)]">
-                        {notification.title}
-                      </p>
-
-                      <p className="mt-1 line-clamp-2 text-xs text-[var(--ff-muted)]">
-                        {notification.message || 'Sem detalhes.'}
-                      </p>
-                    </div>
-
-                    {notification.status === 'unread' && (
-                      <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-[var(--ff-accent)] shadow-[0_0_14px_var(--ff-accent-shadow)]" />
-                    )}
-                  </div>
-                </Link>
-              ))
-            )}
-          </div>
-        </Card>
-      </section>
-
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(320px,0.8fr)]">
         <Card className="overflow-hidden border-[var(--ff-accent-border)]/20 bg-gradient-to-br from-[var(--ff-accent-soft)]/20 via-[var(--ff-card)] to-[var(--ff-surface-2)]">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_330px] lg:items-center">
@@ -1218,6 +1075,151 @@ function Dashboard() {
                 Editar perfil
               </button>
             </Link>
+          </div>
+        </Card>
+      </section>
+
+
+      {/* Metas e notificações aparecem depois do resumo principal para não empurrar o Dashboard para baixo. */}
+      <section className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
+        <Card className="p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-3 py-1 text-xs font-black text-[var(--ff-accent-text)]">
+                <Target size={14} />
+                Metas ativas
+              </div>
+
+              <h2 className="mt-3 text-xl font-black text-[var(--ff-text)]">
+                Seus próximos objetivos
+              </h2>
+
+              <p className="mt-1 text-sm text-[var(--ff-muted)]">
+                Acompanhe metas automáticas como treinos semanais, volume mensal, peso corporal e PRs.
+              </p>
+            </div>
+
+            <Link to="/goals">
+              <Button variant="secondary">
+                Ver metas
+                <ChevronRight size={16} />
+              </Button>
+            </Link>
+          </div>
+
+          <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
+            {dashboardGoals.length === 0 ? (
+              <div className="md:col-span-3 rounded-2xl border border-dashed border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4 text-sm text-[var(--ff-muted)]">
+                Nenhuma meta criada ainda. Crie metas para treinar, evoluir peso, bater PRs ou registrar fotos.
+              </div>
+            ) : (
+              dashboardGoals.map((goal) => (
+                <Link
+                  key={goal.id || goal._id}
+                  to="/goals"
+                  className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4 transition hover:-translate-y-0.5 hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-card-hover)]"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="line-clamp-1 font-black text-[var(--ff-text)]">
+                        {goal.title}
+                      </p>
+
+                      <p className="mt-1 text-xs text-[var(--ff-muted)]">
+                        {Number(goal.currentValue || 0).toLocaleString('pt-BR')}
+                        {goal.unit || ''} / {Number(goal.targetValue || 0).toLocaleString('pt-BR')}
+                        {goal.unit || ''}
+                      </p>
+                    </div>
+
+                    <Badge variant="purple">
+                      {Math.min(100, Number(goal.progressPercent || 0))}%
+                    </Badge>
+                  </div>
+
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--ff-border)]">
+                    <div
+                      className="h-full rounded-full bg-[var(--ff-accent)]"
+                      style={{ width: `${Math.min(100, Number(goal.progressPercent || 0))}%` }}
+                    />
+                  </div>
+                </Link>
+              ))
+            )}
+          </div>
+        </Card>
+
+        <Link
+          to="/goals"
+          className="flex min-h-[150px] flex-col justify-between rounded-3xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] p-5 text-[var(--ff-accent-text)] transition hover:-translate-y-0.5 hover:shadow-[0_0_22px_var(--ff-accent-shadow)]"
+        >
+          <Flag size={26} />
+          <div>
+            <p className="text-3xl font-black">{goals.filter((goal) => goal.status === 'active').length}</p>
+            <p className="text-sm font-bold">metas ativas</p>
+          </div>
+        </Link>
+      </section>
+
+
+      <section className="mb-6">
+        <Card className="p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-3 py-1 text-xs font-black text-[var(--ff-accent-text)]">
+                <Bell size={14} />
+                {unreadNotificationsCount > 0
+                  ? `${unreadNotificationsCount} não lida(s)`
+                  : 'Tudo em dia'}
+              </div>
+
+              <h2 className="mt-3 text-xl font-black text-[var(--ff-text)]">
+                Notificações inteligentes
+              </h2>
+
+              <p className="mt-1 text-sm text-[var(--ff-muted)]">
+                Alertas sobre metas, treino, peso corporal e fotos de evolução.
+              </p>
+            </div>
+
+            <Link to="/notifications">
+              <Button variant="secondary">
+                Ver notificações
+                <ChevronRight size={16} />
+              </Button>
+            </Link>
+          </div>
+
+          <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
+            {dashboardNotifications.length === 0 ? (
+              <div className="md:col-span-3 rounded-2xl border border-dashed border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4 text-sm text-[var(--ff-muted)]">
+                Nenhuma notificação por enquanto. O ForgeFlow vai avisar quando encontrar algo importante.
+              </div>
+            ) : (
+              dashboardNotifications.map((notification) => (
+                <Link
+                  key={notification.id || notification._id}
+                  to={notification.actionUrl || '/notifications'}
+                  className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4 transition hover:-translate-y-0.5 hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-card-hover)]"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="line-clamp-1 font-black text-[var(--ff-text)]">
+                        {notification.title}
+                      </p>
+
+                      <p className="mt-1 line-clamp-2 text-xs text-[var(--ff-muted)]">
+                        {notification.message || 'Sem detalhes.'}
+                      </p>
+                    </div>
+
+                    {notification.status === 'unread' && (
+                      <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-[var(--ff-accent)] shadow-[0_0_14px_var(--ff-accent-shadow)]" />
+                    )}
+                  </div>
+                </Link>
+              ))
+            )}
           </div>
         </Card>
       </section>

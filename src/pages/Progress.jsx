@@ -280,6 +280,9 @@ function ChartShell({ title, description, icon: Icon, badge, children }) {
 }
 
 function MonthlyProgressChart({ data = [], accentColor }) {
+  const currentMonth = data[0] || null
+  const hasComparison = data.length >= 2
+
   return (
     <ChartShell
       title="Resumo mensal"
@@ -287,15 +290,36 @@ function MonthlyProgressChart({ data = [], accentColor }) {
       icon={CalendarDays}
       badge={`${data.length} meses`}
     >
-      <div className="mt-5 h-[320px]">
+      <div className="mt-5 h-auto min-h-[260px] sm:h-[320px]">
         {data.length === 0 ? (
           <EmptyState
             title="Sem dados mensais"
             description="Finalize treinos para gerar o resumo por mês."
           />
+        ) : !hasComparison ? (
+          <div className="grid h-full min-h-[260px] grid-cols-1 content-center gap-3 sm:grid-cols-3">
+            <DetailStat
+              icon={BarChart3}
+              label="Mês atual"
+              value={getShortMonth(currentMonth.month)}
+              description="Ainda há só um mês com dados, então o gráfico comparativo aparece quando houver mais meses."
+            />
+            <DetailStat
+              icon={Dumbbell}
+              label="Treinos"
+              value={currentMonth.workouts || 0}
+              description="Treinos finalizados neste mês."
+            />
+            <DetailStat
+              icon={Flame}
+              label="Volume"
+              value={formatVolume(currentMonth.volume || 0)}
+              description={`${currentMonth.sets || 0} séries registradas.`}
+            />
+          </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={data}>
+            <ComposedChart data={data} margin={{ top: 16, right: 16, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
               <XAxis
                 dataKey="month"
@@ -303,12 +327,14 @@ function MonthlyProgressChart({ data = [], accentColor }) {
                 tick={{ fontSize: 11, fill: 'var(--ff-muted)' }}
                 tickLine={false}
                 axisLine={false}
+                interval="preserveStartEnd"
               />
               <YAxis
                 yAxisId="volume"
                 tick={{ fontSize: 11, fill: 'var(--ff-muted)' }}
                 tickLine={false}
                 axisLine={false}
+                width={54}
               />
               <YAxis
                 yAxisId="workouts"
@@ -317,6 +343,7 @@ function MonthlyProgressChart({ data = [], accentColor }) {
                 tickLine={false}
                 axisLine={false}
                 allowDecimals={false}
+                width={30}
               />
               <Tooltip
                 contentStyle={getTooltipStyle()}
