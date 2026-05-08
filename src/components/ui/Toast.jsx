@@ -12,7 +12,7 @@ function Toast({
   const isSuccess = type === 'success'
 
   return (
-    <div className="fixed right-4 top-20 z-[10000] w-[calc(100%-32px)] max-w-sm rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 text-[var(--ff-text)] shadow-2xl shadow-black/20">
+    <div className="safe-top fixed left-3 right-3 top-20 z-[10000] rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 text-[var(--ff-text)] shadow-2xl shadow-black/20 sm:left-auto sm:right-4 sm:w-[calc(100%-32px)] sm:max-w-sm">
       <div className="flex items-start gap-3">
         <div
           className={
@@ -39,7 +39,8 @@ function Toast({
         <button
           type="button"
           onClick={onClose}
-          className="text-[var(--ff-muted)] transition hover:text-[var(--ff-text)]"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[var(--ff-muted)] transition hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)]"
+          aria-label="Fechar aviso"
         >
           <X size={18} />
         </button>

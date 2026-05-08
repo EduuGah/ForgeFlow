@@ -8,14 +8,16 @@ function Button({
 }) {
   const baseClasses = `
     inline-flex
-    h-11
+    min-h-11
     items-center
     justify-center
     gap-2
     rounded-2xl
     px-4
+    py-2.5
     text-sm
     font-bold
+    leading-tight
     transition
     duration-200
     disabled:cursor-not-allowed

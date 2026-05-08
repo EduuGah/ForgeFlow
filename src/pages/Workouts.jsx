@@ -1884,7 +1884,7 @@ function Workouts() {
                 </div>
             </div>
 
-            <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
+            <section className="mt-6 grid grid-cols-1 gap-4 2xl:grid-cols-3 2xl:gap-6">
                 <div className="xl:col-span-2">
                     <Card>
                         <button

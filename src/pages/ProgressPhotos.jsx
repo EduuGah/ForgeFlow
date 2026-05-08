@@ -455,7 +455,7 @@ function ProgressPhotos() {
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
+      <section className="mt-6 grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
         <aside className="space-y-6">
           <Card>
             <div className="flex items-center gap-3">

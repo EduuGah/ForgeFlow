@@ -339,7 +339,7 @@ function WorkoutCalendar() {
                 </Card>
             </section>
 
-            <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+            <section className="mt-6 grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
                 <Card>
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div>
@@ -403,7 +403,7 @@ function WorkoutCalendar() {
                                 return (
                                     <div
                                         key={`empty-${index}`}
-                                        className="min-h-[86px] rounded-2xl border border-transparent"
+                                        className="min-h-[64px] sm:min-h-[86px] rounded-2xl border border-transparent"
                                     />
                                 )
                             }
@@ -420,10 +420,10 @@ function WorkoutCalendar() {
                                     onClick={() => setSelectedDate(key)}
                                     className={
                                         isSelected
-                                            ? 'min-h-[86px] rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)]/15 p-2 text-left shadow-[0_0_18px_var(--ff-accent-shadow)]/20'
+                                            ? 'min-h-[64px] sm:min-h-[86px] rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)]/15 p-2 text-left shadow-[0_0_18px_var(--ff-accent-shadow)]/20'
                                             : sessions.length > 0
-                                                ? 'min-h-[86px] rounded-2xl border border-zinc-800 bg-[#18181b] p-2 text-left transition hover:border-[var(--ff-accent-border)]/40 hover:bg-[#1f1f23]'
-                                                : 'min-h-[86px] rounded-2xl border border-zinc-900 bg-zinc-950/60 p-2 text-left transition hover:border-zinc-800 hover:bg-zinc-950'
+                                                ? 'min-h-[64px] sm:min-h-[86px] rounded-2xl border border-zinc-800 bg-[#18181b] p-2 text-left transition hover:border-[var(--ff-accent-border)]/40 hover:bg-[#1f1f23]'
+                                                : 'min-h-[64px] sm:min-h-[86px] rounded-2xl border border-zinc-900 bg-zinc-950/60 p-2 text-left transition hover:border-zinc-800 hover:bg-zinc-950'
                                     }
                                 >
                                     <div className="flex items-center justify-between gap-2">
@@ -445,7 +445,7 @@ function WorkoutCalendar() {
                                     </div>
 
                                     {sessions.length > 0 && (
-                                        <div className="mt-3 space-y-1">
+                                        <div className="mt-3 hidden space-y-1 sm:block">
                                             {sessions.slice(0, 2).map((session) => (
                                                 <div
                                                     key={session.id}

@@ -16,12 +16,16 @@ function NotificationBell() {
   useEffect(() => {
     if (!user) return
 
+    let cancelled = false
+
     async function loadNotificationsCount() {
       const cachedNotifications = getUserStorageData(user, 'notifications', [])
 
-      setUnreadCount(
-        cachedNotifications.filter((item) => item.status === 'unread').length
-      )
+      if (!cancelled) {
+        setUnreadCount(
+          cachedNotifications.filter((item) => item.status === 'unread').length
+        )
+      }
 
       try {
         const data = await apiFetch('/notifications?status=unread&limit=10')
@@ -33,21 +37,31 @@ function NotificationBell() {
             }))
           : []
 
-        setUnreadCount(Number(data?.unreadCount) || 0)
-        saveUserStorageData(user, 'notifications', notifications)
+        if (!cancelled) {
+          setUnreadCount(Number(data?.unreadCount) || 0)
+          saveUserStorageData(user, 'notifications', notifications)
+        }
       } catch (error) {
         console.error(error)
       }
     }
 
     loadNotificationsCount()
+
+    const interval = window.setInterval(loadNotificationsCount, 60000)
+
+    return () => {
+      cancelled = true
+      window.clearInterval(interval)
+    }
   }, [user])
 
   return (
     <Link
       to="/notifications"
-      className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface)] text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)]"
+      className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface)] text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)] active:scale-95"
       title="Notificações"
+      aria-label={unreadCount > 0 ? `${unreadCount} notificações não lidas` : 'Notificações'}
     >
       <Bell size={20} />
 

@@ -1222,7 +1222,7 @@ function Dashboard() {
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
+      <section className="mt-6 grid grid-cols-1 gap-4 2xl:grid-cols-3 2xl:gap-6">
         <Card className="xl:col-span-2">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -1550,7 +1550,7 @@ function Dashboard() {
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
+      <section className="mt-6 grid grid-cols-1 gap-4 2xl:grid-cols-3 2xl:gap-6">
         <Card className="xl:col-span-2">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
@@ -1650,7 +1650,7 @@ function Dashboard() {
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
+      <section className="mt-6 grid grid-cols-1 gap-4 2xl:grid-cols-3 2xl:gap-6">
         <Card className="xl:col-span-2">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -1837,7 +1837,7 @@ function Dashboard() {
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
+      <section className="mt-6 grid grid-cols-1 gap-4 2xl:grid-cols-3 2xl:gap-6">
         <Card className="xl:col-span-2">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -1962,7 +1962,7 @@ function Dashboard() {
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-6 2xl:grid-cols-2">
+      <section className="mt-6 grid grid-cols-1 gap-4 sm:gap-6 2xl:grid-cols-2">
         <Card>
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -2084,7 +2084,7 @@ function Dashboard() {
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
+      <section className="mt-6 grid grid-cols-1 gap-4 2xl:grid-cols-3 2xl:gap-6">
         <Card>
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -2290,7 +2290,7 @@ function Dashboard() {
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
+      <section className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2 xl:gap-6">
         <Card>
           <div className="flex items-start justify-between gap-4">
             <div>

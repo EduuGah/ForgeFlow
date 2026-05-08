@@ -389,7 +389,7 @@ function History() {
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-4">
+      <section className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-4">
         <div className="xl:col-span-3">
           <Card>
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">

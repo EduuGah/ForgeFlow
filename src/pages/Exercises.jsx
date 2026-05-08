@@ -1012,7 +1012,7 @@ function Exercises() {
         />
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[330px_minmax(0,1fr)]">
+      <section className="mt-6 grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-[330px_minmax(0,1fr)]">
         <aside className="space-y-6">
           <Card className="overflow-hidden border border-zinc-800 bg-gradient-to-b from-[#17171b] to-[#121216]">
             <div className="border-b border-zinc-800 p-5">

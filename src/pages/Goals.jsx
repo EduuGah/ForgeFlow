@@ -448,7 +448,7 @@ function Goals() {
         </div>
       </Card>
 
-      <section className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-2">
+      <section className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2 xl:gap-5">
         {filteredGoals.length === 0 ? (
           <div className="xl:col-span-2">
             <Card>

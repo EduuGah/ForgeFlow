@@ -988,7 +988,7 @@ function Progress() {
             />
           </section>
 
-          <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <section className="grid grid-cols-1 gap-4 xl:grid-cols-2 xl:gap-6">
             <BodyWeightChart data={bodyWeight} accentColor={chartAccentColor} />
 
             <MuscleGroupChart data={muscleGroups} accentColor={chartAccentColor} />
@@ -996,7 +996,7 @@ function Progress() {
 
           <TrainingVolumeChart data={weeklyProgress} accentColor={chartAccentColor} />
 
-          <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <section className="grid grid-cols-1 gap-4 xl:grid-cols-2 xl:gap-6">
             <MonthlyProgressChart
               data={monthlyProgress}
               accentColor={chartAccentColor}
@@ -1027,7 +1027,7 @@ function Progress() {
             <BodyWeightLog data={bodyWeight} />
           </section>
 
-          <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <section className="grid grid-cols-1 gap-4 xl:grid-cols-2 xl:gap-6">
             <Card>
               <div className="flex items-start justify-between gap-4">
                 <div>

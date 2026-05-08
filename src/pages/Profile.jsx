@@ -500,7 +500,7 @@ function Profile() {
         }
       />
 
-      <section className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+      <section className="grid grid-cols-1 gap-4 2xl:grid-cols-3 2xl:gap-6">
         <Card className="overflow-hidden border-[var(--ff-accent-border)]/20 bg-gradient-to-br from-[var(--ff-accent-soft)]/20 via-[#18181b] to-[#121212] xl:col-span-2">
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-5">
@@ -715,7 +715,7 @@ function Profile() {
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
+      <section className="mt-6 grid grid-cols-1 gap-4 2xl:grid-cols-3 2xl:gap-6">
         <div className="space-y-6 xl:col-span-2">
           <Card>
             <div className="flex items-start justify-between gap-4">
@@ -778,7 +778,7 @@ function Profile() {
             </div>
           </Card>
 
-          <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <section className="grid grid-cols-1 gap-4 xl:grid-cols-2 xl:gap-6">
             <Card>
               <div className="flex items-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-yellow-500/10 text-yellow-400">

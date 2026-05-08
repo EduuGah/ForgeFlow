@@ -37,15 +37,15 @@ function ActiveWorkoutMini() {
     <button
       type="button"
       onClick={handleOpenWorkout}
-      className="fixed bottom-4 left-4 right-4 z-50 overflow-hidden rounded-3xl border border-[var(--ff-accent-border)] bg-[var(--ff-card)]/95 p-4 text-left text-[var(--ff-text)] shadow-2xl shadow-black/20 backdrop-blur-xl transition hover:shadow-[0_0_28px_var(--ff-accent-shadow)] md:left-auto md:w-[420px]"
+      className="safe-bottom fixed bottom-20 left-4 right-4 z-50 overflow-hidden rounded-3xl border border-[var(--ff-accent-border)] bg-[var(--ff-card)]/95 p-3 text-left text-[var(--ff-text)] shadow-2xl shadow-black/20 backdrop-blur-xl transition hover:shadow-[0_0_28px_var(--ff-accent-shadow)] sm:p-4 lg:bottom-4 lg:left-auto lg:w-[420px]"
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--ff-accent-soft),transparent_34%)]" />
 
       <div className="relative">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-3 sm:gap-4">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)] shadow-[0_0_18px_var(--ff-accent-shadow)]">
-              <Dumbbell size={23} />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)] shadow-[0_0_18px_var(--ff-accent-shadow)] sm:h-12 sm:w-12">
+              <Dumbbell size={22} />
             </div>
 
             <div className="min-w-0">
@@ -67,28 +67,28 @@ function ActiveWorkoutMini() {
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center gap-3">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             <div className="text-right">
               <div className="flex items-center justify-end gap-1 text-[var(--ff-accent-text)]">
                 <Clock size={14} />
 
-                <p className="text-sm font-black">
+                <p className="text-xs font-black sm:text-sm">
                   {formatTime(elapsedSeconds)}
                 </p>
               </div>
 
-              <p className="mt-1 text-[11px] font-medium text-[var(--ff-muted)]">
+              <p className="mt-1 text-[10px] font-medium text-[var(--ff-muted)] sm:text-[11px]">
                 abrir treino
               </p>
             </div>
 
-            <div className="hidden h-10 w-10 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-muted)] md:flex">
+            <div className="hidden h-10 w-10 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-muted)] sm:flex">
               <ChevronRight size={20} />
             </div>
           </div>
         </div>
 
-        <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--ff-surface-3)]">
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--ff-surface-3)] sm:mt-4">
           <div
             className="h-full rounded-full transition-all"
             style={{

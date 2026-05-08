@@ -16,8 +16,8 @@ function ConfirmModal({
   const isDanger = variant === 'danger'
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-[var(--ff-overlay)] px-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-6 text-[var(--ff-text)] shadow-2xl shadow-black/20">
+    <div className="fixed inset-0 z-[10000] flex items-end justify-center bg-[var(--ff-overlay)] p-3 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="mobile-bottom-sheet max-h-[90vh] w-full max-w-md overflow-y-auto rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-5 text-[var(--ff-text)] shadow-2xl shadow-black/20 sm:p-6">
         <div className="flex items-start gap-4">
           <div
             className={
@@ -44,14 +44,15 @@ function ConfirmModal({
           <button
             type="button"
             onClick={onCancel}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--ff-surface-2)] text-[var(--ff-muted)] transition hover:bg-[var(--ff-card-hover)] hover:text-[var(--ff-text)]"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--ff-surface-2)] text-[var(--ff-muted)] transition hover:bg-[var(--ff-card-hover)] hover:text-[var(--ff-text)]"
+            aria-label="Fechar modal"
           >
             <X size={18} />
           </button>
         </div>
 
         <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Button type="button" variant="secondary" onClick={onCancel}>
+          <Button type="button" variant="secondary" onClick={onCancel} className="w-full">
             {cancelText}
           </Button>
 
@@ -59,6 +60,7 @@ function ConfirmModal({
             type="button"
             variant={isDanger ? 'danger' : 'primary'}
             onClick={onConfirm}
+            className="w-full"
           >
             {confirmText}
           </Button>
