@@ -1726,16 +1726,63 @@ function getExerciseMainMuscleGroup(item) {
     )
 }
 
-function getExerciseMuscleGroupsFromHistoryExercise(item) {
-    const exercise = item.exercise || {}
+function getMuscleRecoveryStatus(lastTrainedAt) {
+    if (!lastTrainedAt) {
+        return {
+            status: 'Sem dados',
+            level: 'unknown',
+            recoveryPercent: 100,
+            message: 'Ainda não há histórico suficiente.',
+        }
+    }
 
-    const groups = [
-        exercise.muscleGroup,
-        exercise.normalizedGroup,
-        exercise.targetMuscle,
-    ]
+    const now = new Date()
+    const lastDate = new Date(lastTrainedAt)
 
-    return [...new Set(groups.filter(Boolean))]
+    if (Number.isNaN(lastDate.getTime())) {
+        return {
+            status: 'Sem dados',
+            level: 'unknown',
+            recoveryPercent: 100,
+            message: 'Data de treino inválida.',
+        }
+    }
+
+    const diffHours = Math.floor((now - lastDate) / 1000 / 60 / 60)
+
+    if (diffHours < 24) {
+        return {
+            status: 'Recuperando',
+            level: 'low',
+            recoveryPercent: 35,
+            message: 'Treinado há menos de 24h.',
+        }
+    }
+
+    if (diffHours < 48) {
+        return {
+            status: 'Parcial',
+            level: 'medium',
+            recoveryPercent: 65,
+            message: 'Ainda pode estar em recuperação.',
+        }
+    }
+
+    if (diffHours < 72) {
+        return {
+            status: 'Quase pronto',
+            level: 'good',
+            recoveryPercent: 85,
+            message: 'Provavelmente já está quase recuperado.',
+        }
+    }
+
+    return {
+        status: 'Recuperado',
+        level: 'ready',
+        recoveryPercent: 100,
+        message: 'Boa janela para treinar novamente.',
+    }
 }
 
 app.get('/stats/muscle-recovery', authMiddleware, async (req, res) => {
