@@ -14,6 +14,7 @@ import History from './pages/History'
 import StartWorkout from './pages/StartWorkout'
 import Profile from './pages/Profile'
 import ExerciseDetails from './pages/ExerciseDetails'
+import Progress from './pages/Progress'
 import ExerciseProgress from './pages/ExerciseProgress'
 import Settings from './pages/Settings'
 import Login from './pages/Login'
@@ -59,7 +60,6 @@ function App() {
             >
               <Route path="/" element={<Dashboard />} />
               <Route path="/exercises" element={<Exercises />} />
-              <Route path="/progress" element={<ExerciseProgress />} />
               <Route path="/exercises/:id" element={<ExerciseDetails />} />
               <Route path="/workouts" element={<Workouts />} />
               <Route path="/history" element={<History />} />
@@ -69,6 +69,8 @@ function App() {
               <Route path="/complete-profile" element={<CompleteProfile />} />
               <Route path="/calendar" element={<WorkoutCalendar />} />
               <Route path="/recovery" element={<MuscleRecovery />} />
+              <Route path="/progress" element={<Progress />} />
+              <Route path="/exercise-progress" element={<ExerciseProgress />} />
               <Route path="/progress-photos" element={<ProgressPhotos />} />
             </Route>
           </Routes>
