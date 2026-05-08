@@ -77,15 +77,15 @@ function Sidebar({ isOpen = false, onClose }) {
         <button
           type="button"
           onClick={onClose}
-          className="fixed inset-0 z-50 bg-[var(--ff-overlay)] backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-50 bg-[var(--ff-overlay)] backdrop-blur-sm"
           aria-label="Fechar menu"
         />
       )}
 
       <aside
         className={[
-          'fixed left-0 top-0 z-[60] flex h-dvh w-[86vw] max-w-[282px] flex-col overflow-hidden border-r border-[var(--ff-border)] bg-[var(--ff-sidebar)] text-[var(--ff-text)] shadow-2xl shadow-black/20 transition-transform duration-300 lg:translate-x-0',
-          isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+          'fixed left-0 top-0 z-[60] flex h-dvh w-[86vw] max-w-[320px] flex-col overflow-hidden border-r border-[var(--ff-border)] bg-[var(--ff-sidebar)] text-[var(--ff-text)] shadow-2xl shadow-black/20 transition-transform duration-300',
+          isOpen ? 'translate-x-0' : '-translate-x-full',
         ].join(' ')}
       >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--ff-accent-soft),transparent_36%)]" />
@@ -116,7 +116,7 @@ function Sidebar({ isOpen = false, onClose }) {
               <button
                 type="button"
                 onClick={onClose}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-muted)] transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-card-hover)] hover:text-[var(--ff-text)] lg:hidden"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-muted)] transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-card-hover)] hover:text-[var(--ff-text)]"
                 aria-label="Fechar menu"
               >
                 <X size={20} />

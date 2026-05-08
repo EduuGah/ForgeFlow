@@ -377,134 +377,127 @@ function MonthlyProgressChart({ data = [], accentColor }) {
   )
 }
 
-function SetVolumeScatterChart({ data = [], accentColor }) {
+function SetVolumeScatterChart({ data = [] }) {
   const validRows = data
     .filter((row) => row.isValid)
     .slice()
     .reverse()
-    .slice(-40)
+    .slice(-20)
     .map((row, index) => ({
       ...row,
       index: index + 1,
     }))
 
+  const biggestVolume = validRows
+    .slice()
+    .sort((a, b) => Number(b.volume || 0) - Number(a.volume || 0))[0]
+
+  const biggestWeight = validRows
+    .slice()
+    .sort((a, b) => Number(b.weight || 0) - Number(a.weight || 0))[0]
+
   return (
     <ChartShell
       title="Séries recentes detalhadas"
-      description="Cada ponto representa uma série válida dos treinos recentes. Passe o mouse para ver treino, exercício, série, peso, reps, volume e data."
+      description="Em vez de mostrar pontinhos soltos no gráfico, esta área lista as séries recentes com treino, exercício, série, peso, reps, volume e data. Fica mais direto para entender exatamente o que aconteceu."
       icon={Sparkles}
       badge={`${validRows.length} séries`}
     >
-      <div className="mt-5 h-[340px]">
+      <div className="mt-5">
         {validRows.length === 0 ? (
           <EmptyState
             title="Sem séries recentes"
-            description="Finalize treinos com peso e repetições para gerar esse gráfico."
+            description="Finalize treinos com peso e repetições para gerar detalhes por série."
           />
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <ScatterChart margin={{ top: 20, right: 16, bottom: 8, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
-              <XAxis
-                type="number"
-                dataKey="index"
-                name="Ordem"
-                tick={{ fontSize: 11, fill: 'var(--ff-muted)' }}
-                tickLine={false}
-                axisLine={false}
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <DetailStat
+                icon={Weight}
+                label="Maior carga recente"
+                value={biggestWeight ? formatWeight(biggestWeight.weight) : '—'}
+                description={
+                  biggestWeight
+                    ? `${biggestWeight.exerciseName} • Série ${biggestWeight.setNumber} • ${biggestWeight.reps} reps • ${formatDate(biggestWeight.date)}`
+                    : 'Sem carga recente.'
+                }
               />
-              <YAxis
-                type="number"
-                dataKey="weight"
-                name="Peso"
-                tick={{ fontSize: 11, fill: 'var(--ff-muted)' }}
-                tickLine={false}
-                axisLine={false}
-                allowDecimals={false}
+
+              <DetailStat
+                icon={Flame}
+                label="Maior volume recente"
+                value={biggestVolume ? formatVolume(biggestVolume.volume) : '—'}
+                description={
+                  biggestVolume
+                    ? `${biggestVolume.exerciseName} • ${formatWeight(biggestVolume.weight)} × ${biggestVolume.reps} • ${formatDate(biggestVolume.date)}`
+                    : 'Sem volume recente.'
+                }
               />
-              <Tooltip
-                cursor={{ stroke: accentColor, strokeDasharray: '4 4' }}
-                contentStyle={getTooltipStyle()}
-                formatter={(value, name, props) => {
-                  const row = props.payload
+            </div>
 
-                  if (name === 'Peso') return [`${value}kg`, 'Peso']
-                  if (name === 'Ordem') return [`#${value}`, 'Registro']
+            <div className="overflow-hidden rounded-2xl border border-[var(--ff-border)]">
+              <div className="overflow-x-auto">
+                <table className="min-w-[860px] w-full text-left text-sm">
+                  <thead className="bg-[var(--ff-surface-2)] text-xs uppercase tracking-wide text-[var(--ff-muted)]">
+                    <tr>
+                      <th className="px-4 py-3">Data</th>
+                      <th className="px-4 py-3">Treino</th>
+                      <th className="px-4 py-3">Exercício</th>
+                      <th className="px-4 py-3">Série</th>
+                      <th className="px-4 py-3">Peso</th>
+                      <th className="px-4 py-3">Reps</th>
+                      <th className="px-4 py-3">Volume</th>
+                    </tr>
+                  </thead>
 
-                  return [value, name]
-                }}
-                labelFormatter={(_, payload) => {
-                  const row = payload?.[0]?.payload
+                  <tbody className="divide-y divide-[var(--ff-border)]">
+                    {validRows
+                      .slice()
+                      .reverse()
+                      .map((row) => (
+                        <tr
+                          key={row.id}
+                          className="transition hover:bg-[var(--ff-card-hover)]"
+                        >
+                          <td className="px-4 py-3 font-bold text-[var(--ff-text)]">
+                            {formatDate(row.date)}
+                          </td>
 
-                  if (!row) return 'Registro'
+                          <td className="px-4 py-3 text-[var(--ff-muted)]">
+                            {row.workoutName}
+                          </td>
 
-                  return `${row.exerciseName} • Série ${row.setNumber}`
-                }}
-                content={({ active, payload }) => {
-                  if (!active || !payload?.length) return null
+                          <td className="px-4 py-3">
+                            <p className="font-black text-[var(--ff-text)]">
+                              {row.exerciseName}
+                            </p>
+                            <p className="mt-1 text-xs text-[var(--ff-muted)]">
+                              {row.muscleGroup} • {row.equipment}
+                            </p>
+                          </td>
 
-                  const row = payload[0].payload
+                          <td className="px-4 py-3">
+                            <Badge>Série {row.setNumber}</Badge>
+                          </td>
 
-                  return (
-                    <div className="max-w-[320px] rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 shadow-2xl">
-                      <p className="text-sm font-black text-[var(--ff-text)]">
-                        {row.exerciseName}
-                      </p>
+                          <td className="px-4 py-3 font-black text-[var(--ff-accent-text)]">
+                            {formatWeight(row.weight)}
+                          </td>
 
-                      <p className="mt-1 text-xs text-[var(--ff-muted)]">
-                        {row.workoutName} • {formatLongDate(row.date)}
-                      </p>
-
-                      <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                        <div className="rounded-xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-2">
-                          <span className="text-[var(--ff-muted)]">Série</span>
-                          <p className="font-black text-[var(--ff-text)]">
-                            {row.setNumber}
-                          </p>
-                        </div>
-
-                        <div className="rounded-xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-2">
-                          <span className="text-[var(--ff-muted)]">Grupo</span>
-                          <p className="font-black text-[var(--ff-text)]">
-                            {row.muscleGroup}
-                          </p>
-                        </div>
-
-                        <div className="rounded-xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-2">
-                          <span className="text-[var(--ff-muted)]">Peso</span>
-                          <p className="font-black text-[var(--ff-accent-text)]">
-                            {row.weight}kg
-                          </p>
-                        </div>
-
-                        <div className="rounded-xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-2">
-                          <span className="text-[var(--ff-muted)]">Reps</span>
-                          <p className="font-black text-[var(--ff-text)]">
+                          <td className="px-4 py-3 font-bold text-[var(--ff-text)]">
                             {row.reps}
-                          </p>
-                        </div>
+                          </td>
 
-                        <div className="col-span-2 rounded-xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-2">
-                          <span className="text-[var(--ff-muted)]">Volume da série</span>
-                          <p className="font-black text-[var(--ff-accent-text)]">
+                          <td className="px-4 py-3 font-black text-[var(--ff-warning-text)]">
                             {formatVolume(row.volume)}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                }}
-              />
-              <Scatter data={validRows} fill={accentColor}>
-                {validRows.map((row) => (
-                  <Cell
-                    key={row.id}
-                    fill={row.volume === Math.max(...validRows.map((item) => item.volume)) ? 'var(--ff-warning-text)' : accentColor}
-                  />
-                ))}
-              </Scatter>
-            </ScatterChart>
-          </ResponsiveContainer>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </ChartShell>

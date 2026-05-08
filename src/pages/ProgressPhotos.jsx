@@ -396,6 +396,23 @@ function ProgressPhotos() {
     setSelectedPhoto(nextPhoto)
   }
 
+
+
+  useEffect(() => {
+    if (!selectedPhoto) return undefined
+
+    const previousOverflow = document.body.style.overflow
+    const previousOverscroll = document.body.style.overscrollBehavior
+
+    document.body.style.overflow = 'hidden'
+    document.body.style.overscrollBehavior = 'contain'
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.body.style.overscrollBehavior = previousOverscroll
+    }
+  }, [selectedPhoto])
+
   return (
     <>
       <PageHeader
@@ -897,20 +914,20 @@ function ProgressPhotos() {
       </section>
 
       {selectedPhoto && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[80] overflow-y-auto overscroll-contain bg-black/80 p-3 backdrop-blur-sm sm:p-4">
           <button
             type="button"
-            className="absolute inset-0"
+            className="fixed inset-0"
             onClick={() => setSelectedPhoto(null)}
             aria-label="Fechar foto"
           />
 
-          <div className="relative grid max-h-[92vh] w-full max-w-6xl overflow-hidden rounded-3xl border border-white/10 bg-[var(--ff-card)] shadow-2xl lg:grid-cols-[minmax(0,1fr)_340px]">
-            <div className="relative flex min-h-[380px] items-center justify-center bg-black">
+          <div className="relative mx-auto my-4 grid w-full max-w-6xl overflow-hidden rounded-3xl border border-white/10 bg-[var(--ff-card)] shadow-2xl sm:my-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+            <div className="relative flex min-h-[260px] items-center justify-center bg-black sm:min-h-[380px]">
               <img
                 src={selectedPhoto.imageUrl}
                 alt={`Foto de evolução - ${getAngleLabel(selectedPhoto.angle)}`}
-                className="max-h-[92vh] w-full object-contain"
+                className="max-h-[64dvh] w-full object-contain sm:max-h-[86vh]"
               />
 
               {filteredPhotos.length > 1 && (
@@ -936,7 +953,7 @@ function ProgressPhotos() {
               )}
             </div>
 
-            <aside className="relative overflow-y-auto p-5">
+            <aside className="relative p-5">
               <button
                 type="button"
                 onClick={() => setSelectedPhoto(null)}
@@ -1004,7 +1021,7 @@ function ProgressPhotos() {
                 </div>
               </div>
 
-              <div className="mt-5 flex gap-3">
+              <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Button
                   type="button"
                   variant="secondary"
