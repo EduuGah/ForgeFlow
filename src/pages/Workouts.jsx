@@ -166,7 +166,6 @@ function Workouts() {
                 const [workoutsFromApi, exercisesFromApi, historyFromApi] = await Promise.all([
                     apiFetch('/workouts'),
                     apiFetch('/exercises'),
-                    apiFetch('/workout-history'),
                 ])
 
                 const normalizedWorkouts = Array.isArray(workoutsFromApi)
@@ -187,6 +186,8 @@ function Workouts() {
 
                 setWorkouts(normalizedWorkouts)
                 setHistory(normalizedHistory)
+
+
 
                 const mergedExercisesMap = new Map()
 
@@ -240,6 +241,20 @@ function Workouts() {
             }
 
             setIsLoaded(true)
+
+            apiFetch('/workout-history')
+                .then((historyFromApi) => {
+                    const normalizedHistory = Array.isArray(historyFromApi)
+                        ? historyFromApi.map(normalizeHistoryFromApi)
+                        : []
+
+                    setHistory(normalizedHistory)
+                    saveUserStorageData(user, 'history', normalizedHistory)
+                })
+                .catch((error) => {
+                    console.error(error)
+                    setHistory(getUserStorageData(user, 'history', []))
+                })
         }
 
         loadWorkoutsData()
@@ -367,7 +382,7 @@ function Workouts() {
                     totalUses: (currentByName?.totalUses || 0) + 1,
                     lastUsedAt:
                         !currentByName?.lastUsedAt ||
-                        (nextDate && nextDate > new Date(currentByName.lastUsedAt))
+                            (nextDate && nextDate > new Date(currentByName.lastUsedAt))
                             ? finishedAt
                             : currentByName.lastUsedAt,
                 })

@@ -317,18 +317,40 @@ function Dashboard() {
 
       try {
         const [
-          workoutsFromApi,
-          historyFromApi,
-          exercisesFromApi,
-          bodyWeightFromApi,
-          consistencyFromApi,
-        ] = await Promise.all([
+          workoutsResult,
+          historyResult,
+          exercisesResult,
+          bodyWeightResult,
+          consistencyResult,
+        ] = await Promise.allSettled([
           apiFetch('/workouts'),
           apiFetch('/workout-history'),
           apiFetch('/exercises'),
           apiFetch('/body-weight'),
           apiFetch('/stats/consistency'),
         ])
+
+        if (workoutsResult.status === 'fulfilled') {
+          const normalizedWorkouts = Array.isArray(workoutsResult.value)
+            ? workoutsResult.value.map(normalizeWorkoutFromApi)
+            : []
+
+          setWorkouts(normalizedWorkouts)
+          saveUserStorageData(user, 'workouts', normalizedWorkouts)
+        } else {
+          setWorkouts(getUserStorageData(user, 'workouts', []))
+        }
+
+        if (historyResult.status === 'fulfilled') {
+          const normalizedHistory = Array.isArray(historyResult.value)
+            ? historyResult.value.map(normalizeHistoryFromApi)
+            : []
+
+          setHistory(normalizedHistory)
+          saveUserStorageData(user, 'history', normalizedHistory)
+        } else {
+          setHistory(getUserStorageData(user, 'history', []))
+        }
 
         const normalizedWorkouts = Array.isArray(workoutsFromApi)
           ? workoutsFromApi.map(normalizeWorkoutFromApi)

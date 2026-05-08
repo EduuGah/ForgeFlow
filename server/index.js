@@ -1656,6 +1656,42 @@ app.get('/stats/consistency', authMiddleware, async (req, res) => {
     }
 })
 
+app.get('/dashboard', authMiddleware, async (req, res) => {
+    try {
+        const userId = req.user.userId
+
+        const [workouts, history, exercises, bodyWeight] = await Promise.all([
+            Workout.find({ userId }).sort({ updatedAt: -1 }).limit(20),
+            WorkoutHistory.find({ userId }).sort({ finishedAt: -1, createdAt: -1 }).limit(50),
+            Exercise.find({ userId }).sort({ isFavorite: -1, updatedAt: -1 }).limit(100),
+            BodyWeight.find({ userId }).sort({ date: 1, createdAt: 1 }).limit(100),
+        ])
+
+        const consistency = {
+            currentStreak: calculateCurrentStreak(history),
+            bestStreak: calculateBestStreak(history),
+            workoutsLast7Days: countWorkoutsInLastDays(history, 7),
+            workoutsLast30Days: countWorkoutsInLastDays(history, 30),
+            totalWorkoutDays: getUniqueWorkoutDaysFromHistory(history).length,
+            lastWorkoutDate: getUniqueWorkoutDaysFromHistory(history)[0] || null,
+        }
+
+        res.json({
+            workouts,
+            history,
+            exercises,
+            bodyWeight,
+            consistency,
+        })
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao carregar dashboard.',
+        })
+    }
+})
+
 app.get('/exercises', authMiddleware, async (req, res) => {
     const exercises = await Exercise.find({
         userId: req.user.userId,
