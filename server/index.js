@@ -9,6 +9,8 @@ import jwt from 'jsonwebtoken'
 import cookieParser from 'cookie-parser'
 import dns from 'node:dns'
 import bcrypt from 'bcryptjs'
+import multer from 'multer'
+import { v2 as cloudinary } from 'cloudinary'
 
 dotenv.config()
 
@@ -16,6 +18,26 @@ dotenv.config()
 dns.setServers(['1.1.1.1', '8.8.8.8'])
 
 const app = express()
+
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+        fileSize: 5 * 1024 * 1024,
+    },
+    fileFilter: (req, file, callback) => {
+        const allowedMimeTypes = [
+            'image/jpeg',
+            'image/png',
+            'image/webp',
+        ]
+
+        if (!allowedMimeTypes.includes(file.mimetype)) {
+            return callback(new Error('Formato de imagem inválido. Use JPG, PNG ou WEBP.'))
+        }
+
+        callback(null, true)
+    },
+})
 
 const {
     PORT = 3001,
@@ -26,6 +48,9 @@ const {
     GOOGLE_CLIENT_SECRET,
     JWT_SECRET,
     SESSION_SECRET,
+    CLOUDINARY_CLOUD_NAME,
+    CLOUDINARY_API_KEY,
+    CLOUDINARY_API_SECRET,
 } = process.env
 
 function requiredEnv(name, value) {
@@ -152,6 +177,15 @@ requiredEnv('GOOGLE_CLIENT_ID', GOOGLE_CLIENT_ID)
 requiredEnv('GOOGLE_CLIENT_SECRET', GOOGLE_CLIENT_SECRET)
 requiredEnv('JWT_SECRET', JWT_SECRET)
 requiredEnv('SESSION_SECRET', SESSION_SECRET)
+requiredEnv('CLOUDINARY_CLOUD_NAME', CLOUDINARY_CLOUD_NAME)
+requiredEnv('CLOUDINARY_API_KEY', CLOUDINARY_API_KEY)
+requiredEnv('CLOUDINARY_API_SECRET', CLOUDINARY_API_SECRET)
+
+cloudinary.config({
+    cloud_name: CLOUDINARY_CLOUD_NAME,
+    api_key: CLOUDINARY_API_KEY,
+    api_secret: CLOUDINARY_API_SECRET,
+})
 
 const normalizedFrontendUrl = FRONTEND_URL.replace(/\/$/, '')
 const normalizedBackendUrl = BACKEND_URL.replace(/\/$/, '')
@@ -787,6 +821,52 @@ const bodyWeightSchema = new mongoose.Schema(
 )
 
 
+const progressPhotoSchema = new mongoose.Schema(
+    {
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+            index: true,
+        },
+
+        imageUrl: {
+            type: String,
+            required: true,
+        },
+
+        publicId: {
+            type: String,
+            required: true,
+        },
+
+        date: {
+            type: Date,
+            default: Date.now,
+            index: true,
+        },
+
+        angle: {
+            type: String,
+            enum: ['front', 'side', 'back', 'other'],
+            default: 'front',
+        },
+
+        weight: {
+            type: Number,
+            default: null,
+        },
+
+        note: {
+            type: String,
+            default: '',
+        },
+    },
+    {
+        timestamps: true,
+    }
+)
+
 const workoutHistorySchema = new mongoose.Schema(
     {
         userId: {
@@ -864,6 +944,7 @@ const Workout = mongoose.model('Workout', workoutSchema)
 const WorkoutTemplate = mongoose.model('WorkoutTemplate', workoutTemplateSchema)
 const WorkoutHistory = mongoose.model('WorkoutHistory', workoutHistorySchema)
 const BodyWeight = mongoose.model('BodyWeight', bodyWeightSchema)
+const ProgressPhoto = mongoose.model('ProgressPhoto', progressPhotoSchema)
 
 function createToken(user) {
     return jwt.sign(
@@ -915,6 +996,24 @@ function parseDecimal(value) {
     return Number.isFinite(number) ? number : null
 }
 
+
+function uploadBufferToCloudinary(buffer, options = {}) {
+    return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+            options,
+            (error, result) => {
+                if (error) {
+                    reject(error)
+                    return
+                }
+
+                resolve(result)
+            }
+        )
+
+        stream.end(buffer)
+    })
+}
 
 function cleanMongoFields(item = {}) {
     const {
@@ -2399,6 +2498,7 @@ app.get('/export-data', authMiddleware, async (req, res) => {
             workoutHistory,
             bodyWeight,
             workoutTemplates,
+            progressPhotos,
         ] = await Promise.all([
             User.findById(userId),
             AppSettings.findOne({ userId }),
@@ -2407,6 +2507,7 @@ app.get('/export-data', authMiddleware, async (req, res) => {
             WorkoutHistory.find({ userId }).sort({ finishedAt: 1, createdAt: 1 }),
             BodyWeight.find({ userId }).sort({ date: 1, createdAt: 1 }),
             WorkoutTemplate.find({ userId }).sort({ createdAt: 1 }),
+            ProgressPhoto.find({ userId }).sort({ date: 1, createdAt: 1 }),
         ])
 
         if (!user) {
@@ -2433,6 +2534,7 @@ app.get('/export-data', authMiddleware, async (req, res) => {
                 workoutHistory,
                 bodyWeight,
                 workoutTemplates,
+                progressPhotos,
             },
         }
 
@@ -2471,6 +2573,7 @@ app.post('/import-data', authMiddleware, async (req, res) => {
             workoutHistory = [],
             bodyWeight = [],
             workoutTemplates = [],
+            progressPhotos = [],
         } = backup.data
 
         const imported = {
@@ -2479,6 +2582,7 @@ app.post('/import-data', authMiddleware, async (req, res) => {
             workoutHistory: 0,
             bodyWeight: 0,
             workoutTemplates: 0,
+            progressPhotos: 0,
         }
 
         if (mode === 'replace') {
@@ -2488,6 +2592,7 @@ app.post('/import-data', authMiddleware, async (req, res) => {
                 WorkoutHistory.deleteMany({ userId }),
                 BodyWeight.deleteMany({ userId }),
                 WorkoutTemplate.deleteMany({ userId }),
+                ProgressPhoto.deleteMany({ userId }),
             ])
         }
 
@@ -2496,6 +2601,7 @@ app.post('/import-data', authMiddleware, async (req, res) => {
         const historyToCreate = cleanArrayForImport(workoutHistory, userId)
         const bodyWeightToCreate = cleanArrayForImport(bodyWeight, userId)
         const templatesToCreate = cleanArrayForImport(workoutTemplates, userId)
+        const progressPhotosToCreate = cleanArrayForImport(progressPhotos, userId)
 
         if (exercisesToCreate.length > 0) {
             const created = await Exercise.insertMany(exercisesToCreate, {
@@ -2535,6 +2641,14 @@ app.post('/import-data', authMiddleware, async (req, res) => {
             })
 
             imported.workoutTemplates = created.length
+        }
+
+        if (progressPhotosToCreate.length > 0) {
+            const created = await ProgressPhoto.insertMany(progressPhotosToCreate, {
+                ordered: false,
+            })
+
+            imported.progressPhotos = created.length
         }
 
         if (backup.user?.profile) {
@@ -3106,6 +3220,160 @@ app.post('/workout-templates/:id/create-workout', authMiddleware, async (req, re
 
         res.status(500).json({
             message: 'Erro ao criar treino a partir do template.',
+        })
+    }
+})
+
+
+app.get('/progress-photos', authMiddleware, async (req, res) => {
+    try {
+        const photos = await ProgressPhoto.find({
+            userId: req.user.userId,
+        }).sort({
+            date: -1,
+            createdAt: -1,
+        })
+
+        res.json(photos)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao buscar fotos de evolução.',
+        })
+    }
+})
+
+app.post(
+    '/progress-photos',
+    authMiddleware,
+    upload.single('photo'),
+    async (req, res) => {
+        try {
+            if (!req.file) {
+                return res.status(400).json({
+                    message: 'Envie uma imagem.',
+                })
+            }
+
+            const {
+                date,
+                angle = 'front',
+                weight,
+                note = '',
+            } = req.body
+
+            const allowedAngles = ['front', 'side', 'back', 'other']
+            const safeAngle = allowedAngles.includes(angle) ? angle : 'front'
+
+            const uploadResult = await uploadBufferToCloudinary(req.file.buffer, {
+                folder: `forgeflow/progress-photos/${req.user.userId}`,
+                resource_type: 'image',
+                transformation: [
+                    {
+                        width: 1200,
+                        height: 1200,
+                        crop: 'limit',
+                        quality: 'auto',
+                        fetch_format: 'auto',
+                    },
+                ],
+            })
+
+            const photo = await ProgressPhoto.create({
+                userId: req.user.userId,
+                imageUrl: uploadResult.secure_url,
+                publicId: uploadResult.public_id,
+                date: date || new Date(),
+                angle: safeAngle,
+                weight: parseDecimal(weight),
+                note: String(note || '').trim().slice(0, 500),
+            })
+
+            res.status(201).json(photo)
+        } catch (error) {
+            console.error(error)
+
+            res.status(500).json({
+                message: error.message || 'Erro ao enviar foto de evolução.',
+            })
+        }
+    }
+)
+
+app.put('/progress-photos/:id', authMiddleware, async (req, res) => {
+    try {
+        const {
+            date,
+            angle,
+            weight,
+            note,
+        } = req.body
+
+        const allowedAngles = ['front', 'side', 'back', 'other']
+        const updateData = {}
+
+        if (date !== undefined) updateData.date = date
+
+        if (angle !== undefined) {
+            updateData.angle = allowedAngles.includes(angle) ? angle : 'front'
+        }
+
+        if (weight !== undefined) updateData.weight = parseDecimal(weight)
+        if (note !== undefined) updateData.note = String(note || '').trim().slice(0, 500)
+
+        const photo = await ProgressPhoto.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                userId: req.user.userId,
+            },
+            updateData,
+            {
+                new: true,
+            }
+        )
+
+        if (!photo) {
+            return res.status(404).json({
+                message: 'Foto não encontrada.',
+            })
+        }
+
+        res.json(photo)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao atualizar foto de evolução.',
+        })
+    }
+})
+
+app.delete('/progress-photos/:id', authMiddleware, async (req, res) => {
+    try {
+        const photo = await ProgressPhoto.findOne({
+            _id: req.params.id,
+            userId: req.user.userId,
+        })
+
+        if (!photo) {
+            return res.status(404).json({
+                message: 'Foto não encontrada.',
+            })
+        }
+
+        await cloudinary.uploader.destroy(photo.publicId)
+        await ProgressPhoto.deleteOne({ _id: photo._id })
+
+        res.json({
+            ok: true,
+            message: 'Foto removida com sucesso.',
+        })
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao remover foto de evolução.',
         })
     }
 })

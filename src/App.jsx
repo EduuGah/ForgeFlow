@@ -22,6 +22,7 @@ import Register from './pages/Register'
 import CompleteProfile from './pages/CompleteProfile'
 import WorkoutCalendar from './pages/WorkoutCalendar'
 import MuscleRecovery from './pages/MuscleRecovery'
+import ProgressPhotos from './pages/ProgressPhotos'
 
 function App() {
   return (
@@ -68,6 +69,7 @@ function App() {
               <Route path="/complete-profile" element={<CompleteProfile />} />
               <Route path="/calendar" element={<WorkoutCalendar />} />
               <Route path="/recovery" element={<MuscleRecovery />} />
+              <Route path="/progress-photos" element={<ProgressPhotos />} />
             </Route>
           </Routes>
         </WorkoutSessionProvider>

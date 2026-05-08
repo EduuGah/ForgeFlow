@@ -71,6 +71,28 @@ export async function apiDownload(path, filename) {
   window.URL.revokeObjectURL(url)
 }
 
+
+export async function apiFormData(path, formData, options = {}) {
+  const token = getToken()
+
+  const response = await fetch(`${API_URL}${path}`, {
+    method: options.method || 'POST',
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(options.headers || {}),
+    },
+    body: formData,
+  })
+
+  const data = await response.json().catch(() => null)
+
+  if (!response.ok) {
+    throw new Error(data?.message || 'Erro na requisição.')
+  }
+
+  return data
+}
+
 export async function getCurrentUser() {
   return apiFetch('/me')
 }

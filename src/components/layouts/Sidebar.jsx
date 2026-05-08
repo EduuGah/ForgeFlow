@@ -11,6 +11,7 @@ import {
   AlertCircle,
   CalendarDays,
   HeartPulse,
+  Camera,
 } from 'lucide-react'
 import { Link, NavLink } from 'react-router-dom'
 
@@ -39,6 +40,7 @@ function Sidebar({ onClose }) {
     { name: 'Calendário', path: '/calendar', icon: CalendarDays },
     { name: 'Recuperação', path: '/recovery', icon: HeartPulse },
     { name: 'Evolução', path: '/progress', icon: TrendingUp },
+    { name: 'Fotos', path: '/progress-photos', icon: Camera },
     { name: 'Perfil', path: '/profile', icon: UserRound },
     { name: 'Definições', path: '/settings', icon: Settings },
   ]
