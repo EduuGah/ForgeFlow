@@ -1,75 +1,96 @@
 @import "tailwindcss";
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
+  from {
+    opacity: 0;
+  }
 
-    to {
-        opacity: 1;
-    }
-}
-
-@keyframes slideInLeft {
-    from {
-        opacity: 0;
-        transform: translateX(-18px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes fadeOut {
-    from {
-        opacity: 1;
-    }
+  from {
+    opacity: 1;
+  }
 
-    to {
-        opacity: 0;
-    }
+  to {
+    opacity: 0;
+  }
 }
 
 @keyframes slideInLeft {
-    from {
-        opacity: 0;
-        transform: translateX(-24px);
-    }
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
 
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes slideOutLeft {
-    from {
-        opacity: 1;
-        transform: translateX(0);
-    }
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
 
-    to {
-        opacity: 0;
-        transform: translateX(-24px);
-    }
+  to {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+}
+
+:root {
+  --ff-accent: #8b5cf6;
+  --ff-accent-hover: #a78bfa;
+  --ff-accent-soft: rgba(139, 92, 246, 0.12);
+  --ff-accent-border: rgba(139, 92, 246, 0.32);
+  --ff-accent-text: #c4b5fd;
+  --ff-accent-shadow: rgba(139, 92, 246, 0.35);
+
+  --ff-bg: #000000;
+  --ff-bg-soft: #09090b;
+  --ff-surface: #18181b;
+  --ff-surface-2: #101014;
+  --ff-surface-3: #27272a;
+  --ff-header: rgba(0, 0, 0, 0.75);
+  --ff-border: #27272a;
+  --ff-border-strong: #3f3f46;
+  --ff-text: #ffffff;
+  --ff-text-soft: #e4e4e7;
+  --ff-muted: #71717a;
+  --ff-muted-2: #52525b;
+  --ff-overlay: rgba(0, 0, 0, 0.75);
+  --ff-scroll-track: rgba(24, 24, 27, 0.65);
+
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at top left, var(--ff-accent-soft), transparent 32%),
+    var(--ff-bg);
+  color: var(--ff-text);
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
 }
 
 /* Scrollbar global ForgeFlow */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--ff-accent) rgba(24, 24, 27, 0.65);
+  scrollbar-color: var(--ff-accent) var(--ff-scroll-track);
 }
 
 *::-webkit-scrollbar {
@@ -78,7 +99,7 @@
 }
 
 *::-webkit-scrollbar-track {
-  background: rgba(24, 24, 27, 0.65);
+  background: var(--ff-scroll-track);
   border-radius: 999px;
 }
 
@@ -89,35 +110,71 @@
     var(--ff-accent)
   );
   border-radius: 999px;
-  border: 2px solid rgba(24, 24, 27, 0.9);
+  border: 2px solid var(--ff-scroll-track);
 }
 
 *::-webkit-scrollbar-thumb:hover {
   background: var(--ff-accent-hover);
 }
 
-:root {
-  --ff-accent: #8b5cf6;
-  --ff-accent-hover: #a78bfa;
-  --ff-accent-soft: rgba(139, 92, 246, 0.12);
-  --ff-accent-border: rgba(139, 92, 246, 0.32);
-  --ff-accent-text: #c4b5fd;
-  --ff-accent-shadow: rgba(139, 92, 246, 0.35);
+/*
+  Compatibilidade com componentes antigos.
+  Muitas telas ainda usam classes Tailwind fixas como bg-black, bg-zinc-950,
+  text-white e border-zinc-800. Esses overrides fazem o modo claro funcionar
+  sem precisar reescrever todas as páginas de uma vez.
+*/
+:root[data-theme='light'] .bg-black,
+:root[data-theme='light'] .bg-zinc-950,
+:root[data-theme='light'] .bg-\[\#101014\],
+:root[data-theme='light'] .bg-\[\#18181b\] {
+  background-color: var(--ff-surface) !important;
 }
 
-/* Tema roxo deixa o fundo um pouco mais colorido */
-:root[data-theme='purple'] body {
-  background:
-    radial-gradient(circle at top left, var(--ff-accent-soft), transparent 32%),
-    #000;
+:root[data-theme='light'] .bg-zinc-900,
+:root[data-theme='light'] .bg-zinc-800,
+:root[data-theme='light'] .bg-\[\#1f1f23\] {
+  background-color: var(--ff-surface-2) !important;
 }
 
-/* Automático segue o sistema, mas mantém dark como base */
-@media (prefers-color-scheme: dark) {
-  :root[data-theme='auto'] body {
-    background: #000;
-    color: #fff;
-  }
+:root[data-theme='light'] .text-white,
+:root[data-theme='light'] .text-zinc-50,
+:root[data-theme='light'] .text-zinc-100,
+:root[data-theme='light'] .text-zinc-200,
+:root[data-theme='light'] .text-zinc-300 {
+  color: var(--ff-text) !important;
+}
+
+:root[data-theme='light'] .text-zinc-400,
+:root[data-theme='light'] .text-zinc-500,
+:root[data-theme='light'] .text-zinc-600 {
+  color: var(--ff-muted) !important;
+}
+
+:root[data-theme='light'] .border-zinc-950,
+:root[data-theme='light'] .border-zinc-900,
+:root[data-theme='light'] .border-zinc-800,
+:root[data-theme='light'] .border-zinc-700 {
+  border-color: var(--ff-border) !important;
+}
+
+:root[data-theme='light'] .hover\:bg-zinc-900:hover,
+:root[data-theme='light'] .hover\:bg-zinc-800:hover,
+:root[data-theme='light'] .hover\:bg-zinc-700:hover,
+:root[data-theme='light'] .hover\:bg-\[\#1f1f23\]:hover {
+  background-color: var(--ff-surface-2) !important;
+}
+
+:root[data-theme='light'] input,
+:root[data-theme='light'] textarea,
+:root[data-theme='light'] select {
+  background-color: var(--ff-surface) !important;
+  border-color: var(--ff-border) !important;
+  color: var(--ff-text) !important;
+}
+
+:root[data-theme='light'] input::placeholder,
+:root[data-theme='light'] textarea::placeholder {
+  color: var(--ff-muted-2) !important;
 }
 
 /* Modo compacto apenas no celular */

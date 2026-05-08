@@ -9,6 +9,7 @@ import {
   applyAppSettingsToDocument,
   getUserAppSettings,
   saveUserAppSettings,
+  watchSystemThemeChanges,
 } from '../../utils/settingsUtils'
 
 import Sidebar from './Sidebar'
@@ -47,10 +48,13 @@ function AppLayout() {
       applyAppSettingsToDocument(event.detail)
     }
 
+    const stopWatchingSystemTheme = watchSystemThemeChanges()
+
     window.addEventListener('forgeflow:settings-changed', handleSettingsChanged)
 
     return () => {
       window.removeEventListener('forgeflow:settings-changed', handleSettingsChanged)
+      stopWatchingSystemTheme()
     }
   }, [user])
 
@@ -81,19 +85,19 @@ function AppLayout() {
   }, [isSidebarOpen])
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_left,var(--ff-accent-shadow),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(124,58,237,0.08),transparent_32%)]" />
+    <div className="min-h-screen bg-[var(--ff-bg)] text-[var(--ff-text)] transition-colors duration-300">
+      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_left,var(--ff-accent-shadow),transparent_34%),radial-gradient(circle_at_bottom_right,var(--ff-accent-soft),transparent_32%)] opacity-80" />
 
       <header
         id="app-header"
-        className="sticky top-0 z-40 border-b border-zinc-900/90 bg-black/75 backdrop-blur-xl"
+        className="sticky top-0 z-40 border-b border-[var(--ff-border)] bg-[var(--ff-header)] backdrop-blur-xl transition-colors duration-300"
       >
         <div className="flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={openSidebar}
-              className="group flex h-11 w-11 items-center justify-center rounded-2xl border border-zinc-800 bg-[#18181b] text-zinc-300 transition hover:border-[var(--ff-accent-border)] hover:bg-zinc-900 hover:text-white"
+              className="group flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface)] text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)]"
             >
               <Menu
                 size={22}
@@ -106,7 +110,7 @@ function AppLayout() {
                 Forge<span className="text-[var(--ff-accent)]">Flow</span>
               </h1>
 
-              <p className="hidden text-xs text-zinc-500 sm:block">
+              <p className="hidden text-xs text-[var(--ff-muted)] sm:block">
                 Workout Tracker
               </p>
             </div>
@@ -125,8 +129,8 @@ function AppLayout() {
             onClick={closeSidebar}
             className={
               isSidebarClosing
-                ? 'absolute inset-0 animate-[fadeOut_0.22s_ease-in] bg-black/75 backdrop-blur-sm'
-                : 'absolute inset-0 animate-[fadeIn_0.2s_ease-out] bg-black/75 backdrop-blur-sm'
+                ? 'absolute inset-0 animate-[fadeOut_0.22s_ease-in] bg-[var(--ff-overlay)] backdrop-blur-sm'
+                : 'absolute inset-0 animate-[fadeIn_0.2s_ease-out] bg-[var(--ff-overlay)] backdrop-blur-sm'
             }
           />
 

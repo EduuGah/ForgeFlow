@@ -6,10 +6,13 @@ import {
   FileJson,
   FileSpreadsheet,
   FileText,
+  Moon,
   Palette,
   RotateCcw,
   SlidersHorizontal,
+  Sun,
   X,
+  Monitor,
 } from 'lucide-react'
 
 import PageHeader from '../components/ui/PageHeader'
@@ -26,6 +29,7 @@ import { apiDownload, apiFetch } from '../services/api'
 
 import {
   accentColors,
+  applyAppSettingsToDocument,
   defaultSettings,
   getUserAppSettings,
   saveUserAppSettings,
@@ -34,17 +38,17 @@ import {
 function SectionTitle({ icon: Icon, title, description }) {
   return (
     <div className="flex items-start gap-3">
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)] shadow-[0_0_22px_var(--ff-accent-shadow)]/20">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)] shadow-[0_0_22px_var(--ff-accent-shadow)]/20">
         <Icon size={23} />
       </div>
 
       <div>
-        <h2 className="text-xl font-black tracking-tight text-zinc-50">
+        <h2 className="text-xl font-black tracking-tight text-[var(--ff-text)]">
           {title}
         </h2>
 
         {description && (
-          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-zinc-500">
+          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[var(--ff-muted)]">
             {description}
           </p>
         )}
@@ -65,10 +69,10 @@ function ToggleSwitch({ active, onChange, label }) {
       onClick={() => onChange(!isActive)}
       className={[
         'group inline-flex min-w-[112px] items-center justify-between gap-2 rounded-full border p-1.5 transition-all duration-200',
-        'focus:outline-none focus:ring-2 focus:ring-[var(--ff-accent)]/50 focus:ring-offset-2 focus:ring-offset-zinc-950',
+        'focus:outline-none focus:ring-2 focus:ring-[var(--ff-accent)]/50 focus:ring-offset-2 focus:ring-offset-[var(--ff-bg)]',
         isActive
           ? 'border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)] shadow-[0_0_20px_var(--ff-accent-shadow)]/25'
-          : 'border-zinc-800 bg-zinc-900 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300',
+          : 'border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-muted)] hover:border-[var(--ff-border-strong)] hover:text-[var(--ff-text)]',
       ].join(' ')}
     >
       <span
@@ -76,7 +80,7 @@ function ToggleSwitch({ active, onChange, label }) {
           'flex h-7 w-7 items-center justify-center rounded-full transition-all duration-200',
           isActive
             ? 'translate-x-[72px] bg-[var(--ff-accent)] text-white'
-            : 'translate-x-0 bg-zinc-700 text-zinc-300',
+            : 'translate-x-0 bg-[var(--ff-surface-3)] text-[var(--ff-muted)]',
         ].join(' ')}
       >
         {isActive ? <Check size={15} /> : <X size={15} />}
@@ -105,8 +109,8 @@ function SettingToggleCard({ title, description, active, onChange }) {
         'group flex min-h-[132px] w-full flex-col justify-between rounded-3xl border p-5 text-left transition-all duration-200',
         'hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[var(--ff-accent)]/40',
         isActive
-          ? 'border-[var(--ff-accent-border)]/60 bg-[var(--ff-accent-soft)]/20 shadow-[0_0_26px_var(--ff-accent-shadow)]/15'
-          : 'border-zinc-800 bg-zinc-950 hover:border-zinc-700 hover:bg-zinc-900/70',
+          ? 'border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] shadow-[0_0_26px_var(--ff-accent-shadow)]/15'
+          : 'border-[var(--ff-border)] bg-[var(--ff-surface-2)] hover:border-[var(--ff-border-strong)]',
       ].join(' ')}
     >
       <div className="flex items-start justify-between gap-4">
@@ -115,17 +119,17 @@ function SettingToggleCard({ title, description, active, onChange }) {
             <span
               className={[
                 'h-2.5 w-2.5 rounded-full transition',
-                isActive ? 'bg-[var(--ff-accent)]' : 'bg-zinc-700',
+                isActive ? 'bg-[var(--ff-accent)]' : 'bg-[var(--ff-muted-2)]',
               ].join(' ')}
             />
 
-            <p className="font-bold text-zinc-100">
+            <p className="font-bold text-[var(--ff-text)]">
               {title}
             </p>
           </div>
 
           {description && (
-            <p className="mt-2 text-sm leading-relaxed text-zinc-500">
+            <p className="mt-2 text-sm leading-relaxed text-[var(--ff-muted)]">
               {description}
             </p>
           )}
@@ -137,6 +141,78 @@ function SettingToggleCard({ title, description, active, onChange }) {
           onChange={onChange}
         />
       </div>
+    </button>
+  )
+}
+
+function ThemeOption({ icon: Icon, title, description, active, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        'rounded-3xl border p-5 text-left transition hover:-translate-y-0.5',
+        active
+          ? 'border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] shadow-[0_0_26px_var(--ff-accent-shadow)]/20'
+          : 'border-[var(--ff-border)] bg-[var(--ff-surface-2)] hover:border-[var(--ff-border-strong)]',
+      ].join(' ')}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--ff-surface)] text-[var(--ff-accent-text)]">
+          <Icon size={22} />
+        </div>
+
+        {active && (
+          <span className="rounded-full bg-[var(--ff-accent)] px-2 py-1 text-xs font-black text-white">
+            Atual
+          </span>
+        )}
+      </div>
+
+      <p className="mt-4 font-black text-[var(--ff-text)]">
+        {title}
+      </p>
+
+      <p className="mt-1 text-sm leading-relaxed text-[var(--ff-muted)]">
+        {description}
+      </p>
+    </button>
+  )
+}
+
+function ColorOption({ colorKey, color, active, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        'group flex items-center gap-3 rounded-2xl border p-3 text-left transition hover:-translate-y-0.5',
+        active
+          ? 'border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)]'
+          : 'border-[var(--ff-border)] bg-[var(--ff-surface-2)] hover:border-[var(--ff-border-strong)]',
+      ].join(' ')}
+    >
+      <span
+        className="h-8 w-8 shrink-0 rounded-full shadow-lg ring-2 ring-white/10"
+        style={{
+          background: `linear-gradient(135deg, ${color.primary}, ${color.primaryHover})`,
+          boxShadow: `0 0 18px ${color.shadow}`,
+        }}
+      />
+
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-bold text-[var(--ff-text)]">
+          {color.name}
+        </span>
+
+        <span className="block truncate text-xs text-[var(--ff-muted)]">
+          {colorKey}
+        </span>
+      </span>
+
+      {active && (
+        <Check size={18} className="text-[var(--ff-accent-text)]" />
+      )}
     </button>
   )
 }
@@ -161,6 +237,7 @@ function Settings() {
 
     const cachedSettings = getUserAppSettings(user)
     setSettings(cachedSettings)
+    applyAppSettingsToDocument(cachedSettings)
 
     async function loadSettings() {
       try {
@@ -172,8 +249,10 @@ function Settings() {
         })
 
         setSettings(mergedSettings)
+        applyAppSettingsToDocument(mergedSettings)
       } catch {
         setSettings(cachedSettings)
+        applyAppSettingsToDocument(cachedSettings)
       }
     }
 
@@ -244,6 +323,7 @@ function Settings() {
 
     setSettings(updatedSettings)
     saveUserAppSettings(user, updatedSettings)
+    applyAppSettingsToDocument(updatedSettings)
 
     try {
       await apiFetch('/settings', {
@@ -271,6 +351,7 @@ function Settings() {
       onConfirm: async () => {
         setSettings(defaultSettings)
         saveUserAppSettings(user, defaultSettings)
+        applyAppSettingsToDocument(defaultSettings)
         setConfirmModal(null)
 
         try {
@@ -294,7 +375,6 @@ function Settings() {
       },
     })
   }
-
 
   async function handleExportJson() {
     try {
@@ -418,7 +498,7 @@ function Settings() {
     <>
       <PageHeader
         title="Configurações"
-        description="Controle aparência e preferências de treino do ForgeFlow."
+        description="Ajuste visual, preferências úteis, backup e segurança da sua conta."
         action={
           <Badge variant="purple">
             Conta sincronizada
@@ -449,161 +529,102 @@ function Settings() {
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-6">
-
-          <Card>
-            <SectionTitle
-              icon={SlidersHorizontal}
-              title={user?.hasPassword ? 'Alterar senha' : 'Criar senha de acesso'}
-              description={
-                user?.hasPassword
-                  ? 'Atualize sua senha usada no login tradicional.'
-                  : 'Sua conta foi criada com Google. Crie uma senha para também entrar usando e-mail e senha.'
-              }
-            />
-
-            <form onSubmit={handleSetPassword} className="mt-6 space-y-4">
-              {user?.hasPassword && (
-                <Input
-                  label="Senha atual"
-                  type="password"
-                  value={passwordForm.currentPassword}
-                  onChange={(event) =>
-                    setPasswordForm((prev) => ({
-                      ...prev,
-                      currentPassword: event.target.value,
-                    }))
-                  }
-                  placeholder="Digite sua senha atual"
-                />
-              )}
-
-              <Input
-                label="Nova senha"
-                type="password"
-                value={passwordForm.password}
-                onChange={(event) =>
-                  setPasswordForm((prev) => ({
-                    ...prev,
-                    password: event.target.value,
-                  }))
-                }
-                placeholder="Mínimo 6 caracteres"
-              />
-
-              <Input
-                label="Confirmar nova senha"
-                type="password"
-                value={passwordForm.confirmPassword}
-                onChange={(event) =>
-                  setPasswordForm((prev) => ({
-                    ...prev,
-                    confirmPassword: event.target.value,
-                  }))
-                }
-                placeholder="Repita a nova senha"
-              />
-
-              <Button type="submit" disabled={savingPassword}>
-                {savingPassword
-                  ? 'Salvando...'
-                  : user?.hasPassword
-                    ? 'Alterar senha'
-                    : 'Criar senha'}
-              </Button>
-            </form>
-          </Card>
-
-
-          <Card>
-            <SectionTitle
-              icon={FileJson}
-              title="Backup e exportação"
-              description="Exporte seus dados do ForgeFlow, importe um backup JSON e baixe seu histórico em formatos úteis."
-            />
-
-            <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2">
-              <Button type="button" onClick={handleExportJson}>
-                <Download size={17} />
-                Exportar backup JSON
-              </Button>
-
-              <Button type="button" variant="secondary" onClick={handleExportCsv}>
-                <FileSpreadsheet size={17} />
-                Exportar histórico CSV/Excel
-              </Button>
-
-              <Button type="button" variant="secondary" onClick={handleExportPdf}>
-                <FileText size={17} />
-                Exportar relatório PDF
-              </Button>
-
-              <label className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-950 px-5 text-sm font-bold text-zinc-200 transition hover:border-[var(--ff-accent-border)] hover:text-white">
-                <FileJson size={17} />
-                Importar backup JSON
-                <input
-                  type="file"
-                  accept="application/json,.json"
-                  onChange={handleImportJson}
-                  className="hidden"
-                />
-              </label>
-            </div>
-
-            <div className="mt-5 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4">
-              <p className="text-sm font-bold text-yellow-300">
-                Importação em modo adicionar
-              </p>
-
-              <p className="mt-1 text-xs leading-relaxed text-yellow-100/75">
-                Por segurança, o backup importado adiciona dados à sua conta sem apagar os dados atuais.
-              </p>
-            </div>
-          </Card>
-
           <Card>
             <SectionTitle
               icon={Palette}
               title="Aparência"
-              description="Ajuste o visual do ForgeFlow para deixar o app mais confortável no dia a dia."
+              description="Escolha o tema e personalize a cor principal do ForgeFlow."
             />
 
-            <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-              <Select
-                label="Tema"
-                value={settings.themeMode}
-                onChange={(event) =>
-                  handleUpdateSetting('themeMode', event.target.value)
-                }
-              >
-                <option value="dark">Escuro</option>
-                <option value="purple">Roxo</option>
-                <option value="auto">Automático</option>
-              </Select>
+            <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
+              <ThemeOption
+                icon={Moon}
+                title="Escuro"
+                description="Visual padrão, com fundo preto e contraste alto."
+                active={settings.themeMode === 'dark'}
+                onClick={() => handleUpdateSetting('themeMode', 'dark')}
+              />
 
-              <Select
-                label="Cor principal do app"
-                value={settings.accentColor}
-                onChange={(event) =>
-                  handleUpdateSetting('accentColor', event.target.value)
-                }
-              >
-                {Object.entries(accentColors).map(([key, color]) => (
-                  <option key={key} value={key}>
-                    {color.name}
-                  </option>
-                ))}
-              </Select>
+              <ThemeOption
+                icon={Sun}
+                title="Claro"
+                description="Fundo claro para usar melhor durante o dia."
+                active={settings.themeMode === 'light'}
+                onClick={() => handleUpdateSetting('themeMode', 'light')}
+              />
 
-              <div className="md:col-span-2">
-                <SettingToggleCard
-                  title="Modo compacto no celular"
-                  description="Reduz espaçamentos e deixa os cards mais compactos em telas pequenas."
-                  active={settings.compactMobile}
-                  onChange={(value) =>
-                    handleUpdateSetting('compactMobile', value)
-                  }
-                />
+              <ThemeOption
+                icon={Monitor}
+                title="Sistema"
+                description="Segue automaticamente o tema do seu dispositivo."
+                active={settings.themeMode === 'system'}
+                onClick={() => handleUpdateSetting('themeMode', 'system')}
+              />
+            </div>
+
+            <div className="mt-8">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h3 className="text-base font-black text-[var(--ff-text)]">
+                    Cor principal
+                  </h3>
+
+                  <p className="mt-1 text-sm text-[var(--ff-muted)]">
+                    Todas as cores continuam disponíveis, agora em uma grade visual.
+                  </p>
+                </div>
+
+                <Badge>
+                  {accentColors[settings.accentColor]?.name || 'Roxo'}
+                </Badge>
               </div>
+
+              <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {Object.entries(accentColors).map(([key, color]) => (
+                  <ColorOption
+                    key={key}
+                    colorKey={key}
+                    color={color}
+                    active={settings.accentColor === key}
+                    onClick={() => handleUpdateSetting('accentColor', key)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-6 rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-5">
+              <p className="text-sm font-black text-[var(--ff-text)]">
+                Prévia
+              </p>
+
+              <p className="mt-1 text-sm text-[var(--ff-muted)]">
+                Este card usa as mesmas variáveis globais aplicadas no app.
+              </p>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                <span className="rounded-full bg-[var(--ff-accent)] px-3 py-1 text-xs font-black text-white">
+                  Botão principal
+                </span>
+
+                <span className="rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-3 py-1 text-xs font-black text-[var(--ff-accent-text)]">
+                  Destaque
+                </span>
+
+                <span className="rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface)] px-3 py-1 text-xs font-black text-[var(--ff-muted)]">
+                  Superfície
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-5">
+              <SettingToggleCard
+                title="Modo compacto no celular"
+                description="Reduz espaçamentos e deixa os cards mais compactos em telas pequenas."
+                active={settings.compactMobile}
+                onChange={(value) =>
+                  handleUpdateSetting('compactMobile', value)
+                }
+              />
             </div>
           </Card>
 
@@ -611,7 +632,7 @@ function Settings() {
             <SectionTitle
               icon={SlidersHorizontal}
               title="Preferências de treino"
-              description="Defina como os treinos, séries, comparações e confirmações devem se comportar."
+              description="Somente opções que já têm efeito real nas telas do ForgeFlow."
             />
 
             <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -688,42 +709,6 @@ function Settings() {
               />
 
               <SettingToggleCard
-                title="Abrir calendário automaticamente"
-                description="Campos de data abrem o calendário ao clicar."
-                active={settings.autoOpenCalendar}
-                onChange={(value) =>
-                  handleUpdateSetting('autoOpenCalendar', value)
-                }
-              />
-
-              <SettingToggleCard
-                title="Iniciar descanso automaticamente"
-                description="Quando uma série for concluída, o timer de descanso inicia sozinho."
-                active={settings.autoStartRestTimer}
-                onChange={(value) =>
-                  handleUpdateSetting('autoStartRestTimer', value)
-                }
-              />
-
-              <SettingToggleCard
-                title="Mostrar PRs durante o treino"
-                description="Exibe tags de PR de peso e volume enquanto o treino está ativo."
-                active={settings.showPRDuringWorkout}
-                onChange={(value) =>
-                  handleUpdateSetting('showPRDuringWorkout', value)
-                }
-              />
-
-              <SettingToggleCard
-                title="Comparar com último treino"
-                description="Mostra diferenças de peso, reps e volume em relação ao último treino."
-                active={settings.showLastWorkoutComparison}
-                onChange={(value) =>
-                  handleUpdateSetting('showLastWorkoutComparison', value)
-                }
-              />
-
-              <SettingToggleCard
                 title="Confirmar antes de finalizar"
                 description="Abre uma confirmação antes de salvar o treino no histórico."
                 active={settings.confirmBeforeFinishWorkout}
@@ -741,6 +726,116 @@ function Settings() {
                 }
               />
             </div>
+          </Card>
+
+          <Card>
+            <SectionTitle
+              icon={FileJson}
+              title="Backup e exportação"
+              description="Exporte seus dados do ForgeFlow, importe um backup JSON e baixe seu histórico em formatos úteis."
+            />
+
+            <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2">
+              <Button type="button" onClick={handleExportJson}>
+                <Download size={17} />
+                Exportar backup JSON
+              </Button>
+
+              <Button type="button" variant="secondary" onClick={handleExportCsv}>
+                <FileSpreadsheet size={17} />
+                Exportar histórico CSV/Excel
+              </Button>
+
+              <Button type="button" variant="secondary" onClick={handleExportPdf}>
+                <FileText size={17} />
+                Exportar relatório PDF
+              </Button>
+
+              <label className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-5 text-sm font-bold text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)]">
+                <FileJson size={17} />
+                Importar backup JSON
+                <input
+                  type="file"
+                  accept="application/json,.json"
+                  onChange={handleImportJson}
+                  className="hidden"
+                />
+              </label>
+            </div>
+
+            <div className="mt-5 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4">
+              <p className="text-sm font-bold text-yellow-300">
+                Importação em modo adicionar
+              </p>
+
+              <p className="mt-1 text-xs leading-relaxed text-yellow-100/75">
+                Por segurança, o backup importado adiciona dados à sua conta sem apagar os dados atuais.
+                Depois podemos criar uma opção separada para substituir tudo.
+              </p>
+            </div>
+          </Card>
+
+          <Card>
+            <SectionTitle
+              icon={SlidersHorizontal}
+              title={user?.hasPassword ? 'Alterar senha' : 'Criar senha de acesso'}
+              description={
+                user?.hasPassword
+                  ? 'Atualize sua senha usada no login tradicional.'
+                  : 'Sua conta foi criada com Google. Crie uma senha para também entrar usando e-mail e senha.'
+              }
+            />
+
+            <form onSubmit={handleSetPassword} className="mt-6 space-y-4">
+              {user?.hasPassword && (
+                <Input
+                  label="Senha atual"
+                  type="password"
+                  value={passwordForm.currentPassword}
+                  onChange={(event) =>
+                    setPasswordForm((prev) => ({
+                      ...prev,
+                      currentPassword: event.target.value,
+                    }))
+                  }
+                  placeholder="Digite sua senha atual"
+                />
+              )}
+
+              <Input
+                label="Nova senha"
+                type="password"
+                value={passwordForm.password}
+                onChange={(event) =>
+                  setPasswordForm((prev) => ({
+                    ...prev,
+                    password: event.target.value,
+                  }))
+                }
+                placeholder="Mínimo 6 caracteres"
+              />
+
+              <Input
+                label="Confirmar nova senha"
+                type="password"
+                value={passwordForm.confirmPassword}
+                onChange={(event) =>
+                  setPasswordForm((prev) => ({
+                    ...prev,
+                    confirmPassword: event.target.value,
+                  }))
+                }
+                placeholder="Repita a nova senha"
+              />
+
+              <Button type="submit" disabled={savingPassword}>
+                {savingPassword
+                  ? 'Salvando...'
+                  : user?.hasPassword
+                    ? 'Alterar senha'
+                    : 'Criar senha'}
+              </Button>
+            </form>
           </Card>
         </div>
 
