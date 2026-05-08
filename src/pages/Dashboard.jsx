@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import {
   Activity,
   BarChart3,
+  Bell,
   CalendarDays,
   ChevronRight,
   Dumbbell,
@@ -330,6 +331,8 @@ function Dashboard() {
   const [chartAccentColor, setChartAccentColor] = useState('#8b5cf6')
   const [muscleRecovery, setMuscleRecovery] = useState([])
   const [goals, setGoals] = useState([])
+  const [notifications, setNotifications] = useState([])
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0)
   const [consistencyStats, setConsistencyStats] = useState({
     currentStreak: 0,
     bestStreak: 0,
@@ -353,6 +356,7 @@ function Dashboard() {
       const cachedHistory = getUserStorageData(user, 'history', [])
       const cachedBodyWeight = getUserStorageData(user, 'bodyweight', [])
       const cachedGoals = getUserStorageData(user, 'goals', [])
+      const cachedNotifications = getUserStorageData(user, 'notifications', [])
 
       const userProfile = user?.profile || {}
 
@@ -379,6 +383,7 @@ function Dashboard() {
           consistencyResult,
           muscleRecoveryResult,
           goalsResult,
+          notificationsResult,
         ] = await Promise.allSettled([
           apiFetch('/workouts'),
           apiFetch('/workout-history'),
@@ -387,6 +392,7 @@ function Dashboard() {
           apiFetch('/stats/consistency'),
           apiFetch('/stats/muscle-recovery'),
           apiFetch('/goals'),
+          apiFetch('/notifications?limit=5'),
         ])
 
         const normalizedWorkouts =
@@ -447,6 +453,18 @@ function Dashboard() {
               }))
             : cachedGoals
 
+        const notificationsFromApi =
+          notificationsResult.status === 'fulfilled'
+            ? notificationsResult.value
+            : null
+
+        const normalizedNotifications = Array.isArray(notificationsFromApi?.notifications)
+          ? notificationsFromApi.notifications.map((item) => ({
+              ...item,
+              id: item._id || item.id,
+            }))
+          : cachedNotifications
+
         setWorkouts(normalizedWorkouts)
         setHistory(normalizedHistory)
         setExercises(userExercises)
@@ -454,12 +472,21 @@ function Dashboard() {
         setConsistencyStats(normalizedConsistency)
         setMuscleRecovery(normalizedMuscleRecovery)
         setGoals(normalizedGoals)
+        setNotifications(normalizedNotifications)
+        setUnreadNotificationsCount(Number(notificationsFromApi?.unreadCount) || 0)
+
+        apiFetch('/notifications/generate', {
+          method: 'POST',
+        }).catch((error) => {
+          console.error(error)
+        })
 
         saveUserStorageData(user, 'workouts', normalizedWorkouts)
         saveUserStorageData(user, 'history', normalizedHistory)
         saveUserStorageData(user, 'exercises', userExercises)
         saveUserStorageData(user, 'bodyweight', normalizedBodyWeight)
         saveUserStorageData(user, 'goals', normalizedGoals)
+        saveUserStorageData(user, 'notifications', normalizedNotifications)
 
         const hasAnyApiSuccess = [
           workoutsResult,
@@ -469,6 +496,7 @@ function Dashboard() {
           consistencyResult,
           muscleRecoveryResult,
           goalsResult,
+          notificationsResult,
         ].some((result) => result.status === 'fulfilled')
 
         setDashboardSource(hasAnyApiSuccess ? 'database' : 'local')
@@ -491,6 +519,8 @@ function Dashboard() {
 
         setMuscleRecovery([])
         setGoals(cachedGoals)
+        setNotifications(cachedNotifications)
+        setUnreadNotificationsCount(cachedNotifications.filter((item) => item.status === 'unread').length)
         setDashboardSource('local')
       } finally {
         setLoadingDashboard(false)
@@ -816,6 +846,12 @@ function Dashboard() {
       .slice(0, 3)
   }, [goals])
 
+  const dashboardNotifications = useMemo(() => {
+    return notifications
+      .filter((notification) => notification.status !== 'archived')
+      .slice(0, 3)
+  }, [notifications])
+
   async function handleStartWorkout(workout) {
     try {
       if (workout?.id) {
@@ -942,6 +978,69 @@ function Dashboard() {
             <p className="text-sm font-bold">metas ativas</p>
           </div>
         </Link>
+      </section>
+
+
+      <section className="mb-6">
+        <Card className="p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-3 py-1 text-xs font-black text-[var(--ff-accent-text)]">
+                <Bell size={14} />
+                {unreadNotificationsCount > 0
+                  ? `${unreadNotificationsCount} não lida(s)`
+                  : 'Tudo em dia'}
+              </div>
+
+              <h2 className="mt-3 text-xl font-black text-[var(--ff-text)]">
+                Notificações inteligentes
+              </h2>
+
+              <p className="mt-1 text-sm text-[var(--ff-muted)]">
+                Alertas sobre metas, treino, peso corporal e fotos de evolução.
+              </p>
+            </div>
+
+            <Link to="/notifications">
+              <Button variant="secondary">
+                Ver notificações
+                <ChevronRight size={16} />
+              </Button>
+            </Link>
+          </div>
+
+          <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3">
+            {dashboardNotifications.length === 0 ? (
+              <div className="md:col-span-3 rounded-2xl border border-dashed border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4 text-sm text-[var(--ff-muted)]">
+                Nenhuma notificação por enquanto. O ForgeFlow vai avisar quando encontrar algo importante.
+              </div>
+            ) : (
+              dashboardNotifications.map((notification) => (
+                <Link
+                  key={notification.id || notification._id}
+                  to={notification.actionUrl || '/notifications'}
+                  className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4 transition hover:-translate-y-0.5 hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-card-hover)]"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="line-clamp-1 font-black text-[var(--ff-text)]">
+                        {notification.title}
+                      </p>
+
+                      <p className="mt-1 line-clamp-2 text-xs text-[var(--ff-muted)]">
+                        {notification.message || 'Sem detalhes.'}
+                      </p>
+                    </div>
+
+                    {notification.status === 'unread' && (
+                      <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-[var(--ff-accent)] shadow-[0_0_14px_var(--ff-accent-shadow)]" />
+                    )}
+                  </div>
+                </Link>
+              ))
+            )}
+          </div>
+        </Card>
       </section>
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(320px,0.8fr)]">

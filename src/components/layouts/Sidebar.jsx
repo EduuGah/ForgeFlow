@@ -14,6 +14,7 @@ import {
   Camera,
   LineChart,
   Flag,
+  Bell,
 } from 'lucide-react'
 import { Link, NavLink } from 'react-router-dom'
 
@@ -45,6 +46,7 @@ function Sidebar({ onClose }) {
     { name: 'Por exercício', path: '/exercise-progress', icon: LineChart },
     { name: 'Fotos', path: '/progress-photos', icon: Camera },
     { name: 'Metas', path: '/goals', icon: Flag },
+    { name: 'Notificações', path: '/notifications', icon: Bell },
     { name: 'Perfil', path: '/profile', icon: UserRound },
     { name: 'Definições', path: '/settings', icon: Settings },
   ]

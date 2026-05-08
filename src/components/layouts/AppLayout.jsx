@@ -14,6 +14,7 @@ import {
 
 import Sidebar from './Sidebar'
 import ActiveWorkoutMini from '../workout/ActiveWorkoutMini'
+import NotificationBell from '../notifications/NotificationBell'
 
 function AppLayout() {
   const { user } = useAuth()
@@ -116,8 +117,12 @@ function AppLayout() {
             </div>
           </div>
 
-          <div className="hidden rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-3 py-1 text-xs font-bold text-[var(--ff-accent-text)] sm:block">
-            Beta
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+
+            <div className="hidden rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-3 py-1 text-xs font-bold text-[var(--ff-accent-text)] sm:block">
+              Beta
+            </div>
           </div>
         </div>
       </header>
