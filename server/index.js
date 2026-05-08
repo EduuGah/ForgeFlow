@@ -1620,6 +1620,163 @@ app.delete('/body-weight/:id', authMiddleware, async (req, res) => {
     }
 })
 
+function getMuscleRecoveryStatus(lastTrainedAt) {
+    if (!lastTrainedAt) {
+        return {
+            status: 'Sem dados',
+            level: 'unknown',
+            recoveryPercent: 100,
+            message: 'Ainda não há histórico suficiente.',
+        }
+    }
+
+    const now = new Date()
+    const lastDate = new Date(lastTrainedAt)
+
+    const diffHours = Math.floor((now - lastDate) / 1000 / 60 / 60)
+
+    if (diffHours < 24) {
+        return {
+            status: 'Recuperando',
+            level: 'low',
+            recoveryPercent: 35,
+            message: 'Treinado há menos de 24h.',
+        }
+    }
+
+    if (diffHours < 48) {
+        return {
+            status: 'Parcial',
+            level: 'medium',
+            recoveryPercent: 65,
+            message: 'Ainda pode estar em recuperação.',
+        }
+    }
+
+    if (diffHours < 72) {
+        return {
+            status: 'Quase pronto',
+            level: 'good',
+            recoveryPercent: 85,
+            message: 'Provavelmente já está quase recuperado.',
+        }
+    }
+
+    return {
+        status: 'Recuperado',
+        level: 'ready',
+        recoveryPercent: 100,
+        message: 'Boa janela para treinar novamente.',
+    }
+}
+
+function getExerciseMuscleGroupsFromHistoryExercise(item) {
+    const exercise = item.exercise || {}
+
+    const groups = [
+        exercise.muscleGroup,
+        exercise.normalizedGroup,
+        exercise.targetMuscle,
+    ]
+
+    return [...new Set(groups.filter(Boolean))]
+}
+
+app.get('/stats/muscle-recovery', authMiddleware, async (req, res) => {
+    try {
+        const history = await WorkoutHistory.find({
+            userId: req.user.userId,
+        }).sort({
+            finishedAt: -1,
+            createdAt: -1,
+        }).limit(80)
+
+        const muscleMap = new Map()
+
+        history.forEach((session) => {
+            const trainedAt = session.finishedAt || session.createdAt
+
+            if (!trainedAt) return
+
+            const sessionDate = new Date(trainedAt)
+
+            if (Number.isNaN(sessionDate.getTime())) return
+
+            session.exercises?.forEach((item) => {
+                const groups = getExerciseMuscleGroupsFromHistoryExercise(item)
+
+                groups.forEach((group) => {
+                    const current = muscleMap.get(group)
+
+                    const completedSets = Array.isArray(item.sets)
+                        ? item.sets.filter((set) => {
+                            return (
+                                set.type !== 'warmup' &&
+                                set.completed &&
+                                Number(set.weight || 0) > 0 &&
+                                Number(set.reps || 0) > 0
+                            )
+                        })
+                        : []
+
+                    const volume = completedSets.reduce((total, set) => {
+                        return total + Number(set.weight || 0) * Number(set.reps || 0)
+                    }, 0)
+
+                    if (!current) {
+                        muscleMap.set(group, {
+                            muscleGroup: group,
+                            lastTrainedAt: trainedAt,
+                            totalSessions: 1,
+                            totalSets: completedSets.length,
+                            totalVolume: volume,
+                        })
+
+                        return
+                    }
+
+                    const currentDate = new Date(current.lastTrainedAt)
+
+                    muscleMap.set(group, {
+                        ...current,
+                        lastTrainedAt:
+                            sessionDate > currentDate
+                                ? trainedAt
+                                : current.lastTrainedAt,
+                        totalSessions: current.totalSessions + 1,
+                        totalSets: current.totalSets + completedSets.length,
+                        totalVolume: current.totalVolume + volume,
+                    })
+                })
+            })
+        })
+
+        const recovery = Array.from(muscleMap.values())
+            .map((item) => {
+                const recoveryStatus = getMuscleRecoveryStatus(item.lastTrainedAt)
+
+                return {
+                    ...item,
+                    ...recoveryStatus,
+                }
+            })
+            .sort((a, b) => {
+                return a.recoveryPercent - b.recoveryPercent
+            })
+
+        res.json({
+            recovery,
+            generatedAt: new Date(),
+        })
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao calcular recuperação muscular.',
+        })
+    }
+})
+
 app.get('/stats/consistency', authMiddleware, async (req, res) => {
     try {
         const history = await WorkoutHistory.find({

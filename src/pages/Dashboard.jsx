@@ -264,6 +264,57 @@ function normalizeExerciseFromApi(exercise) {
   }
 }
 
+function getRecoveryStyle(level) {
+  const styles = {
+    low: {
+      label: 'Recuperando',
+      text: 'text-red-300',
+      border: 'border-red-500/20',
+      bg: 'bg-red-500/10',
+      bar: 'bg-red-400',
+    },
+    medium: {
+      label: 'Parcial',
+      text: 'text-yellow-300',
+      border: 'border-yellow-500/20',
+      bg: 'bg-yellow-500/10',
+      bar: 'bg-yellow-400',
+    },
+    good: {
+      label: 'Quase pronto',
+      text: 'text-blue-300',
+      border: 'border-blue-500/20',
+      bg: 'bg-blue-500/10',
+      bar: 'bg-blue-400',
+    },
+    ready: {
+      label: 'Recuperado',
+      text: 'text-emerald-300',
+      border: 'border-emerald-500/20',
+      bg: 'bg-emerald-500/10',
+      bar: 'bg-emerald-400',
+    },
+    unknown: {
+      label: 'Sem dados',
+      text: 'text-zinc-400',
+      border: 'border-zinc-800',
+      bg: 'bg-zinc-950',
+      bar: 'bg-zinc-500',
+    },
+  }
+
+  return styles[level] || styles.unknown
+}
+
+function formatRecoveryDate(dateString) {
+  if (!dateString) return 'Sem registro'
+
+  return new Date(dateString).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+  })
+}
+
 function Dashboard() {
   const { user } = useAuth()
 
@@ -276,6 +327,7 @@ function Dashboard() {
   const [loadingDashboard, setLoadingDashboard] = useState(true)
   const [dashboardSource, setDashboardSource] = useState('local')
   const [chartAccentColor, setChartAccentColor] = useState('#8b5cf6')
+  const [muscleRecovery, setMuscleRecovery] = useState([])
   const [consistencyStats, setConsistencyStats] = useState({
     currentStreak: 0,
     bestStreak: 0,
@@ -322,12 +374,14 @@ function Dashboard() {
           exercisesResult,
           bodyWeightResult,
           consistencyResult,
+          muscleRecoveryFromApi,
         ] = await Promise.allSettled([
           apiFetch('/workouts'),
           apiFetch('/workout-history'),
           apiFetch('/exercises'),
           apiFetch('/body-weight'),
           apiFetch('/stats/consistency'),
+          apiFetch('/stats/muscle-recovery'),
         ])
 
         if (workoutsResult.status === 'fulfilled') {
@@ -377,6 +431,10 @@ function Dashboard() {
           lastWorkoutDate: consistencyFromApi?.lastWorkoutDate || null,
         }
 
+        const normalizedMuscleRecovery = Array.isArray(muscleRecoveryFromApi?.recovery)
+          ? muscleRecoveryFromApi.recovery
+          : []
+
         const finalExercises =
           userExercises.length > 0 ? userExercises : cachedExercises
 
@@ -385,6 +443,7 @@ function Dashboard() {
         setExercises(finalExercises)
         setBodyWeight(normalizedBodyWeight.length > 0 ? normalizedBodyWeight : cachedBodyWeight)
         setConsistencyStats(normalizedConsistency)
+        setMuscleRecovery(normalizedMuscleRecovery)
 
         saveUserStorageData(user, 'workouts', normalizedWorkouts)
         saveUserStorageData(user, 'history', normalizedHistory)
@@ -413,6 +472,7 @@ function Dashboard() {
           totalWorkoutDays: 0,
           lastWorkoutDate: null,
         })
+        setMuscleRecovery([])
         setDashboardSource('local')
       } finally {
         setLoadingDashboard(false)
@@ -485,6 +545,19 @@ function Dashboard() {
     () => getRecentPRs(completedSets, 6),
     [completedSets]
   )
+
+  const mostRecoveredMuscles = useMemo(() => {
+    return muscleRecovery
+      .slice()
+      .sort((a, b) => b.recoveryPercent - a.recoveryPercent)
+      .slice(0, 4)
+  }, [muscleRecovery])
+
+  const musclesStillRecovering = useMemo(() => {
+    return muscleRecovery
+      .filter((item) => item.level === 'low' || item.level === 'medium')
+      .slice(0, 4)
+  }, [muscleRecovery])
 
   const workoutsByWeek = useMemo(() => {
     const map = new Map()
@@ -841,6 +914,155 @@ function Dashboard() {
                     : 'Sem histórico'}
                 </p>
               </div>
+
+              <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
+                <Card className="xl:col-span-2">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h2 className="text-xl font-bold">
+                        Recuperação muscular
+                      </h2>
+
+                      <p className="mt-1 text-sm text-zinc-500">
+                        Estimativa baseada nos grupos musculares treinados recentemente.
+                      </p>
+                    </div>
+
+                    <Badge>
+                      {muscleRecovery.length} grupos
+                    </Badge>
+                  </div>
+
+                  <div className="mt-5">
+                    {muscleRecovery.length === 0 ? (
+                      <EmptyState
+                        title="Sem dados de recuperação"
+                        description="Finalize alguns treinos para calcular a recuperação dos grupos musculares."
+                      />
+                    ) : (
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                        {muscleRecovery.slice(0, 8).map((item) => {
+                          const style = getRecoveryStyle(item.level)
+
+                          return (
+                            <div
+                              key={item.muscleGroup}
+                              className={`rounded-3xl border ${style.border} ${style.bg} p-4`}
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div>
+                                  <h3 className="font-black text-white">
+                                    {item.muscleGroup}
+                                  </h3>
+
+                                  <p className={`mt-1 text-xs font-bold ${style.text}`}>
+                                    {item.status}
+                                  </p>
+                                </div>
+
+                                <span className={`text-lg font-black ${style.text}`}>
+                                  {item.recoveryPercent}%
+                                </span>
+                              </div>
+
+                              <div className="mt-4 h-2 overflow-hidden rounded-full bg-black/30">
+                                <div
+                                  className={`h-full rounded-full ${style.bar}`}
+                                  style={{
+                                    width: `${item.recoveryPercent}%`,
+                                  }}
+                                />
+                              </div>
+
+                              <div className="mt-4 grid grid-cols-2 gap-2">
+                                <div className="rounded-2xl border border-black/20 bg-black/20 p-3">
+                                  <p className="text-xs text-zinc-500">
+                                    Último treino
+                                  </p>
+
+                                  <p className="mt-1 text-sm font-bold">
+                                    {formatRecoveryDate(item.lastTrainedAt)}
+                                  </p>
+                                </div>
+
+                                <div className="rounded-2xl border border-black/20 bg-black/20 p-3">
+                                  <p className="text-xs text-zinc-500">
+                                    Séries
+                                  </p>
+
+                                  <p className="mt-1 text-sm font-bold">
+                                    {item.totalSets}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <p className="mt-3 text-xs leading-relaxed text-zinc-400">
+                                {item.message}
+                              </p>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </Card>
+
+                <Card>
+                  <h2 className="text-xl font-bold">
+                    Sugestão rápida
+                  </h2>
+
+                  <p className="mt-1 text-sm text-zinc-500">
+                    Use isso para escolher melhor o próximo treino.
+                  </p>
+
+                  <div className="mt-5 space-y-4">
+                    <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+                      <p className="text-xs font-bold text-emerald-200/70">
+                        Mais recuperados
+                      </p>
+
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {mostRecoveredMuscles.length > 0 ? (
+                          mostRecoveredMuscles.map((item) => (
+                            <Badge key={item.muscleGroup}>
+                              {item.muscleGroup}
+                            </Badge>
+                          ))
+                        ) : (
+                          <p className="text-sm text-zinc-500">
+                            Sem dados ainda.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4">
+                      <p className="text-xs font-bold text-yellow-200/70">
+                        Ainda recuperando
+                      </p>
+
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {musclesStillRecovering.length > 0 ? (
+                          musclesStillRecovering.map((item) => (
+                            <Badge key={item.muscleGroup}>
+                              {item.muscleGroup}
+                            </Badge>
+                          ))
+                        ) : (
+                          <p className="text-sm text-zinc-500">
+                            Nenhum grupo crítico agora.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <p className="text-xs leading-relaxed text-zinc-500">
+                      A recuperação é estimada pelo tempo desde o último treino. Depois podemos melhorar usando volume, séries e intensidade.
+                    </p>
+                  </div>
+                </Card>
+              </section>
 
               <div className="rounded-3xl border border-zinc-800 bg-black/30 p-4">
                 <p className="text-xs text-zinc-500">Peso atual</p>
