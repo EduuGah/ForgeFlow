@@ -144,6 +144,7 @@ function countWorkoutsInLastDays(history = [], days = 7) {
     }).length
 }
 
+
 requiredEnv('FRONTEND_URL', FRONTEND_URL)
 requiredEnv('BACKEND_URL', BACKEND_URL)
 requiredEnv('MONGODB_URI', MONGODB_URI)
@@ -429,6 +430,129 @@ const workoutSchema = new mongoose.Schema(
     }
 )
 
+const DEFAULT_WORKOUT_TEMPLATES = [
+    {
+        name: 'Push - Peito, Ombros e Tríceps',
+        description: 'Modelo base para treino de empurrar, focado em peito, ombros e tríceps.',
+        category: 'Push Pull Legs',
+        goal: 'Hipertrofia',
+        difficulty: 'Intermediário',
+        estimatedDuration: 60,
+        source: 'ForgeFlow',
+        exercises: [],
+    },
+    {
+        name: 'Pull - Costas e Bíceps',
+        description: 'Modelo base para treino de puxar, focado em costas, bíceps e posteriores de ombro.',
+        category: 'Push Pull Legs',
+        goal: 'Hipertrofia',
+        difficulty: 'Intermediário',
+        estimatedDuration: 60,
+        source: 'ForgeFlow',
+        exercises: [],
+    },
+    {
+        name: 'Legs - Pernas completo',
+        description: 'Modelo base para treino de pernas, com foco em quadríceps, posterior, glúteos e panturrilhas.',
+        category: 'Push Pull Legs',
+        goal: 'Hipertrofia',
+        difficulty: 'Intermediário',
+        estimatedDuration: 70,
+        source: 'ForgeFlow',
+        exercises: [],
+    },
+    {
+        name: 'Upper - Superiores',
+        description: 'Modelo de treino para membros superiores em uma divisão Upper/Lower.',
+        category: 'Upper Lower',
+        goal: 'Força e hipertrofia',
+        difficulty: 'Intermediário',
+        estimatedDuration: 65,
+        source: 'ForgeFlow',
+        exercises: [],
+    },
+    {
+        name: 'Lower - Inferiores',
+        description: 'Modelo de treino para membros inferiores em uma divisão Upper/Lower.',
+        category: 'Upper Lower',
+        goal: 'Força e hipertrofia',
+        difficulty: 'Intermediário',
+        estimatedDuration: 65,
+        source: 'ForgeFlow',
+        exercises: [],
+    },
+    {
+        name: 'Full Body - Corpo inteiro',
+        description: 'Modelo simples para treinar o corpo inteiro em uma única sessão.',
+        category: 'Full Body',
+        goal: 'Condicionamento geral',
+        difficulty: 'Iniciante',
+        estimatedDuration: 50,
+        source: 'ForgeFlow',
+        exercises: [],
+    },
+]
+
+const workoutTemplateSchema = new mongoose.Schema(
+    {
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+            index: true,
+        },
+
+        name: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+
+        description: {
+            type: String,
+            default: '',
+        },
+
+        category: {
+            type: String,
+            default: 'Personalizado',
+        },
+
+        goal: {
+            type: String,
+            default: '',
+        },
+
+        difficulty: {
+            type: String,
+            default: '',
+        },
+
+        estimatedDuration: {
+            type: Number,
+            default: null,
+        },
+
+        exercises: {
+            type: Array,
+            default: [],
+        },
+
+        isFavorite: {
+            type: Boolean,
+            default: false,
+        },
+
+        source: {
+            type: String,
+            default: 'User',
+        },
+    },
+    {
+        timestamps: true,
+    }
+)
+
 const bodyWeightSchema = new mongoose.Schema(
     {
         userId: {
@@ -534,6 +658,7 @@ const workoutHistorySchema = new mongoose.Schema(
 const User = mongoose.model('User', userSchema)
 const Exercise = mongoose.model('Exercise', exerciseSchema)
 const Workout = mongoose.model('Workout', workoutSchema)
+const WorkoutTemplate = mongoose.model('WorkoutTemplate', workoutTemplateSchema)
 const WorkoutHistory = mongoose.model('WorkoutHistory', workoutHistorySchema)
 const BodyWeight = mongoose.model('BodyWeight', bodyWeightSchema)
 
@@ -1983,6 +2108,251 @@ app.get('/dashboard', authMiddleware, async (req, res) => {
 
         res.status(500).json({
             message: 'Erro ao carregar dashboard.',
+        })
+    }
+})
+
+app.get('/workout-templates', authMiddleware, async (req, res) => {
+    try {
+        const templates = await WorkoutTemplate.find({
+            userId: req.user.userId,
+        }).sort({
+            isFavorite: -1,
+            updatedAt: -1,
+            createdAt: -1,
+        })
+
+        res.json(templates)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao buscar templates de treino.',
+        })
+    }
+})
+
+app.post('/workout-templates', authMiddleware, async (req, res) => {
+    try {
+        const {
+            name,
+            description = '',
+            category = 'Personalizado',
+            goal = '',
+            difficulty = '',
+            estimatedDuration = null,
+            exercises = [],
+            isFavorite = false,
+            source = 'User',
+        } = req.body
+
+        if (!name?.trim()) {
+            return res.status(400).json({
+                message: 'Informe o nome do template.',
+            })
+        }
+
+        const template = await WorkoutTemplate.create({
+            userId: req.user.userId,
+            name: name.trim(),
+            description,
+            category,
+            goal,
+            difficulty,
+            estimatedDuration,
+            exercises,
+            isFavorite: Boolean(isFavorite),
+            source,
+        })
+
+        res.status(201).json(template)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao criar template de treino.',
+        })
+    }
+})
+
+app.post('/workout-templates/seed-defaults', authMiddleware, async (req, res) => {
+    try {
+        const existingTemplates = await WorkoutTemplate.find({
+            userId: req.user.userId,
+            source: 'ForgeFlow',
+        })
+
+        if (existingTemplates.length > 0) {
+            return res.json({
+                created: 0,
+                templates: existingTemplates,
+                message: 'Templates padrão já existem.',
+            })
+        }
+
+        const templatesToCreate = DEFAULT_WORKOUT_TEMPLATES.map((template) => ({
+            ...template,
+            userId: req.user.userId,
+        }))
+
+        const createdTemplates = await WorkoutTemplate.insertMany(templatesToCreate)
+
+        res.status(201).json({
+            created: createdTemplates.length,
+            templates: createdTemplates,
+            message: 'Templates padrão criados com sucesso.',
+        })
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao criar templates padrão.',
+        })
+    }
+})
+
+app.put('/workout-templates/:id', authMiddleware, async (req, res) => {
+    try {
+        const {
+            name,
+            description,
+            category,
+            goal,
+            difficulty,
+            estimatedDuration,
+            exercises,
+            isFavorite,
+        } = req.body
+
+        const updateData = {}
+
+        if (name !== undefined) {
+            if (!name?.trim()) {
+                return res.status(400).json({
+                    message: 'Informe o nome do template.',
+                })
+            }
+
+            updateData.name = name.trim()
+        }
+
+        if (description !== undefined) updateData.description = description
+        if (category !== undefined) updateData.category = category
+        if (goal !== undefined) updateData.goal = goal
+        if (difficulty !== undefined) updateData.difficulty = difficulty
+        if (estimatedDuration !== undefined) updateData.estimatedDuration = estimatedDuration
+        if (exercises !== undefined) updateData.exercises = exercises
+        if (isFavorite !== undefined) updateData.isFavorite = Boolean(isFavorite)
+
+        const template = await WorkoutTemplate.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                userId: req.user.userId,
+            },
+            updateData,
+            {
+                new: true,
+            }
+        )
+
+        if (!template) {
+            return res.status(404).json({
+                message: 'Template não encontrado.',
+            })
+        }
+
+        res.json(template)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao atualizar template.',
+        })
+    }
+})
+
+app.patch('/workout-templates/:id/favorite', authMiddleware, async (req, res) => {
+    try {
+        const template = await WorkoutTemplate.findOne({
+            _id: req.params.id,
+            userId: req.user.userId,
+        })
+
+        if (!template) {
+            return res.status(404).json({
+                message: 'Template não encontrado.',
+            })
+        }
+
+        template.isFavorite = !template.isFavorite
+
+        await template.save()
+
+        res.json(template)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao atualizar favorito do template.',
+        })
+    }
+})
+
+app.delete('/workout-templates/:id', authMiddleware, async (req, res) => {
+    try {
+        const template = await WorkoutTemplate.findOneAndDelete({
+            _id: req.params.id,
+            userId: req.user.userId,
+        })
+
+        if (!template) {
+            return res.status(404).json({
+                message: 'Template não encontrado.',
+            })
+        }
+
+        res.json({
+            ok: true,
+            message: 'Template removido com sucesso.',
+        })
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao remover template.',
+        })
+    }
+})
+
+app.post('/workout-templates/:id/create-workout', authMiddleware, async (req, res) => {
+    try {
+        const template = await WorkoutTemplate.findOne({
+            _id: req.params.id,
+            userId: req.user.userId,
+        })
+
+        if (!template) {
+            return res.status(404).json({
+                message: 'Template não encontrado.',
+            })
+        }
+
+        const workout = await Workout.create({
+            userId: req.user.userId,
+            name: req.body.name?.trim() || template.name,
+            description: template.description,
+            folderId: req.body.folderId || null,
+            folderName: '',
+            exercises: template.exercises || [],
+            estimatedDuration: template.estimatedDuration || null,
+        })
+
+        res.status(201).json(workout)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao criar treino a partir do template.',
         })
     }
 })
