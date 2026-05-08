@@ -1,5 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, Flag, Plus, RefreshCcw, Search, Target, Trophy, X } from 'lucide-react'
+import {
+  Archive,
+  CheckCircle2,
+  Flag,
+  Plus,
+  RefreshCcw,
+  RotateCcw,
+  Search,
+  Target,
+  Trophy,
+  X,
+} from 'lucide-react'
 
 import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
@@ -34,7 +45,8 @@ function normalizeGoal(goal) {
     direction: goal.direction || 'increase',
     period: goal.period || 'none',
     exerciseName: goal.exerciseName || '',
-    deadline: goal.deadline || null,
+    deadline: goal.deadline ? String(goal.deadline).slice(0, 10) : '',
+    completedAt: goal.completedAt || null,
   }
 }
 
@@ -203,7 +215,7 @@ function Goals() {
   function handleCompleteGoal(goal) {
     setConfirmModal({
       title: 'Concluir meta?',
-      description: `A meta "${goal.title}" será marcada como concluída.`,
+      description: `A meta "${goal.title}" será marcada como concluída. Você ainda poderá editar ou arquivar depois.`,
       confirmText: 'Concluir',
       onConfirm: async () => {
         try {
@@ -229,7 +241,7 @@ function Goals() {
   function handleArchiveGoal(goal) {
     setConfirmModal({
       title: 'Arquivar meta?',
-      description: `A meta "${goal.title}" ficará oculta das metas ativas.`,
+      description: `A meta "${goal.title}" sairá da lista de metas ativas, mas você poderá desarquivar depois.`,
       confirmText: 'Arquivar',
       onConfirm: async () => {
         try {
@@ -247,6 +259,66 @@ function Goals() {
         } catch (error) {
           console.error(error)
           showToast('error', 'Erro ao arquivar', error.message || 'Não foi possível arquivar a meta.')
+        }
+      },
+    })
+  }
+
+  function handleUnarchiveGoal(goal) {
+    setConfirmModal({
+      title: 'Desarquivar meta?',
+      description: `A meta "${goal.title}" voltará para suas metas ativas.`,
+      confirmText: 'Desarquivar',
+      onConfirm: async () => {
+        try {
+          const goalFromApi = await apiFetch(`/goals/${goal.id}`, {
+            method: 'PUT',
+            body: JSON.stringify({
+              status: 'active',
+              completedAt: null,
+            }),
+          })
+
+          const normalizedGoal = normalizeGoal(goalFromApi)
+          const updatedGoals = goals.map((item) => item.id === normalizedGoal.id ? normalizedGoal : item)
+
+          setGoals(updatedGoals)
+          saveUserStorageData(user, 'goals', updatedGoals)
+          setConfirmModal(null)
+          showToast('success', 'Meta desarquivada', 'A meta voltou para a lista de ativas.')
+        } catch (error) {
+          console.error(error)
+          showToast('error', 'Erro ao desarquivar', error.message || 'Não foi possível desarquivar a meta.')
+        }
+      },
+    })
+  }
+
+  function handleReactivateGoal(goal) {
+    setConfirmModal({
+      title: 'Reativar meta?',
+      description: `A meta "${goal.title}" voltará para andamento.`,
+      confirmText: 'Reativar',
+      onConfirm: async () => {
+        try {
+          const goalFromApi = await apiFetch(`/goals/${goal.id}`, {
+            method: 'PUT',
+            body: JSON.stringify({
+              status: 'active',
+              completedAt: null,
+            }),
+          })
+
+          const normalizedGoal = normalizeGoal(goalFromApi)
+          const updatedGoals = goals.map((item) => item.id === normalizedGoal.id ? normalizedGoal : item)
+
+          setGoals(updatedGoals)
+          saveUserStorageData(user, 'goals', updatedGoals)
+          setConfirmModal(null)
+          showToast('success', 'Meta reativada', 'A meta voltou para andamento.')
+        } catch (error) {
+          console.error(error)
+          showToast('error', 'Erro ao reativar', error.message || 'Não foi possível reativar a meta.')
         }
       },
     })
@@ -282,7 +354,7 @@ function Goals() {
     <>
       <PageHeader
         title="Metas"
-        description="Crie objetivos reais e acompanhe automaticamente com base nos seus treinos, peso, fotos e PRs."
+        description="Crie objetivos claros e acompanhe automaticamente com base nos seus treinos, peso, fotos e PRs."
         action={
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant={source === 'database' ? 'purple' : 'default'}>
@@ -324,7 +396,7 @@ function Goals() {
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <p className="text-sm text-[var(--ff-muted)]">Concluídas</p>
-            <CheckCircle2 size={20} className="text-emerald-400" />
+            <CheckCircle2 size={20} className="text-[var(--ff-success-text)]" />
           </div>
           <h2 className="mt-2 text-3xl font-black text-[var(--ff-text)]">{stats.completed}</h2>
           <p className="mt-2 text-xs text-[var(--ff-muted)]">metas finalizadas</p>
@@ -332,11 +404,11 @@ function Goals() {
 
         <Card className="p-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-[var(--ff-muted)]">Total</p>
-            <Trophy size={20} className="text-[var(--ff-accent-text)]" />
+            <p className="text-sm text-[var(--ff-muted)]">Arquivadas</p>
+            <Archive size={20} className="text-[var(--ff-muted)]" />
           </div>
-          <h2 className="mt-2 text-3xl font-black text-[var(--ff-text)]">{stats.total}</h2>
-          <p className="mt-2 text-xs text-[var(--ff-muted)]">criadas no app</p>
+          <h2 className="mt-2 text-3xl font-black text-[var(--ff-text)]">{stats.archived}</h2>
+          <p className="mt-2 text-xs text-[var(--ff-muted)]">guardadas para depois</p>
         </Card>
       </section>
 
@@ -405,6 +477,8 @@ function Goals() {
               onDelete={handleDeleteGoal}
               onComplete={handleCompleteGoal}
               onArchive={handleArchiveGoal}
+              onUnarchive={handleUnarchiveGoal}
+              onReactivate={handleReactivateGoal}
             />
           ))
         )}
