@@ -17,6 +17,7 @@ function normalizeNotificationFromApi(notification = {}) {
     status: notification.status || 'unread',
     actionUrl: notification.actionUrl || '',
     source: notification.source || 'system',
+    dedupeKey: notification.dedupeKey || '',
     readAt: notification.readAt || null,
     createdAt: notification.createdAt || new Date().toISOString(),
     updatedAt: notification.updatedAt || notification.createdAt || new Date().toISOString(),
@@ -26,6 +27,14 @@ function normalizeNotificationFromApi(notification = {}) {
 function dispatchNotificationsChanged(detail = {}) {
   window.dispatchEvent(
     new CustomEvent('forgeflow:notifications-changed', {
+      detail,
+    })
+  )
+}
+
+function dispatchNotificationPopup(detail = {}) {
+  window.dispatchEvent(
+    new CustomEvent('forgeflow:notification-popup', {
       detail,
     })
   )
@@ -58,10 +67,12 @@ export async function generateSmartNotifications({
   minimumMinutes = 0,
   force = false,
   updateLocalStorage = true,
+  showPopup = force,
 } = {}) {
   if (!user) {
     return {
       created: 0,
+      createdNotifications: [],
       notifications: [],
       unreadCount: 0,
       skipped: true,
@@ -71,6 +82,7 @@ export async function generateSmartNotifications({
   if (!force && minimumMinutes > 0 && !shouldGenerateNotifications(user, minimumMinutes)) {
     return {
       created: 0,
+      createdNotifications: [],
       notifications: [],
       unreadCount: 0,
       skipped: true,
@@ -85,21 +97,33 @@ export async function generateSmartNotifications({
     ? data.notifications.map(normalizeNotificationFromApi)
     : []
 
+  const createdNotifications = Array.isArray(data?.createdNotifications)
+    ? data.createdNotifications.map(normalizeNotificationFromApi)
+    : []
+
   if (updateLocalStorage) {
     saveUserStorageData(user, 'notifications', notifications)
   }
 
   markNotificationsGeneratedNow(user)
 
-  dispatchNotificationsChanged({
+  const detail = {
     reason,
     created: Number(data?.created) || 0,
+    createdNotifications,
     unreadCount: Number(data?.unreadCount) || 0,
-  })
+  }
+
+  dispatchNotificationsChanged(detail)
+
+  if (showPopup && createdNotifications.length > 0) {
+    dispatchNotificationPopup(detail)
+  }
 
   return {
     ...data,
     notifications,
+    createdNotifications,
     unreadCount: Number(data?.unreadCount) || 0,
     created: Number(data?.created) || 0,
   }
@@ -107,6 +131,10 @@ export async function generateSmartNotifications({
 
 export function notifyNotificationsChanged(detail = {}) {
   dispatchNotificationsChanged(detail)
+}
+
+export function showNotificationPopup(detail = {}) {
+  dispatchNotificationPopup(detail)
 }
 
 export { normalizeNotificationFromApi }

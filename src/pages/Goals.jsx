@@ -25,7 +25,11 @@ import GoalFormModal from '../components/goals/GoalFormModal'
 
 import { useAuth } from '../context/AuthContext'
 import { apiFetch } from '../services/api'
-import { generateSmartNotifications } from '../utils/notificationUtils'
+import {
+  generateSmartNotifications,
+  notifyNotificationsChanged,
+  showNotificationPopup,
+} from '../utils/notificationUtils'
 import {
   getUserStorageData,
   saveUserStorageData,
@@ -236,10 +240,25 @@ function Goals() {
 
           setGoals(updatedGoals)
           saveUserStorageData(user, 'goals', updatedGoals)
+
+          if (goalFromApi?.createdNotification) {
+            showNotificationPopup({
+              reason: 'goal-completed',
+              created: 1,
+              createdNotifications: [goalFromApi.createdNotification],
+            })
+          }
+
+          notifyNotificationsChanged({
+            reason: 'goal-completed',
+            created: goalFromApi?.createdNotification ? 1 : 0,
+          })
+
           generateSmartNotifications({
             user,
             reason: 'goal-completed',
             force: true,
+            showPopup: false,
           }).catch((error) => {
             console.error(error)
           })

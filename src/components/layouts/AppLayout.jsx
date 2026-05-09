@@ -16,11 +16,13 @@ import Sidebar from './Sidebar'
 import MobileBottomNav from './MobileBottomNav'
 import ActiveWorkoutMini from '../workout/ActiveWorkoutMini'
 import NotificationBell from '../notifications/NotificationBell'
+import SmartNotificationPopup from '../notifications/SmartNotificationPopup'
 import { generateSmartNotifications } from '../../utils/notificationUtils'
 
 function AppLayout() {
   const { user } = useAuth()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [popupNotification, setPopupNotification] = useState(null)
 
   useEffect(() => {
     if (!user) return
@@ -66,10 +68,34 @@ function AppLayout() {
       user,
       reason: 'app-open',
       minimumMinutes: 60,
+      showPopup: false,
     }).catch((error) => {
       console.error(error)
     })
   }, [user])
+
+  useEffect(() => {
+    function handleNotificationPopup(event) {
+      const createdNotifications = Array.isArray(event.detail?.createdNotifications)
+        ? event.detail.createdNotifications
+        : []
+
+      const priorityNotification =
+        createdNotifications.find((notification) => notification.type === 'success') ||
+        createdNotifications.find((notification) => notification.type === 'goal') ||
+        createdNotifications[0]
+
+      if (priorityNotification) {
+        setPopupNotification(priorityNotification)
+      }
+    }
+
+    window.addEventListener('forgeflow:notification-popup', handleNotificationPopup)
+
+    return () => {
+      window.removeEventListener('forgeflow:notification-popup', handleNotificationPopup)
+    }
+  }, [])
 
   useEffect(() => {
     if (isSidebarOpen) {
@@ -141,6 +167,11 @@ function AppLayout() {
 
       <MobileBottomNav />
       <ActiveWorkoutMini />
+
+      <SmartNotificationPopup
+        notification={popupNotification}
+        onClose={() => setPopupNotification(null)}
+      />
     </div>
   )
 }

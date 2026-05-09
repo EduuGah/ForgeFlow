@@ -2148,31 +2148,66 @@ app.post('/notifications/generate', authMiddleware, async (req, res) => {
         for (const goal of goals) {
             const enrichedGoal = await enrichGoalWithProgress(goal, userId)
             const progressPercent = Number(enrichedGoal?.progressPercent || 0)
+            const roundedProgress = Math.max(0, Math.min(100, Math.round(progressPercent)))
+            const goalPeriodKey = goal.period === 'monthly'
+                ? currentMonthKey
+                : goal.period === 'weekly'
+                    ? `${now.getFullYear()}-W${Math.ceil((((now - new Date(now.getFullYear(), 0, 1)) / 86400000) + new Date(now.getFullYear(), 0, 1).getDay() + 1) / 7)}`
+                    : 'once'
 
-            if (progressPercent < 80 || progressPercent >= 100) {
-                resolvedDedupeKeys.push(`goal-near-${goal._id}-${currentMonthKey}`)
+            const goalMilestones = [
+                {
+                    threshold: 50,
+                    title: 'Você chegou em 50% da meta',
+                    message: `Metade do caminho concluída: você atingiu ${roundedProgress}% da meta "${goal.title}".`,
+                    type: 'goal',
+                },
+                {
+                    threshold: 75,
+                    title: 'Meta em ritmo forte',
+                    message: `Você já passou de 75% da meta "${goal.title}". Progresso atual: ${roundedProgress}%.`,
+                    type: 'goal',
+                },
+                {
+                    threshold: 90,
+                    title: 'Reta final da meta',
+                    message: `Falta pouco! Você chegou em ${roundedProgress}% da meta "${goal.title}".`,
+                    type: 'goal',
+                },
+            ]
+
+            for (const milestone of goalMilestones) {
+                const dedupeKey = `goal-milestone-${goal._id}-${milestone.threshold}-${goalPeriodKey}`
+
+                if (progressPercent < milestone.threshold || progressPercent >= 100) {
+                    resolvedDedupeKeys.push(dedupeKey)
+                }
+
+                if (progressPercent >= milestone.threshold && progressPercent < 100) {
+                    const result = await createNotificationIfNotExists({
+                        userId,
+                        title: milestone.title,
+                        message: milestone.message,
+                        type: milestone.type,
+                        actionUrl: '/goals',
+                        dedupeKey,
+                    })
+
+                    if (result.created) {
+                        createdNotifications.push(result.notification)
+                    }
+                }
             }
 
-            if (progressPercent >= 80 && progressPercent < 100) {
-                const result = await createNotificationIfNotExists({
-                    userId,
-                    title: 'Meta quase concluída',
-                    message: `Você já atingiu ${progressPercent}% da meta "${goal.title}".`,
-                    type: 'goal',
-                    actionUrl: '/goals',
-                    dedupeKey: `goal-near-${goal._id}-${currentMonthKey}`,
-                })
-
-                if (result.created) {
-                    createdNotifications.push(result.notification)
-                }
+            if (progressPercent < 100) {
+                resolvedDedupeKeys.push(`goal-completed-${goal._id}`)
             }
 
             if (progressPercent >= 100) {
                 const result = await createNotificationIfNotExists({
                     userId,
                     title: 'Meta alcançada',
-                    message: `Você alcançou a meta "${goal.title}".`,
+                    message: `Você alcançou 100% da meta "${goal.title}". Parabéns!`,
                     type: 'success',
                     actionUrl: '/goals',
                     dedupeKey: `goal-completed-${goal._id}`,
@@ -2302,6 +2337,7 @@ app.post('/notifications/generate', authMiddleware, async (req, res) => {
 
         res.json({
             created: createdNotifications.length,
+            createdNotifications,
             notifications,
             unreadCount,
         })
@@ -2617,8 +2653,21 @@ app.patch('/goals/:id/complete', authMiddleware, async (req, res) => {
         }
 
         const enrichedGoal = await enrichGoalWithProgress(goal, req.user.userId)
+        const notificationResult = await createNotificationIfNotExists({
+            userId: req.user.userId,
+            title: 'Meta concluída',
+            message: `Você marcou a meta "${goal.title}" como concluída. Boa!`,
+            type: 'success',
+            actionUrl: '/goals',
+            dedupeKey: `goal-manual-completed-${goal._id}`,
+        })
 
-        res.json(enrichedGoal)
+        res.json({
+            ...enrichedGoal,
+            createdNotification: notificationResult.created
+                ? notificationResult.notification
+                : null,
+        })
     } catch (error) {
         console.error(error)
 
