@@ -13,7 +13,7 @@ function Toast({
 
   return (
     <div className="safe-top fixed left-3 right-3 top-20 z-[10000] rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 text-[var(--ff-text)] shadow-2xl shadow-black/20 sm:left-auto sm:right-4 sm:w-[calc(100%-32px)] sm:max-w-sm">
-      <div className="flex items-start gap-3">
+      <div className="grid grid-cols-[44px_minmax(0,1fr)_36px] items-center gap-3">
         <div
           className={
             isSuccess
@@ -24,13 +24,13 @@ function Toast({
           {isSuccess ? <CheckCircle2 size={22} /> : <AlertCircle size={22} />}
         </div>
 
-        <div className="min-w-0 flex-1">
-          <p className="font-bold text-[var(--ff-text)]">
+        <div className="min-w-0 self-center text-center">
+          <p className="truncate text-base font-black leading-tight text-[var(--ff-text)]">
             {title}
           </p>
 
           {message && (
-            <p className="mt-1 text-sm text-[var(--ff-muted)]">
+            <p className="mt-1 text-sm leading-relaxed text-[var(--ff-muted)]">
               {message}
             </p>
           )}

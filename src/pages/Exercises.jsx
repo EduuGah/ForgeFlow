@@ -1122,7 +1122,7 @@ function Exercises() {
       </section>
 
       <section className="mt-6 grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-[330px_minmax(0,1fr)]">
-        <aside className="space-y-6">
+        <aside className="order-2 space-y-6 xl:order-1">
           <Card className="overflow-hidden border border-zinc-800 bg-gradient-to-b from-[#17171b] to-[#121216]">
             <div className="border-b border-zinc-800 p-5">
               <div className="flex items-center gap-3">
@@ -1316,7 +1316,7 @@ function Exercises() {
             </div>
           </Card>
 
-          <Card className="border border-zinc-800 bg-gradient-to-b from-[#17171b] to-[#121216]">
+          <Card className="hidden border border-zinc-800 bg-gradient-to-b from-[#17171b] to-[#121216] xl:block">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
                 <Wrench size={22} />
@@ -1362,7 +1362,7 @@ function Exercises() {
           </Card>
         </aside>
 
-        <main>
+        <main className="order-1 xl:order-2">
           <Card className="overflow-hidden border border-zinc-800 bg-gradient-to-b from-[#17171b] to-[#121216]">
             <div className="border-b border-zinc-800 p-5">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -1379,6 +1379,10 @@ function Exercises() {
 
                   <p className="mt-1 text-sm text-zinc-500">
                     {filteredExercises.length} exercícios encontrados • exibindo {displayedExercises.length}
+                  </p>
+
+                  <p className="mt-2 text-xs leading-relaxed text-zinc-500 xl:hidden">
+                    No celular, a biblioteca aparece primeiro. Filtros avançados ficam logo abaixo da lista.
                   </p>
                 </div>
 

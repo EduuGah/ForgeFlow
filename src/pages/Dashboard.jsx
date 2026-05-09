@@ -647,7 +647,7 @@ function Dashboard() {
   )
 
   const recentPRs = useMemo(
-    () => getRecentPRs(completedSets, 6),
+    () => getRecentPRs(completedSets, 4),
     [completedSets]
   )
 
@@ -731,6 +731,9 @@ function Dashboard() {
           weight,
           reps,
           volume,
+          date: set.date,
+          workoutName: set.workoutName,
+          setNumber: set.setNumber,
         })
       }
     })
@@ -747,11 +750,17 @@ function Dashboard() {
             weight: weightPr.weight,
             reps: weightPr.reps,
             volume: weightVolume,
+            date: weightPr.date,
+            workoutName: weightPr.workoutName,
+            setNumber: weightPr.setNumber,
           },
           volumePR: volumePr || {
             weight: weightPr.weight,
             reps: weightPr.reps,
             volume: weightVolume,
+            date: weightPr.date,
+            workoutName: weightPr.workoutName,
+            setNumber: weightPr.setNumber,
           },
         }
       })
@@ -784,7 +793,7 @@ function Dashboard() {
 
         return dateB - dateA
       })
-      .slice(0, 5)
+      .slice(0, 4)
   }, [workouts])
 
   const lastSession = history[0] || null
@@ -957,7 +966,34 @@ function Dashboard() {
       />
 
 
-      <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(320px,0.8fr)]">
+      <nav className="mb-5 rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 shadow-[0_14px_34px_rgba(0,0,0,0.18)]">
+        <p className="px-2 pb-2 text-xs font-black uppercase tracking-wide text-[var(--ff-muted)]">
+          Mapa rápido
+        </p>
+
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
+          <a href="#dashboard-overview" className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 py-2 text-center text-xs font-bold text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)]">
+            Resumo
+          </a>
+          <a href="#dashboard-goals" className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 py-2 text-center text-xs font-bold text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)]">
+            Metas
+          </a>
+          <a href="#dashboard-today" className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 py-2 text-center text-xs font-bold text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)]">
+            Hoje
+          </a>
+          <a href="#dashboard-performance" className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 py-2 text-center text-xs font-bold text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)]">
+            Evolução
+          </a>
+          <a href="#dashboard-prs" className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 py-2 text-center text-xs font-bold text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)]">
+            PRs
+          </a>
+          <a href="#dashboard-notifications" className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 py-2 text-center text-xs font-bold text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)]">
+            Alertas
+          </a>
+        </div>
+      </nav>
+
+      <section id="dashboard-overview" className="scroll-mt-24 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.7fr)_minmax(320px,0.8fr)]">
         <Card className="overflow-hidden border-[var(--ff-accent-border)]/20 bg-gradient-to-br from-[var(--ff-accent-soft)]/20 via-[var(--ff-card)] to-[var(--ff-surface-2)]">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_330px] lg:items-center">
             <div className="min-w-0">
@@ -998,7 +1034,7 @@ function Dashboard() {
                 Veja seu progresso, frequência, volume, recordes e próximos treinos em uma visão geral.
               </p>
 
-              <div className="mt-6 grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
+              <div className="mt-5 grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
                 <Link to="/workouts">
                   <button
                     type="button"
@@ -1140,7 +1176,7 @@ function Dashboard() {
 
 
       {/* Metas e notificações aparecem depois do resumo principal para não empurrar o Dashboard para baixo. */}
-      <section className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
+      <section id="dashboard-goals" className="scroll-mt-24 mb-6 grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_220px]">
         <Card className="p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
@@ -1221,7 +1257,7 @@ function Dashboard() {
       </section>
 
 
-      <section className="mb-6">
+      <section id="dashboard-today" className="scroll-mt-24 mb-6">
         <Card className="p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
@@ -1283,7 +1319,7 @@ function Dashboard() {
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-4 2xl:grid-cols-3 2xl:gap-6">
+      <section id="dashboard-performance" className="scroll-mt-24 mt-6 grid grid-cols-1 gap-5 xl:grid-cols-3 2xl:grid-cols-4">
         <Card className="xl:col-span-2">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -1435,7 +1471,7 @@ function Dashboard() {
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
         <Card className="p-5">
           <div className="flex items-center justify-between">
             <p className="text-sm text-zinc-500">Treinos</p>
@@ -1493,7 +1529,7 @@ function Dashboard() {
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
         <Card className="p-5">
           <div className="flex items-center justify-between">
             <p className="text-sm text-zinc-500">Streak atual</p>
@@ -1555,7 +1591,7 @@ function Dashboard() {
         </Card>
       </section>
 
-      <section className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+      <section className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-3">
         <Card className="p-5">
           <div className="flex items-center justify-between">
             <p className="text-sm text-zinc-500">PRs de peso</p>
@@ -1611,7 +1647,7 @@ function Dashboard() {
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-4 2xl:grid-cols-3 2xl:gap-6">
+      <section className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-3 2xl:grid-cols-4">
         <Card className="xl:col-span-2">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
@@ -1711,7 +1747,7 @@ function Dashboard() {
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-4 2xl:grid-cols-3 2xl:gap-6">
+      <section className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-3 2xl:grid-cols-4">
         <Card className="xl:col-span-2">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -1900,7 +1936,7 @@ function Dashboard() {
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-4 2xl:grid-cols-3 2xl:gap-6">
+      <section className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-3 2xl:grid-cols-4">
         <Card className="xl:col-span-2">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -2027,7 +2063,7 @@ function Dashboard() {
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-4 sm:gap-6 2xl:grid-cols-2">
+      <section className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-2">
         <Card>
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -2153,7 +2189,7 @@ function Dashboard() {
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-4 2xl:grid-cols-3 2xl:gap-6">
+      <section className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-3 2xl:grid-cols-4">
         <Card>
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -2365,7 +2401,7 @@ function Dashboard() {
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2 xl:gap-6">
+      <section id="dashboard-prs" className="scroll-mt-24 mt-6 grid grid-cols-1 gap-5 xl:grid-cols-2 2xl:grid-cols-3">
         <Card>
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -2438,19 +2474,29 @@ function Dashboard() {
 
                 <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="rounded-2xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 p-3">
-                    <p className="text-xs font-bold text-[var(--ff-accent-text)]">
-                      Peso PR
-                    </p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-bold text-[var(--ff-accent-text)]">
+                        Peso PR
+                      </p>
+                      <Badge>Peso</Badge>
+                    </div>
 
                     <p className="mt-1 text-lg font-black">
                       {pr.weightPR.weight}kg × {pr.weightPR.reps}
                     </p>
+
+                    <p className="mt-2 text-xs leading-relaxed text-zinc-500">
+                      {formatShortDate(pr.weightPR.date)} • {pr.weightPR.workoutName || 'Treino'} • Série {pr.weightPR.setNumber || '-'}
+                    </p>
                   </div>
 
                   <div className="rounded-2xl border border-orange-500/20 bg-orange-500/10 p-3">
-                    <p className="text-xs font-bold text-orange-300">
-                      Volume PR
-                    </p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-bold text-orange-300">
+                        Volume PR
+                      </p>
+                      <Badge>Volume</Badge>
+                    </div>
 
                     <p className="mt-1 text-lg font-black">
                       {pr.volumePR.volume}kg
@@ -2458,6 +2504,10 @@ function Dashboard() {
 
                     <p className="mt-1 text-xs text-zinc-500">
                       {pr.volumePR.weight}kg × {pr.volumePR.reps}
+                    </p>
+
+                    <p className="mt-2 text-xs leading-relaxed text-zinc-500">
+                      {formatShortDate(pr.volumePR.date)} • {pr.volumePR.workoutName || 'Treino'} • Série {pr.volumePR.setNumber || '-'}
                     </p>
                   </div>
                 </div>
@@ -2493,13 +2543,29 @@ function Dashboard() {
                     </p>
 
                     <p className="mt-1 text-xs text-zinc-500">
-                      {pr.muscleGroup || 'Sem grupo'}
+                      {pr.muscleGroup || 'Sem grupo'} • {formatShortDate(pr.date)}
+                    </p>
+
+                    <p className="mt-1 line-clamp-1 text-xs text-zinc-600">
+                      {pr.workoutName || 'Treino'} • Série {pr.setNumber || '-'} • Volume {formatVolume(pr.volume)}
                     </p>
                   </div>
 
-                  <Badge>
-                    {pr.weight}kg × {pr.reps}
-                  </Badge>
+                  <div className="flex flex-col items-end gap-1">
+                    <Badge>
+                      {pr.isWeightPR && pr.isVolumePR
+                        ? 'Peso + Volume'
+                        : pr.isWeightPR
+                          ? 'Peso PR'
+                          : pr.isVolumePR
+                            ? 'Volume PR'
+                            : 'PR'}
+                    </Badge>
+
+                    <span className="text-xs font-black text-[var(--ff-accent-text)]">
+                      {pr.weight}kg × {pr.reps}
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}

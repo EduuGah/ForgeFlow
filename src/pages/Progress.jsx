@@ -404,17 +404,46 @@ function MonthlyProgressChart({ data = [], accentColor }) {
 }
 
 function SetVolumeDetails({ data = [] }) {
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [openDateKeys, setOpenDateKeys] = useState([])
+
   const validRows = useMemo(() => {
     return data
       .filter((row) => row.isValid)
       .slice()
       .reverse()
-      .slice(-20)
+      .slice(-36)
       .map((row, index) => ({
         ...row,
         index: index + 1,
       }))
   }, [data])
+
+  const groupedRows = useMemo(() => {
+    const map = new Map()
+
+    validRows
+      .slice()
+      .reverse()
+      .forEach((row) => {
+        const key = row.date ? String(row.date).slice(0, 10) : 'sem-data'
+        const current = map.get(key) || {
+          key,
+          label: formatDate(row.date),
+          rows: [],
+          totalVolume: 0,
+        }
+
+        current.rows.push(row)
+        current.totalVolume += Number(row.volume || 0)
+
+        map.set(key, current)
+      })
+
+    return Array.from(map.values())
+  }, [validRows])
+
+  const visibleGroups = isExpanded ? groupedRows : groupedRows.slice(0, 3)
 
   const biggestVolume = useMemo(() => {
     return validRows
@@ -428,10 +457,24 @@ function SetVolumeDetails({ data = [] }) {
       .sort((a, b) => Number(b.weight || 0) - Number(a.weight || 0))[0]
   }, [validRows])
 
+  function toggleDateGroup(key) {
+    setOpenDateKeys((current) =>
+      current.includes(key)
+        ? current.filter((item) => item !== key)
+        : [...current, key]
+    )
+  }
+
+  useEffect(() => {
+    if (groupedRows.length > 0 && openDateKeys.length === 0) {
+      setOpenDateKeys([groupedRows[0].key])
+    }
+  }, [groupedRows, openDateKeys.length])
+
   return (
     <ChartShell
       title="Séries recentes detalhadas"
-      description="Lista as séries recentes com treino, exercício, peso, reps, volume e data."
+      description="Agrupadas por data para leitura mais rápida. A lista tem scroll interno para não alongar a página inteira."
       icon={Sparkles}
       badge={`${validRows.length} séries`}
     >
@@ -467,66 +510,112 @@ function SetVolumeDetails({ data = [] }) {
               />
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-[var(--ff-border)]">
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[860px] text-left text-sm">
-                  <thead className="bg-[var(--ff-surface-2)] text-xs uppercase tracking-wide text-[var(--ff-muted)]">
-                    <tr>
-                      <th className="px-4 py-3">Data</th>
-                      <th className="px-4 py-3">Treino</th>
-                      <th className="px-4 py-3">Exercício</th>
-                      <th className="px-4 py-3">Série</th>
-                      <th className="px-4 py-3">Peso</th>
-                      <th className="px-4 py-3">Reps</th>
-                      <th className="px-4 py-3">Volume</th>
-                    </tr>
-                  </thead>
+            <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
+              <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm font-black text-[var(--ff-text)]">
+                    Histórico por data
+                  </p>
 
-                  <tbody className="divide-y divide-[var(--ff-border)]">
-                    {validRows
-                      .slice()
-                      .reverse()
-                      .map((row) => (
-                        <tr
-                          key={row.id}
-                          className="transition hover:bg-[var(--ff-card-hover)]"
-                        >
-                          <td className="px-4 py-3 font-bold text-[var(--ff-text)]">
-                            {formatDate(row.date)}
-                          </td>
+                  <p className="text-xs text-[var(--ff-muted)]">
+                    {groupedRows.length} dia(s) com séries válidas nos registros recentes.
+                  </p>
+                </div>
 
-                          <td className="px-4 py-3 text-[var(--ff-muted)]">
-                            {row.workoutName}
-                          </td>
+                {groupedRows.length > 3 && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setIsExpanded((current) => !current)}
+                    className="w-full sm:w-auto"
+                  >
+                    {isExpanded ? 'Mostrar menos' : 'Mostrar todos'}
+                  </Button>
+                )}
+              </div>
 
-                          <td className="px-4 py-3">
-                            <p className="font-black text-[var(--ff-text)]">
-                              {row.exerciseName}
-                            </p>
-                            <p className="mt-1 text-xs text-[var(--ff-muted)]">
-                              {row.muscleGroup} • {row.equipment}
-                            </p>
-                          </td>
+              <div className="max-h-[520px] space-y-3 overflow-y-auto pr-1">
+                {visibleGroups.map((group) => {
+                  const isOpen = openDateKeys.includes(group.key)
 
-                          <td className="px-4 py-3">
-                            <Badge>Série {row.setNumber}</Badge>
-                          </td>
+                  return (
+                    <div
+                      key={group.key}
+                      className="overflow-hidden rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)]"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => toggleDateGroup(group.key)}
+                        className="flex w-full flex-col gap-2 p-4 text-left transition hover:bg-[var(--ff-card-hover)] sm:flex-row sm:items-center sm:justify-between"
+                      >
+                        <div>
+                          <p className="font-black text-[var(--ff-text)]">
+                            {group.label}
+                          </p>
 
-                          <td className="px-4 py-3 font-black text-[var(--ff-accent-text)]">
-                            {formatWeight(row.weight)}
-                          </td>
+                          <p className="mt-1 text-xs text-[var(--ff-muted)]">
+                            {group.rows.length} série(s) • {formatVolume(group.totalVolume)}
+                          </p>
+                        </div>
 
-                          <td className="px-4 py-3 font-bold text-[var(--ff-text)]">
-                            {row.reps}
-                          </td>
+                        <Badge>
+                          {isOpen ? 'Minimizar' : 'Expandir'}
+                        </Badge>
+                      </button>
 
-                          <td className="px-4 py-3 font-black text-[var(--ff-warning-text)]">
-                            {formatVolume(row.volume)}
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
+                      {isOpen && (
+                        <div className="border-t border-[var(--ff-border)] p-3">
+                          <div className="space-y-2">
+                            {group.rows.map((row) => (
+                              <div
+                                key={row.id}
+                                className="grid grid-cols-2 gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3 text-sm lg:grid-cols-[minmax(160px,1fr)_80px_80px_110px]"
+                              >
+                                <div className="col-span-2 min-w-0 lg:col-span-1">
+                                  <p className="truncate font-black text-[var(--ff-text)]">
+                                    {row.exerciseName}
+                                  </p>
+
+                                  <p className="mt-1 truncate text-xs text-[var(--ff-muted)]">
+                                    {row.workoutName} • {row.muscleGroup} • {row.equipment}
+                                  </p>
+                                </div>
+
+                                <div>
+                                  <p className="text-[11px] uppercase tracking-wide text-[var(--ff-muted)] lg:hidden">
+                                    Peso
+                                  </p>
+
+                                  <p className="font-black text-[var(--ff-accent-text)]">
+                                    {formatWeight(row.weight)}
+                                  </p>
+                                </div>
+
+                                <div>
+                                  <p className="text-[11px] uppercase tracking-wide text-[var(--ff-muted)] lg:hidden">
+                                    Reps
+                                  </p>
+
+                                  <p className="font-bold text-[var(--ff-text)]">
+                                    {row.reps}
+                                  </p>
+                                </div>
+
+                                <div className="col-span-2 flex items-center justify-between gap-2 lg:col-span-1">
+                                  <Badge>Série {row.setNumber}</Badge>
+
+                                  <p className="font-black text-[var(--ff-warning-text)]">
+                                    {formatVolume(row.volume)}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             </div>
           </div>
