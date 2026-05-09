@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Archive,
   CheckCircle2,
@@ -31,6 +31,7 @@ import {
   showNotificationPopup,
 } from '../utils/notificationUtils'
 import {
+  clearLegacyForgeFlowStorage,
   getUserStorageData,
   saveUserStorageData,
 } from '../utils/userStorage'
@@ -66,9 +67,6 @@ function Goals() {
   const [loading, setLoading] = useState(true)
   const [source, setSource] = useState('local')
   const [search, setSearch] = useState('')
-  const deferredSearch = useDeferredValue(search)
-  const [visibleCount, setVisibleCount] = useState(12)
-  const [syncing, setSyncing] = useState(false)
   const [statusFilter, setStatusFilter] = useState('active')
   const [modalGoal, setModalGoal] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -77,60 +75,48 @@ function Goals() {
   const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
-    if (!user) return undefined
-
-    let isMounted = true
+    if (!user) return
 
     async function loadData() {
+      setLoading(true)
+
       const cachedGoals = getUserStorageData(user, 'goals', [])
       const cachedExercises = getUserStorageData(user, 'exercises', [])
 
-      setGoals(Array.isArray(cachedGoals) ? cachedGoals.map(normalizeGoal) : [])
-      setExercises(Array.isArray(cachedExercises) ? cachedExercises : [])
-      setLoading(!Array.isArray(cachedGoals) || cachedGoals.length === 0)
-      setSyncing(true)
-      setSource('local')
-
       try {
-        const [goalsResult, exercisesResult] = await Promise.allSettled([
+        const [goalsFromApi, exercisesFromApi] = await Promise.all([
           apiFetch('/goals'),
           apiFetch('/exercises'),
         ])
 
-        if (!isMounted) return
+        const normalizedGoals = Array.isArray(goalsFromApi)
+          ? goalsFromApi.map(normalizeGoal)
+          : []
 
-        const normalizedGoals = goalsResult.status === 'fulfilled' && Array.isArray(goalsResult.value)
-          ? goalsResult.value.map(normalizeGoal)
-          : Array.isArray(cachedGoals) ? cachedGoals.map(normalizeGoal) : []
-
-        const normalizedExercises = exercisesResult.status === 'fulfilled' && Array.isArray(exercisesResult.value)
-          ? exercisesResult.value.map((exercise) => ({
+        const normalizedExercises = Array.isArray(exercisesFromApi)
+          ? exercisesFromApi.map((exercise) => ({
               ...exercise,
               id: exercise._id || exercise.id,
             }))
-          : Array.isArray(cachedExercises) ? cachedExercises : []
+          : []
 
         setGoals(normalizedGoals)
         setExercises(normalizedExercises)
         saveUserStorageData(user, 'goals', normalizedGoals)
         saveUserStorageData(user, 'exercises', normalizedExercises)
-        setSource(goalsResult.status === 'fulfilled' || exercisesResult.status === 'fulfilled' ? 'database' : 'local')
+        setSource('database')
       } catch (error) {
         console.error(error)
+
+        setGoals(Array.isArray(cachedGoals) ? cachedGoals.map(normalizeGoal) : [])
+        setExercises(Array.isArray(cachedExercises) ? cachedExercises : [])
         setSource('local')
       } finally {
-        if (isMounted) {
-          setLoading(false)
-          setSyncing(false)
-        }
+        setLoading(false)
       }
     }
 
     loadData()
-
-    return () => {
-      isMounted = false
-    }
   }, [user, refreshKey])
 
   function showToast(type, title, message = '') {
@@ -164,7 +150,7 @@ function Goals() {
   }, [goals])
 
   const filteredGoals = useMemo(() => {
-    const term = deferredSearch.toLowerCase().trim()
+    const term = search.toLowerCase().trim()
 
     return goals
       .filter((goal) => {
@@ -192,15 +178,7 @@ function Goals() {
 
         return new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0)
       })
-  }, [goals, deferredSearch, statusFilter])
-
-  const visibleGoals = useMemo(() => {
-    return filteredGoals.slice(0, visibleCount)
-  }, [filteredGoals, visibleCount])
-
-  useEffect(() => {
-    setVisibleCount(12)
-  }, [deferredSearch, statusFilter])
+  }, [goals, search, statusFilter])
 
   function openCreateModal() {
     setModalGoal(null)
@@ -533,7 +511,7 @@ function Goals() {
             </Card>
           </div>
         ) : (
-          visibleGoals.map((goal) => (
+          filteredGoals.map((goal) => (
             <GoalCard
               key={goal.id}
               goal={goal}
@@ -545,19 +523,6 @@ function Goals() {
               onReactivate={handleReactivateGoal}
             />
           ))
-        )}
-
-        {visibleCount < filteredGoals.length && (
-          <div className="xl:col-span-2">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setVisibleCount((current) => current + 12)}
-              className="w-full"
-            >
-              Carregar mais metas
-            </Button>
-          </div>
         )}
       </section>
 

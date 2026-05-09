@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 
 import { useAuth } from '../../context/AuthContext'
 import { apiFetch } from '../../services/api'
-import { getUserStorageData } from '../../utils/userStorage'
+import { clearLegacyForgeFlowStorage, getUserStorageData } from '../../utils/userStorage'
 
 function getUnreadCountFromCache(user) {
   const cachedNotifications = getUserStorageData(user, 'notifications', [])
@@ -20,6 +20,8 @@ function NotificationBell() {
   const isLoadingRef = useRef(false)
 
   useEffect(() => {
+    setUnreadCount(0)
+
     if (!user) return undefined
 
     let isMounted = true
@@ -28,6 +30,7 @@ function NotificationBell() {
       if (isLoadingRef.current) return
 
       isLoadingRef.current = true
+      clearLegacyForgeFlowStorage(['notifications'])
       setUnreadCount(getUnreadCountFromCache(user))
 
       try {

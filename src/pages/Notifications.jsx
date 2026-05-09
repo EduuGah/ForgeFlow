@@ -33,6 +33,7 @@ import { useAuth } from '../context/AuthContext'
 import { apiFetch } from '../services/api'
 import { generateSmartNotifications, notifyNotificationsChanged } from '../utils/notificationUtils'
 import {
+  clearLegacyForgeFlowStorage,
   getUserStorageData,
   saveUserStorageData,
 } from '../utils/userStorage'
@@ -368,6 +369,8 @@ function Notifications() {
   async function loadNotifications(filter = statusFilter) {
     if (!user) return
 
+    clearLegacyForgeFlowStorage(['notifications'])
+
     const cachedNotifications = getUserStorageData(user, 'notifications', [])
     const normalizedCached = Array.isArray(cachedNotifications)
       ? cachedNotifications.map(normalizeNotificationFromApi)
@@ -401,6 +404,9 @@ function Notifications() {
   }
 
   useEffect(() => {
+    setNotifications([])
+    setUnreadCount(0)
+    setSelectedNotification(null)
     loadNotifications()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, statusFilter])
