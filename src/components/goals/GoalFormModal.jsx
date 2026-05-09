@@ -205,23 +205,30 @@ function GoalFormModal({
     }
   }
 
+  function showValidationModal(title, description) {
+    setValidationModal({
+      title,
+      description,
+    })
+  }
+
   function handleSubmit(event) {
     event.preventDefault()
 
     const parsedTarget = Number(targetValue)
 
     if (!title.trim()) {
-      alert('Informe um nome para a meta.')
+      showValidationModal('Atenção', 'Informe um nome para a meta.')
       return
     }
 
     if (!Number.isFinite(parsedTarget) || parsedTarget <= 0) {
-      alert('Informe um número válido no campo "Quero alcançar".')
+      showValidationModal('Atenção', 'Informe um número válido no campo "Quero alcançar".')
       return
     }
 
     if (type === 'exercise_pr_weight' && !exerciseName.trim()) {
-      alert('Informe o exercício da meta.')
+      showValidationModal('Atenção', 'Informe o exercício da meta.')
       return
     }
 
