@@ -1,6 +1,8 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
+import { Menu } from 'lucide-react'
 import { Outlet } from 'react-router-dom'
 
+import forgeflowIcon from '../../assets/forgeflow-icon.png'
 import { useAuth } from '../../context/AuthContext'
 import { useWorkoutSession } from '../../context/WorkoutSessionContext'
 import { apiFetch } from '../../services/api'
@@ -13,10 +15,10 @@ import {
 } from '../../utils/settingsUtils'
 
 import MobileBottomNav from './MobileBottomNav'
-import MobileTopbar from './MobileTopbar'
+import Sidebar from './Sidebar'
+import NotificationBell from '../notifications/NotificationBell'
 import { generateSmartNotifications } from '../../utils/notificationUtils'
 
-const Sidebar = lazy(() => import('./Sidebar'))
 const ActiveWorkoutMini = lazy(() => import('../workout/ActiveWorkoutMini'))
 const SmartNotificationPopup = lazy(() =>
   import('../notifications/SmartNotificationPopup')
@@ -42,9 +44,32 @@ function AppLayout() {
   const { user } = useAuth()
   const { activeSession } = useWorkoutSession()
 
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
-  const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [popupNotification, setPopupNotification] = useState(null)
+
+  useEffect(() => {
+    function handleOpenSidebar() {
+      setIsSidebarOpen(true)
+    }
+
+    function handleCloseSidebar() {
+      setIsSidebarOpen(false)
+    }
+
+    function handleToggleSidebar() {
+      setIsSidebarOpen((current) => !current)
+    }
+
+    window.addEventListener('forgeflow:open-sidebar', handleOpenSidebar)
+    window.addEventListener('forgeflow:close-sidebar', handleCloseSidebar)
+    window.addEventListener('forgeflow:toggle-sidebar', handleToggleSidebar)
+
+    return () => {
+      window.removeEventListener('forgeflow:open-sidebar', handleOpenSidebar)
+      window.removeEventListener('forgeflow:close-sidebar', handleCloseSidebar)
+      window.removeEventListener('forgeflow:toggle-sidebar', handleToggleSidebar)
+    }
+  }, [])
 
   useEffect(() => {
     if (!user) return undefined
@@ -129,49 +154,80 @@ function AppLayout() {
   }, [])
 
   useEffect(() => {
-    if (isMobileSidebarOpen) {
-      document.body.classList.add('ff-scroll-lock')
+    if (isSidebarOpen || popupNotification) {
+      document.body.style.overflow = 'hidden'
     } else {
-      document.body.classList.remove('ff-scroll-lock')
+      document.body.style.overflow = ''
     }
 
     return () => {
-      document.body.classList.remove('ff-scroll-lock')
+      document.body.style.overflow = ''
     }
-  }, [isMobileSidebarOpen])
+  }, [isSidebarOpen, popupNotification])
 
   return (
-    <div className="relative min-h-screen bg-[var(--ff-bg)] text-[var(--ff-text)] transition-colors duration-300">
-      <div className="pointer-events-none fixed inset-0 -z-0 bg-[radial-gradient(circle_at_top_left,var(--ff-accent-shadow),transparent_34%),radial-gradient(circle_at_bottom_right,var(--ff-accent-soft),transparent_32%)] opacity-80" />
+    <div className="min-h-screen bg-[var(--ff-bg)] text-[var(--ff-text)] transition-colors duration-300">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,var(--ff-accent-shadow),transparent_34%),radial-gradient(circle_at_bottom_right,var(--ff-accent-soft),transparent_32%)] opacity-80" />
 
-      <Suspense fallback={null}>
-        <Sidebar
-          mode="desktop"
-          collapsed={isDesktopSidebarCollapsed}
-          onToggleCollapse={() => setIsDesktopSidebarCollapsed((current) => !current)}
-        />
-      </Suspense>
-
-      <MobileTopbar onOpenSidebar={() => setIsMobileSidebarOpen(true)} />
-
-      <Suspense fallback={null}>
-        <Sidebar
-          mode="mobile"
-          isOpen={isMobileSidebarOpen}
-          onClose={() => setIsMobileSidebarOpen(false)}
-        />
-      </Suspense>
-
-      <main
-        className={[
-          'relative z-10 min-h-dvh px-4 pb-[calc(7.25rem+env(safe-area-inset-bottom))] pt-[calc(5.75rem+env(safe-area-inset-top))]',
-          'sm:px-6',
-          'lg:px-8 lg:pb-10 lg:pt-8',
-          'transition-[padding] duration-300 ease-out',
-          isDesktopSidebarCollapsed ? 'lg:pl-[7rem]' : 'lg:pl-[20rem]',
-        ].join(' ')}
+      <header
+        id="app-header"
+        className="sticky top-0 z-40 border-b border-[var(--ff-border)] bg-[var(--ff-header)] backdrop-blur-xl transition-colors duration-300"
       >
-        <div className="mx-auto w-full max-w-[1760px]">
+        <div className="safe-top">
+          <div className="flex h-16 items-center justify-between gap-3 px-4 sm:px-6">
+            <div className="flex min-w-0 items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setIsSidebarOpen(true)}
+                className="group flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface)] text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)] active:scale-95"
+                aria-label="Abrir menu"
+                aria-expanded={isSidebarOpen}
+              >
+                <Menu
+                  size={22}
+                  className="transition group-hover:text-[var(--ff-accent-text)]"
+                />
+              </button>
+
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)] shadow-[0_0_18px_var(--ff-accent-shadow)]">
+                  <img
+                    src={forgeflowIcon}
+                    alt="ForgeFlow"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+
+                <div className="min-w-0">
+                  <h1 className="truncate text-lg font-black leading-tight tracking-tight">
+                    Forge<span className="text-[var(--ff-accent)]">Flow</span>
+                  </h1>
+
+                  <p className="hidden truncate text-xs text-[var(--ff-muted)] sm:block">
+                    Workout Tracker
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-2">
+              <div className="hidden rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-3 py-1 text-xs font-bold text-[var(--ff-accent-text)] sm:block">
+                Beta
+              </div>
+
+              <NotificationBell />
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <Sidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      />
+
+      <main className="relative px-4 py-6 pb-36 sm:px-6 lg:px-8 lg:pb-10">
+        <div className="mx-auto w-full max-w-[1600px]">
           <Outlet />
         </div>
       </main>

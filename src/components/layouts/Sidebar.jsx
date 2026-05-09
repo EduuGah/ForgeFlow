@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import {
   AlertCircle,
   Bell,
@@ -64,53 +63,11 @@ const linkGroups = [
   },
 ]
 
-function Sidebar({
-  isOpen,
-  open,
-  isSidebarOpen,
-  onClose,
-  onOpenChange,
-}) {
+function Sidebar({ isOpen = false, onClose }) {
   const { user, logout } = useAuth()
 
-  const controlledOpen =
-    isOpen !== undefined ||
-    open !== undefined ||
-    isSidebarOpen !== undefined
-
-  const externalOpen = Boolean(isOpen ?? open ?? isSidebarOpen)
-  const [internalOpen, setInternalOpen] = useState(false)
-
-  const sidebarIsOpen = controlledOpen ? externalOpen : internalOpen
-
-  useEffect(() => {
-    function handleOpenSidebar() {
-      setInternalOpen(true)
-      onOpenChange?.(true)
-    }
-
-    function handleCloseSidebar() {
-      setInternalOpen(false)
-      onOpenChange?.(false)
-    }
-
-    window.addEventListener('forgeflow:open-sidebar', handleOpenSidebar)
-    window.addEventListener('forgeflow:close-sidebar', handleCloseSidebar)
-    window.addEventListener('forgeflow:toggle-sidebar', handleOpenSidebar)
-
-    return () => {
-      window.removeEventListener('forgeflow:open-sidebar', handleOpenSidebar)
-      window.removeEventListener('forgeflow:close-sidebar', handleCloseSidebar)
-      window.removeEventListener('forgeflow:toggle-sidebar', handleOpenSidebar)
-    }
-  }, [onOpenChange])
-
   function closeSidebar() {
-    setInternalOpen(false)
-    onOpenChange?.(false)
     onClose?.()
-
-    window.dispatchEvent(new CustomEvent('forgeflow:sidebar-closed'))
   }
 
   function handleLogout() {
@@ -125,20 +82,20 @@ function Sidebar({
         onClick={closeSidebar}
         className={[
           'fixed inset-0 z-[9990] bg-black/70 backdrop-blur-sm transition-opacity duration-300',
-          sidebarIsOpen
+          isOpen
             ? 'pointer-events-auto opacity-100'
             : 'pointer-events-none opacity-0',
         ].join(' ')}
         aria-label="Fechar menu"
-        tabIndex={sidebarIsOpen ? 0 : -1}
+        tabIndex={isOpen ? 0 : -1}
       />
 
       <aside
         className={[
           'fixed left-0 top-0 z-[10000] flex h-dvh w-[86vw] max-w-[330px] flex-col overflow-hidden border-r border-[var(--ff-border)] bg-[var(--ff-sidebar)] text-[var(--ff-text)] shadow-2xl shadow-black/40 transition-transform duration-300 ease-out',
-          sidebarIsOpen ? 'translate-x-0' : '-translate-x-full',
+          isOpen ? 'translate-x-0' : '-translate-x-full',
         ].join(' ')}
-        aria-hidden={!sidebarIsOpen}
+        aria-hidden={!isOpen}
       >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--ff-accent-soft),transparent_38%)]" />
 
