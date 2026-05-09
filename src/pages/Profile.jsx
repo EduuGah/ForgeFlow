@@ -521,11 +521,11 @@ function Profile() {
         }
       />
 
-      <section className="grid grid-cols-1 gap-4 2xl:grid-cols-3 2xl:gap-6">
+      <section className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.8fr)_minmax(300px,0.9fr)]">
         <Card className="overflow-hidden border-[var(--ff-accent-border)]/20 bg-gradient-to-br from-[var(--ff-accent-soft)]/20 via-[#18181b] to-[#121212] xl:col-span-2">
-          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-5">
-              <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)] shadow-[0_0_20px_var(--ff-accent-shadow)]">
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)] shadow-[0_0_20px_var(--ff-accent-shadow)]">
                 {profile.avatarUrl ? (
                   <img
                     src={profile.avatarUrl}
@@ -545,7 +545,7 @@ function Profile() {
                   ForgeFlow Athlete
                 </div>
 
-                <h1 className="mt-3 text-3xl font-black tracking-tight">
+                <h1 className="mt-3 text-2xl font-black tracking-tight lg:text-3xl">
                   {profile.name || 'Atleta ForgeFlow'}
                 </h1>
 
@@ -738,8 +738,8 @@ function Profile() {
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-4 2xl:grid-cols-3 2xl:gap-6">
-        <div className="space-y-6 xl:col-span-2">
+      <section className="mt-5 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.65fr)_minmax(300px,0.95fr)]">
+        <div className="space-y-5">
           <Card>
             <div className="flex items-start justify-between gap-4">
               <div>

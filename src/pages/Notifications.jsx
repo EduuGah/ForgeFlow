@@ -765,7 +765,7 @@ function Notifications() {
         </div>
       </Card>
 
-      <section className="mt-6 space-y-4">
+      <section className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2">
         {filteredNotifications.length === 0 ? (
           <Card>
             <EmptyState
@@ -790,8 +790,8 @@ function Notifications() {
                 key={notification.id}
                 className={
                   isUnread
-                    ? 'group relative overflow-hidden rounded-3xl border border-[var(--ff-accent-border)] bg-[var(--ff-card)] p-4 shadow-[0_0_28px_var(--ff-accent-shadow)] transition hover:-translate-y-0.5 hover:bg-[var(--ff-card-hover)]'
-                    : 'group relative overflow-hidden rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 opacity-80 transition hover:-translate-y-0.5 hover:opacity-100 hover:bg-[var(--ff-card-hover)]'
+                    ? 'group relative flex h-full flex-col overflow-hidden rounded-3xl border border-[var(--ff-accent-border)] bg-[var(--ff-card)] p-4 shadow-[0_0_28px_var(--ff-accent-shadow)]/10 transition hover:-translate-y-0.5 hover:bg-[var(--ff-card-hover)]'
+                    : 'group relative flex h-full flex-col overflow-hidden rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 opacity-85 transition hover:-translate-y-0.5 hover:opacity-100 hover:bg-[var(--ff-card-hover)]'
                 }
               >
                 {isUnread && (

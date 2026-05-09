@@ -501,7 +501,7 @@ function History() {
         />
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-4 2xl:grid-cols-[minmax(0,1fr)_360px] 2xl:gap-6">
+      <section className="mt-6 grid grid-cols-1 gap-5 2xl:grid-cols-[minmax(0,1fr)_340px] 2xl:gap-6">
         <div>
           <Card>
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -528,7 +528,7 @@ function History() {
               )}
             </div>
 
-            <div className="mt-5 grid grid-cols-1 gap-3 xl:grid-cols-[1fr_190px_190px_auto]">
+            <div className="mt-5 grid grid-cols-1 gap-3 2xl:grid-cols-[minmax(0,1fr)_180px_180px_auto]">
               <div>
                 <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-zinc-500">
                   Buscar
@@ -740,7 +740,7 @@ function History() {
 
                     {isExpanded && (
                       <div className="border-t border-zinc-800 p-4 sm:p-5">
-                        <div className="space-y-4">
+                        <div className="max-h-[520px] space-y-4 overflow-y-auto pr-1">
                           {session.exercises.map((exercise, exerciseIndex) => {
                             const exerciseVolume = getExerciseVolume(exercise)
                             const validSets = (exercise.sets || []).filter(isValidWorkingSet)

@@ -406,6 +406,7 @@ function MonthlyProgressChart({ data = [], accentColor }) {
 function SetVolumeDetails({ data = [] }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [openDateKeys, setOpenDateKeys] = useState([])
+  const [initialized, setInitialized] = useState(false)
 
   const validRows = useMemo(() => {
     return data
@@ -429,7 +430,7 @@ function SetVolumeDetails({ data = [] }) {
         const key = row.date ? String(row.date).slice(0, 10) : 'sem-data'
         const current = map.get(key) || {
           key,
-          label: formatDate(row.date),
+          label: formatLongDate(row.date),
           rows: [],
           totalVolume: 0,
         }
@@ -446,15 +447,11 @@ function SetVolumeDetails({ data = [] }) {
   const visibleGroups = isExpanded ? groupedRows : groupedRows.slice(0, 3)
 
   const biggestVolume = useMemo(() => {
-    return validRows
-      .slice()
-      .sort((a, b) => Number(b.volume || 0) - Number(a.volume || 0))[0]
+    return validRows.slice().sort((a, b) => Number(b.volume || 0) - Number(a.volume || 0))[0]
   }, [validRows])
 
   const biggestWeight = useMemo(() => {
-    return validRows
-      .slice()
-      .sort((a, b) => Number(b.weight || 0) - Number(a.weight || 0))[0]
+    return validRows.slice().sort((a, b) => Number(b.weight || 0) - Number(a.weight || 0))[0]
   }, [validRows])
 
   function toggleDateGroup(key) {
@@ -466,15 +463,16 @@ function SetVolumeDetails({ data = [] }) {
   }
 
   useEffect(() => {
-    if (groupedRows.length > 0 && openDateKeys.length === 0) {
+    if (!initialized && groupedRows.length > 0) {
       setOpenDateKeys([groupedRows[0].key])
+      setInitialized(true)
     }
-  }, [groupedRows, openDateKeys.length])
+  }, [groupedRows, initialized])
 
   return (
     <ChartShell
       title="Séries recentes detalhadas"
-      description="Agrupadas por data para leitura mais rápida. A lista tem scroll interno para não alongar a página inteira."
+      description="Agrupadas por data, com expansão por dia e scroll interno para a página não ficar longa demais."
       icon={Sparkles}
       badge={`${validRows.length} séries`}
     >
@@ -513,22 +511,12 @@ function SetVolumeDetails({ data = [] }) {
             <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
               <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-sm font-black text-[var(--ff-text)]">
-                    Histórico por data
-                  </p>
-
-                  <p className="text-xs text-[var(--ff-muted)]">
-                    {groupedRows.length} dia(s) com séries válidas nos registros recentes.
-                  </p>
+                  <p className="text-sm font-black text-[var(--ff-text)]">Histórico por data</p>
+                  <p className="text-xs text-[var(--ff-muted)]">{groupedRows.length} dia(s) com séries válidas nos registros recentes.</p>
                 </div>
 
                 {groupedRows.length > 3 && (
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => setIsExpanded((current) => !current)}
-                    className="w-full sm:w-auto"
-                  >
+                  <Button type="button" variant="secondary" onClick={() => setIsExpanded((current) => !current)} className="w-full sm:w-auto">
                     {isExpanded ? 'Mostrar menos' : 'Mostrar todos'}
                   </Button>
                 )}
@@ -539,28 +527,18 @@ function SetVolumeDetails({ data = [] }) {
                   const isOpen = openDateKeys.includes(group.key)
 
                   return (
-                    <div
-                      key={group.key}
-                      className="overflow-hidden rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)]"
-                    >
+                    <div key={group.key} className="overflow-hidden rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)]">
                       <button
                         type="button"
                         onClick={() => toggleDateGroup(group.key)}
                         className="flex w-full flex-col gap-2 p-4 text-left transition hover:bg-[var(--ff-card-hover)] sm:flex-row sm:items-center sm:justify-between"
                       >
-                        <div>
-                          <p className="font-black text-[var(--ff-text)]">
-                            {group.label}
-                          </p>
-
-                          <p className="mt-1 text-xs text-[var(--ff-muted)]">
-                            {group.rows.length} série(s) • {formatVolume(group.totalVolume)}
-                          </p>
+                        <div className="min-w-0">
+                          <p className="font-black text-[var(--ff-text)]">{group.label}</p>
+                          <p className="mt-1 text-xs text-[var(--ff-muted)]">{group.rows.length} série(s) • <span className="inline-block max-w-full break-words">{formatVolume(group.totalVolume)}</span></p>
                         </div>
 
-                        <Badge>
-                          {isOpen ? 'Minimizar' : 'Expandir'}
-                        </Badge>
+                        <Badge>{isOpen ? 'Minimizar' : 'Expandir'}</Badge>
                       </button>
 
                       {isOpen && (
@@ -572,41 +550,23 @@ function SetVolumeDetails({ data = [] }) {
                                 className="grid grid-cols-2 gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3 text-sm lg:grid-cols-[minmax(160px,1fr)_80px_80px_110px]"
                               >
                                 <div className="col-span-2 min-w-0 lg:col-span-1">
-                                  <p className="truncate font-black text-[var(--ff-text)]">
-                                    {row.exerciseName}
-                                  </p>
-
-                                  <p className="mt-1 truncate text-xs text-[var(--ff-muted)]">
-                                    {row.workoutName} • {row.muscleGroup} • {row.equipment}
-                                  </p>
+                                  <p className="truncate font-black text-[var(--ff-text)]">{row.exerciseName}</p>
+                                  <p className="mt-1 truncate text-xs text-[var(--ff-muted)]">{row.workoutName} • {row.muscleGroup} • {row.equipment}</p>
                                 </div>
 
                                 <div>
-                                  <p className="text-[11px] uppercase tracking-wide text-[var(--ff-muted)] lg:hidden">
-                                    Peso
-                                  </p>
-
-                                  <p className="font-black text-[var(--ff-accent-text)]">
-                                    {formatWeight(row.weight)}
-                                  </p>
+                                  <p className="text-[11px] uppercase tracking-wide text-[var(--ff-muted)] lg:hidden">Peso</p>
+                                  <p className="font-black text-[var(--ff-accent-text)]">{formatWeight(row.weight)}</p>
                                 </div>
 
                                 <div>
-                                  <p className="text-[11px] uppercase tracking-wide text-[var(--ff-muted)] lg:hidden">
-                                    Reps
-                                  </p>
-
-                                  <p className="font-bold text-[var(--ff-text)]">
-                                    {row.reps}
-                                  </p>
+                                  <p className="text-[11px] uppercase tracking-wide text-[var(--ff-muted)] lg:hidden">Reps</p>
+                                  <p className="font-bold text-[var(--ff-text)]">{row.reps}</p>
                                 </div>
 
                                 <div className="col-span-2 flex items-center justify-between gap-2 lg:col-span-1">
                                   <Badge>Série {row.setNumber}</Badge>
-
-                                  <p className="font-black text-[var(--ff-warning-text)]">
-                                    {formatVolume(row.volume)}
-                                  </p>
+                                  <p className="max-w-[120px] break-words text-right font-black text-[var(--ff-warning-text)]">{formatVolume(row.volume)}</p>
                                 </div>
                               </div>
                             ))}
@@ -1246,11 +1206,6 @@ function Progress() {
               <ChartLoadingCard title="Preparando PRs por exercício" />
             )}
           </Suspense>
-
-          <ExercisePrTable
-            data={normalizedProgress.exerciseOptions}
-            onSelectExercise={setSelectedExercise}
-          />
 
           <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
             <RecentWorkoutDetails workouts={normalizedProgress.recentWorkouts} />

@@ -577,7 +577,7 @@ function Settings() {
         </div>
       )}
 
-      <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <section className="grid grid-cols-1 gap-6 2xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-6">
           <Card>
             <SectionTitle
@@ -913,7 +913,7 @@ function Settings() {
         </div>
 
         <aside className="space-y-6">
-          <Card className="xl:sticky xl:top-24">
+          <Card>
             <SectionTitle
               icon={AlertTriangle}
               title="Área de risco"

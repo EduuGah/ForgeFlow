@@ -77,21 +77,45 @@ function formatDate(dateString) {
     })
 }
 
-function formatRelativeDate(dateString) {
-    if (!dateString) return 'Sem registro'
+function getCalendarDayDiff(dateString) {
+    if (!dateString) return null
 
     const now = new Date()
     const date = new Date(dateString)
 
+    const startNow = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const startDate = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+
+    return Math.max(0, Math.floor((startNow - startDate) / 86400000))
+}
+
+function getRecoveryStateByDayDiff(dayDiff) {
+    if (dayDiff === null || Number.isNaN(dayDiff)) {
+        return { level: 'unknown', recoveryPercent: 0 }
+    }
+
+    if (dayDiff <= 0) return { level: 'low', recoveryPercent: 25 }
+    if (dayDiff === 1) return { level: 'medium', recoveryPercent: 55 }
+    if (dayDiff === 2) return { level: 'good', recoveryPercent: 82 }
+
+    return { level: 'ready', recoveryPercent: 100 }
+}
+
+function formatRelativeDate(dateString) {
+    if (!dateString) return 'Sem registro'
+
+    const dayDiff = getCalendarDayDiff(dateString)
+    const now = new Date()
+    const date = new Date(dateString)
     const diffHours = Math.floor((now - date) / 1000 / 60 / 60)
 
-    if (diffHours < 1) return 'Agora há pouco'
-    if (diffHours < 24) return `${diffHours}h atrás`
+    if (dayDiff === 0) {
+        if (diffHours < 1) return 'Hoje • agora há pouco'
+        return `Hoje • ${diffHours}h atrás`
+    }
 
-    const diffDays = Math.floor(diffHours / 24)
-
-    if (diffDays === 1) return 'Ontem'
-    return `${diffDays} dias atrás`
+    if (dayDiff == 1) return 'Ontem'
+    return `${dayDiff} dias atrás`
 }
 
 function formatVolume(value) {
@@ -122,7 +146,14 @@ function MuscleRecovery() {
                 if (!isMounted) return
 
                 const normalizedRecovery = Array.isArray(data?.recovery)
-                    ? data.recovery
+                    ? data.recovery.map((item) => {
+                        const state = getRecoveryStateByDayDiff(getCalendarDayDiff(item.lastTrainedAt))
+                        return {
+                            ...item,
+                            level: item.lastTrainedAt ? state.level : (item.level || 'unknown'),
+                            recoveryPercent: item.lastTrainedAt ? state.recoveryPercent : Number(item.recoveryPercent || 0),
+                        }
+                    })
                     : []
 
                 setRecovery(normalizedRecovery)
@@ -407,24 +438,24 @@ function MuscleRecovery() {
 
                         <p className="mt-3 text-sm leading-relaxed text-zinc-500">
                             A recuperação é estimada pelo tempo desde o último treino de cada grupo muscular.
-                            Por enquanto, o cálculo usa uma regra simples de 24h, 48h e 72h.
+                            O cálculo foi ajustado para considerar a virada do dia: mudou o dia, já conta como +1 dia de recuperação.
                         </p>
 
                         <div className="mt-4 space-y-2 text-sm">
                             <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-3 text-red-200">
-                                0–24h: recuperando
+                                Mesmo dia: recuperando
                             </div>
 
                             <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-3 text-yellow-200">
-                                24–48h: parcial
+                                Dia seguinte: parcial
                             </div>
 
                             <div className="rounded-2xl border border-blue-500/20 bg-blue-500/10 p-3 text-blue-200">
-                                48–72h: quase pronto
+                                2 dias depois: quase pronto
                             </div>
 
                             <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-emerald-200">
-                                72h+: recuperado
+                                3 dias ou mais: recuperado
                             </div>
                         </div>
                     </Card>

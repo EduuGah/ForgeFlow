@@ -1,4 +1,28 @@
-import { CheckCircle2, AlertCircle, X } from 'lucide-react'
+import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react'
+
+function getToastTone(type) {
+  if (type === 'error' || type === 'danger') {
+    return {
+      icon: AlertCircle,
+      iconBox: 'bg-red-500/10 text-[var(--ff-danger-text)] border-red-500/20',
+      bar: 'bg-red-500',
+    }
+  }
+
+  if (type === 'info') {
+    return {
+      icon: Info,
+      iconBox: 'bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)] border-[var(--ff-accent-border)]',
+      bar: 'bg-[var(--ff-accent)]',
+    }
+  }
+
+  return {
+    icon: CheckCircle2,
+    iconBox: 'bg-emerald-500/10 text-[var(--ff-success-text)] border-emerald-500/20',
+    bar: 'bg-emerald-500',
+  }
+}
 
 function Toast({
   show,
@@ -9,37 +33,38 @@ function Toast({
 }) {
   if (!show) return null
 
-  const isSuccess = type === 'success'
+  const tone = getToastTone(type)
+  const Icon = tone.icon
 
   return (
-    <div className="safe-top fixed left-3 right-3 top-20 z-[10000] rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 text-[var(--ff-text)] shadow-2xl shadow-black/20 sm:left-auto sm:right-4 sm:w-[calc(100%-32px)] sm:max-w-sm">
-      <div className="grid grid-cols-[44px_minmax(0,1fr)_36px] items-center gap-3">
-        <div
-          className={
-            isSuccess
-              ? 'flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-[var(--ff-success-text)]'
-              : 'flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-red-500/10 text-[var(--ff-danger-text)]'
-          }
-        >
-          {isSuccess ? <CheckCircle2 size={22} /> : <AlertCircle size={22} />}
-        </div>
+    <div className="pointer-events-none safe-top fixed left-3 right-3 top-20 z-[10000] flex justify-center sm:left-auto sm:right-4 sm:justify-end">
+      <div className="pointer-events-auto relative w-full max-w-[420px] overflow-hidden rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] text-[var(--ff-text)] shadow-2xl shadow-black/25 backdrop-blur-xl animate-[fadeIn_0.16s_ease-out]">
+        <div className={`absolute inset-x-0 top-0 h-1 ${tone.bar}`} />
 
-        <div className="min-w-0 self-center text-center">
-          <p className="truncate text-base font-black leading-tight text-[var(--ff-text)]">
-            {title}
-          </p>
+        <div className="flex items-start gap-3 px-4 py-4 pr-12">
+          <div
+            className={`mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border ${tone.iconBox}`}
+          >
+            <Icon size={22} />
+          </div>
 
-          {message && (
-            <p className="mt-1 text-sm leading-relaxed text-[var(--ff-muted)]">
-              {message}
+          <div className="min-w-0 flex-1 pt-0.5">
+            <p className="text-left text-base font-black leading-snug tracking-tight text-[var(--ff-text)]">
+              {title}
             </p>
-          )}
+
+            {message && (
+              <p className="mt-1.5 text-left text-sm leading-relaxed text-[var(--ff-muted)]">
+                {message}
+              </p>
+            )}
+          </div>
         </div>
 
         <button
           type="button"
           onClick={onClose}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[var(--ff-muted)] transition hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)]"
+          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-xl text-[var(--ff-muted)] transition hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)]"
           aria-label="Fechar aviso"
         >
           <X size={18} />

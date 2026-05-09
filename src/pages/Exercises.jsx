@@ -127,6 +127,15 @@ function normalizeEquipment(equipment) {
     Cable: 'Cabo',
     Barbell: 'Barra',
     Bench: 'Banco',
+    'Barra EZ': 'Barra',
+    'Barra W': 'Barra',
+    'Barra Z': 'Barra',
+    'EZ Bar': 'Barra',
+    'EZ-bar': 'Barra',
+    'W Bar': 'Barra',
+    'Z Bar': 'Barra',
+    'Barra curva': 'Barra',
+    'Barra reta': 'Barra',
   }
 
   return aliases[normalized] || normalized
@@ -1317,23 +1326,23 @@ function Exercises() {
           </Card>
 
           <Card className="hidden border border-zinc-800 bg-gradient-to-b from-[#17171b] to-[#121216] xl:block">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
-                <Wrench size={22} />
+            <div className="flex items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
+                <Wrench size={18} />
               </div>
 
               <div>
-                <h2 className="text-lg font-black">
+                <h2 className="text-base font-black">
                   Equipamentos
                 </h2>
 
-                <p className="text-sm text-zinc-500">
-                  Veja por ferramenta utilizada.
+                <p className="text-xs text-zinc-500">
+                  Atalho compacto por ferramenta.
                 </p>
               </div>
             </div>
 
-            <div className="mt-5 grid grid-cols-2 gap-3">
+            <div className="mt-4 grid grid-cols-3 gap-2">
               {stats.equipmentStats.map((item) => (
                 <button
                   key={item.name}
@@ -1345,16 +1354,16 @@ function Exercises() {
                   }
                   className={
                     equipmentFilter === item.name
-                      ? 'rounded-2xl border border-[var(--ff-accent-border)]/40 bg-[var(--ff-accent-soft)]/10 p-3 text-left shadow-[0_0_14px_var(--ff-accent-shadow)]/10'
-                      : 'rounded-2xl border border-zinc-800 bg-[#18181b] p-3 text-left transition hover:border-[var(--ff-accent-border)]/30'
+                      ? 'rounded-xl border border-[var(--ff-accent-border)]/40 bg-[var(--ff-accent-soft)]/10 p-2.5 text-left shadow-[0_0_14px_var(--ff-accent-shadow)]/10'
+                      : 'rounded-xl border border-zinc-800 bg-[#18181b] p-2.5 text-left transition hover:border-[var(--ff-accent-border)]/30'
                   }
                 >
-                  <p className="text-sm font-semibold">
+                  <p className="line-clamp-1 text-xs font-semibold">
                     {item.name}
                   </p>
 
-                  <p className="mt-1 text-xs text-zinc-500">
-                    {item.count}
+                  <p className="mt-1 text-[11px] text-zinc-500">
+                    {item.count} ex.
                   </p>
                 </button>
               ))}

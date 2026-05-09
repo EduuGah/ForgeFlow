@@ -966,7 +966,7 @@ function Dashboard() {
       />
 
 
-      <nav className="mb-5 rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 shadow-[0_14px_34px_rgba(0,0,0,0.18)]">
+      <nav className="mb-6 rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 shadow-[0_14px_34px_rgba(0,0,0,0.18)]">
         <p className="px-2 pb-2 text-xs font-black uppercase tracking-wide text-[var(--ff-muted)]">
           Mapa rápido
         </p>
@@ -993,7 +993,9 @@ function Dashboard() {
         </div>
       </nav>
 
-      <section id="dashboard-overview" className="scroll-mt-24 grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.7fr)_minmax(320px,0.8fr)]">
+      <SectionIntro eyebrow="Visão geral" title="Seu painel principal" description="Comece pelo resumo principal, depois use o mapa rápido para navegar entre metas, hoje, evolução, PRs e alertas." />
+
+      <section id="dashboard-overview" className="scroll-mt-24 mb-8 grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(320px,0.8fr)]">
         <Card className="overflow-hidden border-[var(--ff-accent-border)]/20 bg-gradient-to-br from-[var(--ff-accent-soft)]/20 via-[var(--ff-card)] to-[var(--ff-surface-2)]">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_330px] lg:items-center">
             <div className="min-w-0">
@@ -1176,7 +1178,9 @@ function Dashboard() {
 
 
       {/* Metas e notificações aparecem depois do resumo principal para não empurrar o Dashboard para baixo. */}
-      <section id="dashboard-goals" className="scroll-mt-24 mb-6 grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_220px]">
+      <SectionIntro eyebrow="Metas" title="Próximos objetivos" description="Aqui ficam suas metas ativas e o que está mais perto de ser concluído." />
+
+      <section id="dashboard-goals" className="scroll-mt-24 mb-8 grid grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_220px]">
         <Card className="p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
@@ -1319,7 +1323,9 @@ function Dashboard() {
         </Card>
       </section>
 
-      <section id="dashboard-performance" className="scroll-mt-24 mt-6 grid grid-cols-1 gap-5 xl:grid-cols-3 2xl:grid-cols-4">
+      <SectionIntro eyebrow="Evolução" title="Como você está treinando" description="Resumo de frequência, consistência, volume e distribuição muscular para entender rapidamente sua fase atual." className="mt-2" />
+
+      <section id="dashboard-performance" className="scroll-mt-24 mt-3 grid grid-cols-1 gap-5 xl:grid-cols-3 2xl:grid-cols-4">
         <Card className="xl:col-span-2">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -2401,7 +2407,9 @@ function Dashboard() {
         </Card>
       </section>
 
-      <section id="dashboard-prs" className="scroll-mt-24 mt-6 grid grid-cols-1 gap-5 xl:grid-cols-2 2xl:grid-cols-3">
+      <SectionIntro eyebrow="Recordes" title="Seus PRs e destaques" description="Veja seus recordes recentes com contexto completo: data, treino, tipo de PR e volume da série." className="mt-2" />
+
+      <section id="dashboard-prs" className="scroll-mt-24 mt-3 grid grid-cols-1 gap-5 xl:grid-cols-2 2xl:grid-cols-3">
         <Card>
           <div className="flex items-start justify-between gap-4">
             <div>
