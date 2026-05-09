@@ -12,6 +12,7 @@ import {
   Layers3,
   Filter,
   Search,
+  SlidersHorizontal,
   Sparkles,
   Target,
   Activity,
@@ -40,6 +41,7 @@ import Select from '../components/ui/Select'
 import Textarea from '../components/ui/Textarea'
 import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
+import MobileFilterSheet from '../components/ui/MobileFilterSheet'
 
 const INITIAL_VISIBLE_COUNT = 8
 const LOAD_MORE_COUNT = 8
@@ -582,6 +584,7 @@ function Exercises() {
   const [dataSource, setDataSource] = useState('local')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT)
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
 
   const [exercises, setExercises] = useState([])
 
@@ -1101,7 +1104,7 @@ function Exercises() {
         }
       />
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="ff-desktop-only grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="Total"
           value={indexedExercises.length}
@@ -1132,7 +1135,7 @@ function Exercises() {
       </section>
 
       <section className="mt-6 grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-[330px_minmax(0,1fr)]">
-        <aside className="order-2 space-y-6 xl:order-1">
+        <aside className="order-2 hidden space-y-6 xl:order-1 xl:block">
           <Card className="overflow-hidden border border-zinc-800 bg-gradient-to-b from-[#17171b] to-[#121216]">
             <div className="border-b border-zinc-800 p-5">
               <div className="flex items-center gap-3">
@@ -1438,6 +1441,17 @@ function Exercises() {
 
                     <button
                       type="button"
+                      onClick={() => setIsMobileFilterOpen(true)}
+                      className="shrink-0 rounded-full border border-zinc-800 bg-zinc-950 px-4 py-2 text-xs font-bold text-zinc-300"
+                    >
+                      <span className="inline-flex items-center gap-1">
+                        <SlidersHorizontal size={13} />
+                        Filtros
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
                       onClick={() => setShowOnlyFavorites((current) => !current)}
                       className={
                         showOnlyFavorites
@@ -1727,6 +1741,66 @@ function Exercises() {
           </Card>
         </main>
       </section>
+
+
+      <MobileFilterSheet
+        open={isMobileFilterOpen}
+        title="Filtros de exercícios"
+        description="Use filtros completos sem precisar descer até o fim da biblioteca."
+        onClose={() => setIsMobileFilterOpen(false)}
+      >
+        <div className="space-y-4">
+          <Input
+            type="search"
+            placeholder="Buscar por nome, grupo, equipamento..."
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+
+          <button
+            type="button"
+            onClick={() => setShowOnlyFavorites((current) => !current)}
+            className={
+              showOnlyFavorites
+                ? 'flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-yellow-500/30 bg-yellow-500/10 text-sm font-bold text-yellow-300'
+                : 'flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-950 text-sm font-bold text-zinc-300'
+            }
+          >
+            <Star size={17} fill={showOnlyFavorites ? 'currentColor' : 'none'} />
+            Somente favoritos
+          </button>
+
+          <Select value={groupFilter} onChange={(event) => setGroupFilter(event.target.value)}>
+            <option value="">Todos os grupos</option>
+            {stats.muscleGroups.map((group) => (
+              <option key={group} value={group}>{group}</option>
+            ))}
+          </Select>
+
+          <Select value={subgroupFilter} onChange={(event) => setSubgroupFilter(event.target.value)}>
+            <option value="">Todos os subgrupos</option>
+            {stats.subgroupList.map((subgroup) => (
+              <option key={subgroup} value={subgroup}>{subgroup}</option>
+            ))}
+          </Select>
+
+          <Select value={equipmentFilter} onChange={(event) => setEquipmentFilter(event.target.value)}>
+            <option value="">Todos os equipamentos</option>
+            {stats.equipmentList.map((item) => (
+              <option key={item} value={item}>{item}</option>
+            ))}
+          </Select>
+
+          <div className="grid grid-cols-2 gap-3 pt-2">
+            <Button type="button" variant="secondary" onClick={clearFilters} className="w-full">
+              Limpar
+            </Button>
+            <Button type="button" onClick={() => setIsMobileFilterOpen(false)} className="w-full">
+              Aplicar
+            </Button>
+          </div>
+        </div>
+      </MobileFilterSheet>
 
       <button
         type="button"

@@ -6,6 +6,7 @@ import {
   Info,
   Target,
   Trophy,
+  AlertTriangle,
   X,
 } from 'lucide-react'
 
@@ -154,6 +155,7 @@ function GoalFormModal({
   const [exerciseName, setExerciseName] = useState('')
   const [deadline, setDeadline] = useState('')
   const [customMode, setCustomMode] = useState(false)
+  const [validationModal, setValidationModal] = useState(null)
 
   const selectedConfig = useMemo(() => {
     return getGoalTypeConfig(type)
@@ -205,23 +207,27 @@ function GoalFormModal({
     }
   }
 
+  function showValidation(title, description) {
+    setValidationModal({ title, description })
+  }
+
   function handleSubmit(event) {
     event.preventDefault()
 
     const parsedTarget = Number(targetValue)
 
     if (!title.trim()) {
-      alert('Informe um nome para a meta.')
+      showValidation('Nome da meta obrigatório', 'Informe um nome para identificar sua meta.')
       return
     }
 
     if (!Number.isFinite(parsedTarget) || parsedTarget <= 0) {
-      alert('Informe um número válido no campo "Quero alcançar".')
+      showValidation('Valor alvo inválido', 'Informe um número válido no campo Quero alcançar.')
       return
     }
 
     if (type === 'exercise_pr_weight' && !exerciseName.trim()) {
-      alert('Informe o exercício da meta.')
+      showValidation('Exercício obrigatório', 'Escolha qual exercício será usado para acompanhar este PR.')
       return
     }
 
@@ -242,8 +248,8 @@ function GoalFormModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] shadow-2xl">
+    <div className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/75 p-3 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="max-h-[92dvh] w-full max-w-4xl overflow-y-auto rounded-t-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] shadow-2xl sm:rounded-[2rem]">
         <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[var(--ff-border)] bg-[var(--ff-card)] p-5">
           <div>
             <p className="text-xs font-black uppercase tracking-wide text-[var(--ff-accent-text)]">
@@ -482,6 +488,32 @@ function GoalFormModal({
             </Button>
           </div>
         </form>
+        {validationModal && (
+          <div className="fixed inset-0 z-[11000] flex items-end justify-center bg-black/80 p-3 backdrop-blur-md sm:items-center sm:p-4">
+            <div className="w-full max-w-md rounded-t-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] p-5 text-center shadow-2xl sm:rounded-3xl sm:p-6">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-yellow-500/25 bg-yellow-500/10 text-[var(--ff-warning-text)]">
+                <AlertTriangle size={28} />
+              </div>
+
+              <h3 className="mt-5 text-xl font-black text-[var(--ff-text)]">
+                {validationModal.title}
+              </h3>
+
+              <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-[var(--ff-muted)]">
+                {validationModal.description}
+              </p>
+
+              <Button
+                type="button"
+                onClick={() => setValidationModal(null)}
+                className="mt-6 w-full"
+              >
+                Entendi
+              </Button>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   )

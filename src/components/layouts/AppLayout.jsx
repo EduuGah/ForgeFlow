@@ -14,6 +14,7 @@ import {
 } from '../../utils/settingsUtils'
 
 import MobileBottomNav from './MobileBottomNav'
+import MobileTopbar from './MobileTopbar'
 import NotificationBell from '../notifications/NotificationBell'
 import { generateSmartNotifications } from '../../utils/notificationUtils'
 
@@ -144,46 +145,11 @@ function AppLayout() {
     <div className="min-h-screen bg-[var(--ff-bg)] text-[var(--ff-text)] transition-colors duration-300">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,var(--ff-accent-shadow),transparent_34%),radial-gradient(circle_at_bottom_right,var(--ff-accent-soft),transparent_32%)] opacity-80" />
 
-      <header
-        id="app-header"
-        className="sticky top-0 z-40 border-b border-[var(--ff-border)] bg-[var(--ff-header)] backdrop-blur-xl transition-colors duration-300"
-      >
-        <div className="safe-top">
-          <div className="flex h-16 items-center justify-between gap-3 px-4 sm:px-6">
-            <div className="flex min-w-0 items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setIsSidebarOpen(true)}
-                className="group flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface)] text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)] active:scale-95"
-                aria-label="Abrir menu"
-              >
-                <Menu
-                  size={22}
-                  className="transition group-hover:text-[var(--ff-accent-text)]"
-                />
-              </button>
+      <MobileTopbar onOpenSidebar={() => setIsSidebarOpen(true)} />
 
-              <div className="min-w-0">
-                <h1 className="truncate text-lg font-black leading-tight tracking-tight">
-                  Forge<span className="text-[var(--ff-accent)]">Flow</span>
-                </h1>
-
-                <p className="hidden truncate text-xs text-[var(--ff-muted)] sm:block">
-                  Workout Tracker
-                </p>
-              </div>
-            </div>
-
-            <div className="flex shrink-0 items-center gap-2">
-              <div className="hidden rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-3 py-1 text-xs font-bold text-[var(--ff-accent-text)] sm:block">
-                Beta
-              </div>
-
-              <NotificationBell />
-            </div>
-          </div>
-        </div>
-      </header>
+      <Suspense fallback={null}>
+        <Sidebar variant="desktop" />
+      </Suspense>
 
       {isSidebarOpen && (
         <Suspense fallback={null}>
@@ -194,8 +160,8 @@ function AppLayout() {
         </Suspense>
       )}
 
-      <main className="relative px-4 py-6 pb-36 sm:px-6 lg:px-8 lg:pb-10">
-        <div className="mx-auto w-full max-w-[1600px]">
+      <main className="relative px-4 pb-36 pt-[calc(5.25rem+env(safe-area-inset-top))] sm:px-6 lg:ml-[292px] lg:px-8 lg:py-8 lg:pb-10">
+        <div className="mx-auto w-full max-w-[1760px]">
           <Outlet />
         </div>
       </main>

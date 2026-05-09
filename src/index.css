@@ -650,3 +650,42 @@ textarea:focus-visible {
     overscroll-behavior-y: none;
   }
 }
+
+
+/* ForgeFlow adaptive layout: mobile is an app shell, desktop is a workspace. */
+.safe-top { padding-top: env(safe-area-inset-top); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+
+.ff-mobile-scroll-x {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.ff-mobile-scroll-x::-webkit-scrollbar { display: none; }
+
+.ff-app-card {
+  border-radius: 1.55rem;
+  border: 1px solid var(--ff-border);
+  background: var(--ff-card);
+}
+
+@media (max-width: 1023px) {
+  html {
+    scroll-padding-top: calc(5.25rem + env(safe-area-inset-top));
+  }
+
+  body {
+    overscroll-behavior-y: contain;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ff-desktop-only { display: none !important; }
+  .ff-mobile-tap { min-height: 44px; }
+  .ff-mobile-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+}
+
+@media (min-width: 1024px) {
+  .ff-mobile-only { display: none !important; }
+  .ff-desktop-density { gap: 1.25rem; }
+}

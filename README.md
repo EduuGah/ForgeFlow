@@ -1,11 +1,31 @@
-````md
 # ForgeFlow
 
-ForgeFlow é uma aplicação web para organizar treinos de academia, registrar cargas, acompanhar evolução física e manter um histórico real de cada sessão.
+ForgeFlow é uma aplicação fullstack para organizar treinos de academia, registrar cargas, acompanhar evolução física e manter um histórico real de cada sessão.
 
-O projeto começou como uma forma de praticar React, JavaScript e Tailwind CSS, mas acabou evoluindo para uma aplicação mais completa, com frontend, backend próprio, autenticação, banco de dados, upload de imagens, estatísticas e deploy em produção.
+O projeto começou como uma forma de praticar React, JavaScript e Tailwind CSS, mas evoluiu para uma aplicação mais completa, com frontend, backend próprio, autenticação, banco de dados, upload de imagens, estatísticas, metas, notificações, exportações e preparação para experiência mobile.
 
 🔗 **Deploy:** https://forge-flow-five.vercel.app/
+
+---
+
+## Sumário
+
+- [Sobre o projeto](#sobre-o-projeto)
+- [Status atual](#status-atual)
+- [Tecnologias utilizadas](#tecnologias-utilizadas)
+- [Funcionalidades](#funcionalidades)
+- [Backend](#backend)
+- [Como rodar localmente](#como-rodar-localmente)
+- [Rodando a API](#rodando-a-api)
+- [Estrutura geral](#estrutura-geral)
+- [LocalStorage e banco de dados](#localstorage-e-banco-de-dados)
+- [Segurança e boas práticas](#segurança-e-boas-práticas)
+- [Etapas concluídas](#etapas-concluídas)
+- [Roadmap](#roadmap)
+- [Possível versão mobile](#possível-versão-mobile)
+- [O que estou praticando com este projeto](#o-que-estou-praticando-com-este-projeto)
+- [Autor](#autor)
+- [Licença](#licença)
 
 ---
 
@@ -13,9 +33,9 @@ O projeto começou como uma forma de praticar React, JavaScript e Tailwind CSS, 
 
 A ideia do ForgeFlow é facilitar o controle de treino sem depender de planilhas, anotações soltas ou aplicativos muito genéricos.
 
-Com ele, é possível cadastrar exercícios, montar treinos, iniciar uma sessão, registrar séries, peso e repetições, visualizar histórico, acompanhar PRs, metas, fotos de evolução, recuperação muscular e gráficos de progresso.
+Com ele, é possível cadastrar exercícios, montar treinos, iniciar uma sessão, registrar séries, peso e repetições, visualizar histórico, acompanhar PRs, criar metas, registrar fotos de evolução, analisar recuperação muscular e acompanhar gráficos de progresso.
 
-Além da parte visual, o projeto também funciona como laboratório para praticar organização de código, componentização, consumo de API, autenticação, persistência em banco de dados, upload de arquivos, deploy e estruturação de um produto real.
+Além da parte visual, o projeto também funciona como laboratório prático para estudar organização de código, componentização, consumo de API, autenticação, persistência em banco de dados, upload de arquivos, deploy, performance, UX mobile e estruturação de um produto real.
 
 ---
 
@@ -27,9 +47,9 @@ O projeto já possui uma estrutura funcional com:
 - layout responsivo com Tailwind CSS;
 - navegação com React Router;
 - dashboard com métricas, gráficos e cards inteligentes;
-- biblioteca de exercícios;
+- biblioteca de exercícios com busca, filtros, favoritos e mídia;
 - criação, edição, exclusão e duplicação de treinos;
-- execução de treino com cronômetro;
+- execução de treino com cronômetro, séries, cargas e repetições;
 - histórico de treinos finalizados;
 - controle de PRs por peso e volume;
 - página de perfil;
@@ -53,7 +73,9 @@ O projeto já possui uma estrutura funcional com:
 - gráficos avançados de evolução;
 - metas e objetivos reais;
 - notificações internas inteligentes;
-- preparação visual para mobile;
+- cache separado por conta;
+- ajustes de performance e carregamento inicial;
+- melhorias mobile-first em telas principais;
 - deploy do frontend na Vercel;
 - deploy da API no Render.
 
@@ -121,7 +143,9 @@ Ele mostra informações como:
 - notificações recentes;
 - recuperação muscular;
 - últimas fotos de evolução;
-- gráficos de volume, peso e grupos musculares.
+- gráficos de volume, peso e grupos musculares;
+- PRs recentes com tipo, data, treino, série e volume;
+- mapa rápido para navegação entre seções.
 
 A ideia é que o usuário consiga abrir o app e entender rapidamente como está sua evolução.
 
@@ -135,6 +159,7 @@ O ForgeFlow possui autenticação com:
 - cadastro de usuário;
 - login com Google;
 - criação de senha para contas criadas via Google;
+- proteção de rotas no frontend;
 - proteção de rotas no backend;
 - autenticação por token;
 - carregamento do usuário autenticado;
@@ -156,6 +181,7 @@ Atualmente conta com:
 - exercícios organizados por grupos musculares;
 - busca por nome;
 - filtros por músculo e equipamento;
+- chips rápidos de filtro no mobile;
 - detalhes individuais do exercício;
 - criação manual de exercícios;
 - edição de exercícios;
@@ -163,7 +189,9 @@ Atualmente conta com:
 - favoritos sincronizados;
 - suporte para imagens e GIFs;
 - instruções, dicas, variações e erros comuns;
-- sincronização entre dispositivos.
+- sincronização entre dispositivos;
+- renderização progressiva para melhorar performance;
+- layout mobile em blocos compactos.
 
 A biblioteca ainda pode ser refinada com mais imagens, GIFs e padronização dos grupos musculares.
 
@@ -190,7 +218,8 @@ Funcionalidades atuais:
 - criação de treino a partir de template;
 - salvar treino atual como template;
 - editar templates;
-- preencher templates padrão automaticamente.
+- preencher templates padrão automaticamente;
+- experiência mobile com barra inferior e ações fixas.
 
 ---
 
@@ -211,7 +240,11 @@ O sistema possui:
 - identificação de PR de volume;
 - resumo antes de finalizar;
 - salvamento do treino no histórico;
-- persistência do treino ativo.
+- persistência do treino ativo;
+- barra fixa inferior no celular;
+- campos otimizados para toque;
+- timer de descanso;
+- toast de confirmação ao concluir ações.
 
 Essa é uma das partes centrais do projeto, porque concentra a lógica real de progressão.
 
@@ -231,7 +264,12 @@ Inclui:
 - destaques de PR;
 - detalhes por treino;
 - exclusão individual;
-- base para gráficos, calendário, streak e recuperação muscular.
+- base para gráficos, calendário, streak e recuperação muscular;
+- busca por treino ou exercício;
+- filtro por data;
+- renderização progressiva;
+- detalhes expansíveis;
+- scroll interno em listas longas.
 
 ---
 
@@ -272,18 +310,20 @@ Esses dados são usados no Dashboard e no Calendário.
 
 A recuperação muscular estima quais grupos foram treinados recentemente e quais já estão mais recuperados.
 
-O cálculo considera o tempo desde o último treino de cada grupo muscular.
+O cálculo considera o tempo desde o último treino de cada grupo muscular, com uma lógica mais natural para uso real: a virada do dia já conta como avanço de recuperação.
 
 A página de recuperação mostra:
 
 - grupo muscular;
 - último treino;
+- data e horário do último treino;
 - percentual estimado de recuperação;
 - status;
 - séries recentes;
 - volume recente;
 - sugestão de grupos mais recuperados;
-- filtros por grupo e status.
+- filtros por grupo e status;
+- chips rápidos no mobile.
 
 Também foram tratados aliases para evitar duplicidade como “Peito” e “Peitoral”.
 
@@ -354,6 +394,8 @@ Tipos de metas planejados/implementados:
 
 O progresso é calculado automaticamente quando possível, usando histórico, peso, fotos e registros de treino.
 
+Também foi adicionada uma lógica de baseline para evitar que metas criadas hoje contem progresso antigo. Por exemplo: se o usuário já tinha fotos antes de criar uma meta de fotos, a meta passa a contar apenas o progresso novo a partir da criação.
+
 ---
 
 ### Notificações internas
@@ -367,7 +409,8 @@ Elas podem avisar sobre:
 - falta de treino recente;
 - falta de registro de peso;
 - foto de evolução pendente;
-- início do primeiro treino.
+- início do primeiro treino;
+- primeiros passos da conta.
 
 Também existe uma central de notificações com:
 
@@ -376,7 +419,10 @@ Também existe uma central de notificações com:
 - marcar como lida;
 - marcar todas como lidas;
 - arquivar;
-- excluir.
+- excluir;
+- cards compactos;
+- cache separado por conta;
+- popup menor em formato de toast.
 
 ---
 
@@ -397,7 +443,10 @@ Ela mostra:
 - maiores cargas;
 - maiores volumes;
 - últimas fotos;
-- últimos treinos.
+- últimos treinos;
+- séries recentes agrupadas por data;
+- histórico por data com scroll interno;
+- duração semanal com intervalo real de datas.
 
 A intenção é transformar a página em uma central real de progresso.
 
@@ -419,7 +468,10 @@ Atualmente possui campos como:
 - divisão de treino preferida;
 - notas pessoais;
 - histórico de peso corporal;
-- informações gerais da conta.
+- informações gerais da conta;
+- destaques pessoais;
+- gráfico de peso corporal;
+- versão mais compacta para desktop e mobile.
 
 ---
 
@@ -432,12 +484,14 @@ Ela concentra:
 - tema/aparência;
 - cor principal do app;
 - preferências da conta;
+- preferências de treino;
 - criação/alteração de senha;
-- limpeza de dados locais;
 - exportação de backup JSON;
 - importação de backup JSON;
 - exportação de histórico em CSV/Excel;
-- exportação de relatório em PDF.
+- exportação de relatório em PDF;
+- restauração de configurações padrão;
+- layout mais compacto no desktop.
 
 ---
 
@@ -475,8 +529,8 @@ GOOGLE_CLIENT_ID=sua_client_id
 GOOGLE_CLIENT_SECRET=sua_client_secret
 CLOUDINARY_CLOUD_NAME=seu_cloud_name
 CLOUDINARY_API_KEY=sua_api_key
-CLOUDINARY_API_SECRET=seu_api_secret
-````
+CLOUDINARY_API_SECRET=sua_api_secret
+```
 
 Em produção, essas URLs são substituídas pelas URLs reais da Vercel e Render.
 
@@ -563,8 +617,12 @@ npm run dev
 ```bash
 src/
 ├── components/
-│   ├── layout/
+│   ├── auth/
+│   ├── goals/
+│   ├── layouts/
 │   ├── notifications/
+│   ├── profile/
+│   ├── progress/
 │   ├── ui/
 │   └── workout/
 │
@@ -573,19 +631,25 @@ src/
 │   └── WorkoutSessionContext.jsx
 │
 ├── data/
-│   └── defaultExercises.js
+│   ├── defaultExercises.js
+│   └── exercises/
 │
 ├── pages/
+│   ├── AuthCallback.jsx
+│   ├── CompleteProfile.jsx
 │   ├── Dashboard.jsx
-│   ├── Exercises.jsx
 │   ├── ExerciseDetails.jsx
+│   ├── ExerciseProgress.jsx
+│   ├── Exercises.jsx
 │   ├── Goals.jsx
 │   ├── History.jsx
+│   ├── Login.jsx
 │   ├── MuscleRecovery.jsx
 │   ├── Notifications.jsx
 │   ├── Profile.jsx
 │   ├── Progress.jsx
 │   ├── ProgressPhotos.jsx
+│   ├── Register.jsx
 │   ├── Settings.jsx
 │   ├── StartWorkout.jsx
 │   ├── WorkoutCalendar.jsx
@@ -596,12 +660,15 @@ src/
 │
 ├── utils/
 │   ├── analyticsUtils.js
+│   ├── chartUtils.js
 │   ├── exerciseStorage.js
+│   ├── notificationUtils.js
 │   ├── prUtils.js
 │   ├── settingsUtils.js
 │   └── userStorage.js
 │
 ├── App.jsx
+├── index.css
 └── main.jsx
 ```
 
@@ -609,6 +676,7 @@ src/
 server/
 ├── index.js
 ├── package.json
+├── package-lock.json
 └── .env
 ```
 
@@ -616,30 +684,32 @@ server/
 
 ## LocalStorage e banco de dados
 
-O projeto ainda usa LocalStorage como fallback e cache local em algumas partes, mas a base principal vem sendo migrada para o MongoDB.
+O projeto usa MongoDB como base principal e LocalStorage como cache/fallback.
 
 Hoje a aplicação já salva no backend dados como:
 
-* usuário;
-* perfil;
-* exercícios;
-* favoritos;
-* treinos;
-* histórico;
-* peso corporal;
-* templates;
-* fotos de evolução;
-* metas;
-* notificações;
-* configurações.
+- usuário;
+- perfil;
+- exercícios;
+- favoritos;
+- treinos;
+- histórico;
+- peso corporal;
+- templates;
+- fotos de evolução;
+- metas;
+- notificações;
+- configurações.
 
 O LocalStorage continua sendo útil para:
 
-* cache;
-* fallback quando a API falha;
-* rascunhos;
-* melhoria de carregamento;
-* suporte durante desenvolvimento.
+- cache;
+- fallback quando a API falha;
+- rascunhos;
+- melhoria de carregamento;
+- suporte durante desenvolvimento.
+
+Também foi adicionada separação de cache por conta para evitar que dados de um usuário apareçam em outro login.
 
 A ideia é reduzir cada vez mais a dependência local e manter os dados principais sincronizados por conta.
 
@@ -649,19 +719,68 @@ A ideia é reduzir cada vez mais a dependência local e manter os dados principa
 
 Alguns cuidados já foram considerados no projeto:
 
-* variáveis sensíveis fora do GitHub;
-* uso de `.env`;
-* autenticação por token;
-* rotas protegidas por usuário;
-* validação de usuário nas operações;
-* upload de imagem via Cloudinary;
-* imagens não são salvas em Base64 no banco;
-* limite de tamanho para upload;
-* separação entre frontend e backend;
-* CORS configurado por ambiente;
-* backup e exportação de dados do usuário.
+- variáveis sensíveis fora do GitHub;
+- uso de `.env`;
+- autenticação por token;
+- rotas protegidas por usuário;
+- validação de usuário nas operações;
+- upload de imagem via Cloudinary;
+- imagens não são salvas em Base64 no banco;
+- limite de tamanho para upload;
+- separação entre frontend e backend;
+- CORS configurado por ambiente;
+- backup e exportação de dados do usuário;
+- cache separado por conta;
+- fallback local controlado.
 
-Ainda há espaço para melhorias, principalmente antes de transformar o projeto em app mobile.
+Ainda há espaço para melhorias antes de transformar o projeto em app mobile publicado.
+
+---
+
+## Etapas concluídas
+
+### Etapa 20 — Performance e carregamento inicial
+
+A Etapa 20 focou em melhorar performance, carregamento inicial, cache e estabilidade geral.
+
+Principais melhorias:
+
+- lazy loading de rotas;
+- carregamento inicial mais leve;
+- uso de `Suspense`;
+- otimização de páginas grandes;
+- cache local antes da API;
+- sincronização posterior com backend;
+- renderização progressiva de listas;
+- redução de cálculos repetidos;
+- uso de `useMemo` e `useDeferredValue`;
+- imagens com `loading="lazy"` e `decoding="async"`;
+- correção de metas para não contar progresso antigo;
+- baseline para metas automáticas;
+- correção de popup de meta concluída;
+- toast menor no canto superior;
+- cache separado por conta;
+- ajustes mobile iniciais.
+
+### Etapa 21 — Mobile App Experience
+
+A Etapa 21 focou em deixar o projeto com mais cara de aplicativo mobile, não apenas um site responsivo.
+
+Principais melhorias:
+
+- navegação inferior mobile;
+- telas com ações mais acessíveis no celular;
+- biblioteca de exercícios com busca rápida e chips;
+- cards de exercícios em blocos compactos;
+- recuperação muscular com filtros rápidos;
+- exibição de hora do último treino;
+- modal de validação em metas acima do formulário;
+- dashboard com mapa rápido e seções mais claras;
+- progresso com listas agrupadas por data;
+- histórico com áreas expansíveis;
+- notificações mais compactas;
+- perfil mais compacto;
+- configurações com melhor aproveitamento de espaço.
 
 ---
 
@@ -669,24 +788,26 @@ Ainda há espaço para melhorias, principalmente antes de transformar o projeto 
 
 Próximas etapas planejadas:
 
-* Etapa 20 — melhorar performance e carregamento inicial;
-* Etapa 21 — checklist de segurança e produção;
-* Etapa 22 — transformar em PWA;
-* Etapa 23 — portar para mobile com Capacitor;
-* Etapa 24 — testes em APK/app Android;
-* Etapa 25 — preparação para publicação na Play Store.
+- Etapa 22 — PWA e instalação no celular;
+- Etapa 23 — checklist de segurança e produção;
+- Etapa 24 — preparar Capacitor;
+- Etapa 25 — testes em APK/app Android;
+- Etapa 26 — ajustes nativos mobile;
+- Etapa 27 — preparação para publicação na Play Store.
 
 Melhorias futuras:
 
-* push notifications reais;
-* metas recorrentes;
-* conquistas/badges;
-* página pública/social;
-* compartilhamento de evolução;
-* melhorias no treino ativo mobile;
-* drag and drop de exercícios;
-* comparações avançadas de períodos;
-* integração mais profunda com recursos nativos do celular.
+- push notifications reais;
+- metas recorrentes;
+- conquistas/badges;
+- página pública/social;
+- compartilhamento de evolução;
+- melhorias no treino ativo mobile;
+- drag and drop de exercícios;
+- comparações avançadas de períodos;
+- integração mais profunda com recursos nativos do celular;
+- testes automatizados;
+- refatoração gradual do backend em módulos separados.
 
 ---
 
@@ -698,35 +819,36 @@ A ideia é manter o frontend React atual e empacotar a aplicação como app Andr
 
 Antes disso, o foco é:
 
-* revisar responsividade;
-* melhorar performance;
-* ajustar autenticação;
-* validar upload de fotos;
-* revisar segurança;
-* criar versão PWA;
-* testar em dispositivos reais.
+- revisar responsividade;
+- melhorar performance;
+- ajustar autenticação;
+- validar upload de fotos;
+- revisar segurança;
+- criar versão PWA;
+- testar em dispositivos reais.
 
 ---
 
-## O que estou praticando com esse projeto
+## O que estou praticando com este projeto
 
 Esse projeto está servindo para praticar várias áreas importantes do desenvolvimento:
 
-* React na prática;
-* organização de componentes;
-* criação de layout responsivo;
-* gerenciamento de estado;
-* autenticação;
-* consumo de API;
-* criação de backend;
-* integração com MongoDB;
-* upload de arquivos;
-* geração de PDF/CSV/JSON;
-* gráficos e estatísticas;
-* persistência local e em nuvem;
-* deploy de frontend e backend;
-* estruturação de um produto real;
-* preparação para app mobile.
+- React na prática;
+- organização de componentes;
+- criação de layout responsivo;
+- experiência mobile-first;
+- gerenciamento de estado;
+- autenticação;
+- consumo de API;
+- criação de backend;
+- integração com MongoDB;
+- upload de arquivos;
+- geração de PDF/CSV/JSON;
+- gráficos e estatísticas;
+- persistência local e em nuvem;
+- deploy de frontend e backend;
+- estruturação de um produto real;
+- preparação para app mobile.
 
 ---
 
@@ -736,15 +858,15 @@ Esse projeto está servindo para praticar várias áreas importantes do desenvol
 
 Desenvolvedor Fullstack em formação, estudando e construindo projetos práticos com foco em:
 
-* React
-* JavaScript
-* Tailwind CSS
-* Node.js
-* Python
-* Java
-* SQL
-* automação de processos
-* sistemas internos
+- React
+- JavaScript
+- Tailwind CSS
+- Node.js
+- Python
+- Java
+- SQL
+- automação de processos
+- sistemas internos
 
 ---
 

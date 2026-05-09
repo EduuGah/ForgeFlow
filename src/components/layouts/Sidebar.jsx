@@ -63,7 +63,8 @@ const linkGroups = [
   },
 ]
 
-function Sidebar({ isOpen = false, onClose }) {
+function Sidebar({ isOpen = false, onClose, variant = 'overlay' }) {
+  const isDesktop = variant === 'desktop'
   const { user, logout } = useAuth()
 
   function handleLogout() {
@@ -73,7 +74,7 @@ function Sidebar({ isOpen = false, onClose }) {
 
   return (
     <>
-      {isOpen && (
+      {!isDesktop && isOpen && (
         <button
           type="button"
           onClick={onClose}
@@ -84,8 +85,10 @@ function Sidebar({ isOpen = false, onClose }) {
 
       <aside
         className={[
-          'fixed left-0 top-0 z-[60] flex h-dvh w-[86vw] max-w-[320px] flex-col overflow-hidden border-r border-[var(--ff-border)] bg-[var(--ff-sidebar)] text-[var(--ff-text)] shadow-2xl shadow-black/20 transition-transform duration-300',
-          isOpen ? 'translate-x-0' : '-translate-x-full',
+          isDesktop
+            ? 'fixed left-0 top-0 z-40 hidden h-dvh w-[292px] flex-col overflow-hidden border-r border-[var(--ff-border)] bg-[var(--ff-sidebar)] text-[var(--ff-text)] shadow-xl shadow-black/10 lg:flex'
+            : 'fixed left-0 top-0 z-[60] flex h-dvh w-[86vw] max-w-[320px] flex-col overflow-hidden border-r border-[var(--ff-border)] bg-[var(--ff-sidebar)] text-[var(--ff-text)] shadow-2xl shadow-black/20 transition-transform duration-300',
+          isDesktop ? 'translate-x-0' : isOpen ? 'translate-x-0' : '-translate-x-full',
         ].join(' ')}
       >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--ff-accent-soft),transparent_36%)]" />
@@ -113,14 +116,16 @@ function Sidebar({ isOpen = false, onClose }) {
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-muted)] transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-card-hover)] hover:text-[var(--ff-text)]"
-                aria-label="Fechar menu"
-              >
-                <X size={20} />
-              </button>
+              {!isDesktop && (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-muted)] transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-card-hover)] hover:text-[var(--ff-text)]"
+                  aria-label="Fechar menu"
+                >
+                  <X size={20} />
+                </button>
+              )}
             </div>
           </div>
 
