@@ -63,8 +63,15 @@ const linkGroups = [
   },
 ]
 
-function Sidebar({ isOpen = false, onClose }) {
+function Sidebar({
+  isOpen,
+  open,
+  isSidebarOpen,
+  onClose,
+}) {
   const { user, logout } = useAuth()
+
+  const sidebarIsOpen = Boolean(isOpen ?? open ?? isSidebarOpen ?? true)
 
   function handleLogout() {
     onClose?.()
@@ -77,8 +84,8 @@ function Sidebar({ isOpen = false, onClose }) {
         type="button"
         onClick={onClose}
         className={[
-          'fixed inset-0 z-[80] bg-[var(--ff-overlay)] backdrop-blur-sm transition-opacity duration-300',
-          isOpen
+          'fixed inset-0 z-[9990] bg-black/70 backdrop-blur-sm transition-opacity duration-300',
+          sidebarIsOpen
             ? 'pointer-events-auto opacity-100'
             : 'pointer-events-none opacity-0',
         ].join(' ')}
@@ -87,11 +94,11 @@ function Sidebar({ isOpen = false, onClose }) {
 
       <aside
         className={[
-          'fixed left-0 top-0 z-[90] flex h-dvh w-[86vw] max-w-[320px] flex-col overflow-hidden border-r border-[var(--ff-border)] bg-[var(--ff-sidebar)] text-[var(--ff-text)] shadow-2xl shadow-black/25 transition-transform duration-300 ease-out',
-          isOpen ? 'translate-x-0' : '-translate-x-full',
+          'fixed left-0 top-0 z-[10000] flex h-dvh w-[86vw] max-w-[330px] flex-col overflow-hidden border-r border-[var(--ff-border)] bg-[var(--ff-sidebar)] text-[var(--ff-text)] shadow-2xl shadow-black/40 transition-transform duration-300 ease-out',
+          sidebarIsOpen ? 'translate-x-0' : '-translate-x-full',
         ].join(' ')}
       >
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--ff-accent-soft),transparent_36%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--ff-accent-soft),transparent_38%)]" />
 
         <div className="relative flex h-full flex-col">
           <div className="safe-top p-4">
