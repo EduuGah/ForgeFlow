@@ -31,6 +31,7 @@ import Toast from '../components/ui/Toast'
 
 import { useAuth } from '../context/AuthContext'
 import { apiFetch } from '../services/api'
+import { generateSmartNotifications, notifyNotificationsChanged } from '../utils/notificationUtils'
 import {
   getUserStorageData,
   saveUserStorageData,
@@ -430,8 +431,10 @@ function Notifications() {
 
   async function handleGenerateNotifications() {
     try {
-      const data = await apiFetch('/notifications/generate', {
-        method: 'POST',
+      const data = await generateSmartNotifications({
+        user,
+        reason: 'manual-check',
+        force: true,
       })
 
       const normalizedNotifications = Array.isArray(data?.notifications)

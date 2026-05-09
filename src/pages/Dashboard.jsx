@@ -46,6 +46,7 @@ import {
 } from '../utils/userStorage'
 
 import { apiFetch } from '../services/api'
+import { generateSmartNotifications } from '../utils/notificationUtils'
 
 import {
   getCompletedSets,
@@ -475,8 +476,10 @@ function Dashboard() {
         setNotifications(normalizedNotifications)
         setUnreadNotificationsCount(Number(notificationsFromApi?.unreadCount) || 0)
 
-        apiFetch('/notifications/generate', {
-          method: 'POST',
+        generateSmartNotifications({
+          user,
+          reason: 'dashboard-open',
+          minimumMinutes: 30,
         }).catch((error) => {
           console.error(error)
         })

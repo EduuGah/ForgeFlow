@@ -30,6 +30,7 @@ import {
 } from '../utils/prUtils'
 
 import { getAppSettings } from '../utils/settingsUtils'
+import { generateSmartNotifications } from '../utils/notificationUtils'
 
 function formatTime(seconds) {
   const hours = Math.floor(seconds / 3600)
@@ -107,6 +108,14 @@ function StartWorkout() {
 
     try {
       await finishSession()
+
+      generateSmartNotifications({
+        user,
+        reason: 'workout-finished',
+        force: true,
+      }).catch((error) => {
+        console.error(error)
+      })
 
       setIsFinishModalOpen(false)
 

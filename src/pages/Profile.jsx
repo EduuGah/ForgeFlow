@@ -39,6 +39,7 @@ import AccountSecurityCard from '../components/profile/AccountSecurityCard'
 
 import { useAuth } from '../context/AuthContext'
 import { apiFetch } from '../services/api'
+import { generateSmartNotifications } from '../utils/notificationUtils'
 import {
   getUserStorageData,
   saveUserStorageData,
@@ -413,6 +414,14 @@ function Profile() {
 
       setBodyWeight(updatedWeights)
       saveUserStorageData(user, 'bodyweight', updatedWeights)
+
+      generateSmartNotifications({
+        user,
+        reason: alreadyHasDate?.id ? 'weight-updated' : 'weight-created',
+        force: true,
+      }).catch((error) => {
+        console.error(error)
+      })
 
       setWeightInput('')
       setDateInput('')

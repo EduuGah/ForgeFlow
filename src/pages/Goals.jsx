@@ -25,6 +25,7 @@ import GoalFormModal from '../components/goals/GoalFormModal'
 
 import { useAuth } from '../context/AuthContext'
 import { apiFetch } from '../services/api'
+import { generateSmartNotifications } from '../utils/notificationUtils'
 import {
   getUserStorageData,
   saveUserStorageData,
@@ -204,6 +205,13 @@ function Goals() {
 
       setGoals(updatedGoals)
       saveUserStorageData(user, 'goals', updatedGoals)
+      generateSmartNotifications({
+        user,
+        reason: modalGoal ? 'goal-updated' : 'goal-created',
+        force: true,
+      }).catch((error) => {
+        console.error(error)
+      })
       closeModal()
       showToast('success', modalGoal ? 'Meta atualizada' : 'Meta criada', 'A meta foi salva com sucesso.')
     } catch (error) {
@@ -228,6 +236,13 @@ function Goals() {
 
           setGoals(updatedGoals)
           saveUserStorageData(user, 'goals', updatedGoals)
+          generateSmartNotifications({
+            user,
+            reason: 'goal-completed',
+            force: true,
+          }).catch((error) => {
+            console.error(error)
+          })
           setConfirmModal(null)
           showToast('success', 'Meta concluída', 'Boa! Sua meta foi marcada como concluída.')
         } catch (error) {

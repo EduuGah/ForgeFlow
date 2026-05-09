@@ -2051,6 +2051,31 @@ async function createNotificationIfNotExists({
     }
 }
 
+
+async function archiveResolvedNotifications(userId, dedupeKeys = []) {
+    const keys = dedupeKeys.filter(Boolean)
+
+    if (keys.length === 0) return 0
+
+    const result = await Notification.updateMany(
+        {
+            userId,
+            dedupeKey: {
+                $in: keys,
+            },
+            status: {
+                $ne: 'archived',
+            },
+        },
+        {
+            status: 'archived',
+            readAt: new Date(),
+        }
+    )
+
+    return result.modifiedCount || 0
+}
+
 app.get('/notifications', authMiddleware, async (req, res) => {
     try {
         const {
@@ -2118,10 +2143,15 @@ app.post('/notifications/generate', authMiddleware, async (req, res) => {
 
         const now = new Date()
         const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+        const resolvedDedupeKeys = []
 
         for (const goal of goals) {
             const enrichedGoal = await enrichGoalWithProgress(goal, userId)
             const progressPercent = Number(enrichedGoal?.progressPercent || 0)
+
+            if (progressPercent < 80 || progressPercent >= 100) {
+                resolvedDedupeKeys.push(`goal-near-${goal._id}-${currentMonthKey}`)
+            }
 
             if (progressPercent >= 80 && progressPercent < 100) {
                 const result = await createNotificationIfNotExists({
@@ -2173,7 +2203,11 @@ app.post('/notifications/generate', authMiddleware, async (req, res) => {
                 if (result.created) {
                     createdNotifications.push(result.notification)
                 }
+            } else {
+                resolvedDedupeKeys.push(`no-workout-${currentMonthKey}`)
             }
+
+            resolvedDedupeKeys.push('first-workout')
         } else {
             const result = await createNotificationIfNotExists({
                 userId,
@@ -2208,7 +2242,11 @@ app.post('/notifications/generate', authMiddleware, async (req, res) => {
                 if (result.created) {
                     createdNotifications.push(result.notification)
                 }
+            } else {
+                resolvedDedupeKeys.push(`weight-missing-${currentMonthKey}`)
             }
+
+            resolvedDedupeKeys.push('first-weight')
         } else {
             const result = await createNotificationIfNotExists({
                 userId,
@@ -2247,7 +2285,11 @@ app.post('/notifications/generate', authMiddleware, async (req, res) => {
             if (result.created) {
                 createdNotifications.push(result.notification)
             }
+        } else {
+            resolvedDedupeKeys.push(`photo-missing-${currentMonthKey}`)
         }
+
+        await archiveResolvedNotifications(userId, resolvedDedupeKeys)
 
         const notifications = await Notification.find({ userId })
             .sort({ createdAt: -1 })

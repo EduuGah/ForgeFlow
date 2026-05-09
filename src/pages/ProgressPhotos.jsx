@@ -26,6 +26,7 @@ import ConfirmModal from '../components/ui/ConfirmModal'
 
 import { useAuth } from '../context/AuthContext'
 import { apiFetch, apiFormData } from '../services/api'
+import { generateSmartNotifications } from '../utils/notificationUtils'
 import {
   getUserStorageData,
   saveUserStorageData,
@@ -291,6 +292,14 @@ function ProgressPhotos() {
 
       setPhotos(updatedPhotos)
       saveUserStorageData(user, 'progress-photos', updatedPhotos)
+
+      generateSmartNotifications({
+        user,
+        reason: 'progress-photo-created',
+        force: true,
+      }).catch((error) => {
+        console.error(error)
+      })
 
       setFile(null)
       setDate(new Date().toISOString().slice(0, 10))

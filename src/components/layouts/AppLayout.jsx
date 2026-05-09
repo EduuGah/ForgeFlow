@@ -16,6 +16,7 @@ import Sidebar from './Sidebar'
 import MobileBottomNav from './MobileBottomNav'
 import ActiveWorkoutMini from '../workout/ActiveWorkoutMini'
 import NotificationBell from '../notifications/NotificationBell'
+import { generateSmartNotifications } from '../../utils/notificationUtils'
 
 function AppLayout() {
   const { user } = useAuth()
@@ -56,6 +57,18 @@ function AppLayout() {
       window.removeEventListener('forgeflow:settings-changed', handleSettingsChanged)
       stopWatchingSystemTheme()
     }
+  }, [user])
+
+  useEffect(() => {
+    if (!user) return
+
+    generateSmartNotifications({
+      user,
+      reason: 'app-open',
+      minimumMinutes: 60,
+    }).catch((error) => {
+      console.error(error)
+    })
   }, [user])
 
   useEffect(() => {
