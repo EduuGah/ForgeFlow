@@ -78,7 +78,7 @@ const GOAL_TYPES = [
     period: 'monthly',
     direction: 'increase',
     placeholder: 'Ex: 1',
-    helper: 'Exemplo: registrar 1 foto por mês. O app conta as fotos enviadas no mês atual.',
+    helper: 'Exemplo: registrar 1 foto por mês. Para metas criadas no meio do mês, o app conta apenas as novas fotos feitas depois da criação da meta.',
     titleExample: 'Registrar 1 foto de evolução por mês',
   },
   {
@@ -237,6 +237,7 @@ function GoalFormModal({
       period: selectedConfig.period,
       deadline: deadline || null,
       status: goal?.status || 'active',
+      resetProgressBaseline: !goal,
     })
   }
 

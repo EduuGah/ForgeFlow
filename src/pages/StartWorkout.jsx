@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { Timer, X } from 'lucide-react'
+import { useEffect, useMemo, useState, useDeferredValue } from 'react'
+import { Timer, X, ChevronDown, Dumbbell, RotateCcw, StickyNote, Trophy } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import PageHeader from '../components/ui/PageHeader'
@@ -33,9 +33,10 @@ import { getAppSettings } from '../utils/settingsUtils'
 import { generateSmartNotifications } from '../utils/notificationUtils'
 
 function formatTime(seconds) {
-  const hours = Math.floor(seconds / 3600)
-  const minutes = Math.floor((seconds % 3600) / 60)
-  const secs = seconds % 60
+  const safeSeconds = Number(seconds) || 0
+  const hours = Math.floor(safeSeconds / 3600)
+  const minutes = Math.floor((safeSeconds % 3600) / 60)
+  const secs = safeSeconds % 60
 
   return [hours, minutes, secs]
     .map((value) => String(value).padStart(2, '0'))
@@ -60,6 +61,29 @@ function isValidActiveSession(session) {
   )
 }
 
+function getRestSeconds(restTimerText) {
+  if (!restTimerText || restTimerText === 'Desligado') return 0
+
+  const number = Number(String(restTimerText).replace(/\D/g, ''))
+
+  return Number.isNaN(number) ? 0 : number
+}
+
+function getExerciseId(exercise) {
+  return String(exercise?.id || exercise?._id || '')
+}
+
+function getExerciseName(sessionExercise) {
+  return sessionExercise?.exercise?.name || 'Exercício sem nome'
+}
+
+function getExerciseSubtitle(sessionExercise) {
+  const muscleGroup = sessionExercise?.exercise?.muscleGroup || 'Sem grupo'
+  const equipment = sessionExercise?.exercise?.equipment || 'Sem equipamento'
+
+  return `${muscleGroup} • ${equipment}`
+}
+
 function StartWorkout() {
   const { user } = useAuth()
 
@@ -81,11 +105,12 @@ function StartWorkout() {
 
   const [exercises, setExercises] = useState([])
   const [replaceExerciseId, setReplaceExerciseId] = useState(null)
+  const [replaceSearch, setReplaceSearch] = useState('')
+  const deferredReplaceSearch = useDeferredValue(replaceSearch)
+
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false)
   const [restTimer, setRestTimer] = useState(null)
-
   const [collapsedExerciseIds, setCollapsedExerciseIds] = useState([])
-
   const [savingWorkout, setSavingWorkout] = useState(false)
   const [confirmModal, setConfirmModal] = useState(null)
   const [toast, setToast] = useState(null)
@@ -93,13 +118,92 @@ function StartWorkout() {
 
   const sessionIsInvalid = activeSession && !isValidActiveSession(activeSession)
 
+  const sessionExercises = useMemo(() => {
+    return Array.isArray(activeSession?.exercises) ? activeSession.exercises : []
+  }, [activeSession?.exercises])
+
+  const progressPercent = useMemo(() => {
+    if (!totalSets) return 0
+
+    return Math.min(100, Math.round((completedSets / totalSets) * 100))
+  }, [completedSets, totalSets])
+
+  const workoutSummary = useMemo(() => {
+    const totalExercises = sessionExercises.length
+
+    const skippedExercises = sessionExercises.filter(
+      (exercise) => exercise.skipped
+    ).length
+
+    const totalPRs = sessionExercises.reduce((total, exercise) => {
+      return total + exercise.sets.filter(
+        (set) => set.isPR || set.isWeightPR || set.isVolumePR
+      ).length
+    }, 0)
+
+    return {
+      totalExercises,
+      skippedExercises,
+      totalPRs,
+    }
+  }, [sessionExercises])
+
+  const exercisePerformanceMap = useMemo(() => {
+    if (!user || sessionExercises.length === 0) return new Map()
+
+    const map = new Map()
+
+    sessionExercises.forEach((sessionExercise) => {
+      const name = getExerciseName(sessionExercise)
+
+      const lastPerformance = getLastExercisePerformance(name, user)
+      const bestWeightPerformance = getBestWeightPerformance(name, user)
+      const bestVolumePerformance = getBestVolumePerformance(name, user)
+      const prTypes = getSessionPRTypes(name, sessionExercise.sets, user)
+
+      map.set(sessionExercise.id, {
+        lastSet: getFirstCompletedSet(lastPerformance),
+        bestWeightPerformance,
+        bestVolumePerformance,
+        weightPRSetId: prTypes.weightPRSetId,
+        volumePRSetId: prTypes.volumePRSetId,
+      })
+    })
+
+    return map
+  }, [sessionExercises, user])
+
+  const replacementOptions = useMemo(() => {
+    const search = String(deferredReplaceSearch || '').toLowerCase().trim()
+
+    return exercises
+      .filter((exercise) => {
+        if (!search) return true
+
+        const searchable = `${exercise.name || ''} ${exercise.muscleGroup || ''} ${exercise.equipment || ''}`.toLowerCase()
+
+        return searchable.includes(search)
+      })
+      .slice(0, 80)
+  }, [exercises, deferredReplaceSearch])
+
+  function showToast(type, title, message = '') {
+    setToast({
+      type,
+      title,
+      message,
+    })
+
+    window.setTimeout(() => {
+      setToast(null)
+    }, 3000)
+  }
+
   function handleClearBrokenSession() {
     removeUserStorageData(user, 'active-session')
     cancelSession()
     window.location.href = '/workouts'
   }
-
- 
 
   async function handleFinishWorkout() {
     if (savingWorkout) return
@@ -137,6 +241,62 @@ function StartWorkout() {
     }
   }
 
+  function handleCancelWorkout() {
+    if (!appSettings.confirmBeforeCancelWorkout) {
+      cancelSession()
+      showToast('success', 'Treino cancelado', 'A sessão ativa foi encerrada.')
+      return
+    }
+
+    setConfirmModal({
+      title: 'Cancelar treino?',
+      description: 'O treino em andamento será descartado e não será salvo no histórico.',
+      confirmText: 'Cancelar treino',
+      variant: 'danger',
+      onConfirm: () => {
+        cancelSession()
+        setConfirmModal(null)
+        showToast('success', 'Treino cancelado', 'A sessão ativa foi encerrada.')
+      },
+    })
+  }
+
+  function handleCompleteSet(sessionExercise, setId) {
+    toggleSetCompleted(sessionExercise.id, setId)
+
+    if (!appSettings.autoStartRestTimer) return
+
+    const seconds = getRestSeconds(sessionExercise.restTimer)
+
+    if (seconds > 0) {
+      setRestTimer({
+        exerciseName: getExerciseName(sessionExercise),
+        secondsLeft: seconds,
+        totalSeconds: seconds,
+      })
+    }
+  }
+
+  function toggleExerciseCollapse(exerciseId) {
+    setCollapsedExerciseIds((current) =>
+      current.includes(exerciseId)
+        ? current.filter((id) => id !== exerciseId)
+        : [...current, exerciseId]
+    )
+  }
+
+  function handleReplaceExercise(sessionExerciseId, newExerciseId) {
+    const newExercise = exercises.find(
+      (exercise) => getExerciseId(exercise) === String(newExerciseId)
+    )
+
+    if (!newExercise) return
+
+    replaceExercise(sessionExerciseId, newExercise)
+    setReplaceExerciseId(null)
+    setReplaceSearch('')
+  }
+
   useEffect(() => {
     function handleSettingsChanged(event) {
       setAppSettings(event.detail || getAppSettings())
@@ -150,14 +310,16 @@ function StartWorkout() {
   }, [])
 
   useEffect(() => {
+    if (!user) return
+
     setExercises(getUserStorageData(user, 'exercises', []))
   }, [user])
 
   useEffect(() => {
     if (!restTimer) return
-    if (restTimer.secondsLeft <= 0) return
+    if (restTimer.secondsLeft <= 0) return undefined
 
-    const interval = setInterval(() => {
+    const interval = window.setInterval(() => {
       setRestTimer((current) => {
         if (!current) return null
 
@@ -175,16 +337,16 @@ function StartWorkout() {
       })
     }, 1000)
 
-    return () => clearInterval(interval)
+    return () => window.clearInterval(interval)
   }, [restTimer])
 
   useEffect(() => {
     if (!activeSession) return
 
     if (appSettings.collapseSeriesByDefault) {
-      setCollapsedExerciseIds(activeSession.exercises.map((exercise) => exercise.id))
+      setCollapsedExerciseIds(sessionExercises.map((exercise) => exercise.id))
     }
-  }, [activeSession?.id, appSettings.collapseSeriesByDefault])
+  }, [activeSession?.id, appSettings.collapseSeriesByDefault, sessionExercises])
 
   if (sessionIsInvalid) {
     return (
@@ -234,157 +396,63 @@ function StartWorkout() {
     )
   }
 
-  const totalExercises = activeSession.exercises.length
-
-  const skippedExercises = activeSession.exercises.filter(
-    (exercise) => exercise.skipped
-  ).length
-
-  const totalPRs = activeSession.exercises.reduce((total, exercise) => {
-    return total + exercise.sets.filter(
-      (set) => set.isPR || set.isWeightPR || set.isVolumePR
-    ).length
-  }, 0)
-
-  function getRestSeconds(restTimerText) {
-    if (!restTimerText || restTimerText === 'Desligado') return 0
-
-    const number = Number(restTimerText.replace(/\D/g, ''))
-
-    return Number.isNaN(number) ? 0 : number
-  }
-
-  function toggleExerciseCollapse(exerciseId) {
-    setCollapsedExerciseIds((current) =>
-      current.includes(exerciseId)
-        ? current.filter((id) => id !== exerciseId)
-        : [...current, exerciseId]
-    )
-  }
-
-  function showToast(type, title, message = '') {
-    setToast({
-      type,
-      title,
-      message,
-    })
-
-    setTimeout(() => {
-      setToast(null)
-    }, 3000)
-  }
-
-  function handleCancelWorkout() {
-    if (!appSettings.confirmBeforeCancelWorkout) {
-      cancelSession()
-      showToast('success', 'Treino cancelado', 'A sessão ativa foi encerrada.')
-      return
-    }
-
-    setConfirmModal({
-      title: 'Cancelar treino?',
-      description: 'O treino em andamento será descartado e não será salvo no histórico.',
-      confirmText: 'Cancelar treino',
-      variant: 'danger',
-      onConfirm: () => {
-        cancelSession()
-        setConfirmModal(null)
-        showToast('success', 'Treino cancelado', 'A sessão ativa foi encerrada.')
-      },
-    })
-  }
-
-  function handleCompleteSet(sessionExercise, setId) {
-    toggleSetCompleted(sessionExercise.id, setId)
-
-    if (!appSettings.autoStartRestTimer) return
-
-    const seconds = getRestSeconds(sessionExercise.restTimer)
-
-    if (seconds > 0) {
-      setRestTimer({
-        exerciseName: sessionExercise.exercise?.name || 'Exercício',
-        secondsLeft: seconds,
-        totalSeconds: seconds,
-      })
-    }
-  }
-
   return (
     <>
-      <div className="mb-6 rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 sm:p-5 shadow-[0_18px_45px_rgba(0,0,0,0.22)]">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-wide text-[var(--ff-accent-text)]">
-              Treino ativo
-            </p>
+      <div className="sticky top-0 z-30 -mx-4 mb-5 border-b border-[var(--ff-border)] bg-[var(--ff-bg)]/92 px-4 pb-3 pt-2 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 xl:static xl:mx-0 xl:border-0 xl:bg-transparent xl:p-0 xl:backdrop-blur-none">
+        <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.22)] sm:p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <p className="text-xs font-bold uppercase tracking-wide text-[var(--ff-accent-text)]">
+                Treino ativo
+              </p>
 
-            <h1 className="mt-1 truncate text-2xl font-black text-[var(--ff-text)] sm:text-3xl">
-              {activeSession.workoutName}
-            </h1>
+              <h1 className="mt-1 truncate text-2xl font-black text-[var(--ff-text)] sm:text-3xl">
+                {activeSession.workoutName}
+              </h1>
 
-            <p className="mt-1 text-sm text-[var(--ff-muted)]">
-              {completedSets}/{totalSets} séries concluídas
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
-            <div className="flex h-11 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 px-4 text-sm font-black text-[var(--ff-accent-text)]">
-              {formatTime(elapsedSeconds)}
+              <p className="mt-1 text-sm text-[var(--ff-muted)]">
+                {completedSets}/{totalSets} séries concluídas • {progressPercent}%
+              </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => {
-                if (appSettings.confirmBeforeFinishWorkout) {
-                  setIsFinishModalOpen(true)
-                } else {
-                  handleFinishWorkout()
-                }
-              }}
-              className="h-11 rounded-2xl bg-[var(--ff-accent)] px-4 text-sm font-bold text-[var(--ff-text)] shadow-[0_0_20px_var(--ff-accent-shadow)] transition hover:bg-[var(--ff-accent-hover)] hover:shadow-[0_0_20px_var(--ff-accent-shadow)]"
-            >
-              Finalizar
-            </button>
-          </div>
-        </div>
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+              <div className="flex h-12 items-center justify-center gap-2 rounded-2xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 px-4 text-sm font-black text-[var(--ff-accent-text)] sm:h-11">
+                <Timer size={18} />
+                {formatTime(elapsedSeconds)}
+              </div>
 
-        <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--ff-surface-3)]">
-          <div
-            className="h-full rounded-full bg-[var(--ff-accent-soft)] transition-all"
-            style={{
-              width: totalSets ? `${(completedSets / totalSets) * 100}%` : '0%',
-            }}
-          />
+              <button
+                type="button"
+                onClick={() => {
+                  if (appSettings.confirmBeforeFinishWorkout) {
+                    setIsFinishModalOpen(true)
+                  } else {
+                    handleFinishWorkout()
+                  }
+                }}
+                disabled={savingWorkout}
+                className="h-12 rounded-2xl bg-[var(--ff-accent)] px-4 text-sm font-bold text-white shadow-[0_0_20px_var(--ff-accent-shadow)] transition hover:bg-[var(--ff-accent-hover)] hover:shadow-[0_0_20px_var(--ff-accent-shadow)] disabled:cursor-not-allowed disabled:opacity-60 sm:h-11"
+              >
+                {savingWorkout ? 'Salvando...' : 'Finalizar'}
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--ff-surface-3)]">
+            <div
+              className="h-full rounded-full bg-[var(--ff-accent)] transition-all"
+              style={{
+                width: `${progressPercent}%`,
+              }}
+            />
+          </div>
         </div>
       </div>
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-4 xl:gap-6">
-        <div className="space-y-4 pb-36 xl:col-span-3">
-          {(activeSession.exercises || []).map((sessionExercise, exerciseIndex) => {
-            const lastPerformance = getLastExercisePerformance(
-              sessionExercise.exercise?.name || 'Exercício sem nome',
-              user
-            )
-
-            const bestWeightPerformance = getBestWeightPerformance(
-              sessionExercise.exercise?.name || 'Exercício sem nome',
-              user
-            )
-
-            const bestVolumePerformance = getBestVolumePerformance(
-              sessionExercise.exercise?.name || 'Exercício sem nome',
-              user
-            )
-
-            const lastSet = getFirstCompletedSet(lastPerformance)
-
-            const { weightPRSetId, volumePRSetId } = getSessionPRTypes(
-              sessionExercise.exercise?.name || 'Exercício sem nome',
-              sessionExercise.sets,
-              user
-            )
-
+        <div className="space-y-4 pb-40 xl:col-span-3 xl:pb-6">
+          {sessionExercises.map((sessionExercise, exerciseIndex) => {
+            const performance = exercisePerformanceMap.get(sessionExercise.id) || {}
             const isCollapsed = collapsedExerciseIds.includes(sessionExercise.id)
 
             const exerciseCompletedSets = sessionExercise.sets.filter(
@@ -395,72 +463,78 @@ function StartWorkout() {
               (set) => set.type !== 'warmup'
             ).length
 
+            const exerciseProgressPercent = exerciseTotalSets
+              ? Math.min(100, Math.round((exerciseCompletedSets / exerciseTotalSets) * 100))
+              : 0
+
             return (
               <Card
                 key={sessionExercise.id}
-                className={sessionExercise.skipped ? 'opacity-50' : ''}
+                className={`overflow-hidden ${sessionExercise.skipped ? 'opacity-50' : ''}`}
               >
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 text-sm font-bold text-[var(--ff-accent-text)]">
+                    <button
+                      type="button"
+                      onClick={() => toggleExerciseCollapse(sessionExercise.id)}
+                      className="flex w-full items-center gap-3 text-left"
+                    >
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 text-sm font-black text-[var(--ff-accent-text)]">
                         {exerciseIndex + 1}
                       </span>
 
-                      <div className="min-w-0">
-                        <h2 className="truncate text-xl font-bold">
-                          {sessionExercise.exercise.name}
+                      <div className="min-w-0 flex-1">
+                        <h2 className="truncate text-xl font-black text-[var(--ff-text)]">
+                          {getExerciseName(sessionExercise)}
                         </h2>
 
-                        <p className="text-sm text-[var(--ff-muted)]">
-                          {sessionExercise.exercise.muscleGroup} • {sessionExercise.exercise.equipment}
+                        <p className="mt-1 truncate text-sm text-[var(--ff-muted)]">
+                          {getExerciseSubtitle(sessionExercise)}
                         </p>
                       </div>
-                    </div>
 
-                    <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-2">
-                      <div className="rounded-xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
+                      <ChevronDown
+                        size={20}
+                        className={`shrink-0 text-[var(--ff-muted)] transition ${isCollapsed ? '-rotate-90' : ''}`}
+                      />
+                    </button>
+
+                    <div className="mt-4 grid grid-cols-1 gap-2 lg:grid-cols-2">
+                      <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
                         <p className="text-xs text-[var(--ff-muted)]">
                           Último treino
                         </p>
 
-                        <p className="text-sm font-semibold text-[var(--ff-text-soft)] mt-1">
-                          {lastSet
-                            ? formatPerformance(lastSet)
+                        <p className="mt-1 text-sm font-semibold text-[var(--ff-text-soft)]">
+                          {performance.lastSet
+                            ? formatPerformance(performance.lastSet)
                             : 'Sem registro anterior'}
                         </p>
                       </div>
 
-                      <div className="rounded-xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 p-3">
+                      <div className="rounded-2xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 p-3">
                         <p className="text-xs text-[var(--ff-accent-text)]">
                           Melhores marcas
                         </p>
 
-                        <p className="text-sm font-semibold text-[var(--ff-accent-text)] mt-1">
+                        <p className="mt-1 text-sm font-semibold text-[var(--ff-accent-text)]">
                           Peso:{' '}
-                          {bestWeightPerformance
-                            ? `${bestWeightPerformance.weight}kg x ${bestWeightPerformance.reps} reps`
+                          {performance.bestWeightPerformance
+                            ? `${performance.bestWeightPerformance.weight}kg x ${performance.bestWeightPerformance.reps} reps`
                             : 'Sem registro'}
                         </p>
 
-                        <p className="text-sm font-semibold text-[var(--ff-accent-text)] mt-1">
+                        <p className="mt-1 text-sm font-semibold text-[var(--ff-accent-text)]">
                           Volume:{' '}
-                          {bestVolumePerformance
-                            ? `${bestVolumePerformance.volume}kg total`
+                          {performance.bestVolumePerformance
+                            ? `${performance.bestVolumePerformance.volume}kg total`
                             : 'Sem registro'}
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:flex lg:justify-end">
-                    <button
-                      type="button"
-                      onClick={() => toggleExerciseCollapse(sessionExercise.id)}
-                      className="h-10 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 text-xs font-bold text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)]/40 hover:bg-zinc-900 hover:text-[var(--ff-text)] lg:h-11 lg:px-4 lg:text-sm"
-                    >
-                      {isCollapsed ? 'Abrir' : 'Minimizar'}
-                    </button>
+                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:flex lg:justify-end">
                     <button
                       type="button"
                       onClick={() =>
@@ -470,15 +544,15 @@ function StartWorkout() {
                             : sessionExercise.id
                         )
                       }
-                      className="h-10 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 text-xs font-bold text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)]/40 hover:bg-zinc-900 hover:text-[var(--ff-text)] lg:h-11 lg:px-4 lg:text-sm"
+                      className="h-11 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 text-xs font-bold text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)]/40 hover:bg-zinc-900 hover:text-[var(--ff-text)] lg:px-4 lg:text-sm"
                     >
-                      Substituir
+                      Trocar
                     </button>
 
                     <button
                       type="button"
                       onClick={() => skipExercise(sessionExercise.id)}
-                      className="h-10 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 text-xs font-bold text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)]/40 hover:bg-zinc-900 hover:text-[var(--ff-text)] lg:h-11 lg:px-4 lg:text-sm"
+                      className="h-11 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 text-xs font-bold text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)]/40 hover:bg-zinc-900 hover:text-[var(--ff-text)] lg:px-4 lg:text-sm"
                     >
                       {sessionExercise.skipped ? 'Retomar' : 'Pular'}
                     </button>
@@ -486,7 +560,7 @@ function StartWorkout() {
                     <button
                       type="button"
                       onClick={() => removeExercise(sessionExercise.id)}
-                      className="h-10 rounded-2xl border border-red-500/20 bg-red-500/10 px-3 text-xs font-bold text-red-300 transition hover:border-red-400/40 hover:bg-red-500/20 lg:h-11 lg:px-4 lg:text-sm"
+                      className="h-11 rounded-2xl border border-red-500/20 bg-red-500/10 px-3 text-xs font-bold text-red-300 transition hover:border-red-400/40 hover:bg-red-500/20 lg:px-4 lg:text-sm"
                     >
                       Excluir
                     </button>
@@ -509,7 +583,7 @@ function StartWorkout() {
                       <button
                         type="button"
                         onClick={() => toggleExerciseCollapse(sessionExercise.id)}
-                        className="rounded-2xl bg-[var(--ff-accent)] px-4 py-2 text-xs font-bold text-[var(--ff-text)] transition hover:bg-[var(--ff-accent-hover)]"
+                        className="rounded-2xl bg-[var(--ff-accent)] px-4 py-2 text-xs font-bold text-white transition hover:bg-[var(--ff-accent-hover)]"
                       >
                         Ver séries
                       </button>
@@ -517,11 +591,9 @@ function StartWorkout() {
 
                     <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--ff-surface-3)]">
                       <div
-                        className="h-full rounded-full bg-[var(--ff-accent-soft)] transition-all"
+                        className="h-full rounded-full bg-[var(--ff-accent)] transition-all"
                         style={{
-                          width: exerciseTotalSets
-                            ? `${(exerciseCompletedSets / exerciseTotalSets) * 100}%`
-                            : '0%',
+                          width: `${exerciseProgressPercent}%`,
                         }}
                       />
                     </div>
@@ -529,33 +601,39 @@ function StartWorkout() {
                 )}
 
                 {replaceExerciseId === sessionExercise.id && (
-                  <div className="mt-4">
-                    <Select
-                      label="Substituir por"
-                      defaultValue=""
-                      onChange={(event) => {
-                        const newExercise = exercises.find(
-                          (exercise) => exercise.id === event.target.value
-                        )
+                  <div className="mt-4 rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+                    <Input
+                      label="Buscar substituto"
+                      placeholder="Pesquisar exercício..."
+                      value={replaceSearch}
+                      onChange={(event) => setReplaceSearch(event.target.value)}
+                    />
 
-                        if (newExercise) {
-                          replaceExercise(sessionExercise.id, newExercise)
-                          setReplaceExerciseId(null)
-                        }
-                      }}
-                    >
-                      <option value="">Selecione um exercício</option>
+                    <div className="mt-3">
+                      <Select
+                        label="Substituir por"
+                        defaultValue=""
+                        onChange={(event) => handleReplaceExercise(sessionExercise.id, event.target.value)}
+                      >
+                        <option value="">Selecione um exercício</option>
 
-                      {exercises.map((exercise) => (
-                        <option key={exercise.id} value={exercise.id}>
-                          {exercise.name}
-                        </option>
-                      ))}
-                    </Select>
+                        {replacementOptions.map((exercise) => (
+                          <option key={getExerciseId(exercise)} value={getExerciseId(exercise)}>
+                            {exercise.name}
+                          </option>
+                        ))}
+                      </Select>
+
+                      {exercises.length > replacementOptions.length && (
+                        <p className="mt-2 text-xs text-[var(--ff-muted)]">
+                          Exibindo até {replacementOptions.length} opções. Use a busca para filtrar melhor.
+                        </p>
+                      )}
+                    </div>
                   </div>
                 )}
-                {!isCollapsed && (
 
+                {!isCollapsed && (
                   <div className="mt-5">
                     <div className="mb-2 hidden grid-cols-[52px_minmax(120px,1fr)_minmax(120px,1fr)_150px_52px] gap-3 px-3 text-xs font-bold uppercase tracking-wide text-[var(--ff-muted)] lg:grid">
                       <span>Série</span>
@@ -572,15 +650,15 @@ function StartWorkout() {
                         const isWeightPR =
                           appSettings.showPRDuringWorkout &&
                           !isWarmup &&
-                          set.id === weightPRSetId
+                          set.id === performance.weightPRSetId
 
                         const isVolumePR =
                           appSettings.showPRDuringWorkout &&
                           !isWarmup &&
-                          set.id === volumePRSetId
+                          set.id === performance.volumePRSetId
 
                         const comparison = getExerciseComparison(
-                          sessionExercise.exercise.name,
+                          getExerciseName(sessionExercise),
                           set,
                           user
                         )
@@ -588,19 +666,21 @@ function StartWorkout() {
                         return (
                           <div
                             key={set.id}
-                            className={`grid w-full grid-cols-[42px_minmax(0,1fr)_minmax(0,1fr)_74px_42px] items-center gap-2 rounded-2xl border p-2.5 transition sm:grid-cols-[44px_minmax(90px,1fr)_minmax(90px,1fr)_88px_44px] sm:p-3 lg:grid-cols-[52px_minmax(120px,1fr)_minmax(120px,1fr)_150px_52px] lg:gap-3 ${set.completed
-                              ? 'border-emerald-500/30 bg-emerald-500/5'
-                              : 'border-[var(--ff-border)] bg-[var(--ff-surface-2)]'
-                              }`}
+                            className={`grid w-full grid-cols-[42px_minmax(0,1fr)_minmax(0,1fr)_74px_46px] items-center gap-2 rounded-2xl border p-2.5 transition sm:grid-cols-[44px_minmax(90px,1fr)_minmax(90px,1fr)_88px_48px] sm:p-3 lg:grid-cols-[52px_minmax(120px,1fr)_minmax(120px,1fr)_150px_52px] lg:gap-3 ${
+                              set.completed
+                                ? 'border-emerald-500/30 bg-emerald-500/5'
+                                : 'border-[var(--ff-border)] bg-[var(--ff-surface-2)]'
+                            }`}
                           >
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#18181b] text-sm font-bold lg:h-11 lg:w-11">
+                            <div className="flex h-11 w-10 shrink-0 items-center justify-center rounded-xl bg-[#18181b] text-sm font-black lg:w-11">
                               {isWarmup ? 'A' : set.setNumber}
                             </div>
 
                             <Input
                               type="number"
                               min="0"
-                              placeholder={appSettings.weightUnit}
+                              inputMode="decimal"
+                              placeholder={appSettings.weightUnit || 'kg'}
                               value={set.weight}
                               onChange={(event) =>
                                 updateSet(
@@ -610,12 +690,13 @@ function StartWorkout() {
                                   event.target.value
                                 )
                               }
-                              className="h-10 w-full px-2 text-center text-sm lg:h-11 lg:px-3"
+                              className="h-11 w-full px-2 text-center text-base font-bold lg:px-3"
                             />
 
                             <Input
                               type="number"
                               min="1"
+                              inputMode="numeric"
                               placeholder="reps"
                               value={set.reps}
                               onChange={(event) =>
@@ -626,10 +707,10 @@ function StartWorkout() {
                                   event.target.value
                                 )
                               }
-                              className="h-10 w-full px-2 text-center text-sm lg:h-11 lg:px-3"
+                              className="h-11 w-full px-2 text-center text-base font-bold lg:px-3"
                             />
 
-                            <div className="flex min-h-10 flex-col items-start justify-center gap-1 overflow-hidden">
+                            <div className="flex min-h-11 flex-col items-start justify-center gap-1 overflow-hidden">
                               {isWarmup && (
                                 <span className="w-fit rounded-lg bg-zinc-700/40 px-1.5 py-1 text-[9px] font-bold text-[var(--ff-text-soft)] sm:px-2 sm:text-[10px]">
                                   AQUEC.
@@ -679,9 +760,10 @@ function StartWorkout() {
                               onClick={() => handleCompleteSet(sessionExercise, set.id)}
                               className={
                                 set.completed
-                                  ? 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-[var(--ff-text)] lg:h-11 lg:w-11'
-                                  : 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 text-zinc-400 transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)] lg:h-11 lg:w-11'
+                                  ? 'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white'
+                                  : 'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 text-zinc-400 transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)]'
                               }
+                              aria-label={set.completed ? 'Desmarcar série' : 'Concluir série'}
                             >
                               {set.completed ? '✓' : '○'}
                             </button>
@@ -689,29 +771,28 @@ function StartWorkout() {
                         )
                       })}
                     </div>
+
+                    <button
+                      type="button"
+                      onClick={() => addSet(sessionExercise.id)}
+                      className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--ff-surface-3)] text-sm font-bold transition hover:bg-zinc-700"
+                    >
+                      + Adicionar série
+                    </button>
                   </div>
-                )}
-                {!isCollapsed && (
-                  <button
-                    type="button"
-                    onClick={() => addSet(sessionExercise.id)}
-                    className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[var(--ff-surface-3)] text-sm font-bold transition hover:bg-zinc-700"
-                  >
-                    + Adicionar Série
-                  </button>
                 )}
               </Card>
             )
           })}
         </div>
 
-        <div className="xl:col-span-1 space-y-4">
+        <aside className="space-y-4 xl:col-span-1">
           <Card className="hidden xl:block">
             <h2 className="text-xl font-bold">
               Treino ativo
             </h2>
 
-            <p className="mt-2 text-3xl font-bold text-[var(--ff-accent-text)]">
+            <p className="mt-2 text-3xl font-black text-[var(--ff-accent-text)]">
               {formatTime(elapsedSeconds)}
             </p>
 
@@ -721,17 +802,32 @@ function StartWorkout() {
 
             <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--ff-surface-3)]">
               <div
-                className="h-full rounded-full bg-[var(--ff-accent-soft)]"
+                className="h-full rounded-full bg-[var(--ff-accent)]"
                 style={{
-                  width: totalSets
-                    ? `${(completedSets / totalSets) * 100}%`
-                    : '0%',
+                  width: `${progressPercent}%`,
                 }}
               />
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
+                <p className="text-xs text-[var(--ff-muted)]">Exercícios</p>
+                <p className="mt-1 text-xl font-black">{workoutSummary.totalExercises}</p>
+              </div>
+
+              <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-3">
+                <p className="text-xs text-yellow-200/70">PRs</p>
+                <p className="mt-1 text-xl font-black text-yellow-300">{workoutSummary.totalPRs}</p>
+              </div>
             </div>
           </Card>
 
           <Card>
+            <div className="mb-3 flex items-center gap-2">
+              <StickyNote size={18} className="text-[var(--ff-accent-text)]" />
+              <h2 className="text-lg font-black">Observações</h2>
+            </div>
+
             <Textarea
               label="Observações finais"
               placeholder="Ex: treino pesado, ombro incomodou, aumentei carga no supino..."
@@ -741,8 +837,8 @@ function StartWorkout() {
             />
           </Card>
 
-          <Card>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-1">
+          <Card className="hidden xl:block">
+            <div className="grid grid-cols-1 gap-3">
               <Button
                 type="button"
                 onClick={() => setIsFinishModalOpen(true)}
@@ -761,29 +857,61 @@ function StartWorkout() {
               </Button>
             </div>
           </Card>
-        </div>
+        </aside>
       </section>
 
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--ff-border)] bg-[var(--ff-bg)]/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-16px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl xl:hidden">
+        <div className="mx-auto flex max-w-[1600px] items-center gap-3">
+          <button
+            type="button"
+            onClick={handleCancelWorkout}
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10 text-red-300"
+            aria-label="Cancelar treino"
+          >
+            <X size={20} />
+          </button>
+
+          <div className="min-w-0 flex-1 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 py-2">
+            <p className="truncate text-xs font-bold text-[var(--ff-muted)]">
+              {completedSets}/{totalSets} séries • {progressPercent}%
+            </p>
+
+            <p className="truncate text-sm font-black text-[var(--ff-accent-text)]">
+              {formatTime(elapsedSeconds)}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsFinishModalOpen(true)}
+            disabled={savingWorkout}
+            className="h-12 shrink-0 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-black text-white shadow-[0_0_20px_var(--ff-accent-shadow)] disabled:opacity-60"
+          >
+            Finalizar
+          </button>
+        </div>
+      </div>
+
       {restTimer && (
-        <div className="fixed bottom-4 left-3 right-3 z-50 rounded-3xl border border-[var(--ff-accent-border)]/30 bg-[#121212]/95 p-3 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)] backdrop-blur-xl sm:left-1/2 sm:right-auto sm:w-[calc(100%-32px)] sm:max-w-md sm:-translate-x-1/2 sm:p-4">
+        <div className="fixed bottom-[88px] left-3 right-3 z-50 rounded-3xl border border-[var(--ff-accent-border)]/30 bg-[#121212]/95 p-3 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)] backdrop-blur-xl sm:left-1/2 sm:right-auto sm:w-[calc(100%-32px)] sm:max-w-md sm:-translate-x-1/2 sm:p-4 xl:bottom-4">
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
+            <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)] sm:h-12 sm:w-12">
                 <Timer size={22} />
               </div>
 
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-bold text-[var(--ff-text)]">
                   Descanso
                 </p>
 
-                <p className="text-xs text-[var(--ff-muted)]">
+                <p className="truncate text-xs text-[var(--ff-muted)]">
                   {restTimer.exerciseName}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex shrink-0 items-center gap-3">
               <p className="text-xl font-black text-[var(--ff-accent-text)] sm:text-2xl">
                 {formatTime(restTimer.secondsLeft)}
               </p>
@@ -800,7 +928,7 @@ function StartWorkout() {
 
           <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[var(--ff-surface-3)] sm:mt-4 sm:h-2">
             <div
-              className="h-full rounded-full bg-[var(--ff-accent-soft)] transition-all"
+              className="h-full rounded-full bg-[var(--ff-accent)] transition-all"
               style={{
                 width: `${restTimer.totalSeconds
                   ? ((restTimer.totalSeconds - restTimer.secondsLeft) /
@@ -821,15 +949,15 @@ function StartWorkout() {
       )}
 
       {isFinishModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-6 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)]">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 px-4 pb-4 backdrop-blur-sm sm:items-center sm:pb-0">
+          <div className="w-full max-w-lg rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-5 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)] sm:p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold text-[var(--ff-accent-text)]">
                   Confirmar finalização
                 </p>
 
-                <h2 className="mt-1 text-2xl font-bold text-[var(--ff-text)]">
+                <h2 className="mt-1 text-2xl font-black text-[var(--ff-text)]">
                   Finalizar treino?
                 </h2>
 
@@ -853,17 +981,17 @@ function StartWorkout() {
                   Duração
                 </p>
 
-                <p className="mt-1 text-xl font-bold text-[var(--ff-accent-text)]">
+                <p className="mt-1 text-xl font-black text-[var(--ff-accent-text)]">
                   {formatTime(elapsedSeconds)}
                 </p>
               </div>
 
               <div className="rounded-2xl border border-[var(--ff-border)] bg-zinc-900 p-4">
                 <p className="text-xs text-[var(--ff-muted)]">
-                  Séries concluídas
+                  Séries
                 </p>
 
-                <p className="mt-1 text-xl font-bold">
+                <p className="mt-1 text-xl font-black">
                   {completedSets}/{totalSets}
                 </p>
               </div>
@@ -873,8 +1001,8 @@ function StartWorkout() {
                   Exercícios
                 </p>
 
-                <p className="mt-1 text-xl font-bold">
-                  {totalExercises}
+                <p className="mt-1 text-xl font-black">
+                  {workoutSummary.totalExercises}
                 </p>
               </div>
 
@@ -883,16 +1011,17 @@ function StartWorkout() {
                   Pulados
                 </p>
 
-                <p className="mt-1 text-xl font-bold">
-                  {skippedExercises}
+                <p className="mt-1 text-xl font-black">
+                  {workoutSummary.skippedExercises}
                 </p>
               </div>
             </div>
 
-            {totalPRs > 0 && (
+            {workoutSummary.totalPRs > 0 && (
               <div className="mt-4 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4">
-                <p className="text-sm font-bold text-yellow-400">
-                  🏆 {totalPRs} novo(s) PR(s) neste treino
+                <p className="flex items-center gap-2 text-sm font-bold text-yellow-400">
+                  <Trophy size={17} />
+                  {workoutSummary.totalPRs} novo(s) PR(s) neste treino
                 </p>
               </div>
             )}
@@ -909,7 +1038,7 @@ function StartWorkout() {
               </div>
             )}
 
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Button
                 type="button"
                 variant="secondary"

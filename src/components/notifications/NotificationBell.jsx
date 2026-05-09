@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Bell } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
@@ -17,6 +17,7 @@ function getUnreadCountFromCache(user) {
 function NotificationBell() {
   const { user } = useAuth()
   const [unreadCount, setUnreadCount] = useState(0)
+  const isLoadingRef = useRef(false)
 
   useEffect(() => {
     if (!user) return undefined
@@ -24,6 +25,9 @@ function NotificationBell() {
     let isMounted = true
 
     async function loadNotificationsCount() {
+      if (isLoadingRef.current) return
+
+      isLoadingRef.current = true
       setUnreadCount(getUnreadCountFromCache(user))
 
       try {
@@ -34,6 +38,8 @@ function NotificationBell() {
         setUnreadCount(Number(data?.unreadCount) || 0)
       } catch (error) {
         console.error(error)
+      } finally {
+        isLoadingRef.current = false
       }
     }
 
@@ -46,7 +52,7 @@ function NotificationBell() {
     window.addEventListener('focus', handleNotificationsChanged)
     window.addEventListener('forgeflow:notifications-changed', handleNotificationsChanged)
 
-    const intervalId = window.setInterval(loadNotificationsCount, 60000)
+    const intervalId = window.setInterval(loadNotificationsCount, 90000)
 
     return () => {
       isMounted = false
@@ -66,7 +72,7 @@ function NotificationBell() {
       <Bell size={20} />
 
       {unreadCount > 0 && (
-        <span className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[var(--ff-accent)] px-1.5 text-[10px] font-black text-white shadow-[0_0_14px_var(--ff-accent-shadow)]">
+        <span className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[var(--ff-accent)] px-1.5 text-center text-[10px] font-black leading-none text-white shadow-[0_0_14px_var(--ff-accent-shadow)]">
           {unreadCount > 9 ? '9+' : unreadCount}
         </span>
       )}

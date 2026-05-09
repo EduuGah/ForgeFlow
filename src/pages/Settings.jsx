@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   AlertTriangle,
   Check,
@@ -223,6 +223,8 @@ function Settings() {
   const [settings, setSettings] = useState(defaultSettings)
   const [confirmModal, setConfirmModal] = useState(null)
   const [toast, setToast] = useState(null)
+  const [syncStatus, setSyncStatus] = useState('idle')
+  const [pendingSettingKey, setPendingSettingKey] = useState('')
 
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
@@ -231,17 +233,48 @@ function Settings() {
   })
 
   const [savingPassword, setSavingPassword] = useState(false)
+  const [exportingType, setExportingType] = useState('')
+
+  const currentAccent = useMemo(() => {
+    return accentColors[settings.accentColor] || accentColors.purple || Object.values(accentColors)[0]
+  }, [settings.accentColor])
+
+  const syncBadgeText = useMemo(() => {
+    if (syncStatus === 'loading') return 'Carregando'
+    if (syncStatus === 'syncing') return 'Sincronizando'
+    if (syncStatus === 'local') return 'Salvo local'
+    if (syncStatus === 'error') return 'Falha ao sincronizar'
+
+    return 'Conta sincronizada'
+  }, [syncStatus])
+
+  const showToast = useCallback((type, title, message = '') => {
+    setToast({
+      type,
+      title,
+      message,
+    })
+
+    window.setTimeout(() => {
+      setToast(null)
+    }, 3000)
+  }, [])
 
   useEffect(() => {
-    if (!user) return
+    if (!user) return undefined
+
+    let isMounted = true
 
     const cachedSettings = getUserAppSettings(user)
     setSettings(cachedSettings)
     applyAppSettingsToDocument(cachedSettings)
+    setSyncStatus('loading')
 
     async function loadSettings() {
       try {
         const settingsFromDatabase = await apiFetch('/settings')
+
+        if (!isMounted) return
 
         const mergedSettings = saveUserAppSettings(user, {
           ...cachedSettings,
@@ -250,26 +283,22 @@ function Settings() {
 
         setSettings(mergedSettings)
         applyAppSettingsToDocument(mergedSettings)
+        setSyncStatus('idle')
       } catch {
+        if (!isMounted) return
+
         setSettings(cachedSettings)
         applyAppSettingsToDocument(cachedSettings)
+        setSyncStatus('local')
       }
     }
 
     loadSettings()
+
+    return () => {
+      isMounted = false
+    }
   }, [user])
-
-  function showToast(type, title, message = '') {
-    setToast({
-      type,
-      title,
-      message,
-    })
-
-    setTimeout(() => {
-      setToast(null)
-    }, 3000)
-  }
 
   async function handleSetPassword(event) {
     event.preventDefault()
@@ -322,6 +351,8 @@ function Settings() {
     }
 
     setSettings(updatedSettings)
+    setPendingSettingKey(key)
+    setSyncStatus('syncing')
     saveUserAppSettings(user, updatedSettings)
     applyAppSettingsToDocument(updatedSettings)
 
@@ -331,13 +362,18 @@ function Settings() {
         body: JSON.stringify(updatedSettings),
       })
 
+      setSyncStatus('idle')
       showToast('success', 'Configuração salva', 'A preferência foi salva na sua conta.')
     } catch {
+      setSyncStatus('local')
+
       showToast(
         'error',
         'Salvo localmente',
         'A configuração foi aplicada, mas não foi possível sincronizar com a conta.'
       )
+    } finally {
+      setPendingSettingKey('')
     }
   }
 
@@ -350,6 +386,7 @@ function Settings() {
       variant: 'danger',
       onConfirm: async () => {
         setSettings(defaultSettings)
+        setSyncStatus('syncing')
         saveUserAppSettings(user, defaultSettings)
         applyAppSettingsToDocument(defaultSettings)
         setConfirmModal(null)
@@ -360,12 +397,16 @@ function Settings() {
             body: JSON.stringify(defaultSettings),
           })
 
+          setSyncStatus('idle')
+
           showToast(
             'success',
             'Configurações restauradas',
             'As preferências voltaram ao padrão e foram salvas na sua conta.'
           )
         } catch {
+          setSyncStatus('local')
+
           showToast(
             'error',
             'Restaurado localmente',
@@ -378,6 +419,7 @@ function Settings() {
 
   async function handleExportJson() {
     try {
+      setExportingType('json')
       const date = new Date().toISOString().slice(0, 10)
 
       await apiDownload('/export-data', `forgeflow-backup-${date}.json`)
@@ -395,11 +437,14 @@ function Settings() {
         'Erro ao exportar',
         error.message || 'Não foi possível exportar seus dados.'
       )
+    } finally {
+      setExportingType('')
     }
   }
 
   async function handleExportCsv() {
     try {
+      setExportingType('csv')
       const date = new Date().toISOString().slice(0, 10)
 
       await apiDownload(
@@ -420,11 +465,14 @@ function Settings() {
         'Erro ao exportar',
         error.message || 'Não foi possível exportar o CSV.'
       )
+    } finally {
+      setExportingType('')
     }
   }
 
   async function handleExportPdf() {
     try {
+      setExportingType('pdf')
       const date = new Date().toISOString().slice(0, 10)
 
       await apiDownload(
@@ -445,6 +493,8 @@ function Settings() {
         'Erro ao exportar PDF',
         error.message || 'Não foi possível exportar o PDF.'
       )
+    } finally {
+      setExportingType('')
     }
   }
 
@@ -500,8 +550,8 @@ function Settings() {
         title="Configurações"
         description="Ajuste visual, preferências úteis, backup e segurança da sua conta."
         action={
-          <Badge variant="purple">
-            Conta sincronizada
+          <Badge variant={syncStatus === 'idle' ? 'purple' : 'default'}>
+            {syncBadgeText}
           </Badge>
         }
       />
@@ -575,7 +625,7 @@ function Settings() {
                 </div>
 
                 <Badge>
-                  {accentColors[settings.accentColor]?.name || 'Roxo'}
+                  {currentAccent?.name || 'Roxo'}
                 </Badge>
               </div>
 
@@ -593,13 +643,21 @@ function Settings() {
             </div>
 
             <div className="mt-6 rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-5">
-              <p className="text-sm font-black text-[var(--ff-text)]">
-                Prévia
-              </p>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="text-sm font-black text-[var(--ff-text)]">
+                    Prévia
+                  </p>
 
-              <p className="mt-1 text-sm text-[var(--ff-muted)]">
-                Este card usa as mesmas variáveis globais aplicadas no app.
-              </p>
+                  <p className="mt-1 text-sm text-[var(--ff-muted)]">
+                    Este card usa as mesmas variáveis globais aplicadas no app.
+                  </p>
+                </div>
+
+                {pendingSettingKey === 'accentColor' && (
+                  <Badge>Aplicando cor...</Badge>
+                )}
+              </div>
 
               <div className="mt-4 flex flex-wrap gap-2">
                 <span className="rounded-full bg-[var(--ff-accent)] px-3 py-1 text-xs font-black text-white">
@@ -670,6 +728,7 @@ function Settings() {
                 type="number"
                 min="1"
                 max="20"
+                inputMode="numeric"
                 value={settings.workoutsVisibleLimit}
                 onChange={(event) =>
                   handleUpdateSetting(
@@ -736,19 +795,33 @@ function Settings() {
             />
 
             <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2">
-              <Button type="button" onClick={handleExportJson}>
+              <Button
+                type="button"
+                onClick={handleExportJson}
+                disabled={Boolean(exportingType)}
+              >
                 <Download size={17} />
-                Exportar backup JSON
+                {exportingType === 'json' ? 'Exportando...' : 'Exportar backup JSON'}
               </Button>
 
-              <Button type="button" variant="secondary" onClick={handleExportCsv}>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleExportCsv}
+                disabled={Boolean(exportingType)}
+              >
                 <FileSpreadsheet size={17} />
-                Exportar histórico CSV/Excel
+                {exportingType === 'csv' ? 'Exportando...' : 'Exportar histórico CSV/Excel'}
               </Button>
 
-              <Button type="button" variant="secondary" onClick={handleExportPdf}>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleExportPdf}
+                disabled={Boolean(exportingType)}
+              >
                 <FileText size={17} />
-                Exportar relatório PDF
+                {exportingType === 'pdf' ? 'Exportando...' : 'Exportar relatório PDF'}
               </Button>
 
               <label className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-5 text-sm font-bold text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)]">
@@ -828,7 +901,7 @@ function Settings() {
                 placeholder="Repita a nova senha"
               />
 
-              <Button type="submit" disabled={savingPassword}>
+              <Button type="submit" disabled={savingPassword} className="w-full sm:w-auto">
                 {savingPassword
                   ? 'Salvando...'
                   : user?.hasPassword
@@ -840,12 +913,26 @@ function Settings() {
         </div>
 
         <aside className="space-y-6">
-          <Card>
+          <Card className="xl:sticky xl:top-24">
             <SectionTitle
               icon={AlertTriangle}
               title="Área de risco"
               description="Use apenas quando quiser voltar as preferências para o padrão."
             />
+
+            <div className="mt-5 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+              <p className="text-xs font-bold uppercase tracking-wide text-[var(--ff-muted)]">
+                Status
+              </p>
+
+              <p className="mt-1 text-sm font-black text-[var(--ff-text)]">
+                {syncBadgeText}
+              </p>
+
+              <p className="mt-2 text-xs leading-relaxed text-[var(--ff-muted)]">
+                Alterações visuais são aplicadas imediatamente e sincronizadas com a conta em seguida.
+              </p>
+            </div>
 
             <Button
               type="button"

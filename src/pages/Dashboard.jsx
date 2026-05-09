@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   Activity,
@@ -46,8 +46,6 @@ import {
 } from '../utils/userStorage'
 
 import { apiFetch } from '../services/api'
-import { generateSmartNotifications } from '../utils/notificationUtils'
-
 import {
   getCompletedSets,
   getExercisePRs,
@@ -141,6 +139,40 @@ function getTooltipLabel(label) {
 
 function formatChartVolume(value) {
   return `${Number(value || 0).toLocaleString('pt-BR')} kg`
+}
+
+function runWhenBrowserIsIdle(callback) {
+  if (typeof window === 'undefined') return undefined
+
+  if ('requestIdleCallback' in window) {
+    const idleId = window.requestIdleCallback(callback, {
+      timeout: 1800,
+    })
+
+    return () => window.cancelIdleCallback(idleId)
+  }
+
+  const timeoutId = window.setTimeout(callback, 700)
+
+  return () => window.clearTimeout(timeoutId)
+}
+
+function ChartLoadingPlaceholder({ label = 'Preparando gráfico' }) {
+  return (
+    <div className="flex h-full min-h-[220px] items-center justify-center rounded-3xl border border-dashed border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-6 text-center">
+      <div>
+        <div className="mx-auto h-10 w-10 animate-pulse rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)]" />
+
+        <p className="mt-4 text-sm font-bold text-[var(--ff-text)]">
+          {label}
+        </p>
+
+        <p className="mt-1 text-xs leading-relaxed text-[var(--ff-muted)]">
+          O ForgeFlow carrega os gráficos após o conteúdo principal para deixar a tela mais rápida.
+        </p>
+      </div>
+    </div>
+  )
 }
 
 function getDaysDiff(dateA, dateB) {
@@ -328,6 +360,7 @@ function Dashboard() {
   const [profile, setProfile] = useState({})
   const [prSearch, setPrSearch] = useState('')
   const [loadingDashboard, setLoadingDashboard] = useState(true)
+  const [shouldRenderCharts, setShouldRenderCharts] = useState(false)
   const [dashboardSource, setDashboardSource] = useState('local')
   const [chartAccentColor, setChartAccentColor] = useState('#8b5cf6')
   const [muscleRecovery, setMuscleRecovery] = useState([])
@@ -345,12 +378,16 @@ function Dashboard() {
 
   const navigate = useNavigate()
   const { startSession } = useWorkoutSession()
+  const deferredPrSearch = useDeferredValue(prSearch)
 
   useEffect(() => {
-    if (!user) return
+    if (!user) return undefined
+
+    let isMounted = true
 
     async function loadDashboardData() {
       setLoadingDashboard(true)
+      setShouldRenderCharts(false)
 
       const cachedExercises = getUserStorageData(user, 'exercises', [])
       const cachedWorkouts = getUserStorageData(user, 'workouts', [])
@@ -360,8 +397,7 @@ function Dashboard() {
       const cachedNotifications = getUserStorageData(user, 'notifications', [])
 
       const userProfile = user?.profile || {}
-
-      setProfile({
+      const normalizedProfile = {
         name: user?.name || '',
         avatarUrl: user?.avatarUrl || '',
         height: userProfile.height || '',
@@ -373,7 +409,18 @@ function Dashboard() {
           : '',
         preferredSplit: userProfile.preferredSplit || '',
         notes: userProfile.notes || '',
-      })
+      }
+
+      setProfile(normalizedProfile)
+      setExercises(cachedExercises)
+      setWorkouts(cachedWorkouts)
+      setHistory(cachedHistory)
+      setBodyWeight(cachedBodyWeight)
+      setGoals(cachedGoals)
+      setNotifications(cachedNotifications)
+      setUnreadNotificationsCount(
+        cachedNotifications.filter((item) => item.status === 'unread').length
+      )
 
       try {
         const [
@@ -466,6 +513,8 @@ function Dashboard() {
             }))
           : cachedNotifications
 
+        if (!isMounted) return
+
         setWorkouts(normalizedWorkouts)
         setHistory(normalizedHistory)
         setExercises(userExercises)
@@ -476,13 +525,6 @@ function Dashboard() {
         setNotifications(normalizedNotifications)
         setUnreadNotificationsCount(Number(notificationsFromApi?.unreadCount) || 0)
 
-        generateSmartNotifications({
-          user,
-          reason: 'dashboard-open',
-          minimumMinutes: 30,
-        }).catch((error) => {
-          console.error(error)
-        })
 
         saveUserStorageData(user, 'workouts', normalizedWorkouts)
         saveUserStorageData(user, 'history', normalizedHistory)
@@ -506,6 +548,8 @@ function Dashboard() {
       } catch (error) {
         console.error(error)
 
+        if (!isMounted) return
+
         setExercises(cachedExercises)
         setWorkouts(cachedWorkouts)
         setHistory(cachedHistory)
@@ -526,11 +570,21 @@ function Dashboard() {
         setUnreadNotificationsCount(cachedNotifications.filter((item) => item.status === 'unread').length)
         setDashboardSource('local')
       } finally {
-        setLoadingDashboard(false)
+        if (isMounted) {
+          setLoadingDashboard(false)
+
+          runWhenBrowserIsIdle(() => {
+            if (isMounted) setShouldRenderCharts(true)
+          })
+        }
       }
     }
 
     loadDashboardData()
+
+    return () => {
+      isMounted = false
+    }
   }, [user])
 
   useEffect(() => {
@@ -704,11 +758,11 @@ function Dashboard() {
       .filter((pr) =>
         `${pr.exerciseName} ${pr.muscleGroup}`
           .toLowerCase()
-          .includes(prSearch.toLowerCase())
+          .includes(deferredPrSearch.toLowerCase())
       )
       .sort((a, b) => Number(b.weightPR.weight) - Number(a.weightPR.weight))
       .slice(0, 12)
-  }, [completedSets, prSearch])
+  }, [completedSets, deferredPrSearch])
 
   const favoriteWorkouts = useMemo(() => {
     return workouts.filter((workout) => workout.isFavorite)
@@ -912,6 +966,8 @@ function Dashboard() {
                   {profile?.avatarUrl ? (
                     <img
                       src={profile.avatarUrl}
+                      loading="eager"
+                      decoding="async"
                       alt={profile?.name || 'Foto de perfil'}
                       className="h-full w-full object-cover"
                     />
@@ -1730,6 +1786,8 @@ function Dashboard() {
                         {media ? (
                           <img
                             src={media}
+                            loading="lazy"
+                            decoding="async"
                             alt={firstExercise?.name || workout.name}
                             className="h-full w-full object-cover"
                           />
@@ -1894,6 +1952,8 @@ function Dashboard() {
                           {media ? (
                             <img
                               src={media}
+                              loading="lazy"
+                              decoding="async"
                               alt={exercise.name}
                               className="h-full w-full object-cover"
                             />
@@ -1982,7 +2042,9 @@ function Dashboard() {
           </div>
 
           <div className={`mt-5 h-[280px] sm:h-72 ${chartFocusFixClass}`}>
-            {volumeByWorkout.length === 0 ? (
+            {!shouldRenderCharts ? (
+              <ChartLoadingPlaceholder label="Preparando gráfico de volume" />
+            ) : volumeByWorkout.length === 0 ? (
               <EmptyState
                 title="Sem dados para gráfico"
                 description="Finalize treinos para gerar evolução de volume."
@@ -2050,7 +2112,9 @@ function Dashboard() {
           </div>
 
           <div className={`mt-5 h-[280px] sm:h-72 ${chartFocusFixClass}`}>
-            {completedSets.length === 0 ? (
+            {!shouldRenderCharts ? (
+              <ChartLoadingPlaceholder label="Preparando radar muscular" />
+            ) : completedSets.length === 0 ? (
               <EmptyState
                 title="Sem dados musculares"
                 description="Finalize treinos para gerar o gráfico."
@@ -2104,7 +2168,9 @@ function Dashboard() {
           </div>
 
           <div className={`mt-5 h-[260px] ${chartFocusFixClass}`}>
-            {workoutsByWeek.length === 0 ? (
+            {!shouldRenderCharts ? (
+              <ChartLoadingPlaceholder label="Preparando gráfico semanal" />
+            ) : workoutsByWeek.length === 0 ? (
               <EmptyState
                 title="Sem frequência"
                 description="Finalize treinos para gerar esse gráfico."
@@ -2169,7 +2235,9 @@ function Dashboard() {
           </div>
 
           <div className={`mt-5 h-[260px] ${chartFocusFixClass}`}>
-            {setsByWorkout.length === 0 ? (
+            {!shouldRenderCharts ? (
+              <ChartLoadingPlaceholder label="Preparando gráfico de séries" />
+            ) : setsByWorkout.length === 0 ? (
               <EmptyState
                 title="Sem séries"
                 description="Finalize treinos para gerar esse gráfico."
@@ -2244,7 +2312,9 @@ function Dashboard() {
           </div>
 
           <div className={`mt-5 h-[260px] ${chartFocusFixClass}`}>
-            {muscleVolumeChartData.length === 0 ? (
+            {!shouldRenderCharts ? (
+              <ChartLoadingPlaceholder label="Preparando gráfico muscular" />
+            ) : muscleVolumeChartData.length === 0 ? (
               <EmptyState
                 title="Sem volume"
                 description="Finalize treinos para gerar esse gráfico."

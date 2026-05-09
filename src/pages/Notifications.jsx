@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Archive,
@@ -200,8 +200,8 @@ function NotificationDetailModal({
   const Icon = meta.icon
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-2xl overflow-hidden rounded-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] shadow-2xl">
+    <div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/70 p-3 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="max-h-[92vh] w-full max-w-2xl overflow-hidden rounded-t-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] shadow-2xl sm:rounded-[2rem]">
         <div className="flex items-start justify-between gap-4 border-b border-[var(--ff-border)] p-5">
           <div className="flex min-w-0 items-start gap-4">
             <div
@@ -339,6 +339,9 @@ function Notifications() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [statusFilter, setStatusFilter] = useState('')
   const [search, setSearch] = useState('')
+  const deferredSearch = useDeferredValue(search)
+  const [visibleCount, setVisibleCount] = useState(30)
+  const [syncing, setSyncing] = useState(false)
   const [loading, setLoading] = useState(true)
   const [source, setSource] = useState('local')
   const [toast, setToast] = useState(null)
@@ -365,12 +368,18 @@ function Notifications() {
   async function loadNotifications(filter = statusFilter) {
     if (!user) return
 
-    setLoading(true)
-
     const cachedNotifications = getUserStorageData(user, 'notifications', [])
+    const normalizedCached = Array.isArray(cachedNotifications)
+      ? cachedNotifications.map(normalizeNotificationFromApi)
+      : []
+
+    setNotifications(normalizedCached)
+    setUnreadCount(normalizedCached.filter((item) => item.status === 'unread').length)
+    setLoading(normalizedCached.length === 0)
+    setSyncing(true)
 
     try {
-      const query = filter ? `?status=${filter}&limit=60` : '?limit=60'
+      const query = filter ? `?status=${filter}&limit=80` : '?limit=80'
       const data = await apiFetch(`/notifications${query}`)
 
       const normalizedNotifications = Array.isArray(data?.notifications)
@@ -384,18 +393,10 @@ function Notifications() {
       setSource('database')
     } catch (error) {
       console.error(error)
-
-      const normalizedCached = Array.isArray(cachedNotifications)
-        ? cachedNotifications.map(normalizeNotificationFromApi)
-        : []
-
-      setNotifications(normalizedCached)
-      setUnreadCount(
-        normalizedCached.filter((item) => item.status === 'unread').length
-      )
       setSource('local')
     } finally {
       setLoading(false)
+      setSyncing(false)
     }
   }
 
@@ -403,6 +404,10 @@ function Notifications() {
     loadNotifications()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, statusFilter])
+
+  useEffect(() => {
+    setVisibleCount(30)
+  }, [deferredSearch, statusFilter])
 
   const stats = useMemo(() => {
     const unread = notifications.filter((item) => item.status === 'unread').length
@@ -418,7 +423,7 @@ function Notifications() {
   }, [notifications])
 
   const filteredNotifications = useMemo(() => {
-    const term = search.toLowerCase().trim()
+    const term = deferredSearch.toLowerCase().trim()
 
     if (!term) return notifications
 
@@ -427,7 +432,11 @@ function Notifications() {
         .toLowerCase()
         .includes(term)
     })
-  }, [notifications, search])
+  }, [notifications, deferredSearch])
+
+  const visibleNotifications = useMemo(() => {
+    return filteredNotifications.slice(0, visibleCount)
+  }, [filteredNotifications, visibleCount])
 
   async function handleGenerateNotifications() {
     try {
@@ -771,7 +780,7 @@ function Notifications() {
             />
           </Card>
         ) : (
-          filteredNotifications.map((notification) => {
+          visibleNotifications.map((notification) => {
             const meta = getNotificationMeta(notification.type)
             const Icon = meta.icon
             const isUnread = notification.status === 'unread'
@@ -888,6 +897,17 @@ function Notifications() {
               </article>
             )
           })
+        )}
+
+        {visibleCount < filteredNotifications.length && (
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setVisibleCount((current) => current + 30)}
+            className="w-full"
+          >
+            Carregar mais notificações
+          </Button>
         )}
       </section>
 

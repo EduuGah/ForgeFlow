@@ -151,7 +151,9 @@ function Profile() {
   const settings = getAppSettings()
 
   useEffect(() => {
-    if (!user) return
+    if (!user) return undefined
+
+    let isMounted = true
 
     async function loadProfileData() {
       const userProfile = user?.profile || {}
@@ -173,19 +175,25 @@ function Profile() {
       const cachedBodyWeight = getSafeBodyWeightList(user)
       const cachedHistory = getUserStorageData(user, 'history', [])
 
+      setBodyWeight(cachedBodyWeight)
+      setHistory(cachedHistory)
+      setIsProfileLoaded(true)
+
       try {
-        const [bodyWeightFromApi, historyFromApi] = await Promise.all([
+        const [bodyWeightResult, historyResult] = await Promise.allSettled([
           apiFetch('/body-weight'),
           apiFetch('/workout-history'),
         ])
 
-        const normalizedBodyWeight = Array.isArray(bodyWeightFromApi)
-          ? bodyWeightFromApi.map(normalizeBodyWeightFromApi)
-          : []
+        if (!isMounted) return
 
-        const normalizedHistory = Array.isArray(historyFromApi)
-          ? historyFromApi.map(normalizeHistoryFromApi)
-          : []
+        const normalizedBodyWeight = bodyWeightResult.status === 'fulfilled' && Array.isArray(bodyWeightResult.value)
+          ? bodyWeightResult.value.map(normalizeBodyWeightFromApi)
+          : cachedBodyWeight
+
+        const normalizedHistory = historyResult.status === 'fulfilled' && Array.isArray(historyResult.value)
+          ? historyResult.value.map(normalizeHistoryFromApi)
+          : cachedHistory
 
         setBodyWeight(normalizedBodyWeight)
         setHistory(normalizedHistory)
@@ -195,20 +203,24 @@ function Profile() {
       } catch (error) {
         console.error(error)
 
-        setBodyWeight(cachedBodyWeight)
-        setHistory(cachedHistory)
+        if (isMounted) {
+          setBodyWeight(cachedBodyWeight)
+          setHistory(cachedHistory)
 
-        showToast(
-          'error',
-          'Usando dados locais',
-          'Não foi possível carregar seus dados do servidor.'
-        )
+          showToast(
+            'error',
+            'Usando dados locais',
+            'Não foi possível carregar seus dados do servidor.'
+          )
+        }
       }
-
-      setIsProfileLoaded(true)
     }
 
     loadProfileData()
+
+    return () => {
+      isMounted = false
+    }
   }, [user])
 
   useEffect(() => {
@@ -519,6 +531,8 @@ function Profile() {
                     src={profile.avatarUrl}
                     alt={profile.name || 'Usuário'}
                     className="h-full w-full object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                 ) : (
                   <UserRound size={44} />
@@ -1062,8 +1076,8 @@ function Profile() {
       </section>
 
       {isEditOpen && (
-        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/80 px-4 py-6 backdrop-blur-sm">
-          <div className="mx-auto w-full max-w-2xl rounded-3xl border border-zinc-800 bg-[#121212] p-6 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)]">
+        <div className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/80 px-4 pb-4 backdrop-blur-sm sm:items-center sm:py-6">
+          <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-[2rem] border border-zinc-800 bg-[#121212] p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)] sm:rounded-3xl sm:p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-bold text-[var(--ff-accent-text)]">
@@ -1097,6 +1111,8 @@ function Profile() {
                         src={profile.avatarUrl}
                         alt={profile.name || 'Foto de perfil'}
                         className="h-full w-full object-cover"
+                        loading="lazy"
+                        decoding="async"
                       />
                     ) : (
                       <UserRound size={34} />
@@ -1149,6 +1165,7 @@ function Profile() {
               <div>
                 <Input
                   label="Altura em cm"
+                  inputMode="numeric"
                   placeholder="Ex: 175"
                   value={profile.height}
                   onChange={(event) => {

@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Menu } from 'lucide-react'
 import { Outlet } from 'react-router-dom'
 
 import { useAuth } from '../../context/AuthContext'
+import { useWorkoutSession } from '../../context/WorkoutSessionContext'
 import { apiFetch } from '../../services/api'
 
 import {
@@ -12,27 +13,52 @@ import {
   watchSystemThemeChanges,
 } from '../../utils/settingsUtils'
 
-import Sidebar from './Sidebar'
 import MobileBottomNav from './MobileBottomNav'
-import ActiveWorkoutMini from '../workout/ActiveWorkoutMini'
 import NotificationBell from '../notifications/NotificationBell'
-import SmartNotificationPopup from '../notifications/SmartNotificationPopup'
 import { generateSmartNotifications } from '../../utils/notificationUtils'
+
+const Sidebar = lazy(() => import('./Sidebar'))
+const ActiveWorkoutMini = lazy(() => import('../workout/ActiveWorkoutMini'))
+const SmartNotificationPopup = lazy(() =>
+  import('../notifications/SmartNotificationPopup')
+)
+
+function runWhenBrowserIsIdle(callback) {
+  if (typeof window === 'undefined') return undefined
+
+  if ('requestIdleCallback' in window) {
+    const idleId = window.requestIdleCallback(callback, {
+      timeout: 2500,
+    })
+
+    return () => window.cancelIdleCallback(idleId)
+  }
+
+  const timeoutId = window.setTimeout(callback, 900)
+
+  return () => window.clearTimeout(timeoutId)
+}
 
 function AppLayout() {
   const { user } = useAuth()
+  const { activeSession } = useWorkoutSession()
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [popupNotification, setPopupNotification] = useState(null)
 
   useEffect(() => {
-    if (!user) return
+    if (!user) return undefined
 
     const cachedSettings = getUserAppSettings(user)
     applyAppSettingsToDocument(cachedSettings)
 
+    let isMounted = true
+
     async function loadAccountSettings() {
       try {
         const settingsFromDatabase = await apiFetch('/settings')
+
+        if (!isMounted) return
 
         const mergedSettings = saveUserAppSettings(user, {
           ...cachedSettings,
@@ -41,7 +67,9 @@ function AppLayout() {
 
         applyAppSettingsToDocument(mergedSettings)
       } catch {
-        applyAppSettingsToDocument(cachedSettings)
+        if (isMounted) {
+          applyAppSettingsToDocument(cachedSettings)
+        }
       }
     }
 
@@ -56,21 +84,24 @@ function AppLayout() {
     window.addEventListener('forgeflow:settings-changed', handleSettingsChanged)
 
     return () => {
+      isMounted = false
       window.removeEventListener('forgeflow:settings-changed', handleSettingsChanged)
       stopWatchingSystemTheme()
     }
   }, [user])
 
   useEffect(() => {
-    if (!user) return
+    if (!user) return undefined
 
-    generateSmartNotifications({
-      user,
-      reason: 'app-open',
-      minimumMinutes: 60,
-      showPopup: false,
-    }).catch((error) => {
-      console.error(error)
+    return runWhenBrowserIsIdle(() => {
+      generateSmartNotifications({
+        user,
+        reason: 'app-open',
+        minimumMinutes: 60,
+        showPopup: false,
+      }).catch((error) => {
+        console.error(error)
+      })
     })
   }, [user])
 
@@ -98,7 +129,7 @@ function AppLayout() {
   }, [])
 
   useEffect(() => {
-    if (isSidebarOpen) {
+    if (isSidebarOpen || popupNotification) {
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = ''
@@ -107,11 +138,11 @@ function AppLayout() {
     return () => {
       document.body.style.overflow = ''
     }
-  }, [isSidebarOpen])
+  }, [isSidebarOpen, popupNotification])
 
   return (
     <div className="min-h-screen bg-[var(--ff-bg)] text-[var(--ff-text)] transition-colors duration-300">
-      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_top_left,var(--ff-accent-shadow),transparent_34%),radial-gradient(circle_at_bottom_right,var(--ff-accent-soft),transparent_32%)] opacity-80" />
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,var(--ff-accent-shadow),transparent_34%),radial-gradient(circle_at_bottom_right,var(--ff-accent-soft),transparent_32%)] opacity-80" />
 
       <header
         id="app-header"
@@ -133,7 +164,7 @@ function AppLayout() {
               </button>
 
               <div className="min-w-0">
-                <h1 className="truncate text-lg font-black tracking-tight leading-tight">
+                <h1 className="truncate text-lg font-black leading-tight tracking-tight">
                   Forge<span className="text-[var(--ff-accent)]">Flow</span>
                 </h1>
 
@@ -154,10 +185,14 @@ function AppLayout() {
         </div>
       </header>
 
-      <Sidebar
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-      />
+      {isSidebarOpen && (
+        <Suspense fallback={null}>
+          <Sidebar
+            isOpen={isSidebarOpen}
+            onClose={() => setIsSidebarOpen(false)}
+          />
+        </Suspense>
+      )}
 
       <main className="relative px-4 py-6 pb-36 sm:px-6 lg:px-8 lg:pb-10">
         <div className="mx-auto w-full max-w-[1600px]">
@@ -166,12 +201,21 @@ function AppLayout() {
       </main>
 
       <MobileBottomNav />
-      <ActiveWorkoutMini />
 
-      <SmartNotificationPopup
-        notification={popupNotification}
-        onClose={() => setPopupNotification(null)}
-      />
+      {activeSession && (
+        <Suspense fallback={null}>
+          <ActiveWorkoutMini />
+        </Suspense>
+      )}
+
+      {popupNotification && (
+        <Suspense fallback={null}>
+          <SmartNotificationPopup
+            notification={popupNotification}
+            onClose={() => setPopupNotification(null)}
+          />
+        </Suspense>
+      )}
     </div>
   )
 }

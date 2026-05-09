@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
     ArrowLeft,
@@ -41,6 +41,22 @@ import {
 
 import defaultExercises from '../data/defaultExercises'
 
+const MAX_QUICK_EXERCISES_VISIBLE = 80
+
+function getComparableDateValue(item) {
+    const date = new Date(item?.updatedAt || item?.createdAt || 0)
+
+    return Number.isNaN(date.getTime()) ? 0 : date.getTime()
+}
+
+function normalizeSearchText(value) {
+    return String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim()
+}
+
 function Workouts() {
     const [workouts, setWorkouts] = useState([])
     const [exercises, setExercises] = useState([])
@@ -68,6 +84,7 @@ function Workouts() {
     const [editingTemplateId, setEditingTemplateId] = useState(null)
     const [builderMode, setBuilderMode] = useState('workout')
     const [isLoaded, setIsLoaded] = useState(false)
+    const [isSyncingData, setIsSyncingData] = useState(false)
     const [isBuilderOpen, setIsBuilderOpen] = useState(false)
 
     const [folders, setFolders] = useState([])
@@ -461,7 +478,9 @@ function Workouts() {
     }, [])
 
     useEffect(() => {
-        if (!user) return
+        if (!user) return undefined
+
+        let isMounted = true
 
         async function loadWorkoutsData() {
             setIsLoaded(false)
@@ -469,6 +488,7 @@ function Workouts() {
             const cachedWorkouts = getUserStorageData(user, 'workouts', [])
             const cachedHistory = getUserStorageData(user, 'history', [])
             const savedExercises = getUserStorageData(user, 'exercises', null)
+            const cachedTemplates = getUserStorageData(user, 'workout-templates', [])
             const savedFolders = getUserStorageData(user, 'folders', [])
             const savedSetModels = getUserStorageData(user, 'set-models', [])
             const draft = getUserStorageData(user, 'workout-draft', null)
@@ -478,84 +498,12 @@ function Workouts() {
                     ? savedExercises
                     : getInitialExercises()
 
+            setWorkouts(cachedWorkouts)
+            setHistory(cachedHistory)
             setExercises(initialExercises)
+            setWorkoutTemplates(cachedTemplates)
             setFolders(savedFolders)
             setCustomSetModels(savedSetModels)
-
-            try {
-                const [workoutsFromApi, exercisesFromApi, historyFromApi, templatesFromApi] = await Promise.all([
-                    apiFetch('/workouts'),
-                    apiFetch('/exercises'),
-                    apiFetch('/workout-history'),
-                    apiFetch('/workout-templates'),
-                ])
-
-                const normalizedWorkouts = Array.isArray(workoutsFromApi)
-                    ? workoutsFromApi.map(normalizeWorkoutFromApi)
-                    : []
-
-                const normalizedExercises = Array.isArray(exercisesFromApi)
-                    ? exercisesFromApi.map((exercise) => ({
-                        ...exercise,
-                        id: exercise._id || exercise.id,
-                        isFavorite: Boolean(exercise.isFavorite),
-                    }))
-                    : []
-
-                const normalizedHistory = Array.isArray(historyFromApi)
-                    ? historyFromApi.map(normalizeHistoryFromApi)
-                    : []
-
-                const normalizedTemplates = Array.isArray(templatesFromApi)
-                    ? templatesFromApi.map(normalizeWorkoutTemplateFromApi)
-                    : []
-
-                setWorkouts(normalizedWorkouts)
-                setHistory(normalizedHistory)
-
-                setWorkoutTemplates(normalizedTemplates)
-                saveUserStorageData(user, 'workout-templates', normalizedTemplates)
-
-
-
-                const mergedExercisesMap = new Map()
-
-                initialExercises.forEach((exercise) => {
-                    mergedExercisesMap.set(String(exercise.id), {
-                        ...exercise,
-                        isFavorite: Boolean(exercise.isFavorite),
-                    })
-                })
-
-                normalizedExercises.forEach((exercise) => {
-                    const originalLocalId = exercise.originalLocalId || exercise.localId
-
-                    if (originalLocalId && mergedExercisesMap.has(String(originalLocalId))) {
-                        mergedExercisesMap.delete(String(originalLocalId))
-                    }
-
-                    mergedExercisesMap.set(String(exercise.id), exercise)
-                })
-
-                const finalExercises = Array.from(mergedExercisesMap.values())
-
-                setExercises(finalExercises)
-                saveUserStorageData(user, 'exercises', finalExercises)
-
-                saveUserStorageData(user, 'workouts', normalizedWorkouts)
-                saveUserStorageData(user, 'history', normalizedHistory)
-            } catch (error) {
-                console.error(error)
-                setWorkouts(cachedWorkouts)
-                setHistory(cachedHistory)
-                setWorkoutTemplates(getUserStorageData(user, 'workout-templates', []))
-
-                showToast(
-                    'error',
-                    'Usando dados locais',
-                    'Não foi possível carregar seus treinos do servidor.'
-                )
-            }
 
             if (draft) {
                 setWorkoutName(draft.workoutName || '')
@@ -573,23 +521,107 @@ function Workouts() {
             }
 
             setIsLoaded(true)
+            setIsSyncingData(true)
 
-            apiFetch('/workout-history')
-                .then((historyFromApi) => {
-                    const normalizedHistory = Array.isArray(historyFromApi)
-                        ? historyFromApi.map(normalizeHistoryFromApi)
-                        : []
+            const [workoutsResult, exercisesResult, historyResult, templatesResult] = await Promise.allSettled([
+                apiFetch('/workouts'),
+                apiFetch('/exercises'),
+                apiFetch('/workout-history'),
+                apiFetch('/workout-templates'),
+            ])
 
-                    setHistory(normalizedHistory)
-                    saveUserStorageData(user, 'history', normalizedHistory)
+            if (!isMounted) return
+
+            const normalizedWorkouts =
+                workoutsResult.status === 'fulfilled' && Array.isArray(workoutsResult.value)
+                    ? workoutsResult.value.map(normalizeWorkoutFromApi)
+                    : cachedWorkouts
+
+            const normalizedExercises =
+                exercisesResult.status === 'fulfilled' && Array.isArray(exercisesResult.value)
+                    ? exercisesResult.value.map((exercise) => ({
+                        ...exercise,
+                        id: exercise._id || exercise.id,
+                        isFavorite: Boolean(exercise.isFavorite),
+                    }))
+                    : []
+
+            const normalizedHistory =
+                historyResult.status === 'fulfilled' && Array.isArray(historyResult.value)
+                    ? historyResult.value.map(normalizeHistoryFromApi)
+                    : cachedHistory
+
+            const normalizedTemplates =
+                templatesResult.status === 'fulfilled' && Array.isArray(templatesResult.value)
+                    ? templatesResult.value.map(normalizeWorkoutTemplateFromApi)
+                    : cachedTemplates
+
+            const mergedExercisesMap = new Map()
+
+            initialExercises.forEach((exercise) => {
+                mergedExercisesMap.set(String(exercise.id), {
+                    ...exercise,
+                    isFavorite: Boolean(exercise.isFavorite),
                 })
-                .catch((error) => {
-                    console.error(error)
-                    setHistory(getUserStorageData(user, 'history', []))
-                })
+            })
+
+            normalizedExercises.forEach((exercise) => {
+                const originalLocalId = exercise.originalLocalId || exercise.localId
+
+                if (originalLocalId && mergedExercisesMap.has(String(originalLocalId))) {
+                    mergedExercisesMap.delete(String(originalLocalId))
+                }
+
+                mergedExercisesMap.set(String(exercise.id), exercise)
+            })
+
+            const finalExercises = Array.from(mergedExercisesMap.values())
+
+            setWorkouts(normalizedWorkouts)
+            setHistory(normalizedHistory)
+            setExercises(finalExercises)
+            setWorkoutTemplates(normalizedTemplates)
+            setIsSyncingData(false)
+
+            saveUserStorageData(user, 'workouts', normalizedWorkouts)
+            saveUserStorageData(user, 'history', normalizedHistory)
+            saveUserStorageData(user, 'exercises', finalExercises)
+            saveUserStorageData(user, 'workout-templates', normalizedTemplates)
+
+            const allRequestsFailed = [
+                workoutsResult,
+                exercisesResult,
+                historyResult,
+                templatesResult,
+            ].every((result) => result.status === 'rejected')
+
+            if (allRequestsFailed) {
+                showToast(
+                    'error',
+                    'Usando dados locais',
+                    'Não foi possível carregar seus treinos do servidor.'
+                )
+            }
         }
 
-        loadWorkoutsData()
+        loadWorkoutsData().catch((error) => {
+            console.error(error)
+
+            if (!isMounted) return
+
+            setIsLoaded(true)
+            setIsSyncingData(false)
+
+            showToast(
+                'error',
+                'Usando dados locais',
+                'Não foi possível carregar seus treinos do servidor.'
+            )
+        })
+
+        return () => {
+            isMounted = false
+        }
     }, [user])
 
     useEffect(() => {
@@ -673,25 +705,33 @@ function Workouts() {
         saveUserStorageData(user, 'workout-templates', workoutTemplates)
     }, [workoutTemplates, isLoaded, user])
 
-    const muscleGroups = useMemo(() => {
-        return [
-            ...new Set(exercises.map((exercise) => exercise.muscleGroup).filter(Boolean)),
-        ].sort()
+    const exerciseLibraryStats = useMemo(() => {
+        const groups = new Set()
+        const equipment = new Set()
+        let favorites = 0
+        let hasForgeFlowSource = false
+
+        exercises.forEach((exercise) => {
+            if (exercise.muscleGroup) groups.add(exercise.muscleGroup)
+            if (exercise.equipment) equipment.add(exercise.equipment)
+            if (exercise.isFavorite) favorites += 1
+            if (exercise.source === 'ForgeFlow') hasForgeFlowSource = true
+        })
+
+        return {
+            muscleGroups: Array.from(groups).sort(),
+            equipmentList: Array.from(equipment).sort(),
+            favoriteExercisesCount: favorites,
+            hasImportedLibrary: hasForgeFlowSource,
+        }
     }, [exercises])
 
-    const equipmentList = useMemo(() => {
-        return [
-            ...new Set(exercises.map((exercise) => exercise.equipment).filter(Boolean)),
-        ].sort()
-    }, [exercises])
-
-    const favoriteExercisesCount = useMemo(() => {
-        return exercises.filter((exercise) => exercise.isFavorite).length
-    }, [exercises])
-
-    const hasImportedLibrary = useMemo(() => {
-        return exercises.some((exercise) => exercise.source === 'ForgeFlow')
-    }, [exercises])
+    const {
+        muscleGroups,
+        equipmentList,
+        favoriteExercisesCount,
+        hasImportedLibrary,
+    } = exerciseLibraryStats
 
     const sortedWorkoutTemplates = useMemo(() => {
         return workoutTemplates
@@ -700,10 +740,7 @@ function Workouts() {
                 if (a.isFavorite && !b.isFavorite) return -1
                 if (!a.isFavorite && b.isFavorite) return 1
 
-                const dateA = new Date(a.updatedAt || a.createdAt || 0)
-                const dateB = new Date(b.updatedAt || b.createdAt || 0)
-
-                return dateB - dateA
+                return getComparableDateValue(b) - getComparableDateValue(a)
             })
     }, [workoutTemplates])
 
@@ -783,64 +820,132 @@ function Workouts() {
         })
     }
 
-    const filteredQuickExercises = useMemo(() => {
-        const filtered = exercises.filter((exercise) => {
-            const text =
-                `${exercise.name} ${exercise.muscleGroup} ${exercise.equipment} ${exercise.originalName || ''}`.toLowerCase()
+    const deferredQuickSearch = useDeferredValue(quickSearch)
 
-            const matchesSearch = text.includes(quickSearch.toLowerCase())
+    const indexedExercises = useMemo(() => {
+        return exercises.map((exercise) => {
+            const recentInfo = getRecentExerciseInfo(exercise)
+            const recentTime = recentInfo?.lastUsedAt
+                ? new Date(recentInfo.lastUsedAt).getTime()
+                : 0
 
-            const matchesGroup = quickGroupFilter
-                ? exercise.muscleGroup === quickGroupFilter
-                : true
-
-            const matchesEquipment = quickEquipmentFilter
-                ? exercise.equipment === quickEquipmentFilter
-                : true
-
-            const matchesFavorite = quickFavoritesOnly
-                ? exercise.isFavorite === true
-                : true
-
-            return (
-                matchesSearch &&
-                matchesGroup &&
-                matchesEquipment &&
-                matchesFavorite
-            )
-        })
-
-        return filtered.sort((a, b) => {
-            if (a.isFavorite && !b.isFavorite) return -1
-            if (!a.isFavorite && b.isFavorite) return 1
-
-            const recentA = getRecentExerciseInfo(a)
-            const recentB = getRecentExerciseInfo(b)
-
-            if (recentA?.lastUsedAt && !recentB?.lastUsedAt) return -1
-            if (!recentA?.lastUsedAt && recentB?.lastUsedAt) return 1
-
-            if (recentA?.lastUsedAt && recentB?.lastUsedAt) {
-                return new Date(recentB.lastUsedAt) - new Date(recentA.lastUsedAt)
+            return {
+                ...exercise,
+                __recentInfo: recentInfo,
+                __recentTime: Number.isNaN(recentTime) ? 0 : recentTime,
+                __searchText: normalizeSearchText(
+                    `${exercise.name} ${exercise.muscleGroup} ${exercise.equipment} ${exercise.originalName || ''}`
+                ),
+                __sortName: String(exercise.name || '').toLocaleLowerCase('pt-BR'),
             }
-
-            return String(a.name || '').localeCompare(String(b.name || ''))
         })
+    }, [exercises, recentExerciseMap])
+
+    const sortedExercisesForSelect = useMemo(() => {
+        return indexedExercises
+            .slice()
+            .sort((a, b) => {
+                if (a.isFavorite && !b.isFavorite) return -1
+                if (!a.isFavorite && b.isFavorite) return 1
+
+                return a.__sortName.localeCompare(b.__sortName, 'pt-BR')
+            })
+    }, [indexedExercises])
+
+    const filteredQuickExercises = useMemo(() => {
+        const normalizedSearch = normalizeSearchText(deferredQuickSearch)
+
+        return indexedExercises
+            .filter((exercise) => {
+                const matchesSearch = normalizedSearch
+                    ? exercise.__searchText.includes(normalizedSearch)
+                    : true
+
+                const matchesGroup = quickGroupFilter
+                    ? exercise.muscleGroup === quickGroupFilter
+                    : true
+
+                const matchesEquipment = quickEquipmentFilter
+                    ? exercise.equipment === quickEquipmentFilter
+                    : true
+
+                const matchesFavorite = quickFavoritesOnly
+                    ? exercise.isFavorite === true
+                    : true
+
+                return (
+                    matchesSearch &&
+                    matchesGroup &&
+                    matchesEquipment &&
+                    matchesFavorite
+                )
+            })
+            .sort((a, b) => {
+                if (a.isFavorite && !b.isFavorite) return -1
+                if (!a.isFavorite && b.isFavorite) return 1
+
+                if (a.__recentTime !== b.__recentTime) {
+                    return b.__recentTime - a.__recentTime
+                }
+
+                return a.__sortName.localeCompare(b.__sortName, 'pt-BR')
+            })
     }, [
-        exercises,
-        quickSearch,
+        indexedExercises,
+        deferredQuickSearch,
         quickGroupFilter,
         quickEquipmentFilter,
         quickFavoritesOnly,
-        recentExerciseMap,
     ])
 
+    const visibleQuickExercises = useMemo(() => {
+        return filteredQuickExercises.slice(0, MAX_QUICK_EXERCISES_VISIBLE)
+    }, [filteredQuickExercises])
+
+    const workoutListMetaMap = useMemo(() => {
+        const map = new Map()
+
+        workouts.forEach((workout) => {
+            const workoutId = getWorkoutId(workout)
+            const groups = new Set()
+            const exerciseNames = []
+
+            ;(workout.exercises || []).forEach((item) => {
+                const exercise = item.exercise || {}
+
+                if (exercise.muscleGroup) groups.add(exercise.muscleGroup)
+                if (exercise.name) {
+                    exerciseNames.push(`${exercise.name} (${exercise.equipment || 'sem equipamento'})`)
+                }
+            })
+
+            map.set(workoutId, {
+                muscleGroups: Array.from(groups),
+                exerciseNames: exerciseNames.join(', '),
+            })
+        })
+
+        return map
+    }, [workouts])
+
+    const folderWorkoutCounts = useMemo(() => {
+        const counts = new Map()
+
+        workouts.forEach((workout) => {
+            if (!workout.folderId) return
+
+            counts.set(workout.folderId, (counts.get(workout.folderId) || 0) + 1)
+        })
+
+        return counts
+    }, [workouts])
+
     const totalExercisesInSavedWorkouts = useMemo(() => {
-        return workouts.reduce((total, workout) => total + workout.exercises.length, 0)
+        return workouts.reduce((total, workout) => total + (workout.exercises?.length || 0), 0)
     }, [workouts])
 
     const totalSetsInCurrentWorkout = useMemo(() => {
-        return workoutExercises.reduce((total, item) => total + item.sets.length, 0)
+        return workoutExercises.reduce((total, item) => total + (item.sets?.length || 0), 0)
     }, [workoutExercises])
 
     const filteredWorkouts = useMemo(() => {
@@ -852,10 +957,7 @@ function Workouts() {
                 if (a.isFavorite && !b.isFavorite) return -1
                 if (!a.isFavorite && b.isFavorite) return 1
 
-                const dateA = new Date(a.updatedAt || a.createdAt || 0)
-                const dateB = new Date(b.updatedAt || b.createdAt || 0)
-
-                return dateB - dateA
+                return getComparableDateValue(b) - getComparableDateValue(a)
             })
     }, [workouts, selectedFolderId])
 
@@ -1752,33 +1854,28 @@ function Workouts() {
         navigate('/start-workout')
     }
 
-    function getMuscleGroupsFromWorkout(workout) {
-        const groups = workout.exercises.map((item) => item.exercise?.muscleGroup)
-
-        return [...new Set(groups)].filter(Boolean)
-    }
-
-    function getWorkoutExerciseNames(workout) {
-        return workout.exercises
-            .map((item) => `${item.exercise?.name} (${item.exercise?.equipment})`)
-            .join(', ')
-    }
-
     return (
         <>
             <PageHeader
                 title="Treinos"
                 description="Monte treinos, organize exercícios e inicie seus treinos salvos."
                 action={
-                    <button
-                        type="button"
-                        onClick={openCreateBuilder}
-                        className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-bold text-white shadow-[0_0_20px_var(--ff-accent-shadow)] transition hover:bg-[var(--ff-accent-hover)]
- hover:shadow-[0_0_20px_var(--ff-accent-shadow)]"
-                    >
-                        <Plus size={18} />
-                        Novo treino
-                    </button>
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                        {isSyncingData && (
+                            <Badge variant="purple">
+                                Sincronizando
+                            </Badge>
+                        )}
+
+                        <button
+                            type="button"
+                            onClick={openCreateBuilder}
+                            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-bold text-white shadow-[0_0_20px_var(--ff-accent-shadow)] transition hover:bg-[var(--ff-accent-hover)] hover:shadow-[0_0_20px_var(--ff-accent-shadow)]"
+                        >
+                            <Plus size={18} />
+                            Novo treino
+                        </button>
+                    </div>
                 }
             />
 
@@ -1849,7 +1946,7 @@ function Workouts() {
                     </button>
 
                     {folders.map((folder) => {
-                        const total = workouts.filter((workout) => workout.folderId === folder.id).length
+                        const total = folderWorkoutCounts.get(folder.id) || 0
 
                         return (
                             <div
@@ -1924,7 +2021,8 @@ function Workouts() {
                                 {visibleWorkouts.map((workout) => {
                                     const workoutId = getWorkoutId(workout)
                                     const isExpanded = expandedWorkoutId === workoutId
-                                    const workoutMuscleGroups = getMuscleGroupsFromWorkout(workout)
+                                    const workoutMeta = workoutListMetaMap.get(workoutId) || { muscleGroups: [], exerciseNames: '' }
+                                    const workoutMuscleGroups = workoutMeta.muscleGroups
 
                                     return (
                                         <div
@@ -1950,7 +2048,7 @@ function Workouts() {
                                                         )}
 
                                                         <p className="mt-2 line-clamp-2 text-sm text-zinc-500 sm:truncate">
-                                                            {getWorkoutExerciseNames(workout)}
+                                                            {workoutMeta.exerciseNames}
                                                         </p>
 
                                                         {workoutMuscleGroups.length > 0 && (
@@ -2046,6 +2144,8 @@ function Workouts() {
                                                                             src={item.exercise.mediaUrl}
                                                                             alt={item.exercise.name}
                                                                             className="h-full w-full object-cover"
+                                                                            loading="lazy"
+                                                                            decoding="async"
                                                                         />
                                                                     ) : (
                                                                         <Dumbbell size={26} className="text-zinc-900" />
@@ -2393,11 +2493,22 @@ function Workouts() {
                 </Card>
             </section>
 
+            {!isBuilderOpen && (
+                <button
+                    type="button"
+                    onClick={openCreateBuilder}
+                    className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 z-40 flex h-14 w-14 items-center justify-center rounded-3xl bg-[var(--ff-accent)] text-white shadow-[0_0_28px_var(--ff-accent-shadow)] transition active:scale-95 sm:hidden"
+                    aria-label="Criar novo treino"
+                >
+                    <Plus size={24} />
+                </button>
+            )}
+
             {isBuilderOpen && (
-                <div className="fixed inset-0 z-[9999] overflow-y-auto overscroll-contain bg-black">
-                    <div className="mx-auto max-w-[1180px] px-4 py-4 sm:py-6">
+                <div className="fixed inset-0 z-[9999] overflow-y-auto overscroll-contain bg-[#050507] pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:pb-0">
+                    <div className="mx-auto max-w-[1180px] px-3 py-3 sm:px-4 sm:py-6">
                         <form onSubmit={handleSubmit}>
-                            <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-zinc-900 bg-black/90 px-4 py-3 backdrop-blur-xl sm:static sm:mx-0 sm:mb-6 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
+                            <div className="sticky top-0 z-20 -mx-3 mb-4 border-b border-zinc-900 bg-black/90 px-3 py-3 backdrop-blur-xl sm:static sm:mx-0 sm:mb-6 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                     <div className="flex min-w-0 items-center gap-3">
                                         <button
@@ -2531,6 +2642,8 @@ function Workouts() {
                                                             src={item.exercise.mediaUrl}
                                                             alt={item.exercise.name}
                                                             className="h-full w-full object-cover"
+                                                            loading="lazy"
+                                                            decoding="async"
                                                         />
                                                     ) : (
                                                         <Dumbbell size={26} className="text-zinc-900" />
@@ -2754,6 +2867,12 @@ function Workouts() {
                                                         {filteredQuickExercises.length} encontrados
                                                     </Badge>
 
+                                                    {filteredQuickExercises.length > visibleQuickExercises.length && (
+                                                        <Badge>
+                                                            exibindo {visibleQuickExercises.length}
+                                                        </Badge>
+                                                    )}
+
                                                     {favoriteExercisesCount > 0 && (
                                                         <Badge>
                                                             ⭐ {favoriteExercisesCount} favoritos
@@ -2850,9 +2969,9 @@ function Workouts() {
                                                 />
                                             )}
 
-                                            {filteredQuickExercises.map((exercise) => {
+                                            {visibleQuickExercises.map((exercise) => {
                                                 const alreadyAdded = isExerciseAlreadyAdded(exercise.id)
-                                                const recentInfo = getRecentExerciseInfo(exercise)
+                                                const recentInfo = exercise.__recentInfo
 
                                                 return (
                                                     <button
@@ -2882,6 +3001,7 @@ function Workouts() {
                                                                     alt={exercise.name}
                                                                     className="h-full w-full object-cover"
                                                                     loading="lazy"
+                                                                    decoding="async"
                                                                 />
                                                             ) : (
                                                                 <Dumbbell size={24} className="text-zinc-900" />
@@ -2938,15 +3058,7 @@ function Workouts() {
                                                 >
                                                     <option value="">Selecione um exercício</option>
 
-                                                    {exercises
-                                                        .slice()
-                                                        .sort((a, b) => {
-                                                            if (a.isFavorite && !b.isFavorite) return -1
-                                                            if (!a.isFavorite && b.isFavorite) return 1
-
-                                                            return String(a.name || '').localeCompare(String(b.name || ''))
-                                                        })
-                                                        .map((exercise) => (
+                                                    {sortedExercisesForSelect.map((exercise) => (
                                                             <option key={exercise.id} value={exercise.id}>
                                                                 {exercise.isFavorite ? '⭐ ' : ''}{exercise.name}
                                                             </option>
@@ -3014,14 +3126,35 @@ function Workouts() {
                                     </Card>
                                 </div>
                             </section>
+
+                            <div className="fixed inset-x-0 bottom-0 z-30 border-t border-zinc-800 bg-black/90 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-xl sm:hidden">
+                                <div className="grid grid-cols-[48px_1fr] gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={closeBuilder}
+                                        className="flex h-12 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-950 text-zinc-300 transition active:scale-95"
+                                        aria-label="Fechar criação de treino"
+                                    >
+                                        <X size={20} />
+                                    </button>
+
+                                    <button
+                                        type="submit"
+                                        className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-black text-white shadow-[0_0_20px_var(--ff-accent-shadow)] transition active:scale-[0.98]"
+                                    >
+                                        <Save size={18} />
+                                        {builderMode === 'template' ? 'Salvar template' : 'Salvar treino'}
+                                    </button>
+                                </div>
+                            </div>
                         </form>
                     </div>
                 </div>
             )}
 
             {isFolderModalOpen && (
-                <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 px-4 backdrop-blur-sm">
-                    <div className="w-full max-w-sm rounded-3xl border border-zinc-800 bg-[#121212] p-6 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)]">
+                <div className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/80 px-3 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm sm:items-center sm:px-4">
+                    <div className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-t-3xl border border-zinc-800 bg-[#121212] p-6 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)] sm:rounded-3xl">
                         <div className="flex items-start justify-between gap-4">
                             <div>
                                 <p className="text-sm font-bold text-[var(--ff-accent-text)]
@@ -3069,8 +3202,8 @@ function Workouts() {
             )}
 
             {isSetModelModalOpen && (
-                <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 px-4 backdrop-blur-sm">
-                    <div className="w-full max-w-md rounded-3xl border border-zinc-800 bg-[#121212] p-6 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)]">
+                <div className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/80 px-3 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm sm:items-center sm:px-4">
+                    <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl border border-zinc-800 bg-[#121212] p-6 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)] sm:rounded-3xl">
                         <div className="flex items-start justify-between gap-4">
                             <div>
                                 <p className="text-sm font-bold text-[var(--ff-accent-text)]

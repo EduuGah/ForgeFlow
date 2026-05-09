@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
     Activity,
@@ -105,16 +105,21 @@ function MuscleRecovery() {
     const [loading, setLoading] = useState(true)
     const [source, setSource] = useState('database')
     const [search, setSearch] = useState('')
+    const deferredSearch = useDeferredValue(search)
     const [statusFilter, setStatusFilter] = useState('')
 
     useEffect(() => {
-        if (!user) return
+        if (!user) return undefined
+
+        let isMounted = true
 
         async function loadRecovery() {
-            setLoading(true)
+            setLoading(recovery.length === 0)
 
             try {
                 const data = await apiFetch('/stats/muscle-recovery')
+
+                if (!isMounted) return
 
                 const normalizedRecovery = Array.isArray(data?.recovery)
                     ? data.recovery
@@ -125,18 +130,26 @@ function MuscleRecovery() {
             } catch (error) {
                 console.error(error)
 
-                setRecovery([])
-                setSource('local')
+                if (isMounted) {
+                    setRecovery([])
+                    setSource('local')
+                }
             } finally {
-                setLoading(false)
+                if (isMounted) {
+                    setLoading(false)
+                }
             }
         }
 
         loadRecovery()
+
+        return () => {
+            isMounted = false
+        }
     }, [user])
 
     const filteredRecovery = useMemo(() => {
-        const term = search.toLowerCase().trim()
+        const term = deferredSearch.toLowerCase().trim()
 
         return recovery
             .filter((item) => {
@@ -156,7 +169,7 @@ function MuscleRecovery() {
 
                 return a.recoveryPercent - b.recoveryPercent
             })
-    }, [recovery, search, statusFilter])
+    }, [recovery, deferredSearch, statusFilter])
 
     const readyMuscles = useMemo(() => {
         return recovery.filter((item) => item.level === 'ready')
@@ -291,7 +304,7 @@ function MuscleRecovery() {
                                 <Search size={19} />
 
                                 <input
-                                    type="text"
+                                    type="search"
                                     placeholder="Buscar grupo..."
                                     value={search}
                                     onChange={(event) => setSearch(event.target.value)}

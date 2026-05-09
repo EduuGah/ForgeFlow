@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Activity,
   BarChart3,
   CalendarDays,
   Camera,
@@ -10,10 +9,8 @@ import {
   Flame,
   History,
   Info,
-  LineChart,
   Medal,
   RefreshCcw,
-  Search,
   Sparkles,
   Target,
   Timer,
@@ -21,18 +18,11 @@ import {
   Weight,
 } from 'lucide-react'
 import {
-  Area,
-  AreaChart,
   Bar,
-  BarChart,
   CartesianGrid,
-  Cell,
   ComposedChart,
   Line,
-  LineChart as RechartsLineChart,
   ResponsiveContainer,
-  Scatter,
-  ScatterChart,
   Tooltip,
   XAxis,
   YAxis,
@@ -43,16 +33,11 @@ import Card from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
 import Button from '../components/ui/Button'
 import EmptyState from '../components/ui/EmptyState'
-import Select from '../components/ui/Select'
 
 import ProgressSummaryCards, {
   formatDuration,
   formatVolume,
 } from '../components/progress/ProgressSummaryCards'
-import BodyWeightChart from '../components/progress/BodyWeightChart'
-import TrainingVolumeChart from '../components/progress/TrainingVolumeChart'
-import MuscleGroupChart from '../components/progress/MuscleGroupChart'
-import ExercisePrChart from '../components/progress/ExercisePrChart'
 
 import { useAuth } from '../context/AuthContext'
 import { apiFetch } from '../services/api'
@@ -60,6 +45,11 @@ import {
   getUserStorageData,
   saveUserStorageData,
 } from '../utils/userStorage'
+
+const BodyWeightChart = lazy(() => import('../components/progress/BodyWeightChart'))
+const TrainingVolumeChart = lazy(() => import('../components/progress/TrainingVolumeChart'))
+const MuscleGroupChart = lazy(() => import('../components/progress/MuscleGroupChart'))
+const ExercisePrChart = lazy(() => import('../components/progress/ExercisePrChart'))
 
 function formatDate(dateString) {
   if (!dateString) return 'Sem data'
@@ -79,10 +69,6 @@ function formatLongDate(dateString) {
     month: 'long',
     year: 'numeric',
   })
-}
-
-function formatNumber(value) {
-  return Number(value || 0).toLocaleString('pt-BR')
 }
 
 function formatWeight(value) {
@@ -219,6 +205,44 @@ function getTooltipStyle() {
   }
 }
 
+function runWhenBrowserIsIdle(callback) {
+  if (typeof window === 'undefined') return undefined
+
+  if ('requestIdleCallback' in window) {
+    const idleId = window.requestIdleCallback(callback, {
+      timeout: 2200,
+    })
+
+    return () => window.cancelIdleCallback(idleId)
+  }
+
+  const timeoutId = window.setTimeout(callback, 650)
+
+  return () => window.clearTimeout(timeoutId)
+}
+
+function ChartLoadingCard({ title = 'Preparando gráfico' }) {
+  return (
+    <Card>
+      <div className="flex min-h-[260px] items-center justify-center rounded-3xl border border-dashed border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-6 text-center">
+        <div>
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">
+            <BarChart3 size={22} />
+          </div>
+
+          <p className="mt-4 text-sm font-black text-[var(--ff-text)]">
+            {title}
+          </p>
+
+          <p className="mt-1 text-xs text-[var(--ff-muted)]">
+            Carregando depois do conteúdo principal para melhorar a abertura da tela.
+          </p>
+        </div>
+      </div>
+    </Card>
+  )
+}
+
 function DetailStat({ icon: Icon, label, value, description }) {
   return (
     <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
@@ -304,12 +328,14 @@ function MonthlyProgressChart({ data = [], accentColor }) {
               value={getShortMonth(currentMonth.month)}
               description="Ainda há só um mês com dados, então o gráfico comparativo aparece quando houver mais meses."
             />
+
             <DetailStat
               icon={Dumbbell}
               label="Treinos"
               value={currentMonth.workouts || 0}
               description="Treinos finalizados neste mês."
             />
+
             <DetailStat
               icon={Flame}
               label="Volume"
@@ -377,29 +403,35 @@ function MonthlyProgressChart({ data = [], accentColor }) {
   )
 }
 
-function SetVolumeScatterChart({ data = [] }) {
-  const validRows = data
-    .filter((row) => row.isValid)
-    .slice()
-    .reverse()
-    .slice(-20)
-    .map((row, index) => ({
-      ...row,
-      index: index + 1,
-    }))
+function SetVolumeDetails({ data = [] }) {
+  const validRows = useMemo(() => {
+    return data
+      .filter((row) => row.isValid)
+      .slice()
+      .reverse()
+      .slice(-20)
+      .map((row, index) => ({
+        ...row,
+        index: index + 1,
+      }))
+  }, [data])
 
-  const biggestVolume = validRows
-    .slice()
-    .sort((a, b) => Number(b.volume || 0) - Number(a.volume || 0))[0]
+  const biggestVolume = useMemo(() => {
+    return validRows
+      .slice()
+      .sort((a, b) => Number(b.volume || 0) - Number(a.volume || 0))[0]
+  }, [validRows])
 
-  const biggestWeight = validRows
-    .slice()
-    .sort((a, b) => Number(b.weight || 0) - Number(a.weight || 0))[0]
+  const biggestWeight = useMemo(() => {
+    return validRows
+      .slice()
+      .sort((a, b) => Number(b.weight || 0) - Number(a.weight || 0))[0]
+  }, [validRows])
 
   return (
     <ChartShell
       title="Séries recentes detalhadas"
-      description="Em vez de mostrar pontinhos soltos no gráfico, esta área lista as séries recentes com treino, exercício, série, peso, reps, volume e data. Fica mais direto para entender exatamente o que aconteceu."
+      description="Lista as séries recentes com treino, exercício, peso, reps, volume e data."
       icon={Sparkles}
       badge={`${validRows.length} séries`}
     >
@@ -437,7 +469,7 @@ function SetVolumeScatterChart({ data = [] }) {
 
             <div className="overflow-hidden rounded-2xl border border-[var(--ff-border)]">
               <div className="overflow-x-auto">
-                <table className="min-w-[860px] w-full text-left text-sm">
+                <table className="w-full min-w-[860px] text-left text-sm">
                   <thead className="bg-[var(--ff-surface-2)] text-xs uppercase tracking-wide text-[var(--ff-muted)]">
                     <tr>
                       <th className="px-4 py-3">Data</th>
@@ -505,7 +537,12 @@ function SetVolumeScatterChart({ data = [] }) {
 }
 
 function ExercisePrTable({ data = [], onSelectExercise }) {
-  const topPrs = data.slice(0, 12)
+  const [visibleCount, setVisibleCount] = useState(8)
+  const visiblePrs = data.slice(0, visibleCount)
+
+  useEffect(() => {
+    setVisibleCount(8)
+  }, [data])
 
   return (
     <Card>
@@ -524,14 +561,14 @@ function ExercisePrTable({ data = [], onSelectExercise }) {
       </div>
 
       <div className="mt-5 overflow-hidden rounded-2xl border border-[var(--ff-border)]">
-        {topPrs.length === 0 ? (
+        {visiblePrs.length === 0 ? (
           <EmptyState
             title="Sem PRs ainda"
             description="Finalize treinos com peso e repetições para gerar PRs."
           />
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-[920px] w-full text-left text-sm">
+            <table className="w-full min-w-[920px] text-left text-sm">
               <thead className="bg-[var(--ff-surface-2)] text-xs uppercase tracking-wide text-[var(--ff-muted)]">
                 <tr>
                   <th className="px-4 py-3">Exercício</th>
@@ -544,7 +581,7 @@ function ExercisePrTable({ data = [], onSelectExercise }) {
               </thead>
 
               <tbody className="divide-y divide-[var(--ff-border)]">
-                {topPrs.map((item) => (
+                {visiblePrs.map((item) => (
                   <tr
                     key={item.exerciseName}
                     className="transition hover:bg-[var(--ff-card-hover)]"
@@ -607,12 +644,30 @@ function ExercisePrTable({ data = [], onSelectExercise }) {
           </div>
         )}
       </div>
+
+      {visibleCount < data.length && (
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => setVisibleCount((current) => current + 8)}
+          className="mt-4 w-full"
+        >
+          Mostrar mais PRs
+        </Button>
+      )}
     </Card>
   )
 }
 
 function RecentWorkoutDetails({ workouts = [] }) {
   const [expandedId, setExpandedId] = useState(null)
+  const [visibleCount, setVisibleCount] = useState(5)
+  const visibleWorkouts = workouts.slice(0, visibleCount)
+
+  useEffect(() => {
+    setVisibleCount(5)
+    setExpandedId(null)
+  }, [workouts])
 
   return (
     <Card>
@@ -636,13 +691,13 @@ function RecentWorkoutDetails({ workouts = [] }) {
       </div>
 
       <div className="mt-5 space-y-3">
-        {workouts.length === 0 ? (
+        {visibleWorkouts.length === 0 ? (
           <EmptyState
             title="Sem treinos recentes"
             description="Finalize treinos para ver detalhes por série."
           />
         ) : (
-          workouts.slice(0, 8).map((session) => {
+          visibleWorkouts.map((session) => {
             const id = session._id || session.id || session.finishedAt
             const rows = getSessionSets(session)
             const validRows = rows.filter((row) => row.isValid)
@@ -683,7 +738,7 @@ function RecentWorkoutDetails({ workouts = [] }) {
                       </p>
                     ) : (
                       <div className="overflow-x-auto">
-                        <table className="min-w-[820px] w-full text-left text-sm">
+                        <table className="w-full min-w-[820px] text-left text-sm">
                           <thead className="text-xs uppercase tracking-wide text-[var(--ff-muted)]">
                             <tr>
                               <th className="px-3 py-2">Exercício</th>
@@ -737,6 +792,17 @@ function RecentWorkoutDetails({ workouts = [] }) {
               </div>
             )
           })
+        )}
+
+        {visibleCount < workouts.length && (
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setVisibleCount((current) => current + 5)}
+            className="w-full"
+          >
+            Mostrar mais treinos
+          </Button>
         )}
       </div>
     </Card>
@@ -813,10 +879,13 @@ function Progress() {
 
   const [progressData, setProgressData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [syncing, setSyncing] = useState(false)
   const [source, setSource] = useState('local')
   const [selectedExercise, setSelectedExercise] = useState('')
+  const deferredSelectedExercise = useDeferredValue(selectedExercise)
   const [chartAccentColor, setChartAccentColor] = useState('#8b5cf6')
   const [refreshKey, setRefreshKey] = useState(0)
+  const [chartsReady, setChartsReady] = useState(false)
 
   useEffect(() => {
     function updateChartColor() {
@@ -837,90 +906,112 @@ function Progress() {
   }, [])
 
   useEffect(() => {
-    if (!user) return
+    return runWhenBrowserIsIdle(() => {
+      setChartsReady(true)
+    })
+  }, [])
+
+  useEffect(() => {
+    if (!user) return undefined
+
+    let isMounted = true
 
     async function loadProgress() {
-      setLoading(true)
+      setLoading((current) => current && !progressData)
+      setSyncing(true)
 
       const cachedProgress = getUserStorageData(user, 'progress-stats', null)
 
+      if (cachedProgress && !deferredSelectedExercise) {
+        setProgressData(cachedProgress)
+        setSource('local')
+        setLoading(false)
+      }
+
       try {
-        const query = selectedExercise
-          ? `?exerciseName=${encodeURIComponent(selectedExercise)}`
+        const query = deferredSelectedExercise
+          ? `?exerciseName=${encodeURIComponent(deferredSelectedExercise)}`
           : ''
 
         const data = await apiFetch(`/stats/progress${query}`)
 
+        if (!isMounted) return
+
         setProgressData(data)
-        saveUserStorageData(user, 'progress-stats', data)
+
+        if (!deferredSelectedExercise) {
+          saveUserStorageData(user, 'progress-stats', data)
+        }
+
         setSource('database')
       } catch (error) {
         console.error(error)
 
-        setProgressData(cachedProgress)
+        if (!isMounted) return
+
+        setProgressData((current) => current || cachedProgress)
         setSource('local')
       } finally {
-        setLoading(false)
+        if (isMounted) {
+          setLoading(false)
+          setSyncing(false)
+        }
       }
     }
 
     loadProgress()
-  }, [user, selectedExercise, refreshKey])
 
-  const summary = progressData?.summary || {}
-  const insights = progressData?.insights || {}
-  const charts = progressData?.charts || {}
-  const recent = progressData?.recent || {}
+    return () => {
+      isMounted = false
+    }
+  }, [user, deferredSelectedExercise, refreshKey])
 
-  const exerciseOptions = useMemo(() => {
-    return Array.isArray(charts.exercisePrs) ? charts.exercisePrs : []
-  }, [charts.exercisePrs])
+  const normalizedProgress = useMemo(() => {
+    const summary = progressData?.summary || {}
+    const insights = progressData?.insights || {}
+    const charts = progressData?.charts || {}
+    const recent = progressData?.recent || {}
 
-  const weeklyProgress = Array.isArray(charts.weeklyProgress)
-    ? charts.weeklyProgress
-    : []
-
-  const monthlyProgress = Array.isArray(charts.monthlyProgress)
-    ? charts.monthlyProgress
-    : []
-
-  const bodyWeight = Array.isArray(charts.bodyWeight)
-    ? charts.bodyWeight
-    : []
-
-  const muscleGroups = Array.isArray(charts.muscleGroups)
-    ? charts.muscleGroups
-    : []
-
-  const selectedExerciseTimeline = Array.isArray(charts.selectedExerciseTimeline)
-    ? charts.selectedExerciseTimeline
-    : []
-
-  const recentWorkouts = Array.isArray(recent.workouts)
-    ? recent.workouts
-    : []
+    return {
+      summary,
+      insights,
+      charts,
+      recent,
+      exerciseOptions: Array.isArray(charts.exercisePrs) ? charts.exercisePrs : [],
+      weeklyProgress: Array.isArray(charts.weeklyProgress) ? charts.weeklyProgress : [],
+      monthlyProgress: Array.isArray(charts.monthlyProgress) ? charts.monthlyProgress : [],
+      bodyWeight: Array.isArray(charts.bodyWeight) ? charts.bodyWeight : [],
+      muscleGroups: Array.isArray(charts.muscleGroups) ? charts.muscleGroups : [],
+      selectedExerciseTimeline: Array.isArray(charts.selectedExerciseTimeline) ? charts.selectedExerciseTimeline : [],
+      recentWorkouts: Array.isArray(recent.workouts) ? recent.workouts : [],
+      progressPhotos: Array.isArray(recent.progressPhotos) ? recent.progressPhotos : [],
+    }
+  }, [progressData])
 
   const recentSetRows = useMemo(() => {
-    return getAllRecentSetRows(recentWorkouts)
-  }, [recentWorkouts])
+    return getAllRecentSetRows(normalizedProgress.recentWorkouts)
+  }, [normalizedProgress.recentWorkouts])
 
-  const validRecentSetRows = useMemo(() => {
-    return recentSetRows.filter((row) => row.isValid)
-  }, [recentSetRows])
+  const recentSetSummary = useMemo(() => {
+    const validRecentSetRows = recentSetRows.filter((row) => row.isValid)
 
-  const strongestRecentSet = useMemo(() => {
-    return validRecentSetRows
-      .slice()
-      .sort((a, b) => b.weight - a.weight || b.reps - a.reps)[0] || null
-  }, [validRecentSetRows])
+    const strongestRecentSet =
+      validRecentSetRows
+        .slice()
+        .sort((a, b) => b.weight - a.weight || b.reps - a.reps)[0] || null
 
-  const biggestVolumeRecentSet = useMemo(() => {
-    return validRecentSetRows
-      .slice()
-      .sort((a, b) => b.volume - a.volume)[0] || null
-  }, [validRecentSetRows])
+    const biggestVolumeRecentSet =
+      validRecentSetRows
+        .slice()
+        .sort((a, b) => b.volume - a.volume)[0] || null
 
-  const latestWorkout = recentWorkouts[0] || null
+    return {
+      validRecentSetRows,
+      strongestRecentSet,
+      biggestVolumeRecentSet,
+      latestWorkout: normalizedProgress.recentWorkouts[0] || null,
+    }
+  }, [recentSetRows, normalizedProgress.recentWorkouts])
 
   return (
     <>
@@ -930,8 +1021,8 @@ function Progress() {
         action={
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant={source === 'database' ? 'purple' : 'default'}>
-              {loading
-                ? 'Carregando...'
+              {loading || syncing
+                ? 'Sincronizando...'
                 : source === 'database'
                   ? 'Sincronizado'
                   : 'Local'}
@@ -941,7 +1032,7 @@ function Progress() {
               type="button"
               variant="secondary"
               onClick={() => setRefreshKey((key) => key + 1)}
-              disabled={loading}
+              disabled={loading || syncing}
             >
               <RefreshCcw size={16} />
               Atualizar
@@ -964,16 +1055,19 @@ function Progress() {
         </Card>
       ) : (
         <div className="space-y-6">
-          <ProgressSummaryCards summary={summary} insights={insights} />
+          <ProgressSummaryCards
+            summary={normalizedProgress.summary}
+            insights={normalizedProgress.insights}
+          />
 
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <DetailStat
               icon={Medal}
               label="Melhor série recente"
-              value={strongestRecentSet ? formatWeight(strongestRecentSet.weight) : '—'}
+              value={recentSetSummary.strongestRecentSet ? formatWeight(recentSetSummary.strongestRecentSet.weight) : '—'}
               description={
-                strongestRecentSet
-                  ? `${strongestRecentSet.exerciseName} • Série ${strongestRecentSet.setNumber} • ${strongestRecentSet.reps} reps • ${formatDate(strongestRecentSet.date)}`
+                recentSetSummary.strongestRecentSet
+                  ? `${recentSetSummary.strongestRecentSet.exerciseName} • Série ${recentSetSummary.strongestRecentSet.setNumber} • ${recentSetSummary.strongestRecentSet.reps} reps • ${formatDate(recentSetSummary.strongestRecentSet.date)}`
                   : 'Sem séries recentes válidas.'
               }
             />
@@ -981,10 +1075,10 @@ function Progress() {
             <DetailStat
               icon={Flame}
               label="Maior volume recente"
-              value={biggestVolumeRecentSet ? formatVolume(biggestVolumeRecentSet.volume) : '—'}
+              value={recentSetSummary.biggestVolumeRecentSet ? formatVolume(recentSetSummary.biggestVolumeRecentSet.volume) : '—'}
               description={
-                biggestVolumeRecentSet
-                  ? `${biggestVolumeRecentSet.exerciseName} • ${formatWeight(biggestVolumeRecentSet.weight)} × ${biggestVolumeRecentSet.reps}`
+                recentSetSummary.biggestVolumeRecentSet
+                  ? `${recentSetSummary.biggestVolumeRecentSet.exerciseName} • ${formatWeight(recentSetSummary.biggestVolumeRecentSet.weight)} × ${recentSetSummary.biggestVolumeRecentSet.reps}`
                   : 'Sem volume recente.'
               }
             />
@@ -992,10 +1086,10 @@ function Progress() {
             <DetailStat
               icon={Clock3}
               label="Último treino"
-              value={latestWorkout?.workoutName || '—'}
+              value={recentSetSummary.latestWorkout?.workoutName || '—'}
               description={
-                latestWorkout
-                  ? `${formatLongDate(getSessionDate(latestWorkout))} • ${formatDuration(latestWorkout.durationSeconds || latestWorkout.duration)}`
+                recentSetSummary.latestWorkout
+                  ? `${formatLongDate(getSessionDate(recentSetSummary.latestWorkout))} • ${formatDuration(recentSetSummary.latestWorkout.durationSeconds || recentSetSummary.latestWorkout.duration)}`
                   : 'Nenhum treino recente encontrado.'
               }
             />
@@ -1003,48 +1097,76 @@ function Progress() {
             <DetailStat
               icon={Target}
               label="Séries recentes"
-              value={validRecentSetRows.length}
+              value={recentSetSummary.validRecentSetRows.length}
               description="Quantidade de séries válidas nos últimos treinos retornados pela rota de evolução."
             />
           </section>
 
-          <section className="grid grid-cols-1 gap-4 xl:grid-cols-2 xl:gap-6">
-            <BodyWeightChart data={bodyWeight} accentColor={chartAccentColor} />
+          <Suspense fallback={<ChartLoadingCard title="Preparando gráficos principais" />}>
+            {chartsReady ? (
+              <section className="grid grid-cols-1 gap-4 xl:grid-cols-2 xl:gap-6">
+                <BodyWeightChart
+                  data={normalizedProgress.bodyWeight}
+                  accentColor={chartAccentColor}
+                />
 
-            <MuscleGroupChart data={muscleGroups} accentColor={chartAccentColor} />
+                <MuscleGroupChart
+                  data={normalizedProgress.muscleGroups}
+                  accentColor={chartAccentColor}
+                />
+              </section>
+            ) : (
+              <ChartLoadingCard title="Preparando gráficos principais" />
+            )}
+          </Suspense>
+
+          <Suspense fallback={<ChartLoadingCard title="Preparando volume semanal" />}>
+            {chartsReady ? (
+              <TrainingVolumeChart
+                data={normalizedProgress.weeklyProgress}
+                accentColor={chartAccentColor}
+              />
+            ) : (
+              <ChartLoadingCard title="Preparando volume semanal" />
+            )}
+          </Suspense>
+
+          <section className="grid grid-cols-1 gap-4 xl:grid-cols-2 xl:gap-6">
+            {chartsReady ? (
+              <MonthlyProgressChart
+                data={normalizedProgress.monthlyProgress}
+                accentColor={chartAccentColor}
+              />
+            ) : (
+              <ChartLoadingCard title="Preparando resumo mensal" />
+            )}
+
+            <SetVolumeDetails data={recentSetRows} />
           </section>
 
-          <TrainingVolumeChart data={weeklyProgress} accentColor={chartAccentColor} />
-
-          <section className="grid grid-cols-1 gap-4 xl:grid-cols-2 xl:gap-6">
-            <MonthlyProgressChart
-              data={monthlyProgress}
-              accentColor={chartAccentColor}
-            />
-
-            <SetVolumeScatterChart
-              data={recentSetRows}
-              accentColor={chartAccentColor}
-            />
-          </section>
-
-          <ExercisePrChart
-            exerciseOptions={exerciseOptions}
-            selectedExercise={selectedExercise}
-            onSelectExercise={setSelectedExercise}
-            timeline={selectedExerciseTimeline}
-            accentColor={chartAccentColor}
-          />
+          <Suspense fallback={<ChartLoadingCard title="Preparando PRs por exercício" />}>
+            {chartsReady ? (
+              <ExercisePrChart
+                exerciseOptions={normalizedProgress.exerciseOptions}
+                selectedExercise={selectedExercise}
+                onSelectExercise={setSelectedExercise}
+                timeline={normalizedProgress.selectedExerciseTimeline}
+                accentColor={chartAccentColor}
+              />
+            ) : (
+              <ChartLoadingCard title="Preparando PRs por exercício" />
+            )}
+          </Suspense>
 
           <ExercisePrTable
-            data={exerciseOptions}
+            data={normalizedProgress.exerciseOptions}
             onSelectExercise={setSelectedExercise}
           />
 
           <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-            <RecentWorkoutDetails workouts={recentWorkouts} />
+            <RecentWorkoutDetails workouts={normalizedProgress.recentWorkouts} />
 
-            <BodyWeightLog data={bodyWeight} />
+            <BodyWeightLog data={normalizedProgress.bodyWeight} />
           </section>
 
           <section className="grid grid-cols-1 gap-4 xl:grid-cols-2 xl:gap-6">
@@ -1069,14 +1191,14 @@ function Progress() {
               </div>
 
               <div className="mt-5">
-                {!recent.progressPhotos || recent.progressPhotos.length === 0 ? (
+                {normalizedProgress.progressPhotos.length === 0 ? (
                   <EmptyState
                     title="Sem fotos"
                     description="Envie fotos de evolução para complementar seus gráficos."
                   />
                 ) : (
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    {recent.progressPhotos.slice(0, 8).map((photo) => (
+                    {normalizedProgress.progressPhotos.slice(0, 8).map((photo) => (
                       <Link
                         key={photo._id || photo.id}
                         to="/progress-photos"
@@ -1087,6 +1209,8 @@ function Progress() {
                             src={photo.imageUrl}
                             alt="Foto de evolução"
                             className="h-full w-full object-cover transition group-hover:scale-105"
+                            loading="lazy"
+                            decoding="async"
                           />
                         </div>
 
@@ -1125,42 +1249,42 @@ function Progress() {
 
               <div className="mt-5 space-y-3 text-sm leading-relaxed text-[var(--ff-muted)]">
                 <p>
-                  Você tem <strong className="text-[var(--ff-text)]">{summary.totalFinishedWorkouts || 0}</strong> treino(s)
+                  Você tem <strong className="text-[var(--ff-text)]">{normalizedProgress.summary.totalFinishedWorkouts || 0}</strong> treino(s)
                   finalizado(s), com volume total de{' '}
-                  <strong className="text-[var(--ff-accent-text)]">{formatVolume(summary.totalVolume || 0)}</strong>.
+                  <strong className="text-[var(--ff-accent-text)]">{formatVolume(normalizedProgress.summary.totalVolume || 0)}</strong>.
                 </p>
 
                 <p>
                   Seu volume médio por treino está em{' '}
-                  <strong className="text-[var(--ff-text)]">{formatVolume(summary.averageVolumePerWorkout || 0)}</strong>,
+                  <strong className="text-[var(--ff-text)]">{formatVolume(normalizedProgress.summary.averageVolumePerWorkout || 0)}</strong>,
                   e sua duração média é de{' '}
-                  <strong className="text-[var(--ff-text)]">{formatDuration(summary.averageDurationSeconds || 0)}</strong>.
+                  <strong className="text-[var(--ff-text)]">{formatDuration(normalizedProgress.summary.averageDurationSeconds || 0)}</strong>.
                 </p>
 
-                {insights.mostTrainedMuscle && (
+                {normalizedProgress.insights.mostTrainedMuscle && (
                   <p>
                     O grupo com maior volume/séries no período é{' '}
-                    <strong className="text-[var(--ff-accent-text)]">{insights.mostTrainedMuscle.muscleGroup}</strong>,
-                    com {insights.mostTrainedMuscle.sets || 0} série(s).
+                    <strong className="text-[var(--ff-accent-text)]">{normalizedProgress.insights.mostTrainedMuscle.muscleGroup}</strong>,
+                    com {normalizedProgress.insights.mostTrainedMuscle.sets || 0} série(s).
                   </p>
                 )}
 
-                {insights.bestWeightPr && (
+                {normalizedProgress.insights.bestWeightPr && (
                   <p>
                     Sua maior carga registrada foi em{' '}
-                    <strong className="text-[var(--ff-text)]">{insights.bestWeightPr.exerciseName}</strong>:
+                    <strong className="text-[var(--ff-text)]">{normalizedProgress.insights.bestWeightPr.exerciseName}</strong>:
                     {' '}
-                    <strong className="text-[var(--ff-accent-text)]">{formatWeight(insights.bestWeightPr.bestWeight)}</strong>
-                    {' '}por {insights.bestWeightPr.bestWeightReps || 0} rep(s), no treino{' '}
-                    <strong className="text-[var(--ff-text)]">{insights.bestWeightPr.bestWeightWorkoutName || 'Treino'}</strong>.
+                    <strong className="text-[var(--ff-accent-text)]">{formatWeight(normalizedProgress.insights.bestWeightPr.bestWeight)}</strong>
+                    {' '}por {normalizedProgress.insights.bestWeightPr.bestWeightReps || 0} rep(s), no treino{' '}
+                    <strong className="text-[var(--ff-text)]">{normalizedProgress.insights.bestWeightPr.bestWeightWorkoutName || 'Treino'}</strong>.
                   </p>
                 )}
 
-                {insights.bestVolumePr && (
+                {normalizedProgress.insights.bestVolumePr && (
                   <p>
                     A melhor série em volume foi em{' '}
-                    <strong className="text-[var(--ff-text)]">{insights.bestVolumePr.exerciseName}</strong>,
-                    somando <strong className="text-[var(--ff-warning-text)]">{formatVolume(insights.bestVolumePr.bestVolume)}</strong>.
+                    <strong className="text-[var(--ff-text)]">{normalizedProgress.insights.bestVolumePr.exerciseName}</strong>,
+                    somando <strong className="text-[var(--ff-warning-text)]">{formatVolume(normalizedProgress.insights.bestVolumePr.bestVolume)}</strong>.
                   </p>
                 )}
               </div>

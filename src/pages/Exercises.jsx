@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Plus,
-  Search,
   X,
   Dumbbell,
   ImageIcon,
@@ -21,7 +20,6 @@ import {
   FileImage,
   LinkIcon,
   HelpCircle,
-  ListChecks,
   Star,
 } from 'lucide-react'
 
@@ -42,6 +40,8 @@ import Textarea from '../components/ui/Textarea'
 import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
 
+const INITIAL_VISIBLE_COUNT = 60
+const LOAD_MORE_COUNT = 60
 
 const muscleGroupOrder = [
   'Peito',
@@ -80,6 +80,14 @@ const defaultEquipmentList = [
   'Mobilidade',
 ]
 
+function normalizeText(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+}
+
 function normalizeMuscleGroup(group) {
   if (!group) return 'Outros'
 
@@ -102,17 +110,6 @@ function normalizeMuscleGroup(group) {
   }
 
   return aliases[normalized] || normalized
-}
-
-function normalizeExerciseFromApi(exercise) {
-  return {
-    ...exercise,
-    id: exercise._id || exercise.id,
-    normalizedGroup: normalizeMuscleGroup(exercise.muscleGroup),
-    normalizedEquipment: normalizeEquipment(exercise.equipment),
-    subgroup: getSubgroup(exercise),
-    isFavorite: Boolean(exercise.isFavorite),
-  }
 }
 
 function normalizeEquipment(equipment) {
@@ -161,23 +158,9 @@ function getExerciseIdentityKey(exercise = {}) {
     return `local:${String(possibleId)}`
   }
 
-  const name = String(exercise.originalName || exercise.name || '')
-    .trim()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-
-  const group = String(exercise.muscleGroup || exercise.normalizedGroup || '')
-    .trim()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-
-  const equipment = String(exercise.equipment || exercise.normalizedEquipment || '')
-    .trim()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+  const name = normalizeText(exercise.originalName || exercise.name)
+  const group = normalizeText(exercise.muscleGroup || exercise.normalizedGroup)
+  const equipment = normalizeText(exercise.equipment || exercise.normalizedEquipment)
 
   if (name) {
     return `exercise:${name}:${group}:${equipment}`
@@ -190,16 +173,47 @@ function isApiExercise(exercise = {}) {
   return typeof (exercise._id || exercise.id) === 'string' && /^[a-f\d]{24}$/i.test(exercise._id || exercise.id)
 }
 
+function normalizeExerciseFromApi(exercise) {
+  const normalizedGroup = normalizeMuscleGroup(exercise.muscleGroup)
+  const normalizedEquipment = normalizeEquipment(exercise.equipment)
+  const subgroup = getSubgroup({
+    ...exercise,
+    muscleGroup: normalizedGroup,
+  })
+
+  return {
+    ...exercise,
+    id: exercise._id || exercise.id,
+    normalizedGroup,
+    normalizedEquipment,
+    subgroup,
+    isFavorite: Boolean(exercise.isFavorite),
+  }
+}
+
+function normalizeExerciseForList(exercise) {
+  const normalizedGroup = normalizeMuscleGroup(exercise.muscleGroup || exercise.normalizedGroup)
+  const normalizedEquipment = normalizeEquipment(exercise.equipment || exercise.normalizedEquipment)
+  const subgroup = getSubgroup({
+    ...exercise,
+    muscleGroup: normalizedGroup,
+  })
+
+  return {
+    ...exercise,
+    id: exercise._id || exercise.id || crypto.randomUUID(),
+    normalizedGroup,
+    normalizedEquipment,
+    subgroup,
+    isFavorite: Boolean(exercise.isFavorite),
+  }
+}
+
 function mergeExercisesWithoutDuplicates(...lists) {
   const merged = new Map()
 
   lists.flat().filter(Boolean).forEach((exercise) => {
-    const normalized = {
-      ...exercise,
-      id: exercise._id || exercise.id,
-      isFavorite: Boolean(exercise.isFavorite),
-    }
-
+    const normalized = normalizeExerciseForList(exercise)
     const identityKey = getExerciseIdentityKey(normalized)
     const current = merged.get(identityKey)
 
@@ -255,8 +269,40 @@ function getSortedUnique(values, preferredOrder = []) {
     if (indexA !== -1) return -1
     if (indexB !== -1) return 1
 
-    return a.localeCompare(b)
+    return String(a).localeCompare(String(b))
   })
+}
+
+function buildStatsMap(items, key) {
+  const map = new Map()
+
+  items.forEach((item) => {
+    const value = item[key]
+
+    if (!value) return
+
+    map.set(value, (map.get(value) || 0) + 1)
+  })
+
+  return map
+}
+
+function getStatsFromMap(map, preferredOrder = []) {
+  return Array.from(map.entries())
+    .map(([name, count]) => ({
+      name,
+      count,
+    }))
+    .sort((a, b) => {
+      const indexA = preferredOrder.indexOf(a.name)
+      const indexB = preferredOrder.indexOf(b.name)
+
+      if (indexA !== -1 && indexB !== -1) return indexA - indexB
+      if (indexA !== -1) return -1
+      if (indexB !== -1) return 1
+
+      return a.name.localeCompare(b.name)
+    })
 }
 
 function StatCard({ title, value, description, icon: Icon }) {
@@ -412,6 +458,8 @@ function MediaUploader({
                 src={mediaUrl}
                 alt="Preview do exercício"
                 className="h-full w-full object-cover"
+                loading="lazy"
+                decoding="async"
               />
             ) : (
               <div className="text-center text-zinc-900">
@@ -481,7 +529,7 @@ function MediaUploader({
             )}
 
             <p className="text-xs leading-relaxed text-zinc-500">
-              Observação: imagens/GIFs muito grandes podem não salvar bem no navegador. Para arquivos grandes, prefira uma URL ou, futuramente, um storage como Cloudinary, Firebase ou backend próprio.
+              Para melhor performance no app, prefira URLs externas ou imagens leves. Base64 grande pesa no LocalStorage e deixa a biblioteca mais lenta.
             </p>
           </div>
         </div>
@@ -507,29 +555,36 @@ function Exercises() {
   const [variations, setVariations] = useState('')
 
   const [search, setSearch] = useState('')
+  const deferredSearch = useDeferredValue(search)
   const [groupFilter, setGroupFilter] = useState('')
   const [subgroupFilter, setSubgroupFilter] = useState('')
   const [equipmentFilter, setEquipmentFilter] = useState('')
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false)
   const [groupSearch, setGroupSearch] = useState('')
+  const deferredGroupSearch = useDeferredValue(groupSearch)
   const [subgroupSearch, setSubgroupSearch] = useState('')
+  const deferredSubgroupSearch = useDeferredValue(subgroupSearch)
 
   const [expandedExerciseId, setExpandedExerciseId] = useState(null)
   const [editingId, setEditingId] = useState(null)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [dataSource, setDataSource] = useState('local')
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [visibleCount, setVisibleCount] = useState(80)
+  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT)
 
   const [exercises, setExercises] = useState([])
 
   useEffect(() => {
-    if (!user) return
+    if (!user) return undefined
+
+    let isMounted = true
 
     async function loadExercises() {
       setIsLoaded(false)
+      setIsSyncing(true)
 
       const savedExercises = getUserStorageData(user, 'exercises', null)
-
       const defaultExercises = getInitialExercises()
 
       const cachedExercises = Array.isArray(savedExercises)
@@ -541,8 +596,14 @@ function Exercises() {
         cachedExercises
       )
 
+      setExercises(fallbackExercises)
+      setIsLoaded(true)
+      setDataSource(cachedExercises.length > 0 ? 'local' : 'defaults')
+
       try {
         const exercisesFromApi = await apiFetch('/exercises')
+
+        if (!isMounted) return
 
         const normalizedFromApi = Array.isArray(exercisesFromApi)
           ? exercisesFromApi.map(normalizeExerciseFromApi)
@@ -556,16 +617,27 @@ function Exercises() {
 
         setExercises(finalExercises)
         saveUserStorageData(user, 'exercises', finalExercises)
+        setDataSource('database')
       } catch (error) {
         console.error(error)
-        setExercises(fallbackExercises)
+
+        if (!isMounted) return
+
         saveUserStorageData(user, 'exercises', fallbackExercises)
+        setDataSource('local')
       } finally {
-        setIsLoaded(true)
+        if (isMounted) {
+          setIsSyncing(false)
+          setIsLoaded(true)
+        }
       }
     }
 
     loadExercises()
+
+    return () => {
+      isMounted = false
+    }
   }, [user])
 
   useEffect(() => {
@@ -575,64 +647,72 @@ function Exercises() {
   }, [exercises, isLoaded, user])
 
   useEffect(() => {
-    setVisibleCount(80)
+    setVisibleCount(INITIAL_VISIBLE_COUNT)
     setExpandedExerciseId(null)
-  }, [search, groupFilter, subgroupFilter, equipmentFilter, showOnlyFavorites])
+  }, [deferredSearch, groupFilter, subgroupFilter, equipmentFilter, showOnlyFavorites])
 
-  const normalizedExercises = useMemo(() => {
+  const indexedExercises = useMemo(() => {
     return exercises.map((exercise) => {
-      const normalizedGroup = normalizeMuscleGroup(exercise.muscleGroup)
-      const normalizedEquipment = normalizeEquipment(exercise.equipment)
-      const subgroup = getSubgroup(exercise)
+      const normalized = normalizeExerciseForList(exercise)
+      const secondaryMuscles = normalizeList(normalized.secondaryMuscles)
+
+      const searchableText = normalizeText(`
+        ${normalized.name || ''}
+        ${normalized.originalName || ''}
+        ${normalized.normalizedGroup || ''}
+        ${normalized.subgroup || ''}
+        ${normalized.normalizedEquipment || ''}
+        ${normalized.description || ''}
+        ${secondaryMuscles.join(' ')}
+      `)
 
       return {
-        ...exercise,
-        normalizedGroup,
-        normalizedEquipment,
-        subgroup,
+        ...normalized,
+        searchableText,
       }
     })
   }, [exercises])
 
-  const muscleGroups = useMemo(() => {
-    return getSortedUnique(
-      normalizedExercises.map((exercise) => exercise.normalizedGroup),
-      muscleGroupOrder
-    )
-  }, [normalizedExercises])
+  const stats = useMemo(() => {
+    const groupMap = buildStatsMap(indexedExercises, 'normalizedGroup')
+    const subgroupMap = buildStatsMap(indexedExercises, 'subgroup')
+    const equipmentMap = buildStatsMap(indexedExercises, 'normalizedEquipment')
 
-  const subgroupList = useMemo(() => {
-    return getSortedUnique(
-      normalizedExercises.map((exercise) => exercise.subgroup)
-    )
-  }, [normalizedExercises])
+    const muscleGroups = getStatsFromMap(groupMap, muscleGroupOrder).map((item) => item.name)
+    const subgroupList = getStatsFromMap(subgroupMap).map((item) => item.name)
 
-  const equipmentList = useMemo(() => {
-    return getSortedUnique(
+    const equipmentNames = getSortedUnique(
       [
         ...defaultEquipmentList,
-        ...normalizedExercises.map((exercise) => exercise.normalizedEquipment),
+        ...Array.from(equipmentMap.keys()),
       ],
       defaultEquipmentList
     )
-  }, [normalizedExercises])
+
+    const equipmentStats = equipmentNames
+      .map((item) => ({
+        name: item,
+        count: equipmentMap.get(item) || 0,
+      }))
+      .filter((item) => item.count > 0)
+
+    return {
+      groupStats: getStatsFromMap(groupMap, muscleGroupOrder),
+      subgroupStats: getStatsFromMap(subgroupMap),
+      equipmentStats,
+      muscleGroups,
+      subgroupList,
+      equipmentList: equipmentNames,
+      favoriteExercisesCount: indexedExercises.filter((exercise) => exercise.isFavorite).length,
+    }
+  }, [indexedExercises])
 
   const filteredExercises = useMemo(() => {
-    const normalizedSearch = search.toLowerCase().trim()
+    const normalizedSearch = normalizeText(deferredSearch)
 
-    const filtered = normalizedExercises.filter((exercise) => {
-      const text = `
-      ${exercise.name || ''}
-      ${exercise.originalName || ''}
-      ${exercise.normalizedGroup || ''}
-      ${exercise.subgroup || ''}
-      ${exercise.normalizedEquipment || ''}
-      ${exercise.description || ''}
-      ${normalizeList(exercise.secondaryMuscles).join(' ')}
-    `.toLowerCase()
-
+    const filtered = indexedExercises.filter((exercise) => {
       const matchesSearch = normalizedSearch
-        ? text.includes(normalizedSearch)
+        ? exercise.searchableText.includes(normalizedSearch)
         : true
 
       const matchesGroup = groupFilter
@@ -670,8 +750,8 @@ function Exercises() {
       return dateB - dateA
     })
   }, [
-    normalizedExercises,
-    search,
+    indexedExercises,
+    deferredSearch,
     groupFilter,
     subgroupFilter,
     equipmentFilter,
@@ -682,58 +762,25 @@ function Exercises() {
     return filteredExercises.slice(0, visibleCount)
   }, [filteredExercises, visibleCount])
 
-  const groupStats = useMemo(() => {
-    return muscleGroups
-      .map((group) => ({
-        name: group,
-        count: normalizedExercises.filter(
-          (exercise) => exercise.normalizedGroup === group
-        ).length,
-      }))
-      .filter((group) => group.count > 0)
-  }, [muscleGroups, normalizedExercises])
-
-  const subgroupStats = useMemo(() => {
-    return subgroupList
-      .map((subgroup) => ({
-        name: subgroup,
-        count: normalizedExercises.filter(
-          (exercise) => exercise.subgroup === subgroup
-        ).length,
-      }))
-      .filter((subgroup) => subgroup.count > 0)
-  }, [subgroupList, normalizedExercises])
-
-  const equipmentStats = useMemo(() => {
-    return equipmentList
-      .map((item) => ({
-        name: item,
-        count: normalizedExercises.filter(
-          (exercise) => exercise.normalizedEquipment === item
-        ).length,
-      }))
-      .filter((item) => item.count > 0)
-  }, [equipmentList, normalizedExercises])
-
   const filteredGroupStats = useMemo(() => {
-    const term = groupSearch.toLowerCase().trim()
+    const term = normalizeText(deferredGroupSearch)
 
-    if (!term) return groupStats
+    if (!term) return stats.groupStats
 
-    return groupStats.filter((group) =>
-      group.name.toLowerCase().includes(term)
+    return stats.groupStats.filter((group) =>
+      normalizeText(group.name).includes(term)
     )
-  }, [groupStats, groupSearch])
+  }, [stats.groupStats, deferredGroupSearch])
 
   const filteredSubgroupStats = useMemo(() => {
-    const term = subgroupSearch.toLowerCase().trim()
+    const term = normalizeText(deferredSubgroupSearch)
 
-    if (!term) return subgroupStats
+    if (!term) return stats.subgroupStats
 
-    return subgroupStats.filter((subgroup) =>
-      subgroup.name.toLowerCase().includes(term)
+    return stats.subgroupStats.filter((subgroup) =>
+      normalizeText(subgroup.name).includes(term)
     )
-  }, [subgroupStats, subgroupSearch])
+  }, [stats.subgroupStats, deferredSubgroupSearch])
 
   function renderInfoList(title, items, variant = 'default') {
     const normalizedItems = normalizeList(items)
@@ -886,11 +933,11 @@ function Exercises() {
       setExercises(
         exercises.map((exercise) =>
           exercise.id === editingId
-            ? {
+            ? normalizeExerciseForList({
               ...exercise,
               ...normalizedPayload,
               updatedAt: new Date().toISOString(),
-            }
+            })
             : exercise
         )
       )
@@ -899,13 +946,13 @@ function Exercises() {
       return
     }
 
-    const newExercise = {
+    const newExercise = normalizeExerciseForList({
       id: crypto.randomUUID(),
       source: 'ForgeFlow',
       originalName: name.trim(),
       ...normalizedPayload,
       createdAt: new Date().toISOString(),
-    }
+    })
 
     setExercises([newExercise, ...exercises])
     closeModal()
@@ -949,7 +996,6 @@ function Exercises() {
     event?.stopPropagation()
 
     try {
-      // Se o exercício já existe no MongoDB, só alterna o favorito.
       if (isMongoId(exercise.id)) {
         const updatedExerciseFromApi = await apiFetch(`/exercises/${exercise.id}/favorite`, {
           method: 'PATCH',
@@ -966,7 +1012,6 @@ function Exercises() {
         return
       }
 
-      // Se é exercício padrão/local, cria uma cópia no MongoDB já favoritada.
       const createdExerciseFromApi = await apiFetch('/exercises', {
         method: 'POST',
         body: JSON.stringify({
@@ -1009,9 +1054,13 @@ function Exercises() {
     setShowOnlyFavorites(false)
   }
 
-  const favoriteExercisesCount = normalizedExercises.filter(
-    (exercise) => exercise.isFavorite
-  ).length
+  const hasActiveFilters = Boolean(
+    search ||
+    groupFilter ||
+    subgroupFilter ||
+    equipmentFilter ||
+    showOnlyFavorites
+  )
 
   return (
     <>
@@ -1019,42 +1068,54 @@ function Exercises() {
         title="Exercícios"
         description="Biblioteca premium com grupos, subgrupos, equipamentos, GIFs e detalhes completos."
         action={
-          <button
-            type="button"
-            onClick={openCreateModal}
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-bold text-white shadow-[0_0_20px_var(--ff-accent-shadow)] transition hover:bg-[var(--ff-accent-hover)]"
-          >
-            <Plus size={18} />
-            Adicionar exercício
-          </button>
+          <div className="flex items-center gap-2">
+            {(isSyncing || dataSource !== 'database') && (
+              <Badge variant={isSyncing ? 'purple' : 'default'}>
+                {isSyncing
+                  ? 'Sincronizando'
+                  : dataSource === 'defaults'
+                    ? 'Padrão local'
+                    : 'Local'}
+              </Badge>
+            )}
+
+            <button
+              type="button"
+              onClick={openCreateModal}
+              className="hidden h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-bold text-white shadow-[0_0_20px_var(--ff-accent-shadow)] transition hover:bg-[var(--ff-accent-hover)] sm:inline-flex"
+            >
+              <Plus size={18} />
+              Adicionar exercício
+            </button>
+          </div>
         }
       />
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="Total"
-          value={normalizedExercises.length}
+          value={indexedExercises.length}
           description="Exercícios cadastrados"
           icon={Dumbbell}
         />
 
         <StatCard
           title="Grupos"
-          value={groupStats.length}
+          value={stats.groupStats.length}
           description="Grupos musculares ativos"
           icon={Layers3}
         />
 
         <StatCard
           title="Subgrupos"
-          value={subgroupStats.length}
+          value={stats.subgroupStats.length}
           description="Músculos-alvo mapeados"
           icon={Target}
         />
 
         <StatCard
           title="Favoritos"
-          value={favoriteExercisesCount}
+          value={stats.favoriteExercisesCount}
           description="Exercícios marcados"
           icon={Star}
         />
@@ -1181,7 +1242,7 @@ function Exercises() {
 
             <div className="mt-5 space-y-4">
               <Input
-                type="text"
+                type="search"
                 placeholder="Buscar por nome, grupo, equipamento..."
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
@@ -1209,7 +1270,7 @@ function Exercises() {
               >
                 <option value="">Todos os grupos</option>
 
-                {muscleGroups.map((group) => (
+                {stats.muscleGroups.map((group) => (
                   <option key={group} value={group}>
                     {group}
                   </option>
@@ -1222,7 +1283,7 @@ function Exercises() {
               >
                 <option value="">Todos os subgrupos</option>
 
-                {subgroupList.map((subgroup) => (
+                {stats.subgroupList.map((subgroup) => (
                   <option key={subgroup} value={subgroup}>
                     {subgroup}
                   </option>
@@ -1235,14 +1296,14 @@ function Exercises() {
               >
                 <option value="">Todos os equipamentos</option>
 
-                {equipmentList.map((item) => (
+                {stats.equipmentList.map((item) => (
                   <option key={item} value={item}>
                     {item}
                   </option>
                 ))}
               </Select>
 
-              {(search || groupFilter || subgroupFilter || equipmentFilter || showOnlyFavorites) && (
+              {hasActiveFilters && (
                 <Button
                   type="button"
                   variant="secondary"
@@ -1273,7 +1334,7 @@ function Exercises() {
             </div>
 
             <div className="mt-5 grid grid-cols-2 gap-3">
-              {equipmentStats.map((item) => (
+              {stats.equipmentStats.map((item) => (
                 <button
                   key={item.name}
                   type="button"
@@ -1332,8 +1393,15 @@ function Exercises() {
               </div>
             </div>
 
-            <div className="max-h-[900px] overflow-y-auto p-4">
-              {filteredExercises.length === 0 && (
+            <div className="max-h-none overflow-visible p-4 xl:max-h-[900px] xl:overflow-y-auto">
+              {!isLoaded && (
+                <EmptyState
+                  title="Carregando biblioteca"
+                  description="Preparando seus exercícios."
+                />
+              )}
+
+              {isLoaded && filteredExercises.length === 0 && (
                 <EmptyState
                   title="Nenhum exercício encontrado"
                   description="Tente limpar os filtros ou buscar por outro termo."
@@ -1358,13 +1426,14 @@ function Exercises() {
                           className="w-full p-4 text-left"
                         >
                           <div className="flex items-center gap-4">
-                            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-zinc-700 bg-white shadow-inner">
+                            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-zinc-700 bg-white shadow-inner sm:h-20 sm:w-20">
                               {media ? (
                                 <img
                                   src={media}
                                   alt={exercise.name}
                                   className="h-full w-full object-cover"
                                   loading="lazy"
+                                  decoding="async"
                                 />
                               ) : (
                                 <Dumbbell size={30} className="text-zinc-900" />
@@ -1446,8 +1515,8 @@ function Exercises() {
                               size={22}
                               className={
                                 isExpanded
-                                  ? 'shrink-0 rotate-180 text-[var(--ff-accent-text)] transition'
-                                  : 'shrink-0 text-zinc-500 transition'
+                                  ? 'hidden shrink-0 rotate-180 text-[var(--ff-accent-text)] transition sm:block'
+                                  : 'hidden shrink-0 text-zinc-500 transition sm:block'
                               }
                             />
                           </div>
@@ -1560,7 +1629,7 @@ function Exercises() {
                       <Button
                         type="button"
                         variant="secondary"
-                        onClick={() => setVisibleCount((current) => current + 80)}
+                        onClick={() => setVisibleCount((current) => current + LOAD_MORE_COUNT)}
                         className="w-full"
                       >
                         Carregar mais exercícios
@@ -1574,34 +1643,45 @@ function Exercises() {
         </main>
       </section>
 
+      <button
+        type="button"
+        onClick={openCreateModal}
+        className="fixed bottom-24 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-3xl bg-[var(--ff-accent)] text-white shadow-[0_0_28px_var(--ff-accent-shadow)] transition active:scale-95 sm:hidden"
+        aria-label="Adicionar exercício"
+      >
+        <Plus size={24} />
+      </button>
+
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-4 backdrop-blur-sm">
-          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-zinc-800 bg-[#121212] p-6 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)]">
-            <div className="mb-6 flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold text-[var(--ff-accent-text)]">
-                  {editingId ? 'Editar exercício' : 'Novo exercício'}
-                </p>
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/75 px-4 pb-4 backdrop-blur-sm sm:items-center sm:pb-0">
+          <div className="max-h-[92vh] w-full max-w-3xl overflow-hidden rounded-3xl border border-zinc-800 bg-[#121212] shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)]">
+            <div className="sticky top-0 z-10 border-b border-zinc-800 bg-[#121212]/95 p-5 backdrop-blur-xl sm:p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-[var(--ff-accent-text)]">
+                    {editingId ? 'Editar exercício' : 'Novo exercício'}
+                  </p>
 
-                <h2 className="mt-1 text-2xl font-black">
-                  {editingId ? 'Atualizar exercício' : 'Cadastrar exercício'}
-                </h2>
+                  <h2 className="mt-1 text-2xl font-black">
+                    {editingId ? 'Atualizar exercício' : 'Cadastrar exercício'}
+                  </h2>
 
-                <p className="mt-2 text-sm text-zinc-500">
-                  Adicione grupo, subgrupo, músculos secundários, mídia e instruções.
-                </p>
+                  <p className="mt-2 text-sm text-zinc-500">
+                    Adicione grupo, subgrupo, músculos secundários, mídia e instruções.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900 text-zinc-400 transition hover:bg-zinc-800 hover:text-white"
+                >
+                  <X size={22} />
+                </button>
               </div>
-
-              <button
-                type="button"
-                onClick={closeModal}
-                className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900 text-zinc-400 transition hover:bg-zinc-800 hover:text-white"
-              >
-                <X size={22} />
-              </button>
             </div>
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} className="max-h-[calc(92vh-120px)] overflow-y-auto p-5 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:p-6">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <Input
                   label="Nome"
@@ -1650,7 +1730,7 @@ function Exercises() {
                 >
                   <option value="">Selecione</option>
 
-                  {equipmentList.map((item) => (
+                  {stats.equipmentList.map((item) => (
                     <option key={item} value={item}>
                       {item}
                     </option>
@@ -1720,10 +1800,12 @@ Mantenha os pés firmes no chão.`}
                   examples={['dica por linha', 'segurança', 'foco muscular']}
                 />
               </div>
+            </form>
 
-              <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Button type="submit" className="w-full">
-                  {editingId ? 'Salvar alterações' : 'Cadastrar exercício'}
+            <div className="fixed inset-x-0 bottom-0 z-[60] border-t border-zinc-800 bg-[#121212]/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-xl sm:absolute">
+              <div className="mx-auto grid w-full max-w-3xl grid-cols-2 gap-3">
+                <Button type="submit" onClick={handleSubmit} className="w-full">
+                  {editingId ? 'Salvar' : 'Cadastrar'}
                 </Button>
 
                 <Button
@@ -1735,7 +1817,7 @@ Mantenha os pés firmes no chão.`}
                   Cancelar
                 </Button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}

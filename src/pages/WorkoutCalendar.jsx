@@ -133,22 +133,32 @@ function WorkoutCalendar() {
     })
 
     useEffect(() => {
-        if (!user) return
+        if (!user) return undefined
+
+        let isMounted = true
 
         async function loadCalendarData() {
-            setLoading(true)
-
             const cachedHistory = getUserStorageData(user, 'history', [])
 
+            setHistory(cachedHistory)
+            setSource(cachedHistory.length > 0 ? 'local' : 'empty')
+            setLoading(cachedHistory.length === 0)
+
             try {
-                const [historyFromApi, consistencyFromApi] = await Promise.all([
+                const [historyResult, consistencyResult] = await Promise.allSettled([
                     apiFetch('/workout-history'),
                     apiFetch('/stats/consistency'),
                 ])
 
-                const normalizedHistory = Array.isArray(historyFromApi)
-                    ? historyFromApi.map(normalizeHistoryFromApi)
-                    : []
+                if (!isMounted) return
+
+                const normalizedHistory = historyResult.status === 'fulfilled' && Array.isArray(historyResult.value)
+                    ? historyResult.value.map(normalizeHistoryFromApi)
+                    : cachedHistory
+
+                const consistencyFromApi = consistencyResult.status === 'fulfilled'
+                    ? consistencyResult.value
+                    : null
 
                 const normalizedConsistency = {
                     currentStreak: Number(consistencyFromApi?.currentStreak) || 0,
@@ -163,27 +173,22 @@ function WorkoutCalendar() {
                 setConsistencyStats(normalizedConsistency)
 
                 saveUserStorageData(user, 'history', normalizedHistory)
-                setSource('database')
+                setSource(historyResult.status === 'fulfilled' || consistencyResult.status === 'fulfilled' ? 'database' : 'local')
             } catch (error) {
                 console.error(error)
-
-                setHistory(cachedHistory)
-                setConsistencyStats({
-                    currentStreak: 0,
-                    bestStreak: 0,
-                    workoutsLast7Days: 0,
-                    workoutsLast30Days: 0,
-                    totalWorkoutDays: 0,
-                    lastWorkoutDate: null,
-                })
-
                 setSource('local')
             } finally {
-                setLoading(false)
+                if (isMounted) {
+                    setLoading(false)
+                }
             }
         }
 
         loadCalendarData()
+
+        return () => {
+            isMounted = false
+        }
     }, [user])
 
     const sessionsByDate = useMemo(() => {
@@ -269,7 +274,7 @@ function WorkoutCalendar() {
                 action={
                     <Badge variant={source === 'database' ? 'purple' : 'default'}>
                         {loading
-                            ? 'Carregando...'
+                            ? 'Sincronizando...'
                             : source === 'database'
                                 ? 'Sincronizado'
                                 : 'Local'}

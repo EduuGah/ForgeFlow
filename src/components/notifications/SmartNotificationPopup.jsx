@@ -17,6 +17,7 @@ function getNotificationTone(type) {
       border: 'border-emerald-500/30',
       bg: 'bg-emerald-500/10',
       text: 'text-[var(--ff-success-text)]',
+      iconBg: 'bg-emerald-500/10',
       title: 'Conquista desbloqueada',
     }
   }
@@ -26,6 +27,7 @@ function getNotificationTone(type) {
       border: 'border-[var(--ff-accent-border)]',
       bg: 'bg-[var(--ff-accent-soft)]',
       text: 'text-[var(--ff-accent-text)]',
+      iconBg: 'bg-[var(--ff-accent-soft)]',
       title: 'Progresso de meta',
     }
   }
@@ -34,6 +36,7 @@ function getNotificationTone(type) {
     border: 'border-[var(--ff-accent-border)]',
     bg: 'bg-[var(--ff-accent-soft)]',
     text: 'text-[var(--ff-accent-text)]',
+    iconBg: 'bg-[var(--ff-accent-soft)]',
     title: 'Nova notificação',
   }
 }
@@ -50,11 +53,14 @@ function SmartNotificationPopup({ notification, onClose }) {
       }
     }
 
-    document.body.style.overflow = 'hidden'
+    const timeoutId = window.setTimeout(() => {
+      onClose?.()
+    }, 6500)
+
     window.addEventListener('keydown', handleKeyDown)
 
     return () => {
-      document.body.style.overflow = ''
+      window.clearTimeout(timeoutId)
       window.removeEventListener('keydown', handleKeyDown)
     }
   }, [notification, onClose])
@@ -73,46 +79,50 @@ function SmartNotificationPopup({ notification, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[10050] flex items-end justify-center bg-[var(--ff-overlay)] p-3 backdrop-blur-sm sm:items-center sm:p-4">
-      <div className="w-full max-w-md overflow-hidden rounded-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] text-center text-[var(--ff-text)] shadow-2xl shadow-black/25 animate-[fadeIn_0.18s_ease-out]">
-        <div className="relative p-6 sm:p-7">
-          <button
-            type="button"
-            onClick={onClose}
-            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-muted)] transition hover:bg-[var(--ff-card-hover)] hover:text-[var(--ff-text)]"
-            aria-label="Fechar popup"
-          >
-            <X size={18} />
-          </button>
+    <div className="safe-top pointer-events-none fixed left-3 right-3 top-20 z-[10050] sm:left-auto sm:right-4 sm:w-[calc(100%-32px)] sm:max-w-md">
+      <div className="pointer-events-auto overflow-hidden rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] text-[var(--ff-text)] shadow-2xl shadow-black/25 animate-[fadeIn_0.18s_ease-out]">
+        <div className="p-4 sm:p-5">
+          <div className="flex items-start gap-3">
+            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${tone.border} ${tone.iconBg} ${tone.text} shadow-[0_0_22px_var(--ff-accent-shadow)]/15`}>
+              <Icon size={24} />
+            </div>
 
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)] shadow-[0_0_26px_var(--ff-accent-shadow)]">
-            <Icon size={32} />
+            <div className="min-w-0 flex-1">
+              <p className={`text-[11px] font-black uppercase tracking-[0.18em] ${tone.text}`}>
+                {tone.title}
+              </p>
+
+              <h2 className="mt-1 line-clamp-2 text-base font-black tracking-tight text-[var(--ff-text)]">
+                {notification.title}
+              </h2>
+
+              {notification.message && (
+                <p className="mt-1 line-clamp-3 text-sm leading-relaxed text-[var(--ff-muted)]">
+                  {notification.message}
+                </p>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[var(--ff-muted)] transition hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)]"
+              aria-label="Fechar popup"
+            >
+              <X size={18} />
+            </button>
           </div>
 
-          <p className={`mt-5 text-xs font-black uppercase tracking-[0.22em] ${tone.text}`}>
-            {tone.title}
-          </p>
-
-          <h2 className="mt-2 text-2xl font-black tracking-tight text-[var(--ff-text)]">
-            {notification.title}
-          </h2>
-
-          {notification.message && (
-            <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-[var(--ff-muted)]">
-              {notification.message}
-            </p>
-          )}
-
-          <div className={`mx-auto mt-5 rounded-3xl border ${tone.border} ${tone.bg} p-4 text-sm leading-relaxed ${tone.text}`}>
-            Essa notificação apareceu agora porque seu progresso acabou de atingir um marco importante.
+          <div className={`mt-4 rounded-2xl border ${tone.border} ${tone.bg} p-3 text-xs leading-relaxed ${tone.text}`}>
+            Essa notificação apareceu porque seu progresso atingiu um marco importante.
           </div>
 
-          <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="mt-4 grid grid-cols-2 gap-3">
             <Button
               type="button"
               variant="secondary"
               onClick={onClose}
-              className="w-full"
+              className="w-full justify-center text-center"
             >
               Fechar
             </Button>
@@ -120,7 +130,7 @@ function SmartNotificationPopup({ notification, onClose }) {
             <Button
               type="button"
               onClick={handleOpenAction}
-              className="w-full"
+              className="w-full justify-center text-center"
             >
               Ver detalhes
             </Button>

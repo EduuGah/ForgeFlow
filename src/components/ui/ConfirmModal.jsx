@@ -18,7 +18,7 @@ function ConfirmModal({
   return (
     <div className="fixed inset-0 z-[10000] flex items-end justify-center bg-[var(--ff-overlay)] p-3 backdrop-blur-sm sm:items-center sm:p-4">
       <div className="max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] p-5 text-center text-[var(--ff-text)] shadow-2xl shadow-black/20 sm:rounded-3xl sm:p-6">
-        <div className="relative flex flex-col items-center">
+        <div className="relative flex flex-col items-center text-center">
           <button
             type="button"
             onClick={onCancel}
@@ -38,12 +38,12 @@ function ConfirmModal({
             <AlertTriangle size={27} />
           </div>
 
-          <h2 className="mt-5 max-w-sm text-xl font-black text-[var(--ff-text)]">
+          <h2 className="mt-5 max-w-sm text-center text-xl font-black text-[var(--ff-text)]">
             {title}
           </h2>
 
           {description && (
-            <p className="mt-2 max-w-sm text-sm leading-relaxed text-[var(--ff-muted)]">
+            <p className="mt-2 max-w-sm text-center text-sm leading-relaxed text-[var(--ff-muted)]">
               {description}
             </p>
           )}
@@ -54,7 +54,7 @@ function ConfirmModal({
             type="button"
             variant="secondary"
             onClick={onCancel}
-            className="w-full"
+            className="w-full justify-center text-center"
           >
             {cancelText}
           </Button>
@@ -63,7 +63,7 @@ function ConfirmModal({
             type="button"
             variant={isDanger ? 'danger' : 'primary'}
             onClick={onConfirm}
-            className="w-full"
+            className="w-full justify-center text-center"
           >
             {confirmText}
           </Button>

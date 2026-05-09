@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import {
   CalendarDays,
   ChevronDown,
@@ -29,6 +29,17 @@ import {
   removeUserStorageData,
 } from '../utils/userStorage'
 
+const INITIAL_VISIBLE_SESSIONS = 10
+const LOAD_MORE_SESSIONS = 10
+
+function normalizeText(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+}
+
 function normalizeHistoryFromApi(session) {
   return {
     ...session,
@@ -41,9 +52,10 @@ function normalizeHistoryFromApi(session) {
 }
 
 function formatTime(seconds) {
-  const hours = Math.floor(seconds / 3600)
-  const minutes = Math.floor((seconds % 3600) / 60)
-  const secs = seconds % 60
+  const safeSeconds = Number(seconds) || 0
+  const hours = Math.floor(safeSeconds / 3600)
+  const minutes = Math.floor((safeSeconds % 3600) / 60)
+  const secs = safeSeconds % 60
 
   return [hours, minutes, secs]
     .map((value) => String(value).padStart(2, '0'))
@@ -85,6 +97,10 @@ function formatHour(dateString) {
   })
 }
 
+function formatVolume(value) {
+  return `${Number(value || 0).toLocaleString('pt-BR')}kg`
+}
+
 function isValidWorkingSet(set) {
   return (
     set.type !== 'warmup' &&
@@ -98,7 +114,7 @@ function isValidWorkingSet(set) {
 
 function getSessionCompletedSets(session) {
   return session.exercises.flatMap((exercise) =>
-    exercise.sets
+    (exercise.sets || [])
       .filter(isValidWorkingSet)
       .map((set) => ({
         ...set,
@@ -109,8 +125,8 @@ function getSessionCompletedSets(session) {
   )
 }
 
-function getSessionVolume(session) {
-  return getSessionCompletedSets(session).reduce((total, set) => {
+function getSessionVolumeFromSets(sets = []) {
+  return sets.reduce((total, set) => {
     const weight = Number(set.weight) || 0
     const reps = Number(set.reps) || 0
 
@@ -118,14 +134,12 @@ function getSessionVolume(session) {
   }, 0)
 }
 
-function getSessionPRs(session) {
-  return getSessionCompletedSets(session).filter(
-    (set) => set.isPR || set.isWeightPR || set.isVolumePR
-  )
+function getSessionPRsFromSets(sets = []) {
+  return sets.filter((set) => set.isPR || set.isWeightPR || set.isVolumePR)
 }
 
 function getExerciseVolume(exercise) {
-  return exercise.sets.reduce((total, set) => {
+  return (exercise.sets || []).reduce((total, set) => {
     if (!set.completed) return total
 
     const weight = Number(set.weight) || 0
@@ -135,15 +149,75 @@ function getExerciseVolume(exercise) {
   }, 0)
 }
 
+function buildSessionMeta(session, index, totalSessions) {
+  const completedSets = getSessionCompletedSets(session)
+  const sessionVolume = getSessionVolumeFromSets(completedSets)
+  const sessionPRs = getSessionPRsFromSets(completedSets)
+  const exerciseNames = session.exercises
+    .map((item) => item.exercise?.name)
+    .filter(Boolean)
+    .join(' ')
+
+  const searchableText = normalizeText(`${session.workoutName} ${exerciseNames}`)
+
+  return {
+    id: session.id,
+    indexLabel: totalSessions - index,
+    completedSets,
+    sessionVolume,
+    sessionPRs,
+    searchableText,
+    finishedDate: session.finishedAt ? new Date(session.finishedAt) : null,
+  }
+}
+
+function StatCard({ title, value, description, icon: Icon, accent = false }) {
+  return (
+    <Card className="p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm text-zinc-500">
+            {title}
+          </p>
+
+          <h3
+            className={
+              accent
+                ? 'mt-2 text-3xl font-black text-[var(--ff-accent-text)]'
+                : 'mt-2 text-3xl font-black text-[var(--ff-text)]'
+            }
+          >
+            {value}
+          </h3>
+
+          <p className="mt-2 text-xs text-[var(--ff-accent-text)]">
+            {description}
+          </p>
+        </div>
+
+        {Icon && (
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
+            <Icon size={21} />
+          </div>
+        )}
+      </div>
+    </Card>
+  )
+}
+
 function History() {
   const { user } = useAuth()
 
   const [history, setHistory] = useState([])
   const [expandedSessionId, setExpandedSessionId] = useState(null)
   const [search, setSearch] = useState('')
-
+  const deferredSearch = useDeferredValue(search)
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
+  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_SESSIONS)
+  const [loading, setLoading] = useState(true)
+  const [syncing, setSyncing] = useState(false)
+  const [source, setSource] = useState('local')
 
   const startDateRef = useRef(null)
   const endDateRef = useRef(null)
@@ -154,13 +228,22 @@ function History() {
   const settings = getAppSettings()
 
   useEffect(() => {
-    if (!user) return
+    if (!user) return undefined
+
+    let isMounted = true
 
     async function loadHistory() {
       const cachedHistory = getUserStorageData(user, 'history', [])
 
+      setHistory(cachedHistory)
+      setSource(cachedHistory.length > 0 ? 'local' : 'empty')
+      setLoading(false)
+      setSyncing(true)
+
       try {
         const historyFromApi = await apiFetch('/workout-history')
+
+        if (!isMounted) return
 
         const normalizedHistory = Array.isArray(historyFromApi)
           ? historyFromApi.map(normalizeHistoryFromApi)
@@ -168,66 +251,102 @@ function History() {
 
         setHistory(normalizedHistory)
         saveUserStorageData(user, 'history', normalizedHistory)
+        setSource('database')
       } catch (error) {
         console.error(error)
 
-        setHistory(cachedHistory)
+        if (!isMounted) return
 
-        showToast(
-          'error',
-          'Usando histórico local',
-          'Não foi possível carregar o histórico do servidor.'
-        )
+        setHistory(cachedHistory)
+        setSource('local')
+
+        if (cachedHistory.length > 0) {
+          showToast(
+            'error',
+            'Usando histórico local',
+            'Não foi possível carregar o histórico do servidor.'
+          )
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false)
+          setSyncing(false)
+        }
       }
     }
 
     loadHistory()
+
+    return () => {
+      isMounted = false
+    }
   }, [user])
 
+  useEffect(() => {
+    setVisibleCount(INITIAL_VISIBLE_SESSIONS)
+    setExpandedSessionId(null)
+  }, [deferredSearch, startDate, endDate])
+
+  const historyMetaMap = useMemo(() => {
+    const map = new Map()
+
+    history.forEach((session, index) => {
+      map.set(session.id, buildSessionMeta(session, index, history.length))
+    })
+
+    return map
+  }, [history])
+
   const filteredHistory = useMemo(() => {
+    const normalizedSearch = normalizeText(deferredSearch)
+
     return history.filter((session) => {
-      const exerciseNames = session.exercises
-        .map((item) => item.exercise?.name)
-        .join(' ')
+      const meta = historyMetaMap.get(session.id)
 
-      const text = `${session.workoutName} ${exerciseNames}`.toLowerCase()
-
-      const matchesSearch = text.includes(search.toLowerCase())
-
-      const sessionDate = session.finishedAt
-        ? new Date(session.finishedAt)
-        : null
+      const matchesSearch = normalizedSearch
+        ? meta?.searchableText?.includes(normalizedSearch)
+        : true
 
       let matchesDate = true
 
-      if (sessionDate && startDate) {
+      if (meta?.finishedDate && startDate) {
         const start = new Date(`${startDate}T00:00:00`)
-        matchesDate = matchesDate && sessionDate >= start
+        matchesDate = matchesDate && meta.finishedDate >= start
       }
 
-      if (sessionDate && endDate) {
+      if (meta?.finishedDate && endDate) {
         const end = new Date(`${endDate}T23:59:59`)
-        matchesDate = matchesDate && sessionDate <= end
+        matchesDate = matchesDate && meta.finishedDate <= end
       }
 
       return matchesSearch && matchesDate
     })
-  }, [history, search, startDate, endDate])
+  }, [history, historyMetaMap, deferredSearch, startDate, endDate])
 
-  const totalVolume = useMemo(() => {
-    return history.reduce((total, session) => total + getSessionVolume(session), 0)
-  }, [history])
+  const visibleHistory = useMemo(() => {
+    return filteredHistory.slice(0, visibleCount)
+  }, [filteredHistory, visibleCount])
 
-  const totalPRs = useMemo(() => {
-    return history.reduce((total, session) => total + getSessionPRs(session).length, 0)
-  }, [history])
+  const summary = useMemo(() => {
+    let totalVolume = 0
+    let totalPRs = 0
+    let totalCompletedSets = 0
 
-  const totalCompletedSets = useMemo(() => {
-    return history.reduce(
-      (total, session) => total + getSessionCompletedSets(session).length,
-      0
-    )
-  }, [history])
+    history.forEach((session) => {
+      const meta = historyMetaMap.get(session.id)
+
+      totalVolume += meta?.sessionVolume || 0
+      totalPRs += meta?.sessionPRs?.length || 0
+      totalCompletedSets += meta?.completedSets?.length || 0
+    })
+
+    return {
+      totalVolume,
+      totalPRs,
+      totalCompletedSets,
+      lastWorkout: history[0] || null,
+    }
+  }, [history, historyMetaMap])
 
   function handleToggleSession(id) {
     setExpandedSessionId(
@@ -242,9 +361,15 @@ function History() {
       message,
     })
 
-    setTimeout(() => {
+    window.setTimeout(() => {
       setToast(null)
     }, 3000)
+  }
+
+  function clearFilters() {
+    setSearch('')
+    setStartDate('')
+    setEndDate('')
   }
 
   function handleClearHistory() {
@@ -319,78 +444,65 @@ function History() {
     })
   }
 
+  const hasActiveFilters = Boolean(search || startDate || endDate)
+
   return (
     <>
       <PageHeader
         title="Histórico"
         description="Revise seus treinos finalizados, séries, volume e recordes pessoais."
         action={
-          <Badge variant="purple">
-            {history.length} treinos
-          </Badge>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant={source === 'database' ? 'purple' : 'default'}>
+              {syncing || loading
+                ? 'Sincronizando...'
+                : source === 'database'
+                  ? 'Sincronizado'
+                  : source === 'empty'
+                    ? 'Sem histórico'
+                    : 'Local'}
+            </Badge>
+
+            <Badge variant="purple">
+              {history.length} treinos
+            </Badge>
+          </div>
         }
       />
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <Card className="p-4">
-          <p className="text-sm text-zinc-500">
-            Treinos
-          </p>
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          title="Treinos"
+          value={history.length}
+          description="Finalizados"
+          icon={CalendarDays}
+        />
 
-          <h3 className="mt-2 text-3xl font-bold">
-            {history.length}
-          </h3>
+        <StatCard
+          title="Séries concluídas"
+          value={summary.totalCompletedSets}
+          description="Registradas"
+          icon={Medal}
+        />
 
-          <p className="mt-2 text-xs text-[var(--ff-accent-text)]">
-            Finalizados
-          </p>
-        </Card>
+        <StatCard
+          title="Volume total"
+          value={formatVolume(summary.totalVolume)}
+          description="Peso × reps"
+          icon={Flame}
+          accent
+        />
 
-        <Card className="p-4">
-          <p className="text-sm text-zinc-500">
-            Séries concluídas
-          </p>
-
-          <h3 className="mt-2 text-3xl font-bold">
-            {totalCompletedSets}
-          </h3>
-
-          <p className="mt-2 text-xs text-[var(--ff-accent-text)]">
-            Registradas
-          </p>
-        </Card>
-
-        <Card className="p-4">
-          <p className="text-sm text-zinc-500">
-            Volume total
-          </p>
-
-          <h3 className="mt-2 text-3xl font-bold text-[var(--ff-accent-text)]">
-            {totalVolume.toLocaleString('pt-BR')}kg
-          </h3>
-
-          <p className="mt-2 text-xs text-[var(--ff-accent-text)]">
-            Peso × reps
-          </p>
-        </Card>
-
-        <Card className="p-4">
-          <p className="text-sm text-zinc-500">
-            PRs
-          </p>
-
-          <h3 className="mt-2 text-3xl font-bold">
-            🏆 {totalPRs}
-          </h3>
-
-          <p className="mt-2 text-xs text-[var(--ff-accent-text)]">
-            Recordes batidos
-          </p>
-        </Card>
+        <StatCard
+          title="PRs"
+          value={`🏆 ${summary.totalPRs}`}
+          description="Recordes batidos"
+          icon={Trophy}
+        />
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-4">
-        <div className="xl:col-span-3">
+      <section className="mt-6 grid grid-cols-1 gap-4 2xl:grid-cols-[minmax(0,1fr)_360px] 2xl:gap-6">
+        <div>
           <Card>
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
@@ -426,7 +538,7 @@ function History() {
                   <Search size={20} />
 
                   <input
-                    type="text"
+                    type="search"
                     placeholder="Treino ou exercício..."
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
@@ -438,6 +550,7 @@ function History() {
                       type="button"
                       onClick={() => setSearch('')}
                       className="text-zinc-500 transition hover:text-white"
+                      aria-label="Limpar busca"
                     >
                       <X size={18} />
                     </button>
@@ -494,14 +607,10 @@ function History() {
               </div>
 
               <div className="flex items-end">
-                {(search || startDate || endDate) && (
+                {hasActiveFilters && (
                   <button
                     type="button"
-                    onClick={() => {
-                      setSearch('')
-                      setStartDate('')
-                      setEndDate('')
-                    }}
+                    onClick={clearFilters}
                     className="h-12 w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 text-sm font-bold text-zinc-300 transition hover:border-[var(--ff-accent-border)]/40 hover:text-white"
                   >
                     Limpar
@@ -511,7 +620,14 @@ function History() {
             </div>
 
             <div className="mt-6 space-y-4">
-              {history.length === 0 && (
+              {loading && history.length === 0 && (
+                <EmptyState
+                  title="Carregando histórico"
+                  description="Buscando seus treinos finalizados."
+                />
+              )}
+
+              {!loading && history.length === 0 && (
                 <EmptyState
                   title="Nenhum treino finalizado"
                   description="Finalize um treino para ele aparecer aqui."
@@ -525,10 +641,12 @@ function History() {
                 />
               )}
 
-              {filteredHistory.map((session, sessionIndex) => {
+              {visibleHistory.map((session) => {
+                const meta = historyMetaMap.get(session.id)
                 const isExpanded = expandedSessionId === session.id
-                const sessionVolume = getSessionVolume(session)
-                const sessionPRs = getSessionPRs(session)
+                const sessionVolume = meta?.sessionVolume || 0
+                const sessionPRs = meta?.sessionPRs || []
+                const indexLabel = meta?.indexLabel || ''
 
                 return (
                   <div
@@ -538,17 +656,17 @@ function History() {
                     <button
                       type="button"
                       onClick={() => handleToggleSession(session.id)}
-                      className="w-full p-5 text-left"
+                      className="w-full p-4 text-left sm:p-5"
                     >
                       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-3">
                             <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 text-sm font-bold text-[var(--ff-accent-text)]">
-                              #{history.length - sessionIndex}
+                              #{indexLabel}
                             </span>
 
-                            <div>
-                              <h3 className="text-xl font-black text-white">
+                            <div className="min-w-0">
+                              <h3 className="line-clamp-2 text-xl font-black text-white">
                                 {session.workoutName}
                               </h3>
 
@@ -585,7 +703,7 @@ function History() {
                               </p>
 
                               <p className="mt-1 font-bold">
-                                {sessionVolume.toLocaleString('pt-BR')}kg
+                                {formatVolume(sessionVolume)}
                               </p>
                             </div>
 
@@ -621,10 +739,11 @@ function History() {
                     </button>
 
                     {isExpanded && (
-                      <div className="border-t border-zinc-800 p-5">
+                      <div className="border-t border-zinc-800 p-4 sm:p-5">
                         <div className="space-y-4">
                           {session.exercises.map((exercise, exerciseIndex) => {
                             const exerciseVolume = getExerciseVolume(exercise)
+                            const validSets = (exercise.sets || []).filter(isValidWorkingSet)
 
                             return (
                               <div
@@ -632,12 +751,14 @@ function History() {
                                 className="rounded-3xl border border-zinc-800 bg-zinc-950 p-4"
                               >
                                 <div className="flex items-center gap-4">
-                                  <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-zinc-700 bg-white">
+                                  <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-zinc-700 bg-white sm:h-16 sm:w-16 sm:rounded-full">
                                     {exercise.exercise?.mediaUrl ? (
                                       <img
                                         src={exercise.exercise.mediaUrl}
                                         alt={exercise.exercise.name}
                                         className="h-full w-full object-cover"
+                                        loading="lazy"
+                                        decoding="async"
                                       />
                                     ) : (
                                       <Dumbbell size={28} className="text-zinc-900" />
@@ -661,11 +782,11 @@ function History() {
 
                                     <div className="mt-2 flex flex-wrap gap-2">
                                       <Badge variant="purple">
-                                        {exercise.sets.filter(isValidWorkingSet).length} séries
+                                        {validSets.length} séries
                                       </Badge>
 
                                       <Badge>
-                                        {exerciseVolume.toLocaleString('pt-BR')}kg volume
+                                        {formatVolume(exerciseVolume)} volume
                                       </Badge>
                                     </div>
                                   </div>
@@ -681,7 +802,7 @@ function History() {
                                   </div>
 
                                   <div className="space-y-2">
-                                    {exercise.sets.filter(isValidWorkingSet).map((set) => {
+                                    {validSets.map((set) => {
                                       const weight = Number(set.weight) || 0
                                       const reps = Number(set.reps) || 0
                                       const volume = weight * reps
@@ -689,11 +810,7 @@ function History() {
                                       return (
                                         <div
                                           key={set.id}
-                                          className={
-                                            set.completed
-                                              ? 'grid grid-cols-1 gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-3 md:grid-cols-[70px_minmax(90px,1fr)_minmax(90px,1fr)_minmax(90px,1fr)_140px] md:items-center'
-                                              : 'grid grid-cols-1 gap-2 rounded-2xl border border-zinc-800 bg-[#18181b] p-3 md:grid-cols-[70px_minmax(90px,1fr)_minmax(90px,1fr)_minmax(90px,1fr)_140px] md:items-center'
-                                          }
+                                          className="grid grid-cols-2 gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-3 md:grid-cols-[70px_minmax(90px,1fr)_minmax(90px,1fr)_minmax(90px,1fr)_140px] md:items-center"
                                         >
                                           <div>
                                             <p className="text-xs text-zinc-500 md:hidden">
@@ -735,7 +852,7 @@ function History() {
                                             </p>
                                           </div>
 
-                                          <div className="flex flex-wrap gap-1">
+                                          <div className="col-span-2 flex flex-wrap gap-1 md:col-span-1">
                                             {set.isWeightPR && (
                                               <span className="rounded-lg bg-[var(--ff-accent-soft)]/20 px-2 py-1 text-[10px] font-bold text-[var(--ff-accent-text)]">
                                                 PESO PR
@@ -795,7 +912,7 @@ function History() {
                             type="button"
                             variant="danger"
                             onClick={() => handleDeleteSession(session.id)}
-                            className="mt-4"
+                            className="mt-4 w-full sm:w-auto"
                           >
                             <Trash2 size={17} />
                             Excluir este treino
@@ -806,11 +923,22 @@ function History() {
                   </div>
                 )
               })}
+
+              {visibleCount < filteredHistory.length && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setVisibleCount((current) => current + LOAD_MORE_SESSIONS)}
+                  className="w-full"
+                >
+                  Carregar mais treinos
+                </Button>
+              )}
             </div>
           </Card>
         </div>
 
-        <div className="space-y-6">
+        <aside className="space-y-6">
           <Card>
             <h2 className="text-xl font-bold">
               Resumo geral
@@ -828,7 +956,7 @@ function History() {
                   </p>
 
                   <p className="font-bold">
-                    {history[0] ? formatShortDate(history[0].finishedAt) : 'Sem dados'}
+                    {summary.lastWorkout ? formatShortDate(summary.lastWorkout.finishedAt) : 'Sem dados'}
                   </p>
                 </div>
               </div>
@@ -844,7 +972,7 @@ function History() {
                   </p>
 
                   <p className="font-bold">
-                    {totalVolume.toLocaleString('pt-BR')}kg
+                    {formatVolume(summary.totalVolume)}
                   </p>
                 </div>
               </div>
@@ -860,7 +988,7 @@ function History() {
                   </p>
 
                   <p className="font-bold">
-                    {totalPRs} PRs
+                    {summary.totalPRs} PRs
                   </p>
                 </div>
               </div>
@@ -876,7 +1004,7 @@ function History() {
                   </p>
 
                   <p className="font-bold">
-                    {totalCompletedSets}
+                    {summary.totalCompletedSets}
                   </p>
                 </div>
               </div>
@@ -892,7 +1020,7 @@ function History() {
               Use a página de evolução para acompanhar um exercício específico ao longo do tempo.
             </p>
           </Card>
-        </div>
+        </aside>
       </section>
 
       <ConfirmModal

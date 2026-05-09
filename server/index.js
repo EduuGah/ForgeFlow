@@ -913,6 +913,21 @@ const goalSchema = new mongoose.Schema(
             default: 0,
         },
 
+        baselineValue: {
+            type: Number,
+            default: 0,
+        },
+
+        baselineAt: {
+            type: Date,
+            default: null,
+        },
+
+        baselinePeriodKey: {
+            type: String,
+            default: '',
+        },
+
         unit: {
             type: String,
             default: '',
@@ -1940,7 +1955,31 @@ function getExerciseBestWeight(history = [], exerciseName = '') {
     return bestWeight
 }
 
-async function calculateGoalCurrentValue(goal, userId) {
+function getGoalPeriodKey(goal, date = new Date()) {
+    if (goal.period === 'monthly') {
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+    }
+
+    if (goal.period === 'weekly') {
+        const startOfYear = new Date(date.getFullYear(), 0, 1)
+        const week = Math.ceil((((date - startOfYear) / 86400000) + startOfYear.getDay() + 1) / 7)
+
+        return `${date.getFullYear()}-W${week}`
+    }
+
+    return 'once'
+}
+
+function shouldUseGoalBaseline(goal) {
+    return [
+        'weekly_workouts',
+        'monthly_workouts',
+        'monthly_volume',
+        'progress_photos',
+    ].includes(goal.type)
+}
+
+async function calculateGoalRawValue(goal, userId) {
     const type = goal.type
 
     if (type === 'custom') {
@@ -1987,6 +2026,24 @@ async function calculateGoalCurrentValue(goal, userId) {
     }
 
     return Number(goal.currentValue || 0)
+}
+
+async function calculateGoalCurrentValue(goal, userId) {
+    const rawValue = await calculateGoalRawValue(goal, userId)
+
+    if (!shouldUseGoalBaseline(goal)) {
+        return rawValue
+    }
+
+    const currentPeriodKey = getGoalPeriodKey(goal, new Date())
+    const baselinePeriodKey = goal.baselinePeriodKey || ''
+    const baselineValue = Number(goal.baselineValue || 0)
+
+    if (baselinePeriodKey && baselinePeriodKey !== currentPeriodKey) {
+        return rawValue
+    }
+
+    return Math.max(0, rawValue - baselineValue)
 }
 
 async function enrichGoalWithProgress(goal, userId) {
@@ -2519,6 +2576,17 @@ app.post('/goals', authMiddleware, async (req, res) => {
             })
         }
 
+        const goalDraft = {
+            type,
+            period,
+            exerciseName,
+            currentValue: Number(currentValue) || 0,
+        }
+
+        const baselineValue = shouldUseGoalBaseline(goalDraft)
+            ? await calculateGoalRawValue(goalDraft, req.user.userId)
+            : 0
+
         const goal = await Goal.create({
             userId: req.user.userId,
             title: title.trim(),
@@ -2526,6 +2594,11 @@ app.post('/goals', authMiddleware, async (req, res) => {
             type,
             targetValue: parsedTarget,
             currentValue: Number(currentValue) || 0,
+            baselineValue,
+            baselineAt: shouldUseGoalBaseline(goalDraft) ? new Date() : null,
+            baselinePeriodKey: shouldUseGoalBaseline(goalDraft)
+                ? getGoalPeriodKey(goalDraft, new Date())
+                : '',
             unit,
             exerciseName,
             direction,
@@ -2561,6 +2634,7 @@ app.put('/goals/:id', authMiddleware, async (req, res) => {
             deadline,
             status,
             color,
+            resetProgressBaseline = false,
         } = req.body
 
         const updateData = {}
@@ -2599,6 +2673,30 @@ app.put('/goals/:id', authMiddleware, async (req, res) => {
 
         if (currentValue !== undefined) {
             updateData.currentValue = Number(currentValue) || 0
+        }
+
+        if (resetProgressBaseline || type !== undefined || period !== undefined || exerciseName !== undefined) {
+            const previousGoal = await Goal.findOne({
+                _id: req.params.id,
+                userId: req.user.userId,
+            })
+
+            if (previousGoal) {
+                const baselineDraft = {
+                    ...previousGoal.toObject(),
+                    ...updateData,
+                }
+
+                if (shouldUseGoalBaseline(baselineDraft)) {
+                    updateData.baselineValue = await calculateGoalRawValue(baselineDraft, req.user.userId)
+                    updateData.baselineAt = new Date()
+                    updateData.baselinePeriodKey = getGoalPeriodKey(baselineDraft, new Date())
+                } else {
+                    updateData.baselineValue = 0
+                    updateData.baselineAt = null
+                    updateData.baselinePeriodKey = ''
+                }
+            }
         }
 
         const goal = await Goal.findOneAndUpdate(
