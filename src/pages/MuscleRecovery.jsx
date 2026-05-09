@@ -101,6 +101,15 @@ function getRecoveryStateByDayDiff(dayDiff) {
     return { level: 'ready', recoveryPercent: 100 }
 }
 
+function formatHour(dateString) {
+    if (!dateString) return 'Sem horário'
+
+    return new Date(dateString).toLocaleTimeString('pt-BR', {
+        hour: '2-digit',
+        minute: '2-digit',
+    })
+}
+
 function formatRelativeDate(dateString) {
     if (!dateString) return 'Sem registro'
 
@@ -309,6 +318,32 @@ function MuscleRecovery() {
                         ainda recuperando
                     </p>
                 </Card>
+            </section>
+
+
+            <section className="mt-5 xl:hidden">
+                <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+                    {[
+                        { value: '', label: 'Todos' },
+                        { value: 'low', label: 'Recuperando' },
+                        { value: 'medium', label: 'Parcial' },
+                        { value: 'good', label: 'Quase pronto' },
+                        { value: 'ready', label: 'Recuperado' },
+                    ].map((option) => (
+                        <button
+                            key={option.value || 'all'}
+                            type="button"
+                            onClick={() => setStatusFilter(option.value)}
+                            className={
+                                statusFilter === option.value
+                                    ? 'shrink-0 rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-4 py-2 text-xs font-black text-[var(--ff-accent-text)]'
+                                    : 'shrink-0 rounded-full border border-zinc-800 bg-zinc-950 px-4 py-2 text-xs font-bold text-zinc-400'
+                            }
+                        >
+                            {option.label}
+                        </button>
+                    ))}
+                </div>
             </section>
 
             <section className="mt-6 grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-[330px_minmax(0,1fr)]">

@@ -11,6 +11,7 @@ import {
   ChevronDown,
   Layers3,
   Filter,
+  Search,
   Sparkles,
   Target,
   Activity,
@@ -40,8 +41,8 @@ import Textarea from '../components/ui/Textarea'
 import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
 
-const INITIAL_VISIBLE_COUNT = 60
-const LOAD_MORE_COUNT = 60
+const INITIAL_VISIBLE_COUNT = 8
+const LOAD_MORE_COUNT = 8
 
 const muscleGroupOrder = [
   'Peito',
@@ -481,7 +482,7 @@ function MediaUploader({
             )}
           </div>
 
-          <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3 xl:grid-cols-1">
             <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--ff-accent-border)]/40 bg-[var(--ff-accent-soft)]/10 p-5 text-center transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-accent-soft)]/20">
               <Upload size={24} className="text-[var(--ff-accent-text)]" />
 
@@ -1391,8 +1392,79 @@ function Exercises() {
                   </p>
 
                   <p className="mt-2 text-xs leading-relaxed text-zinc-500 xl:hidden">
-                    No celular, a biblioteca aparece primeiro. Filtros avançados ficam logo abaixo da lista.
+                    No celular, use a busca e os chips rápidos aqui em cima. Os filtros completos ficam abaixo da lista.
                   </p>
+                <div className="mt-4 space-y-3 xl:hidden">
+                  <div className="flex h-12 items-center gap-3 rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-zinc-400">
+                    <Search size={18} />
+
+                    <input
+                      type="search"
+                      placeholder="Buscar exercício..."
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-500"
+                    />
+
+                    {search && (
+                      <button
+                        type="button"
+                        onClick={() => setSearch('')}
+                        className="text-zinc-500 transition hover:text-white"
+                        aria-label="Limpar busca"
+                      >
+                        <X size={17} />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setGroupFilter('')
+                        setSubgroupFilter('')
+                        setEquipmentFilter('')
+                        setShowOnlyFavorites(false)
+                      }}
+                      className={
+                        !hasActiveFilters
+                          ? 'shrink-0 rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-4 py-2 text-xs font-black text-[var(--ff-accent-text)]'
+                          : 'shrink-0 rounded-full border border-zinc-800 bg-zinc-950 px-4 py-2 text-xs font-bold text-zinc-400'
+                      }
+                    >
+                      Todos
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowOnlyFavorites((current) => !current)}
+                      className={
+                        showOnlyFavorites
+                          ? 'shrink-0 rounded-full border border-yellow-500/30 bg-yellow-500/10 px-4 py-2 text-xs font-black text-yellow-300'
+                          : 'shrink-0 rounded-full border border-zinc-800 bg-zinc-950 px-4 py-2 text-xs font-bold text-zinc-400'
+                      }
+                    >
+                      Favoritos
+                    </button>
+
+                    {stats.groupStats.slice(0, 8).map((group) => (
+                      <button
+                        key={group.name}
+                        type="button"
+                        onClick={() => setGroupFilter(groupFilter === group.name ? '' : group.name)}
+                        className={
+                          groupFilter === group.name
+                            ? 'shrink-0 rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-4 py-2 text-xs font-black text-[var(--ff-accent-text)]'
+                            : 'shrink-0 rounded-full border border-zinc-800 bg-zinc-950 px-4 py-2 text-xs font-bold text-zinc-400'
+                        }
+                      >
+                        {group.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 </div>
 
                 <button
@@ -1422,7 +1494,7 @@ function Exercises() {
               )}
 
               {displayedExercises.length > 0 && (
-                <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3 xl:grid-cols-1">
                   {displayedExercises.map((exercise) => {
                     const isExpanded = expandedExerciseId === exercise.id
                     const media = getExerciseMedia(exercise)
@@ -1436,10 +1508,10 @@ function Exercises() {
                         <button
                           type="button"
                           onClick={() => handleToggleExercise(exercise.id)}
-                          className="w-full p-4 text-left"
+                          className="relative w-full p-3 text-left sm:p-4"
                         >
-                          <div className="flex items-center gap-4">
-                            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-zinc-700 bg-white shadow-inner sm:h-20 sm:w-20">
+                          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:gap-4">
+                            <div className="flex aspect-square w-full shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-zinc-700 bg-white shadow-inner xl:h-20 xl:w-20">
                               {media ? (
                                 <img
                                   src={media}
@@ -1455,7 +1527,7 @@ function Exercises() {
 
                             <div className="min-w-0 flex-1">
                               <div className="flex flex-wrap items-center gap-2">
-                                <h3 className="truncate text-base font-black text-white">
+                                <h3 className="line-clamp-2 text-sm font-black leading-tight text-white xl:truncate xl:text-base">
                                   {exercise.name}
                                 </h3>
 
@@ -1473,7 +1545,7 @@ function Exercises() {
                                 </p>
                               )}
 
-                              <div className="mt-3 flex flex-wrap gap-2">
+                              <div className="mt-2 flex flex-wrap gap-1.5 xl:mt-3 xl:gap-2">
                                 <Badge variant="purple">
                                   {exercise.normalizedGroup}
                                 </Badge>
@@ -1514,8 +1586,8 @@ function Exercises() {
                               }
                               className={
                                 exercise.isFavorite
-                                  ? 'flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-yellow-500/30 bg-yellow-500/10 text-yellow-300 transition hover:bg-yellow-500/20'
-                                  : 'flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-950 text-zinc-500 transition hover:border-yellow-500/30 hover:bg-yellow-500/10 hover:text-yellow-300'
+                                  ? 'absolute right-2 top-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-yellow-500/30 bg-yellow-500/10 text-yellow-300 backdrop-blur transition hover:bg-yellow-500/20 xl:static xl:h-10 xl:w-10'
+                                  : 'absolute right-2 top-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-950/90 text-zinc-500 backdrop-blur transition hover:border-yellow-500/30 hover:bg-yellow-500/10 hover:text-yellow-300 xl:static xl:h-10 xl:w-10'
                               }
                             >
                               <Star
@@ -1645,7 +1717,7 @@ function Exercises() {
                         onClick={() => setVisibleCount((current) => current + LOAD_MORE_COUNT)}
                         className="w-full"
                       >
-                        Carregar mais exercícios
+                        Carregar mais 8 exercícios
                       </Button>
                     </div>
                   )}
