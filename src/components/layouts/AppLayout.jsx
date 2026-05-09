@@ -1,5 +1,4 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { Menu } from 'lucide-react'
 import { Outlet } from 'react-router-dom'
 
 import { useAuth } from '../../context/AuthContext'
@@ -15,7 +14,6 @@ import {
 
 import MobileBottomNav from './MobileBottomNav'
 import MobileTopbar from './MobileTopbar'
-import NotificationBell from '../notifications/NotificationBell'
 import { generateSmartNotifications } from '../../utils/notificationUtils'
 
 const Sidebar = lazy(() => import('./Sidebar'))
@@ -44,7 +42,8 @@ function AppLayout() {
   const { user } = useAuth()
   const { activeSession } = useWorkoutSession()
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
+  const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = useState(false)
   const [popupNotification, setPopupNotification] = useState(null)
 
   useEffect(() => {
@@ -130,37 +129,48 @@ function AppLayout() {
   }, [])
 
   useEffect(() => {
-    if (isSidebarOpen || popupNotification) {
-      document.body.style.overflow = 'hidden'
+    if (isMobileSidebarOpen) {
+      document.body.classList.add('ff-scroll-lock')
     } else {
-      document.body.style.overflow = ''
+      document.body.classList.remove('ff-scroll-lock')
     }
 
     return () => {
-      document.body.style.overflow = ''
+      document.body.classList.remove('ff-scroll-lock')
     }
-  }, [isSidebarOpen, popupNotification])
+  }, [isMobileSidebarOpen])
 
   return (
-    <div className="min-h-screen bg-[var(--ff-bg)] text-[var(--ff-text)] transition-colors duration-300">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,var(--ff-accent-shadow),transparent_34%),radial-gradient(circle_at_bottom_right,var(--ff-accent-soft),transparent_32%)] opacity-80" />
-
-      <MobileTopbar onOpenSidebar={() => setIsSidebarOpen(true)} />
+    <div className="relative min-h-screen bg-[var(--ff-bg)] text-[var(--ff-text)] transition-colors duration-300">
+      <div className="pointer-events-none fixed inset-0 -z-0 bg-[radial-gradient(circle_at_top_left,var(--ff-accent-shadow),transparent_34%),radial-gradient(circle_at_bottom_right,var(--ff-accent-soft),transparent_32%)] opacity-80" />
 
       <Suspense fallback={null}>
-        <Sidebar variant="desktop" />
+        <Sidebar
+          mode="desktop"
+          collapsed={isDesktopSidebarCollapsed}
+          onToggleCollapse={() => setIsDesktopSidebarCollapsed((current) => !current)}
+        />
       </Suspense>
 
-      {isSidebarOpen && (
-        <Suspense fallback={null}>
-          <Sidebar
-            isOpen={isSidebarOpen}
-            onClose={() => setIsSidebarOpen(false)}
-          />
-        </Suspense>
-      )}
+      <MobileTopbar onOpenSidebar={() => setIsMobileSidebarOpen(true)} />
 
-      <main className="relative px-4 pb-36 pt-[calc(5.25rem+env(safe-area-inset-top))] sm:px-6 lg:ml-[292px] lg:px-8 lg:py-8 lg:pb-10">
+      <Suspense fallback={null}>
+        <Sidebar
+          mode="mobile"
+          isOpen={isMobileSidebarOpen}
+          onClose={() => setIsMobileSidebarOpen(false)}
+        />
+      </Suspense>
+
+      <main
+        className={[
+          'relative z-10 min-h-dvh px-4 pb-[calc(7.25rem+env(safe-area-inset-bottom))] pt-[calc(5.75rem+env(safe-area-inset-top))]',
+          'sm:px-6',
+          'lg:px-8 lg:pb-10 lg:pt-8',
+          'transition-[padding] duration-300 ease-out',
+          isDesktopSidebarCollapsed ? 'lg:pl-[7rem]' : 'lg:pl-[20rem]',
+        ].join(' ')}
+      >
         <div className="mx-auto w-full max-w-[1760px]">
           <Outlet />
         </div>
