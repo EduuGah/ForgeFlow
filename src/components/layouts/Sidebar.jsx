@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import {
   AlertCircle,
   Bell,
@@ -68,13 +69,52 @@ function Sidebar({
   open,
   isSidebarOpen,
   onClose,
+  onOpenChange,
 }) {
   const { user, logout } = useAuth()
 
-  const sidebarIsOpen = Boolean(isOpen ?? open ?? isSidebarOpen ?? true)
+  const controlledOpen =
+    isOpen !== undefined ||
+    open !== undefined ||
+    isSidebarOpen !== undefined
+
+  const externalOpen = Boolean(isOpen ?? open ?? isSidebarOpen)
+  const [internalOpen, setInternalOpen] = useState(false)
+
+  const sidebarIsOpen = controlledOpen ? externalOpen : internalOpen
+
+  useEffect(() => {
+    function handleOpenSidebar() {
+      setInternalOpen(true)
+      onOpenChange?.(true)
+    }
+
+    function handleCloseSidebar() {
+      setInternalOpen(false)
+      onOpenChange?.(false)
+    }
+
+    window.addEventListener('forgeflow:open-sidebar', handleOpenSidebar)
+    window.addEventListener('forgeflow:close-sidebar', handleCloseSidebar)
+    window.addEventListener('forgeflow:toggle-sidebar', handleOpenSidebar)
+
+    return () => {
+      window.removeEventListener('forgeflow:open-sidebar', handleOpenSidebar)
+      window.removeEventListener('forgeflow:close-sidebar', handleCloseSidebar)
+      window.removeEventListener('forgeflow:toggle-sidebar', handleOpenSidebar)
+    }
+  }, [onOpenChange])
+
+  function closeSidebar() {
+    setInternalOpen(false)
+    onOpenChange?.(false)
+    onClose?.()
+
+    window.dispatchEvent(new CustomEvent('forgeflow:sidebar-closed'))
+  }
 
   function handleLogout() {
-    onClose?.()
+    closeSidebar()
     logout()
   }
 
@@ -82,7 +122,7 @@ function Sidebar({
     <>
       <button
         type="button"
-        onClick={onClose}
+        onClick={closeSidebar}
         className={[
           'fixed inset-0 z-[9990] bg-black/70 backdrop-blur-sm transition-opacity duration-300',
           sidebarIsOpen
@@ -90,6 +130,7 @@ function Sidebar({
             : 'pointer-events-none opacity-0',
         ].join(' ')}
         aria-label="Fechar menu"
+        tabIndex={sidebarIsOpen ? 0 : -1}
       />
 
       <aside
@@ -97,6 +138,7 @@ function Sidebar({
           'fixed left-0 top-0 z-[10000] flex h-dvh w-[86vw] max-w-[330px] flex-col overflow-hidden border-r border-[var(--ff-border)] bg-[var(--ff-sidebar)] text-[var(--ff-text)] shadow-2xl shadow-black/40 transition-transform duration-300 ease-out',
           sidebarIsOpen ? 'translate-x-0' : '-translate-x-full',
         ].join(' ')}
+        aria-hidden={!sidebarIsOpen}
       >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--ff-accent-soft),transparent_38%)]" />
 
@@ -105,7 +147,7 @@ function Sidebar({
             <div className="flex items-center justify-between gap-4 rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
               <Link
                 to="/"
-                onClick={onClose}
+                onClick={closeSidebar}
                 className="flex min-w-0 items-center gap-3"
               >
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)] shadow-[0_0_20px_var(--ff-accent-shadow)]">
@@ -129,7 +171,7 @@ function Sidebar({
 
               <button
                 type="button"
-                onClick={onClose}
+                onClick={closeSidebar}
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-muted)] transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-card-hover)] hover:text-[var(--ff-text)] active:scale-95"
                 aria-label="Fechar menu"
               >
@@ -154,7 +196,7 @@ function Sidebar({
                         key={link.path}
                         to={link.path}
                         end={link.path === '/'}
-                        onClick={onClose}
+                        onClick={closeSidebar}
                         className={({ isActive }) =>
                           isActive
                             ? 'group flex min-h-12 items-center gap-3 rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-4 py-3 text-[var(--ff-accent-text)] shadow-[0_0_18px_var(--ff-accent-shadow)]'
@@ -180,7 +222,7 @@ function Sidebar({
             <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3">
               <Link
                 to="/profile"
-                onClick={onClose}
+                onClick={closeSidebar}
                 className="group flex min-h-12 items-center gap-3 rounded-xl transition hover:bg-[var(--ff-card-hover)]"
               >
                 {user?.avatarUrl ? (
@@ -221,7 +263,7 @@ function Sidebar({
 
                   <Link
                     to="/complete-profile"
-                    onClick={onClose}
+                    onClick={closeSidebar}
                     className="shrink-0 text-xs font-bold text-[var(--ff-accent-text)] transition hover:underline"
                   >
                     Completar
