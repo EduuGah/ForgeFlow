@@ -1,20 +1,20 @@
-const CACHE_VERSION = 'forgeflow-pwa-v2'
+const CACHE_VERSION = 'forgeflow-pwa-v3'
 const STATIC_CACHE = `${CACHE_VERSION}-static`
-const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`
 
-const APP_SHELL = [
-  '/',
+const STATIC_ASSETS = [
   '/offline.html',
   '/manifest.webmanifest',
   '/icons/icon-192.png',
-  '/icons/icon-512.png'
+  '/icons/icon-512.png',
+  '/icons/maskable-192.png',
+  '/icons/maskable-512.png'
 ]
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(STATIC_CACHE)
-      .then((cache) => cache.addAll(APP_SHELL))
+      .then((cache) => cache.addAll(STATIC_ASSETS))
       .then(() => self.skipWaiting())
   )
 })
@@ -26,27 +26,25 @@ self.addEventListener('activate', (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key.startsWith('forgeflow-pwa-') && !key.startsWith(CACHE_VERSION))
-            .map((key) => caches.delete(key))
+            .filter((key) => key.startsWith('forgeflow-pwa-'))
+            .map((key) => {
+              if (key === STATIC_CACHE) return Promise.resolve()
+              return caches.delete(key)
+            })
         )
       )
       .then(() => self.clients.claim())
   )
 })
 
-function isCacheableRequest(request) {
+function isSameOriginHttpRequest(request) {
   try {
     const url = new URL(request.url)
 
-    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-      return false
-    }
-
-    if (url.origin !== self.location.origin) {
-      return false
-    }
-
-    return true
+    return (
+      (url.protocol === 'http:' || url.protocol === 'https:') &&
+      url.origin === self.location.origin
+    )
   } catch {
     return false
   }
@@ -66,80 +64,82 @@ function isApiRequest(request) {
       url.pathname.startsWith('/goals') ||
       url.pathname.startsWith('/notifications') ||
       url.pathname.startsWith('/settings') ||
-      url.pathname.startsWith('/progress')
+      url.pathname.startsWith('/progress') ||
+      url.pathname.startsWith('/profile')
     )
   } catch {
     return false
   }
 }
 
-async function networkFirst(request) {
+function shouldCacheStaticFile(request) {
   try {
-    const freshResponse = await fetch(request)
+    const url = new URL(request.url)
 
-    if (isCacheableRequest(request) && freshResponse?.ok) {
-      const cache = await caches.open(RUNTIME_CACHE)
-      await cache.put(request, freshResponse.clone())
-    }
+    if (!isSameOriginHttpRequest(request)) return false
 
-    return freshResponse
+    return (
+      url.pathname.startsWith('/icons/') ||
+      url.pathname === '/manifest.webmanifest' ||
+      url.pathname === '/offline.html'
+    )
   } catch {
-    const cachedResponse = isCacheableRequest(request)
-      ? await caches.match(request)
-      : null
+    return false
+  }
+}
 
-    if (cachedResponse) return cachedResponse
-
+async function networkOnlyWithOfflineFallback(request) {
+  try {
+    return await fetch(request)
+  } catch {
     if (request.mode === 'navigate') {
-      return caches.match('/offline.html')
+      const offline = await caches.match('/offline.html')
+      if (offline) return offline
     }
 
     throw new Error('Sem conexão e sem cache disponível.')
   }
 }
 
-async function staleWhileRevalidate(request) {
-  if (!isCacheableRequest(request)) {
-    return fetch(request)
+async function cacheFirstStatic(request) {
+  const cachedResponse = await caches.match(request)
+
+  if (cachedResponse) return cachedResponse
+
+  const networkResponse = await fetch(request)
+
+  if (networkResponse?.ok) {
+    const cache = await caches.open(STATIC_CACHE)
+    await cache.put(request, networkResponse.clone())
   }
 
-  const cache = await caches.open(RUNTIME_CACHE)
-  const cachedResponse = await cache.match(request)
-
-  const fetchPromise = fetch(request)
-    .then((networkResponse) => {
-      if (networkResponse?.ok) {
-        cache.put(request, networkResponse.clone())
-      }
-
-      return networkResponse
-    })
-    .catch(() => cachedResponse)
-
-  return cachedResponse || fetchPromise
+  return networkResponse
 }
 
 self.addEventListener('fetch', (event) => {
   const { request } = event
 
   if (request.method !== 'GET') return
-  if (!isCacheableRequest(request)) return
+  if (!isSameOriginHttpRequest(request)) return
   if (isApiRequest(request)) return
 
-  if (request.mode === 'navigate') {
-    event.respondWith(networkFirst(request))
+  const url = new URL(request.url)
+
+  // Muito importante:
+  // Não cachear HTML, JS ou CSS do Vite.
+  // Esses arquivos usam hash e podem mudar a cada deploy.
+  if (
+    request.mode === 'navigate' ||
+    url.pathname.endsWith('.html') ||
+    url.pathname.endsWith('.js') ||
+    url.pathname.endsWith('.css') ||
+    url.pathname.startsWith('/assets/')
+  ) {
+    event.respondWith(networkOnlyWithOfflineFallback(request))
     return
   }
 
-  const destination = request.destination
-
-  if (
-    destination === 'script' ||
-    destination === 'style' ||
-    destination === 'image' ||
-    destination === 'font' ||
-    destination === 'manifest'
-  ) {
-    event.respondWith(staleWhileRevalidate(request))
+  if (shouldCacheStaticFile(request)) {
+    event.respondWith(cacheFirstStatic(request))
   }
 })
