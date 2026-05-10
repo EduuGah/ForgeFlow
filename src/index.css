@@ -961,3 +961,34 @@ body.ff-lock-scroll {
   min-width: 0;
   overflow: visible;
 }
+
+
+/* =========================================================
+   ForgeFlow — correção React #31 + gráficos v2
+   ========================================================= */
+
+.recharts-responsive-container {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 280px !important;
+}
+
+.recharts-wrapper {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.recharts-surface {
+  overflow: visible;
+}
+
+.recharts-tooltip-wrapper {
+  z-index: 20;
+}
+
+/* Qualquer card de gráfico precisa ter altura mínima real */
+[class*="h-[320px]"] .recharts-responsive-container,
+[class*="h-[280px]"] .recharts-responsive-container,
+.h-80 .recharts-responsive-container {
+  min-height: inherit !important;
+}

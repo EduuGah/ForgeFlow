@@ -35,6 +35,46 @@ import {
   getChartTooltipStyle,
 } from '../utils/chartUtils'
 
+
+function safeText(value, fallback = '—') {
+  if (value === null || value === undefined || value === '') return fallback
+  if (typeof value === 'string' || typeof value === 'number') return String(value)
+  if (value instanceof Date) return value.toLocaleDateString('pt-BR')
+  if (Array.isArray(value)) return value.map((item) => safeText(item)).join(', ')
+  if (typeof value === 'object') {
+    return String(
+      value.axisLabel ||
+      value.dateLabel ||
+      value.label ||
+      value.name ||
+      value.title ||
+      value.exerciseName ||
+      value.workoutName ||
+      value.date ||
+      fallback
+    )
+  }
+  return String(value)
+}
+
+function safeNumber(value, fallback = 0) {
+  const number = Number(value)
+  return Number.isFinite(number) ? number : fallback
+}
+
+function toChartPoint(row, index = 0) {
+  return {
+    ...row,
+    chartIndex: safeNumber(row?.chartIndex, index + 1),
+    axisLabel: safeText(row?.axisLabel || row?.dateLabel || row?.date || index + 1),
+    dateLabel: safeText(row?.dateLabel || row?.date),
+    weight: safeNumber(row?.weight),
+    reps: safeNumber(row?.reps),
+    volume: safeNumber(row?.volume),
+  }
+}
+
+
 function getSessionDate(session) {
   return (
     session.finishedAt ||
@@ -379,15 +419,15 @@ function ExerciseProgress() {
                   <TrendingUp size={22} className="text-[var(--ff-accent-text)]" />
                 </div>
 
-                <div className="mt-5 h-[320px]">
+                <div className="mt-5 h-[320px] min-h-[320px]">
                   {chartData.length === 0 ? (
                     <EmptyState
                       title="Sem séries"
                       description="Nenhuma série válida foi encontrada para esse exercício."
                     />
                   ) : (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={chartData} margin={{ top: 16, right: 14, left: 0, bottom: 0 }}>
+                    <ResponsiveContainer width="100%" height={320}>
+                      <LineChart data={chartData.map(toChartPoint)} margin={{ top: 16, right: 14, left: 0, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
                         <XAxis
                           dataKey="axisLabel"
@@ -407,11 +447,7 @@ function ExerciseProgress() {
                             name === 'volume' ? formatVolume(value) : formatWeight(value),
                             name === 'volume' ? 'Volume' : 'Peso',
                           ]}
-                          labelFormatter={(_, payload) =>
-                            payload?.[0]?.payload
-                              ? `${payload[0].payload.dateLabel} • Série ${payload[0].payload.setNumber}`
-                              : 'Série'
-                          }
+                          labelFormatter={(_, payload) => payload?.[0]?.payload ? `${safeText(payload[0].payload.dateLabel)} • Série ${safeText(payload[0].payload.setNumber)}` : 'Série'}
                           contentStyle={getChartTooltipStyle()}
                           labelStyle={chartLabelStyle}
                           itemStyle={chartItemStyle}
