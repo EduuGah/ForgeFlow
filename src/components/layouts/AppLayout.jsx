@@ -23,6 +23,7 @@ const ActiveWorkoutMini = lazy(() => import('../workout/ActiveWorkoutMini'))
 const SmartNotificationPopup = lazy(() =>
   import('../notifications/SmartNotificationPopup')
 )
+const PwaInstallPrompt = lazy(() => import('../pwa/PwaInstallPrompt'))
 
 function runWhenBrowserIsIdle(callback) {
   if (typeof window === 'undefined') return undefined
@@ -248,6 +249,10 @@ function AppLayout() {
           />
         </Suspense>
       )}
+
+      <Suspense fallback={null}>
+        <PwaInstallPrompt />
+      </Suspense>
     </div>
   )
 }
