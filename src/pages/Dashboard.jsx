@@ -13,10 +13,11 @@ import {
   Play,
   Search,
   Target,
+  TrendingUp,
   Trophy,
   UserRound,
   Weight,
-  X,,
+  X,
   TrendingUp} from 'lucide-react'
 import {
   Bar,
