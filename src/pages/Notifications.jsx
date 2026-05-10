@@ -19,7 +19,10 @@ import {
   Trash2,
   Weight,
   X,
-} from 'lucide-react'
+,
+  Trophy,
+  AlertTriangle,
+  AlertCircle} from 'lucide-react'
 
 import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
@@ -53,6 +56,15 @@ function normalizeNotificationFromApi(notification = {}) {
     createdAt: notification.createdAt || new Date().toISOString(),
     updatedAt: notification.updatedAt || notification.createdAt || new Date().toISOString(),
   }
+}
+
+
+function getNotificationIcon(type) {
+  if (type === 'success') return <Trophy size={18} />
+  if (type === 'goal') return <CheckCircle2 size={18} />
+  if (type === 'warning') return <AlertTriangle size={18} />
+  if (type === 'error' || type === 'danger') return <AlertCircle size={18} />
+  return <BellRing size={18} />
 }
 
 function formatDateTime(dateString) {

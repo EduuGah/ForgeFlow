@@ -4,17 +4,14 @@ import {
   BarChart3,
   CalendarDays,
   Dumbbell,
-  Flame,
   Search,
-  Target,
-  Trophy,
+  TrendingUp,
   Weight,
-  X,
 } from 'lucide-react'
 import {
-  Scatter,
-  ScatterChart,
   CartesianGrid,
+  Line,
+  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -27,872 +24,474 @@ import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
 
 import { useAuth } from '../context/AuthContext'
-import { getUserStorageData } from '../utils/userStorage'
+import { apiFetch } from '../services/api'
+import {
+  getUserStorageData,
+  saveUserStorageData,
+} from '../utils/userStorage'
+import {
+  chartItemStyle,
+  chartLabelStyle,
+  getChartTooltipStyle,
+} from '../utils/chartUtils'
 
-function formatDate(dateString) {
-  if (!dateString) return 'Sem data'
+function getSessionDate(session) {
+  return (
+    session.finishedAt ||
+    session.completedAt ||
+    session.date ||
+    session.createdAt ||
+    session.startedAt
+  )
+}
 
-  return new Date(dateString).toLocaleDateString('pt-BR', {
+function formatDate(value) {
+  if (!value) return '—'
+
+  return new Date(value).toLocaleDateString('pt-BR', {
     day: '2-digit',
     month: '2-digit',
     year: '2-digit',
   })
 }
 
-function formatLongDate(dateString) {
-  if (!dateString) return 'Sem data'
+function formatLongDate(value) {
+  if (!value) return 'Sem data'
 
-  return new Date(dateString).toLocaleDateString('pt-BR', {
+  return new Date(value).toLocaleDateString('pt-BR', {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
   })
 }
 
-function isValidWorkingSet(set) {
-  const hasCompletionFlag =
-    set.completed !== undefined ||
-    set.isCompleted !== undefined ||
-    set.done !== undefined
-
-  const isCompleted = hasCompletionFlag
-    ? set.completed === true || set.isCompleted === true || set.done === true
-    : true
-
-  return (
-    set.type !== 'warmup' &&
-    isCompleted &&
-    Number(set.weight) > 0 &&
-    Number(set.reps) > 0
-  )
+function formatWeight(value) {
+  return `${Number(value || 0).toLocaleString('pt-BR')} kg`
 }
 
-function getSetVolume(set) {
-  return Number(set.weight) * Number(set.reps)
+function formatVolume(value) {
+  return `${Number(value || 0).toLocaleString('pt-BR')} kg`
 }
 
-function ChartPoint({ cx, cy, payload }) {
-  if (cx === undefined || cy === undefined) return null
-
-  return (
-    <g>
-      <circle
-        cx={cx}
-        cy={cy}
-        r={18}
-        fill="transparent"
-        className="cursor-pointer"
-      />
-      <circle
-        cx={cx}
-        cy={cy}
-        r={7}
-        fill="var(--ff-card)"
-        stroke="var(--ff-accent)"
-        strokeWidth={3}
-        className="cursor-pointer drop-shadow-sm"
-      />
-      <text
-        x={cx}
-        y={cy - 14}
-        textAnchor="middle"
-        className="pointer-events-none fill-[var(--ff-text)] text-[11px] font-black"
-      >
-        {payload?.weight}kg
-      </text>
-    </g>
-  )
+function normalizeExerciseName(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
 }
 
-function VolumeChartPoint({ cx, cy, payload }) {
-  if (cx === undefined || cy === undefined) return null
+function getCompletedSetsFromHistory(history = []) {
+  const rows = []
 
-  return (
-    <g>
-      <circle
-        cx={cx}
-        cy={cy}
-        r={18}
-        fill="transparent"
-        className="cursor-pointer"
-      />
-      <circle
-        cx={cx}
-        cy={cy}
-        r={7}
-        fill="var(--ff-card)"
-        stroke="var(--ff-accent)"
-        strokeWidth={3}
-        className="cursor-pointer drop-shadow-sm"
-      />
-    </g>
-  )
-}
+  history.forEach((session, sessionIndex) => {
+    const date = getSessionDate(session)
+    const workoutName = session.workoutName || session.name || `Treino ${sessionIndex + 1}`
 
-function ChartTooltip({ active, payload }) {
-  if (!active || !payload?.length) return null
+    ;(session.exercises || []).forEach((exercise, exerciseIndex) => {
+      const exerciseName =
+        exercise.name ||
+        exercise.exerciseName ||
+        exercise.title ||
+        `Exercício ${exerciseIndex + 1}`
 
-  const item = payload[0].payload
+      ;(exercise.sets || []).forEach((set, rawSetIndex) => {
+        const weight = Number(set.weight || 0)
+        const reps = Number(set.reps || 0)
+        const isCompleted = set.completed !== false
+        const isValid = isCompleted && weight > 0 && reps > 0
 
-  return (
-    <div className="max-w-[280px] rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 shadow-2xl">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-bold text-[var(--ff-text)]">
-            {item.workoutName}
-          </p>
+        if (!isValid) return
 
-          <p className="mt-1 text-xs text-[var(--ff-muted)]">
-            {formatLongDate(item.fullDate)}
-          </p>
-        </div>
+        rows.push({
+          id:
+            set.id ||
+            `${session.id || session._id || sessionIndex}-${exerciseIndex}-${rawSetIndex}`,
+          workoutName,
+          date,
+          fullDate: date,
+          exerciseName,
+          normalizedExerciseName: normalizeExerciseName(exerciseName),
+          muscleGroup: exercise.muscleGroup || exercise.group || 'Sem grupo',
+          equipment: exercise.equipment || 'Não informado',
+          setNumber: set.setNumber || rawSetIndex + 1,
+          weight,
+          reps,
+          volume: weight * reps,
+        })
+      })
+    })
+  })
 
-        <span className="shrink-0 rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-2.5 py-1 text-[11px] font-black text-[var(--ff-accent-text)]">
-          Série {item.setNumber}
-        </span>
-      </div>
-
-      <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-        <div className="rounded-xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-2">
-          <p className="text-[var(--ff-muted)]">
-            Peso
-          </p>
-
-          <p className="mt-1 font-bold text-[var(--ff-accent-text)]">
-            {item.weight}kg
-          </p>
-        </div>
-
-        <div className="rounded-xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-2">
-          <p className="text-[var(--ff-muted)]">
-            Reps
-          </p>
-
-          <p className="mt-1 font-bold text-[var(--ff-text)]">
-            {item.reps}
-          </p>
-        </div>
-
-        <div className="rounded-xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-2">
-          <p className="text-[var(--ff-muted)]">
-            Volume
-          </p>
-
-          <p className="mt-1 font-bold text-[var(--ff-accent-text)]">
-            {item.volume}kg
-          </p>
-        </div>
-
-        <div className="rounded-xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-2">
-          <p className="text-[var(--ff-muted)]">
-            Ordem
-          </p>
-
-          <p className="mt-1 font-bold text-[var(--ff-text)]">
-            #{item.chartIndex}
-          </p>
-        </div>
-      </div>
-    </div>
-  )
+  return rows.sort((a, b) => new Date(a.date) - new Date(b.date))
 }
 
 function ExerciseProgress() {
   const { user } = useAuth()
 
   const [history, setHistory] = useState([])
-  const [selectedExercise, setSelectedExercise] = useState('')
+  const [source, setSource] = useState('local')
+  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [groupFilter, setGroupFilter] = useState('')
-  const [sortMode, setSortMode] = useState('mostSets')
+  const [selectedExerciseName, setSelectedExerciseName] = useState('')
 
   useEffect(() => {
-    setHistory(getUserStorageData(user, 'history', []))
+    if (!user) return undefined
+
+    let isMounted = true
+
+    async function loadHistory() {
+      const cachedHistory = getUserStorageData(user, 'workoutHistory', [])
+
+      if (isMounted) {
+        setHistory(Array.isArray(cachedHistory) ? cachedHistory : [])
+        setSource('local')
+        setLoading(true)
+      }
+
+      try {
+        const data = await apiFetch('/workout-history')
+
+        if (!isMounted) return
+
+        const normalizedHistory = Array.isArray(data) ? data : data?.history || []
+
+        setHistory(normalizedHistory)
+        saveUserStorageData(user, 'workoutHistory', normalizedHistory)
+        setSource('database')
+      } catch (error) {
+        console.error(error)
+      } finally {
+        if (isMounted) setLoading(false)
+      }
+    }
+
+    loadHistory()
+
+    return () => {
+      isMounted = false
+    }
   }, [user])
 
-  const exerciseLibrary = useMemo(() => {
+  const completedSets = useMemo(() => getCompletedSetsFromHistory(history), [history])
+
+  const exerciseOptions = useMemo(() => {
     const map = new Map()
 
-    history.forEach((session, sessionIndex) => {
-      session.exercises.forEach((item) => {
-        const exercise = item.exercise
-
-        if (!exercise?.name) return
-
-        const validSets = item.sets.filter(isValidWorkingSet)
-
-        const volume = validSets.reduce((total, set) => {
-          return total + getSetVolume(set)
-        }, 0)
-
-        if (!map.has(exercise.name)) {
-          map.set(exercise.name, {
-            name: exercise.name,
-            muscleGroup: exercise.muscleGroup || 'Sem grupo',
-            equipment: exercise.equipment || 'Sem equipamento',
-            mediaUrl:
-              exercise.media?.gif ||
-              exercise.media?.image ||
-              exercise.mediaUrl ||
-              exercise.gifUrl ||
-              '',
-            totalAppearances: 0,
-            totalSets: 0,
-            totalVolume: 0,
-            lastDate: session.finishedAt,
-          })
-        }
-
-        const current = map.get(exercise.name)
-
-        map.set(exercise.name, {
-          ...current,
-          totalAppearances: current.totalAppearances + 1,
-          totalSets: current.totalSets + validSets.length,
-          totalVolume: current.totalVolume + volume,
-          lastDate:
-            new Date(session.finishedAt) > new Date(current.lastDate)
-              ? session.finishedAt
-              : current.lastDate,
-        })
-      })
-    })
-
-  return [...map.values()]
-}, [history])
-
-const muscleGroups = useMemo(() => {
-  return [...new Set(exerciseLibrary.map((exercise) => exercise.muscleGroup))]
-    .filter(Boolean)
-    .sort()
-}, [exerciseLibrary])
-
-const filteredExercises = useMemo(() => {
-  const filtered = exerciseLibrary.filter((exercise) => {
-    const matchesSearch = `${exercise.name} ${exercise.muscleGroup} ${exercise.equipment}`
-      .toLowerCase()
-      .includes(search.toLowerCase())
-
-    const matchesGroup = groupFilter
-      ? exercise.muscleGroup === groupFilter
-      : true
-
-    return matchesSearch && matchesGroup
-  })
-
-  return filtered.sort((a, b) => {
-    if (sortMode === 'name') return a.name.localeCompare(b.name)
-    if (sortMode === 'mostSets') return b.totalSets - a.totalSets
-    if (sortMode === 'mostWorkouts') return b.totalAppearances - a.totalAppearances
-    if (sortMode === 'volume') return b.totalVolume - a.totalVolume
-    if (sortMode === 'recent') return new Date(b.lastDate) - new Date(a.lastDate)
-
-    return 0
-  })
-}, [exerciseLibrary, search, groupFilter, sortMode])
-
-const groupedExercises = useMemo(() => {
-  return filteredExercises.reduce((groups, exercise) => {
-    const group = exercise.muscleGroup || 'Sem grupo'
-
-    if (!groups[group]) groups[group] = []
-
-    groups[group].push(exercise)
-
-    return groups
-  }, {})
-}, [filteredExercises])
-
-const selectedExerciseData = useMemo(() => {
-  if (!selectedExercise) return null
-
-  return exerciseLibrary.find((exercise) => exercise.name === selectedExercise) || null
-}, [exerciseLibrary, selectedExercise])
-
-const chartData = useMemo(() => {
-  if (!selectedExercise) return []
-
-  const data = []
-
-  history.forEach((session, sessionIndex) => {
-    const sessionExercises = Array.isArray(session.exercises)
-      ? session.exercises
-      : []
-
-    sessionExercises.forEach((item, exerciseIndex) => {
-      const exercise = item.exercise
-
-      if (exercise?.name !== selectedExercise) return
-
-      const validSets = Array.isArray(item.sets)
-        ? item.sets.filter(isValidWorkingSet)
-        : []
-
-      validSets.forEach((set, setIndex) => {
-        const weight = Number(set.weight)
-        const reps = Number(set.reps)
-        const volume = weight * reps
-        const setNumber = Number(set.setNumber || set.order || setIndex + 1)
-
-        data.push({
-          id: `${session.id || session._id || session.finishedAt}-${item.id || item._id || exercise.name}-${set.id || set._id || setIndex}`,
-          workoutName: session.workoutName || session.name || 'Treino',
-          fullDate: session.finishedAt || session.createdAt,
-          date: formatDate(session.finishedAt || session.createdAt),
-          sessionIndex,
-          exerciseIndex,
-          rawSetIndex: setIndex,
-          setNumber,
-          weight,
-          reps,
-          volume,
-        })
-      })
-    })
-  })
-
-  return data
-    .sort((a, b) => {
-      const dateDiff = new Date(a.fullDate) - new Date(b.fullDate)
-
-      if (dateDiff !== 0) return dateDiff
-      if (a.sessionIndex !== b.sessionIndex) return a.sessionIndex - b.sessionIndex
-      if (a.exerciseIndex !== b.exerciseIndex) return a.exerciseIndex - b.exerciseIndex
-
-      return a.rawSetIndex - b.rawSetIndex
-    })
-    .map((item, index) => ({
-      ...item,
-      chartIndex: index + 1,
-      axisLabel: `#${index + 1} · S${item.setNumber}`,
-    }))
-}, [history, selectedExercise])
-
-const bestWeight = useMemo(() => {
-  return chartData.slice().sort((a, b) => b.weight - a.weight)[0] || null
-}, [chartData])
-
-const bestVolume = useMemo(() => {
-  return chartData.slice().sort((a, b) => b.volume - a.volume)[0] || null
-}, [chartData])
-
-const bestReps = useMemo(() => {
-  return chartData.slice().sort((a, b) => b.reps - a.reps)[0] || null
-}, [chartData])
-
-const totalVolume = useMemo(() => {
-  return chartData.reduce((total, item) => total + item.volume, 0)
-}, [chartData])
-
-const chartTicks = useMemo(() => {
-  if (chartData.length <= 12) {
-    return chartData.map((item) => item.chartIndex)
-  }
-
-  const step = Math.ceil(chartData.length / 8)
-
-  return chartData
-    .filter((_, index) => index % step === 0 || index === chartData.length - 1)
-    .map((item) => item.chartIndex)
-}, [chartData])
-
-const chartDomain = useMemo(() => {
-  if (chartData.length <= 1) return [0.5, 1.5]
-
-  return [0.5, chartData.length + 0.5]
-}, [chartData])
-
-function formatChartTick(value) {
-  const item = chartData.find((point) => point.chartIndex === value)
-
-  if (!item) return ''
-
-  return chartData.length <= 8 ? `#${item.chartIndex} S${item.setNumber}` : `#${item.chartIndex}`
-}
-
-return (
-  <>
-
-  <section className="lg:hidden">
-    <div className="space-y-5">
-      <div className="overflow-hidden rounded-[2rem] border border-[var(--ff-accent-border)]/25 bg-gradient-to-br from-[var(--ff-accent-soft)]/25 via-[var(--ff-card)] to-[var(--ff-surface-2)] p-5 shadow-[0_18px_44px_rgba(0,0,0,0.24)]"><Badge variant="purple">{exerciseLibrary.length} exercícios</Badge><h1 className="mt-4 text-3xl font-black leading-tight tracking-tight text-[var(--ff-text)]">Por exercício</h1><p className="mt-2 text-sm leading-relaxed text-[var(--ff-muted)]">Escolha um exercício e veja carga, volume e séries em cards rápidos.</p></div>
-      <div className="sticky top-[72px] z-20 -mx-4 border-y border-[var(--ff-border)] bg-[var(--ff-bg)]/95 px-4 py-3 backdrop-blur-xl"><div className="flex h-12 items-center gap-3 rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-zinc-400"><Search size={18}/><input type="search" placeholder="Buscar exercício..." value={search} onChange={(event)=>setSearch(event.target.value)} className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-500" />{search && <button type="button" onClick={()=>setSearch('')}><X size={16}/></button>}</div><div className="mt-3 flex gap-2 overflow-x-auto pb-1"><select value={groupFilter} onChange={(event)=>setGroupFilter(event.target.value)} className="h-10 shrink-0 rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 text-xs font-black text-[var(--ff-text)]"><option value="">Todos</option>{muscleGroups.map((group)=><option key={group} value={group}>{group}</option>)}</select><select value={sortMode} onChange={(event)=>setSortMode(event.target.value)} className="h-10 shrink-0 rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 text-xs font-black text-[var(--ff-text)]"><option value="mostSets">Mais séries</option><option value="bestWeight">Maior peso</option><option value="bestVolume">Maior volume</option><option value="name">Nome</option></select></div></div>
-      {!selectedExerciseData ? <section className="grid grid-cols-2 gap-3">{filteredExercises.slice(0,24).map((exercise)=><button key={exercise.name} type="button" onClick={()=>setSelectedExercise(exercise.name)} className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 text-left active:scale-[0.98]"><p className="line-clamp-2 text-sm font-black text-[var(--ff-text)]">{exercise.name}</p><p className="mt-2 text-[11px] text-[var(--ff-muted)]">{exercise.muscleGroup || 'Sem grupo'}</p><p className="mt-2 text-xs font-black text-[var(--ff-accent-text)]">{exercise.setsCount || 0} séries</p></button>)}</section> : <section className="space-y-4"><button type="button" onClick={()=>setSelectedExercise('')} className="text-xs font-black text-[var(--ff-accent-text)]">← trocar exercício</button><Card className="p-4"><h2 className="text-xl font-black text-[var(--ff-text)]">{selectedExercise}</h2><p className="mt-1 text-sm text-[var(--ff-muted)]">{selectedExerciseData.muscleGroup || 'Sem grupo'}</p><div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-2xl bg-[var(--ff-surface-2)] p-3"><p className="text-[11px] text-[var(--ff-muted)]">Melhor peso</p><p className="mt-1 text-lg font-black text-[var(--ff-accent-text)]">{bestWeight}kg</p></div><div className="rounded-2xl bg-[var(--ff-surface-2)] p-3"><p className="text-[11px] text-[var(--ff-muted)]">Melhor volume</p><p className="mt-1 text-lg font-black text-orange-300">{bestVolume}kg</p></div><div className="rounded-2xl bg-[var(--ff-surface-2)] p-3"><p className="text-[11px] text-[var(--ff-muted)]">Reps</p><p className="mt-1 text-lg font-black">{bestReps}</p></div><div className="rounded-2xl bg-[var(--ff-surface-2)] p-3"><p className="text-[11px] text-[var(--ff-muted)]">Volume total</p><p className="mt-1 text-lg font-black">{totalVolume}kg</p></div></div></Card><Card className="p-4"><h3 className="font-black text-[var(--ff-text)]">Séries recentes</h3><div className="mt-3 max-h-[420px] space-y-2 overflow-y-auto">{chartData.slice().reverse().slice(0,20).map((row,index)=><div key={`${row.date}-${index}`} className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3"><p className="text-xs text-[var(--ff-muted)]">{formatLongDate(row.date)}</p><p className="mt-1 text-sm font-black text-[var(--ff-text)]">{row.weight}kg × {row.reps} • {row.volume}kg</p></div>)}</div></Card></section>}
-    </div>
-  </section>
-
-  <div className="hidden lg:block">
-    <PageHeader
-      title="Evolução"
-      description="Acompanhe a progressão de carga, repetições e volume por exercício."
-      action={
-        <Badge variant="purple">
-          {exerciseLibrary.length} exercícios
-        </Badge>
+    completedSets.forEach((set) => {
+      const current = map.get(set.normalizedExerciseName) || {
+        name: set.exerciseName,
+        normalizedName: set.normalizedExerciseName,
+        muscleGroup: set.muscleGroup,
+        count: 0,
+        maxWeight: 0,
+        maxVolume: 0,
+        lastDate: set.date,
       }
-    />
 
-    <section className="grid grid-cols-1 gap-6 xl:grid-cols-[390px_minmax(0,1fr)]">
-      <Card>
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
-            <Search size={24} />
-          </div>
+      current.count += 1
+      current.maxWeight = Math.max(current.maxWeight, set.weight)
+      current.maxVolume = Math.max(current.maxVolume, set.volume)
+      current.lastDate = set.date
 
-          <div>
-            <h2 className="text-xl font-bold">
-              Exercícios
-            </h2>
+      map.set(set.normalizedExerciseName, current)
+    })
 
-            <p className="text-sm text-zinc-500">
-              Selecione um exercício para ver a evolução.
-            </p>
-          </div>
-        </div>
+    return Array.from(map.values()).sort((a, b) => b.count - a.count)
+  }, [completedSets])
 
-        <div className="mt-5 space-y-3">
-          <div className="flex h-12 items-center gap-3 rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-zinc-400">
-            <Search size={20} />
+  useEffect(() => {
+    if (!selectedExerciseName && exerciseOptions.length > 0) {
+      setSelectedExerciseName(exerciseOptions[0].normalizedName)
+    }
+  }, [exerciseOptions, selectedExerciseName])
 
-            <input
-              type="text"
-              placeholder="Buscar exercício..."
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-500"
-            />
+  const filteredExerciseOptions = useMemo(() => {
+    const term = normalizeExerciseName(search)
 
-            {search && (
-              <button
-                type="button"
-                onClick={() => setSearch('')}
-                className="text-zinc-500 transition hover:text-white"
-              >
-                <X size={18} />
-              </button>
-            )}
-          </div>
+    if (!term) return exerciseOptions
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-1">
-            <select
-              value={groupFilter}
-              onChange={(event) => setGroupFilter(event.target.value)}
-              className="h-12 rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition focus:border-[var(--ff-accent-border)]"
-            >
-              <option value="">Todos os grupos</option>
+    return exerciseOptions.filter((exercise) =>
+      normalizeExerciseName(exercise.name).includes(term)
+    )
+  }, [exerciseOptions, search])
 
-              {muscleGroups.map((group) => (
-                <option key={group} value={group}>
-                  {group}
-                </option>
-              ))}
-            </select>
+  const selectedSets = useMemo(() => {
+    return completedSets.filter(
+      (set) => set.normalizedExerciseName === selectedExerciseName
+    )
+  }, [completedSets, selectedExerciseName])
 
-            <select
-              value={sortMode}
-              onChange={(event) => setSortMode(event.target.value)}
-              className="h-12 rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition focus:border-[var(--ff-accent-border)]"
-            >
-              <option value="mostSets">Mais séries</option>
-              <option value="mostWorkouts">Mais treinos</option>
-              <option value="volume">Maior volume</option>
-              <option value="recent">Mais recente</option>
-              <option value="name">Nome</option>
-            </select>
-          </div>
-        </div>
+  const chartData = useMemo(() => {
+    return selectedSets.map((set, index) => ({
+      ...set,
+      chartIndex: index + 1,
+      axisLabel: `${index + 1}`,
+      dateLabel: formatDate(set.date),
+    }))
+  }, [selectedSets])
 
-        <div className="mt-5 max-h-[720px] space-y-5 overflow-y-auto pr-2">
-          {exerciseLibrary.length === 0 && (
-            <EmptyState
-              title="Sem histórico ainda"
-              description="Finalize treinos para gerar evolução dos exercícios."
-            />
-          )}
+  const stats = useMemo(() => {
+    if (selectedSets.length === 0) {
+      return {
+        maxWeight: 0,
+        maxVolume: 0,
+        totalVolume: 0,
+        totalSets: 0,
+        lastSet: null,
+      }
+    }
 
-          {Object.entries(groupedExercises).map(([group, exercises]) => (
-            <div key={group}>
-              <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-sm font-black uppercase tracking-wide text-zinc-500">
-                  {group}
-                </h3>
+    return {
+      maxWeight: Math.max(...selectedSets.map((set) => set.weight)),
+      maxVolume: Math.max(...selectedSets.map((set) => set.volume)),
+      totalVolume: selectedSets.reduce((total, set) => total + set.volume, 0),
+      totalSets: selectedSets.length,
+      lastSet: selectedSets[selectedSets.length - 1],
+    }
+  }, [selectedSets])
 
-                <span className="text-xs font-bold text-zinc-600">
-                  {exercises.length}
-                </span>
-              </div>
+  const selectedExercise = exerciseOptions.find(
+    (exercise) => exercise.normalizedName === selectedExerciseName
+  )
 
-              <div className="space-y-2">
-                {exercises.map((exercise) => (
-                  <button
-                    key={exercise.name}
-                    type="button"
-                    onClick={() => setSelectedExercise(exercise.name)}
-                    className={
-                      selectedExercise === exercise.name
-                        ? 'w-full rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)]/15 p-3 text-left shadow-[0_0_18px_var(--ff-accent-shadow)]/15'
-                        : 'w-full rounded-2xl border border-zinc-800 bg-[#18181b] p-3 text-left transition hover:border-[var(--ff-accent-border)]/30 hover:bg-[#1f1f23]'
-                    }
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-zinc-800 bg-white">
-                        {exercise.mediaUrl ? (
-                          <img
-                            src={exercise.mediaUrl}
-                            alt={exercise.name}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <Dumbbell size={23} className="text-zinc-900" />
-                        )}
-                      </div>
+  return (
+    <>
+      <PageHeader
+        title="Progresso por exercício"
+        description="Escolha um exercício e veja todas as séries registradas, evolução de carga e volume."
+        action={
+          <Badge variant={source === 'database' ? 'purple' : 'default'}>
+            {loading ? 'Carregando' : source === 'database' ? 'Sincronizado' : 'Local'}
+          </Badge>
+        }
+      />
 
-                      <div className="min-w-0 flex-1">
-                        <p
-                          className={
-                            selectedExercise === exercise.name
-                              ? 'truncate font-bold text-[var(--ff-accent-text)]'
-                              : 'truncate font-bold text-white'
-                          }
-                        >
-                          {exercise.name}
-                        </p>
-
-                        <p className="mt-1 text-xs text-zinc-500">
-                          {exercise.totalSets} séries • {exercise.totalAppearances} treinos
-                        </p>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      <div className="space-y-6">
-        {!selectedExerciseData ? (
+      <section className="grid grid-cols-1 gap-5 xl:grid-cols-[340px_minmax(0,1fr)]">
+        <aside className="space-y-5">
           <Card>
-            <EmptyState
-              title="Selecione um exercício"
-              description="Escolha um exercício na lista para visualizar gráficos e marcas pessoais."
-            />
-          </Card>
-        ) : (
-          <>
-            <Card className="overflow-hidden border-[var(--ff-accent-border)]/20 bg-gradient-to-br from-[var(--ff-accent-soft)]/20 via-[#18181b] to-[#121212]">
-              <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-3xl border border-zinc-800 bg-white">
-                    {selectedExerciseData.mediaUrl ? (
-                      <img
-                        src={selectedExerciseData.mediaUrl}
-                        alt={selectedExerciseData.name}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <Dumbbell size={36} className="text-zinc-900" />
-                    )}
-                  </div>
+            <div className="flex h-12 items-center gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-[var(--ff-muted)]">
+              <Search size={18} />
+              <input
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Buscar exercício..."
+                className="w-full bg-transparent text-sm text-[var(--ff-text)] outline-none placeholder:text-[var(--ff-muted)]"
+              />
+            </div>
 
+            <div className="mt-4 max-h-[560px] space-y-2 overflow-y-auto pr-1">
+              {filteredExerciseOptions.length === 0 ? (
+                <EmptyState
+                  title="Nenhum exercício"
+                  description="Finalize treinos com séries válidas para aparecerem aqui."
+                />
+              ) : (
+                filteredExerciseOptions.map((exercise) => (
+                  <button
+                    key={exercise.normalizedName}
+                    type="button"
+                    onClick={() => setSelectedExerciseName(exercise.normalizedName)}
+                    className={[
+                      'w-full rounded-2xl border p-3 text-left transition',
+                      selectedExerciseName === exercise.normalizedName
+                        ? 'border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)]'
+                        : 'border-[var(--ff-border)] bg-[var(--ff-surface-2)] hover:bg-[var(--ff-card-hover)]',
+                    ].join(' ')}
+                  >
+                    <p className="line-clamp-1 font-black text-[var(--ff-text)]">
+                      {exercise.name}
+                    </p>
+                    <p className="mt-1 text-xs text-[var(--ff-muted)]">
+                      {exercise.count} série(s) • {exercise.muscleGroup}
+                    </p>
+                  </button>
+                ))
+              )}
+            </div>
+          </Card>
+        </aside>
+
+        <div className="space-y-5">
+          {!selectedExercise ? (
+            <Card>
+              <EmptyState
+                title="Selecione um exercício"
+                description="Escolha um exercício na lista para ver a evolução."
+              />
+            </Card>
+          ) : (
+            <>
+              <Card>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-wide text-[var(--ff-accent-text)]">
+                    <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--ff-accent-text)]">
                       Exercício selecionado
                     </p>
-
-                    <h1 className="mt-1 text-3xl font-black">
-                      {selectedExerciseData.name}
-                    </h1>
-
-                    <p className="mt-2 text-sm text-zinc-400">
-                      {selectedExerciseData.muscleGroup} • {selectedExerciseData.equipment}
+                    <h2 className="mt-1 text-2xl font-black text-[var(--ff-text)]">
+                      {selectedExercise.name}
+                    </h2>
+                    <p className="mt-1 text-sm text-[var(--ff-muted)]">
+                      {selectedExercise.muscleGroup}
                     </p>
                   </div>
+                  <Badge>{stats.totalSets} séries</Badge>
                 </div>
 
-                <Badge variant="purple">
-                  {selectedExerciseData.totalSets} séries
-                </Badge>
-              </div>
-            </Card>
+                <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+                  <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
+                    <Weight size={18} className="text-[var(--ff-accent-text)]" />
+                    <p className="mt-2 text-lg font-black text-[var(--ff-text)]">{formatWeight(stats.maxWeight)}</p>
+                    <p className="text-xs text-[var(--ff-muted)]">maior carga</p>
+                  </div>
 
-            <section className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-              <Card className="p-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-zinc-500">
-                    Melhor peso
-                  </p>
+                  <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
+                    <BarChart3 size={18} className="text-orange-300" />
+                    <p className="mt-2 text-lg font-black text-[var(--ff-text)]">{formatVolume(stats.maxVolume)}</p>
+                    <p className="text-xs text-[var(--ff-muted)]">maior volume</p>
+                  </div>
 
-                  <Weight size={20} className="text-[var(--ff-accent-text)]" />
+                  <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
+                    <Activity size={18} className="text-emerald-300" />
+                    <p className="mt-2 text-lg font-black text-[var(--ff-text)]">{formatVolume(stats.totalVolume)}</p>
+                    <p className="text-xs text-[var(--ff-muted)]">volume total</p>
+                  </div>
+
+                  <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
+                    <CalendarDays size={18} className="text-[var(--ff-accent-text)]" />
+                    <p className="mt-2 text-lg font-black text-[var(--ff-text)]">{stats.lastSet ? formatDate(stats.lastSet.date) : '—'}</p>
+                    <p className="text-xs text-[var(--ff-muted)]">última série</p>
+                  </div>
                 </div>
-
-                <h3 className="mt-2 text-3xl font-black text-[var(--ff-accent-text)]">
-                  {bestWeight ? `${bestWeight.weight}kg` : '--'}
-                </h3>
-
-                <p className="mt-2 text-xs text-zinc-500">
-                  {bestWeight ? `${bestWeight.reps} reps` : 'Sem dados'}
-                </p>
               </Card>
 
-              <Card className="p-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-zinc-500">
-                    Melhor volume
-                  </p>
-
-                  <Flame size={20} className="text-orange-400" />
+              <Card>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-xl font-black text-[var(--ff-text)]">
+                      Evolução de carga
+                    </h2>
+                    <p className="mt-1 text-sm text-[var(--ff-muted)]">
+                      Cada ponto representa uma série concluída.
+                    </p>
+                  </div>
+                  <TrendingUp size={22} className="text-[var(--ff-accent-text)]" />
                 </div>
 
-                <h3 className="mt-2 text-3xl font-black text-orange-300">
-                  {bestVolume ? `${bestVolume.volume}kg` : '--'}
-                </h3>
-
-                <p className="mt-2 text-xs text-zinc-500">
-                  {bestVolume ? `${bestVolume.weight}kg × ${bestVolume.reps}` : 'Sem dados'}
-                </p>
+                <div className="mt-5 h-[320px]">
+                  {chartData.length === 0 ? (
+                    <EmptyState
+                      title="Sem séries"
+                      description="Nenhuma série válida foi encontrada para esse exercício."
+                    />
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={chartData} margin={{ top: 16, right: 14, left: 0, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
+                        <XAxis
+                          dataKey="axisLabel"
+                          stroke="var(--ff-muted)"
+                          tick={{ fontSize: 11, fill: 'var(--ff-muted)' }}
+                          tickLine={false}
+                          axisLine={false}
+                        />
+                        <YAxis
+                          stroke="var(--ff-muted)"
+                          tick={{ fontSize: 11, fill: 'var(--ff-muted)' }}
+                          tickLine={false}
+                          axisLine={false}
+                        />
+                        <Tooltip
+                          formatter={(value, name) => [
+                            name === 'volume' ? formatVolume(value) : formatWeight(value),
+                            name === 'volume' ? 'Volume' : 'Peso',
+                          ]}
+                          labelFormatter={(_, payload) =>
+                            payload?.[0]?.payload
+                              ? `${payload[0].payload.dateLabel} • Série ${payload[0].payload.setNumber}`
+                              : 'Série'
+                          }
+                          contentStyle={getChartTooltipStyle()}
+                          labelStyle={chartLabelStyle}
+                          itemStyle={chartItemStyle}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="weight"
+                          stroke="var(--ff-accent)"
+                          strokeWidth={3}
+                          dot={{ r: 4, strokeWidth: 2, fill: 'var(--ff-card)' }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="volume"
+                          stroke="#f59e0b"
+                          strokeWidth={2}
+                          dot={false}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  )}
+                </div>
               </Card>
 
-              <Card className="p-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-zinc-500">
-                    Melhor reps
-                  </p>
-
-                  <Trophy size={20} className="text-yellow-400" />
-                </div>
-
-                <h3 className="mt-2 text-3xl font-black">
-                  {bestReps ? bestReps.reps : '--'}
-                </h3>
-
-                <p className="mt-2 text-xs text-zinc-500">
-                  {bestReps ? `${bestReps.weight}kg` : 'Sem dados'}
+              <Card>
+                <h2 className="text-xl font-black text-[var(--ff-text)]">
+                  Séries registradas
+                </h2>
+                <p className="mt-1 text-sm text-[var(--ff-muted)]">
+                  Todas as séries válidas encontradas no histórico.
                 </p>
-              </Card>
 
-              <Card className="p-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-zinc-500">
-                    Volume total
-                  </p>
+                <div className="mt-5 max-h-[560px] space-y-3 overflow-y-auto pr-1">
+                  {selectedSets.length === 0 ? (
+                    <EmptyState
+                      title="Nenhuma série encontrada"
+                      description="Esse exercício ainda não tem séries válidas no histórico."
+                    />
+                  ) : (
+                    selectedSets
+                      .slice()
+                      .reverse()
+                      .map((set) => (
+                        <div
+                          key={set.id}
+                          className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="font-black text-[var(--ff-text)]">
+                                {formatLongDate(set.date)}
+                              </p>
+                              <p className="mt-1 text-xs text-[var(--ff-muted)]">
+                                {set.workoutName} • Série {set.setNumber}
+                              </p>
+                            </div>
+                            <Badge>{formatVolume(set.volume)}</Badge>
+                          </div>
 
-                  <Activity size={20} className="text-[var(--ff-accent-text)]" />
-                </div>
-
-                <h3 className="mt-2 text-2xl font-black">
-                  {totalVolume.toLocaleString('pt-BR')}kg
-                </h3>
-
-                <p className="mt-2 text-xs text-zinc-500">
-                  acumulado
-                </p>
-              </Card>
-            </section>
-
-            <Card>
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="text-xl font-bold">
-                    Evolução de carga
-                  </h2>
-
-                  <p className="mt-1 text-sm text-zinc-500">
-                    Peso usado ao longo dos treinos.
-                  </p>
-                </div>
-
-                <BarChart3 size={24} className="text-[var(--ff-accent-text)]" />
-              </div>
-
-              <div className="mt-5 h-80">
-                {chartData.length === 0 ? (
-                  <EmptyState
-                    title="Sem dados para gráfico"
-                    description="Esse exercício ainda não tem séries válidas no histórico."
-                  />
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ScatterChart
-                      data={chartData}
-                      margin={{ top: 30, right: 28, left: 0, bottom: 8 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
-                      <XAxis
-                        dataKey="chartIndex"
-                        type="number"
-                        domain={chartDomain}
-                        ticks={chartTicks}
-                        tickFormatter={formatChartTick}
-                        stroke="var(--ff-muted)"
-                        tick={{ fontSize: 11, fill: 'var(--ff-muted)', fontWeight: 700 }}
-                        tickLine={false}
-                        axisLine={false}
-                      />
-                      <YAxis
-                        dataKey="weight"
-                        type="number"
-                        stroke="var(--ff-muted)"
-                        tick={{ fontSize: 11, fill: 'var(--ff-muted)' }}
-                        tickLine={false}
-                        axisLine={false}
-                        allowDecimals={false}
-                      />
-                      <Tooltip
-                        content={<ChartTooltip />}
-                        cursor={{ stroke: 'var(--ff-accent)', strokeWidth: 1, strokeDasharray: '4 4' }}
-                        wrapperStyle={{ outline: 'none' }}
-                      />
-                      <Scatter
-                        name="Peso"
-                        data={chartData}
-                        dataKey="weight"
-                        line={{ stroke: 'var(--ff-accent)', strokeWidth: 3 }}
-                        lineType="joint"
-                        isAnimationActive={false}
-                        shape={<ChartPoint />}
-                      />
-                    </ScatterChart>
-                  </ResponsiveContainer>
-                )}
-              </div>
-            </Card>
-
-            <Card>
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="text-xl font-bold">
-                    Evolução de volume
-                  </h2>
-
-                  <p className="mt-1 text-sm text-zinc-500">
-                    Peso × repetições por série.
-                  </p>
-                </div>
-
-                <Flame size={24} className="text-orange-400" />
-              </div>
-
-              <div className="mt-5 h-80">
-                {chartData.length === 0 ? (
-                  <EmptyState
-                    title="Sem dados para gráfico"
-                    description="Esse exercício ainda não tem volume no histórico."
-                  />
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ScatterChart
-                      data={chartData}
-                      margin={{ top: 24, right: 28, left: 0, bottom: 8 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
-                      <XAxis
-                        dataKey="chartIndex"
-                        type="number"
-                        domain={chartDomain}
-                        ticks={chartTicks}
-                        tickFormatter={formatChartTick}
-                        stroke="var(--ff-muted)"
-                        tick={{ fontSize: 11, fill: 'var(--ff-muted)', fontWeight: 700 }}
-                        tickLine={false}
-                        axisLine={false}
-                      />
-                      <YAxis
-                        dataKey="volume"
-                        type="number"
-                        stroke="var(--ff-muted)"
-                        tick={{ fontSize: 11, fill: 'var(--ff-muted)' }}
-                        tickLine={false}
-                        axisLine={false}
-                        allowDecimals={false}
-                      />
-                      <Tooltip
-                        content={<ChartTooltip />}
-                        cursor={{ stroke: 'var(--ff-accent)', strokeWidth: 1, strokeDasharray: '4 4' }}
-                        wrapperStyle={{ outline: 'none' }}
-                      />
-                      <Scatter
-                        name="Volume"
-                        data={chartData}
-                        dataKey="volume"
-                        line={{ stroke: 'var(--ff-accent)', strokeWidth: 3 }}
-                        lineType="joint"
-                        isAnimationActive={false}
-                        shape={<VolumeChartPoint />}
-                      />
-                    </ScatterChart>
-                  </ResponsiveContainer>
-                )}
-              </div>
-            </Card>
-
-            <Card>
-              <h2 className="text-xl font-bold">
-                Registros do exercício
-              </h2>
-
-              <p className="mt-1 text-sm text-zinc-500">
-                Todas as séries válidas encontradas no histórico.
-              </p>
-
-              <div className="mt-5 max-h-[460px] space-y-3 overflow-y-auto pr-2">
-                {chartData.length === 0 && (
-                  <EmptyState
-                    title="Nenhum registro"
-                    description="Finalize um treino com esse exercício."
-                  />
-                )}
-
-                {chartData
-                  .slice()
-                  .reverse()
-                  .map((item) => (
-                    <div
-                      key={item.id}
-                      className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4"
-                    >
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                          <p className="font-bold text-[var(--ff-text)]">
-                            {item.workoutName}
-                          </p>
-
-                          <p className="mt-1 flex items-center gap-2 text-xs text-[var(--ff-muted)]">
-                            <CalendarDays size={14} />
-                            {formatLongDate(item.fullDate)}
-                          </p>
+                          <div className="mt-3 grid grid-cols-2 gap-2">
+                            <div className="rounded-xl bg-[var(--ff-card)] p-3">
+                              <p className="text-xs text-[var(--ff-muted)]">Peso</p>
+                              <p className="font-black text-[var(--ff-accent-text)]">{formatWeight(set.weight)}</p>
+                            </div>
+                            <div className="rounded-xl bg-[var(--ff-card)] p-3">
+                              <p className="text-xs text-[var(--ff-muted)]">Reps</p>
+                              <p className="font-black text-[var(--ff-text)]">{set.reps}</p>
+                            </div>
+                          </div>
                         </div>
-
-                        <div className="flex flex-wrap gap-2">
-                          <Badge variant="purple">
-                            Série {item.setNumber}
-                          </Badge>
-
-                          <Badge variant="purple">
-                            {item.weight}kg
-                          </Badge>
-
-                          <Badge>
-                            {item.reps} reps
-                          </Badge>
-
-                          <Badge>
-                            {item.volume}kg volume
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </Card>
-          </>
-        )}
-      </div>
-    </section>
-    </div>
-</>
-)
+                      ))
+                  )}
+                </div>
+              </Card>
+            </>
+          )}
+        </div>
+      </section>
+    </>
+  )
 }
 
 export default ExerciseProgress

@@ -51,6 +51,17 @@ const TrainingVolumeChart = lazy(() => import('../components/progress/TrainingVo
 const MuscleGroupChart = lazy(() => import('../components/progress/MuscleGroupChart'))
 const ExercisePrChart = lazy(() => import('../components/progress/ExercisePrChart'))
 
+
+function safeText(value, fallback = '—') {
+  if (value === null || value === undefined || value === '') return fallback
+  if (typeof value === 'string' || typeof value === 'number') return String(value)
+  if (value instanceof Date) return value.toLocaleDateString('pt-BR')
+  if (typeof value === 'object') {
+    return String(value.axisLabel || value.label || value.name || value.title || value.date || fallback)
+  }
+  return String(value)
+}
+
 function formatDate(dateString) {
   if (!dateString) return 'Sem data'
 
@@ -585,128 +596,6 @@ function SetVolumeDetails({ data = [] }) {
   )
 }
 
-function ExercisePrTable({ data = [], onSelectExercise }) {
-  const [visibleCount, setVisibleCount] = useState(8)
-  const visiblePrs = data.slice(0, visibleCount)
-
-  useEffect(() => {
-    setVisibleCount(8)
-  }, [data])
-
-  return (
-    <Card>
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-black text-[var(--ff-text)]">
-            Ranking de PRs por exercício
-          </h2>
-
-          <p className="mt-1 text-sm leading-relaxed text-[var(--ff-muted)]">
-            Lista detalhada das melhores cargas e melhores volumes encontrados no histórico.
-          </p>
-        </div>
-
-        <Badge>{data.length} exercícios</Badge>
-      </div>
-
-      <div className="mt-5 overflow-hidden rounded-2xl border border-[var(--ff-border)]">
-        {visiblePrs.length === 0 ? (
-          <EmptyState
-            title="Sem PRs ainda"
-            description="Finalize treinos com peso e repetições para gerar PRs."
-          />
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[920px] text-left text-sm">
-              <thead className="bg-[var(--ff-surface-2)] text-xs uppercase tracking-wide text-[var(--ff-muted)]">
-                <tr>
-                  <th className="px-4 py-3">Exercício</th>
-                  <th className="px-4 py-3">Grupo</th>
-                  <th className="px-4 py-3">Maior carga</th>
-                  <th className="px-4 py-3">Data / treino</th>
-                  <th className="px-4 py-3">Maior volume</th>
-                  <th className="px-4 py-3">Data / treino</th>
-                </tr>
-              </thead>
-
-              <tbody className="divide-y divide-[var(--ff-border)]">
-                {visiblePrs.map((item) => (
-                  <tr
-                    key={item.exerciseName}
-                    className="transition hover:bg-[var(--ff-card-hover)]"
-                  >
-                    <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        onClick={() => onSelectExercise(item.exerciseName)}
-                        className="text-left font-black text-[var(--ff-text)] transition hover:text-[var(--ff-accent-text)]"
-                      >
-                        {item.exerciseName}
-                      </button>
-                    </td>
-
-                    <td className="px-4 py-3 text-[var(--ff-muted)]">
-                      {item.muscleGroup || 'Sem grupo'}
-                    </td>
-
-                    <td className="px-4 py-3">
-                      <span className="font-black text-[var(--ff-accent-text)]">
-                        {formatWeight(item.bestWeight)}
-                      </span>
-                      <span className="ml-1 text-xs text-[var(--ff-muted)]">
-                        × {item.bestWeightReps || 0} reps
-                      </span>
-                    </td>
-
-                    <td className="px-4 py-3">
-                      <p className="font-bold text-[var(--ff-text)]">
-                        {formatDate(item.bestWeightDate)}
-                      </p>
-
-                      <p className="mt-1 line-clamp-1 text-xs text-[var(--ff-muted)]">
-                        {item.bestWeightWorkoutName || 'Treino'}
-                      </p>
-                    </td>
-
-                    <td className="px-4 py-3">
-                      <span className="font-black text-[var(--ff-warning-text)]">
-                        {formatVolume(item.bestVolume)}
-                      </span>
-                      <span className="ml-1 text-xs text-[var(--ff-muted)]">
-                        ({formatWeight(item.bestVolumeWeight)} × {item.bestVolumeReps || 0})
-                      </span>
-                    </td>
-
-                    <td className="px-4 py-3">
-                      <p className="font-bold text-[var(--ff-text)]">
-                        {formatDate(item.bestVolumeDate)}
-                      </p>
-
-                      <p className="mt-1 line-clamp-1 text-xs text-[var(--ff-muted)]">
-                        {item.bestVolumeWorkoutName || 'Treino'}
-                      </p>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {visibleCount < data.length && (
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => setVisibleCount((current) => current + 8)}
-          className="mt-4 w-full"
-        >
-          Mostrar mais PRs
-        </Button>
-      )}
-    </Card>
-  )
-}
 
 function RecentWorkoutDetails({ workouts = [] }) {
   const [expandedId, setExpandedId] = useState(null)
@@ -1222,7 +1111,7 @@ function MobileProgressHome({
         <MobileProgressSection eyebrow="Exercício" title="Ver evolução específica" action={<Link to="/exercise-progress" className="text-xs font-black text-[var(--ff-accent-text)]">Página completa</Link>}>
           <Card id="progress-mobile-exercise" className="scroll-mt-32 p-4">
             <select
-              value={selectedExercise}
+              value={safeText(selectedExercise)}
               onChange={(event) => setSelectedExercise(event.target.value)}
               className="h-12 w-full rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-sm font-bold text-[var(--ff-text)] outline-none"
             >
@@ -1430,7 +1319,7 @@ function Progress() {
             normalizedProgress={normalizedProgress}
             recentSetRows={recentSetRows}
             recentSetSummary={recentSetSummary}
-            selectedExercise={selectedExercise}
+            selectedExercise={safeText(selectedExercise)}
             setSelectedExercise={setSelectedExercise}
             source={source}
             loading={loading}
@@ -1532,7 +1421,7 @@ function Progress() {
             {chartsReady ? (
               <ExercisePrChart
                 exerciseOptions={normalizedProgress.exerciseOptions}
-                selectedExercise={selectedExercise}
+                selectedExercise={safeText(selectedExercise)}
                 onSelectExercise={setSelectedExercise}
                 timeline={normalizedProgress.selectedExerciseTimeline}
                 accentColor={chartAccentColor}
