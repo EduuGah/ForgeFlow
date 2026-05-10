@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
+  AlertTriangle,
   CalendarDays,
   Dumbbell,
   Flag,
@@ -113,8 +114,8 @@ function GoalTypeCard({ item, selected, onClick }) {
       onClick={onClick}
       className={
         selected
-          ? 'rounded-3xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] p-4 text-left shadow-[0_0_24px_var(--ff-accent-shadow)]'
-          : 'rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4 text-left transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-card-hover)]'
+          ? 'rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] p-3 text-left shadow-[0_0_24px_var(--ff-accent-shadow)] sm:rounded-3xl sm:p-4'
+          : 'rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3 text-left transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-card-hover)] sm:rounded-3xl sm:p-4'
       }
     >
       <div className="flex items-start justify-between gap-3">
@@ -154,6 +155,7 @@ function GoalFormModal({
   const [exerciseName, setExerciseName] = useState('')
   const [deadline, setDeadline] = useState('')
   const [customMode, setCustomMode] = useState(false)
+  const [validationModal, setValidationModal] = useState(null)
 
   const selectedConfig = useMemo(() => {
     return getGoalTypeConfig(type)
@@ -205,23 +207,30 @@ function GoalFormModal({
     }
   }
 
+  function showValidationModal(title, description) {
+    setValidationModal({
+      title,
+      description,
+    })
+  }
+
   function handleSubmit(event) {
     event.preventDefault()
 
     const parsedTarget = Number(targetValue)
 
     if (!title.trim()) {
-      alert('Informe um nome para a meta.')
+      showValidationModal('Nome obrigatório', 'Informe um nome para a meta antes de salvar.')
       return
     }
 
     if (!Number.isFinite(parsedTarget) || parsedTarget <= 0) {
-      alert('Informe um número válido no campo "Quero alcançar".')
+      showValidationModal('Valor alvo obrigatório', 'Informe um número válido no campo “Quero alcançar”.')
       return
     }
 
     if (type === 'exercise_pr_weight' && !exerciseName.trim()) {
-      alert('Informe o exercício da meta.')
+      showValidationModal('Exercício obrigatório', 'Escolha ou digite o exercício que será usado nessa meta.')
       return
     }
 
@@ -242,9 +251,9 @@ function GoalFormModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] shadow-2xl">
-        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[var(--ff-border)] bg-[var(--ff-card)] p-5">
+    <div className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/75 p-3 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="max-h-[92dvh] w-full max-w-4xl overflow-hidden rounded-t-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] shadow-2xl sm:rounded-[2rem]">
+        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[var(--ff-border)] bg-[var(--ff-card)] p-4 sm:p-5">
           <div>
             <p className="text-xs font-black uppercase tracking-wide text-[var(--ff-accent-text)]">
               {goal ? 'Editar meta' : 'Nova meta'}
@@ -269,8 +278,8 @@ function GoalFormModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5">
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
+        <form onSubmit={handleSubmit} className="max-h-[calc(92dvh-92px)] overflow-y-auto p-4 pb-28 sm:p-5 sm:pb-5">
+          <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
             <div className="space-y-5">
               <div>
                 <div className="mb-3 flex items-center gap-2">
@@ -280,7 +289,7 @@ function GoalFormModal({
                   </h3>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {GOAL_TYPES.map((item) => (
                     <GoalTypeCard
                       key={item.value}
@@ -467,7 +476,7 @@ function GoalFormModal({
             </aside>
           </div>
 
-          <div className="mt-6 grid grid-cols-1 gap-3 sm:flex sm:justify-end">
+          <div className="fixed inset-x-3 bottom-3 z-20 grid grid-cols-2 gap-3 rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 shadow-2xl shadow-black/30 sm:static sm:mt-6 sm:flex sm:justify-end sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">
             <Button
               type="button"
               variant="secondary"
@@ -483,6 +492,33 @@ function GoalFormModal({
           </div>
         </form>
       </div>
+    
+      {validationModal && (
+        <div className="fixed inset-0 z-[12000] flex items-end justify-center bg-black/80 p-3 backdrop-blur-md sm:items-center sm:p-4">
+          <div className="w-full max-w-md rounded-t-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] p-5 text-center shadow-2xl shadow-black/30 sm:rounded-[2rem] sm:p-6">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-yellow-500/25 bg-yellow-500/10 text-[var(--ff-warning-text)]">
+              <AlertTriangle size={27} />
+            </div>
+
+            <h3 className="mt-5 text-xl font-black text-[var(--ff-text)]">
+              {validationModal.title}
+            </h3>
+
+            <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-[var(--ff-muted)]">
+              {validationModal.description}
+            </p>
+
+            <button
+              type="button"
+              onClick={() => setValidationModal(null)}
+              className="mt-6 h-12 w-full rounded-2xl bg-[var(--ff-accent)] text-sm font-black text-white shadow-[0_0_18px_var(--ff-accent-shadow)] active:scale-[0.98]"
+            >
+              Entendi
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }

@@ -57,7 +57,107 @@ function normalizeSearchText(value) {
         .trim()
 }
 
+
+function MobileSectionTitle({ eyebrow, title, description, action }) {
+  return (
+    <div className="flex items-end justify-between gap-3">
+      <div className="min-w-0">
+        <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--ff-accent-text)]">
+          {eyebrow}
+        </p>
+        <h2 className="mt-1 text-xl font-black tracking-tight text-[var(--ff-text)]">
+          {title}
+        </h2>
+        {description && (
+          <p className="mt-1 text-sm leading-relaxed text-[var(--ff-muted)]">
+            {description}
+          </p>
+        )}
+      </div>
+      {action}
+    </div>
+  )
+}
+
+function MobileWorkoutCard({ workout, onStartWorkout, onEditWorkout, onDuplicateWorkout, onDeleteWorkout }) {
+  const exerciseCount = Array.isArray(workout?.exercises) ? workout.exercises.length : 0
+  const lastUsed = workout?.lastFinishedAt || workout?.lastStartedAt || workout?.updatedAt || workout?.createdAt
+
+  return (
+    <div className="rounded-[1.7rem] border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 shadow-[0_12px_30px_rgba(0,0,0,0.18)]">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="line-clamp-2 text-base font-black leading-tight text-[var(--ff-text)]">
+            {workout?.name || workout?.workoutName || 'Treino sem nome'}
+          </h3>
+
+          <p className="mt-1 text-xs leading-relaxed text-[var(--ff-muted)]">
+            {exerciseCount} exercício(s)
+            {workout?.estimatedDuration ? ` • ${workout.estimatedDuration} min` : ''}
+          </p>
+
+          {lastUsed && (
+            <p className="mt-1 text-[11px] text-[var(--ff-muted-2)]">
+              Último uso: {new Date(lastUsed).toLocaleDateString('pt-BR')}
+            </p>
+          )}
+        </div>
+
+        {workout?.isFavorite && (
+          <span className="shrink-0 rounded-full border border-yellow-500/25 bg-yellow-500/10 px-2.5 py-1 text-[10px] font-black text-yellow-300">
+            Favorito
+          </span>
+        )}
+      </div>
+
+      {workout?.description && (
+        <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-[var(--ff-muted)]">
+          {workout.description}
+        </p>
+      )}
+
+      <div className="mt-4 grid grid-cols-[1fr_auto] gap-2">
+        <button
+          type="button"
+          onClick={() => onStartWorkout?.(workout)}
+          className="flex h-11 items-center justify-center rounded-2xl bg-[var(--ff-accent)] px-4 text-sm font-black text-white shadow-[0_0_18px_var(--ff-accent-shadow)] transition active:scale-[0.98]"
+        >
+          Iniciar
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onEditWorkout?.(workout)}
+          className="flex h-11 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-sm font-black text-[var(--ff-text-soft)] transition active:scale-[0.98]"
+        >
+          Editar
+        </button>
+      </div>
+
+      <div className="mt-2 grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={() => onDuplicateWorkout?.(workout)}
+          className="h-10 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-xs font-bold text-[var(--ff-muted)] transition active:scale-[0.98]"
+        >
+          Duplicar
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onDeleteWorkout?.(workout)}
+          className="h-10 rounded-2xl border border-red-500/20 bg-red-500/10 text-xs font-bold text-[var(--ff-danger-text)] transition active:scale-[0.98]"
+        >
+          Excluir
+        </button>
+      </div>
+    </div>
+  )
+}
+
+
 function Workouts() {
+  const [mobileWorkoutTab, setMobileWorkoutTab] = useState('all')
     const [workouts, setWorkouts] = useState([])
     const [exercises, setExercises] = useState([])
     const [history, setHistory] = useState([])
@@ -1856,7 +1956,8 @@ function Workouts() {
 
     return (
         <>
-            <PageHeader
+            <div className="hidden lg:block">
+        <PageHeader
                 title="Treinos"
                 description="Monte treinos, organize exercícios e inicie seus treinos salvos."
                 action={
@@ -1878,6 +1979,190 @@ function Workouts() {
                     </div>
                 }
             />
+      </div>
+
+
+      <section className="lg:hidden">
+        <div className="space-y-5">
+          <div className="overflow-hidden rounded-[2rem] border border-[var(--ff-accent-border)]/25 bg-gradient-to-br from-[var(--ff-accent-soft)]/25 via-[var(--ff-card)] to-[var(--ff-surface-2)] p-5 shadow-[0_18px_44px_rgba(0,0,0,0.24)]">
+            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[var(--ff-accent-text)]">
+              Meus treinos
+            </p>
+
+            <h1 className="mt-3 text-3xl font-black leading-tight tracking-tight text-[var(--ff-text)]">
+              Escolha o treino e comece rápido
+            </h1>
+
+            <p className="mt-2 text-sm leading-relaxed text-[var(--ff-muted)]">
+              No celular, a tela prioriza iniciar, editar e encontrar treinos com poucos toques.
+            </p>
+
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof setWorkoutModalOpen === 'function') setWorkoutModalOpen(true)
+                  else if (typeof handleCreateWorkout === 'function') handleCreateWorkout()
+                }}
+                className="flex h-12 items-center justify-center rounded-2xl bg-[var(--ff-accent)] px-4 text-sm font-black text-white shadow-[0_0_18px_var(--ff-accent-shadow)] active:scale-[0.98]"
+              >
+                Novo treino
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof setTemplateModalOpen === 'function') setTemplateModalOpen(true)
+                  else if (typeof handleCreateTemplate === 'function') handleCreateTemplate()
+                }}
+                className="flex h-12 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-sm font-black text-[var(--ff-text-soft)] active:scale-[0.98]"
+              >
+                Template
+              </button>
+            </div>
+          </div>
+
+          <div className="sticky top-[72px] z-20 -mx-4 border-y border-[var(--ff-border)] bg-[var(--ff-bg)]/95 px-4 py-3 backdrop-blur-xl">
+            <div className="flex h-12 items-center gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-[var(--ff-muted)]">
+              <input
+                type="search"
+                placeholder="Buscar treino..."
+                value={quickSearch}
+                onChange={(event) => setQuickSearch(event.target.value)}
+                className="w-full bg-transparent text-sm font-medium text-[var(--ff-text)] outline-none placeholder:text-[var(--ff-muted)]"
+              />
+            </div>
+
+            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+              {[
+                ['Todos', 'all'],
+                ['Favoritos', 'favorites'],
+                ['Recentes', 'recent'],
+                ['Templates', 'templates'],
+              ].map(([label, value]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => {
+                    if (typeof setMobileWorkoutTab === 'function') setMobileWorkoutTab(value)
+                  }}
+                  className="shrink-0 rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 py-2 text-xs font-black text-[var(--ff-text-soft)]"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <section className="grid grid-cols-3 gap-3">
+            <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 text-center">
+              <p className="text-xl font-black text-[var(--ff-text)]">
+                {Array.isArray(workouts) ? workouts.length : 0}
+              </p>
+              <p className="mt-1 text-[11px] text-[var(--ff-muted)]">Treinos</p>
+            </div>
+
+            <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 text-center">
+              <p className="text-xl font-black text-yellow-300">
+                {Array.isArray(workouts) ? workouts.filter((item) => item?.isFavorite).length : 0}
+              </p>
+              <p className="mt-1 text-[11px] text-[var(--ff-muted)]">Favoritos</p>
+            </div>
+
+            <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 text-center">
+              <p className="text-xl font-black text-[var(--ff-accent-text)]">
+                {Array.isArray(workoutTemplates) ? workoutTemplates.length : 0}
+              </p>
+              <p className="mt-1 text-[11px] text-[var(--ff-muted)]">Templates</p>
+            </div>
+          </section>
+
+          <section className="space-y-3">
+            <MobileSectionTitle
+              eyebrow="Biblioteca"
+              title="Treinos salvos"
+              description="Cards compactos para iniciar ou editar sem abrir menus longos."
+            />
+
+            <div className="space-y-3">
+              {visibleWorkouts
+                .map((workout) => (
+                  <MobileWorkoutCard
+                    key={workout.id || workout._id || workout.name}
+                    workout={workout}
+                    onStartWorkout={typeof handleStartWorkout === 'function' ? handleStartWorkout : undefined}
+                    onEditWorkout={typeof handleEditWorkout === 'function' ? handleEditWorkout : undefined}
+                    onDuplicateWorkout={typeof handleDuplicateWorkout === 'function' ? handleDuplicateWorkout : undefined}
+                    onDeleteWorkout={typeof handleDeleteWorkout === 'function' ? handleDeleteWorkout : undefined}
+                  />
+                ))}
+
+              {(Array.isArray(filteredWorkouts) ? filteredWorkouts : Array.isArray(workouts) ? workouts : []).length === 0 && (
+                <Card className="p-4">
+                  <EmptyState
+                    title="Nenhum treino encontrado"
+                    description="Crie um treino ou limpe os filtros para começar."
+                  />
+                </Card>
+              )}
+
+              {filteredWorkouts.length > visibleWorkouts.length && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAllWorkouts(true)
+                  }}
+                  className="h-12 w-full rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-sm font-black text-[var(--ff-text-soft)]"
+                >
+                  Carregar mais treinos
+                </button>
+              )}
+            </div>
+          </section>
+
+          {Array.isArray(workoutTemplates) && workoutTemplates.length > 0 && (
+            <section className="space-y-3">
+              <MobileSectionTitle
+                eyebrow="Templates"
+                title="Começar por modelo"
+                description="Use um modelo pronto para montar uma rotina mais rápido."
+              />
+
+              <div className="-mx-4 overflow-x-auto px-4 pb-1">
+                <div className="flex gap-3">
+                  {workoutTemplates.slice(0, 8).map((template) => (
+                    <div
+                      key={template.id || template._id || template.name}
+                      className="min-w-[230px] rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4"
+                    >
+                      <p className="line-clamp-2 text-sm font-black text-[var(--ff-text)]">
+                        {template.name}
+                      </p>
+
+                      <p className="mt-2 line-clamp-2 text-xs text-[var(--ff-muted)]">
+                        {template.description || template.category || 'Template de treino'}
+                      </p>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleCreateWorkoutFromTemplate(template)
+                        }}
+                        className="mt-4 h-10 w-full rounded-2xl bg-[var(--ff-accent)] text-xs font-black text-white"
+                      >
+                        Usar modelo
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+        </div>
+      </section>
+
+
+      <div className="hidden lg:block">
 
             <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <Card className="p-4">
@@ -3275,6 +3560,8 @@ function Workouts() {
                     </div>
                 </div>
             )}
+
+      </div>
 
             <ConfirmModal
                 open={Boolean(confirmModal)}

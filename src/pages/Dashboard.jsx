@@ -956,7 +956,8 @@ function Dashboard() {
 
   return (
     <>
-      <PageHeader
+      <div className="hidden lg:block">
+        <PageHeader
         title="Dashboard"
         description={
           dashboardSource === 'database'
@@ -985,11 +986,450 @@ function Dashboard() {
           </div>
         }
       />
+      </div>
 
+
+      <section className="lg:hidden">
+        <div className="space-y-5">
+          <div className="overflow-hidden rounded-[2rem] border border-[var(--ff-accent-border)]/25 bg-gradient-to-br from-[var(--ff-accent-soft)]/25 via-[var(--ff-card)] to-[var(--ff-surface-2)] p-5 shadow-[0_18px_44px_rgba(0,0,0,0.25)]">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <Badge variant={dashboardSource === 'database' ? 'purple' : 'default'}>
+                  {loadingDashboard
+                    ? 'Carregando'
+                    : dashboardSource === 'database'
+                      ? 'Sincronizado'
+                      : 'Local'}
+                </Badge>
+
+                <h1 className="mt-4 text-3xl font-black leading-tight tracking-tight text-[var(--ff-text)]">
+                  {profile?.name
+                    ? `Olá, ${profile.name.split(' ')[0]}`
+                    : 'Seu treino de hoje'}
+                </h1>
+
+                <p className="mt-2 text-sm leading-relaxed text-[var(--ff-muted)]">
+                  Resumo rápido para você decidir o próximo passo sem se perder em gráficos.
+                </p>
+              </div>
+
+              <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]">
+                {profile?.avatarUrl ? (
+                  <img
+                    src={profile.avatarUrl}
+                    alt={profile?.name || 'Perfil'}
+                    className="h-full w-full object-cover"
+                    loading="eager"
+                    decoding="async"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-xl font-black text-[var(--ff-accent-text)]">
+                    {(profile?.name || 'F').charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-3">
+              <Link to="/workouts">
+                <Button className="h-12 w-full">
+                  <Play size={17} />
+                  Treinar
+                </Button>
+              </Link>
+
+              <Link to="/progress">
+                <Button variant="secondary" className="h-12 w-full">
+                  <TrendingUp size={17} />
+                  Evolução
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          <nav className="sticky top-[72px] z-20 -mx-4 border-y border-[var(--ff-border)] bg-[var(--ff-bg)]/95 px-4 py-3 backdrop-blur-xl">
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {[
+                ['Resumo', '#mobile-dashboard-summary'],
+                ['Hoje', '#mobile-dashboard-today'],
+                ['Metas', '#mobile-dashboard-goals'],
+                ['Progresso', '#mobile-dashboard-progress'],
+                ['PRs', '#mobile-dashboard-prs'],
+                ['Alertas', '#mobile-dashboard-alerts'],
+              ].map(([label, href]) => (
+                <a
+                  key={label}
+                  href={href}
+                  className="shrink-0 rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 py-2 text-xs font-black text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)]"
+                >
+                  {label}
+                </a>
+              ))}
+            </div>
+          </nav>
+
+          <section id="mobile-dashboard-summary" className="scroll-mt-32">
+            <div className="-mx-4 overflow-x-auto px-4 pb-1">
+              <div className="flex gap-3">
+                <div className="min-w-[145px] rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
+                  <p className="text-xs text-[var(--ff-muted)]">Treinos</p>
+                  <p className="mt-2 text-2xl font-black text-[var(--ff-text)]">{history.length}</p>
+                  <p className="mt-1 text-xs text-[var(--ff-muted)]">finalizados</p>
+                </div>
+
+                <div className="min-w-[145px] rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
+                  <p className="text-xs text-[var(--ff-muted)]">Volume</p>
+                  <p className="mt-2 text-xl font-black text-[var(--ff-accent-text)]">{formatVolume(totalVolume)}</p>
+                  <p className="mt-1 text-xs text-[var(--ff-muted)]">total</p>
+                </div>
+
+                <div className="min-w-[145px] rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
+                  <p className="text-xs text-[var(--ff-muted)]">PRs</p>
+                  <p className="mt-2 text-2xl font-black text-yellow-300">{prCount}</p>
+                  <p className="mt-1 text-xs text-[var(--ff-muted)]">recordes</p>
+                </div>
+
+                <div className="min-w-[145px] rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
+                  <p className="text-xs text-[var(--ff-muted)]">Streak</p>
+                  <p className="mt-2 text-2xl font-black text-emerald-300">{consistencyStats.currentStreak || currentStreak}</p>
+                  <p className="mt-1 text-xs text-[var(--ff-muted)]">dia(s)</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="mobile-dashboard-today" className="scroll-mt-32 space-y-3">
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--ff-accent-text)]">
+                  Hoje
+                </p>
+                <h2 className="text-xl font-black text-[var(--ff-text)]">
+                  Próximo passo
+                </h2>
+              </div>
+
+              <Link
+                to="/workouts"
+                className="text-xs font-black text-[var(--ff-accent-text)]"
+              >
+                Ver treinos
+              </Link>
+            </div>
+
+            <Card className="p-4">
+              {recentWorkouts[0] ? (
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-xs text-[var(--ff-muted)]">
+                        Sugestão rápida
+                      </p>
+
+                      <h3 className="mt-1 line-clamp-2 text-lg font-black text-[var(--ff-text)]">
+                        {recentWorkouts[0].name}
+                      </h3>
+
+                      <p className="mt-1 text-xs text-[var(--ff-muted)]">
+                        {recentWorkouts[0].exercises?.length || 0} exercício(s)
+                        {recentWorkouts[0].lastStartedAt
+                          ? ` • usado em ${formatShortDate(recentWorkouts[0].lastStartedAt)}`
+                          : ''}
+                      </p>
+                    </div>
+
+                    {recentWorkouts[0].isFavorite && (
+                      <Badge>Favorito</Badge>
+                    )}
+                  </div>
+
+                  <Button
+                    type="button"
+                    onClick={() => handleStartWorkout(recentWorkouts[0])}
+                    className="w-full"
+                  >
+                    <Play size={17} />
+                    Iniciar agora
+                  </Button>
+                </div>
+              ) : (
+                <EmptyState
+                  title="Nenhum treino salvo"
+                  description="Crie seu primeiro treino para ele aparecer aqui como ação rápida."
+                  action={
+                    <Link to="/workouts">
+                      <Button>Criar treino</Button>
+                    </Link>
+                  }
+                />
+              )}
+            </Card>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Link
+                to="/history"
+                className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4"
+              >
+                <CalendarDays size={20} className="text-[var(--ff-accent-text)]" />
+                <p className="mt-3 text-sm font-black text-[var(--ff-text)]">
+                  Último treino
+                </p>
+                <p className="mt-1 line-clamp-2 text-xs text-[var(--ff-muted)]">
+                  {lastSession ? `${lastSession.workoutName} • ${formatShortDate(lastSession.finishedAt)}` : 'Sem histórico'}
+                </p>
+              </Link>
+
+              <Link
+                to="/profile"
+                className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4"
+              >
+                <Weight size={20} className="text-[var(--ff-accent-text)]" />
+                <p className="mt-3 text-sm font-black text-[var(--ff-text)]">
+                  Peso atual
+                </p>
+                <p className="mt-1 text-xs text-[var(--ff-muted)]">
+                  {currentWeight ? `${currentWeight}kg` : 'Adicionar peso'}
+                </p>
+              </Link>
+            </div>
+          </section>
+
+          <section id="mobile-dashboard-goals" className="scroll-mt-32 space-y-3">
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--ff-accent-text)]">
+                  Metas
+                </p>
+                <h2 className="text-xl font-black text-[var(--ff-text)]">
+                  Objetivos ativos
+                </h2>
+              </div>
+
+              <Link
+                to="/goals"
+                className="text-xs font-black text-[var(--ff-accent-text)]"
+              >
+                Ver todas
+              </Link>
+            </div>
+
+            <div className="space-y-3">
+              {dashboardGoals.length === 0 ? (
+                <Card className="p-4">
+                  <EmptyState
+                    title="Sem metas"
+                    description="Crie metas para acompanhar treinos, fotos, PRs e volume."
+                    action={
+                      <Link to="/goals">
+                        <Button>Criar meta</Button>
+                      </Link>
+                    }
+                  />
+                </Card>
+              ) : (
+                dashboardGoals.map((goal) => (
+                  <Link
+                    key={goal.id || goal._id}
+                    to="/goals"
+                    className="block rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 active:scale-[0.98]"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="line-clamp-1 font-black text-[var(--ff-text)]">
+                          {goal.title}
+                        </p>
+                        <p className="mt-1 text-xs text-[var(--ff-muted)]">
+                          {goal.currentValue || 0}/{goal.targetValue || 0} {goal.unit || ''}
+                        </p>
+                      </div>
+
+                      <Badge>{Math.round(goal.progressPercent || 0)}%</Badge>
+                    </div>
+
+                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--ff-surface-2)]">
+                      <div
+                        className="h-full rounded-full bg-[var(--ff-accent)]"
+                        style={{ width: `${Math.min(100, Math.max(0, Number(goal.progressPercent || 0)))}%` }}
+                      />
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
+          </section>
+
+          <section id="mobile-dashboard-progress" className="scroll-mt-32 space-y-3">
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--ff-accent-text)]">
+                Progresso
+              </p>
+              <h2 className="text-xl font-black text-[var(--ff-text)]">
+                Leitura rápida
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Card className="p-4">
+                <Flame size={21} className="text-orange-300" />
+                <p className="mt-3 text-xs text-[var(--ff-muted)]">Volume médio</p>
+                <p className="mt-1 text-lg font-black text-[var(--ff-text)]">
+                  {formatVolume(averageVolume)}
+                </p>
+              </Card>
+
+              <Card className="p-4">
+                <Activity size={21} className="text-emerald-300" />
+                <p className="mt-3 text-xs text-[var(--ff-muted)]">Duração média</p>
+                <p className="mt-1 text-lg font-black text-[var(--ff-text)]">
+                  {formatDuration(averageDuration)}
+                </p>
+              </Card>
+
+              <Card className="col-span-2 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs text-[var(--ff-muted)]">
+                      Grupo mais treinado
+                    </p>
+                    <p className="mt-1 text-lg font-black text-[var(--ff-text)]">
+                      {strongestMuscleGroup?.group || 'Sem dados'}
+                    </p>
+                  </div>
+
+                  <Badge>{strongestMuscleGroup?.total || 0} séries</Badge>
+                </div>
+              </Card>
+            </div>
+          </section>
+
+          <section id="mobile-dashboard-prs" className="scroll-mt-32 space-y-3">
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--ff-accent-text)]">
+                  PRs
+                </p>
+                <h2 className="text-xl font-black text-[var(--ff-text)]">
+                  Recordes recentes
+                </h2>
+              </div>
+
+              <Link
+                to="/progress"
+                className="text-xs font-black text-[var(--ff-accent-text)]"
+              >
+                Ver evolução
+              </Link>
+            </div>
+
+            <div className="space-y-3">
+              {recentPRs.length === 0 ? (
+                <Card className="p-4">
+                  <EmptyState
+                    title="Sem PRs recentes"
+                    description="Finalize treinos com cargas para gerar recordes."
+                  />
+                </Card>
+              ) : (
+                recentPRs.map((pr) => (
+                  <div
+                    key={`${pr.exerciseName}-${pr.date}-${pr.setNumber}`}
+                    className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="line-clamp-1 font-black text-[var(--ff-text)]">
+                          {pr.exerciseName}
+                        </p>
+                        <p className="mt-1 text-xs text-[var(--ff-muted)]">
+                          {pr.muscleGroup || 'Sem grupo'} • {formatShortDate(pr.date)}
+                        </p>
+                        <p className="mt-1 line-clamp-1 text-xs text-[var(--ff-muted)]">
+                          {pr.workoutName || 'Treino'} • Série {pr.setNumber || '-'}
+                        </p>
+                      </div>
+
+                      <Badge>
+                        {pr.isWeightPR && pr.isVolumePR
+                          ? 'Peso + Volume'
+                          : pr.isWeightPR
+                            ? 'Peso PR'
+                            : pr.isVolumePR
+                              ? 'Volume PR'
+                              : 'PR'}
+                      </Badge>
+                    </div>
+
+                    <p className="mt-3 text-lg font-black text-[var(--ff-accent-text)]">
+                      {pr.weight}kg × {pr.reps}
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+
+          <section id="mobile-dashboard-alerts" className="scroll-mt-32 space-y-3">
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--ff-accent-text)]">
+                  Alertas
+                </p>
+                <h2 className="text-xl font-black text-[var(--ff-text)]">
+                  Notificações
+                </h2>
+              </div>
+
+              <Link
+                to="/notifications"
+                className="text-xs font-black text-[var(--ff-accent-text)]"
+              >
+                Abrir central
+              </Link>
+            </div>
+
+            <div className="space-y-3">
+              {dashboardNotifications.length === 0 ? (
+                <Card className="p-4">
+                  <EmptyState
+                    title="Tudo em dia"
+                    description="Nenhuma notificação importante agora."
+                  />
+                </Card>
+              ) : (
+                dashboardNotifications.map((notification) => (
+                  <Link
+                    key={notification.id || notification._id}
+                    to={notification.actionUrl || '/notifications'}
+                    className="block rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">
+                        <Bell size={18} />
+                      </div>
+
+                      <div className="min-w-0">
+                        <p className="line-clamp-1 font-black text-[var(--ff-text)]">
+                          {notification.title}
+                        </p>
+                        <p className="mt-1 line-clamp-2 text-xs text-[var(--ff-muted)]">
+                          {notification.message || 'Toque para ver detalhes.'}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
+          </section>
+        </div>
+      </section>
+
+
+      <div className="hidden lg:block">
 
       <nav className="mb-6 rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 shadow-[0_14px_34px_rgba(0,0,0,0.18)]">
         <p className="px-2 pb-2 text-xs font-black uppercase tracking-wide text-[var(--ff-muted)]">
-          Mapa rápido
+          Mapa rápido do Dashboard
         </p>
 
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
@@ -2601,6 +3041,7 @@ function Dashboard() {
           </div>
         </Card>
       </section>
+      </div>
     </>
   )
 }
