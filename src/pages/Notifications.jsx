@@ -19,7 +19,6 @@ import {
   Trash2,
   Weight,
   X,
-,
   Trophy,
   AlertTriangle,
   AlertCircle} from 'lucide-react'
