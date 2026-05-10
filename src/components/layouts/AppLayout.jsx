@@ -42,6 +42,13 @@ function runWhenBrowserIsIdle(callback) {
 }
 
 function AppLayout() {
+  useEffect(() => {
+    document.body.style.overflow = ''
+    document.documentElement.style.overflow = ''
+
+    window.dispatchEvent(new CustomEvent('forgeflow:reset-scroll-lock'))
+  }, [])
+
   const { user } = useAuth()
   const { activeSession } = useWorkoutSession()
 
@@ -155,16 +162,19 @@ function AppLayout() {
   }, [])
 
   useEffect(() => {
-    if (isSidebarOpen || popupNotification) {
+    if (isSidebarOpen) {
       document.body.style.overflow = 'hidden'
+      document.documentElement.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
     }
 
     return () => {
       document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
     }
-  }, [isSidebarOpen, popupNotification])
+  }, [isSidebarOpen])
 
   return (
     <div className="min-h-screen bg-[var(--ff-bg)] text-[var(--ff-text)] transition-colors duration-300">
