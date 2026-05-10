@@ -16,8 +16,8 @@ import {
   Trophy,
   UserRound,
   Weight,
-  X,
-} from 'lucide-react'
+  X,,
+  TrendingUp} from 'lucide-react'
 import {
   Bar,
   BarChart,

@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'forgeflow-pwa-v1'
+const CACHE_VERSION = 'forgeflow-pwa-v2'
 const STATIC_CACHE = `${CACHE_VERSION}-static`
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`
 
@@ -34,6 +34,24 @@ self.addEventListener('activate', (event) => {
   )
 })
 
+function isCacheableRequest(request) {
+  try {
+    const url = new URL(request.url)
+
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      return false
+    }
+
+    if (url.origin !== self.location.origin) {
+      return false
+    }
+
+    return true
+  } catch {
+    return false
+  }
+}
+
 function isApiRequest(request) {
   try {
     const url = new URL(request.url)
@@ -59,12 +77,16 @@ async function networkFirst(request) {
   try {
     const freshResponse = await fetch(request)
 
-    const cache = await caches.open(RUNTIME_CACHE)
-    cache.put(request, freshResponse.clone())
+    if (isCacheableRequest(request) && freshResponse?.ok) {
+      const cache = await caches.open(RUNTIME_CACHE)
+      await cache.put(request, freshResponse.clone())
+    }
 
     return freshResponse
   } catch {
-    const cachedResponse = await caches.match(request)
+    const cachedResponse = isCacheableRequest(request)
+      ? await caches.match(request)
+      : null
 
     if (cachedResponse) return cachedResponse
 
@@ -77,12 +99,19 @@ async function networkFirst(request) {
 }
 
 async function staleWhileRevalidate(request) {
+  if (!isCacheableRequest(request)) {
+    return fetch(request)
+  }
+
   const cache = await caches.open(RUNTIME_CACHE)
   const cachedResponse = await cache.match(request)
 
   const fetchPromise = fetch(request)
     .then((networkResponse) => {
-      cache.put(request, networkResponse.clone())
+      if (networkResponse?.ok) {
+        cache.put(request, networkResponse.clone())
+      }
+
       return networkResponse
     })
     .catch(() => cachedResponse)
@@ -94,10 +123,8 @@ self.addEventListener('fetch', (event) => {
   const { request } = event
 
   if (request.method !== 'GET') return
-
-  if (isApiRequest(request)) {
-    return
-  }
+  if (!isCacheableRequest(request)) return
+  if (isApiRequest(request)) return
 
   if (request.mode === 'navigate') {
     event.respondWith(networkFirst(request))
