@@ -244,6 +244,8 @@ function Profile() {
     return getMostTrainedExercise(completedSets)
   }, [completedSets])
 
+  const exercisePRs = prs
+
   const totalSets = completedSets.length
   const totalWorkouts = history.length
 
@@ -566,7 +568,7 @@ function Profile() {
 
               <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 text-center">
                 <p className="text-xl font-black text-yellow-300">
-                  {exercisePRs.length}
+                  {prs.length}
                 </p>
                 <p className="mt-1 text-[11px] text-[var(--ff-muted)]">PRs</p>
               </div>
