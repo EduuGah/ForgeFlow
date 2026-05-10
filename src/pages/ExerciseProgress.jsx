@@ -412,6 +412,16 @@ function formatChartTick(value) {
 
 return (
   <>
+
+  <section className="lg:hidden">
+    <div className="space-y-5">
+      <div className="overflow-hidden rounded-[2rem] border border-[var(--ff-accent-border)]/25 bg-gradient-to-br from-[var(--ff-accent-soft)]/25 via-[var(--ff-card)] to-[var(--ff-surface-2)] p-5 shadow-[0_18px_44px_rgba(0,0,0,0.24)]"><Badge variant="purple">{exerciseLibrary.length} exercícios</Badge><h1 className="mt-4 text-3xl font-black leading-tight tracking-tight text-[var(--ff-text)]">Por exercício</h1><p className="mt-2 text-sm leading-relaxed text-[var(--ff-muted)]">Escolha um exercício e veja carga, volume e séries em cards rápidos.</p></div>
+      <div className="sticky top-[72px] z-20 -mx-4 border-y border-[var(--ff-border)] bg-[var(--ff-bg)]/95 px-4 py-3 backdrop-blur-xl"><div className="flex h-12 items-center gap-3 rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-zinc-400"><Search size={18}/><input type="search" placeholder="Buscar exercício..." value={search} onChange={(event)=>setSearch(event.target.value)} className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-500" />{search && <button type="button" onClick={()=>setSearch('')}><X size={16}/></button>}</div><div className="mt-3 flex gap-2 overflow-x-auto pb-1"><select value={groupFilter} onChange={(event)=>setGroupFilter(event.target.value)} className="h-10 shrink-0 rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 text-xs font-black text-[var(--ff-text)]"><option value="">Todos</option>{muscleGroups.map((group)=><option key={group} value={group}>{group}</option>)}</select><select value={sortMode} onChange={(event)=>setSortMode(event.target.value)} className="h-10 shrink-0 rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 text-xs font-black text-[var(--ff-text)]"><option value="mostSets">Mais séries</option><option value="bestWeight">Maior peso</option><option value="bestVolume">Maior volume</option><option value="name">Nome</option></select></div></div>
+      {!selectedExerciseData ? <section className="grid grid-cols-2 gap-3">{filteredExercises.slice(0,24).map((exercise)=><button key={exercise.name} type="button" onClick={()=>setSelectedExercise(exercise.name)} className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 text-left active:scale-[0.98]"><p className="line-clamp-2 text-sm font-black text-[var(--ff-text)]">{exercise.name}</p><p className="mt-2 text-[11px] text-[var(--ff-muted)]">{exercise.muscleGroup || 'Sem grupo'}</p><p className="mt-2 text-xs font-black text-[var(--ff-accent-text)]">{exercise.setsCount || 0} séries</p></button>)}</section> : <section className="space-y-4"><button type="button" onClick={()=>setSelectedExercise('')} className="text-xs font-black text-[var(--ff-accent-text)]">← trocar exercício</button><Card className="p-4"><h2 className="text-xl font-black text-[var(--ff-text)]">{selectedExercise}</h2><p className="mt-1 text-sm text-[var(--ff-muted)]">{selectedExerciseData.muscleGroup || 'Sem grupo'}</p><div className="mt-4 grid grid-cols-2 gap-3"><div className="rounded-2xl bg-[var(--ff-surface-2)] p-3"><p className="text-[11px] text-[var(--ff-muted)]">Melhor peso</p><p className="mt-1 text-lg font-black text-[var(--ff-accent-text)]">{bestWeight}kg</p></div><div className="rounded-2xl bg-[var(--ff-surface-2)] p-3"><p className="text-[11px] text-[var(--ff-muted)]">Melhor volume</p><p className="mt-1 text-lg font-black text-orange-300">{bestVolume}kg</p></div><div className="rounded-2xl bg-[var(--ff-surface-2)] p-3"><p className="text-[11px] text-[var(--ff-muted)]">Reps</p><p className="mt-1 text-lg font-black">{bestReps}</p></div><div className="rounded-2xl bg-[var(--ff-surface-2)] p-3"><p className="text-[11px] text-[var(--ff-muted)]">Volume total</p><p className="mt-1 text-lg font-black">{totalVolume}kg</p></div></div></Card><Card className="p-4"><h3 className="font-black text-[var(--ff-text)]">Séries recentes</h3><div className="mt-3 max-h-[420px] space-y-2 overflow-y-auto">{chartData.slice().reverse().slice(0,20).map((row,index)=><div key={`${row.date}-${index}`} className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3"><p className="text-xs text-[var(--ff-muted)]">{formatLongDate(row.date)}</p><p className="mt-1 text-sm font-black text-[var(--ff-text)]">{row.weight}kg × {row.reps} • {row.volume}kg</p></div>)}</div></Card></section>}
+    </div>
+  </section>
+
+  <div className="hidden lg:block">
     <PageHeader
       title="Evolução"
       description="Acompanhe a progressão de carga, repetições e volume por exercício."
@@ -880,7 +890,8 @@ return (
         )}
       </div>
     </section>
-  </>
+    </div>
+</>
 )
 }
 

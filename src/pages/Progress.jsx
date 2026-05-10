@@ -923,6 +923,326 @@ function BodyWeightLog({ data = [] }) {
   )
 }
 
+
+function MobileProgressStat({ icon: Icon, label, value, description }) {
+  return (
+    <div className="min-w-[150px] rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 shadow-[0_10px_28px_rgba(0,0,0,0.18)]">
+      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">
+        <Icon size={20} />
+      </div>
+
+      <p className="mt-3 text-xs font-bold text-[var(--ff-muted)]">
+        {label}
+      </p>
+
+      <p className="mt-1 text-xl font-black leading-tight text-[var(--ff-text)]">
+        {value}
+      </p>
+
+      {description && (
+        <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-[var(--ff-muted)]">
+          {description}
+        </p>
+      )}
+    </div>
+  )
+}
+
+function MobileProgressSection({ eyebrow, title, action, children }) {
+  return (
+    <section className="space-y-3">
+      <div className="flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--ff-accent-text)]">
+            {eyebrow}
+          </p>
+          <h2 className="mt-1 text-xl font-black tracking-tight text-[var(--ff-text)]">
+            {title}
+          </h2>
+        </div>
+        {action}
+      </div>
+
+      {children}
+    </section>
+  )
+}
+
+function MobileRecentWorkoutCard({ workout }) {
+  if (!workout) return null
+
+  const sets = getSessionSets(workout).filter((row) => row.isValid)
+  const volume = sets.reduce((total, row) => total + Number(row.volume || 0), 0)
+
+  return (
+    <Link
+      to="/history"
+      className="block rounded-[1.7rem] border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 shadow-[0_12px_30px_rgba(0,0,0,0.18)] active:scale-[0.98]"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="line-clamp-1 text-base font-black text-[var(--ff-text)]">
+            {workout.workoutName || workout.name || 'Treino'}
+          </p>
+          <p className="mt-1 text-xs text-[var(--ff-muted)]">
+            {formatLongDate(getSessionDate(workout))}
+          </p>
+        </div>
+
+        <Badge>{sets.length} séries</Badge>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
+          <p className="text-[11px] text-[var(--ff-muted)]">Volume</p>
+          <p className="mt-1 text-sm font-black text-[var(--ff-warning-text)]">{formatVolume(volume)}</p>
+        </div>
+
+        <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
+          <p className="text-[11px] text-[var(--ff-muted)]">Duração</p>
+          <p className="mt-1 text-sm font-black text-[var(--ff-text)]">{formatDuration(workout.durationSeconds || workout.duration || 0)}</p>
+        </div>
+      </div>
+    </Link>
+  )
+}
+
+function MobileProgressHome({
+  normalizedProgress,
+  recentSetRows,
+  recentSetSummary,
+  selectedExercise,
+  setSelectedExercise,
+  source,
+  loading,
+  syncing,
+  onRefresh,
+}) {
+  const summary = normalizedProgress.summary || {}
+  const insights = normalizedProgress.insights || {}
+  const bestWeightPr = insights.bestWeightPr || null
+  const bestVolumePr = insights.bestVolumePr || null
+  const exerciseOptions = normalizedProgress.exerciseOptions || []
+  const progressPhotos = normalizedProgress.progressPhotos || []
+  const recentWorkouts = normalizedProgress.recentWorkouts || []
+
+  return (
+    <section className="lg:hidden">
+      <div className="space-y-5">
+        <div className="overflow-hidden rounded-[2rem] border border-[var(--ff-accent-border)]/25 bg-gradient-to-br from-[var(--ff-accent-soft)]/25 via-[var(--ff-card)] to-[var(--ff-surface-2)] p-5 shadow-[0_18px_44px_rgba(0,0,0,0.24)]">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <Badge variant={source === 'database' ? 'purple' : 'default'}>
+                {loading || syncing ? 'Sincronizando' : source === 'database' ? 'Sincronizado' : 'Local'}
+              </Badge>
+
+              <h1 className="mt-4 text-3xl font-black leading-tight tracking-tight text-[var(--ff-text)]">
+                Evolução
+              </h1>
+
+              <p className="mt-2 text-sm leading-relaxed text-[var(--ff-muted)]">
+                Versão mobile focada em leitura rápida: resumo, PRs, séries recentes, fotos e próximos detalhes.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={onRefresh}
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-text-soft)] active:scale-95"
+              aria-label="Atualizar evolução"
+            >
+              <RefreshCcw size={20} />
+            </button>
+          </div>
+
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <Link to="/workouts">
+              <Button className="h-12 w-full">
+                <Dumbbell size={17} />
+                Treinar
+              </Button>
+            </Link>
+            <Link to="/progress-photos">
+              <Button variant="secondary" className="h-12 w-full">
+                <Camera size={17} />
+                Fotos
+              </Button>
+            </Link>
+          </div>
+        </div>
+
+        <nav className="sticky top-[72px] z-20 -mx-4 border-y border-[var(--ff-border)] bg-[var(--ff-bg)]/95 px-4 py-3 backdrop-blur-xl">
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {[
+              ['Resumo', '#progress-mobile-summary'],
+              ['PRs', '#progress-mobile-prs'],
+              ['Séries', '#progress-mobile-sets'],
+              ['Treinos', '#progress-mobile-workouts'],
+              ['Fotos', '#progress-mobile-photos'],
+              ['Exercício', '#progress-mobile-exercise'],
+            ].map(([label, href]) => (
+              <a
+                key={label}
+                href={href}
+                className="shrink-0 rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 py-2 text-xs font-black text-[var(--ff-text-soft)]"
+              >
+                {label}
+              </a>
+            ))}
+          </div>
+        </nav>
+
+        <section id="progress-mobile-summary" className="scroll-mt-32">
+          <div className="-mx-4 overflow-x-auto px-4 pb-1">
+            <div className="flex gap-3">
+              <MobileProgressStat
+                icon={Dumbbell}
+                label="Treinos"
+                value={summary.totalFinishedWorkouts || 0}
+                description="finalizados"
+              />
+              <MobileProgressStat
+                icon={Flame}
+                label="Volume"
+                value={formatVolume(summary.totalVolume || 0)}
+                description="total registrado"
+              />
+              <MobileProgressStat
+                icon={Timer}
+                label="Duração média"
+                value={formatDuration(summary.averageDurationSeconds || 0)}
+                description="por treino"
+              />
+              <MobileProgressStat
+                icon={Trophy}
+                label="PRs"
+                value={summary.totalPrs || summary.totalPRs || exerciseOptions.length || 0}
+                description="recordes acompanhados"
+              />
+            </div>
+          </div>
+        </section>
+
+        <MobileProgressSection
+          eyebrow="Leitura rápida"
+          title="O que os dados dizem"
+          action={<Link to="/history" className="text-xs font-black text-[var(--ff-accent-text)]">Histórico</Link>}
+        >
+          <Card className="p-4">
+            <div className="space-y-3 text-sm leading-relaxed text-[var(--ff-muted)]">
+              <p>
+                Você tem <strong className="text-[var(--ff-text)]">{summary.totalFinishedWorkouts || 0}</strong> treino(s) finalizado(s), com volume total de{' '}
+                <strong className="text-[var(--ff-accent-text)]">{formatVolume(summary.totalVolume || 0)}</strong>.
+              </p>
+              <p>
+                Seu volume médio por treino está em <strong className="text-[var(--ff-text)]">{formatVolume(summary.averageVolumePerWorkout || 0)}</strong>.
+              </p>
+              {insights.mostTrainedMuscle && (
+                <p>
+                  Grupo mais treinado: <strong className="text-[var(--ff-accent-text)]">{insights.mostTrainedMuscle.muscleGroup}</strong>.
+                </p>
+              )}
+            </div>
+          </Card>
+        </MobileProgressSection>
+
+        <MobileProgressSection eyebrow="PRs" title="Melhores marcas" action={<Link to="/exercise-progress" className="text-xs font-black text-[var(--ff-accent-text)]">Por exercício</Link>}>
+          <div id="progress-mobile-prs" className="scroll-mt-32 grid grid-cols-1 gap-3">
+            <Card className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">
+                  <Weight size={20} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-[var(--ff-muted)]">Maior carga</p>
+                  <p className="mt-1 line-clamp-1 text-lg font-black text-[var(--ff-text)]">{bestWeightPr?.exerciseName || recentSetSummary.strongestRecentSet?.exerciseName || 'Sem dados'}</p>
+                  <p className="mt-1 text-sm font-black text-[var(--ff-accent-text)]">{bestWeightPr?.bestWeight ? formatWeight(bestWeightPr.bestWeight) : recentSetSummary.strongestRecentSet ? formatWeight(recentSetSummary.strongestRecentSet.weight) : '—'}</p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-orange-500/10 text-orange-300">
+                  <Flame size={20} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-[var(--ff-muted)]">Maior volume</p>
+                  <p className="mt-1 line-clamp-1 text-lg font-black text-[var(--ff-text)]">{bestVolumePr?.exerciseName || recentSetSummary.biggestVolumeRecentSet?.exerciseName || 'Sem dados'}</p>
+                  <p className="mt-1 text-sm font-black text-[var(--ff-warning-text)]">{bestVolumePr?.bestVolume ? formatVolume(bestVolumePr.bestVolume) : recentSetSummary.biggestVolumeRecentSet ? formatVolume(recentSetSummary.biggestVolumeRecentSet.volume) : '—'}</p>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </MobileProgressSection>
+
+        <div id="progress-mobile-sets" className="scroll-mt-32">
+          <SetVolumeDetails data={recentSetRows} />
+        </div>
+
+        <MobileProgressSection eyebrow="Treinos" title="Últimos registros" action={<Link to="/history" className="text-xs font-black text-[var(--ff-accent-text)]">Ver todos</Link>}>
+          <div id="progress-mobile-workouts" className="scroll-mt-32 space-y-3">
+            {recentWorkouts.slice(0, 4).map((workout) => (
+              <MobileRecentWorkoutCard key={workout.id || workout._id || getSessionDate(workout)} workout={workout} />
+            ))}
+            {recentWorkouts.length === 0 && (
+              <Card className="p-4">
+                <EmptyState title="Sem treinos recentes" description="Finalize treinos para gerar registros recentes." />
+              </Card>
+            )}
+          </div>
+        </MobileProgressSection>
+
+        <MobileProgressSection eyebrow="Fotos" title="Evolução visual" action={<Link to="/progress-photos" className="text-xs font-black text-[var(--ff-accent-text)]">Abrir</Link>}>
+          <div id="progress-mobile-photos" className="scroll-mt-32">
+            {progressPhotos.length === 0 ? (
+              <Card className="p-4">
+                <EmptyState title="Sem fotos" description="Envie fotos para comparar sua evolução visual." />
+              </Card>
+            ) : (
+              <div className="-mx-4 overflow-x-auto px-4 pb-1">
+                <div className="flex gap-3">
+                  {progressPhotos.slice(0, 8).map((photo) => (
+                    <Link key={photo._id || photo.id} to="/progress-photos" className="min-w-[128px] overflow-hidden rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)]">
+                      <div className="aspect-square overflow-hidden">
+                        <img src={photo.imageUrl} alt="Foto de evolução" className="h-full w-full object-cover" loading="lazy" decoding="async" />
+                      </div>
+                      <div className="p-3">
+                        <p className="truncate text-xs font-black text-[var(--ff-text)]">{formatDate(photo.date)}</p>
+                        {photo.weight !== null && photo.weight !== undefined && <p className="text-[11px] text-[var(--ff-muted)]">{formatWeight(photo.weight)}</p>}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </MobileProgressSection>
+
+        <MobileProgressSection eyebrow="Exercício" title="Ver evolução específica" action={<Link to="/exercise-progress" className="text-xs font-black text-[var(--ff-accent-text)]">Página completa</Link>}>
+          <Card id="progress-mobile-exercise" className="scroll-mt-32 p-4">
+            <select
+              value={selectedExercise}
+              onChange={(event) => setSelectedExercise(event.target.value)}
+              className="h-12 w-full rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-sm font-bold text-[var(--ff-text)] outline-none"
+            >
+              <option value="">Selecionar exercício</option>
+              {exerciseOptions.map((item) => (
+                <option key={item.exerciseName} value={item.exerciseName}>
+                  {item.exerciseName}
+                </option>
+              ))}
+            </select>
+            <p className="mt-3 text-xs leading-relaxed text-[var(--ff-muted)]">
+              Para gráficos detalhados, abra a página de evolução por exercício.
+            </p>
+          </Card>
+        </MobileProgressSection>
+      </div>
+    </section>
+  )
+}
+
 function Progress() {
   const { user } = useAuth()
 
@@ -1064,7 +1384,8 @@ function Progress() {
 
   return (
     <>
-      <PageHeader
+      <div className="hidden lg:block">
+        <PageHeader
         title="Evolução"
         description="Acompanhe peso, volume, frequência, PRs, fotos, séries e histórico detalhado."
         action={
@@ -1089,6 +1410,7 @@ function Progress() {
           </div>
         }
       />
+      </div>
 
       {!progressData ? (
         <Card>
@@ -1103,7 +1425,20 @@ function Progress() {
           />
         </Card>
       ) : (
-        <div className="space-y-6">
+        <>
+          <MobileProgressHome
+            normalizedProgress={normalizedProgress}
+            recentSetRows={recentSetRows}
+            recentSetSummary={recentSetSummary}
+            selectedExercise={selectedExercise}
+            setSelectedExercise={setSelectedExercise}
+            source={source}
+            loading={loading}
+            syncing={syncing}
+            onRefresh={() => setRefreshKey((key) => key + 1)}
+          />
+
+          <div className="hidden lg:block space-y-6">
           <ProgressSummaryCards
             summary={normalizedProgress.summary}
             insights={normalizedProgress.insights}
@@ -1334,7 +1669,8 @@ function Progress() {
               </div>
             </Card>
           </section>
-        </div>
+          </div>
+        </>
       )}
     </>
   )

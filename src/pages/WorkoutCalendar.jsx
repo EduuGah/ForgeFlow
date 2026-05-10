@@ -266,9 +266,26 @@ function WorkoutCalendar() {
         setSelectedDate(getDateKey(today))
     }
 
+    const mobileMonthName = currentMonth.toLocaleDateString('pt-BR', { month: 'long' })
+
     return (
         <>
-            <PageHeader
+
+            <section className="lg:hidden">
+                <div className="space-y-5">
+                    <div className="overflow-hidden rounded-[2rem] border border-[var(--ff-accent-border)]/25 bg-gradient-to-br from-[var(--ff-accent-soft)]/25 via-[var(--ff-card)] to-[var(--ff-surface-2)] p-5 shadow-[0_18px_44px_rgba(0,0,0,0.24)]">
+                        <Badge variant={source === 'database' ? 'purple' : 'default'}>{loading ? 'Sincronizando' : source === 'database' ? 'Sincronizado' : 'Local'}</Badge>
+                        <h1 className="mt-4 text-3xl font-black leading-tight tracking-tight text-[var(--ff-text)]">Calendário</h1>
+                        <p className="mt-2 text-sm leading-relaxed text-[var(--ff-muted)]">Resumo mensal e dias treinados em formato compacto para celular.</p>
+                        <div className="mt-5 grid grid-cols-3 gap-3"><div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 text-center"><p className="text-xl font-black">{monthStats.totalWorkouts}</p><p className="mt-1 text-[11px] text-[var(--ff-muted)]">treinos</p></div><div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 text-center"><p className="text-lg font-black text-[var(--ff-accent-text)]">{formatDuration(monthStats.totalDuration)}</p><p className="mt-1 text-[11px] text-[var(--ff-muted)]">tempo</p></div><div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 text-center"><p className="text-xl font-black text-orange-300">{consistencyStats.currentStreak}</p><p className="mt-1 text-[11px] text-[var(--ff-muted)]">streak</p></div></div>
+                    </div>
+                    <Card className="p-4"><div className="flex items-center justify-between gap-3"><button type="button" onClick={goToPreviousMonth} className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)]"><ChevronLeft size={20}/></button><div className="text-center"><p className="text-xl font-black text-[var(--ff-text)]">{mobileMonthName}</p><p className="text-xs text-[var(--ff-muted)]">{currentMonth.getFullYear()}</p></div><button type="button" onClick={goToNextMonth} className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)]"><ChevronRight size={20}/></button></div><Button type="button" variant="secondary" onClick={goToCurrentMonth} className="mt-4 w-full">Mês atual</Button></Card>
+                    <section className="space-y-3">{monthSessions.length===0 ? <Card className="p-4"><EmptyState title="Sem treinos no mês" description="Finalize treinos para eles aparecerem aqui." /></Card> : monthSessions.slice(0,20).map((session)=><article key={session.id} className="rounded-[1.7rem] border border-[var(--ff-border)] bg-[var(--ff-card)] p-4"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="line-clamp-2 font-black text-[var(--ff-text)]">{session.workoutName}</p><p className="mt-1 text-xs text-[var(--ff-muted)]">{formatShortDate(session.finishedAt)} • {formatDuration(session.duration || 0)}</p></div><Badge>{session.exercises.length} ex.</Badge></div><p className="mt-3 text-xs text-[var(--ff-muted)]">Volume: {Number(session.totalVolume || 0).toLocaleString('pt-BR')}kg</p></article>)}</section>
+                </div>
+            </section>
+
+            <div className="hidden lg:block">
+                <PageHeader
                 title="Calendário"
                 description="Veja seus treinos finalizados organizados por dia."
                 action={
@@ -629,6 +646,7 @@ function WorkoutCalendar() {
                     </Card>
                 </div>
             </section>
+            </div>
         </>
     )
 }
