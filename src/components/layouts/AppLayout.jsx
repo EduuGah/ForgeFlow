@@ -42,14 +42,7 @@ function runWhenBrowserIsIdle(callback) {
 }
 
 function AppLayout() {
-  useEffect(() => {
-    document.body.style.overflow = ''
-    document.documentElement.style.overflow = ''
-
-    window.dispatchEvent(new CustomEvent('forgeflow:reset-scroll-lock'))
-  }, [])
-
-  const { user } = useAuth()
+const { user } = useAuth()
   const { activeSession } = useWorkoutSession()
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -177,8 +170,8 @@ function AppLayout() {
   }, [isSidebarOpen])
 
   return (
-    <div className="min-h-screen bg-[var(--ff-bg)] text-[var(--ff-text)] transition-colors duration-300">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,var(--ff-accent-shadow),transparent_34%),radial-gradient(circle_at_bottom_right,var(--ff-accent-soft),transparent_32%)] opacity-80" />
+    <div className="min-h-dvh overflow-x-hidden bg-[var(--ff-bg)] text-[var(--ff-text)] transition-colors duration-300">
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,var(--ff-accent-shadow),transparent_34%),radial-gradient(circle_at_bottom_right,var(--ff-accent-soft),transparent_32%)] opacity-80" />
 
       <header
         id="app-header"
@@ -237,7 +230,7 @@ function AppLayout() {
         onClose={() => setIsSidebarOpen(false)}
       />
 
-      <main className="relative px-4 py-6 pb-36 sm:px-6 lg:px-8 lg:pb-10">
+      <main className="relative min-h-0 overflow-visible px-4 py-6 pb-36 sm:px-6 lg:px-8 lg:pb-10">
         <div className="mx-auto w-full max-w-[1600px]">
           <Outlet />
         </div>

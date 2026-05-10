@@ -799,3 +799,74 @@ html {
     transition-duration: 0.001ms !important;
   }
 }
+
+
+/* =========================================================
+   ForgeFlow — correção hard de scroll
+   ========================================================= */
+
+/* O app inteiro deve permitir rolagem da página normalmente. */
+html,
+body,
+#root {
+  min-height: 100%;
+  height: auto !important;
+  overflow-x: hidden;
+}
+
+html,
+body {
+  overflow-y: auto !important;
+}
+
+/* Evita que algum wrapper antigo deixe a página presa em viewport fixa. */
+#root {
+  isolation: isolate;
+}
+
+/* Main sempre participa do fluxo normal da página. */
+main {
+  min-height: 0 !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+/* Overlays decorativos não podem capturar scroll/clique. */
+[aria-hidden="true"] {
+  pointer-events: none;
+}
+
+/* Somente a sidebar aberta deve capturar o fundo.
+   Quando fechada, qualquer overlay com opacity 0 + pointer-events none não bloqueia nada. */
+.pointer-events-none {
+  pointer-events: none !important;
+}
+
+/* Containers horizontais podem scrollar horizontalmente sem bloquear vertical. */
+.ff-mobile-scroll-x,
+.overflow-x-auto {
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Evita scroll-lock preso por estilos inline antigos.
+   A classe abaixo é intencionalmente forte para recuperar páginas travadas. */
+body:not(.ff-lock-scroll),
+html:not(.ff-lock-scroll) {
+  overflow-y: auto !important;
+}
+
+/* Caso o navegador mantenha estado antigo do service worker/hot reload,
+   o conteúdo principal continua rolável. */
+@media (pointer: fine) {
+  body {
+    overscroll-behavior: auto !important;
+  }
+}
+
+/* Sidebar/drawers que precisam scroll interno continuam funcionando. */
+aside,
+[role="dialog"] {
+  overscroll-behavior: contain;
+}
