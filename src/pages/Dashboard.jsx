@@ -18,7 +18,7 @@ import {
   UserRound,
   Weight,
   X,
-  TrendingUp} from 'lucide-react'
+} from 'lucide-react'
 import {
   Bar,
   BarChart,
