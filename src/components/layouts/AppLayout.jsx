@@ -15,174 +15,44 @@ import {
 } from '../../utils/settingsUtils'
 
 import MobileBottomNav from './MobileBottomNav'
-import Sidebar from './Sidebar'
 import NotificationBell from '../notifications/NotificationBell'
 import { generateSmartNotifications } from '../../utils/notificationUtils'
 
+const Sidebar = lazy(() => import('./Sidebar'))
 const ActiveWorkoutMini = lazy(() => import('../workout/ActiveWorkoutMini'))
 const SmartNotificationPopup = lazy(() =>
   import('../notifications/SmartNotificationPopup')
 )
-const PwaInstallPrompt = lazy(() => import('../pwa/PwaInstallPrompt'))
 
 function runWhenBrowserIsIdle(callback) {
   if (typeof window === 'undefined') return undefined
 
   if ('requestIdleCallback' in window) {
-    const idleId = window.requestIdleCallback(callback, {
-      timeout: 2500,
-    })
-
+    const idleId = window.requestIdleCallback(callback, { timeout: 2500 })
     return () => window.cancelIdleCallback(idleId)
   }
 
   const timeoutId = window.setTimeout(callback, 900)
-
   return () => window.clearTimeout(timeoutId)
 }
 
 function AppLayout() {
-const { user } = useAuth()
+  const { user } = useAuth()
   const { activeSession } = useWorkoutSession()
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [popupNotification, setPopupNotification] = useState(null)
   const [isHeaderVisible, setIsHeaderVisible] = useState(true)
   const [isHeaderCompact, setIsHeaderCompact] = useState(false)
   const lastScrollYRef = useRef(0)
   const tickingRef = useRef(false)
-  const [popupNotification, setPopupNotification] = useState(null)
 
   useEffect(() => {
-    function handleOpenSidebar() {
-      setIsSidebarOpen(true)
-    }
-
-    function handleCloseSidebar() {
-      setIsSidebarOpen(false)
-    }
-
-    function handleToggleSidebar() {
-      setIsSidebarOpen((current) => !current)
-    }
-
-    window.addEventListener('forgeflow:open-sidebar', handleOpenSidebar)
-    window.addEventListener('forgeflow:close-sidebar', handleCloseSidebar)
-    window.addEventListener('forgeflow:toggle-sidebar', handleToggleSidebar)
-
-    return () => {
-      window.removeEventListener('forgeflow:open-sidebar', handleOpenSidebar)
-      window.removeEventListener('forgeflow:close-sidebar', handleCloseSidebar)
-      window.removeEventListener('forgeflow:toggle-sidebar', handleToggleSidebar)
-    }
+    document.body.style.overflow = ''
+    document.documentElement.style.overflow = ''
   }, [])
 
   useEffect(() => {
-    if (!user) return undefined
-
-    const cachedSettings = getUserAppSettings(user)
-    applyAppSettingsToDocument(cachedSettings)
-
-    let isMounted = true
-
-    async function loadAccountSettings() {
-      try {
-        const settingsFromDatabase = await apiFetch('/settings')
-
-        if (!isMounted) return
-
-        const mergedSettings = saveUserAppSettings(user, {
-          ...cachedSettings,
-          ...settingsFromDatabase,
-        })
-
-        applyAppSettingsToDocument(mergedSettings)
-      } catch {
-        if (isMounted) {
-          applyAppSettingsToDocument(cachedSettings)
-        }
-      }
-    }
-
-    loadAccountSettings()
-
-    function handleSettingsChanged(event) {
-      applyAppSettingsToDocument(event.detail)
-    }
-
-    const stopWatchingSystemTheme = watchSystemThemeChanges()
-
-    window.addEventListener('forgeflow:settings-changed', handleSettingsChanged)
-
-    return () => {
-      isMounted = false
-      window.removeEventListener('forgeflow:settings-changed', handleSettingsChanged)
-      stopWatchingSystemTheme()
-    }
-  }, [user])
-
-  useEffect(() => {
-    if (!user) return undefined
-
-    return runWhenBrowserIsIdle(() => {
-      generateSmartNotifications({
-        user,
-        reason: 'app-open',
-        minimumMinutes: 60,
-        showPopup: false,
-      }).catch((error) => {
-        console.error(error)
-      })
-    })
-  }, [user])
-
-  useEffect(() => {
-    function handleNotificationPopup(event) {
-      const createdNotifications = Array.isArray(event.detail?.createdNotifications)
-        ? event.detail.createdNotifications
-        : []
-
-      const priorityNotification =
-        createdNotifications.find((notification) => notification.type === 'success') ||
-        createdNotifications.find((notification) => notification.type === 'goal') ||
-        createdNotifications[0]
-
-      if (priorityNotification) {
-        setPopupNotification(priorityNotification)
-      }
-    }
-
-    window.addEventListener('forgeflow:notification-popup', handleNotificationPopup)
-
-    return () => {
-      window.removeEventListener('forgeflow:notification-popup', handleNotificationPopup)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (isSidebarOpen) {
-      document.body.style.overflow = 'hidden'
-      document.documentElement.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-      document.documentElement.style.overflow = ''
-    }
-
-    return () => {
-      document.body.style.overflow = ''
-      document.documentElement.style.overflow = ''
-    }
-  }, [isSidebarOpen])
-
-  useEffect(() => {
-    function unlockScroll() {
-      document.body.style.overflow = ''
-      document.documentElement.style.overflow = ''
-      document.body.classList.remove('ff-lock-scroll')
-      document.documentElement.classList.remove('ff-lock-scroll')
-    }
-
-    unlockScroll()
-
     function handleScrollDirection() {
       const currentScrollY = window.scrollY || 0
       const lastScrollY = lastScrollYRef.current
@@ -204,7 +74,6 @@ const { user } = useAuth()
 
     function handleScroll() {
       if (tickingRef.current) return
-
       tickingRef.current = true
       window.requestAnimationFrame(handleScrollDirection)
     }
@@ -217,10 +86,77 @@ const { user } = useAuth()
       window.removeEventListener('scroll', handleScroll)
       window.removeEventListener('wheel', handleScroll)
       window.removeEventListener('touchmove', handleScroll)
-      unlockScroll()
     }
   }, [])
 
+  useEffect(() => {
+    if (!user) return undefined
+
+    const cachedSettings = getUserAppSettings(user)
+    applyAppSettingsToDocument(cachedSettings)
+
+    let isMounted = true
+
+    async function loadAccountSettings() {
+      try {
+        const settingsFromDatabase = await apiFetch('/settings')
+        if (!isMounted) return
+        const mergedSettings = saveUserAppSettings(user, {
+          ...cachedSettings,
+          ...settingsFromDatabase,
+        })
+        applyAppSettingsToDocument(mergedSettings)
+      } catch {
+        if (isMounted) applyAppSettingsToDocument(cachedSettings)
+      }
+    }
+
+    loadAccountSettings()
+
+    function handleSettingsChanged(event) {
+      applyAppSettingsToDocument(event.detail)
+    }
+
+    const stopWatchingSystemTheme = watchSystemThemeChanges()
+    window.addEventListener('forgeflow:settings-changed', handleSettingsChanged)
+
+    return () => {
+      isMounted = false
+      window.removeEventListener('forgeflow:settings-changed', handleSettingsChanged)
+      stopWatchingSystemTheme()
+    }
+  }, [user])
+
+  useEffect(() => {
+    if (!user) return undefined
+
+    return runWhenBrowserIsIdle(() => {
+      generateSmartNotifications({
+        user,
+        reason: 'app-open',
+        minimumMinutes: 60,
+        showPopup: false,
+      }).catch((error) => console.error(error))
+    })
+  }, [user])
+
+  useEffect(() => {
+    function handleNotificationPopup(event) {
+      const createdNotifications = Array.isArray(event.detail?.createdNotifications)
+        ? event.detail.createdNotifications
+        : []
+
+      const priorityNotification =
+        createdNotifications.find((notification) => notification.type === 'success') ||
+        createdNotifications.find((notification) => notification.type === 'goal') ||
+        createdNotifications[0]
+
+      if (priorityNotification) setPopupNotification(priorityNotification)
+    }
+
+    window.addEventListener('forgeflow:notification-popup', handleNotificationPopup)
+    return () => window.removeEventListener('forgeflow:notification-popup', handleNotificationPopup)
+  }, [])
 
   return (
     <div className="min-h-dvh bg-[var(--ff-bg)] text-[var(--ff-text)] transition-colors duration-300">
@@ -235,12 +171,7 @@ const { user } = useAuth()
         ].join(' ')}
       >
         <div className="safe-top">
-          <div
-            className={[
-              'flex items-center justify-between gap-3 px-4 transition-all duration-300 sm:px-6',
-              isHeaderCompact ? 'h-14' : 'h-16',
-            ].join(' ')}
-          >
+          <div className={['flex items-center justify-between gap-3 px-4 transition-all duration-300 sm:px-6', isHeaderCompact ? 'h-14' : 'h-16'].join(' ')}>
             <div className="flex min-w-0 items-center gap-3">
               <button
                 type="button"
@@ -249,48 +180,36 @@ const { user } = useAuth()
                 aria-label="Abrir menu"
                 aria-expanded={isSidebarOpen}
               >
-                <Menu
-                  size={22}
-                  className="transition group-hover:text-[var(--ff-accent-text)]"
-                />
+                <Menu size={22} className="transition group-hover:text-[var(--ff-accent-text)]" />
               </button>
 
               <div className="flex min-w-0 items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)] shadow-[0_0_18px_var(--ff-accent-shadow)]">
-                  <img
-                    src={forgeflowIcon}
-                    alt="ForgeFlow"
-                    className="h-full w-full object-cover"
-                  />
+                  <img src={forgeflowIcon} alt="ForgeFlow" className="h-full w-full object-cover" />
                 </div>
 
                 <div className="min-w-0">
                   <h1 className="truncate text-lg font-black leading-tight tracking-tight">
                     Forge<span className="text-[var(--ff-accent)]">Flow</span>
                   </h1>
-
-                  <p className="hidden truncate text-xs text-[var(--ff-muted)] sm:block">
-                    Workout Tracker
-                  </p>
+                  <p className="hidden truncate text-xs text-[var(--ff-muted)] sm:block">Workout Tracker</p>
                 </div>
               </div>
             </div>
 
             <div className="flex shrink-0 items-center gap-2">
-              <div className="hidden rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-3 py-1 text-xs font-bold text-[var(--ff-accent-text)] sm:block">
-                Beta
-              </div>
-
+              <div className="hidden rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-3 py-1 text-xs font-bold text-[var(--ff-accent-text)] sm:block">Beta</div>
               <NotificationBell />
             </div>
           </div>
         </div>
       </header>
 
-      <Sidebar
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-      />
+      {isSidebarOpen && (
+        <Suspense fallback={null}>
+          <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+        </Suspense>
+      )}
 
       <main className="relative min-h-0 overflow-visible px-4 pb-36 pt-[calc(5.5rem+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[calc(5.75rem+env(safe-area-inset-top))]">
         <div className="mx-auto w-full max-w-[1600px]">
@@ -308,16 +227,9 @@ const { user } = useAuth()
 
       {popupNotification && (
         <Suspense fallback={null}>
-          <SmartNotificationPopup
-            notification={popupNotification}
-            onClose={() => setPopupNotification(null)}
-          />
+          <SmartNotificationPopup notification={popupNotification} onClose={() => setPopupNotification(null)} />
         </Suspense>
       )}
-
-      <Suspense fallback={null}>
-        <PwaInstallPrompt />
-      </Suspense>
     </div>
   )
 }

@@ -3,34 +3,6 @@ import ReactDOM from 'react-dom/client'
 
 import App from './App.jsx'
 import './index.css'
-import { registerForgeFlowServiceWorker, setupPwaHeadTags } from './utils/pwaUtils.js'
-
-
-function handleStaleViteChunk() {
-  if (typeof window === 'undefined') return
-
-  const reloadKey = 'forgeflow:last-stale-chunk-reload'
-  const lastReload = Number(window.sessionStorage.getItem(reloadKey) || 0)
-  const now = Date.now()
-
-  if (now - lastReload < 10000) return
-
-  window.sessionStorage.setItem(reloadKey, String(now))
-  window.location.reload()
-}
-
-window.addEventListener('vite:preloadError', handleStaleViteChunk)
-
-window.addEventListener('error', (event) => {
-  const message = String(event?.message || '')
-
-  if (
-    message.includes('Failed to fetch dynamically imported module') ||
-    message.includes('Expected a JavaScript-or-Wasm module script')
-  ) {
-    handleStaleViteChunk()
-  }
-})
 
 const rootElement = document.getElementById('root')
 
@@ -48,8 +20,30 @@ function Root() {
   )
 }
 
-setupPwaHeadTags()
+
+function handleStaleViteChunk() {
+  if (typeof window === 'undefined') return
+
+  const reloadKey = 'forgeflow:last-stale-chunk-reload'
+  const lastReload = Number(window.sessionStorage.getItem(reloadKey) || 0)
+  const now = Date.now()
+
+  if (now - lastReload < 10000) return
+
+  window.sessionStorage.setItem(reloadKey, String(now))
+  window.location.reload()
+}
+
+window.addEventListener('vite:preloadError', handleStaleViteChunk)
+window.addEventListener('error', (event) => {
+  const message = String(event?.message || '')
+
+  if (
+    message.includes('Failed to fetch dynamically imported module') ||
+    message.includes('Expected a JavaScript-or-Wasm module script')
+  ) {
+    handleStaleViteChunk()
+  }
+})
 
 ReactDOM.createRoot(rootElement).render(<Root />)
-
-registerForgeFlowServiceWorker()

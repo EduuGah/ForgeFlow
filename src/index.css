@@ -653,229 +653,8 @@ textarea:focus-visible {
 
 
 /* =========================================================
-   ForgeFlow — Etapa 22.10
-   Polimento global mobile/desktop
+   ForgeFlow — pacote final correções de scroll e gráficos
    ========================================================= */
-
-/* Evita "pulos" horizontais em páginas mobile com carrosséis e cards largos */
-html,
-body,
-#root {
-  width: 100%;
-  min-height: 100%;
-}
-
-body {
-  overflow-x: hidden;
-  overscroll-behavior-y: none;
-}
-
-/* Scroll mais suave em atalhos internos como #mobile-dashboard-prs */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Safe areas para iPhone/Android com barra do sistema */
-.safe-top {
-  padding-top: env(safe-area-inset-top);
-}
-
-.safe-bottom {
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-/* Melhor toque em elementos clicáveis no mobile */
-@media (max-width: 1023px) {
-  button,
-  a,
-  input,
-  select,
-  textarea {
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  button,
-  a {
-    touch-action: manipulation;
-  }
-
-  /* Espaço real para bottom nav + mini treino */
-  main {
-    padding-bottom: calc(7.5rem + env(safe-area-inset-bottom)) !important;
-  }
-
-  /* Cards ficam menos "site desktop" e mais app */
-  .ff-mobile-card {
-    border-radius: 1.65rem;
-    padding: 1rem;
-  }
-
-  /* Carrossel horizontal com sensação de app */
-  .ff-mobile-scroll-x {
-    display: flex;
-    gap: 0.75rem;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scroll-snap-type: x proximity;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .ff-mobile-scroll-x::-webkit-scrollbar {
-    display: none;
-  }
-
-  .ff-mobile-scroll-x > * {
-    scroll-snap-align: start;
-  }
-
-  /* Bottom sheets e modais não devem ficar grudados no rodapé do aparelho */
-  .ff-mobile-sheet {
-    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
-  }
-
-  /* Inputs mais confortáveis para dedo */
-  input,
-  select,
-  textarea {
-    font-size: 16px;
-  }
-}
-
-/* Desktop continua com leitura de painel */
-@media (min-width: 1024px) {
-  main {
-    padding-bottom: 2.5rem !important;
-  }
-
-  .ff-desktop-panel {
-    border-radius: 1.5rem;
-  }
-}
-
-/* Scrollbar discreta no desktop */
-@media (min-width: 1024px) {
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: var(--ff-border-strong) transparent;
-  }
-
-  *::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-  }
-
-  *::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  *::-webkit-scrollbar-thumb {
-    background: var(--ff-border-strong);
-    border: 3px solid transparent;
-    border-radius: 999px;
-    background-clip: padding-box;
-  }
-}
-
-/* Evita que âncoras fiquem escondidas atrás do header sticky */
-[id] {
-  scroll-margin-top: 96px;
-}
-
-@media (max-width: 1023px) {
-  [id] {
-    scroll-margin-top: 124px;
-  }
-}
-
-/* Reduz animações para quem prefere menos movimento */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    scroll-behavior: auto !important;
-    transition-duration: 0.001ms !important;
-  }
-}
-
-
-/* =========================================================
-   ForgeFlow — correção hard de scroll
-   ========================================================= */
-
-/* O app inteiro deve permitir rolagem da página normalmente. */
-html,
-body,
-#root {
-  min-height: 100%;
-  height: auto !important;
-  overflow-x: hidden;
-}
-
-html,
-body {
-  overflow-y: auto !important;
-}
-
-/* Evita que algum wrapper antigo deixe a página presa em viewport fixa. */
-#root {
-  isolation: isolate;
-}
-
-/* Main sempre participa do fluxo normal da página. */
-main {
-  min-height: 0 !important;
-  height: auto !important;
-  overflow: visible !important;
-}
-
-/* Overlays decorativos não podem capturar scroll/clique. */
-[aria-hidden="true"] {
-  pointer-events: none;
-}
-
-/* Somente a sidebar aberta deve capturar o fundo.
-   Quando fechada, qualquer overlay com opacity 0 + pointer-events none não bloqueia nada. */
-.pointer-events-none {
-  pointer-events: none !important;
-}
-
-/* Containers horizontais podem scrollar horizontalmente sem bloquear vertical. */
-.ff-mobile-scroll-x,
-.overflow-x-auto {
-  overscroll-behavior-x: contain;
-  overscroll-behavior-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Evita scroll-lock preso por estilos inline antigos.
-   A classe abaixo é intencionalmente forte para recuperar páginas travadas. */
-body:not(.ff-lock-scroll),
-html:not(.ff-lock-scroll) {
-  overflow-y: auto !important;
-}
-
-/* Caso o navegador mantenha estado antigo do service worker/hot reload,
-   o conteúdo principal continua rolável. */
-@media (pointer: fine) {
-  body {
-    overscroll-behavior: auto !important;
-  }
-}
-
-/* Sidebar/drawers que precisam scroll interno continuam funcionando. */
-aside,
-[role="dialog"] {
-  overscroll-behavior: contain;
-}
-
-
-/* =========================================================
-   ForgeFlow — correção scroll mobile + header auto-hide
-   ========================================================= */
-
 html,
 body,
 #root {
@@ -894,28 +673,25 @@ body {
   touch-action: pan-y;
 }
 
-#root {
-  min-height: 100dvh;
-}
-
 main {
   min-height: 100dvh;
   height: auto;
   overflow: visible;
 }
 
-/* Header fixo que some ao descer e volta ao subir */
 #app-header {
   will-change: transform, opacity;
 }
 
-/* Evita que overlays fechados fiquem por cima da tela */
 .pointer-events-none {
   pointer-events: none !important;
 }
 
-/* Em mobile, containers horizontais não devem roubar o scroll vertical */
 @media (max-width: 1023px) {
+  main {
+    padding-bottom: calc(8rem + env(safe-area-inset-bottom)) !important;
+  }
+
   .overflow-x-auto,
   .ff-mobile-scroll-x {
     overscroll-behavior-x: contain;
@@ -923,54 +699,12 @@ main {
     touch-action: pan-x pan-y;
     -webkit-overflow-scrolling: touch;
   }
-
-  main {
-    padding-bottom: calc(8rem + env(safe-area-inset-bottom)) !important;
-  }
 }
-
-/* Só use lock de scroll quando algum componente adicionar explicitamente esta classe. */
-html.ff-lock-scroll,
-body.ff-lock-scroll {
-  overflow: hidden !important;
-}
-
-
-/* =========================================================
-   ForgeFlow — correção gráficos/calendário
-   ========================================================= */
-
-.recharts-wrapper,
-.recharts-responsive-container,
-.recharts-surface {
-  min-width: 0;
-}
-
-.recharts-responsive-container {
-  width: 100% !important;
-  min-height: 260px;
-}
-
-.ff-chart-container {
-  min-height: 280px;
-}
-
-/* Garante que cards com calendário/gráficos não herdem display/altura quebrada */
-[data-chart],
-[data-calendar] {
-  min-width: 0;
-  overflow: visible;
-}
-
-
-/* =========================================================
-   ForgeFlow — correção React #31 + gráficos v2
-   ========================================================= */
 
 .recharts-responsive-container {
   width: 100% !important;
   min-width: 0 !important;
-  min-height: 280px !important;
+  min-height: 260px !important;
 }
 
 .recharts-wrapper {
@@ -986,9 +720,7 @@ body.ff-lock-scroll {
   z-index: 20;
 }
 
-/* Qualquer card de gráfico precisa ter altura mínima real */
-[class*="h-[320px]"] .recharts-responsive-container,
-[class*="h-[280px]"] .recharts-responsive-container,
-.h-80 .recharts-responsive-container {
-  min-height: inherit !important;
+[data-chart],
+[data-calendar] {
+  min-width: 0;
 }

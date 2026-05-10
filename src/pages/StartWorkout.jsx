@@ -398,7 +398,7 @@ function StartWorkout() {
 
   return (
     <>
-      <div className="sticky top-0 z-30 -mx-4 mb-4 border-b border-[var(--ff-border)] bg-[var(--ff-bg)]/95 px-4 pb-3 pt-3 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 xl:static xl:mx-0 xl:border-0 xl:bg-transparent xl:p-0 xl:backdrop-blur-none">
+      <div className="sticky top-0 z-30 -mx-4 mb-5 border-b border-[var(--ff-border)] bg-[var(--ff-bg)]/92 px-4 pb-3 pt-2 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 xl:static xl:mx-0 xl:border-0 xl:bg-transparent xl:p-0 xl:backdrop-blur-none">
         <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.22)] sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
@@ -449,40 +449,6 @@ function StartWorkout() {
         </div>
       </div>
 
-      <div className="sticky top-[calc(4rem+env(safe-area-inset-top))] z-20 -mx-4 mb-4 border-y border-[var(--ff-border)] bg-[var(--ff-bg)]/95 px-4 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 xl:hidden">
-        <div className="mb-2 flex items-center justify-between gap-3">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--ff-accent-text)]">
-            Exercícios
-          </p>
-
-          <span className="text-xs font-bold text-[var(--ff-muted)]">
-            {workoutSummary.totalExercises} no treino
-          </span>
-        </div>
-
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {sessionExercises.map((sessionExercise, index) => {
-            const exerciseCompletedSets = sessionExercise.sets.filter(
-              (set) => set.completed && set.type !== 'warmup'
-            ).length
-
-            const exerciseTotalSets = sessionExercise.sets.filter(
-              (set) => set.type !== 'warmup'
-            ).length
-
-            return (
-              <a
-                key={sessionExercise.id}
-                href={`#active-exercise-${sessionExercise.id}`}
-                className="shrink-0 rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 py-2 text-xs font-black text-[var(--ff-text-soft)]"
-              >
-                {index + 1}. {exerciseCompletedSets}/{exerciseTotalSets}
-              </a>
-            )
-          })}
-        </div>
-      </div>
-
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-4 xl:gap-6">
         <div className="space-y-4 pb-40 xl:col-span-3 xl:pb-6">
           {sessionExercises.map((sessionExercise, exerciseIndex) => {
@@ -502,14 +468,10 @@ function StartWorkout() {
               : 0
 
             return (
-              <div
+              <Card
                 key={sessionExercise.id}
-                id={`active-exercise-${sessionExercise.id}`}
-                className="scroll-mt-40"
+                className={`overflow-hidden ${sessionExercise.skipped ? 'opacity-50' : ''}`}
               >
-                <Card
-                  className={`overflow-hidden ${sessionExercise.skipped ? 'opacity-50' : ''}`}
-                >
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="min-w-0 flex-1">
                     <button
@@ -537,17 +499,7 @@ function StartWorkout() {
                       />
                     </button>
 
-                    <div className="mt-3 flex gap-2 overflow-x-auto pb-1 lg:hidden">
-                      <span className="shrink-0 rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 py-2 text-[11px] font-bold text-[var(--ff-muted)]">
-                        Último: {performance.lastSet ? formatPerformance(performance.lastSet) : 'sem registro'}
-                      </span>
-
-                      <span className="shrink-0 rounded-full border border-[var(--ff-accent-border)]/25 bg-[var(--ff-accent-soft)]/10 px-3 py-2 text-[11px] font-bold text-[var(--ff-accent-text)]">
-                        Melhor peso: {performance.bestWeightPerformance ? `${performance.bestWeightPerformance.weight}kg` : '—'}
-                      </span>
-                    </div>
-
-                    <div className="mt-4 hidden grid-cols-1 gap-2 lg:grid lg:grid-cols-2">
+                    <div className="mt-4 grid grid-cols-1 gap-2 lg:grid-cols-2">
                       <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
                         <p className="text-xs text-[var(--ff-muted)]">
                           Último treino
@@ -829,8 +781,7 @@ function StartWorkout() {
                     </button>
                   </div>
                 )}
-                </Card>
-              </div>
+              </Card>
             )
           })}
         </div>

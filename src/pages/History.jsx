@@ -448,65 +448,7 @@ function History() {
 
   return (
     <>
-
-      <section className="lg:hidden">
-        <div className="space-y-5">
-          <div className="overflow-hidden rounded-[2rem] border border-[var(--ff-accent-border)]/25 bg-gradient-to-br from-[var(--ff-accent-soft)]/25 via-[var(--ff-card)] to-[var(--ff-surface-2)] p-5 shadow-[0_18px_44px_rgba(0,0,0,0.24)]">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <Badge variant={source === 'database' ? 'purple' : 'default'}>
-                  {syncing || loading ? 'Sincronizando' : source === 'database' ? 'Sincronizado' : source === 'empty' ? 'Sem histórico' : 'Local'}
-                </Badge>
-                <h1 className="mt-4 text-3xl font-black leading-tight tracking-tight text-[var(--ff-text)]">Histórico</h1>
-                <p className="mt-2 text-sm leading-relaxed text-[var(--ff-muted)]">Treinos finalizados em cards curtos, com busca rápida e detalhes expansíveis.</p>
-              </div>
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">
-                <CalendarDays size={22} />
-              </div>
-            </div>
-            <div className="mt-5 grid grid-cols-3 gap-3">
-              <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 text-center"><p className="text-xl font-black text-[var(--ff-text)]">{history.length}</p><p className="mt-1 text-[11px] text-[var(--ff-muted)]">treinos</p></div>
-              <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 text-center"><p className="text-xl font-black text-[var(--ff-accent-text)]">{formatVolume(summary.totalVolume)}</p><p className="mt-1 text-[11px] text-[var(--ff-muted)]">volume</p></div>
-              <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 text-center"><p className="text-xl font-black text-yellow-300">{summary.totalPRs}</p><p className="mt-1 text-[11px] text-[var(--ff-muted)]">PRs</p></div>
-            </div>
-          </div>
-          <div className="sticky top-[72px] z-20 -mx-4 border-y border-[var(--ff-border)] bg-[var(--ff-bg)]/95 px-4 py-3 backdrop-blur-xl">
-            <div className="flex h-12 items-center gap-3 rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-zinc-400">
-              <Search size={18}/><input type="search" placeholder="Buscar treino ou exercício..." value={search} onChange={(event)=>setSearch(event.target.value)} className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-500" />
-              {search && <button type="button" onClick={()=>setSearch('')} aria-label="Limpar busca"><X size={16}/></button>}
-            </div>
-          </div>
-          <section className="space-y-3">
-            {loading && history.length === 0 && <Card className="p-4"><EmptyState title="Carregando histórico" description="Buscando seus treinos finalizados." /></Card>}
-            {!loading && history.length === 0 && <Card className="p-4"><EmptyState title="Nenhum treino finalizado" description="Finalize um treino para ele aparecer aqui." /></Card>}
-            {history.length > 0 && filteredHistory.length === 0 && <Card className="p-4"><EmptyState title="Nenhum treino encontrado" description="Tente buscar por outro treino ou exercício." /></Card>}
-            {visibleHistory.map((session)=>{
-              const meta = historyMetaMap.get(session.id)
-              const isExpanded = expandedSessionId === session.id
-              return (
-                <article key={session.id} className="rounded-[1.7rem] border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 shadow-[0_12px_30px_rgba(0,0,0,0.18)]">
-                  <button type="button" onClick={()=>handleToggleSession(session.id)} className="w-full text-left">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0"><h2 className="line-clamp-2 text-base font-black text-[var(--ff-text)]">{session.workoutName}</h2><p className="mt-1 text-xs text-[var(--ff-muted)]">{formatShortDate(session.finishedAt)} • {formatHour(session.finishedAt)}</p></div>
-                      <Badge>{meta?.sessionPRs?.length || 0} PR</Badge>
-                    </div>
-                    <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-                      <div className="rounded-2xl bg-[var(--ff-surface-2)] p-2"><p className="text-[11px] text-[var(--ff-muted)]">Tempo</p><p className="mt-1 text-xs font-black">{formatTime(session.duration || 0)}</p></div>
-                      <div className="rounded-2xl bg-[var(--ff-surface-2)] p-2"><p className="text-[11px] text-[var(--ff-muted)]">Exerc.</p><p className="mt-1 text-xs font-black">{session.exercises.length}</p></div>
-                      <div className="rounded-2xl bg-[var(--ff-surface-2)] p-2"><p className="text-[11px] text-[var(--ff-muted)]">Volume</p><p className="mt-1 text-xs font-black text-[var(--ff-accent-text)]">{formatVolume(meta?.sessionVolume || 0)}</p></div>
-                    </div>
-                  </button>
-                  {isExpanded && <div className="mt-4 max-h-[360px] space-y-2 overflow-y-auto border-t border-[var(--ff-border)] pt-4">{session.exercises.map((item,index)=><div key={item.id || index} className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3"><p className="line-clamp-1 text-sm font-black text-[var(--ff-text)]">{item.exercise?.name || 'Exercício'}</p><p className="mt-1 text-xs text-[var(--ff-muted)]">{(item.sets || []).filter(isValidWorkingSet).length} séries válidas</p></div>)}</div>}
-                </article>
-              )
-            })}
-            {visibleCount < filteredHistory.length && <Button type="button" variant="secondary" onClick={()=>setVisibleCount((current)=>current+LOAD_MORE_SESSIONS)} className="w-full">Carregar mais</Button>}
-          </section>
-        </div>
-      </section>
-
-      <div className="hidden lg:block">
-        <PageHeader
+      <PageHeader
         title="Histórico"
         description="Revise seus treinos finalizados, séries, volume e recordes pessoais."
         action={
@@ -1080,8 +1022,6 @@ function History() {
           </Card>
         </aside>
       </section>
-
-      </div>
 
       <ConfirmModal
         open={Boolean(confirmModal)}

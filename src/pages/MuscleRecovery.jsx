@@ -244,32 +244,7 @@ function MuscleRecovery() {
 
     return (
         <>
-
-            <section className="lg:hidden">
-                <div className="space-y-5">
-                    <div className="overflow-hidden rounded-[2rem] border border-[var(--ff-accent-border)]/25 bg-gradient-to-br from-[var(--ff-accent-soft)]/25 via-[var(--ff-card)] to-[var(--ff-surface-2)] p-5 shadow-[0_18px_44px_rgba(0,0,0,0.24)]">
-                        <Badge variant={source === 'database' ? 'purple' : 'default'}>{loading ? 'Carregando' : source === 'database' ? 'Sincronizado' : 'Local'}</Badge>
-                        <h1 className="mt-4 text-3xl font-black leading-tight tracking-tight text-[var(--ff-text)]">Recuperação</h1>
-                        <p className="mt-2 text-sm leading-relaxed text-[var(--ff-muted)]">Veja rapidamente o que está recuperado e o que ainda precisa descansar.</p>
-                        <div className="mt-5 grid grid-cols-3 gap-3">
-                            <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 text-center"><p className="text-xl font-black">{recovery.length}</p><p className="mt-1 text-[11px] text-[var(--ff-muted)]">grupos</p></div>
-                            <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 text-center"><p className="text-xl font-black text-[var(--ff-accent-text)]">{averageRecovery}%</p><p className="mt-1 text-[11px] text-[var(--ff-muted)]">média</p></div>
-                            <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 text-center"><p className="text-xl font-black text-emerald-300">{readyMuscles.length}</p><p className="mt-1 text-[11px] text-[var(--ff-muted)]">prontos</p></div>
-                        </div>
-                    </div>
-                    <div className="sticky top-[72px] z-20 -mx-4 border-y border-[var(--ff-border)] bg-[var(--ff-bg)]/95 px-4 py-3 backdrop-blur-xl">
-                        <div className="flex h-12 items-center gap-3 rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-zinc-400"><Search size={18}/><input type="search" placeholder="Buscar grupo..." value={search} onChange={(e)=>setSearch(e.target.value)} className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-500" />{search && <button type="button" onClick={()=>setSearch('')}><X size={16}/></button>}</div>
-                        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">{[['Todos',''],['Recuperando','low'],['Parcial','medium'],['Quase pronto','good'],['Pronto','ready']].map(([label,value])=><button key={label} type="button" onClick={()=>setStatusFilter(value)} className={statusFilter===value?'shrink-0 rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-4 py-2 text-xs font-black text-[var(--ff-accent-text)]':'shrink-0 rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 py-2 text-xs font-black text-[var(--ff-text-soft)]'}>{label}</button>)}</div>
-                    </div>
-                    <section className="space-y-3">
-                        {filteredRecovery.map((item)=>{ const style=getRecoveryStyle(item.level); const Icon=style.icon; return <article key={item.muscleGroup} className={`rounded-[1.7rem] border ${style.border} ${style.bg} p-4`}><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className={`line-clamp-1 text-base font-black ${style.text}`}>{item.muscleGroup}</p><p className="mt-1 text-xs text-[var(--ff-muted)]">{formatRelativeDate(item.lastTrainedAt)} • {formatHour(item.lastTrainedAt)}</p></div><Icon size={22} className={style.text}/></div><div className="mt-4 h-2.5 overflow-hidden rounded-full bg-black/20"><div className={`h-full rounded-full ${style.bar}`} style={{width:`${item.recoveryPercent || 0}%`}} /></div><p className="mt-3 text-xs text-[var(--ff-muted)]">{item.totalSets || 0} séries • {Number(item.totalVolume || 0).toLocaleString('pt-BR')}kg</p></article>})}
-                        {!loading && filteredRecovery.length===0 && <Card className="p-4"><EmptyState title="Nenhum grupo encontrado" description="Tente limpar os filtros ou finalizar novos treinos." /></Card>}
-                    </section>
-                </div>
-            </section>
-
-            <div className="hidden lg:block">
-                <PageHeader
+            <PageHeader
                 title="Recuperação muscular"
                 description="Acompanhe quais grupos musculares foram treinados recentemente e quais já estão mais recuperados."
                 action={
@@ -645,7 +620,6 @@ function MuscleRecovery() {
                     </Card>
                 </main>
             </section>
-            </div>
         </>
     )
 }

@@ -59,157 +59,6 @@ function normalizeGoal(goal) {
   }
 }
 
-
-function MobileGoalCard({
-  goal,
-  onEdit,
-  onComplete,
-  onArchive,
-  onUnarchive,
-  onReactivate,
-  onDelete,
-}) {
-  const progress = Math.max(0, Math.min(100, Number(goal.progressPercent || 0)))
-  const isCompleted = goal.status === 'completed' || goal.isCompleted
-  const isArchived = goal.status === 'archived'
-
-  return (
-    <div className="rounded-[1.7rem] border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 shadow-[0_12px_30px_rgba(0,0,0,0.18)]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="line-clamp-2 text-base font-black leading-tight text-[var(--ff-text)]">
-            {goal.title}
-          </p>
-
-          <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-[var(--ff-muted)]">
-            {goal.description || goal.exerciseName || 'Meta de evolução'}
-          </p>
-        </div>
-
-        <Badge
-          variant={
-            isCompleted
-              ? 'success'
-              : isArchived
-                ? 'default'
-                : progress >= 80
-                  ? 'purple'
-                  : 'default'
-          }
-        >
-          {Math.round(progress)}%
-        </Badge>
-      </div>
-
-      <div className="mt-4">
-        <div className="flex items-center justify-between gap-3 text-xs">
-          <span className="font-bold text-[var(--ff-muted)]">
-            {Number(goal.currentValue || 0).toLocaleString('pt-BR')}
-            {goal.unit ? ` ${goal.unit}` : ''}
-          </span>
-
-          <span className="font-bold text-[var(--ff-muted)]">
-            {Number(goal.targetValue || 0).toLocaleString('pt-BR')}
-            {goal.unit ? ` ${goal.unit}` : ''}
-          </span>
-        </div>
-
-        <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-[var(--ff-surface-2)]">
-          <div
-            className="h-full rounded-full bg-[var(--ff-accent)] shadow-[0_0_16px_var(--ff-accent-shadow)]"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </div>
-
-      <div className="mt-3 flex flex-wrap gap-2">
-        {goal.exerciseName && (
-          <span className="rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 py-1 text-[11px] font-bold text-[var(--ff-muted)]">
-            {goal.exerciseName}
-          </span>
-        )}
-
-        {goal.deadline && (
-          <span className="rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 py-1 text-[11px] font-bold text-[var(--ff-muted)]">
-            até {new Date(`${goal.deadline}T12:00:00`).toLocaleDateString('pt-BR')}
-          </span>
-        )}
-
-        {goal.period !== 'none' && (
-          <span className="rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-3 py-1 text-[11px] font-bold text-[var(--ff-accent-text)]">
-            {goal.period === 'weekly' ? 'semanal' : 'mensal'}
-          </span>
-        )}
-      </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-2">
-        <button
-          type="button"
-          onClick={() => onEdit(goal)}
-          className="h-11 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-sm font-black text-[var(--ff-text-soft)] active:scale-[0.98]"
-        >
-          Editar
-        </button>
-
-        {!isCompleted && !isArchived && (
-          <button
-            type="button"
-            onClick={() => onComplete(goal)}
-            className="h-11 rounded-2xl bg-[var(--ff-accent)] text-sm font-black text-white shadow-[0_0_18px_var(--ff-accent-shadow)] active:scale-[0.98]"
-          >
-            Concluir
-          </button>
-        )}
-
-        {isCompleted && (
-          <button
-            type="button"
-            onClick={() => onReactivate(goal)}
-            className="h-11 rounded-2xl bg-[var(--ff-accent)] text-sm font-black text-white shadow-[0_0_18px_var(--ff-accent-shadow)] active:scale-[0.98]"
-          >
-            Reativar
-          </button>
-        )}
-
-        {isArchived && (
-          <button
-            type="button"
-            onClick={() => onUnarchive(goal)}
-            className="h-11 rounded-2xl bg-[var(--ff-accent)] text-sm font-black text-white shadow-[0_0_18px_var(--ff-accent-shadow)] active:scale-[0.98]"
-          >
-            Desarquivar
-          </button>
-        )}
-      </div>
-
-      <div className="mt-2 grid grid-cols-2 gap-2">
-        {!isArchived && (
-          <button
-            type="button"
-            onClick={() => onArchive(goal)}
-            className="h-10 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-xs font-bold text-[var(--ff-muted)] active:scale-[0.98]"
-          >
-            Arquivar
-          </button>
-        )}
-
-        <button
-          type="button"
-          onClick={() => onDelete(goal)}
-          className={
-            isArchived
-              ? 'col-span-2 h-10 rounded-2xl border border-red-500/20 bg-red-500/10 text-xs font-bold text-[var(--ff-danger-text)] active:scale-[0.98]'
-              : 'h-10 rounded-2xl border border-red-500/20 bg-red-500/10 text-xs font-bold text-[var(--ff-danger-text)] active:scale-[0.98]'
-          }
-        >
-          Excluir
-        </button>
-      </div>
-    </div>
-  )
-}
-
-
 function Goals() {
   const { user } = useAuth()
 
@@ -545,261 +394,137 @@ function Goals() {
 
   return (
     <>
-      <section className="lg:hidden">
-        <div className="space-y-5">
-          <div className="overflow-hidden rounded-[2rem] border border-[var(--ff-accent-border)]/25 bg-gradient-to-br from-[var(--ff-accent-soft)]/25 via-[var(--ff-card)] to-[var(--ff-surface-2)] p-5 shadow-[0_18px_44px_rgba(0,0,0,0.24)]">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <Badge variant={source === 'database' ? 'purple' : 'default'}>
-                  {loading ? 'Carregando' : source === 'database' ? 'Sincronizado' : 'Local'}
-                </Badge>
+      <PageHeader
+        title="Metas"
+        description="Crie objetivos claros e acompanhe automaticamente com base nos seus treinos, peso, fotos e PRs."
+        action={
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant={source === 'database' ? 'purple' : 'default'}>
+              {loading ? 'Carregando...' : source === 'database' ? 'Sincronizado' : 'Local'}
+            </Badge>
 
-                <h1 className="mt-4 text-3xl font-black leading-tight tracking-tight text-[var(--ff-text)]">
-                  Suas metas
-                </h1>
-
-                <p className="mt-2 text-sm leading-relaxed text-[var(--ff-muted)]">
-                  Acompanhe objetivos de treino, peso, PR, volume e fotos com cards rápidos para celular.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={openCreateModal}
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--ff-accent)] text-white shadow-[0_0_18px_var(--ff-accent-shadow)] active:scale-95"
-                aria-label="Criar meta"
-              >
-                <Plus size={22} />
-              </button>
-            </div>
-
-            <div className="mt-5 grid grid-cols-3 gap-3">
-              <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 text-center">
-                <p className="text-2xl font-black text-[var(--ff-text)]">{stats.active}</p>
-                <p className="mt-1 text-[11px] text-[var(--ff-muted)]">ativas</p>
-              </div>
-
-              <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 text-center">
-                <p className="text-2xl font-black text-[var(--ff-accent-text)]">{stats.averageProgress}%</p>
-                <p className="mt-1 text-[11px] text-[var(--ff-muted)]">média</p>
-              </div>
-
-              <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 text-center">
-                <p className="text-2xl font-black text-[var(--ff-success-text)]">{stats.completed}</p>
-                <p className="mt-1 text-[11px] text-[var(--ff-muted)]">feitas</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="sticky top-[72px] z-20 -mx-4 border-y border-[var(--ff-border)] bg-[var(--ff-bg)]/95 px-4 py-3 backdrop-blur-xl">
-            <div className="flex h-12 items-center gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-[var(--ff-muted)]">
-              <Search size={18} />
-              <input
-                type="search"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Buscar meta..."
-                className="w-full bg-transparent text-sm font-medium text-[var(--ff-text)] outline-none placeholder:text-[var(--ff-muted)]"
-              />
-              {search && (
-                <button type="button" onClick={() => setSearch('')} aria-label="Limpar busca">
-                  <X size={16} />
-                </button>
-              )}
-            </div>
-
-            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-              {[
-                ['Ativas', 'active'],
-                ['Concluídas', 'completed'],
-                ['Arquivadas', 'archived'],
-                ['Todas', 'all'],
-              ].map(([label, value]) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setStatusFilter(value)}
-                  className={
-                    statusFilter === value
-                      ? 'shrink-0 rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-4 py-2 text-xs font-black text-[var(--ff-accent-text)]'
-                      : 'shrink-0 rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 py-2 text-xs font-black text-[var(--ff-text-soft)]'
-                  }
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <section className="space-y-3">
-            {filteredGoals.length === 0 ? (
-              <Card className="p-4">
-                <EmptyState
-                  title={goals.length === 0 ? 'Nenhuma meta criada' : 'Nenhuma meta encontrada'}
-                  description={
-                    goals.length === 0
-                      ? 'Crie metas como treinar na semana, bater PR, registrar fotos ou atingir volume mensal.'
-                      : 'Tente mudar o filtro ou buscar por outro termo.'
-                  }
-                  action={
-                    <Button type="button" onClick={openCreateModal}>
-                      <Plus size={16} />
-                      Criar meta
-                    </Button>
-                  }
-                />
-              </Card>
-            ) : (
-              filteredGoals.map((goal) => (
-                <MobileGoalCard
-                  key={goal.id}
-                  goal={goal}
-                  onEdit={openEditModal}
-                  onDelete={handleDeleteGoal}
-                  onComplete={handleCompleteGoal}
-                  onArchive={handleArchiveGoal}
-                  onUnarchive={handleUnarchiveGoal}
-                  onReactivate={handleReactivateGoal}
-                />
-              ))
-            )}
-          </section>
-        </div>
-      </section>
-
-      <div className="hidden lg:block">
-        <PageHeader
-          title="Metas"
-          description="Crie objetivos claros e acompanhe automaticamente com base nos seus treinos, peso, fotos e PRs."
-          action={
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant={source === 'database' ? 'purple' : 'default'}>
-                {loading ? 'Carregando...' : source === 'database' ? 'Sincronizado' : 'Local'}
-              </Badge>
-
-              <Button type="button" variant="secondary" onClick={() => setRefreshKey((key) => key + 1)}>
-                <RefreshCcw size={16} />
-                Atualizar
-              </Button>
-
-              <Button type="button" onClick={openCreateModal}>
-                <Plus size={16} />
-                Nova meta
-              </Button>
-            </div>
-          }
-        />
-
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-[var(--ff-muted)]">Metas ativas</p>
-              <Flag size={20} className="text-[var(--ff-accent-text)]" />
-            </div>
-            <h2 className="mt-2 text-3xl font-black text-[var(--ff-text)]">{stats.active}</h2>
-            <p className="mt-2 text-xs text-[var(--ff-muted)]">em andamento</p>
-          </Card>
-
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-[var(--ff-muted)]">Progresso médio</p>
-              <Target size={20} className="text-[var(--ff-accent-text)]" />
-            </div>
-            <h2 className="mt-2 text-3xl font-black text-[var(--ff-accent-text)]">{stats.averageProgress}%</h2>
-            <p className="mt-2 text-xs text-[var(--ff-muted)]">das metas ativas</p>
-          </Card>
-
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-[var(--ff-muted)]">Concluídas</p>
-              <CheckCircle2 size={20} className="text-[var(--ff-success-text)]" />
-            </div>
-            <h2 className="mt-2 text-3xl font-black text-[var(--ff-text)]">{stats.completed}</h2>
-            <p className="mt-2 text-xs text-[var(--ff-muted)]">metas finalizadas</p>
-          </Card>
-
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-[var(--ff-muted)]">Arquivadas</p>
-              <Archive size={20} className="text-[var(--ff-muted)]" />
-            </div>
-            <h2 className="mt-2 text-3xl font-black text-[var(--ff-text)]">{stats.archived}</h2>
-            <p className="mt-2 text-xs text-[var(--ff-muted)]">guardadas para depois</p>
-          </Card>
-        </section>
-
-        <Card className="mt-6">
-          <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_220px_auto]">
-            <div className="flex h-12 items-center gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-[var(--ff-muted)]">
-              <Search size={18} />
-              <input
-                type="text"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Buscar meta, exercício ou descrição..."
-                className="w-full bg-transparent text-sm text-[var(--ff-text)] outline-none placeholder:text-[var(--ff-muted)]"
-              />
-              {search && (
-                <button type="button" onClick={() => setSearch('')}>
-                  <X size={16} />
-                </button>
-              )}
-            </div>
-
-            <select
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value)}
-              className="h-12 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-sm font-bold text-[var(--ff-text)] outline-none"
-            >
-              <option value="active">Ativas</option>
-              <option value="completed">Concluídas</option>
-              <option value="archived">Arquivadas</option>
-              <option value="all">Todas</option>
-            </select>
+            <Button type="button" variant="secondary" onClick={() => setRefreshKey((key) => key + 1)}>
+              <RefreshCcw size={16} />
+              Atualizar
+            </Button>
 
             <Button type="button" onClick={openCreateModal}>
               <Plus size={16} />
-              Criar meta
+              Nova meta
             </Button>
           </div>
+        }
+      />
+
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-[var(--ff-muted)]">Metas ativas</p>
+            <Flag size={20} className="text-[var(--ff-accent-text)]" />
+          </div>
+          <h2 className="mt-2 text-3xl font-black text-[var(--ff-text)]">{stats.active}</h2>
+          <p className="mt-2 text-xs text-[var(--ff-muted)]">em andamento</p>
         </Card>
 
-        <section className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2 xl:gap-5">
-          {filteredGoals.length === 0 ? (
-            <div className="xl:col-span-2">
-              <Card>
-                <EmptyState
-                  title={goals.length === 0 ? 'Nenhuma meta criada' : 'Nenhuma meta encontrada'}
-                  description={
-                    goals.length === 0
-                      ? 'Crie metas como treinar 4x na semana, bater PR, chegar em certo peso ou registrar fotos no mês.'
-                      : 'Tente mudar o filtro ou buscar por outro termo.'
-                  }
-                  action={
-                    <Button type="button" onClick={openCreateModal}>
-                      <Plus size={16} />
-                      Criar primeira meta
-                    </Button>
-                  }
-                />
-              </Card>
-            </div>
-          ) : (
-            filteredGoals.map((goal) => (
-              <GoalCard
-                key={goal.id}
-                goal={goal}
-                onEdit={openEditModal}
-                onDelete={handleDeleteGoal}
-                onComplete={handleCompleteGoal}
-                onArchive={handleArchiveGoal}
-                onUnarchive={handleUnarchiveGoal}
-                onReactivate={handleReactivateGoal}
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-[var(--ff-muted)]">Progresso médio</p>
+            <Target size={20} className="text-[var(--ff-accent-text)]" />
+          </div>
+          <h2 className="mt-2 text-3xl font-black text-[var(--ff-accent-text)]">{stats.averageProgress}%</h2>
+          <p className="mt-2 text-xs text-[var(--ff-muted)]">das metas ativas</p>
+        </Card>
+
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-[var(--ff-muted)]">Concluídas</p>
+            <CheckCircle2 size={20} className="text-[var(--ff-success-text)]" />
+          </div>
+          <h2 className="mt-2 text-3xl font-black text-[var(--ff-text)]">{stats.completed}</h2>
+          <p className="mt-2 text-xs text-[var(--ff-muted)]">metas finalizadas</p>
+        </Card>
+
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-[var(--ff-muted)]">Arquivadas</p>
+            <Archive size={20} className="text-[var(--ff-muted)]" />
+          </div>
+          <h2 className="mt-2 text-3xl font-black text-[var(--ff-text)]">{stats.archived}</h2>
+          <p className="mt-2 text-xs text-[var(--ff-muted)]">guardadas para depois</p>
+        </Card>
+      </section>
+
+      <Card className="mt-6">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_220px_auto]">
+          <div className="flex h-12 items-center gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-[var(--ff-muted)]">
+            <Search size={18} />
+            <input
+              type="text"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Buscar meta, exercício ou descrição..."
+              className="w-full bg-transparent text-sm text-[var(--ff-text)] outline-none placeholder:text-[var(--ff-muted)]"
+            />
+            {search && (
+              <button type="button" onClick={() => setSearch('')}>
+                <X size={16} />
+              </button>
+            )}
+          </div>
+
+          <select
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+            className="h-12 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-sm font-bold text-[var(--ff-text)] outline-none"
+          >
+            <option value="active">Ativas</option>
+            <option value="completed">Concluídas</option>
+            <option value="archived">Arquivadas</option>
+            <option value="all">Todas</option>
+          </select>
+
+          <Button type="button" onClick={openCreateModal}>
+            <Plus size={16} />
+            Criar meta
+          </Button>
+        </div>
+      </Card>
+
+      <section className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2 xl:gap-5">
+        {filteredGoals.length === 0 ? (
+          <div className="xl:col-span-2">
+            <Card>
+              <EmptyState
+                title={goals.length === 0 ? 'Nenhuma meta criada' : 'Nenhuma meta encontrada'}
+                description={
+                  goals.length === 0
+                    ? 'Crie metas como treinar 4x na semana, bater PR, chegar em certo peso ou registrar fotos no mês.'
+                    : 'Tente mudar o filtro ou buscar por outro termo.'
+                }
+                action={
+                  <Button type="button" onClick={openCreateModal}>
+                    <Plus size={16} />
+                    Criar primeira meta
+                  </Button>
+                }
               />
-            ))
-          )}
-        </section>
-      </div>
+            </Card>
+          </div>
+        ) : (
+          filteredGoals.map((goal) => (
+            <GoalCard
+              key={goal.id}
+              goal={goal}
+              onEdit={openEditModal}
+              onDelete={handleDeleteGoal}
+              onComplete={handleCompleteGoal}
+              onArchive={handleArchiveGoal}
+              onUnarchive={handleUnarchiveGoal}
+              onReactivate={handleReactivateGoal}
+            />
+          ))
+        )}
+      </section>
 
       <GoalFormModal
         open={isModalOpen}
@@ -829,6 +554,5 @@ function Goals() {
     </>
   )
 }
-
 
 export default Goals

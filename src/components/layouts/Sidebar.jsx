@@ -66,47 +66,34 @@ const linkGroups = [
 function Sidebar({ isOpen = false, onClose }) {
   const { user, logout } = useAuth()
 
-  function closeSidebar() {
-    onClose?.()
-  }
-
   function handleLogout() {
-    closeSidebar()
+    onClose?.()
     logout()
   }
 
   return (
     <>
-      <button
-        type="button"
-        onClick={closeSidebar}
-        className={[
-          'fixed inset-0 z-[9990] bg-black/70 backdrop-blur-sm transition-opacity duration-300',
-          isOpen
-            ? 'pointer-events-auto opacity-100'
-            : 'pointer-events-none opacity-0',
-        ].join(' ')}
-        aria-label="Fechar menu"
-        tabIndex={isOpen ? 0 : -1}
-      />
+      {isOpen && (
+        <button
+          type="button"
+          onClick={onClose}
+          className="fixed inset-0 z-50 bg-[var(--ff-overlay)] backdrop-blur-sm"
+          aria-label="Fechar menu"
+        />
+      )}
 
       <aside
         className={[
-          'fixed left-0 top-0 z-[10000] flex h-dvh w-[86vw] max-w-[330px] flex-col overflow-hidden border-r border-[var(--ff-border)] bg-[var(--ff-sidebar)] text-[var(--ff-text)] shadow-2xl shadow-black/40 transition-transform duration-300 ease-out',
+          'fixed left-0 top-0 z-[60] flex h-dvh w-[86vw] max-w-[320px] flex-col overflow-hidden border-r border-[var(--ff-border)] bg-[var(--ff-sidebar)] text-[var(--ff-text)] shadow-2xl shadow-black/20 transition-transform duration-300',
           isOpen ? 'translate-x-0' : '-translate-x-full',
         ].join(' ')}
-        aria-hidden={!isOpen}
       >
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--ff-accent-soft),transparent_38%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--ff-accent-soft),transparent_36%)]" />
 
         <div className="relative flex h-full flex-col">
           <div className="safe-top p-4">
             <div className="flex items-center justify-between gap-4 rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
-              <Link
-                to="/"
-                onClick={closeSidebar}
-                className="flex min-w-0 items-center gap-3"
-              >
+              <div className="flex min-w-0 items-center gap-3">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)] shadow-[0_0_20px_var(--ff-accent-shadow)]">
                   <img
                     src={forgeflowIcon}
@@ -124,12 +111,12 @@ function Sidebar({ isOpen = false, onClose }) {
                     Workout Tracker
                   </p>
                 </div>
-              </Link>
+              </div>
 
               <button
                 type="button"
-                onClick={closeSidebar}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-muted)] transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-card-hover)] hover:text-[var(--ff-text)] active:scale-95"
+                onClick={onClose}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-muted)] transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-card-hover)] hover:text-[var(--ff-text)]"
                 aria-label="Fechar menu"
               >
                 <X size={20} />
@@ -153,7 +140,7 @@ function Sidebar({ isOpen = false, onClose }) {
                         key={link.path}
                         to={link.path}
                         end={link.path === '/'}
-                        onClick={closeSidebar}
+                        onClick={onClose}
                         className={({ isActive }) =>
                           isActive
                             ? 'group flex min-h-12 items-center gap-3 rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-4 py-3 text-[var(--ff-accent-text)] shadow-[0_0_18px_var(--ff-accent-shadow)]'
@@ -179,7 +166,7 @@ function Sidebar({ isOpen = false, onClose }) {
             <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3">
               <Link
                 to="/profile"
-                onClick={closeSidebar}
+                onClick={onClose}
                 className="group flex min-h-12 items-center gap-3 rounded-xl transition hover:bg-[var(--ff-card-hover)]"
               >
                 {user?.avatarUrl ? (
@@ -220,7 +207,7 @@ function Sidebar({ isOpen = false, onClose }) {
 
                   <Link
                     to="/complete-profile"
-                    onClick={closeSidebar}
+                    onClick={onClose}
                     className="shrink-0 text-xs font-bold text-[var(--ff-accent-text)] transition hover:underline"
                   >
                     Completar
@@ -231,7 +218,7 @@ function Sidebar({ isOpen = false, onClose }) {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 text-xs font-bold text-[var(--ff-danger-text)] transition hover:bg-red-500/15 active:scale-[0.98]"
+                className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 text-xs font-bold text-[var(--ff-danger-text)] transition hover:bg-red-500/15"
               >
                 <LogOut size={15} />
                 Sair

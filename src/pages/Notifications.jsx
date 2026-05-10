@@ -19,9 +19,7 @@ import {
   Trash2,
   Weight,
   X,
-  Trophy,
-  AlertTriangle,
-  AlertCircle} from 'lucide-react'
+} from 'lucide-react'
 
 import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
@@ -55,15 +53,6 @@ function normalizeNotificationFromApi(notification = {}) {
     createdAt: notification.createdAt || new Date().toISOString(),
     updatedAt: notification.updatedAt || notification.createdAt || new Date().toISOString(),
   }
-}
-
-
-function getNotificationIcon(type) {
-  if (type === 'success') return <Trophy size={18} />
-  if (type === 'goal') return <CheckCircle2 size={18} />
-  if (type === 'warning') return <AlertTriangle size={18} />
-  if (type === 'error' || type === 'danger') return <AlertCircle size={18} />
-  return <BellRing size={18} />
 }
 
 function formatDateTime(dateString) {
@@ -686,204 +675,7 @@ function Notifications() {
 
   return (
     <>
-
-      <section className="lg:hidden">
-        <div className="space-y-5">
-          <div className="overflow-hidden rounded-[2rem] border border-[var(--ff-accent-border)]/25 bg-gradient-to-br from-[var(--ff-accent-soft)]/25 via-[var(--ff-card)] to-[var(--ff-surface-2)] p-5 shadow-[0_18px_44px_rgba(0,0,0,0.24)]">
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <Badge variant={source === 'database' ? 'purple' : 'default'}>
-                  {loading ? 'Carregando' : source === 'database' ? 'Sincronizado' : 'Local'}
-                </Badge>
-
-                <h1 className="mt-4 text-3xl font-black leading-tight tracking-tight text-[var(--ff-text)]">
-                  Notificações
-                </h1>
-
-                <p className="mt-2 text-sm leading-relaxed text-[var(--ff-muted)]">
-                  Alertas de metas, treinos, peso e evolução em formato compacto.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleGenerateNotifications}
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--ff-accent)] text-white shadow-[0_0_18px_var(--ff-accent-shadow)] active:scale-95"
-                aria-label="Verificar notificações"
-              >
-                <BellRing size={21} />
-              </button>
-            </div>
-
-            <div className="mt-5 grid grid-cols-3 gap-3">
-              <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 text-center">
-                <p className="text-2xl font-black text-[var(--ff-accent-text)]">{stats.unread}</p>
-                <p className="mt-1 text-[11px] text-[var(--ff-muted)]">não lidas</p>
-              </div>
-
-              <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 text-center">
-                <p className="text-2xl font-black text-[var(--ff-text)]">{stats.read}</p>
-                <p className="mt-1 text-[11px] text-[var(--ff-muted)]">lidas</p>
-              </div>
-
-              <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 text-center">
-                <p className="text-2xl font-black text-[var(--ff-muted)]">{stats.archived}</p>
-                <p className="mt-1 text-[11px] text-[var(--ff-muted)]">arquivadas</p>
-              </div>
-            </div>
-
-            {stats.unread > 0 && (
-              <Button
-                type="button"
-                onClick={handleMarkAllAsRead}
-                className="mt-4 w-full"
-              >
-                <CheckCheck size={17} />
-                Marcar todas como lidas
-              </Button>
-            )}
-          </div>
-
-          <div className="sticky top-[72px] z-20 -mx-4 border-y border-[var(--ff-border)] bg-[var(--ff-bg)]/95 px-4 py-3 backdrop-blur-xl">
-            <div className="flex h-12 items-center gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-[var(--ff-muted)]">
-              <Search size={18} />
-              <input
-                type="search"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Buscar notificação..."
-                className="w-full bg-transparent text-sm font-medium text-[var(--ff-text)] outline-none placeholder:text-[var(--ff-muted)]"
-              />
-              {search && (
-                <button type="button" onClick={() => setSearch('')} aria-label="Limpar busca">
-                  <X size={16} />
-                </button>
-              )}
-            </div>
-
-            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-              {[
-                ['Todas', ''],
-                ['Não lidas', 'unread'],
-                ['Lidas', 'read'],
-                ['Arquivadas', 'archived'],
-              ].map(([label, value]) => (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => setStatusFilter(value)}
-                  className={
-                    statusFilter === value
-                      ? 'shrink-0 rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-4 py-2 text-xs font-black text-[var(--ff-accent-text)]'
-                      : 'shrink-0 rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 py-2 text-xs font-black text-[var(--ff-text-soft)]'
-                  }
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <section className="space-y-3">
-            {loading && notifications.length === 0 && (
-              <Card className="p-4">
-                <EmptyState title="Carregando notificações" description="Buscando alertas da sua conta." />
-              </Card>
-            )}
-
-            {!loading && visibleNotifications.length === 0 && (
-              <Card className="p-4">
-                <EmptyState title="Nenhuma notificação" description="Não há notificações para o filtro atual." />
-              </Card>
-            )}
-
-            {visibleNotifications.map((notification) => (
-              <article
-                key={notification.id}
-                className={
-                  notification.status === 'unread'
-                    ? 'rounded-[1.7rem] border border-[var(--ff-accent-border)] bg-[var(--ff-card)] p-4 shadow-[0_0_24px_var(--ff-accent-shadow)]/10'
-                    : 'rounded-[1.7rem] border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 opacity-90'
-                }
-              >
-                <div className="flex items-start gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">
-                    {getNotificationIcon(notification.type)}
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-2">
-                      <h2 className="line-clamp-2 text-sm font-black leading-tight text-[var(--ff-text)]">
-                        {notification.title}
-                      </h2>
-
-                      {notification.status === 'unread' && (
-                        <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-[var(--ff-accent)]" />
-                      )}
-                    </div>
-
-                    {notification.message && (
-                      <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-[var(--ff-muted)]">
-                        {notification.message}
-                      </p>
-                    )}
-
-                    <p className="mt-2 text-[11px] text-[var(--ff-muted-2)]">
-                      {formatDateTime(notification.createdAt)}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-4 grid grid-cols-2 gap-2">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => handleOpenNotification(notification)}
-                    className="w-full"
-                  >
-                    <Info size={15} />
-                    Detalhes
-                  </Button>
-
-                  {notification.status === 'unread' ? (
-                    <Button
-                      type="button"
-                      onClick={() => handleMarkAsRead(notification.id)}
-                      className="w-full"
-                    >
-                      <CheckCircle2 size={15} />
-                      Lida
-                    </Button>
-                  ) : (
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={() => handleOpenAction(notification)}
-                      className="w-full"
-                    >
-                      Abrir
-                    </Button>
-                  )}
-                </div>
-              </article>
-            ))}
-
-            {visibleCount < filteredNotifications.length && (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => setVisibleCount((current) => current + 20)}
-                className="w-full"
-              >
-                Carregar mais
-              </Button>
-            )}
-          </section>
-        </div>
-      </section>
-
-      <div className="hidden lg:block">
-        <PageHeader
+      <PageHeader
         title="Notificações"
         description="Acompanhe alertas inteligentes sobre treino, metas, peso e evolução."
         action={
@@ -1124,8 +916,6 @@ function Notifications() {
           </Button>
         )}
       </section>
-
-      </div>
 
       <NotificationDetailModal
         notification={selectedNotification}

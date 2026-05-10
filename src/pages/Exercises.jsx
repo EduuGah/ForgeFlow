@@ -581,7 +581,6 @@ function Exercises() {
   const [isSyncing, setIsSyncing] = useState(false)
   const [dataSource, setDataSource] = useState('local')
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT)
 
   const [exercises, setExercises] = useState([])
@@ -1102,7 +1101,7 @@ function Exercises() {
         }
       />
 
-      <section className="hidden gap-4 sm:grid-cols-2 xl:grid xl:grid-cols-4">
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="Total"
           value={indexedExercises.length}
@@ -1132,8 +1131,8 @@ function Exercises() {
         />
       </section>
 
-      <section className="mt-4 grid grid-cols-1 gap-4 sm:gap-6 xl:mt-6 xl:grid-cols-[330px_minmax(0,1fr)]">
-        <aside className="hidden space-y-6 xl:order-1 xl:block">
+      <section className="mt-6 grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-[330px_minmax(0,1fr)]">
+        <aside className="order-2 space-y-6 xl:order-1">
           <Card className="overflow-hidden border border-zinc-800 bg-gradient-to-b from-[#17171b] to-[#121216]">
             <div className="border-b border-zinc-800 p-5">
               <div className="flex items-center gap-3">
@@ -1162,7 +1161,7 @@ function Exercises() {
               </div>
             </div>
 
-            <div className="max-h-[330px] space-y-2 overflow-y-auto p-4 pt-4">
+            <div className="max-h-[55vh] space-y-2 overflow-y-auto overscroll-contain p-4 pt-4">
               {filteredGroupStats.map((group) => (
                 <FilterListButton
                   key={group.name}
@@ -1211,7 +1210,7 @@ function Exercises() {
               </div>
             </div>
 
-            <div className="max-h-[350px] space-y-2 overflow-y-auto p-4 pt-4">
+            <div className="max-h-[55vh] space-y-2 overflow-y-auto overscroll-contain p-4 pt-4">
               {filteredSubgroupStats.map((subgroup) => (
                 <FilterListButton
                   key={subgroup.name}
@@ -1375,7 +1374,7 @@ function Exercises() {
 
         <main className="order-1 xl:order-2">
           <Card className="overflow-hidden border border-zinc-800 bg-gradient-to-b from-[#17171b] to-[#121216]">
-            <div className="border-b border-zinc-800 p-4 sm:p-5">
+            <div className="border-b border-zinc-800 p-5">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <div className="flex items-center gap-2">
@@ -1396,38 +1395,27 @@ function Exercises() {
                     No celular, use a busca e os chips rápidos aqui em cima. Os filtros completos ficam abaixo da lista.
                   </p>
                 <div className="mt-4 space-y-3 xl:hidden">
-                  <div className="grid grid-cols-[minmax(0,1fr)_48px] gap-2">
-                    <div className="flex h-12 items-center gap-3 rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-zinc-400">
-                      <Search size={18} />
+                  <div className="flex h-12 items-center gap-3 rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-zinc-400">
+                    <Search size={18} />
 
-                      <input
-                        type="search"
-                        placeholder="Buscar exercício..."
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                        className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-500"
-                      />
+                    <input
+                      type="search"
+                      placeholder="Buscar exercício..."
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-500"
+                    />
 
-                      {search && (
-                        <button
-                          type="button"
-                          onClick={() => setSearch('')}
-                          className="text-zinc-500 transition hover:text-white"
-                          aria-label="Limpar busca"
-                        >
-                          <X size={17} />
-                        </button>
-                      )}
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => setIsMobileFiltersOpen(true)}
-                      className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)] shadow-[0_0_18px_var(--ff-accent-shadow)]/20"
-                      aria-label="Abrir filtros"
-                    >
-                      <Filter size={19} />
-                    </button>
+                    {search && (
+                      <button
+                        type="button"
+                        onClick={() => setSearch('')}
+                        className="text-zinc-500 transition hover:text-white"
+                        aria-label="Limpar busca"
+                      >
+                        <X size={17} />
+                      </button>
+                    )}
                   </div>
 
                   <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
@@ -1482,7 +1470,7 @@ function Exercises() {
                 <button
                   type="button"
                   onClick={openCreateModal}
-                  className="hidden h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-bold text-white shadow-[0_0_20px_var(--ff-accent-shadow)] transition hover:bg-[var(--ff-accent-hover)] sm:inline-flex"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-bold text-white shadow-[0_0_20px_var(--ff-accent-shadow)] transition hover:bg-[var(--ff-accent-hover)]"
                 >
                   <Plus size={18} />
                   Adicionar exercício
@@ -1490,7 +1478,7 @@ function Exercises() {
               </div>
             </div>
 
-            <div className="max-h-none overflow-visible p-3 sm:p-4 xl:max-h-[900px] xl:overflow-y-auto">
+            <div className="max-h-[65vh] overflow-y-auto overscroll-contain p-4 xl:max-h-[900px]">
               {!isLoaded && (
                 <EmptyState
                   title="Carregando biblioteca"
@@ -1506,7 +1494,7 @@ function Exercises() {
               )}
 
               {displayedExercises.length > 0 && (
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-1">
+                <div className="grid grid-cols-2 gap-3 xl:grid-cols-1">
                   {displayedExercises.map((exercise) => {
                     const isExpanded = expandedExerciseId === exercise.id
                     const media = getExerciseMedia(exercise)
@@ -1523,7 +1511,7 @@ function Exercises() {
                           className="relative w-full p-3 text-left sm:p-4"
                         >
                           <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:gap-4">
-                            <div className="flex aspect-[4/3] w-full shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-zinc-700 bg-white shadow-inner xl:h-20 xl:w-20 xl:aspect-square">
+                            <div className="flex aspect-square w-full shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-zinc-700 bg-white shadow-inner xl:h-20 xl:w-20">
                               {media ? (
                                 <img
                                   src={media}
@@ -1722,7 +1710,7 @@ function Exercises() {
                   })}
 
                   {visibleCount < filteredExercises.length && (
-                    <div className="col-span-2 pt-4 sm:col-span-3 xl:col-span-1">
+                    <div className="pt-4">
                       <Button
                         type="button"
                         variant="secondary"
@@ -1739,89 +1727,6 @@ function Exercises() {
           </Card>
         </main>
       </section>
-
-
-      {isMobileFiltersOpen && (
-        <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/75 px-3 pb-3 backdrop-blur-sm xl:hidden">
-          <button
-            type="button"
-            className="absolute inset-0"
-            onClick={() => setIsMobileFiltersOpen(false)}
-            aria-label="Fechar filtros"
-          />
-
-          <div className="relative max-h-[82vh] w-full overflow-hidden rounded-t-[2rem] border border-zinc-800 bg-[#121216] shadow-2xl shadow-black/40">
-            <div className="sticky top-0 z-10 border-b border-zinc-800 bg-[#121216]/95 p-4 backdrop-blur-xl">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-wide text-[var(--ff-accent-text)]">
-                    Filtros
-                  </p>
-
-                  <h2 className="text-xl font-black text-white">
-                    Refinar biblioteca
-                  </h2>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setIsMobileFiltersOpen(false)}
-                  className="flex h-10 w-10 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-950 text-zinc-400"
-                  aria-label="Fechar filtros"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-            </div>
-
-            <div className="max-h-[calc(82vh-88px)] space-y-4 overflow-y-auto p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-              <button
-                type="button"
-                onClick={() => setShowOnlyFavorites((current) => !current)}
-                className={
-                  showOnlyFavorites
-                    ? 'flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-yellow-500/30 bg-yellow-500/10 text-sm font-bold text-yellow-300'
-                    : 'flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-950 text-sm font-bold text-zinc-300'
-                }
-              >
-                <Star size={17} fill={showOnlyFavorites ? 'currentColor' : 'none'} />
-                Somente favoritos
-              </button>
-
-              <Select value={groupFilter} onChange={(event) => setGroupFilter(event.target.value)}>
-                <option value="">Todos os grupos</option>
-                {stats.muscleGroups.map((group) => (
-                  <option key={group} value={group}>{group}</option>
-                ))}
-              </Select>
-
-              <Select value={subgroupFilter} onChange={(event) => setSubgroupFilter(event.target.value)}>
-                <option value="">Todos os subgrupos</option>
-                {stats.subgroupList.map((subgroup) => (
-                  <option key={subgroup} value={subgroup}>{subgroup}</option>
-                ))}
-              </Select>
-
-              <Select value={equipmentFilter} onChange={(event) => setEquipmentFilter(event.target.value)}>
-                <option value="">Todos os equipamentos</option>
-                {stats.equipmentList.map((item) => (
-                  <option key={item} value={item}>{item}</option>
-                ))}
-              </Select>
-
-              {hasActiveFilters && (
-                <Button type="button" variant="secondary" onClick={clearFilters} className="w-full">
-                  Limpar filtros
-                </Button>
-              )}
-
-              <Button type="button" onClick={() => setIsMobileFiltersOpen(false)} className="w-full">
-                Aplicar filtros
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <button
         type="button"

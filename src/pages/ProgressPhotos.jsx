@@ -424,21 +424,7 @@ function ProgressPhotos() {
 
   return (
     <>
-
-      <section className="lg:hidden">
-        <div className="space-y-5">
-          <div className="overflow-hidden rounded-[2rem] border border-[var(--ff-accent-border)]/25 bg-gradient-to-br from-[var(--ff-accent-soft)]/25 via-[var(--ff-card)] to-[var(--ff-surface-2)] p-5 shadow-[0_18px_44px_rgba(0,0,0,0.24)]">
-            <Badge variant={source === 'database' ? 'purple' : 'default'}>{loading ? 'Carregando' : source === 'database' ? 'Sincronizado' : 'Local'}</Badge><h1 className="mt-4 text-3xl font-black leading-tight tracking-tight text-[var(--ff-text)]">Fotos</h1><p className="mt-2 text-sm leading-relaxed text-[var(--ff-muted)]">Registre sua evolução com upload rápido e galeria compacta.</p>
-            <div className="mt-5 grid grid-cols-3 gap-3"><div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 text-center"><p className="text-xl font-black">{stats.total}</p><p className="mt-1 text-[11px] text-[var(--ff-muted)]">fotos</p></div><div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 text-center"><p className="text-xl font-black text-[var(--ff-accent-text)]">{stats.angles}</p><p className="mt-1 text-[11px] text-[var(--ff-muted)]">ângulos</p></div><div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 text-center"><p className="text-xs font-black text-[var(--ff-text)]">{stats.lastDate ? formatDate(stats.lastDate) : '—'}</p><p className="mt-1 text-[11px] text-[var(--ff-muted)]">última</p></div></div>
-          </div>
-          <Card className="p-4"><div className="flex items-center gap-3"><div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]"><ImagePlus size={22}/></div><div><h2 className="text-xl font-black text-[var(--ff-text)]">Nova foto</h2><p className="text-sm text-[var(--ff-muted)]">JPG, PNG ou WEBP até 5MB.</p></div></div><form onSubmit={handleSubmit} className="mt-5 space-y-3"><label className="flex cursor-pointer flex-col items-center justify-center rounded-3xl border border-dashed border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] p-5 text-center"><Camera size={28} className="text-[var(--ff-accent-text)]"/><span className="mt-2 text-sm font-black text-[var(--ff-text)]">{file ? file.name : 'Escolher foto'}</span><input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event)=>setFile(event.target.files?.[0] || null)} className="hidden" /></label><div className="grid grid-cols-2 gap-3"><Input label="Data" type="date" value={date} onChange={(event)=>setDate(event.target.value)} /><Select label="Ângulo" value={angle} onChange={(event)=>setAngle(event.target.value)}><option value="front">Frente</option><option value="side">Lado</option><option value="back">Costas</option><option value="other">Outro</option></Select></div><Input label="Peso" type="number" step="0.1" inputMode="decimal" value={weight} onChange={(event)=>setWeight(event.target.value)} placeholder="Opcional"/><Button type="submit" disabled={uploading} className="w-full">{uploading ? 'Enviando...' : 'Salvar foto'}</Button></form></Card>
-          <div className="sticky top-[72px] z-20 -mx-4 border-y border-[var(--ff-border)] bg-[var(--ff-bg)]/95 px-4 py-3 backdrop-blur-xl"><div className="flex h-12 items-center gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-[var(--ff-muted)]"><Search size={18}/><input type="search" value={search} onChange={(event)=>setSearch(event.target.value)} placeholder="Buscar observação..." className="w-full bg-transparent text-sm text-[var(--ff-text)] outline-none" />{search && <button type="button" onClick={()=>setSearch('')}><X size={16}/></button>}</div></div>
-          <section className="grid grid-cols-2 gap-3">{filteredPhotos.length===0 ? <div className="col-span-2"><Card className="p-4"><EmptyState title="Nenhuma foto" description="Envie sua primeira foto para começar." /></Card></div> : filteredPhotos.map((photo)=><button key={photo.id} type="button" onClick={()=>setSelectedPhoto(photo)} className="overflow-hidden rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] text-left"><img src={photo.imageUrl} alt="Foto de evolução" className="aspect-[3/4] w-full object-cover" loading="lazy"/><div className="p-3"><p className="text-xs font-black text-[var(--ff-text)]">{formatDate(photo.date)}</p><p className="mt-1 text-[11px] text-[var(--ff-muted)]">{getAngleLabel(photo.angle)}{photo.weight ? ` • ${photo.weight}kg` : ''}</p></div></button>)}</section>
-        </div>
-      </section>
-
-      <div className="hidden lg:block">
-        <PageHeader
+      <PageHeader
         title="Fotos de evolução"
         description="Registre sua evolução corporal com fotos, peso, data e observações."
         action={
@@ -1076,8 +1062,6 @@ function ProgressPhotos() {
           </div>
         </div>
       )}
-
-      </div>
 
       <ConfirmModal
         open={Boolean(confirmModal)}
