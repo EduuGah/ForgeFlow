@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { Menu } from 'lucide-react'
 import { Outlet } from 'react-router-dom'
 
@@ -46,6 +46,10 @@ const { user } = useAuth()
   const { activeSession } = useWorkoutSession()
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true)
+  const [isHeaderCompact, setIsHeaderCompact] = useState(false)
+  const lastScrollYRef = useRef(0)
+  const tickingRef = useRef(false)
   const [popupNotification, setPopupNotification] = useState(null)
 
   useEffect(() => {
@@ -169,16 +173,74 @@ const { user } = useAuth()
     }
   }, [isSidebarOpen])
 
+  useEffect(() => {
+    function unlockScroll() {
+      document.body.style.overflow = ''
+      document.documentElement.style.overflow = ''
+      document.body.classList.remove('ff-lock-scroll')
+      document.documentElement.classList.remove('ff-lock-scroll')
+    }
+
+    unlockScroll()
+
+    function handleScrollDirection() {
+      const currentScrollY = window.scrollY || 0
+      const lastScrollY = lastScrollYRef.current
+      const difference = currentScrollY - lastScrollY
+
+      setIsHeaderCompact(currentScrollY > 16)
+
+      if (currentScrollY < 24) {
+        setIsHeaderVisible(true)
+      } else if (difference > 8) {
+        setIsHeaderVisible(false)
+      } else if (difference < -8) {
+        setIsHeaderVisible(true)
+      }
+
+      lastScrollYRef.current = currentScrollY
+      tickingRef.current = false
+    }
+
+    function handleScroll() {
+      if (tickingRef.current) return
+
+      tickingRef.current = true
+      window.requestAnimationFrame(handleScrollDirection)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    window.addEventListener('wheel', handleScroll, { passive: true })
+    window.addEventListener('touchmove', handleScroll, { passive: true })
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('wheel', handleScroll)
+      window.removeEventListener('touchmove', handleScroll)
+      unlockScroll()
+    }
+  }, [])
+
+
   return (
-    <div className="min-h-dvh overflow-x-hidden bg-[var(--ff-bg)] text-[var(--ff-text)] transition-colors duration-300">
+    <div className="min-h-dvh bg-[var(--ff-bg)] text-[var(--ff-text)] transition-colors duration-300">
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,var(--ff-accent-shadow),transparent_34%),radial-gradient(circle_at_bottom_right,var(--ff-accent-soft),transparent_32%)] opacity-80" />
 
       <header
         id="app-header"
-        className="sticky top-0 z-40 border-b border-[var(--ff-border)] bg-[var(--ff-header)] backdrop-blur-xl transition-colors duration-300"
+        className={[
+          'fixed inset-x-0 top-0 z-40 border-b border-[var(--ff-border)] bg-[var(--ff-header)] backdrop-blur-xl transition-all duration-300 ease-out',
+          isHeaderVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0',
+          isHeaderCompact ? 'shadow-lg shadow-black/10' : '',
+        ].join(' ')}
       >
         <div className="safe-top">
-          <div className="flex h-16 items-center justify-between gap-3 px-4 sm:px-6">
+          <div
+            className={[
+              'flex items-center justify-between gap-3 px-4 transition-all duration-300 sm:px-6',
+              isHeaderCompact ? 'h-14' : 'h-16',
+            ].join(' ')}
+          >
             <div className="flex min-w-0 items-center gap-3">
               <button
                 type="button"
@@ -230,7 +292,7 @@ const { user } = useAuth()
         onClose={() => setIsSidebarOpen(false)}
       />
 
-      <main className="relative min-h-0 overflow-visible px-4 py-6 pb-36 sm:px-6 lg:px-8 lg:pb-10">
+      <main className="relative min-h-0 overflow-visible px-4 pb-36 pt-[calc(5.5rem+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[calc(5.75rem+env(safe-area-inset-top))]">
         <div className="mx-auto w-full max-w-[1600px]">
           <Outlet />
         </div>

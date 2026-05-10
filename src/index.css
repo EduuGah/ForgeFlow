@@ -870,3 +870,67 @@ aside,
 [role="dialog"] {
   overscroll-behavior: contain;
 }
+
+
+/* =========================================================
+   ForgeFlow — correção scroll mobile + header auto-hide
+   ========================================================= */
+
+html,
+body,
+#root {
+  min-height: 100%;
+  height: auto;
+}
+
+html,
+body {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: auto;
+}
+
+body {
+  touch-action: pan-y;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+main {
+  min-height: 100dvh;
+  height: auto;
+  overflow: visible;
+}
+
+/* Header fixo que some ao descer e volta ao subir */
+#app-header {
+  will-change: transform, opacity;
+}
+
+/* Evita que overlays fechados fiquem por cima da tela */
+.pointer-events-none {
+  pointer-events: none !important;
+}
+
+/* Em mobile, containers horizontais não devem roubar o scroll vertical */
+@media (max-width: 1023px) {
+  .overflow-x-auto,
+  .ff-mobile-scroll-x {
+    overscroll-behavior-x: contain;
+    overscroll-behavior-y: auto;
+    touch-action: pan-x pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  main {
+    padding-bottom: calc(8rem + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+/* Só use lock de scroll quando algum componente adicionar explicitamente esta classe. */
+html.ff-lock-scroll,
+body.ff-lock-scroll {
+  overflow: hidden !important;
+}
