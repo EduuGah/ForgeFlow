@@ -1119,6 +1119,28 @@ const workoutHistorySchema = new mongoose.Schema(
     }
 )
 
+
+const activeWorkoutSessionSchema = new mongoose.Schema(
+    {
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+            unique: true,
+            index: true,
+        },
+
+        session: {
+            type: Object,
+            required: true,
+            default: {},
+        },
+    },
+    {
+        timestamps: true,
+    }
+)
+
 const User = mongoose.model('User', userSchema)
 const Exercise = mongoose.model('Exercise', exerciseSchema)
 const Workout = mongoose.model('Workout', workoutSchema)
@@ -1128,6 +1150,7 @@ const BodyWeight = mongoose.model('BodyWeight', bodyWeightSchema)
 const ProgressPhoto = mongoose.model('ProgressPhoto', progressPhotoSchema)
 const Goal = mongoose.model('Goal', goalSchema)
 const Notification = mongoose.model('Notification', notificationSchema)
+const ActiveWorkoutSession = mongoose.model('ActiveWorkoutSession', activeWorkoutSessionSchema)
 
 function createToken(user) {
     return jwt.sign(
@@ -1289,6 +1312,103 @@ function authMiddleware(req, res, next) {
     }
 }
 
+
+function normalizeActiveWorkoutSessionPayload(payload) {
+    if (!payload) return null
+
+    const session = payload.session || payload.activeSession || payload
+
+    if (!session || typeof session !== 'object') return null
+
+    if (!Array.isArray(session.exercises)) return null
+
+    return {
+        ...session,
+        id: session.id || session._id || new mongoose.Types.ObjectId().toString(),
+        workoutName: session.workoutName || session.name || 'Treino em andamento',
+        exercises: session.exercises,
+    }
+}
+
+async function getActiveWorkoutSession(req, res) {
+    try {
+        const record = await ActiveWorkoutSession.findOne({
+            userId: req.user.userId,
+        }).lean()
+
+        res.json({
+            session: record?.session || null,
+        })
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao buscar treino ativo.',
+        })
+    }
+}
+
+async function saveActiveWorkoutSession(req, res) {
+    try {
+        const session = normalizeActiveWorkoutSessionPayload(req.body)
+
+        if (!session) {
+            await ActiveWorkoutSession.findOneAndDelete({
+                userId: req.user.userId,
+            })
+
+            return res.json({
+                session: null,
+            })
+        }
+
+        const record = await ActiveWorkoutSession.findOneAndUpdate(
+            {
+                userId: req.user.userId,
+            },
+            {
+                userId: req.user.userId,
+                session,
+            },
+            {
+                new: true,
+                upsert: true,
+                setDefaultsOnInsert: true,
+            }
+        )
+
+        res.json({
+            session: record.session,
+            updatedAt: record.updatedAt,
+        })
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao salvar treino ativo.',
+        })
+    }
+}
+
+async function clearActiveWorkoutSession(req, res) {
+    try {
+        await ActiveWorkoutSession.findOneAndDelete({
+            userId: req.user.userId,
+        })
+
+        res.json({
+            ok: true,
+            session: null,
+        })
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao limpar treino ativo.',
+        })
+    }
+}
+
 passport.serializeUser((user, done) => {
     done(null, user._id.toString())
 })
@@ -1404,6 +1524,20 @@ app.put('/settings', authMiddleware, async (req, res) => {
 
     res.json(settings.data)
 })
+
+
+app.get('/active-workout', authMiddleware, getActiveWorkoutSession)
+app.put('/active-workout', authMiddleware, saveActiveWorkoutSession)
+app.delete('/active-workout', authMiddleware, clearActiveWorkoutSession)
+
+// Aliases mantidos para compatibilidade com versões anteriores do frontend.
+app.get('/active-session', authMiddleware, getActiveWorkoutSession)
+app.put('/active-session', authMiddleware, saveActiveWorkoutSession)
+app.delete('/active-session', authMiddleware, clearActiveWorkoutSession)
+
+app.get('/workout-session/active', authMiddleware, getActiveWorkoutSession)
+app.put('/workout-session/active', authMiddleware, saveActiveWorkoutSession)
+app.delete('/workout-session/active', authMiddleware, clearActiveWorkoutSession)
 
 app.get('/health', (req, res) => {
     res.json({
@@ -3141,6 +3275,10 @@ app.post('/workout-history', authMiddleware, async (req, res) => {
                 }
             )
         }
+
+        await ActiveWorkoutSession.findOneAndDelete({
+            userId: req.user.userId,
+        })
 
         res.status(201).json(historyItem)
     } catch (error) {

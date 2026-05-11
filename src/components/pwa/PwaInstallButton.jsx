@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, Download, Info, Share, Smartphone, X } from 'lucide-react'
+import {
+  CheckCircle2,
+  Chrome,
+  Download,
+  Info,
+  MoreVertical,
+  Share,
+  Smartphone,
+  X,
+} from 'lucide-react'
 
 import forgeflowIcon from '../../assets/forgeflow-icon.png'
 
@@ -18,12 +27,19 @@ function isIosDevice() {
   return /iphone|ipad|ipod/i.test(window.navigator.userAgent || '')
 }
 
+function isAndroidDevice() {
+  if (typeof window === 'undefined') return false
+
+  return /android/i.test(window.navigator.userAgent || '')
+}
+
 function PwaInstallButton() {
   const [installPrompt, setInstallPrompt] = useState(null)
   const [isOpen, setIsOpen] = useState(false)
   const [installed, setInstalled] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
   const isIos = useMemo(() => isIosDevice(), [])
+  const isAndroid = useMemo(() => isAndroidDevice(), [])
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined
@@ -63,13 +79,13 @@ function PwaInstallButton() {
 
   async function handleInstall() {
     if (installed) {
-      setStatusMessage('O ForgeFlow já está aberto como aplicativo instalado.')
+      setStatusMessage('O ForgeFlow já parece estar aberto como aplicativo instalado.')
       return
     }
 
     if (!installPrompt) {
       setStatusMessage(
-        'O navegador ainda não liberou o instalador automático. Use as instruções abaixo para adicionar à tela inicial.'
+        'O navegador ainda não liberou o instalador automático. Use uma das instruções abaixo.'
       )
       return
     }
@@ -81,9 +97,10 @@ function PwaInstallButton() {
       if (choice?.outcome === 'accepted') {
         setInstalled(true)
         setIsOpen(false)
+        setStatusMessage('')
       } else {
         setStatusMessage(
-          'Instalação cancelada. Você pode tentar novamente pelo botão Instalar APP.'
+          'Instalação cancelada. Você ainda pode adicionar manualmente pelo menu do navegador.'
         )
       }
 
@@ -99,31 +116,33 @@ function PwaInstallButton() {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[11000] flex items-end justify-center bg-black/55 p-3 backdrop-blur-sm sm:items-center sm:p-4">
-      <div className="w-full max-w-md overflow-hidden rounded-t-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] text-[var(--ff-text)] shadow-2xl shadow-black/35 sm:rounded-[2rem]">
-        <div className="relative p-5 sm:p-6">
-          <button
-            type="button"
-            onClick={() => setIsOpen(false)}
-            className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-xl text-[var(--ff-muted)] transition hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)]"
-            aria-label="Fechar instalação"
-          >
-            <X size={18} />
-          </button>
+    <div className="fixed inset-0 z-[11000] flex items-end justify-center bg-black/60 p-3 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="max-h-[92dvh] w-full max-w-md overflow-hidden rounded-t-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] text-[var(--ff-text)] shadow-2xl shadow-black/35 sm:rounded-[2rem]">
+        <div className="max-h-[92dvh] overflow-y-auto p-5 sm:p-6">
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="absolute right-0 top-0 flex h-9 w-9 items-center justify-center rounded-xl text-[var(--ff-muted)] transition hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)]"
+              aria-label="Fechar instalação"
+            >
+              <X size={18} />
+            </button>
 
-          <div className="flex items-start gap-4 pr-10">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)] shadow-[0_0_18px_var(--ff-accent-shadow)]">
-              <img src={forgeflowIcon} alt="ForgeFlow" className="h-full w-full object-cover" />
-            </div>
+            <div className="flex items-start gap-4 pr-10">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)] shadow-[0_0_18px_var(--ff-accent-shadow)]">
+                <img src={forgeflowIcon} alt="ForgeFlow" className="h-full w-full object-cover" />
+              </div>
 
-            <div className="min-w-0">
-              <p className="text-xl font-black leading-tight text-[var(--ff-text)]">
-                Instalar ForgeFlow
-              </p>
+              <div className="min-w-0">
+                <p className="text-xl font-black leading-tight text-[var(--ff-text)]">
+                  Instalar ForgeFlow
+                </p>
 
-              <p className="mt-2 text-sm leading-relaxed text-[var(--ff-muted)]">
-                Adicione à tela inicial para abrir o ForgeFlow como aplicativo.
-              </p>
+                <p className="mt-2 text-sm leading-relaxed text-[var(--ff-muted)]">
+                  Adicione à tela inicial para abrir o ForgeFlow como aplicativo.
+                </p>
+              </div>
             </div>
           </div>
 
@@ -133,22 +152,58 @@ function PwaInstallButton() {
               <p>O ForgeFlow já parece estar instalado ou aberto em modo aplicativo.</p>
             </div>
           ) : (
-            <div className="mt-5 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4 text-sm leading-relaxed text-[var(--ff-muted)]">
-              {isIos ? (
-                <div className="flex items-start gap-3">
-                  <Share size={18} className="mt-0.5 shrink-0 text-[var(--ff-accent-text)]" />
-                  <p>
-                    No iPhone, abra pelo <strong className="text-[var(--ff-text)]">Safari</strong>, toque em <strong className="text-[var(--ff-text)]">Compartilhar</strong> e depois em <strong className="text-[var(--ff-text)]">Adicionar à Tela de Início</strong>.
-                  </p>
-                </div>
-              ) : (
-                <div className="flex items-start gap-3">
-                  <Smartphone size={18} className="mt-0.5 shrink-0 text-[var(--ff-accent-text)]" />
-                  <p>
-                    No Chrome, o botão abaixo tenta abrir o instalador. Se não abrir, use o menu do navegador e escolha <strong className="text-[var(--ff-text)]">Instalar app</strong> ou <strong className="text-[var(--ff-text)]">Adicionar à tela inicial</strong>.
-                  </p>
+            <div className="mt-5 space-y-3">
+              {installPrompt && (
+                <div className="rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] p-4 text-sm leading-relaxed text-[var(--ff-accent-text)]">
+                  <div className="flex items-start gap-3">
+                    <Download size={18} className="mt-0.5 shrink-0" />
+                    <p>
+                      O navegador liberou a instalação automática. Toque em <strong>Instalar agora</strong>.
+                    </p>
+                  </div>
                 </div>
               )}
+
+              <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4 text-sm leading-relaxed text-[var(--ff-muted)]">
+                <div className="flex items-start gap-3">
+                  {isIos ? (
+                    <Share size={18} className="mt-0.5 shrink-0 text-[var(--ff-accent-text)]" />
+                  ) : (
+                    <Chrome size={18} className="mt-0.5 shrink-0 text-[var(--ff-accent-text)]" />
+                  )}
+
+                  <div>
+                    <p className="font-black text-[var(--ff-text)]">
+                      {isIos ? 'Como instalar no iPhone' : isAndroid ? 'Como instalar no Android' : 'Como instalar no navegador'}
+                    </p>
+
+                    {isIos ? (
+                      <ol className="mt-2 list-decimal space-y-1 pl-4">
+                        <li>Abra o ForgeFlow pelo Safari.</li>
+                        <li>Toque no botão Compartilhar.</li>
+                        <li>Escolha “Adicionar à Tela de Início”.</li>
+                        <li>Confirme em “Adicionar”.</li>
+                      </ol>
+                    ) : (
+                      <ol className="mt-2 list-decimal space-y-1 pl-4">
+                        <li>Abra o ForgeFlow no Chrome.</li>
+                        <li>Toque no menu de três pontos.</li>
+                        <li>Escolha “Instalar app” ou “Adicionar à tela inicial”.</li>
+                        <li>Confirme a instalação.</li>
+                      </ol>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4 text-sm leading-relaxed text-[var(--ff-muted)]">
+                <div className="flex items-start gap-3">
+                  <MoreVertical size={18} className="mt-0.5 shrink-0 text-[var(--ff-accent-text)]" />
+                  <p>
+                    Se o botão automático não abrir nada, não é erro visual: o Chrome/Safari só mostra o instalador quando considera o PWA elegível.
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 
