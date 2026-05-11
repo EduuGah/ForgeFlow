@@ -17,6 +17,8 @@ const ACTIVE_SESSION_API_ENDPOINTS = [
   '/workout-session/active',
 ]
 
+const FINISHED_ACTIVE_SESSION_IDS_KEY = 'forgeflow:finished-active-session-ids'
+
 
 export function WorkoutSessionProvider({ children }) {
   const { user } = useAuth()
@@ -25,6 +27,7 @@ export function WorkoutSessionProvider({ children }) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [isLoaded, setIsLoaded] = useState(false)
   const syncTimeoutRef = useRef(null)
+  const isClearingActiveSessionRef = useRef(false)
 
   function isMongoId(value) {
     return typeof value === 'string' && /^[a-f\d]{24}$/i.test(value)
@@ -118,6 +121,52 @@ export function WorkoutSessionProvider({ children }) {
     )
   }
 
+  function getFinishedActiveSessionIds() {
+    try {
+      const rawValue = window.localStorage.getItem(FINISHED_ACTIVE_SESSION_IDS_KEY)
+      const ids = JSON.parse(rawValue || '[]')
+
+      return Array.isArray(ids) ? ids : []
+    } catch {
+      return []
+    }
+  }
+
+  function rememberFinishedActiveSession(sessionId) {
+    if (!sessionId) return
+
+    const ids = getFinishedActiveSessionIds()
+    const nextIds = [sessionId, ...ids.filter((id) => id !== sessionId)].slice(0, 20)
+
+    window.localStorage.setItem(FINISHED_ACTIVE_SESSION_IDS_KEY, JSON.stringify(nextIds))
+  }
+
+  function wasActiveSessionFinished(session) {
+    if (!session?.id) return false
+
+    return getFinishedActiveSessionIds().includes(session.id)
+  }
+
+  async function clearActiveSessionEverywhere(sessionToClear = activeSession) {
+    const sessionId = sessionToClear?.id
+
+    isClearingActiveSessionRef.current = true
+    window.clearTimeout(syncTimeoutRef.current)
+
+    rememberFinishedActiveSession(sessionId)
+    persistActiveSessionLocally(null)
+
+    try {
+      await tryClearActiveSessionFromApi()
+    } finally {
+      setActiveSession(null)
+
+      window.setTimeout(() => {
+        isClearingActiveSessionRef.current = false
+      }, 1000)
+    }
+  }
+
   function getExerciseDataFromSessionExercise(sessionExercise = {}) {
     if (sessionExercise.exercise && typeof sessionExercise.exercise === 'object') {
       return sessionExercise.exercise
@@ -196,7 +245,7 @@ export function WorkoutSessionProvider({ children }) {
 
       const remoteSession = await tryFetchActiveSessionFromApi()
 
-      if (isMounted && remoteSession) {
+      if (isMounted && remoteSession && !wasActiveSessionFinished(remoteSession)) {
         setActiveSession(remoteSession)
         persistActiveSessionLocally(remoteSession)
       }
@@ -212,18 +261,34 @@ export function WorkoutSessionProvider({ children }) {
   useEffect(() => {
     if (!isLoaded) return
 
+    window.clearTimeout(syncTimeoutRef.current)
+
     if (!activeSession) {
       persistActiveSessionLocally(null)
-      tryClearActiveSessionFromApi()
+
+      if (!isClearingActiveSessionRef.current) {
+        tryClearActiveSessionFromApi()
+      }
+
+      return
+    }
+
+    if (isClearingActiveSessionRef.current || wasActiveSessionFinished(activeSession)) {
+      persistActiveSessionLocally(null)
       return
     }
 
     persistActiveSessionLocally(activeSession)
 
-    window.clearTimeout(syncTimeoutRef.current)
     syncTimeoutRef.current = window.setTimeout(() => {
-      trySaveActiveSessionToApi(activeSession)
+      if (!isClearingActiveSessionRef.current) {
+        trySaveActiveSessionToApi(activeSession)
+      }
     }, 700)
+
+    return () => {
+      window.clearTimeout(syncTimeoutRef.current)
+    }
   }, [activeSession, isLoaded, user])
 
   useEffect(() => {
@@ -237,7 +302,9 @@ export function WorkoutSessionProvider({ children }) {
 
         if (payload.userId !== currentUserId) return
 
-        setActiveSession(payload.session || null)
+        if (!payload.session || wasActiveSessionFinished(payload.session)) return
+
+        setActiveSession(payload.session)
       } catch {
         // Ignora eventos inválidos.
       }
@@ -484,9 +551,7 @@ export function WorkoutSessionProvider({ children }) {
   }
 
   function cancelSession() {
-    setActiveSession(null)
-    persistActiveSessionLocally(null)
-    tryClearActiveSessionFromApi()
+    clearActiveSessionEverywhere(activeSession)
   }
 
   async function finishSession() {
@@ -555,9 +620,7 @@ export function WorkoutSessionProvider({ children }) {
 
       saveUserStorageData(user, 'history', [savedSession, ...history])
 
-      setActiveSession(null)
-      persistActiveSessionLocally(null)
-      tryClearActiveSessionFromApi()
+      await clearActiveSessionEverywhere(finishedSession)
 
       return savedSession
     } catch (error) {
@@ -565,9 +628,7 @@ export function WorkoutSessionProvider({ children }) {
 
       saveUserStorageData(user, 'history', [finishedSession, ...history])
 
-      setActiveSession(null)
-      persistActiveSessionLocally(null)
-      tryClearActiveSessionFromApi()
+      await clearActiveSessionEverywhere(finishedSession)
 
       return finishedSession
     }
