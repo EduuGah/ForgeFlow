@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from './AuthContext'
 import { getSessionPRTypes } from '../utils/prUtils'
 import { apiFetch } from '../services/api'
@@ -24,6 +24,7 @@ export function WorkoutSessionProvider({ children }) {
   const [activeSession, setActiveSession] = useState(null)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [isLoaded, setIsLoaded] = useState(false)
+  const syncTimeoutRef = useRef(null)
 
   function isMongoId(value) {
     return typeof value === 'string' && /^[a-f\d]{24}$/i.test(value)
@@ -165,7 +166,11 @@ export function WorkoutSessionProvider({ children }) {
     }
 
     persistActiveSessionLocally(activeSession)
-    trySaveActiveSessionToApi(activeSession)
+
+    window.clearTimeout(syncTimeoutRef.current)
+    syncTimeoutRef.current = window.setTimeout(() => {
+      trySaveActiveSessionToApi(activeSession)
+    }, 700)
   }, [activeSession, isLoaded, user])
 
   useEffect(() => {

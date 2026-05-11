@@ -876,3 +876,42 @@ input[type='number']::-webkit-inner-spin-button {
 .ff-install-app-toast {
   pointer-events: auto;
 }
+
+
+/* =========================================================
+   ForgeFlow — correção final inputs treino ativo + PWA modal
+   ========================================================= */
+
+.ff-set-input,
+.ff-set-input:focus,
+.ff-set-input:active,
+.ff-set-input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  text-align: center !important;
+  text-align-last: center;
+  caret-color: var(--ff-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.ff-set-input::selection {
+  background: var(--ff-accent-soft);
+}
+
+.ff-set-input::-webkit-outer-spin-button,
+.ff-set-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.ff-set-input[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+@media (max-width: 420px) {
+  .ff-set-input {
+    font-size: 18px !important;
+  }
+}

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
-import { Menu } from 'lucide-react'
+import { Download, Menu } from 'lucide-react'
 import { Outlet, useLocation } from 'react-router-dom'
 
 import forgeflowIcon from '../../assets/forgeflow-icon.png'
@@ -216,6 +216,17 @@ function AppLayout() {
 
             <div className="flex shrink-0 items-center gap-2">
               <div className="hidden rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-3 py-1 text-xs font-bold text-[var(--ff-accent-text)] sm:block">Beta</div>
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('forgeflow:show-install-app'))}
+                className="hidden h-11 items-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface)] px-3 text-xs font-black text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)] sm:flex"
+                aria-label="Instalar APP"
+                title="Instalar APP"
+              >
+                <Download size={16} />
+                App
+              </button>
+
               <NotificationBell />
             </div>
           </div>
