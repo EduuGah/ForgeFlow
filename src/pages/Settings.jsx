@@ -12,8 +12,8 @@ import {
   SlidersHorizontal,
   Sun,
   X,
-  Monitor,
-} from 'lucide-react'
+  Monitor,,
+  Smartphone} from 'lucide-react'
 
 import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'

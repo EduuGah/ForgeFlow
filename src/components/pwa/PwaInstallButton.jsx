@@ -3,7 +3,6 @@ import { Download, Share, Smartphone, X } from 'lucide-react'
 
 import forgeflowIcon from '../../assets/forgeflow-icon.png'
 
-const DISMISS_KEY = 'forgeflow:pwa-install-card-dismissed-at'
 const INSTALLED_KEY = 'forgeflow:pwa-installed'
 
 function isStandaloneMode() {
@@ -21,22 +20,11 @@ function isIosDevice() {
   return /iphone|ipad|ipod/i.test(window.navigator.userAgent || '')
 }
 
-function wasDismissedRecently() {
-  if (typeof window === 'undefined') return true
-
-  const dismissedAt = Number(window.localStorage.getItem(DISMISS_KEY) || 0)
-
-  if (!dismissedAt) return false
-
-  const threeDays = 3 * 24 * 60 * 60 * 1000
-
-  return Date.now() - dismissedAt < threeDays
-}
-
 function PwaInstallButton() {
   const [installPrompt, setInstallPrompt] = useState(null)
   const [showHelp, setShowHelp] = useState(false)
-  const [hidden, setHidden] = useState(false)
+  const [compact, setCompact] = useState(true)
+  const [installed, setInstalled] = useState(false)
   const isIos = useMemo(() => isIosDevice(), [])
 
   useEffect(() => {
@@ -44,43 +32,44 @@ function PwaInstallButton() {
 
     if (isStandaloneMode()) {
       window.localStorage.setItem(INSTALLED_KEY, 'true')
-      setHidden(true)
+      setInstalled(true)
       return undefined
-    }
-
-    if (window.localStorage.getItem(INSTALLED_KEY) === 'true') {
-      setHidden(true)
-      return undefined
-    }
-
-    if (wasDismissedRecently()) {
-      setHidden(true)
     }
 
     function handleBeforeInstallPrompt(event) {
       event.preventDefault()
       setInstallPrompt(event)
-      setHidden(false)
+      setInstalled(false)
+      setCompact(false)
     }
 
     function handleAppInstalled() {
       window.localStorage.setItem(INSTALLED_KEY, 'true')
-      setHidden(true)
+      setInstalled(true)
       setInstallPrompt(null)
+    }
+
+    function handleShowInstallApp() {
+      setInstalled(false)
+      setCompact(false)
+      setShowHelp(true)
     }
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
     window.addEventListener('appinstalled', handleAppInstalled)
+    window.addEventListener('forgeflow:show-install-app', handleShowInstallApp)
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
       window.removeEventListener('appinstalled', handleAppInstalled)
+      window.removeEventListener('forgeflow:show-install-app', handleShowInstallApp)
     }
   }, [])
 
   async function handleInstall() {
     if (!installPrompt) {
-      setShowHelp((current) => !current)
+      setShowHelp(true)
+      setCompact(false)
       return
     }
 
@@ -90,7 +79,9 @@ function PwaInstallButton() {
 
       if (choice?.outcome === 'accepted') {
         window.localStorage.setItem(INSTALLED_KEY, 'true')
-        setHidden(true)
+        setInstalled(true)
+      } else {
+        setShowHelp(true)
       }
 
       setInstallPrompt(null)
@@ -100,12 +91,24 @@ function PwaInstallButton() {
     }
   }
 
-  function handleDismiss() {
-    window.localStorage.setItem(DISMISS_KEY, String(Date.now()))
-    setHidden(true)
-  }
+  if (installed) return null
 
-  if (hidden) return null
+  if (compact) {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          setCompact(false)
+          setShowHelp(true)
+        }}
+        className="fixed bottom-[calc(5.6rem+env(safe-area-inset-bottom))] right-3 z-[70] flex h-12 items-center gap-2 rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-card)] px-4 text-sm font-black text-[var(--ff-accent-text)] shadow-2xl shadow-black/25 backdrop-blur-xl transition hover:bg-[var(--ff-card-hover)] active:scale-[0.98] lg:bottom-5 lg:right-5"
+        aria-label="Instalar APP"
+      >
+        <Download size={17} />
+        Instalar APP
+      </button>
+    )
+  }
 
   return (
     <div className="fixed bottom-[calc(5.6rem+env(safe-area-inset-bottom))] right-3 z-[70] w-[calc(100vw-1.5rem)] max-w-sm lg:bottom-5 lg:right-5">
@@ -113,9 +116,9 @@ function PwaInstallButton() {
         <div className="relative p-4">
           <button
             type="button"
-            onClick={handleDismiss}
+            onClick={() => setCompact(true)}
             className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-xl text-[var(--ff-muted)] transition hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)]"
-            aria-label="Fechar instalar app"
+            aria-label="Minimizar instalar app"
           >
             <X size={16} />
           </button>
@@ -163,6 +166,14 @@ function PwaInstallButton() {
           >
             <Download size={17} />
             {installPrompt ? 'Instalar agora' : 'Instalar APP'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowHelp((current) => !current)}
+            className="mt-2 h-9 w-full rounded-xl text-xs font-bold text-[var(--ff-muted)] transition hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)]"
+          >
+            {showHelp ? 'Ocultar instruções' : 'Ver instruções'}
           </button>
         </div>
       </div>
