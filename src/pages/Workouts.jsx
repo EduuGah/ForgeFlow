@@ -1931,7 +1931,7 @@ function Workouts() {
                     </button>
                 </div>
 
-                <div className="mt-3 flex gap-2 overflow-x-auto overscroll-x-contain pb-2">
+                <div className="mt-3 flex gap-2 ff-mobile-chip-scroll overflow-x-auto overscroll-x-contain pb-2">
                     <button
                         type="button"
                         onClick={() => setSelectedFolderId(null)}

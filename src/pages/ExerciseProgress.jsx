@@ -250,7 +250,7 @@ function ExerciseProgress() {
                     <TrendingUp size={22} className="text-[var(--ff-accent-text)]" />
                   </div>
 
-                  <div className="mt-5 h-[320px] min-h-[320px]" data-chart-container="true">
+                  <div className="mt-5 h-[320px] min-h-[320px] min-w-0" data-chart-container="true">
                     {dateChartData.length === 0 ? (
                       <EmptyState title="Sem séries" description="Nenhuma série válida foi encontrada para esse exercício." />
                     ) : (
@@ -314,7 +314,7 @@ function ExerciseProgress() {
                     <BarChart3 size={22} className="text-orange-300" />
                   </div>
 
-                  <div className="mt-5 h-[320px] min-h-[320px]" data-chart-container="true">
+                  <div className="mt-5 h-[320px] min-h-[320px] min-w-0" data-chart-container="true">
                     {dateChartData.length === 0 ? (
                       <EmptyState title="Sem séries" description="Nenhuma série válida foi encontrada para esse exercício." />
                     ) : (

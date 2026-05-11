@@ -1401,7 +1401,7 @@ function Exercises() {
                   </p>
 
                   <div className="mt-4 hidden xl:block">
-                    <div className="ff-filter-chips flex max-w-full gap-2 overflow-x-auto overscroll-x-contain pb-2 pr-8 [scrollbar-width:thin]">
+                    <div className="ff-filter-chips flex max-w-full gap-2 ff-mobile-chip-scroll overflow-x-auto overscroll-x-contain pb-2 pr-8 [scrollbar-width:thin]">
                       <button
                         type="button"
                         onClick={clearFilters}
@@ -1456,7 +1456,7 @@ function Exercises() {
                     )}
                   </div>
 
-                  <div className="ff-filter-chips -mx-1 flex max-w-full gap-2 overflow-x-auto overscroll-x-contain px-1 pb-2 pr-8 [scrollbar-width:none]">
+                  <div className="ff-filter-chips -mx-1 flex max-w-full gap-2 ff-mobile-chip-scroll overflow-x-auto overscroll-x-contain px-1 pb-2 pr-8 [scrollbar-width:none]">
                     <button
                       type="button"
                       onClick={() => {
