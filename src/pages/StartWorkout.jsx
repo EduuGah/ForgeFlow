@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useDeferredValue } from 'react'
-import { Timer, X, ChevronDown, StickyNote, Trophy, CheckCircle2, Repeat2, SkipForward, Trash2, ImageIcon, Weight, Hash, Plus, BarChart3, ClipboardCheck } from 'lucide-react'
+import { Timer, X, ChevronDown, StickyNote, Trophy, CheckCircle2, Repeat2, SkipForward, Trash2, ImageIcon, Weight, Hash, Plus, BarChart3, ClipboardCheck, Minus } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import PageHeader from '../components/ui/PageHeader'
@@ -106,6 +106,46 @@ function getExerciseSubtitle(sessionExercise) {
 function getSessionExerciseMedia(sessionExercise) {
   return getExerciseMedia(getExerciseData(sessionExercise))
 }
+
+
+function WorkoutSetInput({
+  icon: Icon,
+  label,
+  unit,
+  value,
+  min,
+  inputMode,
+  onChange,
+}) {
+  return (
+    <label className="group block">
+      <span className="mb-1.5 hidden text-[10px] font-black uppercase tracking-[0.18em] text-[var(--ff-muted)] sm:block">
+        {label}
+      </span>
+
+      <div className="flex h-14 items-center overflow-hidden rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] transition group-focus-within:border-[var(--ff-accent-border)] group-focus-within:shadow-[0_0_18px_var(--ff-accent-shadow)]/20">
+        <div className="flex h-full w-11 shrink-0 items-center justify-center border-r border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-accent-text)]">
+          <Icon size={18} />
+        </div>
+
+        <input
+          type="number"
+          min={min}
+          inputMode={inputMode}
+          value={value}
+          onChange={onChange}
+          placeholder="0"
+          className="min-w-0 flex-1 bg-transparent px-2 text-center text-xl font-black tabular-nums text-[var(--ff-text)] outline-none placeholder:text-[var(--ff-muted-2)]"
+        />
+
+        <div className="flex h-full min-w-12 shrink-0 items-center justify-center border-l border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-2 text-xs font-black uppercase text-[var(--ff-muted)]">
+          {unit}
+        </div>
+      </div>
+    </label>
+  )
+}
+
 
 function StartWorkout() {
   const { user } = useAuth()
@@ -692,11 +732,11 @@ function StartWorkout() {
 
                 {!isCollapsed && (
                   <div className="mt-5">
-                    <div className="mb-2 hidden grid-cols-[52px_minmax(120px,1fr)_minmax(120px,1fr)_150px_52px] gap-3 px-3 text-xs font-bold uppercase tracking-wide text-[var(--ff-muted)] lg:grid">
+                    <div className="mb-3 grid grid-cols-[46px_minmax(0,1fr)_minmax(0,1fr)_48px] gap-2 px-1 text-[10px] font-black uppercase tracking-[0.16em] text-[var(--ff-muted)] sm:grid-cols-[52px_minmax(90px,1fr)_minmax(90px,1fr)_52px] lg:grid-cols-[58px_minmax(120px,1fr)_minmax(120px,1fr)_150px_54px] lg:gap-3 lg:px-3">
                       <span>Série</span>
-                      <span>KG</span>
+                      <span>Carga</span>
                       <span>Reps</span>
-                      <span>Recordes</span>
+                      <span className="hidden lg:block">Recordes</span>
                       <span>Status</span>
                     </div>
 
@@ -723,7 +763,7 @@ function StartWorkout() {
                         return (
                           <div
                             key={set.id}
-                            className={`grid w-full grid-cols-[46px_minmax(0,1fr)_minmax(0,1fr)_74px_48px] items-center gap-2 rounded-3xl border p-2.5 transition sm:grid-cols-[52px_minmax(90px,1fr)_minmax(90px,1fr)_92px_52px] sm:p-3 lg:grid-cols-[58px_minmax(120px,1fr)_minmax(120px,1fr)_150px_54px] lg:gap-3 ${
+                            className={`grid w-full grid-cols-[46px_minmax(0,1fr)_minmax(0,1fr)_48px] items-center gap-2 rounded-3xl border p-2.5 transition sm:grid-cols-[52px_minmax(90px,1fr)_minmax(90px,1fr)_52px] sm:p-3 lg:grid-cols-[58px_minmax(120px,1fr)_minmax(120px,1fr)_150px_54px] lg:gap-3 ${
                               set.completed
                                 ? 'border-emerald-500/30 bg-emerald-500/5'
                                 : 'border-[var(--ff-border)] bg-[var(--ff-surface-2)]'
@@ -733,11 +773,12 @@ function StartWorkout() {
                               {isWarmup ? 'A' : set.setNumber}
                             </div>
 
-                            <Input
-                              type="number"
+                            <WorkoutSetInput
+                              icon={Weight}
+                              label="Carga"
+                              unit={appSettings.weightUnit || 'kg'}
                               min="0"
                               inputMode="decimal"
-                              placeholder={appSettings.weightUnit || 'kg'}
                               value={set.weight}
                               onChange={(event) =>
                                 updateSet(
@@ -747,14 +788,14 @@ function StartWorkout() {
                                   event.target.value
                                 )
                               }
-                              className="h-12 w-full rounded-2xl px-2 text-center text-lg font-black lg:px-3"
                             />
 
-                            <Input
-                              type="number"
+                            <WorkoutSetInput
+                              icon={Hash}
+                              label="Reps"
+                              unit="reps"
                               min="1"
                               inputMode="numeric"
-                              placeholder="reps"
                               value={set.reps}
                               onChange={(event) =>
                                 updateSet(
@@ -764,10 +805,9 @@ function StartWorkout() {
                                   event.target.value
                                 )
                               }
-                              className="h-12 w-full rounded-2xl px-2 text-center text-lg font-black lg:px-3"
                             />
 
-                            <div className="flex min-h-11 flex-col items-start justify-center gap-1 overflow-hidden">
+                            <div className="hidden min-h-11 flex-col items-start justify-center gap-1 overflow-hidden lg:flex">
                               {isWarmup && (
                                 <span className="w-fit rounded-lg bg-zinc-700/40 px-1.5 py-1 text-[9px] font-bold text-[var(--ff-text-soft)] sm:px-2 sm:text-[10px]">
                                   AQUEC.
@@ -817,8 +857,8 @@ function StartWorkout() {
                               onClick={() => handleCompleteSet(sessionExercise, set.id)}
                               className={
                                 set.completed
-                                  ? 'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white'
-                                  : 'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 text-zinc-400 transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)]'
+                                  ? 'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-[0_0_18px_rgba(16,185,129,0.35)]'
+                                  : 'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-zinc-700 bg-zinc-900 text-zinc-400 transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)]'
                               }
                               aria-label={set.completed ? 'Desmarcar série' : 'Concluir série'}
                             >

@@ -825,3 +825,28 @@ input[type='number'] {
 .max-h-\[620px\] {
   scrollbar-width: thin;
 }
+
+
+/* =========================================================
+   ForgeFlow — input treino ativo v2 + legenda gráfico
+   ========================================================= */
+
+.recharts-legend-item-text {
+  color: var(--ff-muted) !important;
+}
+
+.recharts-default-legend {
+  display: flex !important;
+  justify-content: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  margin: 0;
+}
+
+input[type='number'] {
+  font-variant-numeric: tabular-nums;
+}

@@ -228,7 +228,7 @@ function ExerciseProgress() {
                           align="right"
                           iconType="circle"
                           wrapperStyle={{ paddingBottom: 12, color: 'var(--ff-muted)', fontSize: 12, fontWeight: 800 }}
-                          formatter={(value) => value === 'volume' ? 'Volume total' : 'Peso usado'}
+                          formatter={(value) => value}
                         />
                         <Line type="monotone" name="Peso usado" dataKey="weight" stroke="var(--ff-accent)" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: 'var(--ff-card)' }} />
                         <Line type="monotone" name="Volume total" dataKey="volume" stroke="#f59e0b" strokeWidth={2} dot={false} />
