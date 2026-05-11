@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   CheckCircle2,
-  Download,
   Globe,
+  Download,
   Info,
   MoreVertical,
   Share,
@@ -40,6 +40,7 @@ function PwaInstallButton() {
   const [statusMessage, setStatusMessage] = useState('')
   const isIos = useMemo(() => isIosDevice(), [])
   const isAndroid = useMemo(() => isAndroidDevice(), [])
+  const pwaDebugStatus = typeof window !== 'undefined' ? window.__FORGEFLOW_PWA_STATUS__ || 'aguardando navegador' : 'indisponível'
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined
@@ -85,7 +86,7 @@ function PwaInstallButton() {
 
     if (!installPrompt) {
       setStatusMessage(
-        'O navegador ainda não liberou o instalador automático. Use uma das instruções abaixo.'
+        'O navegador ainda não liberou o instalador automático. Use as instruções exibidas nesta janela.'
       )
       return
     }
@@ -108,7 +109,7 @@ function PwaInstallButton() {
     } catch (error) {
       console.error(error)
       setStatusMessage(
-        'Não foi possível abrir o instalador automático. Use as instruções abaixo.'
+        'Não foi possível abrir o instalador automático. Use as instruções exibidas nesta janela.'
       )
     }
   }
@@ -206,6 +207,15 @@ function PwaInstallButton() {
               </div>
             </div>
           )}
+
+          <div className="mt-4 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3 text-xs leading-relaxed text-[var(--ff-muted)]">
+            <p>
+              Status PWA: <strong className="text-[var(--ff-text)]">{pwaDebugStatus}</strong>
+            </p>
+            <p className="mt-1">
+              Instalador automático: <strong className="text-[var(--ff-text)]">{installPrompt ? 'liberado pelo navegador' : 'ainda não liberado'}</strong>
+            </p>
+          </div>
 
           {statusMessage && (
             <div className="mt-4 flex items-start gap-3 rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] p-3 text-sm leading-relaxed text-[var(--ff-accent-text)]">

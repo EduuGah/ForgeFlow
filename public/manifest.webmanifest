@@ -1,59 +1,23 @@
 {
   "name": "ForgeFlow",
   "short_name": "ForgeFlow",
-  "description": "App de treinos para registrar cargas, acompanhar evolução, metas, PRs e histórico.",
+  "description": "Workout Tracker para treinos, progresso, metas e evolução.",
   "id": "/",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui", "browser"],
-  "orientation": "portrait",
-  "background_color": "#0b0b0f",
-  "theme_color": "#0b0b0f",
-  "categories": ["health", "fitness", "productivity"],
+  "orientation": "portrait-primary",
+  "background_color": "#05070a",
+  "theme_color": "#0ea5e9",
+  "categories": ["fitness", "health", "productivity"],
   "lang": "pt-BR",
-  "dir": "ltr",
   "icons": [
-    {
-      "src": "/icons/icon-72.png",
-      "sizes": "72x72",
-      "type": "image/png"
-    },
-    {
-      "src": "/icons/icon-96.png",
-      "sizes": "96x96",
-      "type": "image/png"
-    },
-    {
-      "src": "/icons/icon-128.png",
-      "sizes": "128x128",
-      "type": "image/png"
-    },
-    {
-      "src": "/icons/icon-144.png",
-      "sizes": "144x144",
-      "type": "image/png"
-    },
-    {
-      "src": "/icons/icon-152.png",
-      "sizes": "152x152",
-      "type": "image/png"
-    },
-    {
-      "src": "/icons/icon-180.png",
-      "sizes": "180x180",
-      "type": "image/png"
-    },
     {
       "src": "/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-384.png",
-      "sizes": "384x384",
-      "type": "image/png"
     },
     {
       "src": "/icons/icon-512.png",
@@ -77,24 +41,29 @@
   "shortcuts": [
     {
       "name": "Iniciar treino",
-      "short_name": "Treinar",
-      "description": "Abrir a página de treinos.",
-      "url": "/workouts?source=pwa-shortcut",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+      "short_name": "Treino",
+      "description": "Abrir treino ativo",
+      "url": "/start-workout?source=pwa-shortcut",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     },
     {
-      "name": "Ver evolução",
-      "short_name": "Evolução",
-      "description": "Abrir a página de evolução.",
-      "url": "/progress?source=pwa-shortcut",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
-    },
-    {
-      "name": "Metas",
-      "short_name": "Metas",
-      "description": "Abrir suas metas.",
-      "url": "/goals?source=pwa-shortcut",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Abrir resumo do ForgeFlow",
+      "url": "/dashboard?source=pwa-shortcut",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }

@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'forgeflow-pwa-v3'
+const CACHE_VERSION = 'forgeflow-pwa-v4'
 const STATIC_CACHE = `${CACHE_VERSION}-static`
 
 const STATIC_ASSETS = [
@@ -26,11 +26,8 @@ self.addEventListener('activate', (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key.startsWith('forgeflow-pwa-'))
-            .map((key) => {
-              if (key === STATIC_CACHE) return Promise.resolve()
-              return caches.delete(key)
-            })
+            .filter((key) => key.startsWith('forgeflow-pwa-') && key !== STATIC_CACHE)
+            .map((key) => caches.delete(key))
         )
       )
       .then(() => self.clients.claim())
@@ -50,42 +47,30 @@ function isSameOriginHttpRequest(request) {
   }
 }
 
-function isApiRequest(request) {
-  try {
-    const url = new URL(request.url)
+function shouldUseNetworkOnly(request) {
+  const url = new URL(request.url)
 
-    return (
-      url.pathname.startsWith('/api') ||
-      url.pathname.startsWith('/auth') ||
-      url.pathname.startsWith('/me') ||
-      url.pathname.startsWith('/workouts') ||
-      url.pathname.startsWith('/workout-history') ||
-      url.pathname.startsWith('/exercises') ||
-      url.pathname.startsWith('/goals') ||
-      url.pathname.startsWith('/notifications') ||
-      url.pathname.startsWith('/settings') ||
-      url.pathname.startsWith('/progress') ||
-      url.pathname.startsWith('/profile')
-    )
-  } catch {
-    return false
-  }
-}
-
-function shouldCacheStaticFile(request) {
-  try {
-    const url = new URL(request.url)
-
-    if (!isSameOriginHttpRequest(request)) return false
-
-    return (
-      url.pathname.startsWith('/icons/') ||
-      url.pathname === '/manifest.webmanifest' ||
-      url.pathname === '/offline.html'
-    )
-  } catch {
-    return false
-  }
+  return (
+    request.mode === 'navigate' ||
+    url.pathname.startsWith('/assets/') ||
+    url.pathname.endsWith('.js') ||
+    url.pathname.endsWith('.css') ||
+    url.pathname.endsWith('.html') ||
+    url.pathname.startsWith('/api') ||
+    url.pathname.startsWith('/auth') ||
+    url.pathname.startsWith('/me') ||
+    url.pathname.startsWith('/workouts') ||
+    url.pathname.startsWith('/workout-history') ||
+    url.pathname.startsWith('/exercises') ||
+    url.pathname.startsWith('/goals') ||
+    url.pathname.startsWith('/notifications') ||
+    url.pathname.startsWith('/settings') ||
+    url.pathname.startsWith('/progress') ||
+    url.pathname.startsWith('/profile') ||
+    url.pathname.startsWith('/active-workout') ||
+    url.pathname.startsWith('/active-session') ||
+    url.pathname.startsWith('/workout-session')
+  )
 }
 
 async function networkOnlyWithOfflineFallback(request) {
@@ -121,25 +106,19 @@ self.addEventListener('fetch', (event) => {
 
   if (request.method !== 'GET') return
   if (!isSameOriginHttpRequest(request)) return
-  if (isApiRequest(request)) return
 
-  const url = new URL(request.url)
-
-  // Muito importante:
-  // Não cachear HTML, JS ou CSS do Vite.
-  // Esses arquivos usam hash e podem mudar a cada deploy.
-  if (
-    request.mode === 'navigate' ||
-    url.pathname.endsWith('.html') ||
-    url.pathname.endsWith('.js') ||
-    url.pathname.endsWith('.css') ||
-    url.pathname.startsWith('/assets/')
-  ) {
+  if (shouldUseNetworkOnly(request)) {
     event.respondWith(networkOnlyWithOfflineFallback(request))
     return
   }
 
-  if (shouldCacheStaticFile(request)) {
+  const url = new URL(request.url)
+
+  if (
+    url.pathname === '/manifest.webmanifest' ||
+    url.pathname === '/offline.html' ||
+    url.pathname.startsWith('/icons/')
+  ) {
     event.respondWith(cacheFirstStatic(request))
   }
 })
