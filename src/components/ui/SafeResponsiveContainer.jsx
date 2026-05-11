@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { cloneElement, isValidElement, useEffect, useRef, useState } from 'react'
 
 function SafeResponsiveContainer({
   children,
@@ -45,6 +45,23 @@ function SafeResponsiveContainer({
 
   const canRender = size.width >= minWidth && size.height > 0
 
+  function renderChildren() {
+    if (!canRender) return fallback
+
+    if (typeof children === 'function') {
+      return children(size)
+    }
+
+    if (isValidElement(children)) {
+      return cloneElement(children, {
+        width: children.props.width || size.width,
+        height: children.props.height || size.height,
+      })
+    }
+
+    return children
+  }
+
   return (
     <div
       ref={containerRef}
@@ -55,7 +72,7 @@ function SafeResponsiveContainer({
       }}
       data-safe-chart-container="true"
     >
-      {canRender ? children(size) : fallback}
+      {renderChildren()}
     </div>
   )
 }
