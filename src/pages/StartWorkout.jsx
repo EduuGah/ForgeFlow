@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState, useDeferredValue } from 'react'
-import { Timer, X, ChevronDown, StickyNote, Trophy, CheckCircle2, Repeat2, SkipForward, Trash2, ImageIcon, Weight, Hash, Plus, BarChart3, ClipboardCheck, Minus } from 'lucide-react'
+import { Timer, X, ChevronDown, StickyNote, Trophy, CheckCircle2, Repeat2, SkipForward, Trash2, ImageIcon, Weight, Hash, Plus, BarChart3, ClipboardCheck, Minus,
+  Award,
+  Zap} from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import PageHeader from '../components/ui/PageHeader'
@@ -105,6 +107,55 @@ function getExerciseSubtitle(sessionExercise) {
 
 function getSessionExerciseMedia(sessionExercise) {
   return getExerciseMedia(getExerciseData(sessionExercise))
+}
+
+
+function SetPrBadges({ set, compact = false }) {
+  const badges = []
+
+  if (set.isWeightPR) {
+    badges.push({
+      key: 'weight',
+      label: 'Peso PR',
+      icon: Award,
+      className:
+        'border-sky-400/30 bg-sky-500/10 text-sky-200 shadow-[0_0_14px_rgba(14,165,233,0.18)]',
+    })
+  }
+
+  if (set.isVolumePR) {
+    badges.push({
+      key: 'volume',
+      label: 'Volume PR',
+      icon: Zap,
+      className:
+        'border-amber-400/30 bg-amber-500/10 text-amber-200 shadow-[0_0_14px_rgba(245,158,11,0.18)]',
+    })
+  }
+
+  if (badges.length === 0) {
+    return compact ? null : (
+      <span className="text-xs font-bold text-[var(--ff-muted)]">—</span>
+    )
+  }
+
+  return (
+    <div className={compact ? 'flex flex-wrap gap-2' : 'flex flex-col items-start gap-1.5'}>
+      {badges.map((badge) => {
+        const Icon = badge.icon
+
+        return (
+          <span
+            key={badge.key}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${badge.className}`}
+          >
+            <Icon size={12} />
+            {badge.label}
+          </span>
+        )
+      })}
+    </div>
+  )
 }
 
 
@@ -763,7 +814,7 @@ function StartWorkout() {
                         return (
                           <div
                             key={set.id}
-                            className={`grid w-full grid-cols-[52px_minmax(0,1fr)_52px] gap-3 rounded-3xl border p-3 transition sm:grid-cols-[56px_minmax(0,1fr)_minmax(0,1fr)_56px] lg:grid-cols-[58px_minmax(170px,1fr)_minmax(170px,1fr)_150px_54px] lg:items-center lg:gap-3 ${
+                            className={`grid w-full grid-cols-[52px_minmax(0,1fr)_52px] gap-3 rounded-3xl border p-3.5 transition sm:grid-cols-[56px_minmax(0,1fr)_minmax(0,1fr)_56px] lg:grid-cols-[58px_minmax(170px,1fr)_minmax(170px,1fr)_150px_54px] lg:items-center lg:gap-3 ${
                               set.completed
                                 ? 'border-emerald-500/30 bg-emerald-500/5'
                                 : 'border-[var(--ff-border)] bg-[var(--ff-surface-2)]'
@@ -811,49 +862,12 @@ function StartWorkout() {
                             />
                           </div>
 
+                            <div className="col-span-3 row-start-4 min-w-0 lg:hidden">
+                              <SetPrBadges set={set} compact />
+                            </div>
+
                             <div className="hidden min-h-11 flex-col items-start justify-center gap-1 overflow-hidden lg:flex">
-                              {isWarmup && (
-                                <span className="w-fit rounded-lg bg-zinc-700/40 px-1.5 py-1 text-[9px] font-bold text-[var(--ff-text-soft)] sm:px-2 sm:text-[10px]">
-                                  AQUEC.
-                                </span>
-                              )}
-
-                              {isWeightPR && (
-                                <span className="w-fit rounded-lg bg-[var(--ff-accent-soft)]/20 px-1.5 py-1 text-[9px] font-bold text-[var(--ff-accent-text)] sm:px-2 sm:text-[10px]">
-                                  PESO
-                                </span>
-                              )}
-
-                              {isVolumePR && (
-                                <span className="w-fit rounded-lg bg-orange-500/20 px-1.5 py-1 text-[9px] font-bold text-orange-300 sm:px-2 sm:text-[10px]">
-                                  VOL
-                                </span>
-                              )}
-
-                              {!isWarmup && !isWeightPR && !isVolumePR && (
-                                <span className="hidden text-xs text-zinc-600 lg:block">
-                                  —
-                                </span>
-                              )}
-
-                              {appSettings.showLastWorkoutComparison &&
-                                comparison.hasData &&
-                                comparison.last &&
-                                set.completed && (
-                                  <div className="mt-1 hidden text-[10px] leading-tight text-[var(--ff-muted)] lg:block">
-                                    <p>
-                                      Peso: {formatDiff(comparison.weightDiffFromLast, appSettings.weightUnit)}
-                                    </p>
-
-                                    <p>
-                                      Reps: {formatDiff(comparison.repsDiffFromLast)}
-                                    </p>
-
-                                    <p>
-                                      Volume: {formatDiff(comparison.volumeDiffFromLast, appSettings.weightUnit)}
-                                    </p>
-                                  </div>
-                                )}
+                              <SetPrBadges set={set} />
                             </div>
 
                             <button

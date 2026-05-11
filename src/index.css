@@ -1003,3 +1003,18 @@ input[type='number']::-webkit-inner-spin-button {
     font-size: 25px !important;
   }
 }
+
+
+/* =========================================================
+   ForgeFlow — badges de PR nas séries
+   ========================================================= */
+
+.ff-pr-badge-glow {
+  isolation: isolate;
+}
+
+@media (max-width: 640px) {
+  .ff-set-input {
+    min-height: 70px;
+  }
+}
