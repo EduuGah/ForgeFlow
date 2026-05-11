@@ -740,7 +740,7 @@ function StartWorkout() {
                       <span>Status</span>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-3 overflow-x-auto pb-1">
                       {(sessionExercise.sets || []).map((set) => {
                         const isWarmup = set?.type === 'warmup'
 
