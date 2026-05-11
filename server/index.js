@@ -1390,6 +1390,97 @@ async function saveActiveWorkoutSession(req, res) {
     }
 }
 
+async function finishActiveWorkoutSession(req, res) {
+    try {
+        const activeRecord = await ActiveWorkoutSession.findOne({
+            userId: req.user.userId,
+        }).lean()
+
+        const bodySession = normalizeActiveWorkoutSessionPayload(req.body)
+        const activeSession = bodySession || activeRecord?.session
+
+        if (!activeSession) {
+            return res.status(400).json({
+                message: 'Nenhum treino ativo encontrado para finalizar.',
+            })
+        }
+
+        const {
+            workoutId = activeSession.workoutId || null,
+            workoutName = activeSession.workoutName || activeSession.name,
+            name,
+            exercises = activeSession.exercises || [],
+            durationSeconds = activeSession.durationSeconds || activeSession.duration || 0,
+            startedAt = activeSession.startedAt || null,
+            finishedAt = activeSession.finishedAt || new Date(),
+            prs = [],
+            notes = activeSession.notes || '',
+        } = req.body
+
+        const finalWorkoutName = workoutName || name || activeSession.workoutName || activeSession.name
+
+        if (!finalWorkoutName?.trim()) {
+            return res.status(400).json({
+                message: 'Informe o nome do treino finalizado.',
+            })
+        }
+
+        const finalExercises = Array.isArray(exercises) && exercises.length > 0
+            ? exercises
+            : activeSession.exercises || []
+
+        const summary = calculateWorkoutHistorySummary(finalExercises)
+
+        const historyItem = await WorkoutHistory.create({
+            userId: req.user.userId,
+            workoutId: workoutId || null,
+            workoutName: finalWorkoutName.trim(),
+            exercises: finalExercises,
+            durationSeconds: Number(durationSeconds) || 0,
+            startedAt: startedAt || null,
+            finishedAt: finishedAt || new Date(),
+            totalVolume: summary.totalVolume,
+            totalSets: summary.totalSets,
+            totalReps: summary.totalReps,
+            prs: Array.isArray(prs) ? prs : [],
+            notes,
+        })
+
+        if (workoutId) {
+            await Workout.findOneAndUpdate(
+                {
+                    _id: workoutId,
+                    userId: req.user.userId,
+                },
+                {
+                    $set: {
+                        lastFinishedAt: new Date(),
+                    },
+                    $inc: {
+                        totalTimesFinished: 1,
+                    },
+                }
+            )
+        }
+
+        await ActiveWorkoutSession.findOneAndDelete({
+            userId: req.user.userId,
+        })
+
+        res.status(201).json({
+            ok: true,
+            historyItem,
+            session: null,
+        })
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao finalizar treino ativo.',
+        })
+    }
+}
+
 async function clearActiveWorkoutSession(req, res) {
     try {
         await ActiveWorkoutSession.findOneAndDelete({
@@ -1528,6 +1619,7 @@ app.put('/settings', authMiddleware, async (req, res) => {
 
 app.get('/active-workout', authMiddleware, getActiveWorkoutSession)
 app.put('/active-workout', authMiddleware, saveActiveWorkoutSession)
+app.post('/active-workout/finish', authMiddleware, finishActiveWorkoutSession)
 app.delete('/active-workout', authMiddleware, clearActiveWorkoutSession)
 
 // Aliases mantidos para compatibilidade com versões anteriores do frontend.

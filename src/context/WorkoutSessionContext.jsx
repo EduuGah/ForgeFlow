@@ -729,12 +729,18 @@ export function WorkoutSessionProvider({ children }) {
         notes: finishedSession.notes || '',
       }
 
-      const savedSessionFromApi = await apiFetch('/workout-history', {
+      const savedSessionFromApi = await apiFetch('/active-workout/finish', {
         method: 'POST',
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          ...payload,
+          session: finishedSession,
+          activeSessionId: finishedSession.id,
+        }),
       })
 
-      const savedSession = normalizeHistoryFromApi(savedSessionFromApi)
+      const savedSession = normalizeHistoryFromApi(
+        savedSessionFromApi?.historyItem || savedSessionFromApi
+      )
 
       saveUserStorageData(user, 'history', [savedSession, ...history])
       await clearActiveSessionEverywhere(finishedSession)
