@@ -216,7 +216,7 @@ function AppLayout() {
 
             <div className="flex shrink-0 items-center gap-2">
               <div className="hidden rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-3 py-1 text-xs font-bold text-[var(--ff-accent-text)] sm:block">Beta</div>
-<NotificationBell />
+              <NotificationBell />
             </div>
           </div>
         </div>
