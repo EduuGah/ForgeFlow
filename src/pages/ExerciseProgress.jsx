@@ -14,6 +14,7 @@ import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
 import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
+import SafeResponsiveContainer from '../components/ui/SafeResponsiveContainer'
 
 import { useAuth } from '../context/AuthContext'
 import { apiFetch } from '../services/api'

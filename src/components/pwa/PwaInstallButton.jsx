@@ -23,7 +23,7 @@ function isIosDevice() {
 function PwaInstallButton() {
   const [installPrompt, setInstallPrompt] = useState(null)
   const [showHelp, setShowHelp] = useState(false)
-  const [compact, setCompact] = useState(true)
+  const [expanded, setExpanded] = useState(false)
   const [installed, setInstalled] = useState(false)
   const isIos = useMemo(() => isIosDevice(), [])
 
@@ -39,8 +39,6 @@ function PwaInstallButton() {
     function handleBeforeInstallPrompt(event) {
       event.preventDefault()
       setInstallPrompt(event)
-      setInstalled(false)
-      setCompact(false)
     }
 
     function handleAppInstalled() {
@@ -51,7 +49,7 @@ function PwaInstallButton() {
 
     function handleShowInstallApp() {
       setInstalled(false)
-      setCompact(false)
+      setExpanded(true)
       setShowHelp(true)
     }
 
@@ -68,8 +66,8 @@ function PwaInstallButton() {
 
   async function handleInstall() {
     if (!installPrompt) {
+      setExpanded(true)
       setShowHelp(true)
-      setCompact(false)
       return
     }
 
@@ -81,26 +79,25 @@ function PwaInstallButton() {
         window.localStorage.setItem(INSTALLED_KEY, 'true')
         setInstalled(true)
       } else {
+        setExpanded(true)
         setShowHelp(true)
       }
 
       setInstallPrompt(null)
     } catch (error) {
       console.error(error)
+      setExpanded(true)
       setShowHelp(true)
     }
   }
 
   if (installed) return null
 
-  if (compact) {
+  if (!expanded) {
     return (
       <button
         type="button"
-        onClick={() => {
-          setCompact(false)
-          setShowHelp(true)
-        }}
+        onClick={handleInstall}
         className="fixed bottom-[calc(5.6rem+env(safe-area-inset-bottom))] right-3 z-[70] flex h-12 items-center gap-2 rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-card)] px-4 text-sm font-black text-[var(--ff-accent-text)] shadow-2xl shadow-black/25 backdrop-blur-xl transition hover:bg-[var(--ff-card-hover)] active:scale-[0.98] lg:bottom-5 lg:right-5"
         aria-label="Instalar APP"
       >
@@ -116,7 +113,10 @@ function PwaInstallButton() {
         <div className="relative p-4">
           <button
             type="button"
-            onClick={() => setCompact(true)}
+            onClick={() => {
+              setExpanded(false)
+              setShowHelp(false)
+            }}
             className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-xl text-[var(--ff-muted)] transition hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)]"
             aria-label="Minimizar instalar app"
           >
@@ -165,15 +165,7 @@ function PwaInstallButton() {
             className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] text-sm font-black text-white shadow-[0_0_18px_var(--ff-accent-shadow)] active:scale-[0.98]"
           >
             <Download size={17} />
-            {installPrompt ? 'Instalar agora' : 'Instalar APP'}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setShowHelp((current) => !current)}
-            className="mt-2 h-9 w-full rounded-xl text-xs font-bold text-[var(--ff-muted)] transition hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)]"
-          >
-            {showHelp ? 'Ocultar instruções' : 'Ver instruções'}
+            {installPrompt ? 'Instalar agora' : 'Ver como instalar'}
           </button>
         </div>
       </div>

@@ -1,62 +1,61 @@
-import { cloneElement, isValidElement, useEffect, useRef, useState } from 'react'
-
-function getNumericHeight(height, minHeight) {
-  if (typeof height === 'number' && Number.isFinite(height)) return height
-  return minHeight
-}
+import { useEffect, useRef, useState } from 'react'
 
 function SafeResponsiveContainer({
   children,
   height = 320,
-  minHeight = 280,
-  className = '',
+  minWidth = 120,
+  fallback = null,
 }) {
   const containerRef = useRef(null)
-  const numericHeight = getNumericHeight(height, minHeight)
-  const [width, setWidth] = useState(0)
+  const [size, setSize] = useState({
+    width: 0,
+    height,
+  })
 
   useEffect(() => {
     const element = containerRef.current
+
     if (!element) return undefined
 
-    function updateWidth() {
+    function updateSize() {
       const rect = element.getBoundingClientRect()
-      const nextWidth = Math.floor(rect.width || element.offsetWidth || 0)
-      setWidth(Math.max(0, nextWidth))
+      const nextWidth = Math.floor(rect.width)
+      const nextHeight = Math.floor(rect.height || height)
+
+      if (nextWidth > 0 && nextHeight > 0) {
+        setSize({
+          width: nextWidth,
+          height: nextHeight,
+        })
+      }
     }
 
-    updateWidth()
+    updateSize()
 
-    const observer = new ResizeObserver(updateWidth)
+    const observer = new ResizeObserver(updateSize)
     observer.observe(element)
 
-    window.addEventListener('resize', updateWidth)
+    window.addEventListener('resize', updateSize)
 
     return () => {
       observer.disconnect()
-      window.removeEventListener('resize', updateWidth)
+      window.removeEventListener('resize', updateSize)
     }
-  }, [])
+  }, [height])
 
-  const canRenderChart = width > 24 && numericHeight > 24
+  const canRender = size.width >= minWidth && size.height > 0
 
   return (
     <div
       ref={containerRef}
-      className={`min-w-0 ${className}`.trim()}
+      className="h-full min-h-[280px] w-full min-w-0"
       style={{
-        width: '100%',
-        height: numericHeight,
-        minHeight: numericHeight,
+        height,
+        minHeight: height,
       }}
-      data-chart-container="true"
+      data-safe-chart-container="true"
     >
-      {canRenderChart && isValidElement(children)
-        ? cloneElement(children, {
-            width,
-            height: numericHeight,
-          })
-        : null}
+      {canRender ? children(size) : fallback}
     </div>
   )
 }
