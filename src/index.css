@@ -1029,3 +1029,55 @@ input[type='number']::-webkit-inner-spin-button {
     min-height: 70px;
   }
 }
+
+
+/* =========================================================
+   ForgeFlow — Etapa 23.1-23.5 polish treino ativo mobile
+   ========================================================= */
+
+.ff-set-input,
+.ff-set-input:focus,
+.ff-set-input:active,
+.ff-set-input:focus-visible {
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  text-align: center !important;
+  text-align-last: center;
+  caret-color: var(--ff-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.ff-set-input::-webkit-outer-spin-button,
+.ff-set-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+
+.ff-set-input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.ff-sets-scroll {
+  scrollbar-width: thin;
+}
+
+@media (max-width: 640px) {
+  .ff-sets-scroll {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .ff-set-input {
+    font-size: 30px !important;
+    min-height: 72px;
+  }
+}
+
+@media (max-width: 380px) {
+  .ff-set-input {
+    font-size: 27px !important;
+  }
+}

@@ -833,13 +833,13 @@ function StartWorkout() {
                         return (
                           <div
                             key={set.id}
-                            className={`grid w-full grid-cols-[52px_minmax(0,1fr)_52px] gap-3 rounded-3xl border p-3.5 transition sm:grid-cols-[56px_minmax(0,1fr)_minmax(0,1fr)_56px] lg:grid-cols-[58px_minmax(170px,1fr)_minmax(170px,1fr)_150px_54px] lg:items-center lg:gap-3 ${
+                            className={`grid w-full grid-cols-[52px_minmax(0,1fr)_52px] gap-3 rounded-[1.75rem] border p-4 shadow-lg shadow-black/10 transition sm:grid-cols-[56px_minmax(0,1fr)_minmax(0,1fr)_56px] lg:grid-cols-[58px_minmax(170px,1fr)_minmax(170px,1fr)_150px_54px] lg:items-center lg:gap-3 lg:p-3 ${
                               set.completed
-                                ? 'border-emerald-500/30 bg-emerald-500/5'
-                                : 'border-[var(--ff-border)] bg-[var(--ff-surface-2)]'
+                                ? 'border-emerald-400/35 bg-emerald-500/10 shadow-[0_0_20px_rgba(16,185,129,0.10)]'
+                                : 'border-[var(--ff-border)] bg-[linear-gradient(180deg,var(--ff-card),var(--ff-surface-2))]'
                             }`}
                           >
-                            <div className="col-start-1 row-start-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#18181b] text-sm font-black lg:w-12">
+                            <div className="col-start-1 row-start-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-3)] text-sm font-black text-[var(--ff-text)] shadow-inner shadow-black/20 lg:w-12">
                               {isWarmup ? 'A' : set.setNumber}
                             </div>
 
@@ -881,7 +881,7 @@ function StartWorkout() {
                             />
                           </div>
 
-                            <div className="col-span-3 row-start-4 min-w-0 lg:hidden">
+                            <div className="col-span-3 row-start-4 min-w-0 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)]/70 p-2 lg:hidden">
                               <SetPrBadges set={set} performance={performance} compact />
                             </div>
 
@@ -894,8 +894,8 @@ function StartWorkout() {
                               onClick={() => handleCompleteSet(sessionExercise, set.id)}
                               className={
                                 set.completed
-                                  ? 'col-start-3 row-start-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-[0_0_18px_rgba(16,185,129,0.35)] lg:col-auto lg:row-auto'
-                                  : 'col-start-3 row-start-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-zinc-700 bg-zinc-900 text-zinc-400 transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)] lg:col-auto lg:row-auto'
+                                  ? 'col-start-3 row-start-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-emerald-300/30 bg-emerald-500 text-white shadow-[0_0_22px_rgba(16,185,129,0.42)] transition active:scale-95 lg:col-auto lg:row-auto'
+                                  : 'col-start-3 row-start-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-3)] text-[var(--ff-muted)] shadow-inner shadow-black/20 transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)] active:scale-95 lg:col-auto lg:row-auto'
                               }
                               aria-label={set.completed ? 'Desmarcar série' : 'Concluir série'}
                             >
@@ -995,7 +995,7 @@ function StartWorkout() {
         </aside>
       </section>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--ff-border)] bg-[var(--ff-bg)]/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-16px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl xl:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--ff-border)] bg-[var(--ff-bg)]/95 px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-16px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl xl:hidden">
         <div className="mx-auto flex max-w-[1600px] items-center gap-3">
           <button
             type="button"
@@ -1006,7 +1006,7 @@ function StartWorkout() {
             <X size={20} />
           </button>
 
-          <div className="min-w-0 flex-1 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 py-2">
+          <div className="min-w-0 flex-1 rounded-2xl border border-[var(--ff-border)] bg-[linear-gradient(180deg,var(--ff-card),var(--ff-surface-2))] px-3 py-2 shadow-inner shadow-black/10">
             <p className="truncate text-xs font-bold text-[var(--ff-muted)]">
               {completedSets}/{totalSets} séries • {progressPercent}%
             </p>
@@ -1020,7 +1020,7 @@ function StartWorkout() {
             type="button"
             onClick={() => setIsFinishModalOpen(true)}
             disabled={savingWorkout}
-            className="h-12 shrink-0 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-black text-white shadow-[0_0_20px_var(--ff-accent-shadow)] disabled:opacity-60"
+            className="h-12 shrink-0 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-black text-white shadow-[0_0_24px_var(--ff-accent-shadow)] transition active:scale-95 disabled:opacity-60"
           >
             Finalizar
           </button>
