@@ -73,18 +73,20 @@ function Sidebar({ isOpen = false, onClose }) {
 
   return (
     <>
-      {isOpen && (
-        <button
-          type="button"
-          onClick={onClose}
-          className="fixed inset-0 z-50 bg-[var(--ff-overlay)] backdrop-blur-sm"
-          aria-label="Fechar menu"
-        />
-      )}
+      <button
+        type="button"
+        onClick={onClose}
+        className={[
+          'fixed inset-0 z-50 bg-[var(--ff-overlay)] backdrop-blur-sm transition-opacity duration-300 ease-out',
+          isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
+        ].join(' ')}
+        aria-label="Fechar menu"
+        tabIndex={isOpen ? 0 : -1}
+      />
 
       <aside
         className={[
-          'fixed left-0 top-0 z-[60] flex h-dvh w-[86vw] max-w-[320px] flex-col overflow-hidden border-r border-[var(--ff-border)] bg-[var(--ff-sidebar)] text-[var(--ff-text)] shadow-2xl shadow-black/20 transition-transform duration-300',
+          'fixed left-0 top-0 z-[60] flex h-dvh w-[86vw] max-w-[320px] flex-col overflow-hidden border-r border-[var(--ff-border)] bg-[var(--ff-sidebar)] text-[var(--ff-text)] shadow-2xl shadow-black/20 transition-transform duration-300 ease-out will-change-transform',
           isOpen ? 'translate-x-0' : '-translate-x-full',
         ].join(' ')}
       >

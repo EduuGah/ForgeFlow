@@ -1,35 +1,73 @@
-import { Line, LineChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  Tooltip,
+  XAxis,
+  YAxis
+} from 'recharts'
+import ResponsiveContainer from '../ui/SafeResponsiveContainer'
+
 import Badge from '../ui/Badge'
 import Card from '../ui/Card'
 import EmptyState from '../ui/EmptyState'
 import { chartItemStyle, chartLabelStyle, getChartTooltipStyle } from '../../utils/chartUtils'
 
-function BodyWeightChart({ data = [], accentColor = 'var(--ff-accent)' }) {
-  const chartData = data.map((item, index) => ({
-    label: item.label || item.date || String(index + 1),
-    weight: Number(item.weight || 0),
-  })).filter((item) => item.weight > 0)
-
+function BodyWeightChart({ data = [], accentColor = '#8b5cf6' }) {
   return (
     <Card>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-black text-[var(--ff-text)]">Peso corporal</h2>
-          <p className="mt-1 text-sm text-[var(--ff-muted)]">Evolução dos registros de peso.</p>
+          <h2 className="text-xl font-black text-[var(--ff-text)]">
+            Peso corporal
+          </h2>
+
+          <p className="mt-1 text-sm text-[var(--ff-muted)]">
+            Evolução dos registros de peso.
+          </p>
         </div>
-        <Badge>{chartData.length} registros</Badge>
+
+        <Badge>{data.length} registros</Badge>
       </div>
-      <div className="mt-5 h-[320px] min-h-[320px]" data-chart>
-        {chartData.length === 0 ? (
-          <EmptyState title="Sem peso registrado" description="Registre seu peso no perfil para acompanhar a evolução." />
+
+      <div className="mt-5 h-[300px]">
+        {data.length === 0 ? (
+          <EmptyState
+            title="Sem peso registrado"
+            description="Registre seu peso no perfil para acompanhar a evolução."
+          />
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
+            <LineChart data={data} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
-              <XAxis dataKey="label" stroke="var(--ff-muted)" tick={{ fontSize: 11, fill: 'var(--ff-muted)' }} tickLine={false} axisLine={false} />
-              <YAxis stroke="var(--ff-muted)" tick={{ fontSize: 11, fill: 'var(--ff-muted)' }} tickLine={false} axisLine={false} allowDecimals />
-              <Tooltip formatter={(value) => [`${value}kg`, 'Peso']} contentStyle={getChartTooltipStyle()} labelStyle={chartLabelStyle} itemStyle={chartItemStyle} />
-              <Line type="monotone" dataKey="weight" stroke={accentColor} strokeWidth={3} dot={{ r: 4, strokeWidth: 2, stroke: accentColor, fill: 'var(--ff-card)' }} activeDot={{ r: 7, strokeWidth: 3 }} />
+              <XAxis
+                dataKey="label"
+                stroke="var(--ff-muted)"
+                tick={{ fontSize: 11, fill: 'var(--ff-muted)' }}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis
+                stroke="var(--ff-muted)"
+                tick={{ fontSize: 11, fill: 'var(--ff-muted)' }}
+                tickLine={false}
+                axisLine={false}
+                allowDecimals={false}
+              />
+              <Tooltip
+                formatter={(value) => [`${value}kg`, 'Peso']}
+                contentStyle={getChartTooltipStyle()}
+                labelStyle={chartLabelStyle}
+                itemStyle={chartItemStyle}
+              />
+              <Line
+                type="monotone"
+                dataKey="weight"
+                stroke={accentColor}
+                strokeWidth={3}
+                dot={{ r: 4, strokeWidth: 2, stroke: accentColor, fill: 'var(--ff-card)' }}
+                activeDot={{ r: 7, strokeWidth: 3 }}
+              />
             </LineChart>
           </ResponsiveContainer>
         )}
@@ -37,4 +75,5 @@ function BodyWeightChart({ data = [], accentColor = 'var(--ff-accent)' }) {
     </Card>
   )
 }
+
 export default BodyWeightChart

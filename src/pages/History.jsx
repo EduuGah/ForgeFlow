@@ -567,16 +567,6 @@ function History() {
                   ref={startDateRef}
                   type="date"
                   value={startDate}
-                  onClick={() => {
-                    if (settings.autoOpenCalendar) {
-                      startDateRef.current?.showPicker?.()
-                    }
-                  }}
-                  onFocus={() => {
-                    if (settings.autoOpenCalendar) {
-                      startDateRef.current?.showPicker?.()
-                    }
-                  }}
                   onChange={(event) => setStartDate(event.target.value)}
                   className="h-12 w-full cursor-pointer rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-violet-500/10"
                 />
@@ -591,16 +581,6 @@ function History() {
                   ref={endDateRef}
                   type="date"
                   value={endDate}
-                  onClick={() => {
-                    if (settings.autoOpenCalendar) {
-                      endDateRef.current?.showPicker?.()
-                    }
-                  }}
-                  onFocus={() => {
-                    if (settings.autoOpenCalendar) {
-                      endDateRef.current?.showPicker?.()
-                    }
-                  }}
                   onChange={(event) => setEndDate(event.target.value)}
                   className="h-12 w-full cursor-pointer rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-violet-500/10"
                 />

@@ -67,7 +67,6 @@ const muscleGroupOrder = [
 
 const defaultEquipmentList = [
   'Barra',
-  'Barra EZ',
   'Halteres',
   'Máquina',
   'Cabo',
@@ -110,7 +109,13 @@ function normalizeMuscleGroup(group) {
     'Corpo Inteiro': 'Corpo inteiro',
   }
 
-  return aliases[normalized] || normalized
+  const normalizedKey = normalized.toLowerCase()
+
+  if (normalizedKey.includes('barra') && (normalizedKey.includes('w') || normalizedKey.includes('z') || normalizedKey.includes('ez') || normalizedKey.includes('reta') || normalizedKey.includes('curva'))) {
+    return 'Barra'
+  }
+
+  return aliases[normalized] || aliases[normalizedKey] || normalized
 }
 
 function normalizeEquipment(equipment) {
@@ -139,7 +144,13 @@ function normalizeEquipment(equipment) {
     'Barra reta': 'Barra',
   }
 
-  return aliases[normalized] || normalized
+  const normalizedKey = normalized.toLowerCase()
+
+  if (normalizedKey.includes('barra') && (normalizedKey.includes('w') || normalizedKey.includes('z') || normalizedKey.includes('ez') || normalizedKey.includes('reta') || normalizedKey.includes('curva'))) {
+    return 'Barra'
+  }
+
+  return aliases[normalized] || aliases[normalizedKey] || normalized
 }
 
 function getSubgroup(exercise) {
@@ -1326,7 +1337,7 @@ function Exercises() {
             </div>
           </Card>
 
-          <Card className="hidden border border-zinc-800 bg-gradient-to-b from-[#17171b] to-[#121216] xl:block">
+          <Card className="hidden border border-zinc-800 bg-[#151518] xl:block">
             <div className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
                 <Wrench size={18} />
@@ -1343,7 +1354,7 @@ function Exercises() {
               </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-3 gap-2">
+            <div className="mt-4 grid max-h-[190px] grid-cols-2 gap-2 overflow-y-auto pr-1">
               {stats.equipmentStats.map((item) => (
                 <button
                   key={item.name}
@@ -1391,6 +1402,40 @@ function Exercises() {
                     {filteredExercises.length} exercícios encontrados • exibindo {displayedExercises.length}
                   </p>
 
+                  <div className="mt-4 hidden xl:block">
+                    <p className="mb-2 text-[11px] font-black uppercase tracking-[0.18em] text-zinc-500">
+                      Atalhos rápidos para PC
+                    </p>
+                    <div className="flex max-w-full gap-2 overflow-x-auto pb-2 pr-2 [scrollbar-width:thin]">
+                      <button
+                        type="button"
+                        onClick={clearFilters}
+                        className={!hasActiveFilters ? 'shrink-0 rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-4 py-2 text-xs font-black text-[var(--ff-accent-text)]' : 'shrink-0 rounded-full border border-zinc-800 bg-zinc-950 px-4 py-2 text-xs font-bold text-zinc-400'}
+                      >
+                        Todos
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setShowOnlyFavorites((current) => !current)}
+                        className={showOnlyFavorites ? 'shrink-0 rounded-full border border-yellow-500/30 bg-yellow-500/10 px-4 py-2 text-xs font-black text-yellow-300' : 'shrink-0 rounded-full border border-zinc-800 bg-zinc-950 px-4 py-2 text-xs font-bold text-zinc-400'}
+                      >
+                        Favoritos
+                      </button>
+
+                      {stats.groupStats.map((group) => (
+                        <button
+                          key={group.name}
+                          type="button"
+                          onClick={() => setGroupFilter(groupFilter === group.name ? '' : group.name)}
+                          className={groupFilter === group.name ? 'shrink-0 rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-4 py-2 text-xs font-black text-[var(--ff-accent-text)]' : 'shrink-0 rounded-full border border-zinc-800 bg-zinc-950 px-4 py-2 text-xs font-bold text-zinc-400'}
+                        >
+                          {group.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   <p className="mt-2 text-xs leading-relaxed text-zinc-500 xl:hidden">
                     No celular, use a busca e os chips rápidos aqui em cima. Os filtros completos ficam abaixo da lista.
                   </p>
@@ -1418,7 +1463,7 @@ function Exercises() {
                     )}
                   </div>
 
-                  <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+                  <div className="-mx-1 flex max-w-full gap-2 overflow-x-auto overscroll-x-contain px-1 pb-2 [scrollbar-width:none]">
                     <button
                       type="button"
                       onClick={() => {

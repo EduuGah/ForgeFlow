@@ -725,18 +725,30 @@ main {
   min-width: 0;
 }
 
-/* ForgeFlow stable package fixes */
-html, body, #root { min-height: 100%; height: auto; overflow-x: hidden; }
-html, body { overflow-y: auto; overscroll-behavior-y: auto; }
-body { touch-action: pan-y; }
-main { min-height: 100dvh; height: auto; overflow: visible; }
-#app-header { will-change: transform, opacity; }
-.recharts-responsive-container { width: 100% !important; min-width: 0 !important; min-height: 280px !important; }
-.recharts-wrapper { width: 100% !important; min-width: 0 !important; }
-.recharts-surface { overflow: visible; }
-[data-chart] { min-width: 0; min-height: 280px; overflow: visible; }
-[data-calendar] { min-width: 0; overflow: visible; }
+
+/* ForgeFlow reported fixes — charts, scrolling and compact panels */
+.recharts-responsive-container,
+.recharts-wrapper,
+.recharts-surface {
+  min-width: 0 !important;
+}
+
+.recharts-responsive-container {
+  min-height: 260px !important;
+}
+
+.ff-chart-container,
+[data-chart] {
+  min-width: 0;
+  min-height: 280px;
+}
+
+.overflow-x-auto {
+  overscroll-behavior-x: contain;
+}
+
 @media (max-width: 1023px) {
-  main { padding-bottom: calc(8rem + env(safe-area-inset-bottom)) !important; }
-  .overflow-x-auto, .ff-mobile-scroll-x { overscroll-behavior-x: contain; overscroll-behavior-y: auto; touch-action: pan-x pan-y; -webkit-overflow-scrolling: touch; }
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
 }

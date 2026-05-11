@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom/client'
 
 import App from './App.jsx'
 import './index.css'
-import { registerForgeFlowServiceWorker, setupPwaHeadTags } from './utils/pwaUtils.js'
 
 const rootElement = document.getElementById('root')
 
@@ -20,6 +19,7 @@ function Root() {
     <App />
   )
 }
+
 
 function handleStaleViteChunk() {
   if (typeof window === 'undefined') return
@@ -46,6 +46,4 @@ window.addEventListener('error', (event) => {
   }
 })
 
-setupPwaHeadTags()
 ReactDOM.createRoot(rootElement).render(<Root />)
-registerForgeFlowServiceWorker()

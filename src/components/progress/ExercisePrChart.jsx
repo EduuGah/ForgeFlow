@@ -3,11 +3,11 @@ import {
   CartesianGrid,
   Line,
   LineChart,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
-  YAxis,
+  YAxis
 } from 'recharts'
+import ResponsiveContainer from '../ui/SafeResponsiveContainer'
 
 import Badge from '../ui/Badge'
 import Card from '../ui/Card'
