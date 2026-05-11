@@ -918,15 +918,13 @@ input[type='number']::-webkit-inner-spin-button {
 
 
 /* =========================================================
-   ForgeFlow — correção visual dos inputs de série no mobile
+   ForgeFlow — inputs de séries mobile v2
    ========================================================= */
 
 .ff-set-input,
 .ff-set-input:focus,
 .ff-set-input:active,
 .ff-set-input:focus-visible {
-  width: 100% !important;
-  min-width: 0 !important;
   border: 0 !important;
   outline: none !important;
   box-shadow: none !important;
@@ -948,14 +946,18 @@ input[type='number']::-webkit-inner-spin-button {
   appearance: textfield;
 }
 
+.ff-sets-scroll {
+  scrollbar-width: thin;
+}
+
 @media (max-width: 420px) {
   .ff-set-input {
-    font-size: 21px !important;
+    font-size: 23px !important;
   }
 }
 
 @media (max-width: 360px) {
   .ff-set-input {
-    font-size: 19px !important;
+    font-size: 21px !important;
   }
 }
