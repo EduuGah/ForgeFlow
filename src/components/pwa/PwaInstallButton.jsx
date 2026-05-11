@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   CheckCircle2,
-  Chrome,
   Download,
+  Globe,
   Info,
   MoreVertical,
   Share,
@@ -169,7 +169,7 @@ function PwaInstallButton() {
                   {isIos ? (
                     <Share size={18} className="mt-0.5 shrink-0 text-[var(--ff-accent-text)]" />
                   ) : (
-                    <Chrome size={18} className="mt-0.5 shrink-0 text-[var(--ff-accent-text)]" />
+                    <Globe size={18} className="mt-0.5 shrink-0 text-[var(--ff-accent-text)]" />
                   )}
 
                   <div>
