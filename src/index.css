@@ -961,3 +961,45 @@ input[type='number']::-webkit-inner-spin-button {
     font-size: 21px !important;
   }
 }
+
+
+/* =========================================================
+   ForgeFlow — inputs de séries mobile v3 em card
+   ========================================================= */
+
+.ff-set-input,
+.ff-set-input:focus,
+.ff-set-input:active,
+.ff-set-input:focus-visible {
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  text-align: center !important;
+  text-align-last: center;
+  caret-color: var(--ff-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.ff-set-input::-webkit-outer-spin-button,
+.ff-set-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+
+.ff-set-input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+@media (max-width: 420px) {
+  .ff-set-input {
+    font-size: 28px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .ff-set-input {
+    font-size: 25px !important;
+  }
+}

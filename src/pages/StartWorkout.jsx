@@ -732,15 +732,15 @@ function StartWorkout() {
 
                 {!isCollapsed && (
                   <div className="mt-5">
-                    <div className="mb-3 grid grid-cols-[42px_minmax(112px,1fr)_minmax(112px,1fr)_48px] gap-2 px-1 text-[10px] font-black uppercase tracking-[0.16em] text-[var(--ff-muted)] sm:grid-cols-[52px_minmax(150px,1fr)_minmax(150px,1fr)_54px] lg:grid-cols-[58px_minmax(170px,1fr)_minmax(170px,1fr)_150px_54px] lg:gap-3 lg:px-3">
+                    <div className="mb-3 hidden grid-cols-[58px_minmax(170px,1fr)_minmax(170px,1fr)_150px_54px] gap-3 px-3 text-xs font-bold uppercase tracking-wide text-[var(--ff-muted)] lg:grid">
                       <span>Série</span>
-                      <span>Carga</span>
+                      <span>KG</span>
                       <span>Reps</span>
-                      <span className="hidden lg:block">Recordes</span>
+                      <span>Recordes</span>
                       <span>Status</span>
                     </div>
 
-                    <div className="ff-sets-scroll space-y-3 overflow-x-auto pb-2">
+                    <div className="ff-sets-scroll space-y-3 pb-2">
                       {(sessionExercise.sets || []).map((set) => {
                         const isWarmup = set?.type === 'warmup'
 
@@ -763,16 +763,17 @@ function StartWorkout() {
                         return (
                           <div
                             key={set.id}
-                            className={`grid min-w-[360px] w-full grid-cols-[42px_minmax(112px,1fr)_minmax(112px,1fr)_48px] items-center gap-2 rounded-3xl border p-2.5 transition sm:grid-cols-[52px_minmax(150px,1fr)_minmax(150px,1fr)_54px] sm:p-3 lg:grid-cols-[58px_minmax(170px,1fr)_minmax(170px,1fr)_150px_54px] lg:gap-3 ${
+                            className={`grid w-full grid-cols-[52px_minmax(0,1fr)_52px] gap-3 rounded-3xl border p-3 transition sm:grid-cols-[56px_minmax(0,1fr)_minmax(0,1fr)_56px] lg:grid-cols-[58px_minmax(170px,1fr)_minmax(170px,1fr)_150px_54px] lg:items-center lg:gap-3 ${
                               set.completed
                                 ? 'border-emerald-500/30 bg-emerald-500/5'
                                 : 'border-[var(--ff-border)] bg-[var(--ff-surface-2)]'
                             }`}
                           >
-                            <div className="flex h-12 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#18181b] text-sm font-black lg:w-12">
+                            <div className="col-start-1 row-start-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#18181b] text-sm font-black lg:w-12">
                               {isWarmup ? 'A' : set.setNumber}
                             </div>
 
+                            <div className="col-span-3 row-start-2 min-w-0 sm:col-span-1 sm:row-start-1 lg:col-span-1">
                             <WorkoutSetInput
                               icon={Weight}
                               label="Carga"
@@ -789,7 +790,9 @@ function StartWorkout() {
                                 )
                               }
                             />
+                          </div>
 
+                          <div className="col-span-3 row-start-3 min-w-0 sm:col-span-1 sm:row-start-1 lg:col-span-1">
                             <WorkoutSetInput
                               icon={Hash}
                               label="Reps"
@@ -806,6 +809,7 @@ function StartWorkout() {
                                 )
                               }
                             />
+                          </div>
 
                             <div className="hidden min-h-11 flex-col items-start justify-center gap-1 overflow-hidden lg:flex">
                               {isWarmup && (
@@ -857,8 +861,8 @@ function StartWorkout() {
                               onClick={() => handleCompleteSet(sessionExercise, set.id)}
                               className={
                                 set.completed
-                                  ? 'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-[0_0_18px_rgba(16,185,129,0.35)]'
-                                  : 'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-zinc-700 bg-zinc-900 text-zinc-400 transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)]'
+                                  ? 'col-start-3 row-start-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-[0_0_18px_rgba(16,185,129,0.35)] lg:col-auto lg:row-auto'
+                                  : 'col-start-3 row-start-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-zinc-700 bg-zinc-900 text-zinc-400 transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)] lg:col-auto lg:row-auto'
                               }
                               aria-label={set.completed ? 'Desmarcar série' : 'Concluir série'}
                             >
