@@ -118,14 +118,67 @@ export function WorkoutSessionProvider({ children }) {
     )
   }
 
+  function getExerciseDataFromSessionExercise(sessionExercise = {}) {
+    if (sessionExercise.exercise && typeof sessionExercise.exercise === 'object') {
+      return sessionExercise.exercise
+    }
+
+    return sessionExercise
+  }
+
+  function getExerciseNameFromSessionExercise(sessionExercise = {}) {
+    const exercise = getExerciseDataFromSessionExercise(sessionExercise)
+
+    return (
+      exercise.name ||
+      exercise.exerciseName ||
+      exercise.title ||
+      sessionExercise.exerciseName ||
+      sessionExercise.name ||
+      'Exercício sem nome'
+    )
+  }
+
+  function getExerciseMuscleGroupFromSessionExercise(sessionExercise = {}) {
+    const exercise = getExerciseDataFromSessionExercise(sessionExercise)
+
+    return (
+      exercise.muscleGroup ||
+      exercise.group ||
+      sessionExercise.muscleGroup ||
+      sessionExercise.group ||
+      ''
+    )
+  }
+
+  function normalizeSessionExerciseForHistory(sessionExercise = {}) {
+    const exerciseData = getExerciseDataFromSessionExercise(sessionExercise)
+
+    return {
+      ...sessionExercise,
+      exercise: {
+        ...exerciseData,
+        id:
+          exerciseData.id ||
+          exerciseData._id ||
+          sessionExercise.originalExerciseId ||
+          sessionExercise.exerciseId ||
+          '',
+        name: getExerciseNameFromSessionExercise(sessionExercise),
+        muscleGroup: getExerciseMuscleGroupFromSessionExercise(sessionExercise),
+      },
+      sets: Array.isArray(sessionExercise.sets) ? sessionExercise.sets : [],
+    }
+  }
+
   function getSessionPrs(session) {
-    return session.exercises.flatMap((exercise) =>
-      exercise.sets
+    return (session.exercises || []).flatMap((exercise) =>
+      (exercise.sets || [])
         .filter((set) => set.isPR || set.isWeightPR || set.isVolumePR)
         .map((set) => ({
           ...set,
-          exerciseName: exercise.exercise?.name,
-          muscleGroup: exercise.exercise?.muscleGroup,
+          exerciseName: getExerciseNameFromSessionExercise(exercise),
+          muscleGroup: getExerciseMuscleGroupFromSessionExercise(exercise),
         }))
     )
   }
@@ -446,22 +499,28 @@ export function WorkoutSessionProvider({ children }) {
       finishedAt: new Date().toISOString(),
       duration: elapsedSeconds,
       durationSeconds: elapsedSeconds,
-      exercises: activeSession.exercises.map((exercise) => {
-        const workingSets = exercise.sets.filter((set) => isWorkingSet(set))
+      exercises: activeSession.exercises.map((sessionExercise) => {
+        const exercise = normalizeSessionExerciseForHistory(sessionExercise)
+        const sets = Array.isArray(exercise.sets) ? exercise.sets : []
+        const workingSets = sets.filter((set) => isWorkingSet(set))
+        const exerciseName = getExerciseNameFromSessionExercise(exercise)
 
         const { weightPRSetId, volumePRSetId } = getSessionPRTypes(
-          exercise.exercise.name,
+          exerciseName,
           workingSets,
           user
         )
 
         return {
           ...exercise,
-          sets: exercise.sets.map((set) => {
+          sets: sets.map((set) => {
             const isWarmup = isWarmupSet(set)
 
             return {
               ...set,
+              completed: Boolean(set.completed),
+              weight: set.weight === undefined || set.weight === null ? '' : set.weight,
+              reps: set.reps === undefined || set.reps === null ? '' : set.reps,
               isWeightPR: !isWarmup && set.id === weightPRSetId,
               isVolumePR: !isWarmup && set.id === volumePRSetId,
               isPR:

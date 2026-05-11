@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   CheckCircle2,
-  Globe,
   Download,
+  Globe,
   Info,
   MoreVertical,
   Share,
@@ -33,14 +33,20 @@ function isAndroidDevice() {
   return /android/i.test(window.navigator.userAgent || '')
 }
 
+function getPwaStatus() {
+  if (typeof window === 'undefined') return 'indisponível'
+
+  return window.__FORGEFLOW_PWA_STATUS__ || 'aguardando navegador'
+}
+
 function PwaInstallButton() {
   const [installPrompt, setInstallPrompt] = useState(null)
   const [isOpen, setIsOpen] = useState(false)
   const [installed, setInstalled] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
+  const [pwaStatus, setPwaStatus] = useState(getPwaStatus())
   const isIos = useMemo(() => isIosDevice(), [])
   const isAndroid = useMemo(() => isAndroidDevice(), [])
-  const pwaDebugStatus = typeof window !== 'undefined' ? window.__FORGEFLOW_PWA_STATUS__ || 'aguardando navegador' : 'indisponível'
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined
@@ -50,9 +56,14 @@ function PwaInstallButton() {
       return undefined
     }
 
+    function refreshStatus() {
+      setPwaStatus(getPwaStatus())
+    }
+
     function handleBeforeInstallPrompt(event) {
       event.preventDefault()
       setInstallPrompt(event)
+      setStatusMessage('O navegador liberou a instalação automática. Toque em “Instalar agora”.')
     }
 
     function handleAppInstalled() {
@@ -63,18 +74,24 @@ function PwaInstallButton() {
     }
 
     function handleShowInstallApp() {
+      refreshStatus()
       setIsOpen(true)
       setStatusMessage('')
     }
 
+    const intervalId = window.setInterval(refreshStatus, 1000)
+
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
     window.addEventListener('appinstalled', handleAppInstalled)
     window.addEventListener('forgeflow:show-install-app', handleShowInstallApp)
+    window.addEventListener('forgeflow:pwa-ready', refreshStatus)
 
     return () => {
+      window.clearInterval(intervalId)
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
       window.removeEventListener('appinstalled', handleAppInstalled)
       window.removeEventListener('forgeflow:show-install-app', handleShowInstallApp)
+      window.removeEventListener('forgeflow:pwa-ready', refreshStatus)
     }
   }, [])
 
@@ -86,7 +103,7 @@ function PwaInstallButton() {
 
     if (!installPrompt) {
       setStatusMessage(
-        'O navegador ainda não liberou o instalador automático. Use as instruções exibidas nesta janela.'
+        'O navegador ainda não liberou o instalador automático. Siga as instruções exibidas nesta janela.'
       )
       return
     }
@@ -109,7 +126,7 @@ function PwaInstallButton() {
     } catch (error) {
       console.error(error)
       setStatusMessage(
-        'Não foi possível abrir o instalador automático. Use as instruções exibidas nesta janela.'
+        'Não foi possível abrir o instalador automático. Siga as instruções exibidas nesta janela.'
       )
     }
   }
@@ -187,7 +204,7 @@ function PwaInstallButton() {
                       </ol>
                     ) : (
                       <ol className="mt-2 list-decimal space-y-1 pl-4">
-                        <li>Abra o ForgeFlow no Chrome.</li>
+                        <li>Abra o ForgeFlow no Chrome pelo link HTTPS do deploy.</li>
                         <li>Toque no menu de três pontos.</li>
                         <li>Escolha “Instalar app” ou “Adicionar à tela inicial”.</li>
                         <li>Confirme a instalação.</li>
@@ -201,21 +218,21 @@ function PwaInstallButton() {
                 <div className="flex items-start gap-3">
                   <MoreVertical size={18} className="mt-0.5 shrink-0 text-[var(--ff-accent-text)]" />
                   <p>
-                    Se o botão automático não abrir nada, não é erro visual: o Chrome/Safari só mostra o instalador quando considera o PWA elegível.
+                    Se a opção não aparecer no menu, o Chrome ainda não reconheceu o app como PWA instalável. Verifique Manifest e Service Worker em DevTools &gt; Application.
                   </p>
                 </div>
               </div>
+
+              <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3 text-xs leading-relaxed text-[var(--ff-muted)]">
+                <p>
+                  Status PWA: <strong className="text-[var(--ff-text)]">{pwaStatus}</strong>
+                </p>
+                <p className="mt-1">
+                  Instalador automático: <strong className="text-[var(--ff-text)]">{installPrompt ? 'liberado pelo navegador' : 'ainda não liberado'}</strong>
+                </p>
+              </div>
             </div>
           )}
-
-          <div className="mt-4 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3 text-xs leading-relaxed text-[var(--ff-muted)]">
-            <p>
-              Status PWA: <strong className="text-[var(--ff-text)]">{pwaDebugStatus}</strong>
-            </p>
-            <p className="mt-1">
-              Instalador automático: <strong className="text-[var(--ff-text)]">{installPrompt ? 'liberado pelo navegador' : 'ainda não liberado'}</strong>
-            </p>
-          </div>
 
           {statusMessage && (
             <div className="mt-4 flex items-start gap-3 rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] p-3 text-sm leading-relaxed text-[var(--ff-accent-text)]">
