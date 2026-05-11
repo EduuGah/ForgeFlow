@@ -26,6 +26,8 @@ export function WorkoutSessionProvider({ children }) {
   const [isLoaded, setIsLoaded] = useState(false)
   const syncTimeoutRef = useRef(null)
   const isClearingActiveSessionRef = useRef(false)
+  const hasCompletedInitialActiveLoadRef = useRef(false)
+  const lastActiveSessionSyncRef = useRef(0)
 
   function isMongoId(value) {
     return typeof value === 'string' && /^[a-f\d]{24}$/i.test(value)
@@ -234,38 +236,51 @@ export function WorkoutSessionProvider({ children }) {
     let isMounted = true
 
     async function loadActiveSession() {
+      hasCompletedInitialActiveLoadRef.current = false
+      setIsLoaded(false)
+
       const savedSession = getUserStorageData(user, ACTIVE_SESSION_STORAGE_KEY, null)
-
-      if (isMounted) {
-        setActiveSession(savedSession)
-        setIsLoaded(true)
-      }
-
       const remoteSession = await tryFetchActiveSessionFromApi()
 
-      if (isMounted && remoteSession && !wasActiveSessionFinished(remoteSession)) {
-        setActiveSession(remoteSession)
-        persistActiveSessionLocally(remoteSession)
+      if (!isMounted) return
+
+      const nextSession =
+        remoteSession && !wasActiveSessionFinished(remoteSession)
+          ? remoteSession
+          : savedSession && !wasActiveSessionFinished(savedSession)
+            ? savedSession
+            : null
+
+      setActiveSession(nextSession)
+
+      if (nextSession) {
+        persistActiveSessionLocally(nextSession)
+      } else {
+        persistActiveSessionLocally(null)
       }
+
+      hasCompletedInitialActiveLoadRef.current = true
+      setIsLoaded(true)
     }
 
     loadActiveSession()
 
     return () => {
       isMounted = false
+      hasCompletedInitialActiveLoadRef.current = false
     }
   }, [user])
 
   useEffect(() => {
-    if (!isLoaded) return
+    if (!isLoaded || !hasCompletedInitialActiveLoadRef.current) return
 
     window.clearTimeout(syncTimeoutRef.current)
 
     if (!activeSession) {
       persistActiveSessionLocally(null)
 
-      if (!isClearingActiveSessionRef.current) {
-        tryClearActiveSessionFromApi()
+      if (isClearingActiveSessionRef.current) {
+        return
       }
 
       return
@@ -280,6 +295,7 @@ export function WorkoutSessionProvider({ children }) {
 
     syncTimeoutRef.current = window.setTimeout(() => {
       if (!isClearingActiveSessionRef.current) {
+        lastActiveSessionSyncRef.current = Date.now()
         trySaveActiveSessionToApi(activeSession)
       }
     }, 700)
@@ -288,6 +304,62 @@ export function WorkoutSessionProvider({ children }) {
       window.clearTimeout(syncTimeoutRef.current)
     }
   }, [activeSession, isLoaded, user])
+
+  useEffect(() => {
+    if (!isLoaded || !user) return undefined
+
+    let isMounted = true
+
+    async function pollRemoteActiveSession() {
+      if (isClearingActiveSessionRef.current) return
+
+      const remoteSession = await tryFetchActiveSessionFromApi()
+
+      if (!isMounted) return
+
+      setActiveSession((current) => {
+        if (!remoteSession || wasActiveSessionFinished(remoteSession)) {
+          return current
+        }
+
+        if (!current) {
+          persistActiveSessionLocally(remoteSession)
+          return remoteSession
+        }
+
+        if (current.id !== remoteSession.id) {
+          persistActiveSessionLocally(remoteSession)
+          return remoteSession
+        }
+
+        return current
+      })
+    }
+
+    function handleFocusSync() {
+      pollRemoteActiveSession()
+    }
+
+    function handleVisibilitySync() {
+      if (document.visibilityState === 'visible') {
+        pollRemoteActiveSession()
+      }
+    }
+
+    pollRemoteActiveSession()
+
+    const intervalId = window.setInterval(pollRemoteActiveSession, 8000)
+
+    window.addEventListener('focus', handleFocusSync)
+    document.addEventListener('visibilitychange', handleVisibilitySync)
+
+    return () => {
+      isMounted = false
+      window.clearInterval(intervalId)
+      window.removeEventListener('focus', handleFocusSync)
+      document.removeEventListener('visibilitychange', handleVisibilitySync)
+    }
+  }, [isLoaded, user])
 
   useEffect(() => {
     function handleActiveSessionStorage(event) {

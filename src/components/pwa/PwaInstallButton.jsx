@@ -12,7 +12,7 @@ import {
 
 import forgeflowIcon from '../../assets/forgeflow-icon.png'
 
-function isStandaloneMode() {
+export function isStandaloneMode() {
   if (typeof window === 'undefined') return false
 
   return (
@@ -52,9 +52,7 @@ function PwaInstallButton() {
     if (typeof window === 'undefined') return undefined
 
     function refreshStatus() {
-      const standalone = isStandaloneMode()
-
-      setInstalled(standalone)
+      setInstalled(isStandaloneMode())
       setPwaStatus(getPwaStatus())
     }
 
@@ -63,7 +61,6 @@ function PwaInstallButton() {
     function handleBeforeInstallPrompt(event) {
       event.preventDefault()
       setInstallPrompt(event)
-      setStatusMessage('O navegador liberou a instalação automática. Toque em “Instalar agora”.')
     }
 
     function handleAppInstalled() {
@@ -75,14 +72,8 @@ function PwaInstallButton() {
 
     function handleShowInstallApp() {
       refreshStatus()
-
-      if (isStandaloneMode()) {
-        setStatusMessage('O ForgeFlow já está aberto como aplicativo instalado.')
-      } else {
-        setStatusMessage('')
-      }
-
       setIsOpen(true)
+      setStatusMessage('')
     }
 
     const intervalId = window.setInterval(refreshStatus, 1500)
@@ -103,7 +94,7 @@ function PwaInstallButton() {
 
   async function handleInstall() {
     if (installed || isStandaloneMode()) {
-      setStatusMessage('O ForgeFlow já parece estar aberto como aplicativo instalado.')
+      setStatusMessage('O ForgeFlow já está aberto como aplicativo instalado.')
       return
     }
 
@@ -173,7 +164,7 @@ function PwaInstallButton() {
           {installed ? (
             <div className="mt-5 flex items-start gap-3 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-4 text-sm leading-relaxed text-emerald-200">
               <CheckCircle2 size={18} className="mt-0.5 shrink-0" />
-              <p>O ForgeFlow já está aberto como aplicativo instalado. Por isso o botão de instalação não precisa aparecer.</p>
+              <p>O ForgeFlow já está aberto como aplicativo instalado. Por isso o botão de instalação não aparece fora das Configurações.</p>
             </div>
           ) : (
             <div className="mt-5 space-y-3">
