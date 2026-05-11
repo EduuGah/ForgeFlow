@@ -13,8 +13,6 @@ const WorkoutSessionContext = createContext(null)
 const ACTIVE_SESSION_STORAGE_KEY = 'active-session'
 const ACTIVE_SESSION_API_ENDPOINTS = [
   '/active-workout',
-  '/active-session',
-  '/workout-session/active',
 ]
 
 const FINISHED_ACTIVE_SESSION_IDS_KEY = 'forgeflow:finished-active-session-ids'

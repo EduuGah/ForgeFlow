@@ -13,7 +13,8 @@ import {
   Sun,
   X,
   Monitor,
-  Smartphone} from 'lucide-react'
+  Smartphone,
+} from 'lucide-react'
 
 import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
