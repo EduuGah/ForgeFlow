@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useDeferredValue } from 'react'
-import { Timer, X, ChevronDown, Dumbbell, RotateCcw, StickyNote, Trophy } from 'lucide-react'
+import { Timer, X, ChevronDown, StickyNote, Trophy, CheckCircle2, Repeat2, SkipForward, Trash2, ImageIcon, Weight, Hash, Plus, BarChart3, ClipboardCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import PageHeader from '../components/ui/PageHeader'
@@ -31,6 +31,7 @@ import {
 
 import { getAppSettings } from '../utils/settingsUtils'
 import { generateSmartNotifications } from '../utils/notificationUtils'
+import { getExerciseMedia } from '../utils/exerciseMediaUtils'
 
 function formatTime(seconds) {
   const safeSeconds = Number(seconds) || 0
@@ -73,15 +74,37 @@ function getExerciseId(exercise) {
   return String(exercise?.id || exercise?._id || '')
 }
 
+function getExerciseData(sessionExercise) {
+  if (sessionExercise?.exercise && typeof sessionExercise.exercise === 'object') {
+    return sessionExercise.exercise
+  }
+
+  return sessionExercise || {}
+}
+
 function getExerciseName(sessionExercise) {
-  return sessionExercise?.exercise?.name || 'Exercício sem nome'
+  const exercise = getExerciseData(sessionExercise)
+
+  return (
+    exercise.name ||
+    exercise.exerciseName ||
+    exercise.title ||
+    sessionExercise?.exerciseName ||
+    sessionExercise?.name ||
+    'Exercício sem nome'
+  )
 }
 
 function getExerciseSubtitle(sessionExercise) {
-  const muscleGroup = sessionExercise?.exercise?.muscleGroup || 'Sem grupo'
-  const equipment = sessionExercise?.exercise?.equipment || 'Sem equipamento'
+  const exercise = getExerciseData(sessionExercise)
+  const muscleGroup = exercise.muscleGroup || sessionExercise?.muscleGroup || 'Sem grupo'
+  const equipment = exercise.equipment || sessionExercise?.equipment || 'Sem equipamento'
 
   return `${muscleGroup} • ${equipment}`
+}
+
+function getSessionExerciseMedia(sessionExercise) {
+  return getExerciseMedia(getExerciseData(sessionExercise))
 }
 
 function StartWorkout() {
@@ -474,36 +497,66 @@ function StartWorkout() {
               >
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="min-w-0 flex-1">
-                    <button
-                      type="button"
-                      onClick={() => toggleExerciseCollapse(sessionExercise.id)}
-                      className="flex w-full items-center gap-3 text-left"
-                    >
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 text-sm font-black text-[var(--ff-accent-text)]">
-                        {exerciseIndex + 1}
-                      </span>
+                    <div className="flex items-start gap-4">
+                      <div className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-3xl border border-[var(--ff-border)] bg-white shadow-inner sm:h-28 sm:w-28">
+                        {getSessionExerciseMedia(sessionExercise) ? (
+                          <img
+                            src={getSessionExerciseMedia(sessionExercise)}
+                            alt={getExerciseName(sessionExercise)}
+                            className="h-full w-full object-contain"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        ) : (
+                          <ImageIcon size={30} className="text-zinc-500" />
+                        )}
 
-                      <div className="min-w-0 flex-1">
-                        <h2 className="truncate text-xl font-black text-[var(--ff-text)]">
-                          {getExerciseName(sessionExercise)}
-                        </h2>
-
-                        <p className="mt-1 truncate text-sm text-[var(--ff-muted)]">
-                          {getExerciseSubtitle(sessionExercise)}
-                        </p>
+                        <span className="absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-xl bg-black/70 text-xs font-black text-white backdrop-blur">
+                          {exerciseIndex + 1}
+                        </span>
                       </div>
 
-                      <ChevronDown
-                        size={20}
-                        className={`shrink-0 text-[var(--ff-muted)] transition ${isCollapsed ? '-rotate-90' : ''}`}
-                      />
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => toggleExerciseCollapse(sessionExercise.id)}
+                        className="min-w-0 flex-1 text-left"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <h2 className="line-clamp-2 text-2xl font-black leading-tight text-[var(--ff-text)]">
+                              {getExerciseName(sessionExercise)}
+                            </h2>
+
+                            <p className="mt-1 text-sm text-[var(--ff-muted)]">
+                              {getExerciseSubtitle(sessionExercise)}
+                            </p>
+                          </div>
+
+                          <ChevronDown
+                            size={20}
+                            className={`mt-1 shrink-0 text-[var(--ff-muted)] transition ${isCollapsed ? '-rotate-90' : ''}`}
+                          />
+                        </div>
+
+                        <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--ff-surface-3)]">
+                          <div
+                            className="h-full rounded-full bg-[var(--ff-accent)] transition-all"
+                            style={{ width: `${exerciseProgressPercent}%` }}
+                          />
+                        </div>
+
+                        <p className="mt-2 text-xs font-bold text-[var(--ff-muted)]">
+                          {exerciseCompletedSets}/{exerciseTotalSets} séries concluídas
+                        </p>
+                      </button>
+                    </div>
 
                     <div className="mt-4 grid grid-cols-1 gap-2 lg:grid-cols-2">
                       <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
-                        <p className="text-xs text-[var(--ff-muted)]">
+                        <div className="flex items-center gap-2 text-xs text-[var(--ff-muted)]">
+                          <ClipboardCheck size={15} />
                           Último treino
-                        </p>
+                        </div>
 
                         <p className="mt-1 text-sm font-semibold text-[var(--ff-text-soft)]">
                           {performance.lastSet
@@ -513,9 +566,10 @@ function StartWorkout() {
                       </div>
 
                       <div className="rounded-2xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 p-3">
-                        <p className="text-xs text-[var(--ff-accent-text)]">
+                        <div className="flex items-center gap-2 text-xs text-[var(--ff-accent-text)]">
+                          <Trophy size={15} />
                           Melhores marcas
-                        </p>
+                        </div>
 
                         <p className="mt-1 text-sm font-semibold text-[var(--ff-accent-text)]">
                           Peso:{' '}
@@ -544,24 +598,27 @@ function StartWorkout() {
                             : sessionExercise.id
                         )
                       }
-                      className="h-11 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 text-xs font-bold text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)]/40 hover:bg-zinc-900 hover:text-[var(--ff-text)] lg:px-4 lg:text-sm"
+                      className="flex h-11 items-center justify-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 text-xs font-bold text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)]/40 hover:bg-zinc-900 hover:text-[var(--ff-text)] lg:px-4 lg:text-sm"
                     >
+                      <Repeat2 size={15} />
                       Trocar
                     </button>
 
                     <button
                       type="button"
                       onClick={() => skipExercise(sessionExercise.id)}
-                      className="h-11 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 text-xs font-bold text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)]/40 hover:bg-zinc-900 hover:text-[var(--ff-text)] lg:px-4 lg:text-sm"
+                      className="flex h-11 items-center justify-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 text-xs font-bold text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)]/40 hover:bg-zinc-900 hover:text-[var(--ff-text)] lg:px-4 lg:text-sm"
                     >
+                      <SkipForward size={15} />
                       {sessionExercise.skipped ? 'Retomar' : 'Pular'}
                     </button>
 
                     <button
                       type="button"
                       onClick={() => removeExercise(sessionExercise.id)}
-                      className="h-11 rounded-2xl border border-red-500/20 bg-red-500/10 px-3 text-xs font-bold text-red-300 transition hover:border-red-400/40 hover:bg-red-500/20 lg:px-4 lg:text-sm"
+                      className="flex h-11 items-center justify-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 px-3 text-xs font-bold text-red-300 transition hover:border-red-400/40 hover:bg-red-500/20 lg:px-4 lg:text-sm"
                     >
+                      <Trash2 size={15} />
                       Excluir
                     </button>
                   </div>
@@ -666,13 +723,13 @@ function StartWorkout() {
                         return (
                           <div
                             key={set.id}
-                            className={`grid w-full grid-cols-[42px_minmax(0,1fr)_minmax(0,1fr)_74px_46px] items-center gap-2 rounded-2xl border p-2.5 transition sm:grid-cols-[44px_minmax(90px,1fr)_minmax(90px,1fr)_88px_48px] sm:p-3 lg:grid-cols-[52px_minmax(120px,1fr)_minmax(120px,1fr)_150px_52px] lg:gap-3 ${
+                            className={`grid w-full grid-cols-[46px_minmax(0,1fr)_minmax(0,1fr)_74px_48px] items-center gap-2 rounded-3xl border p-2.5 transition sm:grid-cols-[52px_minmax(90px,1fr)_minmax(90px,1fr)_92px_52px] sm:p-3 lg:grid-cols-[58px_minmax(120px,1fr)_minmax(120px,1fr)_150px_54px] lg:gap-3 ${
                               set.completed
                                 ? 'border-emerald-500/30 bg-emerald-500/5'
                                 : 'border-[var(--ff-border)] bg-[var(--ff-surface-2)]'
                             }`}
                           >
-                            <div className="flex h-11 w-10 shrink-0 items-center justify-center rounded-xl bg-[#18181b] text-sm font-black lg:w-11">
+                            <div className="flex h-12 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#18181b] text-sm font-black lg:w-12">
                               {isWarmup ? 'A' : set.setNumber}
                             </div>
 
@@ -690,7 +747,7 @@ function StartWorkout() {
                                   event.target.value
                                 )
                               }
-                              className="h-11 w-full px-2 text-center text-base font-bold lg:px-3"
+                              className="h-12 w-full rounded-2xl px-2 text-center text-lg font-black lg:px-3"
                             />
 
                             <Input
@@ -707,7 +764,7 @@ function StartWorkout() {
                                   event.target.value
                                 )
                               }
-                              className="h-11 w-full px-2 text-center text-base font-bold lg:px-3"
+                              className="h-12 w-full rounded-2xl px-2 text-center text-lg font-black lg:px-3"
                             />
 
                             <div className="flex min-h-11 flex-col items-start justify-center gap-1 overflow-hidden">
@@ -765,7 +822,7 @@ function StartWorkout() {
                               }
                               aria-label={set.completed ? 'Desmarcar série' : 'Concluir série'}
                             >
-                              {set.completed ? '✓' : '○'}
+                              {set.completed ? <CheckCircle2 size={22} /> : <span className="h-3 w-3 rounded-full border-2 border-current" />}
                             </button>
                           </div>
                         )
@@ -777,7 +834,8 @@ function StartWorkout() {
                       onClick={() => addSet(sessionExercise.id)}
                       className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--ff-surface-3)] text-sm font-bold transition hover:bg-zinc-700"
                     >
-                      + Adicionar série
+                      <Plus size={17} />
+                      Adicionar série
                     </button>
                   </div>
                 )}

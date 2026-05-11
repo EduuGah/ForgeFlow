@@ -109,6 +109,29 @@ function getExerciseEquipment(item = {}) {
   )
 }
 
+
+function getExerciseMediaValue(item = {}) {
+  const exercise = getExerciseObject(item)
+
+  return (
+    exercise.imageUrl ||
+    exercise.gifUrl ||
+    exercise.mediaUrl ||
+    exercise.image ||
+    exercise.gif ||
+    exercise.media?.image ||
+    exercise.media?.gif ||
+    item.imageUrl ||
+    item.gifUrl ||
+    item.mediaUrl ||
+    item.image ||
+    item.gif ||
+    item.media?.image ||
+    item.media?.gif ||
+    ''
+  )
+}
+
 function getExerciseSets(exerciseItem = {}) {
   if (Array.isArray(exerciseItem.sets)) return exerciseItem.sets
   if (Array.isArray(exerciseItem.series)) return exerciseItem.series
@@ -157,6 +180,8 @@ export function getCompletedSets(history = []) {
           exerciseName,
           muscleGroup,
           equipment,
+          mediaUrl: getExerciseMediaValue(exerciseItem),
+          imageUrl: getExerciseMediaValue(exerciseItem),
           weight: getSetWeight(set),
           reps: getSetReps(set),
           volume: getSetVolume(set),

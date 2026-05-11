@@ -790,3 +790,38 @@ main {
     display: none;
   }
 }
+
+
+/* =========================================================
+   ForgeFlow — polish treino ativo, legendas e troca de página
+   ========================================================= */
+
+.recharts-legend-wrapper {
+  color: var(--ff-muted) !important;
+}
+
+.recharts-legend-item-text {
+  color: var(--ff-muted) !important;
+  font-weight: 800;
+}
+
+[data-chart-container="true"] {
+  min-width: 0;
+  overflow: visible;
+}
+
+/* Garante que a troca de página não preserve uma posição visual estranha */
+html {
+  scroll-padding-top: calc(6rem + env(safe-area-inset-top));
+}
+
+/* Inputs numéricos do treino ativo ficam mais fáceis de tocar */
+input[type='number'] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Scrollbars internas mais discretas em listas de exercícios/séries */
+.max-h-\[560px\],
+.max-h-\[620px\] {
+  scrollbar-width: thin;
+}

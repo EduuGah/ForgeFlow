@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { Menu } from 'lucide-react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 
 import forgeflowIcon from '../../assets/forgeflow-icon.png'
 import { useAuth } from '../../context/AuthContext'
@@ -38,6 +38,7 @@ function runWhenBrowserIsIdle(callback) {
 
 function AppLayout() {
   const { user } = useAuth()
+  const location = useLocation()
   const { activeSession } = useWorkoutSession()
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -46,6 +47,21 @@ function AppLayout() {
   const [isHeaderCompact, setIsHeaderCompact] = useState(false)
   const lastScrollYRef = useRef(0)
   const tickingRef = useRef(false)
+
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'auto',
+    })
+
+    lastScrollYRef.current = 0
+    setIsHeaderVisible(true)
+    setIsHeaderCompact(false)
+
+    window.dispatchEvent(new CustomEvent('forgeflow:route-scroll-top'))
+  }, [location.pathname])
+
 
   useEffect(() => {
     document.body.style.overflow = ''

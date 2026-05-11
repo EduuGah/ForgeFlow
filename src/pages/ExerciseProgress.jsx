@@ -4,6 +4,7 @@ import {
   CartesianGrid,
   Line,
   LineChart,
+  Legend,
   Tooltip,
   XAxis,
   YAxis
@@ -98,7 +99,7 @@ function ExerciseProgress() {
     completedSets.forEach((set) => {
       const key = set.normalizedExerciseName
       if (!key) return
-      const current = map.get(key) || { name: set.exerciseName, normalizedName: key, muscleGroup: set.muscleGroup, count: 0, maxWeight: 0, maxVolume: 0, lastDate: set.date }
+      const current = map.get(key) || { name: set.exerciseName, normalizedName: key, muscleGroup: set.muscleGroup, mediaUrl: set.mediaUrl || set.imageUrl || '', count: 0, maxWeight: 0, maxVolume: 0, lastDate: set.date }
       current.count += 1
       current.maxWeight = Math.max(current.maxWeight, set.weight)
       current.maxVolume = Math.max(current.maxVolume, set.volume)
@@ -161,9 +162,19 @@ function ExerciseProgress() {
             </div>
             <div className="mt-4 max-h-[560px] space-y-2 overflow-y-auto pr-1">
               {filteredExerciseOptions.length === 0 ? <EmptyState title="Nenhum exercício" description="Finalize treinos com séries válidas para aparecerem aqui." /> : filteredExerciseOptions.map((exercise) => (
-                <button key={exercise.normalizedName} type="button" onClick={() => setSelectedExerciseName(exercise.normalizedName)} className={['w-full rounded-2xl border p-3 text-left transition', selectedExerciseName === exercise.normalizedName ? 'border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)]' : 'border-[var(--ff-border)] bg-[var(--ff-surface-2)] hover:bg-[var(--ff-card-hover)]'].join(' ')}>
-                  <p className="line-clamp-1 font-black text-[var(--ff-text)]">{exercise.name}</p>
-                  <p className="mt-1 text-xs text-[var(--ff-muted)]">{exercise.count} série(s) • {exercise.muscleGroup}</p>
+                <button key={exercise.normalizedName} type="button" onClick={() => setSelectedExerciseName(exercise.normalizedName)} className={['flex w-full items-center gap-3 rounded-2xl border p-2.5 text-left transition', selectedExerciseName === exercise.normalizedName ? 'border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)]' : 'border-[var(--ff-border)] bg-[var(--ff-surface-2)] hover:bg-[var(--ff-card-hover)]'].join(' ')}>
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-border)] bg-white">
+                    {exercise.mediaUrl ? (
+                      <img src={exercise.mediaUrl} alt={exercise.name} className="h-full w-full object-contain" loading="lazy" decoding="async" />
+                    ) : (
+                      <BarChart3 size={22} className="text-zinc-500" />
+                    )}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="line-clamp-1 font-black text-[var(--ff-text)]">{exercise.name}</p>
+                    <p className="mt-1 text-xs text-[var(--ff-muted)]">{exercise.count} série(s) • {exercise.muscleGroup}</p>
+                  </div>
                 </button>
               ))}
             </div>
@@ -177,7 +188,21 @@ function ExerciseProgress() {
             <>
               <Card>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div><p className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--ff-accent-text)]">Exercício selecionado</p><h2 className="mt-1 text-2xl font-black text-[var(--ff-text)]">{selectedExercise.name}</h2><p className="mt-1 text-sm text-[var(--ff-muted)]">{selectedExercise.muscleGroup}</p></div>
+                  <div className="flex min-w-0 items-center gap-4">
+                    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-3xl border border-[var(--ff-border)] bg-white">
+                      {selectedExercise.mediaUrl ? (
+                        <img src={selectedExercise.mediaUrl} alt={selectedExercise.name} className="h-full w-full object-contain" loading="lazy" decoding="async" />
+                      ) : (
+                        <BarChart3 size={30} className="text-zinc-500" />
+                      )}
+                    </div>
+
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--ff-accent-text)]">Exercício selecionado</p>
+                      <h2 className="mt-1 line-clamp-2 text-2xl font-black text-[var(--ff-text)]">{selectedExercise.name}</h2>
+                      <p className="mt-1 text-sm text-[var(--ff-muted)]">{selectedExercise.muscleGroup}</p>
+                    </div>
+                  </div>
                   <Badge>{stats.totalSets} séries</Badge>
                 </div>
                 <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -197,9 +222,16 @@ function ExerciseProgress() {
                         <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
                         <XAxis dataKey="axisLabel" stroke="var(--ff-muted)" tick={{ fontSize: 11, fill: 'var(--ff-muted)' }} tickLine={false} axisLine={false} />
                         <YAxis stroke="var(--ff-muted)" tick={{ fontSize: 11, fill: 'var(--ff-muted)' }} tickLine={false} axisLine={false} />
-                        <Tooltip formatter={(value, name) => [name === 'volume' ? formatVolume(value) : formatWeight(value), name === 'volume' ? 'Volume' : 'Peso']} labelFormatter={(_, payload) => payload?.[0]?.payload ? `${payload[0].payload.dateLabel} • Série ${payload[0].payload.setNumber}` : 'Série'} contentStyle={getChartTooltipStyle()} labelStyle={chartLabelStyle} itemStyle={chartItemStyle} />
-                        <Line type="monotone" dataKey="weight" stroke="var(--ff-accent)" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: 'var(--ff-card)' }} />
-                        <Line type="monotone" dataKey="volume" stroke="#f59e0b" strokeWidth={2} dot={false} />
+                        <Tooltip formatter={(value, name) => [name === 'volume' ? formatVolume(value) : formatWeight(value), name === 'volume' ? 'Volume total' : 'Peso usado']} labelFormatter={(_, payload) => payload?.[0]?.payload ? `${payload[0].payload.dateLabel} • Série ${payload[0].payload.setNumber}` : 'Série'} contentStyle={getChartTooltipStyle()} labelStyle={chartLabelStyle} itemStyle={chartItemStyle} />
+                        <Legend
+                          verticalAlign="top"
+                          align="right"
+                          iconType="circle"
+                          wrapperStyle={{ paddingBottom: 12, color: 'var(--ff-muted)', fontSize: 12, fontWeight: 800 }}
+                          formatter={(value) => value === 'volume' ? 'Volume total' : 'Peso usado'}
+                        />
+                        <Line type="monotone" name="Peso usado" dataKey="weight" stroke="var(--ff-accent)" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: 'var(--ff-card)' }} />
+                        <Line type="monotone" name="Volume total" dataKey="volume" stroke="#f59e0b" strokeWidth={2} dot={false} />
                       </LineChart>
                     </ResponsiveContainer>
                   )}
