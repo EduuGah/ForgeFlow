@@ -23,6 +23,7 @@ const ActiveWorkoutMini = lazy(() => import('../workout/ActiveWorkoutMini'))
 const SmartNotificationPopup = lazy(() =>
   import('../notifications/SmartNotificationPopup')
 )
+const PwaInstallButton = lazy(() => import('../pwa/PwaInstallButton'))
 
 function runWhenBrowserIsIdle(callback) {
   if (typeof window === 'undefined') return undefined
@@ -246,6 +247,9 @@ function AppLayout() {
           <SmartNotificationPopup notification={popupNotification} onClose={() => setPopupNotification(null)} />
         </Suspense>
       )}
+      <Suspense fallback={null}>
+        <PwaInstallButton />
+      </Suspense>
     </div>
   )
 }

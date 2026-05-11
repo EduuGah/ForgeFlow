@@ -4,7 +4,6 @@ import {
   CartesianGrid,
   Line,
   LineChart,
-  Legend,
   Tooltip,
   XAxis,
   YAxis
@@ -143,6 +142,30 @@ function ExerciseProgress() {
     }
   }, [selectedSets])
 
+  const dateChartData = useMemo(() => {
+    const map = new Map()
+
+    selectedSets.forEach((set) => {
+      const dateKey = new Date(set.date).toISOString().slice(0, 10)
+      const current = map.get(dateKey) || {
+        dateKey,
+        dateLabel: formatDate(set.date),
+        longDate: formatLongDate(set.date),
+        maxWeight: 0,
+        totalVolume: 0,
+        sets: 0,
+      }
+
+      current.maxWeight = Math.max(current.maxWeight, Number(set.weight || 0))
+      current.totalVolume += Number(set.volume || 0)
+      current.sets += 1
+
+      map.set(dateKey, current)
+    })
+
+    return Array.from(map.values()).sort((a, b) => a.dateKey.localeCompare(b.dateKey))
+  }, [selectedSets])
+
   const selectedExercise = exerciseOptions.find((exercise) => exercise.normalizedName === selectedExerciseName)
 
   return (
@@ -213,30 +236,135 @@ function ExerciseProgress() {
                 </div>
               </Card>
 
-              <Card>
-                <div className="flex items-center justify-between gap-3"><div><h2 className="text-xl font-black text-[var(--ff-text)]">Evolução de carga e volume</h2><p className="mt-1 text-sm text-[var(--ff-muted)]">Cada ponto representa uma série concluída.</p></div><TrendingUp size={22} className="text-[var(--ff-accent-text)]" /></div>
-                <div className="mt-5 h-[340px] min-h-[340px]" data-chart>
-                  {chartData.length === 0 ? <EmptyState title="Sem séries" description="Nenhuma série válida foi encontrada para esse exercício." /> : (
-                    <ResponsiveContainer height={320}>
-                      <LineChart data={chartData} margin={{ top: 16, right: 14, left: 0, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
-                        <XAxis dataKey="axisLabel" stroke="var(--ff-muted)" tick={{ fontSize: 11, fill: 'var(--ff-muted)' }} tickLine={false} axisLine={false} />
-                        <YAxis stroke="var(--ff-muted)" tick={{ fontSize: 11, fill: 'var(--ff-muted)' }} tickLine={false} axisLine={false} />
-                        <Tooltip formatter={(value, name) => [name === 'volume' ? formatVolume(value) : formatWeight(value), name === 'volume' ? 'Volume total' : 'Peso usado']} labelFormatter={(_, payload) => payload?.[0]?.payload ? `${payload[0].payload.dateLabel} • Série ${payload[0].payload.setNumber}` : 'Série'} contentStyle={getChartTooltipStyle()} labelStyle={chartLabelStyle} itemStyle={chartItemStyle} />
-                        <Legend
-                          verticalAlign="top"
-                          align="right"
-                          iconType="circle"
-                          wrapperStyle={{ paddingBottom: 12, color: 'var(--ff-muted)', fontSize: 12, fontWeight: 800 }}
-                          formatter={(value) => value}
-                        />
-                        <Line type="monotone" name="Peso usado" dataKey="weight" stroke="var(--ff-accent)" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: 'var(--ff-card)' }} />
-                        <Line type="monotone" name="Volume total" dataKey="volume" stroke="#f59e0b" strokeWidth={2} dot={false} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  )}
-                </div>
-              </Card>
+              <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+                <Card>
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-xl font-black text-[var(--ff-text)]">Evolução de carga</h2>
+                      <p className="mt-1 text-sm text-[var(--ff-muted)]">
+                        Maior peso usado por data nesse exercício.
+                      </p>
+                    </div>
+
+                    <TrendingUp size={22} className="text-[var(--ff-accent-text)]" />
+                  </div>
+
+                  <div className="mt-5 h-[320px] min-h-[320px]" data-chart-container="true">
+                    {dateChartData.length === 0 ? (
+                      <EmptyState title="Sem séries" description="Nenhuma série válida foi encontrada para esse exercício." />
+                    ) : (
+                      <SafeResponsiveContainer height={320}>
+                        {({ width, height }) => (
+                          <LineChart
+                            width={width}
+                            height={height}
+                            data={dateChartData}
+                            margin={{ top: 16, right: 14, left: 0, bottom: 0 }}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
+                            <XAxis
+                              dataKey="dateLabel"
+                              stroke="var(--ff-muted)"
+                              tick={{ fontSize: 11, fill: 'var(--ff-muted)' }}
+                              tickLine={false}
+                              axisLine={false}
+                            />
+                            <YAxis
+                              stroke="var(--ff-muted)"
+                              tick={{ fontSize: 11, fill: 'var(--ff-muted)' }}
+                              tickLine={false}
+                              axisLine={false}
+                            />
+                            <Tooltip
+                              formatter={(value) => [formatWeight(value), 'Peso usado']}
+                              labelFormatter={(_, payload) =>
+                                payload?.[0]?.payload
+                                  ? `${payload[0].payload.longDate} • ${payload[0].payload.sets} série(s)`
+                                  : 'Data'
+                              }
+                              contentStyle={getChartTooltipStyle()}
+                              labelStyle={chartLabelStyle}
+                              itemStyle={chartItemStyle}
+                            />
+                            <Line
+                              type="monotone"
+                              name="Peso usado"
+                              dataKey="maxWeight"
+                              stroke="var(--ff-accent)"
+                              strokeWidth={3}
+                              dot={{ r: 4, strokeWidth: 2, fill: 'var(--ff-card)' }}
+                            />
+                          </LineChart>
+                        )}
+                      </SafeResponsiveContainer>
+                    )}
+                  </div>
+                </Card>
+
+                <Card>
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-xl font-black text-[var(--ff-text)]">Evolução de volume</h2>
+                      <p className="mt-1 text-sm text-[var(--ff-muted)]">
+                        Volume total acumulado por data nesse exercício.
+                      </p>
+                    </div>
+
+                    <BarChart3 size={22} className="text-orange-300" />
+                  </div>
+
+                  <div className="mt-5 h-[320px] min-h-[320px]" data-chart-container="true">
+                    {dateChartData.length === 0 ? (
+                      <EmptyState title="Sem séries" description="Nenhuma série válida foi encontrada para esse exercício." />
+                    ) : (
+                      <SafeResponsiveContainer height={320}>
+                        {({ width, height }) => (
+                          <LineChart
+                            width={width}
+                            height={height}
+                            data={dateChartData}
+                            margin={{ top: 16, right: 14, left: 0, bottom: 0 }}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
+                            <XAxis
+                              dataKey="dateLabel"
+                              stroke="var(--ff-muted)"
+                              tick={{ fontSize: 11, fill: 'var(--ff-muted)' }}
+                              tickLine={false}
+                              axisLine={false}
+                            />
+                            <YAxis
+                              stroke="var(--ff-muted)"
+                              tick={{ fontSize: 11, fill: 'var(--ff-muted)' }}
+                              tickLine={false}
+                              axisLine={false}
+                            />
+                            <Tooltip
+                              formatter={(value) => [formatVolume(value), 'Volume total']}
+                              labelFormatter={(_, payload) =>
+                                payload?.[0]?.payload
+                                  ? `${payload[0].payload.longDate} • ${payload[0].payload.sets} série(s)`
+                                  : 'Data'
+                              }
+                              contentStyle={getChartTooltipStyle()}
+                              labelStyle={chartLabelStyle}
+                              itemStyle={chartItemStyle}
+                            />
+                            <Line
+                              type="monotone"
+                              name="Volume total"
+                              dataKey="totalVolume"
+                              stroke="#f59e0b"
+                              strokeWidth={3}
+                              dot={{ r: 4, strokeWidth: 2, fill: 'var(--ff-card)' }}
+                            />
+                          </LineChart>
+                        )}
+                      </SafeResponsiveContainer>
+                    )}
+                  </div>
+                </Card>
+              </div>
 
               <Card>
                 <h2 className="text-xl font-black text-[var(--ff-text)]">Séries registradas</h2><p className="mt-1 text-sm text-[var(--ff-muted)]">Todas as séries válidas encontradas no histórico.</p>
