@@ -37,7 +37,7 @@ function BodyWeightChart({ data = [], accentColor = '#8b5cf6' }) {
             description="Registre seu peso no perfil para acompanhar a evolução."
           />
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer height={320}>
             <LineChart data={data} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
               <XAxis

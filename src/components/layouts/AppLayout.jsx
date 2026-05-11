@@ -211,7 +211,7 @@ function AppLayout() {
         </Suspense>
       )}
 
-      <main className="relative min-h-0 overflow-visible px-4 pb-36 pt-[calc(5.5rem+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[calc(5.75rem+env(safe-area-inset-top))]">
+      <main className="relative min-h-0 overflow-visible px-4 pb-36 pt-[calc(6.25rem+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[calc(6.25rem+env(safe-area-inset-top))]">
         <div className="mx-auto w-full max-w-[1600px]">
           <Outlet />
         </div>

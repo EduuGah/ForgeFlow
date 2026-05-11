@@ -96,14 +96,14 @@ function ExercisePrChart({
           <Badge>{selectedExercise || 'Nenhum'}</Badge>
         </div>
 
-        <div className="mt-5 h-[330px]">
+        <div className="mt-5 min-h-[320px]">
           {!selectedExercise || timeline.length === 0 ? (
             <EmptyState
               title="Selecione um exercício"
               description="Escolha um exercício com histórico para visualizar a evolução."
             />
           ) : (
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer height={320}>
               <LineChart data={timeline} margin={{ top: 18, right: 20, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
                 <XAxis

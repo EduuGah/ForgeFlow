@@ -31,7 +31,7 @@ function ChartShell({ title, description, badge, children, emptyTitle, emptyDesc
         </div>
         {badge && <Badge>{badge}</Badge>}
       </div>
-      <div className="mt-5 h-auto min-h-[260px] sm:h-[320px]">
+      <div className="mt-5 min-h-[320px]">
         {!hasData ? <EmptyState title={emptyTitle} description={emptyDescription} /> : children}
       </div>
     </Card>
@@ -95,7 +95,7 @@ function TrainingVolumeChart({ data = [], accentColor = '#8b5cf6' }) {
         emptyTitle="Sem volume registrado"
         emptyDescription="Finalize treinos com séries concluídas para gerar o gráfico."
       >
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer height={320}>
           <BarChart data={validVolumeData} margin={{ top: 16, right: 12, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
             <XAxis dataKey="weekLabel" stroke="var(--ff-muted)" tick={{ fontSize: 11, fill: 'var(--ff-muted)' }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
@@ -114,7 +114,7 @@ function TrainingVolumeChart({ data = [], accentColor = '#8b5cf6' }) {
         emptyTitle="Sem frequência"
         emptyDescription="Finalize treinos para acompanhar frequência."
       >
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer height={320}>
           <BarChart data={validWorkoutData} margin={{ top: 16, right: 12, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
             <XAxis dataKey="weekLabel" stroke="var(--ff-muted)" tick={{ fontSize: 11, fill: 'var(--ff-muted)' }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
@@ -145,7 +145,7 @@ function TrainingVolumeChart({ data = [], accentColor = '#8b5cf6' }) {
                 <SmallStat label="Treinos" value={lastDurationWeek?.workouts || 0} description="Treinos finalizados nesse período." />
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer height={320}>
                 <LineChart data={validDurationData} margin={{ top: 18, right: 12, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
                   <XAxis dataKey="weekLabel" stroke="var(--ff-muted)" tick={{ fontSize: 11, fill: 'var(--ff-muted)' }} tickLine={false} axisLine={false} interval="preserveStartEnd" />

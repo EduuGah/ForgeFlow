@@ -169,7 +169,7 @@ function ChartLoadingPlaceholder({ label = 'Preparando gráfico' }) {
         </p>
 
         <p className="mt-1 text-xs leading-relaxed text-[var(--ff-muted)]">
-          O ForgeFlow carrega os gráficos após o conteúdo principal para deixar a tela mais rápida.
+
         </p>
       </div>
     </div>
@@ -1032,7 +1032,7 @@ function Dashboard() {
         </div>
       </nav>
 
-      <SectionIntro eyebrow="Visão geral" title="Seu painel principal" description="Comece pelo resumo principal, depois use o mapa rápido para navegar entre metas, hoje, evolução, PRs e alertas." />
+      <SectionIntro eyebrow="Visão geral" title="Seu painel principal" />
 
       <section id="dashboard-overview" className="scroll-mt-24 mb-8 grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(320px,0.8fr)]">
         <Card className="overflow-hidden border-[var(--ff-accent-border)]/20 bg-gradient-to-br from-[var(--ff-accent-soft)]/20 via-[var(--ff-card)] to-[var(--ff-surface-2)]">
@@ -2131,7 +2131,7 @@ function Dashboard() {
                 description="Finalize treinos para gerar evolução de volume."
               />
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer height={320}>
                 <BarChart data={volumeByWorkout}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
 
@@ -2201,7 +2201,7 @@ function Dashboard() {
                 description="Finalize treinos para gerar o gráfico."
               />
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer height={320}>
                 <RadarChart data={radarData}>
                   <PolarGrid stroke="#3f3f46" />
                   <PolarAngleAxis dataKey="group" stroke="#a1a1aa" />
@@ -2257,7 +2257,7 @@ function Dashboard() {
                 description="Finalize treinos para gerar esse gráfico."
               />
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer height={320}>
                 <BarChart data={workoutsByWeek}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
                   <XAxis dataKey="week" stroke="var(--ff-muted)" />
@@ -2324,7 +2324,7 @@ function Dashboard() {
                 description="Finalize treinos para gerar esse gráfico."
               />
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer height={320}>
                 <BarChart data={setsByWorkout}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
 
@@ -2401,7 +2401,7 @@ function Dashboard() {
                 description="Finalize treinos para gerar esse gráfico."
               />
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer height={320}>
                 <BarChart data={muscleVolumeChartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
                   <XAxis dataKey="group" stroke="var(--ff-muted)" />

@@ -764,7 +764,7 @@ function Profile() {
                   description="Adicione seu primeiro peso corporal para gerar o gráfico."
                 />
               ) : (
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer height={320}>
                   <LineChart data={bodyWeightChartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
                     <XAxis

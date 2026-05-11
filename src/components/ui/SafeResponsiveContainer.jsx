@@ -1,49 +1,44 @@
-import { useEffect, useRef, useState } from 'react'
-import { ResponsiveContainer as RechartsResponsiveContainer } from 'recharts'
+import { cloneElement, isValidElement, useEffect, useRef, useState } from 'react'
 
-function getFallbackHeight(height, minHeight) {
-  if (typeof height === 'number') return height
+function getNumericHeight(height, minHeight) {
+  if (typeof height === 'number' && Number.isFinite(height)) return height
   return minHeight
 }
 
 function SafeResponsiveContainer({
   children,
-  height = '100%',
-  minHeight = 260,
+  height = 320,
+  minHeight = 280,
   className = '',
-  ...props
 }) {
   const containerRef = useRef(null)
-  const [size, setSize] = useState({ width: 0, height: 0 })
+  const numericHeight = getNumericHeight(height, minHeight)
+  const [width, setWidth] = useState(0)
 
   useEffect(() => {
     const element = containerRef.current
     if (!element) return undefined
 
-    function updateSize() {
+    function updateWidth() {
       const rect = element.getBoundingClientRect()
-      const fallbackHeight = getFallbackHeight(height, minHeight)
-      setSize({
-        width: Math.max(0, Math.floor(rect.width)),
-        height: Math.max(0, Math.floor(rect.height || fallbackHeight)),
-      })
+      const nextWidth = Math.floor(rect.width || element.offsetWidth || 0)
+      setWidth(Math.max(0, nextWidth))
     }
 
-    updateSize()
+    updateWidth()
 
-    const observer = new ResizeObserver(updateSize)
+    const observer = new ResizeObserver(updateWidth)
     observer.observe(element)
 
-    window.addEventListener('resize', updateSize)
+    window.addEventListener('resize', updateWidth)
 
     return () => {
       observer.disconnect()
-      window.removeEventListener('resize', updateSize)
+      window.removeEventListener('resize', updateWidth)
     }
-  }, [height, minHeight])
+  }, [])
 
-  const fallbackHeight = getFallbackHeight(height, minHeight)
-  const canRenderChart = size.width > 8 && size.height > 8
+  const canRenderChart = width > 24 && numericHeight > 24
 
   return (
     <div
@@ -51,21 +46,17 @@ function SafeResponsiveContainer({
       className={`min-w-0 ${className}`.trim()}
       style={{
         width: '100%',
-        height,
-        minHeight: fallbackHeight,
+        height: numericHeight,
+        minHeight: numericHeight,
       }}
+      data-chart-container="true"
     >
-      {canRenderChart ? (
-        <RechartsResponsiveContainer
-          width="100%"
-          height="100%"
-          minWidth={0}
-          minHeight={fallbackHeight}
-          {...props}
-        >
-          {children}
-        </RechartsResponsiveContainer>
-      ) : null}
+      {canRenderChart && isValidElement(children)
+        ? cloneElement(children, {
+            width,
+            height: numericHeight,
+          })
+        : null}
     </div>
   )
 }

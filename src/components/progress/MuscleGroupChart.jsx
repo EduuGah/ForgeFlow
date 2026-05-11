@@ -32,14 +32,14 @@ function MuscleGroupChart({ data = [], accentColor = '#8b5cf6' }) {
         <Badge>{data.length} grupos</Badge>
       </div>
 
-      <div className="mt-5 h-[330px]">
+      <div className="mt-5 min-h-[320px]">
         {chartData.length === 0 ? (
           <EmptyState
             title="Sem grupos musculares"
             description="Finalize treinos para gerar distribuição muscular."
           />
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer height={320}>
             <BarChart data={chartData} margin={{ top: 16, right: 20, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
               <XAxis

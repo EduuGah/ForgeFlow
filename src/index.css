@@ -752,3 +752,41 @@ main {
     -webkit-overflow-scrolling: touch;
   }
 }
+
+
+/* ForgeFlow final polish: charts and horizontal filters */
+[data-chart-container="true"] {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.recharts-wrapper,
+.recharts-surface {
+  min-width: 0;
+  overflow: visible;
+}
+
+.ff-filter-chips {
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ff-filter-chips > * {
+  scroll-snap-align: start;
+}
+
+.ff-filter-chips::-webkit-scrollbar {
+  height: 6px;
+}
+
+.ff-filter-chips::-webkit-scrollbar-thumb {
+  background: var(--ff-border-strong, rgba(255,255,255,.16));
+  border-radius: 999px;
+}
+
+@media (max-width: 1023px) {
+  .ff-filter-chips::-webkit-scrollbar {
+    display: none;
+  }
+}

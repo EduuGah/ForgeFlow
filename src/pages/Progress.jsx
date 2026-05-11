@@ -313,7 +313,7 @@ function MonthlyProgressChart({ data = [], accentColor }) {
       icon={CalendarDays}
       badge={`${data.length} meses`}
     >
-      <div className="mt-5 h-auto min-h-[260px] sm:h-[320px]">
+      <div className="mt-5 min-h-[320px]">
         {data.length === 0 ? (
           <EmptyState
             title="Sem dados mensais"
@@ -343,7 +343,7 @@ function MonthlyProgressChart({ data = [], accentColor }) {
             />
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer height={320}>
             <ComposedChart data={data} margin={{ top: 16, right: 16, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
               <XAxis

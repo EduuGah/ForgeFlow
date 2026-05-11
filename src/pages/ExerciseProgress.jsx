@@ -192,7 +192,7 @@ function ExerciseProgress() {
                 <div className="flex items-center justify-between gap-3"><div><h2 className="text-xl font-black text-[var(--ff-text)]">Evolução de carga e volume</h2><p className="mt-1 text-sm text-[var(--ff-muted)]">Cada ponto representa uma série concluída.</p></div><TrendingUp size={22} className="text-[var(--ff-accent-text)]" /></div>
                 <div className="mt-5 h-[340px] min-h-[340px]" data-chart>
                   {chartData.length === 0 ? <EmptyState title="Sem séries" description="Nenhuma série válida foi encontrada para esse exercício." /> : (
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer height={320}>
                       <LineChart data={chartData} margin={{ top: 16, right: 14, left: 0, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
                         <XAxis dataKey="axisLabel" stroke="var(--ff-muted)" tick={{ fontSize: 11, fill: 'var(--ff-muted)' }} tickLine={false} axisLine={false} />

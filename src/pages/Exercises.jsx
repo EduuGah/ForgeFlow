@@ -1144,7 +1144,7 @@ function Exercises() {
 
       <section className="mt-6 grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-[330px_minmax(0,1fr)]">
         <aside className="order-2 space-y-6 xl:order-1">
-          <Card className="overflow-hidden border border-zinc-800 bg-gradient-to-b from-[#17171b] to-[#121216]">
+          <Card className="overflow-visible border border-zinc-800 bg-gradient-to-b from-[#17171b] to-[#121216]">
             <div className="border-b border-zinc-800 p-5">
               <div className="flex items-center gap-3">
                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
@@ -1193,7 +1193,7 @@ function Exercises() {
             </div>
           </Card>
 
-          <Card className="overflow-hidden border border-zinc-800 bg-gradient-to-b from-[#17171b] to-[#121216]">
+          <Card className="overflow-visible border border-zinc-800 bg-gradient-to-b from-[#17171b] to-[#121216]">
             <div className="border-b border-zinc-800 p-5">
               <div className="flex items-center gap-3">
                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
@@ -1348,13 +1348,11 @@ function Exercises() {
                   Equipamentos
                 </h2>
 
-                <p className="text-xs text-zinc-500">
-                  Atalho compacto por ferramenta.
-                </p>
+
               </div>
             </div>
 
-            <div className="mt-4 grid max-h-[190px] grid-cols-2 gap-2 overflow-y-auto pr-1">
+            <div className="mt-4 grid max-h-[150px] grid-cols-2 gap-2 overflow-y-auto pr-1">
               {stats.equipmentStats.map((item) => (
                 <button
                   key={item.name}
@@ -1384,7 +1382,7 @@ function Exercises() {
         </aside>
 
         <main className="order-1 xl:order-2">
-          <Card className="overflow-hidden border border-zinc-800 bg-gradient-to-b from-[#17171b] to-[#121216]">
+          <Card className="overflow-visible border border-zinc-800 bg-gradient-to-b from-[#17171b] to-[#121216]">
             <div className="border-b border-zinc-800 p-5">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
@@ -1403,10 +1401,7 @@ function Exercises() {
                   </p>
 
                   <div className="mt-4 hidden xl:block">
-                    <p className="mb-2 text-[11px] font-black uppercase tracking-[0.18em] text-zinc-500">
-                      Atalhos rápidos para PC
-                    </p>
-                    <div className="flex max-w-full gap-2 overflow-x-auto pb-2 pr-2 [scrollbar-width:thin]">
+                    <div className="ff-filter-chips flex max-w-full gap-2 overflow-x-auto overscroll-x-contain pb-2 pr-8 [scrollbar-width:thin]">
                       <button
                         type="button"
                         onClick={clearFilters}
@@ -1436,9 +1431,7 @@ function Exercises() {
                     </div>
                   </div>
 
-                  <p className="mt-2 text-xs leading-relaxed text-zinc-500 xl:hidden">
-                    No celular, use a busca e os chips rápidos aqui em cima. Os filtros completos ficam abaixo da lista.
-                  </p>
+
                 <div className="mt-4 space-y-3 xl:hidden">
                   <div className="flex h-12 items-center gap-3 rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-zinc-400">
                     <Search size={18} />
@@ -1463,7 +1456,7 @@ function Exercises() {
                     )}
                   </div>
 
-                  <div className="-mx-1 flex max-w-full gap-2 overflow-x-auto overscroll-x-contain px-1 pb-2 [scrollbar-width:none]">
+                  <div className="ff-filter-chips -mx-1 flex max-w-full gap-2 overflow-x-auto overscroll-x-contain px-1 pb-2 pr-8 [scrollbar-width:none]">
                     <button
                       type="button"
                       onClick={() => {
