@@ -13,8 +13,7 @@ import {
   Sun,
   X,
   Monitor,
-  Smartphone,
-} from 'lucide-react'
+  Smartphone} from 'lucide-react'
 
 import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
@@ -577,24 +576,6 @@ function Settings() {
           </div>
         </div>
       )}
-
-
-      <Card className="mb-6">
-        <SectionTitle
-          icon={Smartphone}
-          title="Instalar APP"
-          description="Abra as instruções para instalar o ForgeFlow pela tela inicial. Quando já estiver no app, esta opção apenas informa que ele está instalado."
-        />
-
-        <Button
-          type="button"
-          onClick={() => window.dispatchEvent(new CustomEvent('forgeflow:show-install-app'))}
-          className="mt-5 w-full sm:w-auto"
-        >
-          <Smartphone size={18} />
-          Instalar APP
-        </Button>
-      </Card>
 
       <section className="grid grid-cols-1 gap-6 2xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-6">

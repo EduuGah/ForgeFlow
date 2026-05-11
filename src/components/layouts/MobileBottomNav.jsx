@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { ClipboardList, Dumbbell, Home, TrendingUp, UserRound } from 'lucide-react'
+import { ClipboardList, Download, Dumbbell, Home, TrendingUp, UserRound } from 'lucide-react'
 
 const links = [
   { name: 'Início', path: '/', icon: Home },
@@ -11,7 +11,9 @@ const links = [
 
 function MobileBottomNav() {
   return (
-    <nav className="safe-bottom fixed bottom-0 left-0 right-0 z-40 border-t border-[var(--ff-border)] bg-[var(--ff-header)] px-2 pt-2 backdrop-blur-xl lg:hidden">
+    <>
+
+      <nav className="safe-bottom fixed bottom-0 left-0 right-0 z-40 border-t border-[var(--ff-border)] bg-[var(--ff-header)] px-2 pt-2 backdrop-blur-xl lg:hidden">
       <div className="grid grid-cols-5 gap-1">
         {links.map((link) => {
           const Icon = link.icon
@@ -34,7 +36,8 @@ function MobileBottomNav() {
           )
         })}
       </div>
-    </nav>
+      </nav>
+    </>
   )
 }
 

@@ -6,6 +6,7 @@ import {
   Info,
   MoreVertical,
   Share,
+  Smartphone,
   X,
 } from 'lucide-react'
 
@@ -50,16 +51,19 @@ function PwaInstallButton() {
   useEffect(() => {
     if (typeof window === 'undefined') return undefined
 
-    function refreshStatus() {
-      setInstalled(isStandaloneMode())
-      setPwaStatus(getPwaStatus())
+    if (isStandaloneMode()) {
+      setInstalled(true)
+      return undefined
     }
 
-    refreshStatus()
+    function refreshStatus() {
+      setPwaStatus(getPwaStatus())
+    }
 
     function handleBeforeInstallPrompt(event) {
       event.preventDefault()
       setInstallPrompt(event)
+      setStatusMessage('O navegador liberou a instalação automática. Toque em “Instalar agora”.')
     }
 
     function handleAppInstalled() {
@@ -75,7 +79,7 @@ function PwaInstallButton() {
       setStatusMessage('')
     }
 
-    const intervalId = window.setInterval(refreshStatus, 1500)
+    const intervalId = window.setInterval(refreshStatus, 1000)
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
     window.addEventListener('appinstalled', handleAppInstalled)
@@ -92,8 +96,8 @@ function PwaInstallButton() {
   }, [])
 
   async function handleInstall() {
-    if (installed || isStandaloneMode()) {
-      setStatusMessage('O ForgeFlow já está aberto como aplicativo instalado.')
+    if (installed) {
+      setStatusMessage('O ForgeFlow já parece estar aberto como aplicativo instalado.')
       return
     }
 
@@ -163,7 +167,7 @@ function PwaInstallButton() {
           {installed ? (
             <div className="mt-5 flex items-start gap-3 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-4 text-sm leading-relaxed text-emerald-200">
               <CheckCircle2 size={18} className="mt-0.5 shrink-0" />
-              <p>O ForgeFlow já está aberto como aplicativo instalado.</p>
+              <p>O ForgeFlow já parece estar instalado ou aberto em modo aplicativo.</p>
             </div>
           ) : (
             <div className="mt-5 space-y-3">
@@ -171,7 +175,9 @@ function PwaInstallButton() {
                 <div className="rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] p-4 text-sm leading-relaxed text-[var(--ff-accent-text)]">
                   <div className="flex items-start gap-3">
                     <Download size={18} className="mt-0.5 shrink-0" />
-                    <p>O navegador liberou a instalação automática. Toque em <strong>Instalar agora</strong>.</p>
+                    <p>
+                      O navegador liberou a instalação automática. Toque em <strong>Instalar agora</strong>.
+                    </p>
                   </div>
                 </div>
               )}
@@ -218,8 +224,12 @@ function PwaInstallButton() {
               </div>
 
               <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3 text-xs leading-relaxed text-[var(--ff-muted)]">
-                <p>Status PWA: <strong className="text-[var(--ff-text)]">{pwaStatus}</strong></p>
-                <p className="mt-1">Instalador automático: <strong className="text-[var(--ff-text)]">{installPrompt ? 'liberado pelo navegador' : 'ainda não liberado'}</strong></p>
+                <p>
+                  Status PWA: <strong className="text-[var(--ff-text)]">{pwaStatus}</strong>
+                </p>
+                <p className="mt-1">
+                  Instalador automático: <strong className="text-[var(--ff-text)]">{installPrompt ? 'liberado pelo navegador' : 'ainda não liberado'}</strong>
+                </p>
               </div>
             </div>
           )}
@@ -232,14 +242,20 @@ function PwaInstallButton() {
           )}
 
           <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {!installed && (
-              <button type="button" onClick={handleInstall} className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] text-sm font-black text-white shadow-[0_0_18px_var(--ff-accent-shadow)] active:scale-[0.98]">
-                <Download size={17} />
-                {installPrompt ? 'Instalar agora' : 'Verificar instalação'}
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={handleInstall}
+              className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] text-sm font-black text-white shadow-[0_0_18px_var(--ff-accent-shadow)] active:scale-[0.98]"
+            >
+              <Download size={17} />
+              {installPrompt ? 'Instalar agora' : 'Verificar instalação'}
+            </button>
 
-            <button type="button" onClick={() => setIsOpen(false)} className="flex h-12 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-sm font-black text-[var(--ff-text-soft)] active:scale-[0.98]">
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="flex h-12 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-sm font-black text-[var(--ff-text-soft)] active:scale-[0.98]"
+            >
               Fechar
             </button>
           </div>

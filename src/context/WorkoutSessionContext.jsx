@@ -11,28 +11,26 @@ import {
 const WorkoutSessionContext = createContext(null)
 
 const ACTIVE_SESSION_STORAGE_KEY = 'active-session'
-const ACTIVE_WORKOUT_ENDPOINT = '/active-workout'
+const ACTIVE_SESSION_ENDPOINT = '/active-workout'
+const ACTIVE_SESSION_FINISH_ENDPOINT = '/active-workout/finish'
 const FINISHED_ACTIVE_SESSION_IDS_KEY = 'forgeflow:finished-active-session-ids'
 
-function createId() {
+function nowIso() {
+  return new Date().toISOString()
+}
+
+function getTimestamp(value) {
+  const timestamp = new Date(value || 0).getTime()
+
+  return Number.isFinite(timestamp) ? timestamp : 0
+}
+
+function safeCryptoId() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID()
   }
 
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`
-}
-
-function getTimestamp(value) {
-  const time = new Date(value || 0).getTime()
-
-  return Number.isFinite(time) ? time : 0
-}
-
-function stampSession(session) {
-  return {
-    ...session,
-    updatedAt: new Date().toISOString(),
-  }
 }
 
 export function WorkoutSessionProvider({ children }) {
@@ -43,107 +41,11 @@ export function WorkoutSessionProvider({ children }) {
   const [isLoaded, setIsLoaded] = useState(false)
 
   const syncTimeoutRef = useRef(null)
-  const isClearingActiveSessionRef = useRef(false)
+  const isFinishingRef = useRef(false)
   const hasCompletedInitialLoadRef = useRef(false)
-  const activeSessionRef = useRef(null)
-
-  useEffect(() => {
-    activeSessionRef.current = activeSession
-  }, [activeSession])
 
   function isMongoId(value) {
     return typeof value === 'string' && /^[a-f\d]{24}$/i.test(value)
-  }
-
-  function getCurrentUserId() {
-    return user?.id || user?._id || user?.userId || user?.email || 'anonymous'
-  }
-
-  function normalizeHistoryFromApi(session) {
-    return {
-      ...session,
-      id: session?._id || session?.id || createId(),
-      duration: session?.durationSeconds ?? session?.duration ?? 0,
-      workoutName: session?.workoutName || session?.name || 'Treino',
-      exercises: Array.isArray(session?.exercises) ? session.exercises : [],
-    }
-  }
-
-  function normalizeActiveSession(session) {
-    if (!session) return null
-
-    const payload = session.session || session.activeSession || session
-
-    if (!payload || !Array.isArray(payload.exercises) || payload.exercises.length === 0) {
-      return null
-    }
-
-    return {
-      ...payload,
-      id: payload.id || payload._id || createId(),
-      workoutName: payload.workoutName || payload.name || 'Treino em andamento',
-      startedAt: payload.startedAt || new Date().toISOString(),
-      updatedAt: payload.updatedAt || payload.startedAt || new Date().toISOString(),
-      exercises: payload.exercises,
-    }
-  }
-
-  async function fetchRemoteActiveSession() {
-    try {
-      const data = await apiFetch(ACTIVE_WORKOUT_ENDPOINT)
-      return normalizeActiveSession(data)
-    } catch (error) {
-      console.warn('Não foi possível buscar treino ativo remoto:', error?.message || error)
-      return null
-    }
-  }
-
-  async function saveRemoteActiveSession(session) {
-    if (!session) return false
-
-    try {
-      await apiFetch(ACTIVE_WORKOUT_ENDPOINT, {
-        method: 'PUT',
-        body: JSON.stringify({ session }),
-      })
-
-      return true
-    } catch (error) {
-      console.warn('Não foi possível salvar treino ativo remoto:', error?.message || error)
-      return false
-    }
-  }
-
-  async function clearRemoteActiveSession() {
-    try {
-      await apiFetch(ACTIVE_WORKOUT_ENDPOINT, {
-        method: 'DELETE',
-      })
-
-      return true
-    } catch (error) {
-      console.warn('Não foi possível limpar treino ativo remoto:', error?.message || error)
-      return false
-    }
-  }
-
-  function persistActiveSessionLocally(session) {
-    if (!session) {
-      removeUserStorageData(user, ACTIVE_SESSION_STORAGE_KEY)
-      window.localStorage.removeItem('forgeflow:active-session-sync')
-      return
-    }
-
-    saveUserStorageData(user, ACTIVE_SESSION_STORAGE_KEY, session)
-
-    window.localStorage.setItem(
-      'forgeflow:active-session-sync',
-      JSON.stringify({
-        userId: getCurrentUserId(),
-        session,
-        updatedAt: Date.now(),
-      })
-    )
   }
 
   function getFinishedActiveSessionIds() {
@@ -161,7 +63,7 @@ export function WorkoutSessionProvider({ children }) {
     if (!sessionId) return
 
     const ids = getFinishedActiveSessionIds()
-    const nextIds = [sessionId, ...ids.filter((id) => id !== sessionId)].slice(0, 40)
+    const nextIds = [sessionId, ...ids.filter((id) => id !== sessionId)].slice(0, 30)
 
     window.localStorage.setItem(FINISHED_ACTIVE_SESSION_IDS_KEY, JSON.stringify(nextIds))
   }
@@ -172,21 +74,121 @@ export function WorkoutSessionProvider({ children }) {
     return getFinishedActiveSessionIds().includes(session.id)
   }
 
-  function commitActiveSession(updater, { syncImmediately = false } = {}) {
-    setActiveSession((current) => {
-      const nextValue = typeof updater === 'function' ? updater(current) : updater
+  function normalizeHistoryFromApi(session) {
+    const payload = session?.session || session
 
-      if (!nextValue) return null
+    return {
+      ...payload,
+      id: payload?._id || payload?.id || safeCryptoId(),
+      duration: payload?.durationSeconds ?? payload?.duration ?? 0,
+      workoutName: payload?.workoutName || payload?.name || 'Treino',
+      exercises: Array.isArray(payload?.exercises) ? payload.exercises : [],
+    }
+  }
 
-      const stampedSession = stampSession(nextValue)
+  function normalizeActiveSession(response) {
+    if (!response) return null
 
-      if (syncImmediately) {
-        window.clearTimeout(syncTimeoutRef.current)
-        saveRemoteActiveSession(stampedSession)
+    const payload = response.session || response.activeSession || response
+
+    if (!payload || !Array.isArray(payload.exercises)) return null
+
+    return {
+      ...payload,
+      id: payload.id || payload._id || safeCryptoId(),
+      workoutName: payload.workoutName || payload.name || 'Treino em andamento',
+      startedAt: payload.startedAt || nowIso(),
+      updatedAt: payload.updatedAt || payload.savedAt || payload.startedAt || nowIso(),
+      exercises: payload.exercises,
+    }
+  }
+
+  function markSessionUpdated(session) {
+    if (!session) return session
+
+    return {
+      ...session,
+      updatedAt: nowIso(),
+    }
+  }
+
+  function persistActiveSessionLocally(session) {
+    if (!session) {
+      removeUserStorageData(user, ACTIVE_SESSION_STORAGE_KEY)
+
+      window.localStorage.setItem(
+        'forgeflow:active-session-sync',
+        JSON.stringify({
+          userId: user?.id || user?._id || user?.email || 'anonymous',
+          session: null,
+          updatedAt: Date.now(),
+        })
+      )
+
+      return
+    }
+
+    saveUserStorageData(user, ACTIVE_SESSION_STORAGE_KEY, session)
+
+    window.localStorage.setItem(
+      'forgeflow:active-session-sync',
+      JSON.stringify({
+        userId: user?.id || user?._id || user?.email || 'anonymous',
+        session,
+        updatedAt: Date.now(),
+      })
+    )
+  }
+
+  async function fetchActiveSessionState() {
+    try {
+      const data = await apiFetch(ACTIVE_SESSION_ENDPOINT)
+      const session = normalizeActiveSession(data)
+
+      return {
+        ok: true,
+        session,
       }
+    } catch (error) {
+      console.error('Erro ao buscar treino ativo remoto:', error)
 
-      return stampedSession
-    })
+      return {
+        ok: false,
+        session: null,
+        error,
+      }
+    }
+  }
+
+  async function saveActiveSessionToApi(session) {
+    if (!session || isFinishingRef.current) return false
+
+    try {
+      await apiFetch(ACTIVE_SESSION_ENDPOINT, {
+        method: 'PUT',
+        body: JSON.stringify({ session }),
+      })
+
+      return true
+    } catch (error) {
+      console.error('Erro ao salvar treino ativo remoto:', error)
+
+      return false
+    }
+  }
+
+  async function clearActiveSessionFromApi() {
+    try {
+      await apiFetch(ACTIVE_SESSION_ENDPOINT, {
+        method: 'DELETE',
+      })
+
+      return true
+    } catch (error) {
+      console.error('Erro ao limpar treino ativo remoto:', error)
+
+      return false
+    }
   }
 
   function getExerciseDataFromSessionExercise(sessionExercise = {}) {
@@ -254,6 +256,70 @@ export function WorkoutSessionProvider({ children }) {
     )
   }
 
+  function isWarmupSet(set) {
+    return set.type === 'warmup'
+  }
+
+  function isWorkingSet(set) {
+    return set.type !== 'warmup'
+  }
+
+  function applyRemoteSession(remoteSession) {
+    setActiveSession((current) => {
+      if (isFinishingRef.current) return current
+
+      if (!remoteSession) {
+        if (current) {
+          persistActiveSessionLocally(null)
+        }
+
+        return null
+      }
+
+      if (wasActiveSessionFinished(remoteSession)) {
+        persistActiveSessionLocally(null)
+        return null
+      }
+
+      if (!current) {
+        persistActiveSessionLocally(remoteSession)
+        return remoteSession
+      }
+
+      if (current.id !== remoteSession.id) {
+        persistActiveSessionLocally(remoteSession)
+        return remoteSession
+      }
+
+      const remoteUpdatedAt = getTimestamp(remoteSession.updatedAt)
+      const currentUpdatedAt = getTimestamp(current.updatedAt)
+
+      if (remoteUpdatedAt > currentUpdatedAt) {
+        persistActiveSessionLocally(remoteSession)
+        return remoteSession
+      }
+
+      return current
+    })
+  }
+
+  async function clearActiveSessionEverywhere(sessionToClear = activeSession) {
+    const sessionId = sessionToClear?.id
+
+    isFinishingRef.current = true
+    window.clearTimeout(syncTimeoutRef.current)
+
+    rememberFinishedActiveSession(sessionId)
+    persistActiveSessionLocally(null)
+    setActiveSession(null)
+
+    await clearActiveSessionFromApi()
+
+    window.setTimeout(() => {
+      isFinishingRef.current = false
+    }, 1200)
+  }
+
   useEffect(() => {
     let isMounted = true
 
@@ -261,30 +327,28 @@ export function WorkoutSessionProvider({ children }) {
       hasCompletedInitialLoadRef.current = false
       setIsLoaded(false)
 
-      if (!user) {
-        setActiveSession(null)
-        setIsLoaded(true)
-        hasCompletedInitialLoadRef.current = true
-        return
-      }
-
-      const localSession = normalizeActiveSession(
-        getUserStorageData(user, ACTIVE_SESSION_STORAGE_KEY, null)
-      )
-      const remoteSession = await fetchRemoteActiveSession()
+      const savedSession = getUserStorageData(user, ACTIVE_SESSION_STORAGE_KEY, null)
+      const remoteState = await fetchActiveSessionState()
 
       if (!isMounted) return
 
       let nextSession = null
 
-      if (remoteSession && !wasActiveSessionFinished(remoteSession)) {
-        nextSession = remoteSession
-      } else if (localSession && !wasActiveSessionFinished(localSession)) {
-        nextSession = localSession
+      if (remoteState.ok) {
+        nextSession =
+          remoteState.session && !wasActiveSessionFinished(remoteState.session)
+            ? remoteState.session
+            : null
+      } else {
+        nextSession =
+          savedSession && !wasActiveSessionFinished(savedSession)
+            ? savedSession
+            : null
       }
 
       setActiveSession(nextSession)
       persistActiveSessionLocally(nextSession)
+
       hasCompletedInitialLoadRef.current = true
       setIsLoaded(true)
     }
@@ -299,25 +363,25 @@ export function WorkoutSessionProvider({ children }) {
   }, [user])
 
   useEffect(() => {
-    if (!isLoaded || !hasCompletedInitialLoadRef.current || !user) return undefined
+    if (!isLoaded || !hasCompletedInitialLoadRef.current) return
 
     window.clearTimeout(syncTimeoutRef.current)
 
     if (!activeSession) {
       persistActiveSessionLocally(null)
-      return undefined
+      return
     }
 
-    if (isClearingActiveSessionRef.current || wasActiveSessionFinished(activeSession)) {
+    if (isFinishingRef.current || wasActiveSessionFinished(activeSession)) {
       persistActiveSessionLocally(null)
-      return undefined
+      return
     }
 
     persistActiveSessionLocally(activeSession)
 
     syncTimeoutRef.current = window.setTimeout(() => {
-      if (!isClearingActiveSessionRef.current) {
-        saveRemoteActiveSession(activeSession)
+      if (!isFinishingRef.current) {
+        saveActiveSessionToApi(activeSession)
       }
     }, 500)
 
@@ -331,46 +395,29 @@ export function WorkoutSessionProvider({ children }) {
 
     let isMounted = true
 
-    async function syncFromRemote() {
-      if (isClearingActiveSessionRef.current) return
+    async function pollRemoteActiveSession() {
+      if (isFinishingRef.current) return
 
-      const remoteSession = await fetchRemoteActiveSession()
+      const remoteState = await fetchActiveSessionState()
 
-      if (!isMounted || !remoteSession || wasActiveSessionFinished(remoteSession)) return
+      if (!isMounted || !remoteState.ok) return
 
-      setActiveSession((current) => {
-        if (!current) {
-          persistActiveSessionLocally(remoteSession)
-          return remoteSession
-        }
-
-        if (current.id !== remoteSession.id) {
-          persistActiveSessionLocally(remoteSession)
-          return remoteSession
-        }
-
-        if (getTimestamp(remoteSession.updatedAt) > getTimestamp(current.updatedAt)) {
-          persistActiveSessionLocally(remoteSession)
-          return remoteSession
-        }
-
-        return current
-      })
+      applyRemoteSession(remoteState.session)
     }
 
     function handleFocusSync() {
-      syncFromRemote()
+      pollRemoteActiveSession()
     }
 
     function handleVisibilitySync() {
       if (document.visibilityState === 'visible') {
-        syncFromRemote()
+        pollRemoteActiveSession()
       }
     }
 
-    syncFromRemote()
+    pollRemoteActiveSession()
 
-    const intervalId = window.setInterval(syncFromRemote, 5000)
+    const intervalId = window.setInterval(pollRemoteActiveSession, 5000)
 
     window.addEventListener('focus', handleFocusSync)
     document.addEventListener('visibilitychange', handleVisibilitySync)
@@ -390,17 +437,21 @@ export function WorkoutSessionProvider({ children }) {
 
       try {
         const payload = JSON.parse(event.newValue)
+        const currentUserId = user?.id || user?._id || user?.email || 'anonymous'
 
-        if (payload.userId !== getCurrentUserId()) return
-        if (!payload.session || wasActiveSessionFinished(payload.session)) return
+        if (payload.userId !== currentUserId) return
 
-        setActiveSession((current) => {
-          if (!current) return payload.session
+        if (!payload.session) {
+          setActiveSession(null)
+          return
+        }
 
-          return getTimestamp(payload.session.updatedAt) > getTimestamp(current.updatedAt)
-            ? payload.session
-            : current
-        })
+        if (wasActiveSessionFinished(payload.session)) {
+          setActiveSession(null)
+          return
+        }
+
+        applyRemoteSession(payload.session)
       } catch {
         // Ignora eventos inválidos.
       }
@@ -416,7 +467,7 @@ export function WorkoutSessionProvider({ children }) {
   useEffect(() => {
     if (!activeSession?.startedAt) {
       setElapsedSeconds(0)
-      return undefined
+      return
     }
 
     const updateTimer = () => {
@@ -433,33 +484,23 @@ export function WorkoutSessionProvider({ children }) {
     return () => clearInterval(interval)
   }, [activeSession?.startedAt])
 
-  function isWarmupSet(set) {
-    return set.type === 'warmup'
-  }
-
-  function isWorkingSet(set) {
-    return set.type !== 'warmup'
-  }
-
   function startSession(workout) {
-    const session = stampSession({
-      id: createId(),
-      workoutId: workout.id || workout._id || null,
-      workoutName: workout.name || workout.workoutName || 'Treino',
-      startedAt: new Date().toISOString(),
+    const session = markSessionUpdated({
+      id: safeCryptoId(),
+      workoutId: workout.id,
+      workoutName: workout.name,
+      startedAt: nowIso(),
       notes: '',
-      exercises: (workout.exercises || []).map((item) => {
-        const exerciseData = item.exercise || item
-        const plannedSets = Array.isArray(item.sets) ? item.sets : []
+      exercises: workout.exercises.map((item) => {
         let workingSetNumber = 0
 
         return {
-          id: createId(),
-          originalExerciseId: exerciseData.id || exerciseData._id || item.exerciseId || '',
-          exercise: exerciseData,
+          id: safeCryptoId(),
+          originalExerciseId: item.exercise.id,
+          exercise: item.exercise,
           skipped: false,
           restTimer: item.restTimer || 'Desligado',
-          sets: plannedSets.map((set) => {
+          sets: item.sets.map((set) => {
             const type = set.type || 'working'
 
             if (type !== 'warmup') {
@@ -467,7 +508,7 @@ export function WorkoutSessionProvider({ children }) {
             }
 
             return {
-              id: createId(),
+              id: safeCryptoId(),
               plannedDescription: set.description,
               type,
               setNumber: type === 'warmup' ? null : workingSetNumber,
@@ -483,8 +524,8 @@ export function WorkoutSessionProvider({ children }) {
       }),
     })
 
-    rememberFinishedActiveSession(null)
-    commitActiveSession(session, { syncImmediately: true })
+    setActiveSession(session)
+    saveActiveSessionToApi(session)
   }
 
   function updateSet(exerciseId, setId, field, value) {
@@ -504,10 +545,10 @@ export function WorkoutSessionProvider({ children }) {
       }
     }
 
-    commitActiveSession((current) => {
+    setActiveSession((current) => {
       if (!current) return current
 
-      return {
+      return markSessionUpdated({
         ...current,
         exercises: current.exercises.map((exercise) =>
           exercise.id === exerciseId
@@ -524,15 +565,15 @@ export function WorkoutSessionProvider({ children }) {
             }
             : exercise
         ),
-      }
+      })
     })
   }
 
   function toggleSetCompleted(exerciseId, setId) {
-    commitActiveSession((current) => {
+    setActiveSession((current) => {
       if (!current) return current
 
-      return {
+      return markSessionUpdated({
         ...current,
         exercises: current.exercises.map((exercise) =>
           exercise.id === exerciseId
@@ -549,15 +590,15 @@ export function WorkoutSessionProvider({ children }) {
             }
             : exercise
         ),
-      }
+      })
     })
   }
 
   function addSet(exerciseId) {
-    commitActiveSession((current) => {
+    setActiveSession((current) => {
       if (!current) return current
 
-      return {
+      return markSessionUpdated({
         ...current,
         exercises: current.exercises.map((exercise) => {
           if (exercise.id !== exerciseId) return exercise
@@ -570,7 +611,7 @@ export function WorkoutSessionProvider({ children }) {
             sets: [
               ...exercise.sets,
               {
-                id: createId(),
+                id: safeCryptoId(),
                 plannedDescription: 'Extra',
                 type: 'working',
                 setNumber: nextWorkingSetNumber,
@@ -584,28 +625,28 @@ export function WorkoutSessionProvider({ children }) {
             ],
           }
         }),
-      }
+      })
     })
   }
 
   function removeExercise(exerciseId) {
-    commitActiveSession((current) => {
+    setActiveSession((current) => {
       if (!current) return current
 
-      return {
+      return markSessionUpdated({
         ...current,
         exercises: current.exercises.filter(
           (exercise) => exercise.id !== exerciseId
         ),
-      }
+      })
     })
   }
 
   function skipExercise(exerciseId) {
-    commitActiveSession((current) => {
+    setActiveSession((current) => {
       if (!current) return current
 
-      return {
+      return markSessionUpdated({
         ...current,
         exercises: current.exercises.map((exercise) =>
           exercise.id === exerciseId
@@ -615,74 +656,58 @@ export function WorkoutSessionProvider({ children }) {
             }
             : exercise
         ),
-      }
+      })
     })
   }
 
   function replaceExercise(sessionExerciseId, newExercise) {
-    commitActiveSession((current) => {
+    setActiveSession((current) => {
       if (!current) return current
 
-      return {
+      return markSessionUpdated({
         ...current,
         exercises: current.exercises.map((exercise) =>
           exercise.id === sessionExerciseId
             ? {
               ...exercise,
-              originalExerciseId: newExercise.id || newExercise._id || '',
+              originalExerciseId: newExercise.id,
               exercise: newExercise,
             }
             : exercise
         ),
-      }
+      })
     })
   }
 
   function updateNotes(notes) {
-    commitActiveSession((current) => {
+    setActiveSession((current) => {
       if (!current) return current
 
-      return {
+      return markSessionUpdated({
         ...current,
         notes,
-      }
+      })
     })
   }
 
-  async function clearActiveSessionEverywhere(sessionToClear = activeSessionRef.current) {
-    const sessionId = sessionToClear?.id
-
-    isClearingActiveSessionRef.current = true
-    window.clearTimeout(syncTimeoutRef.current)
-
-    rememberFinishedActiveSession(sessionId)
-    persistActiveSessionLocally(null)
-    setActiveSession(null)
-
-    await clearRemoteActiveSession()
-
-    window.setTimeout(() => {
-      isClearingActiveSessionRef.current = false
-    }, 1200)
-  }
-
   function cancelSession() {
-    clearActiveSessionEverywhere(activeSessionRef.current)
+    clearActiveSessionEverywhere(activeSession)
   }
 
   async function finishSession() {
-    const sessionSnapshot = activeSessionRef.current
+    if (!activeSession) return null
 
-    if (!sessionSnapshot) return null
+    isFinishingRef.current = true
+    window.clearTimeout(syncTimeoutRef.current)
 
     const history = getUserStorageData(user, 'history', [])
 
     const finishedSession = {
-      ...sessionSnapshot,
-      finishedAt: new Date().toISOString(),
+      ...activeSession,
+      finishedAt: nowIso(),
       duration: elapsedSeconds,
       durationSeconds: elapsedSeconds,
-      exercises: (sessionSnapshot.exercises || []).map((sessionExercise) => {
+      exercises: activeSession.exercises.map((sessionExercise) => {
         const exercise = normalizeSessionExerciseForHistory(sessionExercise)
         const sets = Array.isArray(exercise.sets) ? exercise.sets : []
         const workingSets = sets.filter((set) => isWorkingSet(set))
@@ -715,44 +740,64 @@ export function WorkoutSessionProvider({ children }) {
       }),
     }
 
+    const payload = {
+      workoutId: isMongoId(finishedSession.workoutId)
+        ? finishedSession.workoutId
+        : null,
+      workoutName: finishedSession.workoutName,
+      exercises: finishedSession.exercises,
+      durationSeconds: finishedSession.durationSeconds,
+      startedAt: finishedSession.startedAt,
+      finishedAt: finishedSession.finishedAt,
+      prs: getSessionPrs(finishedSession),
+      notes: finishedSession.notes || '',
+      session: finishedSession,
+    }
+
     try {
-      const payload = {
-        workoutId: isMongoId(finishedSession.workoutId)
-          ? finishedSession.workoutId
-          : null,
-        workoutName: finishedSession.workoutName,
-        exercises: finishedSession.exercises,
-        durationSeconds: finishedSession.durationSeconds,
-        startedAt: finishedSession.startedAt,
-        finishedAt: finishedSession.finishedAt,
-        prs: getSessionPrs(finishedSession),
-        notes: finishedSession.notes || '',
+      let savedSession = null
+
+      try {
+        const savedFromFinishEndpoint = await apiFetch(ACTIVE_SESSION_FINISH_ENDPOINT, {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        })
+
+        savedSession = normalizeHistoryFromApi(savedFromFinishEndpoint)
+      } catch {
+        const savedSessionFromApi = await apiFetch('/workout-history', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        })
+
+        savedSession = normalizeHistoryFromApi(savedSessionFromApi)
+
+        await clearActiveSessionFromApi()
       }
 
-      const savedSessionFromApi = await apiFetch('/active-workout/finish', {
-        method: 'POST',
-        body: JSON.stringify({
-          ...payload,
-          session: finishedSession,
-          activeSessionId: finishedSession.id,
-        }),
-      })
-
-      const savedSession = normalizeHistoryFromApi(
-        savedSessionFromApi?.historyItem || savedSessionFromApi
-      )
-
       saveUserStorageData(user, 'history', [savedSession, ...history])
-      await clearActiveSessionEverywhere(finishedSession)
+
+      rememberFinishedActiveSession(finishedSession.id)
+      persistActiveSessionLocally(null)
+      setActiveSession(null)
 
       return savedSession
     } catch (error) {
       console.error(error)
 
       saveUserStorageData(user, 'history', [finishedSession, ...history])
-      await clearActiveSessionEverywhere(finishedSession)
+
+      rememberFinishedActiveSession(finishedSession.id)
+      persistActiveSessionLocally(null)
+      setActiveSession(null)
+
+      await clearActiveSessionFromApi()
 
       return finishedSession
+    } finally {
+      window.setTimeout(() => {
+        isFinishingRef.current = false
+      }, 1200)
     }
   }
 
