@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState, useDeferredValue } from 'react'
 import { Timer, X, ChevronDown, StickyNote, Trophy, CheckCircle2, Repeat2, SkipForward, Trash2, ImageIcon, Weight, Hash, Plus, BarChart3, ClipboardCheck, Minus,
   Award,
-  Zap} from 'lucide-react'
+  Zap,
+  TrendingUp} from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import PageHeader from '../components/ui/PageHeader'
@@ -110,10 +111,28 @@ function getSessionExerciseMedia(sessionExercise) {
 }
 
 
-function SetPrBadges({ set, compact = false }) {
+
+function getLiveSetPrStatus(set, performance) {
+  const weight = Number(set.weight || 0)
+  const reps = Number(set.reps || 0)
+  const volume = weight * reps
+
+  const bestWeight = Number(performance?.bestWeightPerformance?.weight || 0)
+  const bestVolume = Number(performance?.bestVolumePerformance?.volume || 0)
+
+  const hasValidSet = weight > 0 && reps > 0
+
+  return {
+    isWeightPR: Boolean(set.isWeightPR) || (hasValidSet && weight > bestWeight),
+    isVolumePR: Boolean(set.isVolumePR) || (hasValidSet && volume > bestVolume),
+  }
+}
+
+function SetPrBadges({ set, performance, compact = false }) {
+  const { isWeightPR, isVolumePR } = getLiveSetPrStatus(set, performance)
   const badges = []
 
-  if (set.isWeightPR) {
+  if (isWeightPR) {
     badges.push({
       key: 'weight',
       label: 'Peso PR',
@@ -123,7 +142,7 @@ function SetPrBadges({ set, compact = false }) {
     })
   }
 
-  if (set.isVolumePR) {
+  if (isVolumePR) {
     badges.push({
       key: 'volume',
       label: 'Volume PR',
@@ -863,11 +882,11 @@ function StartWorkout() {
                           </div>
 
                             <div className="col-span-3 row-start-4 min-w-0 lg:hidden">
-                              <SetPrBadges set={set} compact />
+                              <SetPrBadges set={set} performance={performance} compact />
                             </div>
 
                             <div className="hidden min-h-11 flex-col items-start justify-center gap-1 overflow-hidden lg:flex">
-                              <SetPrBadges set={set} />
+                              <SetPrBadges set={set} performance={performance} />
                             </div>
 
                             <button
