@@ -4,6 +4,7 @@ import { Download, Share, Smartphone, X } from 'lucide-react'
 import forgeflowIcon from '../../assets/forgeflow-icon.png'
 
 const INSTALLED_KEY = 'forgeflow:pwa-installed'
+const PROMPT_SEEN_KEY = 'forgeflow:pwa-install-tip-seen'
 
 function isStandaloneMode() {
   if (typeof window === 'undefined') return false
@@ -22,8 +23,7 @@ function isIosDevice() {
 
 function PwaInstallButton() {
   const [installPrompt, setInstallPrompt] = useState(null)
-  const [showHelp, setShowHelp] = useState(false)
-  const [expanded, setExpanded] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
   const [installed, setInstalled] = useState(false)
   const isIos = useMemo(() => isIosDevice(), [])
 
@@ -39,18 +39,23 @@ function PwaInstallButton() {
     function handleBeforeInstallPrompt(event) {
       event.preventDefault()
       setInstallPrompt(event)
+
+      if (!window.localStorage.getItem(PROMPT_SEEN_KEY)) {
+        setIsOpen(true)
+        window.localStorage.setItem(PROMPT_SEEN_KEY, 'true')
+      }
     }
 
     function handleAppInstalled() {
       window.localStorage.setItem(INSTALLED_KEY, 'true')
       setInstalled(true)
       setInstallPrompt(null)
+      setIsOpen(false)
     }
 
     function handleShowInstallApp() {
       setInstalled(false)
-      setExpanded(true)
-      setShowHelp(true)
+      setIsOpen(true)
     }
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
@@ -65,11 +70,7 @@ function PwaInstallButton() {
   }, [])
 
   async function handleInstall() {
-    if (!installPrompt) {
-      setExpanded(true)
-      setShowHelp(true)
-      return
-    }
+    if (!installPrompt) return
 
     try {
       await installPrompt.prompt()
@@ -78,47 +79,28 @@ function PwaInstallButton() {
       if (choice?.outcome === 'accepted') {
         window.localStorage.setItem(INSTALLED_KEY, 'true')
         setInstalled(true)
-      } else {
-        setExpanded(true)
-        setShowHelp(true)
+        setIsOpen(false)
       }
 
       setInstallPrompt(null)
     } catch (error) {
       console.error(error)
-      setExpanded(true)
-      setShowHelp(true)
     }
   }
 
-  if (installed) return null
+  if (installed || !isOpen) return null
 
-  if (!expanded) {
-    return (
-      <button
-        type="button"
-        onClick={handleInstall}
-        className="fixed bottom-[calc(5.6rem+env(safe-area-inset-bottom))] right-3 z-[70] flex h-12 items-center gap-2 rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-card)] px-4 text-sm font-black text-[var(--ff-accent-text)] shadow-2xl shadow-black/25 backdrop-blur-xl transition hover:bg-[var(--ff-card-hover)] active:scale-[0.98] lg:bottom-5 lg:right-5"
-        aria-label="Instalar APP"
-      >
-        <Download size={17} />
-        Instalar APP
-      </button>
-    )
-  }
+  const hasNativePrompt = Boolean(installPrompt)
 
   return (
-    <div className="fixed bottom-[calc(5.6rem+env(safe-area-inset-bottom))] right-3 z-[70] w-[calc(100vw-1.5rem)] max-w-sm lg:bottom-5 lg:right-5">
-      <div className="overflow-hidden rounded-3xl border border-[var(--ff-accent-border)] bg-[var(--ff-card)] shadow-2xl shadow-black/30 backdrop-blur-xl">
+    <div className="fixed right-3 top-[calc(4.75rem+env(safe-area-inset-top))] z-[80] w-[calc(100vw-1.5rem)] max-w-sm lg:right-5 lg:top-20">
+      <div className="ff-install-app-toast overflow-hidden rounded-3xl border border-[var(--ff-accent-border)] bg-[var(--ff-card)] shadow-2xl shadow-black/30 backdrop-blur-xl">
         <div className="relative p-4">
           <button
             type="button"
-            onClick={() => {
-              setExpanded(false)
-              setShowHelp(false)
-            }}
+            onClick={() => setIsOpen(false)}
             className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-xl text-[var(--ff-muted)] transition hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)]"
-            aria-label="Minimizar instalar app"
+            aria-label="Fechar instalar app"
           >
             <X size={16} />
           </button>
@@ -130,43 +112,43 @@ function PwaInstallButton() {
 
             <div className="min-w-0">
               <p className="text-sm font-black text-[var(--ff-text)]">
-                Instalar APP
+                Instalar ForgeFlow
               </p>
 
               <p className="mt-1 text-xs leading-relaxed text-[var(--ff-muted)]">
-                Adicione o ForgeFlow à tela inicial para abrir como aplicativo.
+                {hasNativePrompt
+                  ? 'Instale o app para abrir pela tela inicial.'
+                  : isIos
+                    ? 'No iPhone, use Safari > Compartilhar > Adicionar à Tela de Início.'
+                    : 'Use o menu do Chrome e escolha Instalar app ou Adicionar à tela inicial.'}
               </p>
             </div>
           </div>
 
-          {showHelp && (
-            <div className="mt-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3 text-xs leading-relaxed text-[var(--ff-muted)]">
-              {isIos ? (
-                <div className="flex gap-2">
-                  <Share size={16} className="mt-0.5 shrink-0 text-[var(--ff-accent-text)]" />
-                  <p>
-                    No iPhone, abra pelo Safari, toque em <strong className="text-[var(--ff-text)]">Compartilhar</strong> e depois em <strong className="text-[var(--ff-text)]">Adicionar à Tela de Início</strong>.
-                  </p>
-                </div>
-              ) : (
-                <div className="flex gap-2">
-                  <Smartphone size={16} className="mt-0.5 shrink-0 text-[var(--ff-accent-text)]" />
-                  <p>
-                    No Chrome, use o menu do navegador e escolha <strong className="text-[var(--ff-text)]">Instalar app</strong> ou <strong className="text-[var(--ff-text)]">Adicionar à tela inicial</strong>.
-                  </p>
-                </div>
-              )}
-            </div>
+          {hasNativePrompt && (
+            <button
+              type="button"
+              onClick={handleInstall}
+              className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] text-sm font-black text-white shadow-[0_0_18px_var(--ff-accent-shadow)] active:scale-[0.98]"
+            >
+              <Download size={17} />
+              Instalar agora
+            </button>
           )}
 
-          <button
-            type="button"
-            onClick={handleInstall}
-            className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] text-sm font-black text-white shadow-[0_0_18px_var(--ff-accent-shadow)] active:scale-[0.98]"
-          >
-            <Download size={17} />
-            {installPrompt ? 'Instalar agora' : 'Ver como instalar'}
-          </button>
+          {!hasNativePrompt && (
+            <div className="mt-3 flex items-start gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3 text-xs leading-relaxed text-[var(--ff-muted)]">
+              {isIos ? (
+                <Share size={16} className="mt-0.5 shrink-0 text-[var(--ff-accent-text)]" />
+              ) : (
+                <Smartphone size={16} className="mt-0.5 shrink-0 text-[var(--ff-accent-text)]" />
+              )}
+
+              <span>
+                O navegador só mostra o instalador quando o PWA está elegível. Esta mensagem não fica presa na tela.
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -10,6 +10,14 @@ import {
 
 const WorkoutSessionContext = createContext(null)
 
+const ACTIVE_SESSION_STORAGE_KEY = 'active-session'
+const ACTIVE_SESSION_API_ENDPOINTS = [
+  '/active-workout',
+  '/active-session',
+  '/workout-session/active',
+]
+
+
 export function WorkoutSessionProvider({ children }) {
   const { user } = useAuth()
 
@@ -31,6 +39,84 @@ export function WorkoutSessionProvider({ children }) {
     }
   }
 
+  function normalizeActiveSession(session) {
+    if (!session) return null
+
+    const payload = session.session || session.activeSession || session
+
+    if (!payload || !Array.isArray(payload.exercises)) return null
+
+    return {
+      ...payload,
+      id: payload.id || payload._id || crypto.randomUUID(),
+      workoutName: payload.workoutName || payload.name || 'Treino em andamento',
+      exercises: payload.exercises,
+    }
+  }
+
+  async function tryFetchActiveSessionFromApi() {
+    for (const endpoint of ACTIVE_SESSION_API_ENDPOINTS) {
+      try {
+        const data = await apiFetch(endpoint)
+        const normalizedSession = normalizeActiveSession(data)
+
+        if (normalizedSession) return normalizedSession
+      } catch {
+        // Alguns backends ainda não têm endpoint de treino ativo. Nesse caso, seguimos com cache local.
+      }
+    }
+
+    return null
+  }
+
+  async function trySaveActiveSessionToApi(session) {
+    if (!session) return
+
+    for (const endpoint of ACTIVE_SESSION_API_ENDPOINTS) {
+      try {
+        await apiFetch(endpoint, {
+          method: 'PUT',
+          body: JSON.stringify({ session }),
+        })
+        return
+      } catch {
+        // Fallback local quando o backend não oferece endpoint de treino ativo.
+      }
+    }
+  }
+
+  async function tryClearActiveSessionFromApi() {
+    for (const endpoint of ACTIVE_SESSION_API_ENDPOINTS) {
+      try {
+        await apiFetch(endpoint, {
+          method: 'DELETE',
+        })
+        return
+      } catch {
+        // Fallback local quando o backend não oferece endpoint de treino ativo.
+      }
+    }
+  }
+
+  function persistActiveSessionLocally(session) {
+    if (!session) {
+      removeUserStorageData(user, ACTIVE_SESSION_STORAGE_KEY)
+      window.localStorage.removeItem('forgeflow:active-session-sync')
+      return
+    }
+
+    saveUserStorageData(user, ACTIVE_SESSION_STORAGE_KEY, session)
+
+    window.localStorage.setItem(
+      'forgeflow:active-session-sync',
+      JSON.stringify({
+        userId: user?.id || user?._id || user?.email || 'anonymous',
+        session,
+        updatedAt: Date.now(),
+      })
+    )
+  }
+
   function getSessionPrs(session) {
     return session.exercises.flatMap((exercise) =>
       exercise.sets
@@ -44,22 +130,67 @@ export function WorkoutSessionProvider({ children }) {
   }
 
   useEffect(() => {
-    const savedSession = getUserStorageData(user, 'active-session', null)
+    let isMounted = true
 
-    setActiveSession(savedSession)
-    setIsLoaded(true)
+    async function loadActiveSession() {
+      const savedSession = getUserStorageData(user, ACTIVE_SESSION_STORAGE_KEY, null)
+
+      if (isMounted) {
+        setActiveSession(savedSession)
+        setIsLoaded(true)
+      }
+
+      const remoteSession = await tryFetchActiveSessionFromApi()
+
+      if (isMounted && remoteSession) {
+        setActiveSession(remoteSession)
+        persistActiveSessionLocally(remoteSession)
+      }
+    }
+
+    loadActiveSession()
+
+    return () => {
+      isMounted = false
+    }
   }, [user])
 
   useEffect(() => {
     if (!isLoaded) return
 
     if (!activeSession) {
-      removeUserStorageData(user, 'active-session')
+      persistActiveSessionLocally(null)
+      tryClearActiveSessionFromApi()
       return
     }
 
-    saveUserStorageData(user, 'active-session', activeSession)
+    persistActiveSessionLocally(activeSession)
+    trySaveActiveSessionToApi(activeSession)
   }, [activeSession, isLoaded, user])
+
+  useEffect(() => {
+    function handleActiveSessionStorage(event) {
+      if (event.key !== 'forgeflow:active-session-sync') return
+      if (!event.newValue) return
+
+      try {
+        const payload = JSON.parse(event.newValue)
+        const currentUserId = user?.id || user?._id || user?.email || 'anonymous'
+
+        if (payload.userId !== currentUserId) return
+
+        setActiveSession(payload.session || null)
+      } catch {
+        // Ignora eventos inválidos.
+      }
+    }
+
+    window.addEventListener('storage', handleActiveSessionStorage)
+
+    return () => {
+      window.removeEventListener('storage', handleActiveSessionStorage)
+    }
+  }, [user])
 
   useEffect(() => {
     if (!activeSession?.startedAt) {
@@ -296,7 +427,8 @@ export function WorkoutSessionProvider({ children }) {
 
   function cancelSession() {
     setActiveSession(null)
-    removeUserStorageData(user, 'active-session')
+    persistActiveSessionLocally(null)
+    tryClearActiveSessionFromApi()
   }
 
   async function finishSession() {
@@ -360,7 +492,8 @@ export function WorkoutSessionProvider({ children }) {
       saveUserStorageData(user, 'history', [savedSession, ...history])
 
       setActiveSession(null)
-      removeUserStorageData(user, 'active-session')
+      persistActiveSessionLocally(null)
+      tryClearActiveSessionFromApi()
 
       return savedSession
     } catch (error) {
@@ -369,7 +502,8 @@ export function WorkoutSessionProvider({ children }) {
       saveUserStorageData(user, 'history', [finishedSession, ...history])
 
       setActiveSession(null)
-      removeUserStorageData(user, 'active-session')
+      persistActiveSessionLocally(null)
+      tryClearActiveSessionFromApi()
 
       return finishedSession
     }

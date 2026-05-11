@@ -732,7 +732,7 @@ function StartWorkout() {
 
                 {!isCollapsed && (
                   <div className="mt-5">
-                    <div className="mb-3 grid grid-cols-[46px_minmax(0,1fr)_minmax(0,1fr)_48px] gap-2 px-1 text-[10px] font-black uppercase tracking-[0.16em] text-[var(--ff-muted)] sm:grid-cols-[52px_minmax(90px,1fr)_minmax(90px,1fr)_52px] lg:grid-cols-[58px_minmax(120px,1fr)_minmax(120px,1fr)_150px_54px] lg:gap-3 lg:px-3">
+                    <div className="mb-3 grid grid-cols-[42px_minmax(86px,1fr)_minmax(86px,1fr)_46px] gap-2 px-1 text-[10px] font-black uppercase tracking-[0.16em] text-[var(--ff-muted)] sm:grid-cols-[54px_minmax(130px,1fr)_minmax(130px,1fr)_54px] lg:grid-cols-[58px_minmax(120px,1fr)_minmax(120px,1fr)_150px_54px] lg:gap-3 lg:px-3">
                       <span>Série</span>
                       <span>Carga</span>
                       <span>Reps</span>
@@ -763,7 +763,7 @@ function StartWorkout() {
                         return (
                           <div
                             key={set.id}
-                            className={`grid w-full grid-cols-[46px_minmax(0,1fr)_minmax(0,1fr)_48px] items-center gap-2 rounded-3xl border p-2.5 transition sm:grid-cols-[52px_minmax(90px,1fr)_minmax(90px,1fr)_52px] sm:p-3 lg:grid-cols-[58px_minmax(120px,1fr)_minmax(120px,1fr)_150px_54px] lg:gap-3 ${
+                            className={`grid w-full grid-cols-[42px_minmax(86px,1fr)_minmax(86px,1fr)_46px] items-center gap-2 rounded-3xl border p-2.5 transition sm:grid-cols-[54px_minmax(130px,1fr)_minmax(130px,1fr)_54px] sm:p-3 lg:grid-cols-[58px_minmax(120px,1fr)_minmax(120px,1fr)_150px_54px] lg:gap-3 ${
                               set.completed
                                 ? 'border-emerald-500/30 bg-emerald-500/5'
                                 : 'border-[var(--ff-border)] bg-[var(--ff-surface-2)]'
