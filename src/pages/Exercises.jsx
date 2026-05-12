@@ -1384,8 +1384,8 @@ function Exercises() {
         <main className="order-1 xl:order-2">
           <Card className="overflow-visible border border-zinc-800 bg-gradient-to-b from-[#17171b] to-[#121216]">
             <div className="border-b border-zinc-800 p-5">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div>
+              <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <h2 className="text-2xl font-black">
                       Biblioteca

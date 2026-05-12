@@ -6,6 +6,7 @@ import {
   ClipboardList,
   Copy,
   Dumbbell,
+  Flame,
   Edit3,
   MoreHorizontal,
   Plus,
@@ -1015,6 +1016,14 @@ function Workouts() {
         })
     }
 
+    function getInitialManualSet(type = 'working') {
+        return {
+            id: crypto.randomUUID(),
+            description: type === 'warmup' ? 'Aquecimento' : '8-12 Rep',
+            type,
+        }
+    }
+
     function resetForm() {
         setWorkoutName('')
         setSelectedExercise('')
@@ -1191,7 +1200,7 @@ function Workouts() {
         const newWorkoutExercise = {
             id: crypto.randomUUID(),
             exercise: exerciseFound,
-            sets: getDefaultSets(),
+            sets: [getInitialManualSet()],
             note: '',
             restTimer: appSettings.defaultRestTimer || 'Desligado',
         }
@@ -1200,11 +1209,11 @@ function Workouts() {
     }
 
     function handleAddExercise() {
-        if (!selectedExercise || exerciseSets.length === 0) {
+        if (!selectedExercise) {
             showToast(
                 'error',
                 'Exercício incompleto',
-                'Selecione um exercício e adicione pelo menos uma série.'
+                'Selecione um exercício antes de adicionar.'
             )
             return
         }
@@ -1216,7 +1225,7 @@ function Workouts() {
         const newWorkoutExercise = {
             id: crypto.randomUUID(),
             exercise: exerciseFound,
-            sets: exerciseSets,
+            sets: exerciseSets.length > 0 ? exerciseSets : [getInitialManualSet()],
             note: '',
             restTimer: appSettings.defaultRestTimer || 'Desligado',
         }
@@ -1257,7 +1266,7 @@ function Workouts() {
         )
     }
 
-    function handleAddSetToWorkoutExercise(id) {
+    function handleAddSetToWorkoutExercise(id, type = 'working') {
         setWorkoutExercises(
             workoutExercises.map((item) =>
                 item.id === id
@@ -1265,12 +1274,52 @@ function Workouts() {
                         ...item,
                         sets: [
                             ...item.sets,
-                            {
-                                id: crypto.randomUUID(),
-                                description: '8-12 Rep',
-                                type: 'working',
-                            },
+                            getInitialManualSet(type),
                         ],
+                    }
+                    : item
+            )
+        )
+    }
+
+    function handleToggleWorkoutSetWarmup(exerciseId, setId) {
+        setWorkoutExercises(
+            workoutExercises.map((item) =>
+                item.id === exerciseId
+                    ? {
+                        ...item,
+                        sets: item.sets.map((set) =>
+                            set.id === setId
+                                ? {
+                                    ...set,
+                                    type: set.type === 'warmup' ? 'working' : 'warmup',
+                                    description:
+                                        set.type === 'warmup'
+                                            ? (set.description === 'Aquecimento' ? '8-12 Rep' : set.description)
+                                            : 'Aquecimento',
+                                }
+                                : set
+                        ),
+                    }
+                    : item
+            )
+        )
+    }
+
+    function handleUpdateWorkoutSetDescription(exerciseId, setId, value) {
+        setWorkoutExercises(
+            workoutExercises.map((item) =>
+                item.id === exerciseId
+                    ? {
+                        ...item,
+                        sets: item.sets.map((set) =>
+                            set.id === setId
+                                ? {
+                                    ...set,
+                                    description: value,
+                                }
+                                : set
+                        ),
                     }
                     : item
             )
@@ -2804,16 +2853,30 @@ function Workouts() {
                                                                     {isWarmup ? 'A' : setIndex + 1}
                                                                 </span>
 
-                                                                <div className="min-w-0">
-                                                                    <p className="truncate text-sm font-bold">
-                                                                        {set.description}
-                                                                    </p>
+                                                                <div className="min-w-0 space-y-2">
+                                                                    <input
+                                                                        type="text"
+                                                                        value={set.description}
+                                                                        onChange={(event) =>
+                                                                            handleUpdateWorkoutSetDescription(
+                                                                                item.id,
+                                                                                set.id,
+                                                                                event.target.value
+                                                                            )
+                                                                        }
+                                                                        className="h-10 w-full rounded-xl border border-zinc-800 bg-[#18181b] px-3 text-sm font-bold text-white outline-none transition hover:border-[var(--ff-accent-border)]/40 focus:border-[var(--ff-accent-border)]"
+                                                                        placeholder="Ex: 8-12 Rep"
+                                                                    />
 
-                                                                    {isWarmup && (
-                                                                        <p className="mt-1 text-[10px] font-bold text-zinc-500">
-                                                                            AQUECIMENTO
-                                                                        </p>
-                                                                    )}
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => handleToggleWorkoutSetWarmup(item.id, set.id)}
+                                                                        className={isWarmup
+                                                                            ? 'rounded-full border border-amber-400/30 bg-amber-500/10 px-3 py-1 text-[10px] font-black text-amber-200'
+                                                                            : 'rounded-full border border-zinc-800 bg-zinc-950 px-3 py-1 text-[10px] font-black text-zinc-500'}
+                                                                    >
+                                                                        {isWarmup ? 'AQUECIMENTO' : 'NORMAL'}
+                                                                    </button>
                                                                 </div>
 
                                                                 <button
@@ -2831,14 +2894,25 @@ function Workouts() {
                                                 </div>
                                             </div>
 
-                                            <button
-                                                type="button"
-                                                onClick={() => handleAddSetToWorkoutExercise(item.id)}
-                                                className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-zinc-800 text-sm font-bold transition hover:bg-zinc-700"
-                                            >
-                                                <Plus size={18} />
-                                                Adicionar série
-                                            </button>
+                                            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleAddSetToWorkoutExercise(item.id)}
+                                                    className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-zinc-800 text-sm font-bold transition hover:bg-zinc-700"
+                                                >
+                                                    <Plus size={18} />
+                                                    Série
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleAddSetToWorkoutExercise(item.id, 'warmup')}
+                                                    className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-amber-400/25 bg-amber-500/10 text-sm font-bold text-amber-200 transition hover:bg-amber-500/15"
+                                                >
+                                                    <Flame size={18} />
+                                                    Aquecimento
+                                                </button>
+                                            </div>
                                         </Card>
                                     ))}
                                 </div>

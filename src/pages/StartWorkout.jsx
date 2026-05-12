@@ -1139,6 +1139,8 @@ function StartWorkout() {
                               min="0"
                               inputMode="decimal"
                               value={set.weight}
+                              suggestedValue={performance.lastSet?.weight || ''}
+                              suggestionLabel={performance.lastSet?.weight ? `Último: ${performance.lastSet.weight}${appSettings.weightUnit || 'kg'}` : ''}
                               onChange={(event) =>
                                 updateSet(
                                   sessionExercise.id,
@@ -1158,6 +1160,8 @@ function StartWorkout() {
                               min="1"
                               inputMode="numeric"
                               value={set.reps}
+                              suggestedValue={performance.lastSet?.reps || ''}
+                              suggestionLabel={performance.lastSet?.reps ? `Último: ${performance.lastSet.reps} reps` : ''}
                               onChange={(event) =>
                                 updateSet(
                                   sessionExercise.id,

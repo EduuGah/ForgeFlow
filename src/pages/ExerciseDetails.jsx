@@ -21,6 +21,7 @@ import EmptyState from '../components/ui/EmptyState'
 
 import { useAuth } from '../context/AuthContext'
 import { getUserStorageData } from '../utils/userStorage'
+import defaultExercises from '../data/defaultExercises'
 
 function getExerciseMedia(exercise) {
   if (exercise?.media?.gif) return exercise.media.gif
@@ -135,16 +136,33 @@ function SummaryItem({ label, value, icon: Icon }) {
 }
 
 function ExerciseDetails() {
-  const { id } = useParams()
+  const { exerciseId } = useParams()
   const { user } = useAuth()
   const [exercise, setExercise] = useState(null)
 
   useEffect(() => {
-    const exercises = getUserStorageData(user, 'exercises', [])
-    const foundExercise = exercises.find((item) => String(item.id) === String(id))
+    const userExercises = getUserStorageData(user, 'exercises', [])
+    const allExercises = [
+      ...userExercises,
+      ...(Array.isArray(defaultExercises) ? defaultExercises : []),
+    ]
+
+    const foundExercise = allExercises.find((item) => {
+      const ids = [
+        item.id,
+        item._id,
+        item.originalLocalId,
+        item.localId,
+        item.exerciseId,
+      ]
+        .filter(Boolean)
+        .map((value) => String(value))
+
+      return ids.includes(String(exerciseId))
+    })
 
     setExercise(foundExercise || null)
-  }, [id, user])
+  }, [exerciseId, user])
 
   if (!exercise) {
     return (
