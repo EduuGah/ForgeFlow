@@ -1499,7 +1499,7 @@ async function sendPasswordResetEmail({ email, resetUrl }) {
     })
 }
 
-async function requireAdminasync(req, res, next) {
+async function requireAdmin(req, res, next) {
     try {
         let role = req.user?.role
 
