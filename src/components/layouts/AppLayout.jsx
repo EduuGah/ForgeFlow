@@ -37,6 +37,19 @@ function runWhenBrowserIsIdle(callback) {
   return () => window.clearTimeout(timeoutId)
 }
 
+
+function getRouteShellClass(pathname = '/') {
+  if (pathname === '/') return 'ff-page-dashboard'
+  if (pathname.startsWith('/workouts')) return 'ff-page-workouts'
+  if (pathname.startsWith('/exercises')) return 'ff-page-exercises'
+  if (pathname.startsWith('/history')) return 'ff-page-history'
+  if (pathname.startsWith('/progress')) return 'ff-page-progress'
+  if (pathname.startsWith('/profile')) return 'ff-page-profile'
+  if (pathname.startsWith('/settings')) return 'ff-page-settings'
+
+  return 'ff-page-default'
+}
+
 function AppLayout() {
   const { user } = useAuth()
   const location = useLocation()
@@ -239,7 +252,7 @@ function AppLayout() {
         </Suspense>
       )}
 
-      <main className="relative min-h-0 overflow-visible px-4 pb-36 pt-[calc(6.25rem+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[calc(6.25rem+env(safe-area-inset-top))]">
+      <main className={`ff-hevy-shell ${getRouteShellClass(location.pathname)} relative min-h-0 overflow-visible px-4 pb-36 pt-[calc(6.25rem+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[calc(6.25rem+env(safe-area-inset-top))]`}>
         <div className="mx-auto w-full max-w-[1600px]">
           <Outlet />
         </div>

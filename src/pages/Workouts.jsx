@@ -2229,7 +2229,7 @@ function Workouts() {
                     </Card>
                 </div>
 
-                <div className="space-y-6">
+                <div className="ff-hevy-workouts space-y-5 sm:space-y-6">
                     <Card className="overflow-hidden p-0">
                         <button
                             type="button"

@@ -1216,3 +1216,243 @@ input[type='number']::-webkit-inner-spin-button {
 main {
   overflow-x: clip;
 }
+
+
+/* =========================================================
+   ForgeFlow — Etapa 25.1-25.4 redesign inspirado no Hevy
+   Observação: sidebar continua drawer/temporária, não fixa.
+   ========================================================= */
+
+:root {
+  --ff-hevy-page-gap: clamp(0.9rem, 1.8vw, 1.4rem);
+  --ff-hevy-card-radius: 1.35rem;
+  --ff-hevy-card-bg: linear-gradient(180deg, var(--ff-card), var(--ff-surface-2));
+  --ff-hevy-card-border: var(--ff-border);
+}
+
+.ff-hevy-shell {
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--ff-accent) 10%, transparent), transparent 34%),
+    var(--ff-bg);
+}
+
+.ff-hevy-shell > div {
+  width: 100%;
+}
+
+/* 25.1 — Base visual global */
+.ff-hevy-shell main,
+.ff-hevy-shell * {
+  min-width: 0;
+}
+
+.ff-hevy-shell .ff-hevy-card,
+.ff-hevy-shell [class*='rounded-3xl'][class*='border'][class*='bg-[var(--ff-card)]'],
+.ff-hevy-shell [class*='rounded-[2rem]'][class*='border'] {
+  border-color: color-mix(in srgb, var(--ff-border) 86%, white 4%);
+}
+
+.ff-hevy-shell h1,
+.ff-hevy-shell h2,
+.ff-hevy-shell h3 {
+  letter-spacing: -0.035em;
+}
+
+.ff-hevy-shell button,
+.ff-hevy-shell a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Header mais próximo de app */
+#app-header {
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--ff-border) 70%, transparent);
+}
+
+#app-header .safe-top > div {
+  max-width: 1600px;
+  margin-inline: auto;
+}
+
+/* Sidebar drawer, não fixa permanente */
+.ff-sidebar-drawer-note {
+  pointer-events: none;
+}
+
+/* Hevy-like cards/list density */
+.ff-hevy-dashboard [class*='rounded-3xl'],
+.ff-hevy-workouts [class*='rounded-3xl'],
+.ff-hevy-exercises [class*='rounded-3xl'] {
+  border-radius: var(--ff-hevy-card-radius);
+}
+
+/* 25.2 — Dashboard: estrutura mais compacta e menos vazia */
+.ff-page-dashboard .ff-hevy-shell,
+.ff-hevy-dashboard {
+  --ff-dashboard-card-min: 0;
+}
+
+.ff-hevy-dashboard > section,
+.ff-hevy-dashboard > div {
+  gap: var(--ff-hevy-page-gap);
+}
+
+.ff-hevy-dashboard [class*='grid'] {
+  min-width: 0;
+}
+
+.ff-hevy-dashboard [class*='shadow-2xl'],
+.ff-hevy-dashboard [class*='shadow-xl'] {
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.20);
+}
+
+/* 25.3 — Rotinas/Treinos: lista mais Hevy */
+.ff-hevy-workouts [class*='space-y'] > [class*='rounded'],
+.ff-page-workouts [class*='space-y'] > [class*='rounded'] {
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+@media (hover: hover) {
+  .ff-page-workouts [class*='space-y'] > [class*='rounded']:hover,
+  .ff-page-exercises [class*='space-y'] > [class*='rounded']:hover {
+    transform: translateY(-1px);
+    border-color: var(--ff-accent-border);
+  }
+}
+
+/* 25.4 — Exercícios: thumbnails/lista mais compactos */
+.ff-hevy-exercises img,
+.ff-page-exercises img {
+  background: #f4f4f5;
+}
+
+.ff-page-exercises [class*='overflow-x-auto'],
+.ff-page-workouts [class*='overflow-x-auto'] {
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ff-page-exercises [class*='overflow-x-auto']::-webkit-scrollbar,
+.ff-page-workouts [class*='overflow-x-auto']::-webkit-scrollbar {
+  display: none;
+}
+
+/* Desktop: conteúdo principal mais aproveitado, sem sidebar fixa permanente */
+@media (min-width: 1024px) {
+  .ff-hevy-shell {
+    padding-left: clamp(1.5rem, 2vw, 2.25rem) !important;
+    padding-right: clamp(1.5rem, 2vw, 2.25rem) !important;
+  }
+
+  .ff-hevy-shell > div {
+    max-width: 1440px !important;
+  }
+
+  .ff-page-dashboard .ff-hevy-dashboard,
+  .ff-page-workouts .ff-hevy-workouts,
+  .ff-page-exercises .ff-hevy-exercises {
+    max-width: 100%;
+  }
+
+  /* Hevy-like: coluna central + lateral apenas quando a própria página já tiver grid */
+  .ff-page-dashboard [class*='lg:grid-cols'],
+  .ff-page-workouts [class*='lg:grid-cols'],
+  .ff-page-exercises [class*='lg:grid-cols'] {
+    align-items: start;
+  }
+}
+
+/* Mobile: cara de app, menos site responsivo */
+@media (max-width: 640px) {
+  .ff-hevy-shell {
+    padding-left: 0.9rem !important;
+    padding-right: 0.9rem !important;
+    padding-top: calc(5.4rem + env(safe-area-inset-top)) !important;
+  }
+
+  .ff-hevy-shell > div {
+    max-width: 100% !important;
+  }
+
+  .ff-hevy-dashboard,
+  .ff-hevy-workouts,
+  .ff-hevy-exercises {
+    gap: 1rem;
+  }
+
+  .ff-page-dashboard [class*='rounded-3xl'],
+  .ff-page-workouts [class*='rounded-3xl'],
+  .ff-page-exercises [class*='rounded-3xl'],
+  .ff-page-dashboard [class*='rounded-[2rem]'],
+  .ff-page-workouts [class*='rounded-[2rem]'],
+  .ff-page-exercises [class*='rounded-[2rem]'] {
+    border-radius: 1.35rem !important;
+  }
+
+  .ff-page-dashboard [class*='p-7'],
+  .ff-page-workouts [class*='p-7'],
+  .ff-page-exercises [class*='p-7'] {
+    padding: 1rem !important;
+  }
+
+  .ff-page-dashboard [class*='p-6'],
+  .ff-page-workouts [class*='p-6'],
+  .ff-page-exercises [class*='p-6'] {
+    padding: 0.95rem !important;
+  }
+
+  .ff-page-dashboard h1,
+  .ff-page-workouts h1,
+  .ff-page-exercises h1 {
+    font-size: clamp(1.75rem, 8vw, 2.35rem) !important;
+    line-height: 1.02 !important;
+  }
+
+  .ff-page-dashboard h2,
+  .ff-page-workouts h2,
+  .ff-page-exercises h2 {
+    font-size: clamp(1.05rem, 5vw, 1.35rem) !important;
+  }
+
+  .ff-page-workouts button,
+  .ff-page-exercises button,
+  .ff-page-dashboard button {
+    min-height: 2.75rem;
+  }
+
+  /* Cards de lista mais parecidos com Hevy no mobile */
+  .ff-page-workouts [class*='space-y'] > article,
+  .ff-page-workouts [class*='space-y'] > div[class*='border'],
+  .ff-page-exercises [class*='space-y'] > article,
+  .ff-page-exercises [class*='space-y'] > div[class*='border'] {
+    border-radius: 1.35rem;
+    background: var(--ff-hevy-card-bg);
+  }
+
+  /* Chips */
+  .ff-page-exercises [class*='rounded-full'],
+  .ff-page-workouts [class*='rounded-full'] {
+    white-space: nowrap;
+  }
+
+  /* Evita que gráficos/cards forcem horizontal */
+  .ff-page-dashboard .recharts-wrapper,
+  .ff-page-dashboard .recharts-surface,
+  .ff-page-progress .recharts-wrapper,
+  .ff-page-progress .recharts-surface {
+    max-width: 100% !important;
+  }
+}
+
+/* Telas muito estreitas */
+@media (max-width: 380px) {
+  .ff-hevy-shell {
+    padding-left: 0.7rem !important;
+    padding-right: 0.7rem !important;
+  }
+
+  .ff-page-dashboard h1,
+  .ff-page-workouts h1,
+  .ff-page-exercises h1 {
+    font-size: 1.72rem !important;
+  }
+}
