@@ -1463,7 +1463,6 @@ async function sendEmail({ to, subject, text, html }) {
         }
     } catch (error) {
         const safeError = getSafeEmailError(error)
-
         console.error('[ForgeFlow][EMAIL] Erro ao enviar e-mail:', safeError)
 
         return {
