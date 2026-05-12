@@ -29,7 +29,11 @@ import { useAuth } from '../context/AuthContext'
 function formatDate(value, withTime = false) {
   if (!value) return '—'
 
-  return new Date(value).toLocaleString('pt-BR', {
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) return '—'
+
+  return date.toLocaleString('pt-BR', {
     day: '2-digit',
     month: '2-digit',
     year: '2-digit',
@@ -40,6 +44,12 @@ function formatDate(value, withTime = false) {
         }
       : {}),
   })
+}
+
+function formatLastLogin(value) {
+  if (!value) return 'Ainda não registrado'
+
+  return formatDate(value, true)
 }
 
 function formatDuration(seconds = 0) {
@@ -292,7 +302,7 @@ function Admin() {
         }
       />
 
-      <section className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(360px,0.9fr)_minmax(0,1.45fr)]">
+      <section className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(390px,0.85fr)_minmax(0,1.55fr)]">
         <Card className="p-4">
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -302,7 +312,7 @@ function Admin() {
               </p>
             </div>
 
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-accent-text)]">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)] shadow-[0_0_18px_var(--ff-accent-shadow)]">
               <UsersRound size={20} />
             </div>
           </div>
@@ -321,7 +331,7 @@ function Admin() {
             />
           </div>
 
-          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <div className="admin-filter-grid mt-3 grid grid-cols-1 gap-2 md:grid-cols-3">
             <select
               value={roleFilter}
               onChange={(event) => setRoleFilter(event.target.value)}
@@ -355,7 +365,7 @@ function Admin() {
           </div>
 
           <div className="mt-3 flex gap-2">
-            <Button variant="secondary" onClick={loadUsers} disabled={loading}>
+            <Button variant="secondary" className="w-full sm:w-auto" onClick={loadUsers} disabled={loading}>
               {loading ? <Loader2 className="animate-spin" size={16} /> : <Search size={16} />}
               Buscar
             </Button>
@@ -382,7 +392,7 @@ function Admin() {
                     type="button"
                     onClick={() => handleSelectUser(item)}
                     className={[
-                      'flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition',
+                      'admin-user-row flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition',
                       isSelected
                         ? 'border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)]'
                         : 'border-[var(--ff-border)] bg-[var(--ff-surface-2)] hover:border-[var(--ff-accent-border)]',
@@ -398,7 +408,7 @@ function Admin() {
                       </p>
                       <p className="truncate text-xs text-[var(--ff-muted)]">{item.email}</p>
                       <p className="mt-1 text-[11px] text-[var(--ff-muted)]">
-                        Último login: {formatDate(item.lastLoginAt, true)}
+                        Último login: {formatLastLogin(item.lastLoginAt)}
                       </p>
                     </div>
 
@@ -448,7 +458,7 @@ function Admin() {
                   </div>
                 </div>
 
-                <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-4">
+                <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                   <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
                     <p className="text-xs text-[var(--ff-muted)]">Criado em</p>
                     <p className="mt-1 text-sm font-black text-[var(--ff-text)]">{formatDate(selectedUser.createdAt)}</p>
@@ -456,7 +466,7 @@ function Admin() {
 
                   <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
                     <p className="text-xs text-[var(--ff-muted)]">Último login</p>
-                    <p className="mt-1 text-sm font-black text-[var(--ff-text)]">{formatDate(selectedUser.lastLoginAt, true)}</p>
+                    <p className="mt-1 text-sm font-black text-[var(--ff-text)]">{formatLastLogin(selectedUser.lastLoginAt)}</p>
                   </div>
 
                   <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
@@ -472,19 +482,20 @@ function Admin() {
                   </div>
                 </div>
 
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <Button variant="secondary" onClick={() => copyText(selectedUserId, 'ID')}>
+                <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                  <Button variant="secondary" className="w-full justify-center" onClick={() => copyText(selectedUserId, 'ID')}>
                     {copied === 'ID' ? <ClipboardCheck size={16} /> : <Clipboard size={16} />}
                     Copiar ID
                   </Button>
 
-                  <Button variant="secondary" onClick={() => copyText(selectedUser.email, 'E-mail')}>
+                  <Button variant="secondary" className="w-full justify-center" onClick={() => copyText(selectedUser.email, 'E-mail')}>
                     {copied === 'E-mail' ? <ClipboardCheck size={16} /> : <Clipboard size={16} />}
                     Copiar e-mail
                   </Button>
 
                   <Button
                     variant="secondary"
+                    className="w-full justify-center"
                     onClick={() =>
                       setConfirmModal({
                         title: selectedUser.role === 'admin' ? 'Rebaixar admin?' : 'Promover para admin?',
@@ -508,6 +519,7 @@ function Admin() {
 
                   <Button
                     variant={selectedUser.isBlocked ? 'secondary' : 'danger'}
+                    className="w-full justify-center"
                     onClick={() =>
                       setConfirmModal({
                         title: selectedUser.isBlocked ? 'Desbloquear usuário?' : 'Bloquear usuário?',
@@ -544,7 +556,7 @@ function Admin() {
                   </div>
                 </div>
 
-                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+                <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
                   <input
                     type="text"
                     value={resetPassword}

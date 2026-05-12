@@ -8,6 +8,7 @@ import {
   FileText,
   Moon,
   Palette,
+  Search,
   RotateCcw,
   SlidersHorizontal,
   Sun,
@@ -226,6 +227,7 @@ function Settings() {
   const [toast, setToast] = useState(null)
   const [syncStatus, setSyncStatus] = useState('idle')
   const [pendingSettingKey, setPendingSettingKey] = useState('')
+  const [colorSearch, setColorSearch] = useState('')
 
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
@@ -613,33 +615,88 @@ function Settings() {
               />
             </div>
 
-            <div className="mt-8">
-              <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+            <div className="ff-settings-color-picker mt-8">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                   <h3 className="text-base font-black text-[var(--ff-text)]">
                     Cor principal
                   </h3>
 
                   <p className="mt-1 text-sm text-[var(--ff-muted)]">
-                    Todas as cores continuam disponíveis, agora em uma grade visual.
+                    As cores agora ficam organizadas por grupos para a lista não virar gigante.
                   </p>
                 </div>
 
-                <Badge>
-                  {currentAccent?.name || 'Roxo'}
-                </Badge>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <Badge>
+                    {currentAccent?.name || 'Roxo'}
+                  </Badge>
+
+                  <div className="flex h-11 min-w-[230px] items-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3">
+                    <Search size={16} className="text-[var(--ff-muted)]" />
+                    <input
+                      type="search"
+                      value={colorSearch}
+                      onChange={(event) => setColorSearch(event.target.value)}
+                      placeholder="Buscar cor..."
+                      className="w-full bg-transparent text-sm font-bold text-[var(--ff-text)] outline-none placeholder:text-[var(--ff-muted)]"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {Object.entries(accentColors).map(([key, color]) => (
-                  <ColorOption
-                    key={key}
-                    colorKey={key}
-                    color={color}
-                    active={settings.accentColor === key}
-                    onClick={() => handleUpdateSetting('accentColor', key)}
-                  />
+              <div className="mt-4 space-y-5">
+                {visibleAccentColors.map((group) => (
+                  <div
+                    key={group.title}
+                    className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4"
+                  >
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--ff-muted)]">
+                        {group.title}
+                      </p>
+
+                      <span className="text-xs font-bold text-[var(--ff-muted)]">
+                        {group.keys.length} cor(es)
+                      </span>
+                    </div>
+
+                    {group.keys.length === 0 ? (
+                      <p className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 text-sm text-[var(--ff-muted)]">
+                        Nenhuma cor encontrada.
+                      </p>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                        {group.keys.map((key) => {
+                          const color = accentColors[key]
+
+                          if (!color) return null
+
+                          return (
+                            <ColorOption
+                              key={`${group.title}-${key}`}
+                              colorKey={key}
+                              color={color}
+                              active={settings.accentColor === key}
+                              onClick={() => handleUpdateSetting('accentColor', key)}
+                            />
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
                 ))}
+              </div>
+
+              <div className="mt-4 rounded-3xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)] p-4">
+                <p className="text-sm font-black text-[var(--ff-text)]">
+                  Próximo passo visual
+                </p>
+
+                <p className="mt-1 text-sm leading-relaxed text-[var(--ff-muted)]">
+                  A estrutura já fica preparada para futuramente a logo acompanhar a cor principal do app.
+                  Para isso, o ideal é usar uma versão SVG/editável da logo.
+                </p>
               </div>
             </div>
 

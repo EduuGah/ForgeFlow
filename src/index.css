@@ -1801,3 +1801,56 @@ main {
     line-height: 1.02 !important;
   }
 }
+
+
+/* =========================================================
+   ForgeFlow — Etapa 31.1 Admin polido e cores organizadas
+   ========================================================= */
+
+.ff-hevy-admin select,
+.ff-settings-color-picker input {
+  color-scheme: dark;
+}
+
+.ff-hevy-admin option {
+  background: #18181b;
+  color: #f4f4f5;
+}
+
+.ff-hevy-admin select {
+  appearance: auto;
+  min-width: 0;
+}
+
+.ff-hevy-admin [class*="grid"] > button {
+  min-width: 0;
+}
+
+.ff-hevy-admin .admin-user-row {
+  min-height: 5rem;
+}
+
+.ff-logo-accent-shell {
+  position: relative;
+  isolation: isolate;
+}
+
+.ff-logo-accent-shell::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  background: radial-gradient(circle, var(--ff-accent-soft), transparent 68%);
+  opacity: 0.85;
+  z-index: -1;
+}
+
+@media (max-width: 640px) {
+  .ff-hevy-admin select {
+    width: 100%;
+  }
+
+  .ff-hevy-admin .admin-filter-grid {
+    grid-template-columns: 1fr;
+  }
+}
