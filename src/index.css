@@ -1854,3 +1854,171 @@ main {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* =========================================================
+   ForgeFlow — Etapas 31.2 até 37
+   Identidade, Admin, Progressão, Treino, Dashboard e Exercícios
+   ========================================================= */
+
+.ff-brand-topbar,
+.ff-mobile-topbar,
+.ff-desktop-topbar {
+  backdrop-filter: blur(18px);
+}
+
+.ff-logo-accent-shell img {
+  transition: filter 180ms ease, transform 180ms ease;
+}
+
+.ff-logo-accent-shell:hover img {
+  transform: scale(1.035);
+}
+
+.ff-admin-stat-card,
+.ff-support-panel-card,
+.ff-dashboard-hero-card,
+.ff-workout-focus-card,
+.ff-exercise-library-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.ff-admin-stat-card::before,
+.ff-support-panel-card::before,
+.ff-dashboard-hero-card::before,
+.ff-workout-focus-card::before,
+.ff-exercise-library-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 20% 0%, var(--ff-accent-soft), transparent 36%),
+    linear-gradient(135deg, rgba(255,255,255,0.035), transparent 42%);
+  opacity: 0.9;
+}
+
+.ff-workout-input-polish input,
+.ff-workout-input-polish textarea,
+.ff-workout-input-polish select {
+  font-size: 16px;
+}
+
+.ff-dashboard-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+.ff-exercise-tag-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ff-accent) transparent;
+}
+
+.ff-exercise-tag-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.ff-exercise-tag-scroll::-webkit-scrollbar-thumb {
+  background: var(--ff-accent);
+  border-radius: 999px;
+}
+
+@media (max-width: 640px) {
+  .ff-dashboard-quick-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ff-admin-stat-card,
+  .ff-support-panel-card,
+  .ff-dashboard-hero-card,
+  .ff-workout-focus-card,
+  .ff-exercise-library-card {
+    border-radius: 1.35rem;
+  }
+}
+
+
+/* =========================================================
+   ForgeFlow — Etapa 34 Progressão inteligente
+   ========================================================= */
+
+.ff-progression-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.ff-progression-glow::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 12% 0%, rgba(255,255,255,0.10), transparent 38%);
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   ForgeFlow — Etapa 35 Treino ativo 2.0
+   ========================================================= */
+
+.ff-active-workout-hero,
+.ff-active-exercise-card,
+.ff-rest-timer-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.ff-active-workout-hero::before,
+.ff-active-exercise-card::before,
+.ff-rest-timer-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 14% 0%, var(--ff-accent-soft), transparent 34%),
+    linear-gradient(135deg, rgba(255,255,255,0.035), transparent 48%);
+  opacity: 0.85;
+}
+
+.ff-active-exercise-card > * {
+  position: relative;
+}
+
+.ff-rest-timer-card {
+  animation: ff-rest-timer-enter 180ms ease-out;
+}
+
+@keyframes ff-rest-timer-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.ff-workout-input-polish input {
+  text-align: center;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+}
+
+@media (max-width: 640px) {
+  .ff-active-workout-hero {
+    border-radius: 1.5rem;
+  }
+
+  .ff-active-exercise-card {
+    border-radius: 1.5rem;
+  }
+
+  .ff-workout-input-polish input {
+    min-height: 3.25rem;
+    font-size: 1.05rem;
+  }
+}

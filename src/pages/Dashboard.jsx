@@ -1061,7 +1061,7 @@ function Dashboard() {
             </div>
           </div>
 
-          <div className="mt-4 space-y-2">
+          <div className="ff-dashboard-hero-card mt-4 space-y-2">
             {recentPRs.length > 0 ? (
               recentPRs.slice(0, 3).map((pr, index) => (
                 <div

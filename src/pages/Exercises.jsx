@@ -827,7 +827,7 @@ function Exercises() {
           {title}
         </p>
 
-        <ul className="mt-3 space-y-2">
+        <ul className="ff-exercise-library-card mt-3 space-y-2">
           {normalizedItems.map((item, index) => (
             <li
               key={`${title}-${index}`}

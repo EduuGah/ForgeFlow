@@ -1811,6 +1811,56 @@ app.delete('/admin/users/:userId/active-workout', authMiddleware, requireAdmin, 
     }
 })
 
+app.get('/admin/stats', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const [
+            totalUsers,
+            totalAdmins,
+            blockedUsers,
+            activeWorkoutSessions,
+            totalWorkouts,
+            totalHistory,
+            recentUsers,
+            recentLogs,
+        ] = await Promise.all([
+            User.countDocuments({}),
+            User.countDocuments({ role: 'admin' }),
+            User.countDocuments({ isBlocked: true }),
+            ActiveWorkoutSession.countDocuments({}),
+            Workout.countDocuments({}),
+            WorkoutHistory.countDocuments({}),
+            User.find({})
+                .sort({ createdAt: -1 })
+                .limit(5)
+                .select('name email role provider isBlocked createdAt lastLoginAt')
+                .lean(),
+            AdminLog.find({})
+                .sort({ createdAt: -1 })
+                .limit(8)
+                .lean(),
+        ])
+
+        return res.json({
+            cards: {
+                totalUsers,
+                totalAdmins,
+                blockedUsers,
+                activeWorkoutSessions,
+                totalWorkouts,
+                totalHistory,
+            },
+            recentUsers: recentUsers.map(sanitizeUser),
+            recentLogs: recentLogs.map(sanitizeAdminLog),
+        })
+    } catch (error) {
+        console.error(error)
+
+        return res.status(500).json({
+            message: 'Erro ao carregar estatísticas admin.',
+        })
+    }
+})
+
 app.get('/admin/logs', authMiddleware, requireAdmin, async (req, res) => {
     try {
         const { targetUserId = '', limit = 50 } = req.query

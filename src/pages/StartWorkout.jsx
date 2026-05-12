@@ -22,6 +22,7 @@ import {
   Pause,
   PlayCircle,
   RotateCcw,
+  Dumbbell,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
@@ -55,6 +56,10 @@ import {
 import { getAppSettings } from '../utils/settingsUtils'
 import { generateSmartNotifications } from '../utils/notificationUtils'
 import { getExerciseMedia } from '../utils/exerciseMediaUtils'
+import {
+  getExerciseProgressionSuggestion,
+  getProgressionToneClasses,
+} from '../utils/progressionSuggestionUtils'
 
 function formatTime(seconds) {
   const safeSeconds = Number(seconds) || 0
@@ -302,6 +307,27 @@ function StartWorkout() {
     }
   }, [sessionExercises])
 
+  const focusExercise = useMemo(() => {
+    return (
+      sessionExercises.find((exercise) =>
+        (exercise.sets || []).some((set) => !set.completed && set.type !== 'warmup')
+      ) ||
+      sessionExercises.find((exercise) => !exercise.skipped) ||
+      sessionExercises[0] ||
+      null
+    )
+  }, [sessionExercises])
+
+  const focusExerciseProgress = useMemo(() => {
+    if (!focusExercise) return 0
+
+    const sets = (focusExercise.sets || []).filter((set) => set.type !== 'warmup')
+    if (!sets.length) return 0
+
+    const completed = sets.filter((set) => set.completed).length
+    return Math.min(100, Math.round((completed / sets.length) * 100))
+  }, [focusExercise])
+
   const exercisePerformanceMap = useMemo(() => {
     if (!user || sessionExercises.length === 0) return new Map()
 
@@ -315,8 +341,15 @@ function StartWorkout() {
       const bestVolumePerformance = getBestVolumePerformance(name, user)
       const prTypes = getSessionPRTypes(name, sessionExercise.sets, user)
 
+      const progressionSuggestion = getExerciseProgressionSuggestion({
+        lastPerformance,
+        currentSets: sessionExercise.sets,
+      })
+
       map.set(sessionExercise.id, {
         lastSet: getFirstCompletedSet(lastPerformance),
+        lastPerformance,
+        progressionSuggestion,
         bestWeightPerformance,
         bestVolumePerformance,
         weightPRSetId: prTypes.weightPRSetId,
@@ -592,7 +625,7 @@ function StartWorkout() {
   return (
     <>
       <div className="sticky top-0 z-30 -mx-4 mb-5 border-b border-[var(--ff-border)] bg-[var(--ff-bg)]/92 px-4 pb-3 pt-2 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 xl:static xl:mx-0 xl:border-0 xl:bg-transparent xl:p-0 xl:backdrop-blur-none">
-        <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.22)] sm:p-5">
+        <div className="ff-active-workout-hero rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.22)] sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               <p className="text-xs font-bold uppercase tracking-wide text-[var(--ff-accent-text)]">
@@ -641,6 +674,43 @@ function StartWorkout() {
             </div>
           </div>
 
+          {focusExercise && (
+            <div className="mt-4 rounded-3xl border border-[var(--ff-accent-border)]/25 bg-[var(--ff-accent-soft)]/10 p-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">
+                    <Dumbbell size={19} />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[var(--ff-accent-text)]">
+                      Próximo foco
+                    </p>
+                    <p className="truncate text-sm font-black text-[var(--ff-text)]">
+                      {getExerciseName(focusExercise)}
+                    </p>
+                    <p className="truncate text-xs text-[var(--ff-muted)]">
+                      {getExerciseSubtitle(focusExercise)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 sm:min-w-[210px]">
+                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--ff-surface-3)]">
+                    <div
+                      className="h-full rounded-full bg-[var(--ff-accent)] transition-all"
+                      style={{ width: `${focusExerciseProgress}%` }}
+                    />
+                  </div>
+
+                  <span className="text-xs font-black text-[var(--ff-accent-text)]">
+                    {focusExerciseProgress}%
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--ff-surface-3)]">
             <div
               className="h-full rounded-full bg-[var(--ff-accent)] transition-all"
@@ -653,9 +723,11 @@ function StartWorkout() {
       </div>
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-4 xl:gap-6">
-        <div className="space-y-4 pb-40 xl:col-span-3 xl:pb-6">
+        <div className="ff-workout-input-polish space-y-4 pb-40 xl:col-span-3 xl:pb-6">
           {sessionExercises.map((sessionExercise, exerciseIndex) => {
             const performance = exercisePerformanceMap.get(sessionExercise.id) || {}
+            const progressionSuggestion = performance.progressionSuggestion
+            const progressionTone = getProgressionToneClasses(progressionSuggestion?.tone)
             const isCollapsed = collapsedExerciseIds.includes(sessionExercise.id)
 
             const exerciseCompletedSets = sessionExercise.sets.filter(
@@ -673,7 +745,7 @@ function StartWorkout() {
             return (
               <Card
                 key={sessionExercise.id}
-                className={`overflow-hidden ${sessionExercise.skipped ? 'opacity-50' : ''}`}
+                className={`ff-active-exercise-card overflow-hidden ${focusExercise?.id === sessionExercise.id ? 'ring-1 ring-[var(--ff-accent-border)] shadow-[0_0_28px_var(--ff-accent-shadow)]' : ''} ${sessionExercise.skipped ? 'opacity-50' : ''}`}
               >
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="min-w-0 flex-1">
@@ -710,6 +782,12 @@ function StartWorkout() {
                             <p className="mt-1 text-sm text-[var(--ff-muted)]">
                               {getExerciseSubtitle(sessionExercise)}
                             </p>
+
+                            {focusExercise?.id === sessionExercise.id && (
+                              <span className="mt-2 inline-flex rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--ff-accent-text)]">
+                                Exercício atual
+                              </span>
+                            )}
                           </div>
 
                           <ChevronDown
@@ -766,6 +844,58 @@ function StartWorkout() {
                         </p>
                       </div>
                     </div>
+
+                    {progressionSuggestion && (
+                      <div className={`ff-progression-glow mt-3 rounded-3xl border p-4 ${progressionTone.card}`}>
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="flex items-start gap-3">
+                            <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border ${progressionTone.icon}`}>
+                              <TrendingUp size={19} />
+                            </div>
+
+                            <div>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <p className="text-sm font-black">
+                                  {progressionSuggestion.title}
+                                </p>
+
+                                <span className={`rounded-full border px-2.5 py-1 text-[11px] font-black ${progressionTone.badge}`}>
+                                  {progressionSuggestion.badge}
+                                </span>
+                              </div>
+
+                              <p className="mt-1 text-sm leading-relaxed opacity-85">
+                                {progressionSuggestion.description}
+                              </p>
+
+                              <p className="mt-2 text-xs font-black uppercase tracking-[0.16em] opacity-70">
+                                {progressionSuggestion.nextTarget}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 sm:min-w-[190px]">
+                            <div className="rounded-2xl border border-white/10 bg-black/10 p-2 text-center">
+                              <p className="text-[10px] font-black uppercase opacity-60">
+                                Anterior
+                              </p>
+                              <p className="text-sm font-black">
+                                {progressionSuggestion.lastVolume || 0} kg
+                              </p>
+                            </div>
+
+                            <div className="rounded-2xl border border-white/10 bg-black/10 p-2 text-center">
+                              <p className="text-[10px] font-black uppercase opacity-60">
+                                Atual
+                              </p>
+                              <p className="text-sm font-black">
+                                {progressionSuggestion.currentVolume || 0} kg
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:flex lg:justify-end">
@@ -1142,7 +1272,7 @@ function StartWorkout() {
       </div>
 
       {restTimer && (
-        <div className="fixed bottom-[88px] left-3 right-3 z-50 rounded-3xl border border-[var(--ff-accent-border)]/30 bg-[#121212]/95 p-3 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)] backdrop-blur-xl sm:left-1/2 sm:right-auto sm:w-[calc(100%-32px)] sm:max-w-md sm:-translate-x-1/2 sm:p-4 xl:bottom-4">
+        <div className="ff-rest-timer-card fixed bottom-[88px] left-3 right-3 z-50 rounded-3xl border border-[var(--ff-accent-border)]/30 bg-[#121212]/95 p-3 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)] backdrop-blur-xl sm:left-1/2 sm:right-auto sm:w-[calc(100%-32px)] sm:max-w-md sm:-translate-x-1/2 sm:p-4 xl:bottom-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)] sm:h-12 sm:w-12">

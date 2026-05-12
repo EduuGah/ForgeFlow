@@ -2,9 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   AlertTriangle,
   Ban,
+  Activity,
+  BarChart3,
   CheckCircle2,
   Clipboard,
   ClipboardCheck,
+  Dumbbell,
   History,
   KeyRound,
   Loader2,
@@ -69,6 +72,7 @@ function getUserId(item) {
 function Admin() {
   const { user } = useAuth()
 
+  const [adminStats, setAdminStats] = useState(null)
   const [users, setUsers] = useState([])
   const [query, setQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
@@ -101,6 +105,15 @@ function Admin() {
       window.setTimeout(() => setCopied(''), 1800)
     } catch {
       showToast('error', 'Não foi possível copiar', 'Copie manualmente.')
+    }
+  }
+
+  async function loadAdminStats() {
+    try {
+      const data = await apiFetch('/admin/stats')
+      setAdminStats(data)
+    } catch (error) {
+      console.error(error)
     }
   }
 
@@ -248,6 +261,7 @@ function Admin() {
       return
     }
 
+    loadAdminStats()
     loadUsers()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin, roleFilter, statusFilter, providerFilter])
@@ -301,6 +315,35 @@ function Admin() {
           </Badge>
         }
       />
+
+
+      <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+        {[
+          ['Usuários', adminStats?.cards?.totalUsers ?? users.length, UsersRound],
+          ['Admins', adminStats?.cards?.totalAdmins ?? '—', ShieldCheck],
+          ['Bloqueados', adminStats?.cards?.blockedUsers ?? '—', Ban],
+          ['Treinos ativos', adminStats?.cards?.activeWorkoutSessions ?? '—', Activity],
+          ['Treinos salvos', adminStats?.cards?.totalWorkouts ?? '—', Dumbbell],
+          ['Históricos', adminStats?.cards?.totalHistory ?? '—', BarChart3],
+        ].map(([label, value, Icon]) => (
+          <Card key={label} className="p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate text-xs font-black uppercase tracking-[0.14em] text-[var(--ff-muted)]">
+                  {label}
+                </p>
+                <p className="mt-2 text-2xl font-black text-[var(--ff-text)]">
+                  {value}
+                </p>
+              </div>
+
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">
+                <Icon size={19} />
+              </div>
+            </div>
+          </Card>
+        ))}
+      </section>
 
       <section className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(390px,0.85fr)_minmax(0,1.55fr)]">
         <Card className="p-4">
