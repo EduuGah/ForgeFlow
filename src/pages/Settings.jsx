@@ -242,6 +242,47 @@ function Settings() {
     return accentColors[settings.accentColor] || accentColors.purple || Object.values(accentColors)[0]
   }, [settings.accentColor])
 
+  const colorGroups = useMemo(
+    () => [
+      {
+        title: 'Recomendadas',
+        keys: ['purple', 'blue', 'cyan', 'green', 'orange', 'rose'],
+      },
+      {
+        title: 'Frias',
+        keys: ['indigo', 'sky', 'cyan', 'teal', 'emerald'],
+      },
+      {
+        title: 'Quentes',
+        keys: ['yellow', 'amber', 'orange', 'red', 'crimson', 'rose', 'pink', 'fuchsia'],
+      },
+      {
+        title: 'Neutras',
+        keys: ['slate', 'zinc'],
+      },
+    ],
+    []
+  )
+
+  const visibleAccentColors = useMemo(() => {
+    const search = colorSearch.trim().toLowerCase()
+
+    if (search) {
+      return [
+        {
+          title: 'Resultado da busca',
+          keys: Object.entries(accentColors)
+            .filter(([key, color]) =>
+              `${key} ${color.name}`.toLowerCase().includes(search)
+            )
+            .map(([key]) => key),
+        },
+      ]
+    }
+
+    return colorGroups
+  }, [colorGroups, colorSearch])
+
   const syncBadgeText = useMemo(() => {
     if (syncStatus === 'loading') return 'Carregando'
     if (syncStatus === 'syncing') return 'Sincronizando'
