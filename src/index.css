@@ -1691,3 +1691,57 @@ main {
     font-size: 27px !important;
   }
 }
+
+
+/* =========================================================
+   ForgeFlow — Etapa 27.1-27.5 melhorias funcionais
+   ========================================================= */
+
+.ff-27-card {
+  border: 1px solid var(--ff-border);
+  background: linear-gradient(180deg, var(--ff-card), var(--ff-surface-2));
+  border-radius: 1.5rem;
+}
+
+.ff-27-action-button {
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.ff-27-action-button:active {
+  transform: scale(0.985);
+}
+
+/* Timer opcional */
+.ff-page-start-workout [aria-label='Iniciar descanso'] {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ff-accent) 12%, transparent);
+}
+
+.ff-page-start-workout [aria-label='Iniciar descanso']:active {
+  transform: scale(0.96);
+}
+
+/* Templates e rankings */
+.ff-page-workouts [class*='Templates avançados'],
+.ff-page-dashboard [class*='Início personalizado'] {
+  isolation: isolate;
+}
+
+@media (max-width: 640px) {
+  .ff-page-start-workout [title='Iniciar descanso manual'] {
+    grid-column: span 2 / span 2;
+  }
+
+  .ff-page-start-workout [aria-label='Iniciar descanso'] {
+    min-width: 3rem;
+  }
+
+  .ff-page-workouts [class*='grid-cols-3'],
+  .ff-page-dashboard [class*='grid-cols-3'],
+  .ff-page-progress [class*='grid-cols-3'] {
+    min-width: 0;
+  }
+}

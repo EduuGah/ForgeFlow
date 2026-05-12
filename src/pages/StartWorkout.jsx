@@ -1,8 +1,28 @@
 import { useEffect, useMemo, useState, useDeferredValue } from 'react'
-import { Timer, X, ChevronDown, StickyNote, Trophy, CheckCircle2, Repeat2, SkipForward, Trash2, ImageIcon, Weight, Hash, Plus, BarChart3, ClipboardCheck, Minus,
+import {
+  Timer,
+  X,
+  ChevronDown,
+  StickyNote,
+  Trophy,
+  CheckCircle2,
+  Repeat2,
+  SkipForward,
+  Trash2,
+  ImageIcon,
+  Weight,
+  Hash,
+  Plus,
+  BarChart3,
+  ClipboardCheck,
+  Minus,
   Award,
   Zap,
-  TrendingUp} from 'lucide-react'
+  TrendingUp,
+  Pause,
+  PlayCircle,
+  RotateCcw,
+} from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 import PageHeader from '../components/ui/PageHeader'
@@ -243,6 +263,7 @@ function StartWorkout() {
 
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false)
   const [restTimer, setRestTimer] = useState(null)
+  const [manualRestSeconds, setManualRestSeconds] = useState(90)
   const [collapsedExerciseIds, setCollapsedExerciseIds] = useState([])
   const [savingWorkout, setSavingWorkout] = useState(false)
   const [confirmModal, setConfirmModal] = useState(null)
@@ -410,6 +431,44 @@ function StartWorkout() {
     }
   }
 
+  function startManualRestTimer(seconds = manualRestSeconds, exerciseName = 'Descanso manual') {
+    const safeSeconds = Math.max(15, Number(seconds) || 90)
+
+    setManualRestSeconds(safeSeconds)
+    setRestTimer({
+      exerciseName,
+      secondsLeft: safeSeconds,
+      totalSeconds: safeSeconds,
+      isPaused: false,
+      source: 'manual',
+    })
+  }
+
+  function toggleRestTimerPaused() {
+    setRestTimer((current) => {
+      if (!current) return current
+      if (current.secondsLeft <= 0) return current
+
+      return {
+        ...current,
+        isPaused: !current.isPaused,
+      }
+    })
+  }
+
+  function restartRestTimer() {
+    setRestTimer((current) => {
+      if (!current) return current
+
+      return {
+        ...current,
+        secondsLeft: current.totalSeconds || manualRestSeconds || 90,
+        isPaused: false,
+      }
+    })
+  }
+
+
   function toggleExerciseCollapse(exerciseId) {
     setCollapsedExerciseIds((current) =>
       current.includes(exerciseId)
@@ -450,6 +509,7 @@ function StartWorkout() {
 
   useEffect(() => {
     if (!restTimer) return
+    if (restTimer.isPaused) return undefined
     if (restTimer.secondsLeft <= 0) return undefined
 
     const interval = window.setInterval(() => {
@@ -553,6 +613,16 @@ function StartWorkout() {
                 <Timer size={18} />
                 {formatTime(elapsedSeconds)}
               </div>
+
+              <button
+                type="button"
+                onClick={() => startManualRestTimer()}
+                className="flex h-12 items-center justify-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-sm font-black text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)] sm:h-11"
+                title="Iniciar descanso manual"
+              >
+                <Timer size={17} />
+                Descanso
+              </button>
 
               <button
                 type="button"
@@ -944,6 +1014,41 @@ function StartWorkout() {
               />
             </div>
 
+            <div className="mt-5 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.14em] text-[var(--ff-muted)]">
+                    Descanso opcional
+                  </p>
+                  <p className="mt-1 text-sm font-bold text-[var(--ff-text)]">
+                    Inicie só quando quiser
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => startManualRestTimer()}
+                  className="flex h-10 items-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-3 text-xs font-black text-white shadow-[0_0_16px_var(--ff-accent-shadow)]"
+                >
+                  <Timer size={15} />
+                  Iniciar
+                </button>
+              </div>
+
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {[60, 90, 120].map((seconds) => (
+                  <button
+                    key={seconds}
+                    type="button"
+                    onClick={() => startManualRestTimer(seconds)}
+                    className="h-9 rounded-xl border border-[var(--ff-border)] bg-[var(--ff-card)] text-xs font-black text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)]"
+                  >
+                    {seconds === 90 ? '1m30' : `${Math.round(seconds / 60)}min`}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="mt-5 grid grid-cols-2 gap-3">
               <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
                 <p className="text-xs text-[var(--ff-muted)]">Exercícios</p>
@@ -1018,6 +1123,15 @@ function StartWorkout() {
 
           <button
             type="button"
+            onClick={() => startManualRestTimer()}
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-accent-text)]"
+            aria-label="Iniciar descanso"
+          >
+            <Timer size={19} />
+          </button>
+
+          <button
+            type="button"
             onClick={() => setIsFinishModalOpen(true)}
             disabled={savingWorkout}
             className="h-12 shrink-0 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-black text-white shadow-[0_0_24px_var(--ff-accent-shadow)] transition active:scale-95 disabled:opacity-60"
@@ -1053,8 +1167,27 @@ function StartWorkout() {
 
               <button
                 type="button"
+                onClick={toggleRestTimerPaused}
+                className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-900 text-zinc-400 transition hover:bg-[var(--ff-surface-3)] hover:text-[var(--ff-text)]"
+                aria-label={restTimer.isPaused ? 'Retomar descanso' : 'Pausar descanso'}
+              >
+                {restTimer.isPaused ? <PlayCircle size={18} /> : <Pause size={18} />}
+              </button>
+
+              <button
+                type="button"
+                onClick={restartRestTimer}
+                className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-900 text-zinc-400 transition hover:bg-[var(--ff-surface-3)] hover:text-[var(--ff-text)]"
+                aria-label="Reiniciar descanso"
+              >
+                <RotateCcw size={17} />
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setRestTimer(null)}
                 className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-900 text-zinc-400 transition hover:bg-[var(--ff-surface-3)] hover:text-[var(--ff-text)]"
+                aria-label="Fechar descanso"
               >
                 <X size={18} />
               </button>
@@ -1074,6 +1207,12 @@ function StartWorkout() {
               }}
             />
           </div>
+
+          {restTimer.isPaused && restTimer.secondsLeft > 0 && (
+            <p className="mt-3 text-center text-sm font-bold text-[var(--ff-muted)]">
+              Descanso pausado
+            </p>
+          )}
 
           {restTimer.secondsLeft === 0 && (
             <p className="mt-3 text-center text-sm font-bold text-emerald-400">

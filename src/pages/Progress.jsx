@@ -966,6 +966,48 @@ function Progress() {
         }
       />
 
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <Link
+          to="/exercise-progress"
+          className="rounded-3xl border border-yellow-400/25 bg-yellow-500/10 p-4 text-yellow-100 transition hover:border-yellow-400/45"
+        >
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-yellow-200/80">
+            Ranking de PRs
+          </p>
+          <h2 className="mt-2 text-xl font-black">Ver evolução por exercício</h2>
+          <p className="mt-2 text-sm text-yellow-100/70">
+            Carga, volume e histórico de séries em uma tela dedicada.
+          </p>
+        </Link>
+
+        <Link
+          to="/history"
+          className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4 transition hover:border-[var(--ff-accent-border)]"
+        >
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--ff-accent-text)]">
+            Histórico
+          </p>
+          <h2 className="mt-2 text-xl font-black text-[var(--ff-text)]">Revisar treinos</h2>
+          <p className="mt-2 text-sm text-[var(--ff-muted)]">
+            Veja sessões antigas e detalhes por data.
+          </p>
+        </Link>
+
+        <Link
+          to="/progress-photos"
+          className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4 transition hover:border-[var(--ff-accent-border)]"
+        >
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--ff-accent-text)]">
+            Fotos
+          </p>
+          <h2 className="mt-2 text-xl font-black text-[var(--ff-text)]">Comparar evolução</h2>
+          <p className="mt-2 text-sm text-[var(--ff-muted)]">
+            Acompanhe mudanças visuais ao longo do tempo.
+          </p>
+        </Link>
+      </section>
+
+
       {!progressData ? (
         <Card>
           <EmptyState

@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Activity, BarChart3, CalendarDays, Search, TrendingUp, Weight } from 'lucide-react'
+import {
+  Activity,
+  BarChart3,
+  CalendarDays,
+  Search,
+  TrendingUp,
+  Weight,
+  Trophy,
+  Medal,
+} from 'lucide-react'
 import {
   CartesianGrid,
   Line,
@@ -165,6 +174,20 @@ function ExerciseProgress() {
     return Array.from(map.values()).sort((a, b) => a.dateKey.localeCompare(b.dateKey))
   }, [selectedSets])
 
+  const prRanking = useMemo(() => {
+    return exerciseOptions
+      .slice()
+      .sort((a, b) => b.maxWeight - a.maxWeight)
+      .slice(0, 5)
+  }, [exerciseOptions])
+
+  const volumeRanking = useMemo(() => {
+    return exerciseOptions
+      .slice()
+      .sort((a, b) => b.maxVolume - a.maxVolume)
+      .slice(0, 5)
+  }, [exerciseOptions])
+
   const selectedExercise = exerciseOptions.find((exercise) => exercise.normalizedName === selectedExerciseName)
 
   return (
@@ -174,6 +197,73 @@ function ExerciseProgress() {
         description="Escolha um exercício e veja séries registradas, evolução de carga e volume."
         action={<Badge variant={source === 'database' ? 'purple' : 'default'}>{loading ? 'Carregando' : source === 'database' ? 'Sincronizado' : 'Local'}</Badge>}
       />
+
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-yellow-400/30 bg-yellow-500/10 text-yellow-200">
+              <Trophy size={20} />
+            </div>
+            <div>
+              <h2 className="text-base font-black text-[var(--ff-text)]">Ranking de carga</h2>
+              <p className="text-xs text-[var(--ff-muted)]">Maiores pesos registrados por exercício</p>
+            </div>
+          </div>
+
+          <div className="mt-4 space-y-2">
+            {prRanking.length > 0 ? prRanking.map((exercise, index) => (
+              <button
+                key={exercise.normalizedName}
+                type="button"
+                onClick={() => setSelectedExerciseName(exercise.normalizedName)}
+                className="flex w-full items-center justify-between gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 py-2 text-left"
+              >
+                <span className="min-w-0 truncate text-sm font-black text-[var(--ff-text)]">
+                  #{index + 1} {exercise.name}
+                </span>
+                <span className="shrink-0 text-sm font-black text-yellow-200">
+                  {formatWeight(exercise.maxWeight)}
+                </span>
+              </button>
+            )) : (
+              <p className="text-sm text-[var(--ff-muted)]">Registre séries para montar o ranking.</p>
+            )}
+          </div>
+        </Card>
+
+        <Card className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-sky-400/30 bg-sky-500/10 text-sky-200">
+              <Medal size={20} />
+            </div>
+            <div>
+              <h2 className="text-base font-black text-[var(--ff-text)]">Ranking de volume</h2>
+              <p className="text-xs text-[var(--ff-muted)]">Melhores séries por peso × reps</p>
+            </div>
+          </div>
+
+          <div className="mt-4 space-y-2">
+            {volumeRanking.length > 0 ? volumeRanking.map((exercise, index) => (
+              <button
+                key={exercise.normalizedName}
+                type="button"
+                onClick={() => setSelectedExerciseName(exercise.normalizedName)}
+                className="flex w-full items-center justify-between gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 py-2 text-left"
+              >
+                <span className="min-w-0 truncate text-sm font-black text-[var(--ff-text)]">
+                  #{index + 1} {exercise.name}
+                </span>
+                <span className="shrink-0 text-sm font-black text-sky-200">
+                  {formatVolume(exercise.maxVolume)}
+                </span>
+              </button>
+            )) : (
+              <p className="text-sm text-[var(--ff-muted)]">Registre séries para montar o ranking.</p>
+            )}
+          </div>
+        </Card>
+      </section>
+
 
       <section className="grid grid-cols-1 gap-5 xl:grid-cols-[340px_minmax(0,1fr)]">
         <aside className="space-y-5">
