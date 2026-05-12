@@ -76,15 +76,6 @@ function App() {
               />
 
               <Route
-                path="/forgot-password"
-                element={
-                  <PublicRoute>
-                    <ForgotPassword />
-                  </PublicRoute>
-                }
-              />
-
-              <Route
                 path="/reset-password/:token"
                 element={
                   <PublicRoute>
