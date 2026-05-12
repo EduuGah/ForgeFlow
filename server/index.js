@@ -52,6 +52,12 @@ const {
     CLOUDINARY_CLOUD_NAME,
     CLOUDINARY_API_KEY,
     CLOUDINARY_API_SECRET,
+    SMTP_HOST,
+    SMTP_PORT = 587,
+    SMTP_USER,
+    SMTP_PASS,
+    SMTP_FROM = 'ForgeFlow <no-reply@forgeflow.app>',
+    EMAIL_DEBUG = 'false',
 } = process.env
 
 function requiredEnv(name, value) {
@@ -1362,13 +1368,138 @@ function sanitizeUser(user) {
     }
 }
 
-async function sendPasswordResetEmail({ email, resetUrl }) {
-    // Integre aqui um provedor real depois, como Nodemailer, Resend ou SendGrid.
-    // Enquanto não houver SMTP configurado, o link aparece no log do Render.
-    console.log(`[ForgeFlow] Password reset URL for ${email}: ${resetUrl}`)
+function getSafeEmailError(error) {
+    return {
+        name: error?.name || 'Error',
+        message: error?.message || 'Erro desconhecido ao enviar e-mail.',
+        code: error?.code || '',
+        command: error?.command || '',
+        responseCode: error?.responseCode || '',
+        response: error?.response || '',
+    }
 }
 
-async function requireAdmin(req, res, next) {
+function isSmtpConfigured() {
+    return Boolean(SMTP_HOST && SMTP_USER && SMTP_PASS)
+}
+
+async function createSmtpTransporter() {
+    const nodemailer = await import('nodemailer')
+
+    return nodemailer.default.createTransport({
+        host: SMTP_HOST,
+        port: Number(SMTP_PORT) || 587,
+        secure: Number(SMTP_PORT) === 465,
+        auth: {
+            user: SMTP_USER,
+            pass: SMTP_PASS,
+        },
+    })
+}
+
+async function sendEmail({ to, subject, text, html }) {
+    const debugInfo = {
+        smtpConfigured: isSmtpConfigured(),
+        host: SMTP_HOST || '',
+        port: Number(SMTP_PORT) || 587,
+        userConfigured: Boolean(SMTP_USER),
+        passConfigured: Boolean(SMTP_PASS),
+        from: SMTP_FROM,
+        to,
+        subject,
+    }
+
+    if (!isSmtpConfigured()) {
+        console.warn('[ForgeFlow][EMAIL] SMTP não configurado:', debugInfo)
+
+        return {
+            sent: false,
+            reason: 'smtp_not_configured',
+            debugInfo,
+        }
+    }
+
+    try {
+        console.log('[ForgeFlow][EMAIL] Tentando enviar e-mail:', debugInfo)
+
+        const transporter = await createSmtpTransporter()
+
+        try {
+            await transporter.verify()
+            console.log('[ForgeFlow][EMAIL] SMTP verify OK.')
+        } catch (verifyError) {
+            const safeError = getSafeEmailError(verifyError)
+            console.error('[ForgeFlow][EMAIL] SMTP verify falhou:', safeError)
+
+            return {
+                sent: false,
+                reason: 'smtp_verify_failed',
+                error: safeError,
+                debugInfo,
+            }
+        }
+
+        const result = await transporter.sendMail({
+            from: SMTP_FROM,
+            to,
+            subject,
+            text,
+            html,
+        })
+
+        console.log('[ForgeFlow][EMAIL] E-mail enviado com sucesso:', {
+            messageId: result?.messageId,
+            accepted: result?.accepted,
+            rejected: result?.rejected,
+            response: result?.response,
+        })
+
+        return {
+            sent: true,
+            messageId: result?.messageId || '',
+            accepted: result?.accepted || [],
+            rejected: result?.rejected || [],
+            response: result?.response || '',
+        }
+    } catch (error) {
+        const safeError = getSafeEmailError(error)
+
+        console.error('[ForgeFlow][EMAIL] Erro ao enviar e-mail:', safeError)
+
+        return {
+            sent: false,
+            reason: 'send_failed',
+            error: safeError,
+            debugInfo,
+        }
+    }
+}
+
+async function sendPasswordResetEmail({ email, resetUrl }) {
+    return sendEmail({
+        to: email,
+        subject: 'Redefinir senha do ForgeFlow',
+        text: `Use este link para redefinir sua senha: ${resetUrl}`,
+        html: `
+            <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111827">
+                <h2>Redefinir senha do ForgeFlow</h2>
+                <p>Recebemos uma solicitação para redefinir sua senha.</p>
+                <p>
+                    <a
+                        href="${resetUrl}"
+                        style="display:inline-block;padding:12px 18px;background:#8b5cf6;color:#fff;border-radius:12px;text-decoration:none;font-weight:bold"
+                    >
+                        Redefinir senha
+                    </a>
+                </p>
+                <p>Se você não solicitou isso, ignore este e-mail.</p>
+                <p style="font-size:12px;color:#6b7280">Este link expira em ${RESET_TOKEN_TTL_MINUTES} minutos.</p>
+            </div>
+        `,
+    })
+}
+
+async function requireAdminasync(req, res, next) {
     try {
         let role = req.user?.role
 
@@ -1421,14 +1552,31 @@ app.post('/auth/forgot-password', async (req, res) => {
 
         const resetUrl = buildFrontendUrl(`/reset-password/${rawToken}`)
 
-        await sendPasswordResetEmail({
+        const emailResult = await sendPasswordResetEmail({
             email: user.email,
             resetUrl,
         })
 
+        if (!emailResult?.sent) {
+            console.error('[ForgeFlow][PASSWORD_RESET] Falha ao enviar e-mail de recuperação:', {
+                email: user.email,
+                reason: emailResult?.reason,
+                error: emailResult?.error,
+                debugInfo: emailResult?.debugInfo,
+            })
+        }
+
         return res.json({
             ...genericResponse,
-            ...(process.env.NODE_ENV !== 'production' ? { resetUrl } : {}),
+            emailSent: Boolean(emailResult?.sent),
+            emailReason: emailResult?.sent ? 'sent' : emailResult?.reason || 'unknown',
+            ...(EMAIL_DEBUG === 'true' && !emailResult?.sent
+                ? {
+                    emailError: emailResult?.error || null,
+                    emailDebug: emailResult?.debugInfo || null,
+                }
+                : {}),
+            ...(process.env.NODE_ENV !== 'production' || EMAIL_DEBUG === 'true' ? { resetUrl } : {}),
         })
     } catch (error) {
         console.error(error)
@@ -1478,6 +1626,52 @@ app.post('/auth/reset-password/:token', async (req, res) => {
 
         return res.status(500).json({
             message: 'Erro ao redefinir senha.',
+        })
+    }
+})
+
+app.post('/admin/test-email', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const to = String(req.body?.to || req.user?.email || '').trim().toLowerCase()
+
+        if (!to) {
+            return res.status(400).json({
+                message: 'Informe o e-mail de destino em "to".',
+            })
+        }
+
+        const result = await sendEmail({
+            to,
+            subject: 'Teste de e-mail do ForgeFlow',
+            text: 'Se você recebeu este e-mail, o SMTP do ForgeFlow está funcionando.',
+            html: `
+                <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111827">
+                    <h2>Teste de e-mail do ForgeFlow</h2>
+                    <p>Se você recebeu este e-mail, o SMTP está funcionando corretamente.</p>
+                </div>
+            `,
+        })
+
+        if (!result.sent) {
+            return res.status(500).json({
+                message: 'Falha ao enviar e-mail de teste.',
+                reason: result.reason,
+                error: result.error || null,
+                debugInfo: result.debugInfo || null,
+            })
+        }
+
+        return res.json({
+            message: 'E-mail de teste enviado com sucesso.',
+            result,
+        })
+    } catch (error) {
+        const safeError = getSafeEmailError(error)
+        console.error('[ForgeFlow][EMAIL_TEST] Erro inesperado:', safeError)
+
+        return res.status(500).json({
+            message: 'Erro inesperado ao testar e-mail.',
+            error: safeError,
         })
     }
 })
