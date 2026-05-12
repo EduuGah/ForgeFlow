@@ -15,6 +15,7 @@ O projeto começou como uma forma de praticar React, JavaScript e Tailwind CSS, 
 - [Tecnologias utilizadas](#tecnologias-utilizadas)
 - [Funcionalidades](#funcionalidades)
 - [Backend](#backend)
+- [Administração](#administração)
 - [Como rodar localmente](#como-rodar-localmente)
 - [Rodando a API](#rodando-a-api)
 - [Estrutura geral](#estrutura-geral)
@@ -76,6 +77,10 @@ O projeto já possui uma estrutura funcional com:
 - cache separado por conta;
 - ajustes de performance e carregamento inicial;
 - melhorias mobile-first em telas principais;
+- PWA com instalação pelo navegador;
+- redesign visual inspirado em apps fitness modernos;
+- painel administrativo para suporte;
+- reset manual de senha pelo admin;
 - deploy do frontend na Vercel;
 - deploy da API no Render.
 
@@ -94,6 +99,7 @@ O projeto já possui uma estrutura funcional com:
 - Lucide React
 - LocalStorage
 - Context API
+- PWA
 
 ### Backend
 
@@ -159,6 +165,7 @@ O ForgeFlow possui autenticação com:
 - cadastro de usuário;
 - login com Google;
 - criação de senha para contas criadas via Google;
+- redefinição manual de senha pelo painel admin;
 - proteção de rotas no frontend;
 - proteção de rotas no backend;
 - autenticação por token;
@@ -243,7 +250,8 @@ O sistema possui:
 - persistência do treino ativo;
 - barra fixa inferior no celular;
 - campos otimizados para toque;
-- timer de descanso;
+- timer de descanso opcional;
+- pausa, retomada e reinício do descanso;
 - toast de confirmação ao concluir ações.
 
 Essa é uma das partes centrais do projeto, porque concentra a lógica real de progressão.
@@ -514,7 +522,9 @@ Principais responsabilidades:
 - notificações;
 - estatísticas;
 - exportação/importação de dados;
-- integração com Cloudinary.
+- integração com Cloudinary;
+- painel administrativo;
+- ações de suporte, como reset manual de senha e limpeza de treino ativo travado.
 
 Exemplo de variáveis usadas no servidor:
 
@@ -533,6 +543,50 @@ CLOUDINARY_API_SECRET=sua_api_secret
 ```
 
 Em produção, essas URLs são substituídas pelas URLs reais da Vercel e Render.
+
+---
+
+## Administração
+
+O ForgeFlow possui uma área administrativa simples para suporte e manutenção.
+
+A rota principal é:
+
+```txt
+/admin
+```
+
+Ela fica disponível apenas para usuários com:
+
+```js
+role: "admin"
+```
+
+Atualmente o painel admin permite:
+
+- listar usuários cadastrados;
+- buscar por nome ou e-mail;
+- visualizar dados básicos da conta;
+- verificar quantidade de treinos e histórico;
+- verificar se existe treino ativo;
+- limpar treino ativo travado;
+- redefinir manualmente a senha temporária de um usuário.
+
+A redefinição feita pelo admin não mostra a senha antiga e não recupera senha existente. Ela apenas substitui o hash salvo no banco por uma nova senha definida pelo administrador.
+
+Para tornar uma conta admin no MongoDB Atlas:
+
+```js
+db.users.updateOne(
+  { email: "edugah3@gmail.com" },
+  { $set: { role: "admin" } }
+)
+```
+
+Depois disso, é necessário sair e entrar novamente no app para gerar um novo token com a permissão atualizada.
+
+No momento, as opções de recuperação por e-mail e verificação por código estão desativadas. O projeto chegou a testar envio por SMTP e por Resend API, mas a versão atual mantém apenas o reset manual pelo admin para evitar dependência de domínio verificado ou serviço externo de e-mail.
+
 
 ---
 
@@ -602,8 +656,9 @@ GOOGLE_CLIENT_SECRET=sua_client_secret
 CLOUDINARY_CLOUD_NAME=seu_cloud_name
 CLOUDINARY_API_KEY=sua_api_key
 CLOUDINARY_API_SECRET=seu_api_secret
-```
 
+
+```
 ### 4. Rodar em desenvolvimento
 
 ```bash
@@ -699,7 +754,8 @@ Hoje a aplicação já salva no backend dados como:
 - fotos de evolução;
 - metas;
 - notificações;
-- configurações.
+- configurações;
+- permissões administrativas básicas no usuário.
 
 O LocalStorage continua sendo útil para:
 
@@ -722,6 +778,8 @@ Alguns cuidados já foram considerados no projeto:
 - variáveis sensíveis fora do GitHub;
 - uso de `.env`;
 - autenticação por token;
+- senhas armazenadas com hash;
+- permissões por `role`;
 - rotas protegidas por usuário;
 - validação de usuário nas operações;
 - upload de imagem via Cloudinary;
@@ -782,18 +840,119 @@ Principais melhorias:
 - perfil mais compacto;
 - configurações com melhor aproveitamento de espaço.
 
+
+### Etapa 22 — PWA e instalação
+
+A Etapa 22 adicionou suporte progressivo para experiência de aplicativo instalável.
+
+Principais melhorias:
+
+- manifesto PWA;
+- service worker;
+- botão de instalação;
+- ajustes para instalação no Chrome/Android;
+- instruções visuais de instalação;
+- tratamento para quando o navegador não libera automaticamente o prompt.
+
+### Etapa 23 — Polimento do treino ativo
+
+A Etapa 23 focou em estabilidade e usabilidade durante o treino.
+
+Principais melhorias:
+
+- correções no treino ativo;
+- sincronização entre dispositivos;
+- ajustes nos inputs de peso e repetições;
+- badges de PR mais visíveis;
+- melhorias mobile no registro de séries;
+- correção de finalização de treino ativo entre PC e celular.
+
+### Etapa 24 — Polimento mobile
+
+A Etapa 24 focou em ajustes visuais e responsivos em várias páginas.
+
+Principais melhorias:
+
+- refinamento do dashboard mobile;
+- filtros de exercícios com melhor scroll;
+- histórico mais compacto;
+- progresso com proteção contra overflow;
+- perfil e configurações mais consistentes;
+- ajustes globais de padding, toque e cards.
+
+### Etapa 25 — Redesign visual inspirado no Hevy
+
+A Etapa 25 reformulou a aparência geral do app.
+
+Principais melhorias:
+
+- visual mais limpo e compacto;
+- cards com melhor hierarquia;
+- desktop mais bem aproveitado;
+- mobile com aparência mais próxima de app;
+- rotinas e exercícios mais visuais;
+- treino ativo mais organizado;
+- histórico, progresso, perfil, notificações e configurações mais consistentes;
+- sidebar mantida como menu/drawer, sem ficar fixa permanentemente.
+
+### Etapa 27 — Melhorias funcionais
+
+A Etapa 27 adicionou melhorias úteis ao uso diário.
+
+Principais melhorias:
+
+- timer de descanso opcional;
+- pausa, retomada e reinício do descanso;
+- templates avançados de treino;
+- ranking de carga por exercício;
+- ranking de volume por exercício;
+- atalhos de PR no dashboard;
+- tela inicial mais personalizada.
+
+### Etapa 28 — Painel Admin
+
+A Etapa 28 adicionou uma área administrativa para suporte.
+
+Principais melhorias:
+
+- rota `/admin`;
+- listagem de usuários;
+- busca de usuários;
+- visualização de detalhes básicos;
+- reset manual de senha pelo admin;
+- limpeza de treino ativo travado;
+- proteção por `role: "admin"`.
+
+### Etapa 29 — Ajustes de e-mail e simplificação
+
+A Etapa 29 testou fluxos de recuperação por e-mail e verificação por código, mas a versão atual optou por manter essas opções desativadas temporariamente.
+
+Situação atual:
+
+- recuperação por e-mail removida da interface;
+- verificação por código removida do cadastro;
+- envio SMTP/Resend removido da versão atual;
+- cadastro comum voltou a entrar direto;
+- reset de senha mantido apenas pelo admin;
+- backend sem dependência de `nodemailer` ou `RESEND_API_KEY`.
+
+
 ---
 
 ## Roadmap
 
-Próximas etapas planejadas:
+Próximas melhorias planejadas:
 
-- Etapa 22 — PWA e instalação no celular;
-- Etapa 23 — checklist de segurança e produção;
-- Etapa 24 — preparar Capacitor;
-- Etapa 25 — testes em APK/app Android;
-- Etapa 26 — ajustes nativos mobile;
-- Etapa 27 — preparação para publicação na Play Store.
+- estabilizar a área admin;
+- melhorar o painel de suporte;
+- adicionar logs/auditoria para ações administrativas;
+- retomar recuperação de senha por e-mail quando houver domínio verificado;
+- configurar envio transacional com domínio próprio;
+- revisar PWA e instalação em dispositivos reais;
+- preparar Capacitor para empacotar o app;
+- testar APK/app Android;
+- criar testes automatizados para rotas críticas;
+- refatorar gradualmente o backend em módulos separados.
 
 Melhorias futuras:
 
@@ -807,7 +966,7 @@ Melhorias futuras:
 - comparações avançadas de períodos;
 - integração mais profunda com recursos nativos do celular;
 - testes automatizados;
-- refatoração gradual do backend em módulos separados.
+- publicação futura na Play Store.
 
 ---
 
