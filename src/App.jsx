@@ -28,8 +28,6 @@ const Notifications = lazy(() => import('./pages/Notifications'))
 const Login = lazy(() => import('./pages/Login'))
 const Register = lazy(() => import('./pages/Register'))
 const AuthCallback = lazy(() => import('./pages/AuthCallback'))
-const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
-const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 const Admin = lazy(() => import('./pages/Admin'))
 
 function AppLoadingFallback() {
