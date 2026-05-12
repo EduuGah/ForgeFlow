@@ -28,6 +28,9 @@ const Notifications = lazy(() => import('./pages/Notifications'))
 const Login = lazy(() => import('./pages/Login'))
 const Register = lazy(() => import('./pages/Register'))
 const AuthCallback = lazy(() => import('./pages/AuthCallback'))
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
+const ResetPassword = lazy(() => import('./pages/ResetPassword'))
+const Admin = lazy(() => import('./pages/Admin'))
 
 function AppLoadingFallback() {
   return (
@@ -74,6 +77,24 @@ function App() {
                 }
               />
 
+              <Route
+                path="/forgot-password"
+                element={
+                  <PublicRoute>
+                    <ForgotPassword />
+                  </PublicRoute>
+                }
+              />
+
+              <Route
+                path="/reset-password/:token"
+                element={
+                  <PublicRoute>
+                    <ResetPassword />
+                  </PublicRoute>
+                }
+              />
+
               <Route path="/auth/callback" element={<AuthCallback />} />
 
               <Route
@@ -99,6 +120,7 @@ function App() {
                 <Route path="/progress-photos" element={<ProgressPhotos />} />
                 <Route path="/goals" element={<Goals />} />
                 <Route path="/notifications" element={<Notifications />} />
+                <Route path="/admin" element={<Admin />} />
               </Route>
             </Routes>
           </Suspense>

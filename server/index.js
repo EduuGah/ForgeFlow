@@ -11,6 +11,7 @@ import dns from 'node:dns'
 import bcrypt from 'bcryptjs'
 import multer from 'multer'
 import { v2 as cloudinary } from 'cloudinary'
+import crypto from 'crypto'
 
 dotenv.config()
 
@@ -272,6 +273,22 @@ const userSchema = new mongoose.Schema(
             type: String,
             enum: ['google', 'credentials', 'both'],
             default: 'credentials',
+        },
+
+        role: {
+            type: String,
+            enum: ['user', 'admin'],
+            default: 'user',
+        },
+
+        resetPasswordTokenHash: {
+            type: String,
+            default: '',
+        },
+
+        resetPasswordExpiresAt: {
+            type: Date,
+            default: null,
         },
 
         profile: {
@@ -1158,6 +1175,7 @@ function createToken(user) {
             userId: user._id.toString(),
             email: user.email,
             name: user.name,
+            role: user.role || 'user',
         },
         JWT_SECRET,
         {
@@ -1173,6 +1191,7 @@ function buildUserResponse(user) {
         email: user.email,
         avatarUrl: user.avatarUrl,
         provider: user.provider,
+        role: user.role || 'user',
         hasPassword: Boolean(user.passwordHash),
         profile: user.profile,
         profileCompleted: user.profileCompleted,
@@ -1311,6 +1330,270 @@ function authMiddleware(req, res, next) {
         })
     }
 }
+
+
+// ==============================
+// Admin + recuperação de senha
+// ==============================
+
+const RESET_TOKEN_TTL_MINUTES = 30
+
+function hashResetToken(token) {
+    return crypto.createHash('sha256').update(token).digest('hex')
+}
+
+function buildFrontendUrl(path) {
+    const baseUrl = FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:5173'
+    return `${baseUrl.replace(/\/$/, '')}${path}`
+}
+
+function sanitizeUser(user) {
+    if (!user) return null
+
+    return {
+        id: String(user._id || user.id),
+        name: user.name || '',
+        email: user.email || '',
+        role: user.role || 'user',
+        provider: user.provider || 'credentials',
+        profileCompleted: Boolean(user.profileCompleted),
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+    }
+}
+
+async function sendPasswordResetEmail({ email, resetUrl }) {
+    // Integre aqui um provedor real depois, como Nodemailer, Resend ou SendGrid.
+    // Enquanto não houver SMTP configurado, o link aparece no log do Render.
+    console.log(`[ForgeFlow] Password reset URL for ${email}: ${resetUrl}`)
+}
+
+async function requireAdmin(req, res, next) {
+    try {
+        let role = req.user?.role
+
+        if (!role && req.user?.userId) {
+            const currentUser = await User.findById(req.user.userId).select('role').lean()
+            role = currentUser?.role
+            req.user.role = role || 'user'
+        }
+
+        if (role === 'admin') {
+            return next()
+        }
+
+        return res.status(403).json({
+            message: 'Acesso restrito a administradores.',
+        })
+    } catch (error) {
+        console.error(error)
+
+        return res.status(500).json({
+            message: 'Erro ao validar permissão de admin.',
+        })
+    }
+}
+
+app.post('/auth/forgot-password', async (req, res) => {
+    try {
+        const email = String(req.body?.email || '').trim().toLowerCase()
+
+        const genericResponse = {
+            message: 'Se existir uma conta com este e-mail, enviaremos um link de recuperação.',
+        }
+
+        if (!email) {
+            return res.json(genericResponse)
+        }
+
+        const user = await User.findOne({ email })
+
+        if (!user) {
+            return res.json(genericResponse)
+        }
+
+        const rawToken = crypto.randomBytes(32).toString('hex')
+        const tokenHash = hashResetToken(rawToken)
+
+        user.resetPasswordTokenHash = tokenHash
+        user.resetPasswordExpiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MINUTES * 60 * 1000)
+        await user.save()
+
+        const resetUrl = buildFrontendUrl(`/reset-password/${rawToken}`)
+
+        await sendPasswordResetEmail({
+            email: user.email,
+            resetUrl,
+        })
+
+        return res.json({
+            ...genericResponse,
+            ...(process.env.NODE_ENV !== 'production' ? { resetUrl } : {}),
+        })
+    } catch (error) {
+        console.error(error)
+
+        return res.status(500).json({
+            message: 'Erro ao gerar link de recuperação.',
+        })
+    }
+})
+
+app.post('/auth/reset-password/:token', async (req, res) => {
+    try {
+        const rawToken = String(req.params.token || '')
+        const password = String(req.body?.password || '')
+
+        if (!rawToken || password.length < 6) {
+            return res.status(400).json({
+                message: 'Token inválido ou senha muito curta.',
+            })
+        }
+
+        const tokenHash = hashResetToken(rawToken)
+
+        const user = await User.findOne({
+            resetPasswordTokenHash: tokenHash,
+            resetPasswordExpiresAt: { $gt: new Date() },
+        })
+
+        if (!user) {
+            return res.status(400).json({
+                message: 'Link inválido ou expirado.',
+            })
+        }
+
+        user.passwordHash = await bcrypt.hash(password, 10)
+        user.provider = user.googleId ? 'both' : 'credentials'
+        user.resetPasswordTokenHash = ''
+        user.resetPasswordExpiresAt = null
+
+        await user.save()
+
+        return res.json({
+            message: 'Senha redefinida com sucesso.',
+        })
+    } catch (error) {
+        console.error(error)
+
+        return res.status(500).json({
+            message: 'Erro ao redefinir senha.',
+        })
+    }
+})
+
+app.get('/admin/users', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const users = await User.find({})
+            .sort({ createdAt: -1 })
+            .select('name email role provider profileCompleted createdAt updatedAt')
+            .lean()
+
+        return res.json({
+            users: users.map(sanitizeUser),
+        })
+    } catch (error) {
+        console.error(error)
+
+        return res.status(500).json({
+            message: 'Erro ao listar usuários.',
+        })
+    }
+})
+
+app.get('/admin/users/:userId', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const { userId } = req.params
+
+        const user = await User.findById(userId)
+            .select('name email role provider profileCompleted createdAt updatedAt')
+            .lean()
+
+        if (!user) {
+            return res.status(404).json({
+                message: 'Usuário não encontrado.',
+            })
+        }
+
+        const [activeWorkout, workoutCount, historyCount] = await Promise.all([
+            ActiveWorkoutSession.findOne({ userId }).lean(),
+            Workout.countDocuments({ userId }),
+            WorkoutHistory.countDocuments({ userId }),
+        ])
+
+        return res.json({
+            user: sanitizeUser(user),
+            activeWorkout: activeWorkout?.session || null,
+            counts: {
+                workouts: workoutCount,
+                history: historyCount,
+            },
+        })
+    } catch (error) {
+        console.error(error)
+
+        return res.status(500).json({
+            message: 'Erro ao carregar usuário.',
+        })
+    }
+})
+
+app.post('/admin/users/:userId/reset-password', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const { userId } = req.params
+        const password = String(req.body?.password || '')
+
+        if (password.length < 6) {
+            return res.status(400).json({
+                message: 'A senha precisa ter pelo menos 6 caracteres.',
+            })
+        }
+
+        const user = await User.findById(userId)
+
+        if (!user) {
+            return res.status(404).json({
+                message: 'Usuário não encontrado.',
+            })
+        }
+
+        user.passwordHash = await bcrypt.hash(password, 10)
+        user.provider = user.googleId ? 'both' : 'credentials'
+        user.resetPasswordTokenHash = ''
+        user.resetPasswordExpiresAt = null
+
+        await user.save()
+
+        return res.json({
+            message: 'Senha redefinida pelo admin.',
+        })
+    } catch (error) {
+        console.error(error)
+
+        return res.status(500).json({
+            message: 'Erro ao redefinir senha pelo admin.',
+        })
+    }
+})
+
+app.delete('/admin/users/:userId/active-workout', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const { userId } = req.params
+
+        await ActiveWorkoutSession.findOneAndDelete({ userId })
+
+        return res.json({
+            message: 'Treino ativo removido, se existia.',
+        })
+    } catch (error) {
+        console.error(error)
+
+        return res.status(500).json({
+            message: 'Erro ao limpar treino ativo do usuário.',
+        })
+    }
+})
+
 
 
 function normalizeActiveWorkoutSessionPayload(payload) {

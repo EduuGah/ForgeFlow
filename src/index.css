@@ -1745,3 +1745,28 @@ main {
     min-width: 0;
   }
 }
+
+
+/* =========================================================
+   ForgeFlow — Etapa 28 admin + recuperação de senha
+   ========================================================= */
+
+.ff-hevy-admin input,
+.ff-hevy-admin button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ff-hevy-admin button:active {
+  transform: scale(0.985);
+}
+
+@media (max-width: 640px) {
+  .ff-hevy-admin {
+    gap: 1rem;
+  }
+
+  .ff-hevy-admin h1 {
+    font-size: clamp(1.75rem, 8vw, 2.25rem) !important;
+    line-height: 1.02 !important;
+  }
+}
