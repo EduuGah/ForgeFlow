@@ -1770,3 +1770,34 @@ main {
     line-height: 1.02 !important;
   }
 }
+
+
+/* =========================================================
+   ForgeFlow — Etapa 31 Admin avançado
+   ========================================================= */
+
+.ff-hevy-admin select {
+  color-scheme: dark;
+}
+
+.ff-hevy-admin option {
+  background: #18181b;
+  color: #f4f4f5;
+}
+
+.ff-hevy-admin button,
+.ff-hevy-admin input,
+.ff-hevy-admin select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 640px) {
+  .ff-hevy-admin {
+    gap: 1rem;
+  }
+
+  .ff-hevy-admin h1 {
+    font-size: clamp(1.75rem, 8vw, 2.25rem) !important;
+    line-height: 1.02 !important;
+  }
+}

@@ -281,6 +281,26 @@ const userSchema = new mongoose.Schema(
             default: 'user',
         },
 
+        isBlocked: {
+            type: Boolean,
+            default: false,
+        },
+
+        blockedAt: {
+            type: Date,
+            default: null,
+        },
+
+        lastLoginAt: {
+            type: Date,
+            default: null,
+        },
+
+        lastAdminActionAt: {
+            type: Date,
+            default: null,
+        },
+
         resetPasswordTokenHash: {
             type: String,
             default: '',
@@ -1158,6 +1178,53 @@ const activeWorkoutSessionSchema = new mongoose.Schema(
     }
 )
 
+const adminLogSchema = new mongoose.Schema(
+    {
+        adminId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+            index: true,
+        },
+
+        targetUserId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            default: null,
+            index: true,
+        },
+
+        action: {
+            type: String,
+            required: true,
+            index: true,
+        },
+
+        message: {
+            type: String,
+            default: '',
+        },
+
+        metadata: {
+            type: Object,
+            default: {},
+        },
+
+        ip: {
+            type: String,
+            default: '',
+        },
+
+        userAgent: {
+            type: String,
+            default: '',
+        },
+    },
+    {
+        timestamps: true,
+    }
+)
+
 const User = mongoose.model('User', userSchema)
 const Exercise = mongoose.model('Exercise', exerciseSchema)
 const Workout = mongoose.model('Workout', workoutSchema)
@@ -1168,6 +1235,7 @@ const ProgressPhoto = mongoose.model('ProgressPhoto', progressPhotoSchema)
 const Goal = mongoose.model('Goal', goalSchema)
 const Notification = mongoose.model('Notification', notificationSchema)
 const ActiveWorkoutSession = mongoose.model('ActiveWorkoutSession', activeWorkoutSessionSchema)
+const AdminLog = mongoose.model('AdminLog', adminLogSchema)
 
 function createToken(user) {
     return jwt.sign(
@@ -1192,6 +1260,8 @@ function buildUserResponse(user) {
         avatarUrl: user.avatarUrl,
         provider: user.provider,
         role: user.role || 'user',
+        isBlocked: Boolean(user.isBlocked),
+        lastLoginAt: user.lastLoginAt,
         hasPassword: Boolean(user.passwordHash),
         profile: user.profile,
         profileCompleted: user.profileCompleted,
@@ -1310,7 +1380,7 @@ function getHistoryRows(history = []) {
     return rows
 }
 
-function authMiddleware(req, res, next) {
+async function authMiddleware(req, res, next) {
     const authHeader = req.headers.authorization
 
     if (!authHeader?.startsWith('Bearer ')) {
@@ -1323,6 +1393,27 @@ function authMiddleware(req, res, next) {
 
     try {
         req.user = jwt.verify(token, JWT_SECRET)
+
+        if (req.user?.userId) {
+            const currentUser = await User.findById(req.user.userId)
+                .select('role isBlocked')
+                .lean()
+
+            if (!currentUser) {
+                return res.status(401).json({
+                    message: 'Usuário não encontrado.',
+                })
+            }
+
+            if (currentUser.isBlocked) {
+                return res.status(403).json({
+                    message: 'Esta conta está bloqueada.',
+                })
+            }
+
+            req.user.role = currentUser.role || req.user.role || 'user'
+        }
+
         next()
     } catch {
         return res.status(401).json({
@@ -1333,7 +1424,7 @@ function authMiddleware(req, res, next) {
 
 
 // ==============================
-// Admin
+// Admin avançado
 // ==============================
 
 function sanitizeUser(user) {
@@ -1346,19 +1437,74 @@ function sanitizeUser(user) {
         role: user.role || 'user',
         provider: user.provider || 'credentials',
         profileCompleted: Boolean(user.profileCompleted),
+        isBlocked: Boolean(user.isBlocked),
+        blockedAt: user.blockedAt || null,
+        lastLoginAt: user.lastLoginAt || null,
+        lastAdminActionAt: user.lastAdminActionAt || null,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
+    }
+}
+
+function sanitizeAdminLog(log) {
+    if (!log) return null
+
+    return {
+        id: String(log._id || log.id),
+        adminId: log.adminId ? String(log.adminId) : '',
+        targetUserId: log.targetUserId ? String(log.targetUserId) : '',
+        action: log.action || '',
+        message: log.message || '',
+        metadata: log.metadata || {},
+        ip: log.ip || '',
+        userAgent: log.userAgent || '',
+        createdAt: log.createdAt,
+    }
+}
+
+async function writeAdminLog(req, { targetUserId = null, action, message = '', metadata = {} }) {
+    try {
+        await AdminLog.create({
+            adminId: req.user.userId,
+            targetUserId,
+            action,
+            message,
+            metadata,
+            ip: req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '',
+            userAgent: req.headers['user-agent'] || '',
+        })
+
+        if (targetUserId) {
+            await User.findByIdAndUpdate(targetUserId, {
+                lastAdminActionAt: new Date(),
+            })
+        }
+    } catch (error) {
+        console.error('[AdminLog] Falha ao registrar log:', error)
     }
 }
 
 async function requireAdmin(req, res, next) {
     try {
         let role = req.user?.role
+        let isBlocked = req.user?.isBlocked
 
-        if (!role && req.user?.userId) {
-            const currentUser = await User.findById(req.user.userId).select('role').lean()
-            role = currentUser?.role
-            req.user.role = role || 'user'
+        if (req.user?.userId) {
+            const currentUser = await User.findById(req.user.userId)
+                .select('role isBlocked')
+                .lean()
+
+            role = currentUser?.role || role || 'user'
+            isBlocked = Boolean(currentUser?.isBlocked)
+
+            req.user.role = role
+            req.user.isBlocked = isBlocked
+        }
+
+        if (isBlocked) {
+            return res.status(403).json({
+                message: 'Esta conta está bloqueada.',
+            })
         }
 
         if (role === 'admin') {
@@ -1379,9 +1525,49 @@ async function requireAdmin(req, res, next) {
 
 app.get('/admin/users', authMiddleware, requireAdmin, async (req, res) => {
     try {
-        const users = await User.find({})
+        const {
+            q = '',
+            role = 'all',
+            status = 'all',
+            provider = 'all',
+            limit = 100,
+        } = req.query
+
+        const filter = {}
+        const search = String(q || '').trim()
+
+        if (search) {
+            filter.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { email: { $regex: search, $options: 'i' } },
+            ]
+        }
+
+        if (['admin', 'user'].includes(role)) {
+            filter.role = role
+        }
+
+        if (status === 'blocked') {
+            filter.isBlocked = true
+        }
+
+        if (status === 'active') {
+            filter.$or = filter.$or
+                ? filter.$or
+                : []
+            filter.isBlocked = { $ne: true }
+        }
+
+        if (['google', 'credentials', 'both'].includes(provider)) {
+            filter.provider = provider
+        }
+
+        const safeLimit = Math.min(Math.max(Number(limit) || 100, 1), 300)
+
+        const users = await User.find(filter)
             .sort({ createdAt: -1 })
-            .select('name email role provider profileCompleted createdAt updatedAt')
+            .limit(safeLimit)
+            .select('name email role provider profileCompleted isBlocked blockedAt lastLoginAt lastAdminActionAt createdAt updatedAt')
             .lean()
 
         return res.json({
@@ -1401,7 +1587,7 @@ app.get('/admin/users/:userId', authMiddleware, requireAdmin, async (req, res) =
         const { userId } = req.params
 
         const user = await User.findById(userId)
-            .select('name email role provider profileCompleted createdAt updatedAt')
+            .select('name email role provider profileCompleted isBlocked blockedAt lastLoginAt lastAdminActionAt createdAt updatedAt profile')
             .lean()
 
         if (!user) {
@@ -1410,15 +1596,44 @@ app.get('/admin/users/:userId', authMiddleware, requireAdmin, async (req, res) =
             })
         }
 
-        const [activeWorkout, workoutCount, historyCount] = await Promise.all([
+        const [activeWorkout, workoutCount, historyCount, recentHistory, recentLogs] = await Promise.all([
             ActiveWorkoutSession.findOne({ userId }).lean(),
             Workout.countDocuments({ userId }),
             WorkoutHistory.countDocuments({ userId }),
+            WorkoutHistory.find({ userId })
+                .sort({ finishedAt: -1, createdAt: -1 })
+                .limit(5)
+                .select('workoutName durationSeconds totalVolume totalSets totalReps prs startedAt finishedAt createdAt exercises')
+                .lean(),
+            AdminLog.find({ targetUserId: userId })
+                .sort({ createdAt: -1 })
+                .limit(10)
+                .lean(),
         ])
 
+        const historySummary = recentHistory.map((item) => ({
+            id: String(item._id || item.id),
+            workoutName: item.workoutName,
+            durationSeconds: item.durationSeconds || 0,
+            totalVolume: item.totalVolume || 0,
+            totalSets: item.totalSets || 0,
+            totalReps: item.totalReps || 0,
+            prsCount: Array.isArray(item.prs) ? item.prs.length : 0,
+            exercisesCount: Array.isArray(item.exercises) ? item.exercises.length : 0,
+            startedAt: item.startedAt,
+            finishedAt: item.finishedAt,
+            createdAt: item.createdAt,
+        }))
+
         return res.json({
-            user: sanitizeUser(user),
+            user: {
+                ...sanitizeUser(user),
+                profile: user.profile || {},
+            },
             activeWorkout: activeWorkout?.session || null,
+            activeWorkoutUpdatedAt: activeWorkout?.updatedAt || null,
+            historySummary,
+            logs: recentLogs.map(sanitizeAdminLog),
             counts: {
                 workouts: workoutCount,
                 history: historyCount,
@@ -1429,6 +1644,103 @@ app.get('/admin/users/:userId', authMiddleware, requireAdmin, async (req, res) =
 
         return res.status(500).json({
             message: 'Erro ao carregar usuário.',
+        })
+    }
+})
+
+app.patch('/admin/users/:userId/role', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const { userId } = req.params
+        const nextRole = String(req.body?.role || '').trim()
+
+        if (!['user', 'admin'].includes(nextRole)) {
+            return res.status(400).json({
+                message: 'Role inválida.',
+            })
+        }
+
+        if (String(req.user.userId) === String(userId) && nextRole !== 'admin') {
+            return res.status(400).json({
+                message: 'Você não pode remover seu próprio acesso admin.',
+            })
+        }
+
+        const user = await User.findById(userId)
+
+        if (!user) {
+            return res.status(404).json({
+                message: 'Usuário não encontrado.',
+            })
+        }
+
+        const previousRole = user.role || 'user'
+        user.role = nextRole
+        await user.save()
+
+        await writeAdminLog(req, {
+            targetUserId: userId,
+            action: 'user_role_updated',
+            message: `Role alterada de ${previousRole} para ${nextRole}.`,
+            metadata: {
+                previousRole,
+                nextRole,
+            },
+        })
+
+        return res.json({
+            user: sanitizeUser(user),
+            message: 'Permissão atualizada.',
+        })
+    } catch (error) {
+        console.error(error)
+
+        return res.status(500).json({
+            message: 'Erro ao atualizar permissão.',
+        })
+    }
+})
+
+app.patch('/admin/users/:userId/block', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const { userId } = req.params
+        const blocked = Boolean(req.body?.blocked)
+
+        if (String(req.user.userId) === String(userId) && blocked) {
+            return res.status(400).json({
+                message: 'Você não pode bloquear sua própria conta.',
+            })
+        }
+
+        const user = await User.findById(userId)
+
+        if (!user) {
+            return res.status(404).json({
+                message: 'Usuário não encontrado.',
+            })
+        }
+
+        user.isBlocked = blocked
+        user.blockedAt = blocked ? new Date() : null
+        await user.save()
+
+        await writeAdminLog(req, {
+            targetUserId: userId,
+            action: blocked ? 'user_blocked' : 'user_unblocked',
+            message: blocked ? 'Usuário bloqueado.' : 'Usuário desbloqueado.',
+            metadata: {
+                blocked,
+            },
+        })
+
+        return res.json({
+            user: sanitizeUser(user),
+            message: blocked ? 'Usuário bloqueado.' : 'Usuário desbloqueado.',
+        })
+    } catch (error) {
+        console.error(error)
+
+        return res.status(500).json({
+            message: 'Erro ao alterar bloqueio do usuário.',
         })
     }
 })
@@ -1457,6 +1769,12 @@ app.post('/admin/users/:userId/reset-password', authMiddleware, requireAdmin, as
 
         await user.save()
 
+        await writeAdminLog(req, {
+            targetUserId: userId,
+            action: 'password_reset_by_admin',
+            message: 'Senha redefinida manualmente pelo admin.',
+        })
+
         return res.json({
             message: 'Senha redefinida pelo admin.',
         })
@@ -1475,6 +1793,12 @@ app.delete('/admin/users/:userId/active-workout', authMiddleware, requireAdmin, 
 
         await ActiveWorkoutSession.findOneAndDelete({ userId })
 
+        await writeAdminLog(req, {
+            targetUserId: userId,
+            action: 'active_workout_cleared',
+            message: 'Treino ativo travado removido pelo admin.',
+        })
+
         return res.json({
             message: 'Treino ativo removido, se existia.',
         })
@@ -1483,6 +1807,34 @@ app.delete('/admin/users/:userId/active-workout', authMiddleware, requireAdmin, 
 
         return res.status(500).json({
             message: 'Erro ao limpar treino ativo do usuário.',
+        })
+    }
+})
+
+app.get('/admin/logs', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const { targetUserId = '', limit = 50 } = req.query
+        const filter = {}
+
+        if (targetUserId) {
+            filter.targetUserId = targetUserId
+        }
+
+        const safeLimit = Math.min(Math.max(Number(limit) || 50, 1), 200)
+
+        const logs = await AdminLog.find(filter)
+            .sort({ createdAt: -1 })
+            .limit(safeLimit)
+            .lean()
+
+        return res.json({
+            logs: logs.map(sanitizeAdminLog),
+        })
+    } catch (error) {
+        console.error(error)
+
+        return res.status(500).json({
+            message: 'Erro ao carregar logs admin.',
         })
     }
 })
@@ -1708,10 +2060,15 @@ passport.use(
                 })
 
                 if (user) {
+                    if (user.isBlocked) {
+                        return done(new Error('Esta conta está bloqueada. Entre em contato com o suporte.'))
+                    }
+
                     user.googleId = profile.id
                     user.name = user.name || profile.displayName
                     user.avatarUrl = profile.photos?.[0]?.value || user.avatarUrl
                     user.provider = user.passwordHash ? 'both' : 'google'
+                    user.lastLoginAt = new Date()
 
                     user = await user.save()
                 } else {
@@ -1722,6 +2079,7 @@ passport.use(
                         avatarUrl: profile.photos?.[0]?.value || '',
                         provider: 'google',
                         profileCompleted: false,
+                        lastLoginAt: new Date(),
                     })
                 }
 
@@ -1944,6 +2302,12 @@ app.post('/auth/login', async (req, res) => {
         })
     }
 
+    if (user.isBlocked) {
+        return res.status(403).json({
+            message: 'Esta conta está bloqueada. Entre em contato com o suporte.',
+        })
+    }
+
     if (!user.passwordHash) {
         return res.status(400).json({
             message:
@@ -1957,6 +2321,9 @@ app.post('/auth/login', async (req, res) => {
             message: 'E-mail ou senha inválidos.',
         })
     }
+
+    user.lastLoginAt = new Date()
+    await user.save()
 
     const token = createToken(user)
 
