@@ -203,7 +203,7 @@ function ExerciseProgress() {
           </Card>
         </aside>
 
-        <div className="space-y-5">
+        <div className="ff-hevy-exercise-progress space-y-5">
           {!selectedExercise ? (
             <Card><EmptyState title="Selecione um exercício" description="Escolha um exercício na lista para ver a evolução." /></Card>
           ) : (

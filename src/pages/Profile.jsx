@@ -932,7 +932,7 @@ function Profile() {
           </section>
         </div>
 
-        <div className="space-y-6">
+        <div className="ff-hevy-profile space-y-5 sm:space-y-6">
           <Card>
             <h2 className="text-xl font-bold">
               Registrar peso

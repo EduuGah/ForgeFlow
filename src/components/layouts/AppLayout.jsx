@@ -42,9 +42,12 @@ function getRouteShellClass(pathname = '/') {
   if (pathname === '/') return 'ff-page-dashboard'
   if (pathname.startsWith('/workouts')) return 'ff-page-workouts'
   if (pathname.startsWith('/exercises')) return 'ff-page-exercises'
+  if (pathname.startsWith('/start-workout')) return 'ff-page-start-workout'
   if (pathname.startsWith('/history')) return 'ff-page-history'
   if (pathname.startsWith('/progress')) return 'ff-page-progress'
+  if (pathname.startsWith('/exercise-progress')) return 'ff-page-exercise-progress'
   if (pathname.startsWith('/profile')) return 'ff-page-profile'
+  if (pathname.startsWith('/notifications')) return 'ff-page-notifications'
   if (pathname.startsWith('/settings')) return 'ff-page-settings'
 
   return 'ff-page-default'

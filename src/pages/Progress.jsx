@@ -979,7 +979,7 @@ function Progress() {
           />
         </Card>
       ) : (
-        <div className="space-y-6">
+        <div className="ff-hevy-progress space-y-5 sm:space-y-6">
           <ProgressSummaryCards
             summary={normalizedProgress.summary}
             insights={normalizedProgress.insights}

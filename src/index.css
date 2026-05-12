@@ -1456,3 +1456,238 @@ main {
     font-size: 1.72rem !important;
   }
 }
+
+
+/* =========================================================
+   ForgeFlow — Etapa 25.5-25.7 Hevy inspired
+   Páginas: treino ativo, histórico, progresso, perfil,
+   notificações e configurações.
+   Sidebar continua drawer, não fixa.
+   ========================================================= */
+
+/* 25.5 — Treino ativo */
+.ff-page-start-workout .ff-hevy-start-workout [class*='rounded-3xl'],
+.ff-page-start-workout .ff-hevy-start-workout [class*='rounded-[2rem]'] {
+  border-radius: 1.45rem !important;
+}
+
+.ff-page-start-workout .ff-hevy-start-workout [class*='shadow-2xl'],
+.ff-page-start-workout .ff-hevy-start-workout [class*='shadow-xl'] {
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.22);
+}
+
+.ff-page-start-workout .ff-set-input {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 25.6 — Histórico e progresso */
+.ff-hevy-history [class*='rounded-3xl'],
+.ff-hevy-progress [class*='rounded-3xl'],
+.ff-hevy-exercise-progress [class*='rounded-3xl'] {
+  border-radius: 1.35rem !important;
+}
+
+.ff-page-history [class*='space-y'] > article,
+.ff-page-history [class*='space-y'] > div[class*='border'] {
+  background:
+    linear-gradient(180deg, var(--ff-card), var(--ff-surface-2));
+  border-color: color-mix(in srgb, var(--ff-border) 88%, white 4%);
+}
+
+.ff-page-progress .recharts-wrapper,
+.ff-page-progress .recharts-surface,
+.ff-page-exercise-progress .recharts-wrapper,
+.ff-page-exercise-progress .recharts-surface,
+.ff-page-profile .recharts-wrapper,
+.ff-page-profile .recharts-surface {
+  max-width: 100% !important;
+}
+
+/* 25.7 — Perfil, notificações e configurações */
+.ff-hevy-profile [class*='rounded-3xl'],
+.ff-hevy-notifications [class*='rounded-3xl'],
+.ff-hevy-settings [class*='rounded-3xl'] {
+  border-radius: 1.35rem !important;
+}
+
+.ff-page-notifications [class*='space-y'] > article,
+.ff-page-notifications [class*='space-y'] > div[class*='border'] {
+  background:
+    linear-gradient(180deg, var(--ff-card), var(--ff-surface-2));
+  border-color: color-mix(in srgb, var(--ff-border) 88%, white 4%);
+}
+
+.ff-page-settings [class*='grid'] > [class*='rounded-3xl'],
+.ff-page-profile [class*='grid'] > [class*='rounded-3xl'] {
+  align-self: start;
+}
+
+/* Desktop: mais aproveitamento horizontal sem sidebar fixa */
+@media (min-width: 1024px) {
+  .ff-page-start-workout .ff-hevy-shell,
+  .ff-page-history .ff-hevy-shell,
+  .ff-page-progress .ff-hevy-shell,
+  .ff-page-exercise-progress .ff-hevy-shell,
+  .ff-page-profile .ff-hevy-shell,
+  .ff-page-notifications .ff-hevy-shell,
+  .ff-page-settings .ff-hevy-shell {
+    padding-left: clamp(1.5rem, 2vw, 2.25rem) !important;
+    padding-right: clamp(1.5rem, 2vw, 2.25rem) !important;
+  }
+
+  .ff-hevy-history,
+  .ff-hevy-progress,
+  .ff-hevy-exercise-progress,
+  .ff-hevy-profile,
+  .ff-hevy-notifications,
+  .ff-hevy-settings {
+    max-width: 100%;
+  }
+
+  .ff-page-history [class*='lg:grid-cols'],
+  .ff-page-progress [class*='lg:grid-cols'],
+  .ff-page-profile [class*='lg:grid-cols'],
+  .ff-page-settings [class*='lg:grid-cols'] {
+    align-items: start;
+  }
+}
+
+/* Mobile: mais app-like e menos cards gigantes */
+@media (max-width: 640px) {
+  .ff-page-start-workout .ff-hevy-shell,
+  .ff-page-history .ff-hevy-shell,
+  .ff-page-progress .ff-hevy-shell,
+  .ff-page-exercise-progress .ff-hevy-shell,
+  .ff-page-profile .ff-hevy-shell,
+  .ff-page-notifications .ff-hevy-shell,
+  .ff-page-settings .ff-hevy-shell {
+    padding-left: 0.85rem !important;
+    padding-right: 0.85rem !important;
+    padding-top: calc(5.35rem + env(safe-area-inset-top)) !important;
+  }
+
+  .ff-hevy-start-workout,
+  .ff-hevy-history,
+  .ff-hevy-progress,
+  .ff-hevy-exercise-progress,
+  .ff-hevy-profile,
+  .ff-hevy-notifications,
+  .ff-hevy-settings {
+    gap: 1rem;
+  }
+
+  .ff-page-history [class*='rounded-3xl'],
+  .ff-page-progress [class*='rounded-3xl'],
+  .ff-page-exercise-progress [class*='rounded-3xl'],
+  .ff-page-profile [class*='rounded-3xl'],
+  .ff-page-notifications [class*='rounded-3xl'],
+  .ff-page-settings [class*='rounded-3xl'],
+  .ff-page-start-workout [class*='rounded-3xl'] {
+    border-radius: 1.25rem !important;
+  }
+
+  .ff-page-history [class*='p-7'],
+  .ff-page-progress [class*='p-7'],
+  .ff-page-exercise-progress [class*='p-7'],
+  .ff-page-profile [class*='p-7'],
+  .ff-page-notifications [class*='p-7'],
+  .ff-page-settings [class*='p-7'] {
+    padding: 1rem !important;
+  }
+
+  .ff-page-history [class*='p-6'],
+  .ff-page-progress [class*='p-6'],
+  .ff-page-exercise-progress [class*='p-6'],
+  .ff-page-profile [class*='p-6'],
+  .ff-page-notifications [class*='p-6'],
+  .ff-page-settings [class*='p-6'] {
+    padding: 0.95rem !important;
+  }
+
+  .ff-page-history h1,
+  .ff-page-progress h1,
+  .ff-page-exercise-progress h1,
+  .ff-page-profile h1,
+  .ff-page-notifications h1,
+  .ff-page-settings h1 {
+    font-size: clamp(1.75rem, 8vw, 2.25rem) !important;
+    line-height: 1.02 !important;
+    letter-spacing: -0.045em;
+  }
+
+  .ff-page-history h2,
+  .ff-page-progress h2,
+  .ff-page-exercise-progress h2,
+  .ff-page-profile h2,
+  .ff-page-notifications h2,
+  .ff-page-settings h2 {
+    font-size: clamp(1.05rem, 5vw, 1.3rem) !important;
+    line-height: 1.1 !important;
+  }
+
+  /* Histórico como feed compacto */
+  .ff-page-history [class*='space-y'] > article,
+  .ff-page-history [class*='space-y'] > div[class*='border'] {
+    border-radius: 1.25rem;
+  }
+
+  /* Notificações menos gigantes */
+  .ff-page-notifications [class*='space-y'] > article,
+  .ff-page-notifications [class*='space-y'] > div[class*='border'] {
+    border-radius: 1.25rem;
+  }
+
+  /* Configurações mais densas */
+  .ff-page-settings main button,
+  .ff-page-profile main button,
+  .ff-page-notifications main button {
+    min-height: 2.75rem;
+  }
+
+  .ff-page-settings input,
+  .ff-page-settings select,
+  .ff-page-settings textarea,
+  .ff-page-profile input,
+  .ff-page-profile select,
+  .ff-page-profile textarea {
+    font-size: 16px;
+  }
+
+  /* Treino ativo mantém botões seguros para toque */
+  .ff-page-start-workout button {
+    min-height: 2.75rem;
+  }
+
+  .ff-page-start-workout .ff-set-input {
+    font-size: 30px !important;
+  }
+
+  /* Gráficos e cards não estouram */
+  .ff-page-progress [class*='overflow-x-auto'],
+  .ff-page-exercise-progress [class*='overflow-x-auto'],
+  .ff-page-history [class*='overflow-x-auto'] {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .ff-page-progress [class*='overflow-x-auto']::-webkit-scrollbar,
+  .ff-page-exercise-progress [class*='overflow-x-auto']::-webkit-scrollbar,
+  .ff-page-history [class*='overflow-x-auto']::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (max-width: 380px) {
+  .ff-page-history h1,
+  .ff-page-progress h1,
+  .ff-page-exercise-progress h1,
+  .ff-page-profile h1,
+  .ff-page-notifications h1,
+  .ff-page-settings h1 {
+    font-size: 1.7rem !important;
+  }
+
+  .ff-page-start-workout .ff-set-input {
+    font-size: 27px !important;
+  }
+}

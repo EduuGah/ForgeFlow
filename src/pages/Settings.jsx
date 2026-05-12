@@ -579,7 +579,7 @@ function Settings() {
       )}
 
       <section className="grid grid-cols-1 gap-6 2xl:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="space-y-6">
+        <div className="ff-hevy-settings space-y-5 sm:space-y-6">
           <Card>
             <SectionTitle
               icon={Palette}
