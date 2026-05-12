@@ -2103,3 +2103,48 @@ main {
 .ff-workout-set-editor input:hover {
   border-color: color-mix(in srgb, var(--ff-accent) 38%, transparent);
 }
+
+
+/* =========================================================
+   ForgeFlow — Fix barra rápida da biblioteca
+   ========================================================= */
+
+.ff-exercise-quick-filter {
+  width: 100%;
+  max-width: 100%;
+  overflow: visible;
+  flex-wrap: wrap;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ff-accent) transparent;
+}
+
+.ff-exercise-quick-filter > * {
+  flex: 0 0 auto;
+}
+
+.ff-exercise-quick-filter::-webkit-scrollbar {
+  height: 6px;
+}
+
+.ff-exercise-quick-filter::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--ff-accent);
+}
+
+/* Mobile/tablet: se a barra aparecer em algum layout menor, volta a ser scroll horizontal */
+@media (max-width: 1279px) {
+  .ff-exercise-quick-filter {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-right: 1rem;
+  }
+}
+
+.ff-workout-last-reference {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ff-accent) 20%, transparent);
+}
+
+.ff-workout-set-editor input:hover {
+  border-color: color-mix(in srgb, var(--ff-accent) 38%, transparent);
+}

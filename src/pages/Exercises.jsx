@@ -1400,8 +1400,8 @@ function Exercises() {
                     {filteredExercises.length} exercícios encontrados • exibindo {displayedExercises.length}
                   </p>
 
-                  <div className="mt-4 hidden min-w-0 max-w-full overflow-hidden xl:block">
-                    <div className="ff-filter-chips ff-exercise-quick-filter flex min-w-0 max-w-full gap-2 overflow-x-auto overscroll-x-contain pb-2 pr-4 [scrollbar-width:thin]">
+                  <div className="mt-4 hidden min-w-0 max-w-full xl:block">
+                    <div className="ff-filter-chips ff-exercise-quick-filter flex min-w-0 max-w-full gap-2 pb-2 pr-1">
                       <button
                         type="button"
                         onClick={clearFilters}
