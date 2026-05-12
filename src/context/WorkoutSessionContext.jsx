@@ -264,6 +264,26 @@ export function WorkoutSessionProvider({ children }) {
     return set.type !== 'warmup'
   }
 
+  function renumberExerciseSets(sets = []) {
+    let workingSetNumber = 0
+
+    return sets.map((set) => {
+      if (set.type === 'warmup') {
+        return {
+          ...set,
+          setNumber: null,
+        }
+      }
+
+      workingSetNumber += 1
+
+      return {
+        ...set,
+        setNumber: workingSetNumber,
+      }
+    })
+  }
+
   function applyRemoteSession(remoteSession) {
     setActiveSession((current) => {
       if (isFinishingRef.current) return current
@@ -594,7 +614,7 @@ export function WorkoutSessionProvider({ children }) {
     })
   }
 
-  function addSet(exerciseId) {
+  function addSet(exerciseId, options = {}) {
     setActiveSession((current) => {
       if (!current) return current
 
@@ -603,6 +623,7 @@ export function WorkoutSessionProvider({ children }) {
         exercises: current.exercises.map((exercise) => {
           if (exercise.id !== exerciseId) return exercise
 
+          const type = options.type === 'warmup' ? 'warmup' : 'working'
           const nextWorkingSetNumber =
             exercise.sets.filter((set) => isWorkingSet(set)).length + 1
 
@@ -612,9 +633,9 @@ export function WorkoutSessionProvider({ children }) {
               ...exercise.sets,
               {
                 id: safeCryptoId(),
-                plannedDescription: 'Extra',
-                type: 'working',
-                setNumber: nextWorkingSetNumber,
+                plannedDescription: type === 'warmup' ? 'Aquecimento' : 'Extra',
+                type,
+                setNumber: type === 'warmup' ? null : nextWorkingSetNumber,
                 weight: '',
                 reps: '',
                 completed: false,
@@ -623,6 +644,54 @@ export function WorkoutSessionProvider({ children }) {
                 isVolumePR: false,
               },
             ],
+          }
+        }),
+      })
+    })
+  }
+
+  function removeSet(exerciseId, setId) {
+    setActiveSession((current) => {
+      if (!current) return current
+
+      return markSessionUpdated({
+        ...current,
+        exercises: current.exercises.map((exercise) => {
+          if (exercise.id !== exerciseId) return exercise
+
+          const nextSets = exercise.sets.filter((set) => set.id !== setId)
+
+          return {
+            ...exercise,
+            sets: renumberExerciseSets(nextSets),
+          }
+        }),
+      })
+    })
+  }
+
+  function toggleSetWarmup(exerciseId, setId) {
+    setActiveSession((current) => {
+      if (!current) return current
+
+      return markSessionUpdated({
+        ...current,
+        exercises: current.exercises.map((exercise) => {
+          if (exercise.id !== exerciseId) return exercise
+
+          const nextSets = exercise.sets.map((set) =>
+            set.id === setId
+              ? {
+                ...set,
+                type: set.type === 'warmup' ? 'working' : 'warmup',
+                completed: false,
+              }
+              : set
+          )
+
+          return {
+            ...exercise,
+            sets: renumberExerciseSets(nextSets),
           }
         }),
       })
@@ -833,6 +902,8 @@ export function WorkoutSessionProvider({ children }) {
         updateSet,
         toggleSetCompleted,
         addSet,
+        removeSet,
+        toggleSetWarmup,
         removeExercise,
         skipExercise,
         replaceExercise,

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useDeferredValue } from 'react'
+import { useEffect, useMemo, useRef, useState, useDeferredValue } from 'react'
 import {
   Timer,
   X,
@@ -23,6 +23,8 @@ import {
   PlayCircle,
   RotateCcw,
   Dumbbell,
+  Flame,
+  ListChecks,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
@@ -253,6 +255,8 @@ function StartWorkout() {
     updateSet,
     toggleSetCompleted,
     addSet,
+    removeSet,
+    toggleSetWarmup,
     removeExercise,
     skipExercise,
     replaceExercise,
@@ -274,6 +278,8 @@ function StartWorkout() {
   const [confirmModal, setConfirmModal] = useState(null)
   const [toast, setToast] = useState(null)
   const [appSettings, setAppSettings] = useState(getAppSettings())
+  const [selectedExerciseId, setSelectedExerciseId] = useState('')
+  const exerciseCardRefs = useRef({})
 
   const sessionIsInvalid = activeSession && !isValidActiveSession(activeSession)
 
@@ -327,6 +333,29 @@ function StartWorkout() {
     const completed = sets.filter((set) => set.completed).length
     return Math.min(100, Math.round((completed / sets.length) * 100))
   }, [focusExercise])
+
+  const selectedExercise = useMemo(() => {
+    return (
+      sessionExercises.find((exercise) => exercise.id === selectedExerciseId) ||
+      focusExercise ||
+      sessionExercises[0] ||
+      null
+    )
+  }, [focusExercise, selectedExerciseId, sessionExercises])
+
+  function focusExerciseCard(exerciseId) {
+    if (!exerciseId) return
+
+    setSelectedExerciseId(exerciseId)
+
+    window.requestAnimationFrame(() => {
+      exerciseCardRefs.current?.[exerciseId]?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    })
+  }
+
 
   const exercisePerformanceMap = useMemo(() => {
     if (!user || sessionExercises.length === 0) return new Map()
@@ -569,10 +598,14 @@ function StartWorkout() {
   useEffect(() => {
     if (!activeSession) return
 
+    if (!selectedExerciseId && focusExercise?.id) {
+      setSelectedExerciseId(focusExercise.id)
+    }
+
     if (appSettings.collapseSeriesByDefault) {
       setCollapsedExerciseIds(sessionExercises.map((exercise) => exercise.id))
     }
-  }, [activeSession?.id, appSettings.collapseSeriesByDefault, sessionExercises])
+  }, [activeSession?.id, appSettings.collapseSeriesByDefault, focusExercise?.id, selectedExerciseId, sessionExercises])
 
   if (sessionIsInvalid) {
     return (
@@ -675,7 +708,11 @@ function StartWorkout() {
           </div>
 
           {focusExercise && (
-            <div className="mt-4 rounded-3xl border border-[var(--ff-accent-border)]/25 bg-[var(--ff-accent-soft)]/10 p-3">
+            <button
+              type="button"
+              onClick={() => focusExerciseCard(focusExercise.id)}
+              className="mt-4 w-full rounded-3xl border border-[var(--ff-accent-border)]/25 bg-[var(--ff-accent-soft)]/10 p-3 text-left transition hover:border-[var(--ff-accent-border)]"
+            >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">
@@ -708,7 +745,7 @@ function StartWorkout() {
                   </span>
                 </div>
               </div>
-            </div>
+            </button>
           )}
 
           <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--ff-surface-3)]">
@@ -721,6 +758,54 @@ function StartWorkout() {
           </div>
         </div>
       </div>
+
+      <section className="ff-exercise-jump-nav mb-4 rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3">
+        <div className="mb-2 flex items-center justify-between gap-3 px-1">
+          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-[var(--ff-muted)]">
+            <ListChecks size={15} />
+            Ir para exercício
+          </div>
+
+          <span className="text-xs font-bold text-[var(--ff-muted)]">
+            {sessionExercises.length} exercício(s)
+          </span>
+        </div>
+
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {sessionExercises.map((exercise, index) => {
+            const isActive = selectedExercise?.id === exercise.id
+            const completed = (exercise.sets || []).filter((set) => set.completed && set.type !== 'warmup').length
+            const total = (exercise.sets || []).filter((set) => set.type !== 'warmup').length || 1
+
+            return (
+              <button
+                key={exercise.id}
+                type="button"
+                onClick={() => focusExerciseCard(exercise.id)}
+                className={[
+                  'flex min-w-[210px] max-w-[260px] items-center gap-3 rounded-2xl border p-3 text-left transition',
+                  isActive
+                    ? 'border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]'
+                    : 'border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-text-soft)] hover:border-[var(--ff-accent-border)]',
+                ].join(' ')}
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-black/30 text-xs font-black">
+                  {index + 1}
+                </span>
+
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-black">
+                    {getExerciseName(exercise)}
+                  </span>
+                  <span className="block text-xs opacity-70">
+                    {completed}/{total} séries
+                  </span>
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      </section>
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-4 xl:gap-6">
         <div className="ff-workout-input-polish space-y-4 pb-40 xl:col-span-3 xl:pb-6">
@@ -745,7 +830,10 @@ function StartWorkout() {
             return (
               <Card
                 key={sessionExercise.id}
-                className={`ff-active-exercise-card overflow-hidden ${focusExercise?.id === sessionExercise.id ? 'ring-1 ring-[var(--ff-accent-border)] shadow-[0_0_28px_var(--ff-accent-shadow)]' : ''} ${sessionExercise.skipped ? 'opacity-50' : ''}`}
+                ref={(node) => {
+                  if (node) exerciseCardRefs.current[sessionExercise.id] = node
+                }}
+                className={`ff-active-exercise-card scroll-mt-32 overflow-hidden ${selectedExercise?.id === sessionExercise.id || focusExercise?.id === sessionExercise.id ? 'ring-1 ring-[var(--ff-accent-border)] shadow-[0_0_28px_var(--ff-accent-shadow)]' : ''} ${sessionExercise.skipped ? 'opacity-50' : ''}`}
               >
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="min-w-0 flex-1">
@@ -1081,12 +1169,34 @@ function StartWorkout() {
                             />
                           </div>
 
-                            <div className="col-span-3 row-start-4 min-w-0 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)]/70 p-2 lg:hidden">
-                              <SetPrBadges set={set} performance={performance} compact />
+                            <div className="col-span-3 row-start-4 grid grid-cols-2 gap-2 lg:hidden">
+                              <div className="min-w-0 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)]/70 p-2">
+                                <SetPrBadges set={set} performance={performance} compact />
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => toggleSetWarmup(sessionExercise.id, set.id)}
+                                className={set.type === 'warmup'
+                                  ? 'rounded-2xl border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-xs font-black text-amber-200'
+                                  : 'rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 py-2 text-xs font-black text-[var(--ff-muted)]'}
+                              >
+                                {set.type === 'warmup' ? 'Aquecimento' : 'Normal'}
+                              </button>
                             </div>
 
                             <div className="hidden min-h-11 flex-col items-start justify-center gap-1 overflow-hidden lg:flex">
                               <SetPrBadges set={set} performance={performance} />
+
+                              <button
+                                type="button"
+                                onClick={() => toggleSetWarmup(sessionExercise.id, set.id)}
+                                className={set.type === 'warmup'
+                                  ? 'rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-1 text-[10px] font-black text-amber-200'
+                                  : 'rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-2 py-1 text-[10px] font-black text-[var(--ff-muted)]'}
+                              >
+                                {set.type === 'warmup' ? 'Aquecimento' : 'Normal'}
+                              </button>
                             </div>
 
                             <button
@@ -1106,14 +1216,38 @@ function StartWorkout() {
                       })}
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => addSet(sessionExercise.id)}
-                      className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--ff-surface-3)] text-sm font-bold transition hover:bg-zinc-700"
-                    >
-                      <Plus size={17} />
-                      Adicionar série
-                    </button>
+                    <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                      <button
+                        type="button"
+                        onClick={() => addSet(sessionExercise.id)}
+                        className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--ff-surface-3)] text-sm font-bold transition hover:bg-zinc-700"
+                      >
+                        <Plus size={17} />
+                        Série
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => addSet(sessionExercise.id, { type: 'warmup' })}
+                        className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-amber-400/25 bg-amber-500/10 text-sm font-bold text-amber-200 transition hover:bg-amber-500/15"
+                      >
+                        <Flame size={17} />
+                        Aquecimento
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const lastSet = [...(sessionExercise.sets || [])].reverse().find(Boolean)
+                          if (lastSet) removeSet(sessionExercise.id, lastSet.id)
+                        }}
+                        disabled={(sessionExercise.sets || []).length <= 1}
+                        className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-red-500/25 bg-red-500/10 text-sm font-bold text-red-200 transition hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        <Minus size={17} />
+                        Remover
+                      </button>
+                    </div>
                   </div>
                 )}
               </Card>

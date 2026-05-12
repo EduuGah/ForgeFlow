@@ -2022,3 +2022,58 @@ main {
     font-size: 1.05rem;
   }
 }
+
+
+/* =========================================================
+   ForgeFlow — Etapa 35.1 Foco por exercício e filtros
+   ========================================================= */
+
+.ff-exercise-quick-filter {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ff-accent) transparent;
+}
+
+.ff-exercise-quick-filter::-webkit-scrollbar,
+.ff-exercise-jump-nav > div:last-child::-webkit-scrollbar {
+  height: 6px;
+}
+
+.ff-exercise-quick-filter::-webkit-scrollbar-thumb,
+.ff-exercise-jump-nav > div:last-child::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--ff-accent);
+}
+
+.ff-exercise-jump-nav {
+  position: sticky;
+  top: 5.25rem;
+  z-index: 20;
+  backdrop-filter: blur(16px);
+}
+
+.ff-active-exercise-card {
+  scroll-margin-top: 8.5rem;
+}
+
+@media (min-width: 1280px) {
+  .ff-exercise-jump-nav {
+    top: 1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .ff-exercise-jump-nav {
+    top: 4.5rem;
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+    border-radius: 1.5rem;
+  }
+
+  .ff-exercise-jump-nav > div:last-child {
+    padding-bottom: 0.25rem;
+  }
+
+  .ff-active-exercise-card {
+    scroll-margin-top: 9rem;
+  }
+}
