@@ -36,6 +36,8 @@ function Login() {
 
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [pendingVerificationEmail, setPendingVerificationEmail] = useState('')
+    const [devCode, setDevCode] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
 
@@ -69,6 +71,11 @@ function Login() {
 
             navigate('/')
         } catch (err) {
+            if (err?.data?.requiresEmailVerification) {
+                setPendingVerificationEmail(err.data.email || email)
+                setDevCode(err.data.devCode || '')
+            }
+
             setError(err.message)
         } finally {
             setLoading(false)

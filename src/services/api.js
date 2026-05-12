@@ -29,7 +29,10 @@ export async function apiFetch(path, options = {}) {
   const data = await response.json().catch(() => null)
 
   if (!response.ok) {
-    throw new Error(data?.message || 'Erro na requisição.')
+    const error = new Error(data?.message || 'Erro na requisição.')
+    error.status = response.status
+    error.data = data
+    throw error
   }
 
   return data

@@ -52,12 +52,10 @@ const {
     CLOUDINARY_CLOUD_NAME,
     CLOUDINARY_API_KEY,
     CLOUDINARY_API_SECRET,
-    SMTP_HOST,
-    SMTP_PORT = 587,
-    SMTP_USER,
-    SMTP_PASS,
-    SMTP_FROM = 'ForgeFlow <no-reply@forgeflow.app>',
+    RESEND_API_KEY,
+    EMAIL_FROM = 'ForgeFlow <onboarding@resend.dev>',
     EMAIL_DEBUG = 'false',
+    REQUIRE_EMAIL_VERIFICATION = 'true',
 } = process.env
 
 function requiredEnv(name, value) {
@@ -295,6 +293,26 @@ const userSchema = new mongoose.Schema(
         resetPasswordExpiresAt: {
             type: Date,
             default: null,
+        },
+
+        emailVerified: {
+            type: Boolean,
+            default: false,
+        },
+
+        emailVerificationCodeHash: {
+            type: String,
+            default: '',
+        },
+
+        emailVerificationExpiresAt: {
+            type: Date,
+            default: null,
+        },
+
+        emailVerificationAttempts: {
+            type: Number,
+            default: 0,
         },
 
         profile: {
@@ -1198,6 +1216,7 @@ function buildUserResponse(user) {
         avatarUrl: user.avatarUrl,
         provider: user.provider,
         role: user.role || 'user',
+        emailVerified: Boolean(user.emailVerified),
         hasPassword: Boolean(user.passwordHash),
         profile: user.profile,
         profileCompleted: user.profileCompleted,
@@ -1373,101 +1392,89 @@ function getSafeEmailError(error) {
         name: error?.name || 'Error',
         message: error?.message || 'Erro desconhecido ao enviar e-mail.',
         code: error?.code || '',
-        command: error?.command || '',
-        responseCode: error?.responseCode || '',
+        status: error?.status || '',
         response: error?.response || '',
     }
 }
 
-function isSmtpConfigured() {
-    return Boolean(SMTP_HOST && SMTP_USER && SMTP_PASS)
+function isEmailApiConfigured() {
+    return Boolean(RESEND_API_KEY)
 }
 
-async function createSmtpTransporter() {
-    const nodemailer = await import('nodemailer')
-
-    return nodemailer.default.createTransport({
-        host: SMTP_HOST,
-        port: Number(SMTP_PORT) || 587,
-        secure: Number(SMTP_PORT) === 465,
-        auth: {
-            user: SMTP_USER,
-            pass: SMTP_PASS,
-        },
-    })
-}
-
-async function sendEmail({ to, subject, text, html }) {
+async function sendEmail({ to, subject, html, text }) {
     const debugInfo = {
-        smtpConfigured: isSmtpConfigured(),
-        host: SMTP_HOST || '',
-        port: Number(SMTP_PORT) || 587,
-        userConfigured: Boolean(SMTP_USER),
-        passConfigured: Boolean(SMTP_PASS),
-        from: SMTP_FROM,
+        provider: 'resend',
+        apiConfigured: isEmailApiConfigured(),
+        from: EMAIL_FROM,
         to,
         subject,
     }
 
-    if (!isSmtpConfigured()) {
-        console.warn('[ForgeFlow][EMAIL] SMTP não configurado:', debugInfo)
+    if (!isEmailApiConfigured()) {
+        console.warn('[ForgeFlow][EMAIL] RESEND_API_KEY não configurada:', debugInfo)
 
         return {
             sent: false,
-            reason: 'smtp_not_configured',
+            reason: 'resend_api_key_missing',
             debugInfo,
         }
     }
 
     try {
-        console.log('[ForgeFlow][EMAIL] Tentando enviar e-mail:', debugInfo)
+        console.log('[ForgeFlow][EMAIL] Tentando enviar via Resend:', debugInfo)
 
-        const transporter = await createSmtpTransporter()
+        const response = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${RESEND_API_KEY}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                from: EMAIL_FROM,
+                to: [to],
+                subject,
+                html,
+                text,
+            }),
+        })
 
-        try {
-            await transporter.verify()
-            console.log('[ForgeFlow][EMAIL] SMTP verify OK.')
-        } catch (verifyError) {
-            const safeError = getSafeEmailError(verifyError)
-            console.error('[ForgeFlow][EMAIL] SMTP verify falhou:', safeError)
+        const data = await response.json().catch(() => null)
+
+        if (!response.ok) {
+            const apiError = {
+                name: 'ResendApiError',
+                message: data?.message || data?.error || `Resend retornou HTTP ${response.status}`,
+                code: data?.name || data?.code || '',
+                status: response.status,
+                response: data,
+            }
+
+            console.error('[ForgeFlow][EMAIL] Resend falhou:', apiError)
 
             return {
                 sent: false,
-                reason: 'smtp_verify_failed',
-                error: safeError,
+                reason: 'resend_api_failed',
+                error: apiError,
                 debugInfo,
             }
         }
 
-        const result = await transporter.sendMail({
-            from: SMTP_FROM,
-            to,
-            subject,
-            text,
-            html,
-        })
-
-        console.log('[ForgeFlow][EMAIL] E-mail enviado com sucesso:', {
-            messageId: result?.messageId,
-            accepted: result?.accepted,
-            rejected: result?.rejected,
-            response: result?.response,
-        })
+        console.log('[ForgeFlow][EMAIL] E-mail enviado via Resend:', data)
 
         return {
             sent: true,
-            messageId: result?.messageId || '',
-            accepted: result?.accepted || [],
-            rejected: result?.rejected || [],
-            response: result?.response || '',
+            provider: 'resend',
+            id: data?.id || '',
+            response: data,
         }
     } catch (error) {
         const safeError = getSafeEmailError(error)
-        console.error('[ForgeFlow][EMAIL] Erro ao enviar e-mail:', safeError)
+
+        console.error('[ForgeFlow][EMAIL] Erro inesperado ao enviar via Resend:', safeError)
 
         return {
             sent: false,
-            reason: 'send_failed',
+            reason: 'resend_send_failed',
             error: safeError,
             debugInfo,
         }
@@ -1480,19 +1487,39 @@ async function sendPasswordResetEmail({ email, resetUrl }) {
         subject: 'Redefinir senha do ForgeFlow',
         text: `Use este link para redefinir sua senha: ${resetUrl}`,
         html: `
-            <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111827">
+            <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
                 <h2>Redefinir senha do ForgeFlow</h2>
-                <p>Recebemos uma solicitação para redefinir sua senha.</p>
-                <p>
-                    <a
-                        href="${resetUrl}"
-                        style="display:inline-block;padding:12px 18px;background:#8b5cf6;color:#fff;border-radius:12px;text-decoration:none;font-weight:bold"
-                    >
-                        Redefinir senha
-                    </a>
-                </p>
-                <p>Se você não solicitou isso, ignore este e-mail.</p>
+                <p>Use o botão abaixo para redefinir sua senha.</p>
+                <p><a href="${resetUrl}" style="display:inline-block;padding:12px 18px;background:#8b5cf6;color:#fff;border-radius:12px;text-decoration:none;font-weight:bold">Redefinir senha</a></p>
+                <p>Se você não pediu isso, ignore este e-mail.</p>
                 <p style="font-size:12px;color:#6b7280">Este link expira em ${RESET_TOKEN_TTL_MINUTES} minutos.</p>
+            </div>
+        `,
+    })
+}
+
+function generateFourDigitCode() {
+    return String(Math.floor(1000 + Math.random() * 9000))
+}
+
+function hashVerificationCode(email, code) {
+    return crypto
+        .createHash('sha256')
+        .update(`${String(email || '').toLowerCase().trim()}:${String(code || '').trim()}`)
+        .digest('hex')
+}
+
+async function sendEmailVerificationCode({ email, code }) {
+    return sendEmail({
+        to: email,
+        subject: 'Código de verificação do ForgeFlow',
+        text: `Seu código de verificação do ForgeFlow é: ${code}. Ele expira em 15 minutos.`,
+        html: `
+            <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111">
+                <h2>Verifique sua conta ForgeFlow</h2>
+                <p>Use o código abaixo para concluir seu cadastro:</p>
+                <div style="font-size:32px;letter-spacing:8px;font-weight:900;background:#f4f4f5;padding:14px 18px;border-radius:14px;display:inline-block">${code}</div>
+                <p>Este código expira em 15 minutos.</p>
             </div>
         `,
     })
@@ -1642,11 +1669,11 @@ app.post('/admin/test-email', authMiddleware, requireAdmin, async (req, res) => 
         const result = await sendEmail({
             to,
             subject: 'Teste de e-mail do ForgeFlow',
-            text: 'Se você recebeu este e-mail, o SMTP do ForgeFlow está funcionando.',
+            text: 'Se você recebeu este e-mail, a API Resend do ForgeFlow está funcionando.',
             html: `
                 <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111827">
                     <h2>Teste de e-mail do ForgeFlow</h2>
-                    <p>Se você recebeu este e-mail, o SMTP está funcionando corretamente.</p>
+                    <p>Se você recebeu este e-mail, a API Resend está funcionando corretamente.</p>
                 </div>
             `,
         })
@@ -2169,7 +2196,7 @@ app.post('/auth/register', async (req, res) => {
         email: normalizedEmail,
     })
 
-    if (existingUser?.passwordHash) {
+    if (existingUser?.passwordHash && existingUser.emailVerified) {
         return res.status(409).json({
             message: 'Já existe uma conta com esse e-mail.',
         })
@@ -2191,11 +2218,13 @@ app.post('/auth/register', async (req, res) => {
     }
 
     const profileCompleted = buildProfileCompletion(profile)
+    const shouldVerifyEmail = REQUIRE_EMAIL_VERIFICATION !== 'false'
+    const verificationCode = generateFourDigitCode()
 
     let user
 
     if (existingUser) {
-        existingUser.name = existingUser.name || name.trim()
+        existingUser.name = name.trim() || existingUser.name
         existingUser.passwordHash = passwordHash
         existingUser.provider = existingUser.googleId ? 'both' : 'credentials'
         existingUser.profile = {
@@ -2203,6 +2232,13 @@ app.post('/auth/register', async (req, res) => {
             ...profile,
         }
         existingUser.profileCompleted = profileCompleted
+        existingUser.emailVerified = shouldVerifyEmail ? Boolean(existingUser.googleId) : true
+
+        if (shouldVerifyEmail && !existingUser.googleId) {
+            existingUser.emailVerificationCodeHash = hashVerificationCode(normalizedEmail, verificationCode)
+            existingUser.emailVerificationExpiresAt = new Date(Date.now() + 15 * 60 * 1000)
+            existingUser.emailVerificationAttempts = 0
+        }
 
         user = await existingUser.save()
     } else {
@@ -2213,6 +2249,29 @@ app.post('/auth/register', async (req, res) => {
             provider: 'credentials',
             profile,
             profileCompleted,
+            emailVerified: !shouldVerifyEmail,
+            ...(shouldVerifyEmail
+                ? {
+                    emailVerificationCodeHash: hashVerificationCode(normalizedEmail, verificationCode),
+                    emailVerificationExpiresAt: new Date(Date.now() + 15 * 60 * 1000),
+                    emailVerificationAttempts: 0,
+                }
+                : {}),
+        })
+    }
+
+    if (shouldVerifyEmail && !user.emailVerified) {
+        const emailResult = await sendEmailVerificationCode({
+            email: normalizedEmail,
+            code: verificationCode,
+        })
+
+        return res.status(201).json({
+            requiresEmailVerification: true,
+            email: normalizedEmail,
+            emailSent: Boolean(emailResult?.sent),
+            message: 'Código de verificação enviado.',
+            ...(process.env.NODE_ENV !== 'production' && !emailResult?.sent ? { devCode: verificationCode } : {}),
         })
     }
 
@@ -2221,6 +2280,114 @@ app.post('/auth/register', async (req, res) => {
     res.status(201).json({
         token,
         user: buildUserResponse(user),
+    })
+})
+
+app.post('/auth/verify-email', async (req, res) => {
+    const email = String(req.body?.email || '').trim().toLowerCase()
+    const code = String(req.body?.code || '').trim()
+
+    if (!email || !/^\d{4}$/.test(code)) {
+        return res.status(400).json({
+            message: 'Informe o e-mail e o código de 4 dígitos.',
+        })
+    }
+
+    const user = await User.findOne({ email })
+
+    if (!user) {
+        return res.status(400).json({
+            message: 'Código inválido ou expirado.',
+        })
+    }
+
+    if (user.emailVerified) {
+        const token = createToken(user)
+
+        return res.json({
+            token,
+            user: buildUserResponse(user),
+            message: 'E-mail já verificado.',
+        })
+    }
+
+    if (!user.emailVerificationExpiresAt || user.emailVerificationExpiresAt < new Date()) {
+        return res.status(400).json({
+            message: 'Código expirado. Solicite um novo código.',
+        })
+    }
+
+    if (Number(user.emailVerificationAttempts || 0) >= 5) {
+        return res.status(429).json({
+            message: 'Muitas tentativas. Solicite um novo código.',
+        })
+    }
+
+    const codeHash = hashVerificationCode(email, code)
+
+    if (codeHash !== user.emailVerificationCodeHash) {
+        user.emailVerificationAttempts = Number(user.emailVerificationAttempts || 0) + 1
+        await user.save()
+
+        return res.status(400).json({
+            message: 'Código inválido.',
+        })
+    }
+
+    user.emailVerified = true
+    user.emailVerificationCodeHash = ''
+    user.emailVerificationExpiresAt = null
+    user.emailVerificationAttempts = 0
+    await user.save()
+
+    const token = createToken(user)
+
+    return res.json({
+        token,
+        user: buildUserResponse(user),
+        message: 'E-mail verificado com sucesso.',
+    })
+})
+
+app.post('/auth/resend-verification-code', async (req, res) => {
+    const email = String(req.body?.email || '').trim().toLowerCase()
+
+    if (!email) {
+        return res.status(400).json({
+            message: 'Informe o e-mail.',
+        })
+    }
+
+    const user = await User.findOne({ email })
+
+    if (!user) {
+        return res.json({
+            message: 'Se existir uma conta pendente, enviaremos um novo código.',
+        })
+    }
+
+    if (user.emailVerified) {
+        return res.json({
+            message: 'Este e-mail já está verificado.',
+        })
+    }
+
+    const code = generateFourDigitCode()
+
+    user.emailVerificationCodeHash = hashVerificationCode(email, code)
+    user.emailVerificationExpiresAt = new Date(Date.now() + 15 * 60 * 1000)
+    user.emailVerificationAttempts = 0
+    await user.save()
+
+    const emailResult = await sendEmailVerificationCode({
+        email,
+        code,
+    })
+
+    return res.json({
+        message: 'Novo código enviado.',
+        emailSent: Boolean(emailResult?.sent),
+        ...(process.env.NODE_ENV !== 'production' && !emailResult?.sent ? { devCode: code } : {}),
     })
 })
 
@@ -2256,6 +2423,28 @@ app.post('/auth/login', async (req, res) => {
     if (!passwordIsValid) {
         return res.status(401).json({
             message: 'E-mail ou senha inválidos.',
+        })
+    }
+
+    if (REQUIRE_EMAIL_VERIFICATION !== 'false' && !user.emailVerified && user.provider !== 'google') {
+        const code = generateFourDigitCode()
+
+        user.emailVerificationCodeHash = hashVerificationCode(user.email, code)
+        user.emailVerificationExpiresAt = new Date(Date.now() + 15 * 60 * 1000)
+        user.emailVerificationAttempts = 0
+        await user.save()
+
+        const emailResult = await sendEmailVerificationCode({
+            email: user.email,
+            code,
+        })
+
+        return res.status(403).json({
+            message: 'Verifique seu e-mail antes de entrar.',
+            requiresEmailVerification: true,
+            email: user.email,
+            emailSent: Boolean(emailResult?.sent),
+            ...(process.env.NODE_ENV !== 'production' && !emailResult?.sent ? { devCode: code } : {}),
         })
     }
 
