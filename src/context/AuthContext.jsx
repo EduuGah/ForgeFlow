@@ -1,9 +1,11 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getCurrentUser, logout as logoutService, logoutFromApi } from '../services/api'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
+  const navigate = useNavigate()
   const [user, setUser] = useState(null)
   const [loadingUser, setLoadingUser] = useState(true)
 
@@ -18,10 +20,18 @@ export function AuthProvider({ children }) {
     }
   }
 
-  async function logout() {
+  function logout({ redirect = true } = {}) {
     setUser(null)
-    await logoutFromApi()
+    setLoadingUser(false)
     logoutService()
+
+    if (redirect) {
+      navigate('/login', { replace: true })
+    }
+
+    logoutFromApi().catch((error) => {
+      console.warn('[ForgeFlow] Não foi possível limpar sessão remota:', error)
+    })
   }
 
   useEffect(() => {
@@ -37,7 +47,7 @@ export function AuthProvider({ children }) {
       loadUser,
       logout,
     }),
-    [user, loadingUser]
+    [user, loadingUser, navigate]
   )
 
   return (

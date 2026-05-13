@@ -13,6 +13,16 @@ import multer from 'multer'
 import { v2 as cloudinary } from 'cloudinary'
 import crypto from 'crypto'
 import {
+    AUTH_COOKIE_NAME,
+    CSRF_COOKIE_NAME,
+    clearAuthCookie,
+    createCsrfToken,
+    getTokenFromRequest,
+    setAuthCookie,
+    setCsrfCookie,
+    usesCookieAuth,
+} from './utils/authCookie.js'
+import {
     normalizeActiveWorkoutPayload,
     normalizeBackupPayload,
     validateWorkoutHistoryPayload,
@@ -198,109 +208,6 @@ const normalizedFrontendUrl = FRONTEND_URL.replace(/\/$/, '')
 const normalizedBackendUrl = BACKEND_URL.replace(/\/$/, '')
 
 
-
-const AUTH_COOKIE_NAME = 'forgeflow_session'
-const CSRF_COOKIE_NAME = 'forgeflow_csrf'
-
-function createCsrfToken() {
-    return crypto.randomBytes(32).toString('hex')
-}
-
-function getCsrfCookieOptions() {
-    return {
-        httpOnly: false,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        path: '/',
-        maxAge: 1000 * 60 * 60 * 24,
-    }
-}
-
-function setCsrfCookie(res, csrfToken) {
-    res.cookie(CSRF_COOKIE_NAME, csrfToken, getCsrfCookieOptions())
-}
-
-function clearCsrfCookie(res) {
-    res.clearCookie(CSRF_COOKIE_NAME, {
-        ...getCsrfCookieOptions(),
-        maxAge: undefined,
-    })
-}
-
-function getAuthCookieOptions() {
-    return {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        path: '/',
-        maxAge: 1000 * 60 * 60 * 24,
-    }
-}
-
-function setAuthCookie(res, token) {
-    const csrfToken = createCsrfToken()
-    res.cookie(AUTH_COOKIE_NAME, token, getAuthCookieOptions())
-    setCsrfCookie(res, csrfToken)
-    return csrfToken
-}
-
-function clearAuthCookie(res) {
-    res.clearCookie(AUTH_COOKIE_NAME, {
-        ...getAuthCookieOptions(),
-        maxAge: undefined,
-    })
-    clearCsrfCookie(res)
-}
-
-function getTokenFromRequest(req) {
-    const authHeader = req.headers.authorization
-
-    if (authHeader?.startsWith('Bearer ')) {
-        return authHeader.split(' ')[1]
-    }
-
-    return req.cookies?.[AUTH_COOKIE_NAME] || ''
-}
-
-function usesCookieAuth(req) {
-    return Boolean(req.cookies?.[AUTH_COOKIE_NAME])
-}
-
-function csrfProtection(req, res, next) {
-    if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
-        return next()
-    }
-
-    const publicAuthPaths = [
-        '/auth/login',
-        '/auth/register',
-        '/auth/logout',
-        '/auth/forgot-password',
-    ]
-
-    if (
-        publicAuthPaths.includes(req.path) ||
-        req.path.startsWith('/auth/reset-password/')
-    ) {
-        return next()
-    }
-
-    if (!usesCookieAuth(req)) {
-        return next()
-    }
-
-    const cookieToken = req.cookies?.[CSRF_COOKIE_NAME]
-    const headerToken = req.headers['x-csrf-token']
-
-    if (!cookieToken || !headerToken || cookieToken !== headerToken) {
-        return res.status(403).json({
-            message: 'Falha de segurança CSRF. Recarregue a página e tente novamente.',
-            reason: 'csrf_failed',
-        })
-    }
-
-    return next()
-}
 
 function requireRecentPassword(user, password) {
     if (!user?.passwordHash) {

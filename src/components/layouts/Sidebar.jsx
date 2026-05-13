@@ -68,8 +68,8 @@ function Sidebar({ isOpen = false, onClose }) {
   const { user, logout } = useAuth()
 
   function handleLogout() {
-    onClose?.()
     logout()
+    onClose?.()
   }
 
   return (
@@ -248,9 +248,9 @@ function Sidebar({ isOpen = false, onClose }) {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 text-xs font-bold text-[var(--ff-danger-text)] transition hover:bg-red-500/15"
+                className="group mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-red-500/35 bg-red-500/10 text-sm font-black text-red-200 shadow-[0_0_0_rgba(239,68,68,0)] transition duration-200 hover:border-red-400/70 hover:bg-red-500/25 hover:text-white hover:shadow-[0_0_22px_rgba(239,68,68,0.18)] active:scale-[0.98]"
               >
-                <LogOut size={15} />
+                <LogOut size={16} className="transition group-hover:-translate-x-0.5" />
                 Sair
               </button>
             </div>

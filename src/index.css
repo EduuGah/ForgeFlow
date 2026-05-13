@@ -2420,3 +2420,9 @@ main {
     word-break: break-word;
   }
 }
+
+
+/* Etapa 46 — logout mais claro */
+.ff-logout-button {
+  -webkit-tap-highlight-color: transparent;
+}
