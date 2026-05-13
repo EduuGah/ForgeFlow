@@ -2200,6 +2200,287 @@ app.delete('/admin/analytics/orphan-history', authMiddleware, requireAdmin, asyn
 })
 
 
+
+app.get('/admin/rankings', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const days = Math.min(Math.max(Number(req.query.days) || 30, 7), 365)
+        const since = new Date()
+        since.setDate(since.getDate() - days + 1)
+        since.setHours(0, 0, 0, 0)
+
+        const staleActiveSince = new Date(Date.now() - 1000 * 60 * 60 * 24)
+        const inactiveSince = new Date(Date.now() - 1000 * 60 * 60 * 24 * 30)
+
+        const [
+            mostWorkouts,
+            highestVolume,
+            mostSets,
+            mostReps,
+            mostLogins,
+            usersWithoutWorkout,
+            inactiveUsers,
+            activeWorkouts,
+            staleActiveWorkouts,
+        ] = await Promise.all([
+            WorkoutHistory.aggregate([
+                { $match: { finishedAt: { $gte: since } } },
+                {
+                    $group: {
+                        _id: '$userId',
+                        value: { $sum: 1 },
+                        totalVolume: { $sum: { $ifNull: ['$totalVolume', 0] } },
+                        totalSets: { $sum: { $ifNull: ['$totalSets', 0] } },
+                    },
+                },
+                { $sort: { value: -1 } },
+                { $limit: 10 },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: '_id',
+                        foreignField: '_id',
+                        as: 'user',
+                    },
+                },
+                { $unwind: { path: '$user', preserveNullAndEmptyArrays: false } },
+                {
+                    $project: {
+                        userId: '$_id',
+                        value: 1,
+                        totalVolume: 1,
+                        totalSets: 1,
+                        name: '$user.name',
+                        email: '$user.email',
+                        lastLoginAt: '$user.lastLoginAt',
+                    },
+                },
+            ]),
+            WorkoutHistory.aggregate([
+                { $match: { finishedAt: { $gte: since } } },
+                {
+                    $group: {
+                        _id: '$userId',
+                        value: { $sum: { $ifNull: ['$totalVolume', 0] } },
+                        count: { $sum: 1 },
+                    },
+                },
+                { $sort: { value: -1 } },
+                { $limit: 10 },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: '_id',
+                        foreignField: '_id',
+                        as: 'user',
+                    },
+                },
+                { $unwind: { path: '$user', preserveNullAndEmptyArrays: false } },
+                {
+                    $project: {
+                        userId: '$_id',
+                        value: 1,
+                        count: 1,
+                        name: '$user.name',
+                        email: '$user.email',
+                        lastLoginAt: '$user.lastLoginAt',
+                    },
+                },
+            ]),
+            WorkoutHistory.aggregate([
+                { $match: { finishedAt: { $gte: since } } },
+                {
+                    $group: {
+                        _id: '$userId',
+                        value: { $sum: { $ifNull: ['$totalSets', 0] } },
+                        count: { $sum: 1 },
+                    },
+                },
+                { $sort: { value: -1 } },
+                { $limit: 10 },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: '_id',
+                        foreignField: '_id',
+                        as: 'user',
+                    },
+                },
+                { $unwind: { path: '$user', preserveNullAndEmptyArrays: false } },
+                {
+                    $project: {
+                        userId: '$_id',
+                        value: 1,
+                        count: 1,
+                        name: '$user.name',
+                        email: '$user.email',
+                        lastLoginAt: '$user.lastLoginAt',
+                    },
+                },
+            ]),
+            WorkoutHistory.aggregate([
+                { $match: { finishedAt: { $gte: since } } },
+                {
+                    $group: {
+                        _id: '$userId',
+                        value: { $sum: { $ifNull: ['$totalReps', 0] } },
+                        count: { $sum: 1 },
+                    },
+                },
+                { $sort: { value: -1 } },
+                { $limit: 10 },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: '_id',
+                        foreignField: '_id',
+                        as: 'user',
+                    },
+                },
+                { $unwind: { path: '$user', preserveNullAndEmptyArrays: false } },
+                {
+                    $project: {
+                        userId: '$_id',
+                        value: 1,
+                        count: 1,
+                        name: '$user.name',
+                        email: '$user.email',
+                        lastLoginAt: '$user.lastLoginAt',
+                    },
+                },
+            ]),
+            LoginEvent.aggregate([
+                { $match: { createdAt: { $gte: since } } },
+                {
+                    $group: {
+                        _id: '$userId',
+                        value: { $sum: 1 },
+                        email: { $last: '$email' },
+                        lastAccessAt: { $max: '$createdAt' },
+                    },
+                },
+                { $sort: { value: -1, lastAccessAt: -1 } },
+                { $limit: 10 },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: '_id',
+                        foreignField: '_id',
+                        as: 'user',
+                    },
+                },
+                { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+                {
+                    $project: {
+                        userId: '$_id',
+                        value: 1,
+                        name: '$user.name',
+                        email: { $ifNull: ['$user.email', '$email'] },
+                        lastAccessAt: 1,
+                    },
+                },
+            ]),
+            User.aggregate([
+                {
+                    $lookup: {
+                        from: 'workouthistories',
+                        localField: '_id',
+                        foreignField: 'userId',
+                        as: 'history',
+                    },
+                },
+                { $match: { history: { $size: 0 } } },
+                { $sort: { createdAt: -1 } },
+                { $limit: 10 },
+                {
+                    $project: {
+                        userId: '$_id',
+                        name: 1,
+                        email: 1,
+                        createdAt: 1,
+                        lastLoginAt: 1,
+                    },
+                },
+            ]),
+            User.find({
+                $or: [
+                    { lastLoginAt: { $exists: false } },
+                    { lastLoginAt: null },
+                    { lastLoginAt: { $lt: inactiveSince } },
+                ],
+            })
+                .sort({ lastLoginAt: 1, createdAt: -1 })
+                .limit(10)
+                .select('name email createdAt lastLoginAt')
+                .lean(),
+            ActiveWorkoutSession.find({})
+                .sort({ updatedAt: -1 })
+                .limit(15)
+                .lean(),
+            ActiveWorkoutSession.find({ updatedAt: { $lt: staleActiveSince } })
+                .sort({ updatedAt: 1 })
+                .limit(15)
+                .lean(),
+        ])
+
+        async function hydrateActiveWorkoutSessions(items = []) {
+            const userIds = items.map((item) => item.userId).filter(Boolean)
+            const users = await User.find({ _id: { $in: userIds } })
+                .select('name email lastLoginAt')
+                .lean()
+
+            const userMap = new Map(users.map((item) => [String(item._id), item]))
+
+            return items.map((item) => {
+                const mappedUser = userMap.get(String(item.userId))
+                const session = item.session || {}
+
+                return {
+                    id: String(item._id),
+                    userId: String(item.userId),
+                    name: mappedUser?.name || 'Usuário',
+                    email: mappedUser?.email || '',
+                    workoutName: session.workoutName || session.name || 'Treino ativo',
+                    exerciseCount: Array.isArray(session.exercises) ? session.exercises.length : 0,
+                    startedAt: session.startedAt || null,
+                    updatedAt: item.updatedAt,
+                    lastLoginAt: mappedUser?.lastLoginAt || null,
+                }
+            })
+        }
+
+        return res.json({
+            period: {
+                days,
+                since,
+                inactiveSince,
+                staleActiveSince,
+            },
+            mostWorkouts,
+            highestVolume,
+            mostSets,
+            mostReps,
+            mostLogins,
+            usersWithoutWorkout,
+            inactiveUsers: inactiveUsers.map((item) => ({
+                userId: String(item._id),
+                name: item.name,
+                email: item.email,
+                createdAt: item.createdAt,
+                lastLoginAt: item.lastLoginAt,
+            })),
+            activeWorkouts: await hydrateActiveWorkoutSessions(activeWorkouts),
+            staleActiveWorkouts: await hydrateActiveWorkoutSessions(staleActiveWorkouts),
+        })
+    } catch (error) {
+        console.error(error)
+
+        return res.status(500).json({
+            message: 'Erro ao carregar rankings administrativos.',
+        })
+    }
+})
+
+
 app.get('/admin/analytics', authMiddleware, requireAdmin, async (req, res) => {
     try {
         const days = Math.min(Math.max(Number(req.query.days) || 14, 7), 90)

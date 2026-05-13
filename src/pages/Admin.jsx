@@ -25,6 +25,7 @@ import {
   UserCog,
   UserRound,
   UsersRound,
+  Zap,
 } from 'lucide-react'
 
 import PageHeader from '../components/ui/PageHeader'
@@ -148,6 +149,68 @@ function MiniBarChart({ title, description, series = [], valueKey = 'count' }) {
   )
 }
 
+
+function RankingCard({ title, description, icon: Icon = Trophy, items = [], valueLabel = '', formatValue = (value) => value, empty = 'Sem dados neste período.' }) {
+  return (
+    <Card className="p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h3 className="text-base font-black text-[var(--ff-text)]">{title}</h3>
+          {description && (
+            <p className="mt-1 text-xs text-[var(--ff-muted)]">{description}</p>
+          )}
+        </div>
+
+        <Icon size={19} className="text-[var(--ff-accent-text)]" />
+      </div>
+
+      <div className="mt-4 space-y-2">
+        {items.length === 0 ? (
+          <p className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3 text-sm text-[var(--ff-muted)]">
+            {empty}
+          </p>
+        ) : (
+          items.map((item, index) => (
+            <div
+              key={item.userId || item.email || item.id || index}
+              className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-sm font-black text-[var(--ff-text)]">
+                  {index + 1}. {item.name || 'Usuário'}
+                </p>
+                <p className="truncate text-xs text-[var(--ff-muted)]">
+                  {item.email || 'sem e-mail'}
+                </p>
+                {item.lastLoginAt && (
+                  <p className="truncate text-[11px] text-[var(--ff-muted-2)]">
+                    Último acesso: {formatDate(item.lastLoginAt, true)}
+                  </p>
+                )}
+                {item.updatedAt && (
+                  <p className="truncate text-[11px] text-[var(--ff-muted-2)]">
+                    Atualizado: {formatDate(item.updatedAt, true)}
+                  </p>
+                )}
+              </div>
+
+              <div className="shrink-0 text-right">
+                <p className="text-sm font-black text-[var(--ff-text)]">
+                  {formatValue(item.value ?? item.count ?? item.exerciseCount ?? 0)}
+                </p>
+                <p className="text-[11px] text-[var(--ff-muted)]">
+                  {valueLabel}
+                </p>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </Card>
+  )
+}
+
+
 function getUserId(item) {
   return item?.id || item?._id || ''
 }
@@ -157,6 +220,7 @@ function Admin() {
 
   const [adminStats, setAdminStats] = useState(null)
   const [analytics, setAnalytics] = useState(null)
+  const [adminRankings, setAdminRankings] = useState(null)
   const [analyticsDays, setAnalyticsDays] = useState(14)
   const [users, setUsers] = useState([])
   const [query, setQuery] = useState('')
@@ -201,6 +265,16 @@ function Admin() {
     } catch (error) {
       console.error(error)
       showToast('error', 'Erro ao carregar métricas', error.message)
+    }
+  }
+
+  async function loadRankings(days = analyticsDays) {
+    try {
+      const data = await apiFetch(`/admin/rankings?days=${days}`)
+      setAdminRankings(data)
+    } catch (error) {
+      console.error(error)
+      showToast('error', 'Erro ao carregar rankings', error.message)
     }
   }
 
@@ -296,6 +370,7 @@ function Admin() {
       )
 
       await loadAnalytics(analyticsDays)
+      await loadRankings(analyticsDays)
       await loadAdminStats()
     } catch (error) {
       console.error(error)
@@ -385,6 +460,7 @@ function Admin() {
 
     loadAdminStats()
     loadAnalytics()
+    loadRankings()
     loadUsers()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin, roleFilter, statusFilter, providerFilter])
@@ -408,6 +484,7 @@ function Admin() {
   const analyticsSeries = analytics?.series || {}
   const recentLogins = Array.isArray(analytics?.recentLogins) ? analytics.recentLogins : []
   const topWorkoutUsers = Array.isArray(analytics?.topWorkoutUsers) ? analytics.topWorkoutUsers : []
+  const rankings = adminRankings || {}
 
   if (!isAdmin) {
     return (
@@ -471,6 +548,7 @@ function Admin() {
               type="button"
               onClick={() => {
                 loadAnalytics(analyticsDays)
+                loadRankings(analyticsDays)
                 loadAdminStats()
               }}
               className="h-10 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 text-xs font-black text-[var(--ff-muted)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)]"
@@ -485,6 +563,7 @@ function Admin() {
                 onClick={() => {
                   setAnalyticsDays(days)
                   loadAnalytics(days)
+                  loadRankings(days)
                 }}
                 className={[
                   'h-10 rounded-2xl border px-3 text-xs font-black transition',
@@ -645,6 +724,105 @@ function Admin() {
           </Card>
         </div>
       </section>
+
+      <section className="space-y-4">
+        <div className="flex flex-col gap-2 rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-xl font-black text-[var(--ff-text)]">
+              Rankings informativos
+            </h2>
+            <p className="mt-1 text-sm text-[var(--ff-muted)]">
+              Filtros rápidos para entender uso, volume, frequência e possíveis contas paradas.
+            </p>
+          </div>
+
+          <Badge variant="purple">
+            {analyticsDays} dias
+          </Badge>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          <RankingCard
+            title="Mais treinos"
+            description="Usuários com mais treinos finalizados."
+            icon={Dumbbell}
+            items={Array.isArray(rankings.mostWorkouts) ? rankings.mostWorkouts : []}
+            valueLabel="treinos"
+          />
+
+          <RankingCard
+            title="Maior volume"
+            description="Volume total levantado no período."
+            icon={Trophy}
+            items={Array.isArray(rankings.highestVolume) ? rankings.highestVolume : []}
+            valueLabel="kg"
+            formatValue={formatCompactNumber}
+          />
+
+          <RankingCard
+            title="Mais séries"
+            description="Soma de séries finalizadas."
+            icon={ListChecks}
+            items={Array.isArray(rankings.mostSets) ? rankings.mostSets : []}
+            valueLabel="séries"
+            formatValue={formatCompactNumber}
+          />
+
+          <RankingCard
+            title="Mais reps"
+            description="Soma de repetições registradas."
+            icon={Activity}
+            items={Array.isArray(rankings.mostReps) ? rankings.mostReps : []}
+            valueLabel="reps"
+            formatValue={formatCompactNumber}
+          />
+
+          <RankingCard
+            title="Mais acessos"
+            description="Eventos de login registrados."
+            icon={CalendarDays}
+            items={Array.isArray(rankings.mostLogins) ? rankings.mostLogins : []}
+            valueLabel="acessos"
+          />
+
+          <RankingCard
+            title="Sem treino"
+            description="Usuários que ainda não possuem histórico."
+            icon={AlertTriangle}
+            items={Array.isArray(rankings.usersWithoutWorkout) ? rankings.usersWithoutWorkout.map((item) => ({ ...item, value: '—' })) : []}
+            valueLabel="sem histórico"
+            empty="Nenhum usuário sem treino encontrado."
+          />
+
+          <RankingCard
+            title="Sem acesso recente"
+            description="Usuários sem login nos últimos 30 dias."
+            icon={Clock3}
+            items={Array.isArray(rankings.inactiveUsers) ? rankings.inactiveUsers.map((item) => ({ ...item, value: item.lastLoginAt ? '30d+' : 'nunca' })) : []}
+            valueLabel="status"
+            empty="Nenhum usuário inativo encontrado."
+          />
+
+          <RankingCard
+            title="Treino ativo"
+            description="Sessões ativas salvas no servidor."
+            icon={Zap}
+            items={Array.isArray(rankings.activeWorkouts) ? rankings.activeWorkouts.map((item) => ({ ...item, value: item.exerciseCount || 0 })) : []}
+            valueLabel="exercícios"
+            empty="Nenhum treino ativo encontrado."
+          />
+
+          <RankingCard
+            title="Treino travado"
+            description="Treinos ativos sem atualização há mais de 24h."
+            icon={AlertTriangle}
+            items={Array.isArray(rankings.staleActiveWorkouts) ? rankings.staleActiveWorkouts.map((item) => ({ ...item, value: item.exerciseCount || 0 })) : []}
+            valueLabel="exercícios"
+            empty="Nenhum treino travado encontrado."
+          />
+        </div>
+      </section>
+
 
       <section className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(390px,0.85fr)_minmax(0,1.55fr)]">
         <Card className="p-4">

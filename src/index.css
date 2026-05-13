@@ -2426,3 +2426,9 @@ main {
 .ff-logout-button {
   -webkit-tap-highlight-color: transparent;
 }
+
+
+/* Etapa 47 — Admin rankings */
+.ff-hevy-admin .ff-ranking-card {
+  min-width: 0;
+}
