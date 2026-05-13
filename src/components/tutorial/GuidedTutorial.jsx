@@ -65,7 +65,7 @@ function useTargetRect(step) {
       })
     }
 
-    timeoutId = window.setTimeout(updateRect, 260)
+    timeoutId = window.setTimeout(updateRect, 240)
 
     window.addEventListener('resize', updateRect)
     window.addEventListener('scroll', updateRect, { passive: true })
@@ -114,7 +114,7 @@ function WelcomePrompt() {
   if (!welcomePromptVisible) return null
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/70 px-4 pb-4 backdrop-blur-md sm:items-center sm:pb-0">
+    <div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/55 px-4 pb-4 backdrop-blur-sm sm:items-center sm:pb-0">
       <div className="ff-tutorial-card w-full max-w-lg rounded-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] p-5 text-[var(--ff-text)] shadow-2xl sm:p-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
@@ -127,7 +127,7 @@ function WelcomePrompt() {
                 Tutorial guiado
               </p>
 
-              <h2 className="mt-1 text-xl font-black tracking-tight">
+              <h2 className="mt-1 text-2xl font-black tracking-tight">
                 Bem-vindo ao ForgeFlow
               </h2>
 
@@ -181,11 +181,11 @@ function WelcomePrompt() {
 function TutorialSpotlight({ rect }) {
   if (!rect) return null
 
-  const padding = 10
+  const padding = 8
 
   return (
     <div
-      className="pointer-events-none fixed z-[96] rounded-[1.75rem] border-2 border-[var(--ff-accent-border)] shadow-[0_0_0_9999px_rgba(0,0,0,0.36),0_0_34px_var(--ff-accent-shadow)] transition-all duration-200"
+      className="pointer-events-none fixed z-[92] rounded-[1.5rem] border-2 border-[var(--ff-accent-border)] shadow-[0_0_26px_var(--ff-accent-shadow)] transition-all duration-200"
       style={{
         top: rect.top - padding,
         left: rect.left - padding,
@@ -196,28 +196,20 @@ function TutorialSpotlight({ rect }) {
   )
 }
 
-function TutorialArrow({ rect, cardPosition }) {
-  if (!rect || !cardPosition?.style?.paddingTop) return null
-
-  const targetX = rect.left + rect.width / 2
-  const targetY = rect.top + rect.height / 2
-  const cardX = Number(cardPosition.style.paddingLeft || 0) + 32
-  const cardY = Number(cardPosition.style.paddingTop || 0) + 24
-  const pointsDown = cardY < targetY
+function TutorialArrow({ rect }) {
+  if (!rect) return null
 
   return (
     <div
-      className="pointer-events-none fixed z-[98] flex items-center justify-center rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent)] text-white shadow-[0_0_20px_var(--ff-accent-shadow)]"
+      className="pointer-events-none fixed z-[93] hidden items-center gap-2 rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent)] px-3 py-2 text-xs font-black text-white shadow-[0_0_18px_var(--ff-accent-shadow)] md:flex"
       style={{
-        left: Math.max(16, Math.min(window.innerWidth - 56, (targetX + cardX) / 2)),
-        top: Math.max(16, Math.min(window.innerHeight - 56, (targetY + cardY) / 2)),
-        width: 34,
-        height: 34,
-        transform: pointsDown ? 'rotate(90deg)' : 'rotate(-90deg)',
+        left: Math.min(window.innerWidth - 190, Math.max(18, rect.left + rect.width + 14)),
+        top: Math.min(window.innerHeight - 64, Math.max(18, rect.top + rect.height / 2 - 20)),
       }}
       aria-hidden="true"
     >
-      <ArrowRight size={18} />
+      <ArrowLeft size={15} />
+      Veja aqui
     </div>
   )
 }
@@ -237,59 +229,20 @@ function TutorialOverlay() {
 
   const targetRect = useTargetRect(activeStep)
 
-  const cardPosition = useMemo(() => {
-    const viewportWidth = window.innerWidth
-    const viewportHeight = window.innerHeight
-
-    if (!targetRect || activeStep?.placement === 'center' || viewportWidth < 768) {
-      return {
-        className: 'items-end justify-center md:items-center',
-        style: {},
-      }
-    }
-
-    const cardWidth = Math.min(430, viewportWidth - 32)
-    const cardHeight = 310
-    const targetCenterX = targetRect.left + targetRect.width / 2
-
-    let left = targetCenterX < viewportWidth / 2
-      ? Math.min(viewportWidth - cardWidth - 16, targetRect.left + targetRect.width + 24)
-      : Math.max(16, targetRect.left - cardWidth - 24)
-
-    let top = targetRect.top
-
-    if (top + cardHeight > viewportHeight - 16) {
-      top = viewportHeight - cardHeight - 16
-    }
-
-    if (top < 16) top = 16
-
-    return {
-      className: 'items-start justify-start',
-      style: {
-        paddingTop: top,
-        paddingLeft: left,
-      },
-    }
-  }, [activeStep?.placement, targetRect])
-
   if (!isRunning || !activeFlow || !activeStep) return null
 
   const isLast = activeStepIndex >= activeFlow.steps.length - 1
 
   return (
-    <div
-      className={`fixed inset-0 z-[95] flex bg-transparent px-4 pb-4 sm:pb-0 ${cardPosition.className}`}
-      style={cardPosition.style}
-    >
+    <div className="pointer-events-none fixed inset-0 z-[91]">
       <TutorialSpotlight rect={targetRect} />
-      <TutorialArrow rect={targetRect} cardPosition={cardPosition} />
+      <TutorialArrow rect={targetRect} />
 
-      <div className="ff-tutorial-card relative z-[97] w-full max-w-[430px] rounded-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 text-[var(--ff-text)] shadow-2xl sm:p-5">
+      <aside className="ff-tutorial-side-panel pointer-events-auto fixed bottom-0 left-0 right-0 z-[94] max-h-[78dvh] overflow-y-auto rounded-t-[1.6rem] border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 text-[var(--ff-text)] shadow-2xl md:bottom-auto md:left-auto md:right-4 md:top-[calc(5rem+env(safe-area-inset-top))] md:max-h-[calc(100dvh-6rem)] md:w-[390px] md:rounded-[1.6rem] md:p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)] shadow-[0_0_22px_var(--ff-accent-shadow)]">
-              <HelpCircle size={23} />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)] shadow-[0_0_18px_var(--ff-accent-shadow)]">
+              <HelpCircle size={21} />
             </div>
 
             <div>
@@ -310,32 +263,50 @@ function TutorialOverlay() {
           <button
             type="button"
             onClick={skipTutorial}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-[var(--ff-muted)] transition hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)]"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl text-[var(--ff-muted)] transition hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)]"
             aria-label="Pular tutorial"
           >
-            <X size={19} />
+            <X size={18} />
           </button>
         </div>
 
-        <div className="mt-5">
+        <div className="mt-4">
           <TutorialProgress current={activeStepIndex} total={activeFlow.steps.length} />
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-[auto_1fr_auto_auto]">
+        <div className="mt-4 grid grid-cols-2 gap-2">
           <button
             type="button"
             onClick={previousStep}
             disabled={activeStepIndex === 0}
-            className="flex h-10 items-center justify-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-sm font-bold text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)] disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-10 items-center justify-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 text-sm font-bold text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)] disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <ArrowLeft size={16} />
+            <ArrowLeft size={15} />
             Voltar
           </button>
 
           <button
             type="button"
+            onClick={isLast ? completeTutorial : nextStep}
+            className="flex h-10 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-3 text-sm font-black text-white shadow-[0_0_18px_var(--ff-accent-shadow)] transition hover:bg-[var(--ff-accent-hover)]"
+          >
+            {isLast ? (
+              <>
+                Concluir
+                <CheckCircle2 size={15} />
+              </>
+            ) : (
+              <>
+                Próximo
+                <ArrowRight size={15} />
+              </>
+            )}
+          </button>
+
+          <button
+            type="button"
             onClick={skipStep}
-            className="flex h-10 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-transparent px-4 text-sm font-bold text-[var(--ff-muted)] transition hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)]"
+            className="flex h-10 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-transparent px-3 text-sm font-bold text-[var(--ff-muted)] transition hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)]"
           >
             Pular etapa
           </button>
@@ -343,39 +314,21 @@ function TutorialOverlay() {
           <button
             type="button"
             onClick={skipTutorial}
-            className="flex h-10 items-center justify-center rounded-2xl border border-red-500/25 bg-red-500/10 px-4 text-sm font-bold text-red-200 transition hover:bg-red-500/15"
+            className="flex h-10 items-center justify-center rounded-2xl border border-red-500/25 bg-red-500/10 px-3 text-sm font-bold text-red-200 transition hover:bg-red-500/15"
           >
             Pular tudo
-          </button>
-
-          <button
-            type="button"
-            onClick={isLast ? completeTutorial : nextStep}
-            className="col-span-2 flex h-10 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-black text-white shadow-[0_0_20px_var(--ff-accent-shadow)] transition hover:bg-[var(--ff-accent-hover)] sm:col-span-1"
-          >
-            {isLast ? (
-              <>
-                Concluir
-                <CheckCircle2 size={17} />
-              </>
-            ) : (
-              <>
-                Próximo
-                <ArrowRight size={17} />
-              </>
-            )}
           </button>
         </div>
 
         <button
           type="button"
           onClick={() => window.dispatchEvent(new CustomEvent('forgeflow:reset-tutorial'))}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-2 text-xs font-bold text-[var(--ff-muted)] transition hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)]"
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-2 text-xs font-bold text-[var(--ff-muted)] transition hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)]"
         >
           <RotateCcw size={14} />
           Reiniciar estado do tutorial
         </button>
-      </div>
+      </aside>
     </div>
   )
 }
@@ -419,7 +372,7 @@ function FloatingTutorialHelp() {
                 setIsOpen(false)
                 startTutorial(currentPageFlowId || 'welcome')
               }}
-              className="flex h-10 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-4 text-sm font-black text-white shadow-[0_0_18px_var(--ff-accent-shadow)]"
+              className="flex h-11 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-4 text-sm font-black text-white shadow-[0_0_18px_var(--ff-accent-shadow)]"
             >
               <PlayCircle size={16} />
               Ver tutorial desta tela
@@ -431,7 +384,7 @@ function FloatingTutorialHelp() {
                 setIsOpen(false)
                 startTutorial('welcome')
               }}
-              className="flex h-10 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-sm font-bold text-[var(--ff-text-soft)]"
+              className="flex h-11 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-sm font-bold text-[var(--ff-text-soft)]"
             >
               Tutorial completo
             </button>

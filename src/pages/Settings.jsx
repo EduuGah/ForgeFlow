@@ -342,30 +342,6 @@ function Settings() {
 
     loadSettings()
 
-    function startGuidedTutorial(flowId = 'welcome') {
-    window.dispatchEvent(
-      new CustomEvent('forgeflow:start-tutorial', {
-        detail: { flowId },
-      })
-    )
-
-    showToast(
-      'success',
-      'Tutorial aberto',
-      'O guia foi iniciado. Você pode pular etapas ou encerrar quando quiser.'
-    )
-  }
-
-  function resetGuidedTutorial() {
-    window.dispatchEvent(new CustomEvent('forgeflow:reset-tutorial'))
-
-    showToast(
-      'success',
-      'Tutorial reiniciado',
-      'O tutorial inicial voltará a aparecer para esta conta.'
-    )
-  }
-
   return () => {
       isMounted = false
     }
@@ -660,7 +636,7 @@ function Settings() {
             <div className="mt-5 grid grid-cols-1 gap-3 lg:grid-cols-3">
               <button
                 type="button"
-                onClick={() => startGuidedTutorial('welcome')}
+                onClick={() => window.dispatchEvent(new CustomEvent('forgeflow:start-tutorial', { detail: { flowId: 'welcome' } }))}
                 className="rounded-3xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] p-4 text-left transition hover:bg-[var(--ff-accent-soft)]/80"
               >
                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--ff-accent)] text-white">
@@ -678,7 +654,7 @@ function Settings() {
 
               <button
                 type="button"
-                onClick={() => startGuidedTutorial('workout')}
+                onClick={() => window.dispatchEvent(new CustomEvent('forgeflow:start-tutorial', { detail: { flowId: 'workout' } }))}
                 className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4 text-left transition hover:border-[var(--ff-accent-border)]"
               >
                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] text-[var(--ff-accent-text)]">
@@ -696,7 +672,7 @@ function Settings() {
 
               <button
                 type="button"
-                onClick={() => startGuidedTutorial('exercises')}
+                onClick={() => window.dispatchEvent(new CustomEvent('forgeflow:start-tutorial', { detail: { flowId: 'exercises' } }))}
                 className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4 text-left transition hover:border-[var(--ff-accent-border)]"
               >
                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] text-[var(--ff-accent-text)]">
@@ -723,7 +699,7 @@ function Settings() {
                 <button
                   key={flowId}
                   type="button"
-                  onClick={() => startGuidedTutorial(flowId)}
+                  onClick={() => window.dispatchEvent(new CustomEvent('forgeflow:start-tutorial', { detail: { flowId } }))}
                   className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 py-2 text-xs font-black text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)]"
                 >
                   {label}
@@ -733,7 +709,7 @@ function Settings() {
 
             <button
               type="button"
-              onClick={resetGuidedTutorial}
+              onClick={() => window.dispatchEvent(new CustomEvent('forgeflow:reset-tutorial'))}
               className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-sm font-bold text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)] sm:w-auto sm:px-4"
             >
               <RotateCcwIcon size={16} />
