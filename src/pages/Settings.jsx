@@ -15,6 +15,9 @@ import {
   X,
   Monitor,
   Smartphone,
+  HelpCircle,
+  PlayCircle,
+  RotateCcw as RotateCcwIcon,
 } from 'lucide-react'
 
 import PageHeader from '../components/ui/PageHeader'
@@ -38,6 +41,38 @@ import {
 } from '../utils/settingsUtils'
 
 function SectionTitle({ icon: Icon, title, description }) {
+  function startGuidedTutorial(flowId = 'welcome') {
+    window.dispatchEvent(
+      new CustomEvent('forgeflow:start-tutorial', {
+        detail: { flowId },
+      })
+    )
+
+    showToast(
+      'success',
+      'Tutorial aberto',
+      'O guia foi iniciado. Você pode pular etapas ou encerrar quando quiser.'
+    )
+  }
+
+  function resetGuidedTutorial() {
+    window.dispatchEvent(new CustomEvent('forgeflow:reset-tutorial'))
+
+    showToast(
+      'success',
+      'Tutorial reiniciado',
+      'O tutorial inicial voltará a aparecer para esta conta.'
+    )
+  }
+
+  function toggleContextualTips() {
+    window.dispatchEvent(
+      new CustomEvent('forgeflow:start-tutorial', {
+        detail: { flowId: 'settings' },
+      })
+    )
+  }
+
   return (
     <div className="flex items-start gap-3">
       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)] shadow-[0_0_22px_var(--ff-accent-shadow)]/20">
@@ -623,6 +658,97 @@ function Settings() {
 
       <section className="grid grid-cols-1 gap-6 2xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="ff-hevy-settings space-y-5 sm:space-y-6">
+          <Card>
+            <SectionTitle
+              icon={HelpCircle}
+              title="Tutorial guiado"
+              description="Revise o funcionamento do ForgeFlow sempre que quiser."
+            />
+
+            <div className="mt-5 grid grid-cols-1 gap-3 lg:grid-cols-3">
+              <button
+                type="button"
+                onClick={() => startGuidedTutorial('welcome')}
+                className="rounded-3xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] p-4 text-left transition hover:bg-[var(--ff-accent-soft)]/80"
+              >
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--ff-accent)] text-white">
+                  <PlayCircle size={21} />
+                </div>
+
+                <p className="mt-3 font-black text-[var(--ff-text)]">
+                  Tutorial completo
+                </p>
+
+                <p className="mt-1 text-sm leading-relaxed text-[var(--ff-muted)]">
+                  Tour inicial pelo Dashboard, Treinos, Exercícios, Evolução e Configurações.
+                </p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => startGuidedTutorial('workout')}
+                className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4 text-left transition hover:border-[var(--ff-accent-border)]"
+              >
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] text-[var(--ff-accent-text)]">
+                  <Smartphone size={21} />
+                </div>
+
+                <p className="mt-3 font-black text-[var(--ff-text)]">
+                  Treino ativo
+                </p>
+
+                <p className="mt-1 text-sm leading-relaxed text-[var(--ff-muted)]">
+                  Guia rápido para registrar séries, aquecimento, descanso e finalização.
+                </p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => startGuidedTutorial('exercises')}
+                className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4 text-left transition hover:border-[var(--ff-accent-border)]"
+              >
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] text-[var(--ff-accent-text)]">
+                  <HelpCircle size={21} />
+                </div>
+
+                <p className="mt-3 font-black text-[var(--ff-text)]">
+                  Biblioteca
+                </p>
+
+                <p className="mt-1 text-sm leading-relaxed text-[var(--ff-muted)]">
+                  Aprenda a pesquisar, filtrar, favoritar e abrir detalhes de exercícios.
+                </p>
+              </button>
+            </div>
+
+            <div className="mt-3 grid grid-cols-2 gap-2 lg:grid-cols-4">
+              {[
+                ['dashboard', 'Dashboard'],
+                ['workouts', 'Treinos'],
+                ['progress', 'Evolução'],
+                ['settings', 'Configurações'],
+              ].map(([flowId, label]) => (
+                <button
+                  key={flowId}
+                  type="button"
+                  onClick={() => startGuidedTutorial(flowId)}
+                  className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 py-2 text-xs font-black text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)]"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={resetGuidedTutorial}
+              className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-sm font-bold text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)] sm:w-auto sm:px-4"
+            >
+              <RotateCcwIcon size={16} />
+              Resetar tutorial inicial
+            </button>
+          </Card>
+
           <Card>
             <SectionTitle
               icon={Palette}

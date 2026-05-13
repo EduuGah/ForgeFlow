@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
 import { AuthProvider } from './context/AuthContext'
 import { WorkoutSessionProvider } from './context/WorkoutSessionContext'
+import { TutorialProvider } from './context/TutorialContext'
 
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import PublicRoute from './components/auth/PublicRoute'
@@ -49,8 +50,9 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <WorkoutSessionProvider>
-          <Suspense fallback={<AppLoadingFallback />}>
-            <Routes>
+          <TutorialProvider>
+            <Suspense fallback={<AppLoadingFallback />}>
+              <Routes>
               <Route
                 path="/login"
                 element={
@@ -108,8 +110,9 @@ function App() {
               </Route>
 
               <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Suspense>
+              </Routes>
+            </Suspense>
+          </TutorialProvider>
         </WorkoutSessionProvider>
       </AuthProvider>
     </BrowserRouter>

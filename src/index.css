@@ -2148,3 +2148,61 @@ main {
 .ff-workout-set-editor input:hover {
   border-color: color-mix(in srgb, var(--ff-accent) 38%, transparent);
 }
+
+
+/* =========================================================
+   ForgeFlow — Etapa 38.1 Tutorial guiado
+   ========================================================= */
+
+.ff-tutorial-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.ff-tutorial-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 12% 0%, var(--ff-accent-soft), transparent 38%),
+    linear-gradient(135deg, rgba(255,255,255,0.045), transparent 45%);
+}
+
+.ff-tutorial-card > * {
+  position: relative;
+}
+
+@media (max-width: 640px) {
+  .ff-tutorial-card {
+    border-radius: 1.5rem;
+  }
+}
+
+
+/* =========================================================
+   ForgeFlow — Etapa 38.2 Tutorial guiado avançado
+   ========================================================= */
+
+.ff-tutorial-card {
+  animation: ff-tutorial-card-in 180ms ease-out;
+}
+
+@keyframes ff-tutorial-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .ff-tutorial-card {
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+  }
+}
