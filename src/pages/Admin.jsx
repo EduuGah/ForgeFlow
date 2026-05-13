@@ -4,6 +4,12 @@ import {
   Ban,
   Activity,
   BarChart3,
+  Bell,
+  Trophy,
+  Target,
+  LineChart,
+  Clock3,
+  CalendarDays,
   CheckCircle2,
   Clipboard,
   ClipboardCheck,
@@ -11,6 +17,7 @@ import {
   History,
   KeyRound,
   Loader2,
+  ListChecks,
   LockOpen,
   Search,
   ShieldCheck,
@@ -65,6 +72,72 @@ function formatDuration(seconds = 0) {
   return `${minutes}min`
 }
 
+function formatCompactNumber(value = 0) {
+  const number = Number(value || 0)
+
+  return new Intl.NumberFormat('pt-BR', {
+    notation: Math.abs(number) >= 10000 ? 'compact' : 'standard',
+    maximumFractionDigits: 1,
+  }).format(number)
+}
+
+function formatShortDate(value) {
+  if (!value) return '—'
+
+  const [year, month, day] = String(value).split('-')
+  if (!year || !month || !day) return value
+
+  return `${day}/${month}`
+}
+
+function getSeriesMax(series = [], key = 'count') {
+  return Math.max(1, ...series.map((item) => Number(item?.[key] || 0)))
+}
+
+function MiniBarChart({ title, description, series = [], valueKey = 'count' }) {
+  const max = getSeriesMax(series, valueKey)
+
+  return (
+    <Card className="p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-base font-black text-[var(--ff-text)]">{title}</h3>
+          {description && (
+            <p className="mt-1 text-xs text-[var(--ff-muted)]">{description}</p>
+          )}
+        </div>
+
+        <LineChart size={19} className="text-[var(--ff-accent-text)]" />
+      </div>
+
+      <div className="mt-4 flex h-28 items-end gap-1.5 overflow-hidden rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
+        {series.map((item) => {
+          const value = Number(item?.[valueKey] || 0)
+          const height = Math.max(6, Math.round((value / max) * 100))
+
+          return (
+            <div
+              key={item.date}
+              className="group relative flex min-w-[10px] flex-1 items-end justify-center"
+              title={`${formatShortDate(item.date)}: ${value}`}
+            >
+              <div
+                className="w-full max-w-5 rounded-t-lg bg-[var(--ff-accent)]/75 transition group-hover:bg-[var(--ff-accent)]"
+                style={{ height: `${height}%` }}
+              />
+            </div>
+          )
+        })}
+      </div>
+
+      <div className="mt-2 flex justify-between text-[10px] font-bold text-[var(--ff-muted)]">
+        <span>{formatShortDate(series[0]?.date)}</span>
+        <span>{formatShortDate(series[series.length - 1]?.date)}</span>
+      </div>
+    </Card>
+  )
+}
+
 function getUserId(item) {
   return item?.id || item?._id || ''
 }
@@ -73,6 +146,8 @@ function Admin() {
   const { user } = useAuth()
 
   const [adminStats, setAdminStats] = useState(null)
+  const [analytics, setAnalytics] = useState(null)
+  const [analyticsDays, setAnalyticsDays] = useState(14)
   const [users, setUsers] = useState([])
   const [query, setQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
@@ -105,6 +180,16 @@ function Admin() {
       window.setTimeout(() => setCopied(''), 1800)
     } catch {
       showToast('error', 'Não foi possível copiar', 'Copie manualmente.')
+    }
+  }
+
+  async function loadAnalytics(days = analyticsDays) {
+    try {
+      const data = await apiFetch(`/admin/analytics?days=${days}`)
+      setAnalytics(data)
+    } catch (error) {
+      console.error(error)
+      showToast('error', 'Erro ao carregar métricas', error.message)
     }
   }
 
@@ -262,6 +347,7 @@ function Admin() {
     }
 
     loadAdminStats()
+    loadAnalytics()
     loadUsers()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin, roleFilter, statusFilter, providerFilter])
@@ -281,6 +367,10 @@ function Admin() {
   const activeWorkout = details?.activeWorkout
   const historySummary = Array.isArray(details?.historySummary) ? details.historySummary : []
   const logs = Array.isArray(details?.logs) ? details.logs : []
+  const analyticsCards = analytics?.cards || {}
+  const analyticsSeries = analytics?.series || {}
+  const recentLogins = Array.isArray(analytics?.recentLogins) ? analytics.recentLogins : []
+  const topWorkoutUsers = Array.isArray(analytics?.topWorkoutUsers) ? analytics.topWorkoutUsers : []
 
   if (!isAdmin) {
     return (
@@ -307,7 +397,7 @@ function Admin() {
     <div className="ff-hevy-admin space-y-6">
       <PageHeader
         title="Admin avançado"
-        description="Gerencie usuários, permissões, bloqueios, suporte e logs."
+        description="Métricas, usuários, acessos, permissões, suporte e logs."
         action={
           <Badge variant="purple">
             <ShieldCheck size={13} />
@@ -317,32 +407,183 @@ function Admin() {
       />
 
 
-      <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-        {[
-          ['Usuários', adminStats?.cards?.totalUsers ?? users.length, UsersRound],
-          ['Admins', adminStats?.cards?.totalAdmins ?? '—', ShieldCheck],
-          ['Bloqueados', adminStats?.cards?.blockedUsers ?? '—', Ban],
-          ['Treinos ativos', adminStats?.cards?.activeWorkoutSessions ?? '—', Activity],
-          ['Treinos salvos', adminStats?.cards?.totalWorkouts ?? '—', Dumbbell],
-          ['Históricos', adminStats?.cards?.totalHistory ?? '—', BarChart3],
-        ].map(([label, value, Icon]) => (
-          <Card key={label} className="p-4">
+      <section className="space-y-4">
+        <div className="flex flex-col gap-3 rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-xl font-black text-[var(--ff-text)]">
+              Visão geral do projeto
+            </h2>
+            <p className="mt-1 text-sm text-[var(--ff-muted)]">
+              Métricas úteis para acompanhar o ForgeFlow quando estiver em produção.
+            </p>
+          </div>
+
+          <div className="flex gap-2">
+            {[7, 14, 30, 90].map((days) => (
+              <button
+                key={days}
+                type="button"
+                onClick={() => {
+                  setAnalyticsDays(days)
+                  loadAnalytics(days)
+                }}
+                className={[
+                  'h-10 rounded-2xl border px-3 text-xs font-black transition',
+                  analyticsDays === days
+                    ? 'border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]'
+                    : 'border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-muted)] hover:border-[var(--ff-accent-border)]',
+                ].join(' ')}
+              >
+                {days}d
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+          {[
+            ['Usuários', analyticsCards.totalUsers ?? adminStats?.cards?.totalUsers ?? users.length, UsersRound],
+            ['Acessos', analyticsCards.loginEvents ?? '—', Clock3],
+            ['Treinos', analyticsCards.totalWorkouts ?? '—', Dumbbell],
+            ['Históricos', analyticsCards.totalHistory ?? '—', History],
+            ['Séries', analyticsCards.totalSets ?? '—', ListChecks],
+            ['Volume', analyticsCards.totalVolume ? `${formatCompactNumber(analyticsCards.totalVolume)} kg` : '—', Trophy],
+            ['Admins', analyticsCards.totalAdmins ?? '—', ShieldCheck],
+            ['Bloqueados', analyticsCards.blockedUsers ?? '—', Ban],
+            ['Ativos agora', analyticsCards.activeWorkoutSessions ?? '—', Activity],
+            ['Exercícios', analyticsCards.totalExercises ?? '—', Target],
+            ['Metas', analyticsCards.totalGoals ?? '—', CheckCircle2],
+            ['Notificações', analyticsCards.totalNotifications ?? '—', Bell],
+          ].map(([label, value, Icon]) => (
+            <Card key={label} className="ff-admin-stat-card p-4">
+              <div className="relative flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-black uppercase tracking-[0.14em] text-[var(--ff-muted)]">
+                    {label}
+                  </p>
+                  <p className="mt-2 truncate text-2xl font-black text-[var(--ff-text)]">
+                    {value}
+                  </p>
+                </div>
+
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">
+                  <Icon size={19} />
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+          <MiniBarChart
+            title="Acessos por dia"
+            description={`Últimos ${analytics?.period?.days || analyticsDays} dias`}
+            series={analyticsSeries.logins || []}
+          />
+
+          <MiniBarChart
+            title="Novos usuários"
+            description="Cadastros por dia"
+            series={analyticsSeries.newUsers || []}
+          />
+
+          <MiniBarChart
+            title="Treinos finalizados"
+            description="Históricos salvos por dia"
+            series={analyticsSeries.history || []}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          <Card className="p-4">
             <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="truncate text-xs font-black uppercase tracking-[0.14em] text-[var(--ff-muted)]">
-                  {label}
-                </p>
-                <p className="mt-2 text-2xl font-black text-[var(--ff-text)]">
-                  {value}
+              <div>
+                <h3 className="text-base font-black text-[var(--ff-text)]">
+                  Últimos acessos
+                </h3>
+                <p className="mt-1 text-xs text-[var(--ff-muted)]">
+                  Acessos registrados após esta atualização.
                 </p>
               </div>
 
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">
-                <Icon size={19} />
-              </div>
+              <CalendarDays size={19} className="text-[var(--ff-accent-text)]" />
+            </div>
+
+            <div className="mt-4 space-y-2">
+              {recentLogins.length === 0 ? (
+                <p className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3 text-sm text-[var(--ff-muted)]">
+                  Nenhum acesso registrado ainda.
+                </p>
+              ) : (
+                recentLogins.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-black text-[var(--ff-text)]">
+                        {item.email}
+                      </p>
+                      <p className="text-xs text-[var(--ff-muted)]">
+                        {item.provider} · {formatDate(item.createdAt, true)}
+                      </p>
+                    </div>
+
+                    <Badge>{item.provider}</Badge>
+                  </div>
+                ))
+              )}
             </div>
           </Card>
-        ))}
+
+          <Card className="p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h3 className="text-base font-black text-[var(--ff-text)]">
+                  Usuários mais ativos
+                </h3>
+                <p className="mt-1 text-xs text-[var(--ff-muted)]">
+                  Ranking por treinos finalizados.
+                </p>
+              </div>
+
+              <Trophy size={19} className="text-[var(--ff-accent-text)]" />
+            </div>
+
+            <div className="mt-4 space-y-2">
+              {topWorkoutUsers.length === 0 ? (
+                <p className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3 text-sm text-[var(--ff-muted)]">
+                  Nenhum histórico encontrado ainda.
+                </p>
+              ) : (
+                topWorkoutUsers.map((item, index) => (
+                  <div
+                    key={item.userId || item.email || index}
+                    className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-black text-[var(--ff-text)]">
+                        {index + 1}. {item.name}
+                      </p>
+                      <p className="truncate text-xs text-[var(--ff-muted)]">
+                        {item.email || 'sem e-mail'}
+                      </p>
+                    </div>
+
+                    <div className="text-right">
+                      <p className="text-sm font-black text-[var(--ff-text)]">
+                        {item.count}
+                      </p>
+                      <p className="text-[11px] text-[var(--ff-muted)]">
+                        treinos
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </Card>
+        </div>
       </section>
 
       <section className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(390px,0.85fr)_minmax(0,1.55fr)]">

@@ -1178,6 +1178,44 @@ const activeWorkoutSessionSchema = new mongoose.Schema(
     }
 )
 
+
+const loginEventSchema = new mongoose.Schema(
+    {
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+            index: true,
+        },
+
+        email: {
+            type: String,
+            default: '',
+            index: true,
+        },
+
+        provider: {
+            type: String,
+            enum: ['credentials', 'google', 'unknown'],
+            default: 'unknown',
+            index: true,
+        },
+
+        ip: {
+            type: String,
+            default: '',
+        },
+
+        userAgent: {
+            type: String,
+            default: '',
+        },
+    },
+    {
+        timestamps: true,
+    }
+)
+
 const adminLogSchema = new mongoose.Schema(
     {
         adminId: {
@@ -1236,6 +1274,7 @@ const Goal = mongoose.model('Goal', goalSchema)
 const Notification = mongoose.model('Notification', notificationSchema)
 const ActiveWorkoutSession = mongoose.model('ActiveWorkoutSession', activeWorkoutSessionSchema)
 const AdminLog = mongoose.model('AdminLog', adminLogSchema)
+const LoginEvent = mongoose.model('LoginEvent', loginEventSchema)
 
 function createToken(user) {
     return jwt.sign(
@@ -1459,6 +1498,22 @@ function sanitizeAdminLog(log) {
         ip: log.ip || '',
         userAgent: log.userAgent || '',
         createdAt: log.createdAt,
+    }
+}
+
+async function writeLoginEvent(req, user, provider = 'unknown') {
+    try {
+        if (!user?._id) return
+
+        await LoginEvent.create({
+            userId: user._id,
+            email: user.email || '',
+            provider,
+            ip: req?.headers?.['x-forwarded-for'] || req?.socket?.remoteAddress || '',
+            userAgent: req?.headers?.['user-agent'] || '',
+        })
+    } catch (error) {
+        console.error('[LoginEvent] Falha ao registrar acesso:', error)
     }
 }
 
@@ -1810,6 +1865,259 @@ app.delete('/admin/users/:userId/active-workout', authMiddleware, requireAdmin, 
         })
     }
 })
+
+
+function getDateOnly(value) {
+    const date = new Date(value)
+
+    if (Number.isNaN(date.getTime())) {
+        return null
+    }
+
+    return date.toISOString().slice(0, 10)
+}
+
+function createEmptyDateMap(days = 14) {
+    const map = new Map()
+    const now = new Date()
+
+    for (let index = days - 1; index >= 0; index -= 1) {
+        const date = new Date(now)
+        date.setDate(now.getDate() - index)
+
+        map.set(date.toISOString().slice(0, 10), 0)
+    }
+
+    return map
+}
+
+function mapAggregationToSeries(aggregation = [], days = 14) {
+    const map = createEmptyDateMap(days)
+
+    aggregation.forEach((item) => {
+        if (!item?._id) return
+        map.set(item._id, item.count || 0)
+    })
+
+    return Array.from(map.entries()).map(([date, count]) => ({
+        date,
+        count,
+    }))
+}
+
+app.get('/admin/analytics', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const days = Math.min(Math.max(Number(req.query.days) || 14, 7), 90)
+        const since = new Date()
+        since.setDate(since.getDate() - days + 1)
+        since.setHours(0, 0, 0, 0)
+
+        const [
+            totalUsers,
+            totalAdmins,
+            blockedUsers,
+            activeWorkoutSessions,
+            totalWorkouts,
+            totalHistory,
+            totalExercises,
+            totalGoals,
+            totalNotifications,
+            loginEvents,
+            newUsersByDay,
+            workoutsByDay,
+            historyByDay,
+            loginEventsByDay,
+            historyTotals,
+            recentUsers,
+            recentLogins,
+            topWorkoutUsers,
+        ] = await Promise.all([
+            User.countDocuments({}),
+            User.countDocuments({ role: 'admin' }),
+            User.countDocuments({ isBlocked: true }),
+            ActiveWorkoutSession.countDocuments({}),
+            Workout.countDocuments({}),
+            WorkoutHistory.countDocuments({}),
+            Exercise.countDocuments({}),
+            Goal.countDocuments({}),
+            Notification.countDocuments({}),
+            LoginEvent.countDocuments({ createdAt: { $gte: since } }),
+            User.aggregate([
+                { $match: { createdAt: { $gte: since } } },
+                {
+                    $group: {
+                        _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+                        count: { $sum: 1 },
+                    },
+                },
+                { $sort: { _id: 1 } },
+            ]),
+            Workout.aggregate([
+                { $match: { createdAt: { $gte: since } } },
+                {
+                    $group: {
+                        _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+                        count: { $sum: 1 },
+                    },
+                },
+                { $sort: { _id: 1 } },
+            ]),
+            WorkoutHistory.aggregate([
+                { $match: { finishedAt: { $gte: since } } },
+                {
+                    $group: {
+                        _id: { $dateToString: { format: '%Y-%m-%d', date: '$finishedAt' } },
+                        count: { $sum: 1 },
+                        totalSets: { $sum: { $ifNull: ['$totalSets', 0] } },
+                        totalVolume: { $sum: { $ifNull: ['$totalVolume', 0] } },
+                    },
+                },
+                { $sort: { _id: 1 } },
+            ]),
+            LoginEvent.aggregate([
+                { $match: { createdAt: { $gte: since } } },
+                {
+                    $group: {
+                        _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+                        count: { $sum: 1 },
+                    },
+                },
+                { $sort: { _id: 1 } },
+            ]),
+            WorkoutHistory.aggregate([
+                {
+                    $group: {
+                        _id: null,
+                        totalSets: { $sum: { $ifNull: ['$totalSets', 0] } },
+                        totalReps: { $sum: { $ifNull: ['$totalReps', 0] } },
+                        totalVolume: { $sum: { $ifNull: ['$totalVolume', 0] } },
+                        totalDurationSeconds: { $sum: { $ifNull: ['$durationSeconds', 0] } },
+                    },
+                },
+            ]),
+            User.find({})
+                .sort({ createdAt: -1 })
+                .limit(8)
+                .select('name email role provider isBlocked createdAt lastLoginAt')
+                .lean(),
+            LoginEvent.find({})
+                .sort({ createdAt: -1 })
+                .limit(10)
+                .select('email provider createdAt userAgent')
+                .lean(),
+            WorkoutHistory.aggregate([
+                {
+                    $group: {
+                        _id: '$userId',
+                        count: { $sum: 1 },
+                        totalVolume: { $sum: { $ifNull: ['$totalVolume', 0] } },
+                    },
+                },
+                { $sort: { count: -1 } },
+                { $limit: 5 },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: '_id',
+                        foreignField: '_id',
+                        as: 'user',
+                    },
+                },
+                { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+                {
+                    $project: {
+                        userId: '$_id',
+                        count: 1,
+                        totalVolume: 1,
+                        name: '$user.name',
+                        email: '$user.email',
+                    },
+                },
+            ]),
+        ])
+
+        const totals = historyTotals?.[0] || {}
+        const loginSeries = mapAggregationToSeries(loginEventsByDay, days)
+        const newUserSeries = mapAggregationToSeries(newUsersByDay, days)
+        const workoutSeries = mapAggregationToSeries(workoutsByDay, days)
+
+        const historyMap = createEmptyDateMap(days)
+        historyByDay.forEach((item) => {
+            if (!item?._id) return
+            historyMap.set(item._id, {
+                date: item._id,
+                count: item.count || 0,
+                totalSets: item.totalSets || 0,
+                totalVolume: item.totalVolume || 0,
+            })
+        })
+
+        const historySeries = Array.from(historyMap.entries()).map(([date, value]) => {
+            if (typeof value === 'number') {
+                return {
+                    date,
+                    count: value,
+                    totalSets: 0,
+                    totalVolume: 0,
+                }
+            }
+
+            return value
+        })
+
+        return res.json({
+            period: {
+                days,
+                since: since.toISOString(),
+                until: new Date().toISOString(),
+            },
+            cards: {
+                totalUsers,
+                totalAdmins,
+                blockedUsers,
+                activeWorkoutSessions,
+                totalWorkouts,
+                totalHistory,
+                totalExercises,
+                totalGoals,
+                totalNotifications,
+                loginEvents,
+                totalSets: totals.totalSets || 0,
+                totalReps: totals.totalReps || 0,
+                totalVolume: totals.totalVolume || 0,
+                totalDurationSeconds: totals.totalDurationSeconds || 0,
+            },
+            series: {
+                logins: loginSeries,
+                newUsers: newUserSeries,
+                workouts: workoutSeries,
+                history: historySeries,
+            },
+            recentUsers: recentUsers.map(sanitizeUser),
+            recentLogins: recentLogins.map((item) => ({
+                id: String(item._id || item.id),
+                email: item.email,
+                provider: item.provider,
+                createdAt: item.createdAt,
+                userAgent: item.userAgent || '',
+            })),
+            topWorkoutUsers: topWorkoutUsers.map((item) => ({
+                userId: item.userId ? String(item.userId) : '',
+                name: item.name || 'Usuário removido',
+                email: item.email || '',
+                count: item.count || 0,
+                totalVolume: item.totalVolume || 0,
+            })),
+        })
+    } catch (error) {
+        console.error(error)
+
+        return res.status(500).json({
+            message: 'Erro ao carregar analytics admin.',
+        })
+    }
+})
+
 
 app.get('/admin/stats', authMiddleware, requireAdmin, async (req, res) => {
     try {
@@ -2234,7 +2542,8 @@ app.get(
         failureRedirect: `${normalizedFrontendUrl}/login?error=google`,
         session: false,
     }),
-    (req, res) => {
+    async (req, res) => {
+        await writeLoginEvent(req, req.user, 'google')
         const token = createToken(req.user)
 
         res.redirect(`${normalizedFrontendUrl}/auth/callback?token=${token}`)
@@ -2374,6 +2683,7 @@ app.post('/auth/login', async (req, res) => {
 
     user.lastLoginAt = new Date()
     await user.save()
+    await writeLoginEvent(req, user, 'credentials')
 
     const token = createToken(user)
 

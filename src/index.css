@@ -2295,3 +2295,27 @@ main {
     border-radius: 1.35rem;
   }
 }
+
+
+/* =========================================================
+   ForgeFlow — Admin analytics de produção
+   ========================================================= */
+
+.ff-admin-stat-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.ff-admin-stat-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 12% 0%, var(--ff-accent-soft), transparent 38%),
+    linear-gradient(135deg, rgba(255,255,255,0.035), transparent 45%);
+}
+
+.ff-admin-stat-card > * {
+  position: relative;
+}
