@@ -64,7 +64,18 @@ async function networkOnlyWithOfflineFallback(request) {
       return (await cache.match(OFFLINE_URL)) || Response.error()
     }
 
-    throw error
+    return new Response(
+      JSON.stringify({
+        message: 'Sem conexão ou servidor indisponível.',
+        reason: 'network_failed',
+      }),
+      {
+        status: 503,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    )
   }
 }
 

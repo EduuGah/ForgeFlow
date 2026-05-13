@@ -263,6 +263,20 @@ function csrfProtection(req, res, next) {
         return next()
     }
 
+    const publicAuthPaths = [
+        '/auth/login',
+        '/auth/register',
+        '/auth/logout',
+        '/auth/forgot-password',
+    ]
+
+    if (
+        publicAuthPaths.includes(req.path) ||
+        req.path.startsWith('/auth/reset-password/')
+    ) {
+        return next()
+    }
+
     if (!usesCookieAuth(req)) {
         return next()
     }
@@ -394,7 +408,6 @@ app.use(securityHeaders)
 app.use(generalRateLimit)
 app.use(express.json({ limit: '10mb' }))
 app.use(cookieParser())
-app.use(csrfProtection)
 
 app.use(
     cors({
@@ -402,6 +415,8 @@ app.use(
         credentials: true,
     })
 )
+
+app.use(csrfProtection)
 
 app.use(
     session({
@@ -3157,6 +3172,19 @@ app.post('/auth/login', authRateLimit, async (req, res) => {
 })
 
 
+
+app.get('/auth/csrf', (req, res) => {
+    const csrfToken = req.cookies?.[CSRF_COOKIE_NAME] || createCsrfToken()
+
+    if (!req.cookies?.[CSRF_COOKIE_NAME]) {
+        setCsrfCookie(res, csrfToken)
+    }
+
+    return res.json({
+        csrfToken,
+    })
+})
+
 app.get('/auth/session', authMiddleware, async (req, res) => {
     const user = await User.findById(req.user.userId)
 
@@ -3170,7 +3198,16 @@ app.get('/auth/session', authMiddleware, async (req, res) => {
         setCsrfCookie(res, createCsrfToken())
     }
 
-    return res.json(buildUserResponse(user))
+    const csrfToken = req.cookies?.[CSRF_COOKIE_NAME] || createCsrfToken()
+
+    if (!req.cookies?.[CSRF_COOKIE_NAME]) {
+        setCsrfCookie(res, csrfToken)
+    }
+
+    return res.json({
+        ...buildUserResponse(user),
+        csrfToken,
+    })
 })
 
 app.post('/auth/logout', async (req, res) => {

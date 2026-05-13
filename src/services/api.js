@@ -2,23 +2,32 @@ const API_URL = import.meta.env.VITE_API_URL
 
 const TOKEN_KEY = 'forgeflow:token'
 
-function getCookieValue(name) {
-  if (typeof document === 'undefined') return ''
-
-  return document.cookie
-    .split('; ')
-    .find((row) => row.startsWith(`${name}=`))
-    ?.split('=')
-    .slice(1)
-    .join('=') || ''
-}
-
-function getCsrfToken() {
-  return decodeURIComponent(getCookieValue('forgeflow_csrf') || '')
-}
+let cachedCsrfToken = ''
 
 function shouldAttachCsrf(method = 'GET') {
   return !['GET', 'HEAD', 'OPTIONS'].includes(String(method || 'GET').toUpperCase())
+}
+
+async function ensureCsrfToken() {
+  if (cachedCsrfToken) return cachedCsrfToken
+
+  const response = await fetch(`${API_URL}/auth/csrf`, {
+    method: 'GET',
+    credentials: 'include',
+  })
+
+  const data = await response.json().catch(() => null)
+
+  if (!response.ok) {
+    return ''
+  }
+
+  cachedCsrfToken = data?.csrfToken || ''
+  return cachedCsrfToken
+}
+
+export function setCsrfToken(token) {
+  cachedCsrfToken = token || cachedCsrfToken
 }
 
 export function clearLegacyAuthToken() {
@@ -44,6 +53,9 @@ export function logout() {
 
 export async function apiFetch(path, options = {}) {
   const token = getToken()
+  const csrfToken = shouldAttachCsrf(options.method || 'GET')
+    ? await ensureCsrfToken()
+    : ''
 
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
@@ -51,7 +63,7 @@ export async function apiFetch(path, options = {}) {
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(shouldAttachCsrf(options.method || 'GET') ? { 'X-CSRF-Token': getCsrfToken() } : {}),
+      ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
       ...(options.headers || {}),
     },
   })
@@ -76,7 +88,6 @@ export async function apiDownload(path, filename, options = {}) {
     credentials: 'include',
     headers: {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(shouldAttachCsrf('GET') ? { 'X-CSRF-Token': getCsrfToken() } : {}),
       ...(options.password ? { 'X-ForgeFlow-Password': options.password } : {}),
       ...(options.headers || {}),
     },
@@ -111,13 +122,16 @@ export async function apiDownload(path, filename, options = {}) {
 
 export async function apiFormData(path, formData, options = {}) {
   const token = getToken()
+  const csrfToken = shouldAttachCsrf(options.method || 'POST')
+    ? await ensureCsrfToken()
+    : ''
 
   const response = await fetch(`${API_URL}${path}`, {
     method: options.method || 'POST',
     credentials: 'include',
     headers: {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(shouldAttachCsrf(options.method || 'POST') ? { 'X-CSRF-Token': getCsrfToken() } : {}),
+      ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
       ...(options.headers || {}),
     },
     body: formData,
@@ -133,7 +147,9 @@ export async function apiFormData(path, formData, options = {}) {
 }
 
 export async function getCurrentUser() {
-  return apiFetch('/auth/session')
+  const data = await apiFetch('/auth/session')
+  setCsrfToken(data?.csrfToken)
+  return data
 }
 
 
