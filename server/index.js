@@ -23,6 +23,13 @@ import {
     usesCookieAuth,
 } from './utils/authCookie.js'
 import { csrfProtection } from './utils/csrfProtection.js'
+import { securityHeaders } from './utils/securityHeaders.js'
+import {
+    authRateLimit,
+    generalRateLimit,
+    sensitiveRateLimit,
+} from './utils/rateLimit.js'
+import { requireRecentPassword } from './utils/sensitiveSecurity.js'
 import {
     normalizeActiveWorkoutPayload,
     normalizeBackupPayload,
@@ -208,116 +215,6 @@ cloudinary.config({
 const normalizedFrontendUrl = FRONTEND_URL.replace(/\/$/, '')
 const normalizedBackendUrl = BACKEND_URL.replace(/\/$/, '')
 
-
-
-function requireRecentPassword(user, password) {
-    if (!user?.passwordHash) {
-        return {
-            ok: false,
-            message: 'Esta ação exige uma senha tradicional. Crie uma senha antes de continuar.',
-        }
-    }
-
-    if (!password?.trim()) {
-        return {
-            ok: false,
-            message: 'Informe sua senha para confirmar esta ação.',
-        }
-    }
-
-    return {
-        ok: true,
-    }
-}
-
-
-function securityHeaders(req, res, next) {
-    res.setHeader('X-Content-Type-Options', 'nosniff')
-    res.setHeader('X-Frame-Options', 'DENY')
-    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
-    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
-    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups')
-    res.setHeader(
-        'Content-Security-Policy',
-        [
-            "default-src 'self'",
-            "base-uri 'self'",
-            "frame-ancestors 'none'",
-            "object-src 'none'",
-            "img-src 'self' data: https:",
-            "media-src 'self' https:",
-            "font-src 'self' data:",
-            "connect-src 'self' https:",
-            "script-src 'self' 'unsafe-inline'",
-            "style-src 'self' 'unsafe-inline'",
-        ].join('; ')
-    )
-
-    if (process.env.NODE_ENV === 'production') {
-        res.setHeader(
-            'Strict-Transport-Security',
-            'max-age=15552000; includeSubDomains'
-        )
-    }
-
-    next()
-}
-
-const rateLimitStore = new Map()
-
-function createRateLimiter({ windowMs = 60_000, max = 60, keyPrefix = 'global' } = {}) {
-    return (req, res, next) => {
-        const ip =
-            req.headers['x-forwarded-for']?.toString().split(',')[0]?.trim() ||
-            req.socket?.remoteAddress ||
-            'unknown'
-
-        const key = `${keyPrefix}:${ip}`
-        const now = Date.now()
-        const current = rateLimitStore.get(key)
-
-        if (!current || current.expiresAt <= now) {
-            rateLimitStore.set(key, {
-                count: 1,
-                expiresAt: now + windowMs,
-            })
-
-            return next()
-        }
-
-        current.count += 1
-
-        if (current.count > max) {
-            const retryAfter = Math.ceil((current.expiresAt - now) / 1000)
-            res.setHeader('Retry-After', String(retryAfter))
-
-            return res.status(429).json({
-                message: 'Muitas tentativas. Aguarde um pouco e tente novamente.',
-            })
-        }
-
-        rateLimitStore.set(key, current)
-        return next()
-    }
-}
-
-const authRateLimit = createRateLimiter({
-    windowMs: 15 * 60 * 1000,
-    max: 35,
-    keyPrefix: 'auth',
-})
-
-const sensitiveRateLimit = createRateLimiter({
-    windowMs: 15 * 60 * 1000,
-    max: 12,
-    keyPrefix: 'sensitive',
-})
-
-const generalRateLimit = createRateLimiter({
-    windowMs: 60 * 1000,
-    max: 180,
-    keyPrefix: 'general',
-})
 
 
 app.use(securityHeaders)
@@ -1844,7 +1741,8 @@ app.get('/admin/users', authMiddleware, requireAdmin, async (req, res) => {
             role = 'all',
             status = 'all',
             provider = 'all',
-            limit = 100,
+            limit = 25,
+            page = 1,
         } = req.query
 
         const filter = {}
@@ -1866,9 +1764,6 @@ app.get('/admin/users', authMiddleware, requireAdmin, async (req, res) => {
         }
 
         if (status === 'active') {
-            filter.$or = filter.$or
-                ? filter.$or
-                : []
             filter.isBlocked = { $ne: true }
         }
 
@@ -1876,16 +1771,32 @@ app.get('/admin/users', authMiddleware, requireAdmin, async (req, res) => {
             filter.provider = provider
         }
 
-        const safeLimit = Math.min(Math.max(Number(limit) || 100, 1), 300)
+        const safeLimit = Math.min(Math.max(Number(limit) || 25, 5), 50)
+        const safePage = Math.max(Number(page) || 1, 1)
+        const skip = (safePage - 1) * safeLimit
 
-        const users = await User.find(filter)
-            .sort({ createdAt: -1 })
-            .limit(safeLimit)
-            .select('name email role provider profileCompleted isBlocked blockedAt lastLoginAt lastAdminActionAt createdAt updatedAt')
-            .lean()
+        const [total, users] = await Promise.all([
+            User.countDocuments(filter),
+            User.find(filter)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(safeLimit)
+                .select('name email role provider profileCompleted isBlocked blockedAt lastLoginAt lastAdminActionAt createdAt updatedAt')
+                .lean(),
+        ])
+
+        const totalPages = Math.max(Math.ceil(total / safeLimit), 1)
 
         return res.json({
             users: users.map(sanitizeUser),
+            pagination: {
+                page: safePage,
+                limit: safeLimit,
+                total,
+                totalPages,
+                hasNextPage: safePage < totalPages,
+                hasPreviousPage: safePage > 1,
+            },
         })
     } catch (error) {
         console.error(error)

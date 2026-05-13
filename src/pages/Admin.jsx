@@ -227,6 +227,16 @@ function Admin() {
   const [roleFilter, setRoleFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
   const [providerFilter, setProviderFilter] = useState('all')
+  const [userPage, setUserPage] = useState(1)
+  const [userLimit, setUserLimit] = useState(25)
+  const [userPagination, setUserPagination] = useState({
+    page: 1,
+    limit: 25,
+    total: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  })
   const [selectedUser, setSelectedUser] = useState(null)
   const [details, setDetails] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -296,7 +306,7 @@ function Admin() {
     }
   }
 
-  async function loadUsers() {
+  async function loadUsers(page = userPage, limit = userLimit) {
     setLoading(true)
 
     try {
@@ -305,11 +315,20 @@ function Admin() {
       if (roleFilter !== 'all') params.set('role', roleFilter)
       if (statusFilter !== 'all') params.set('status', statusFilter)
       if (providerFilter !== 'all') params.set('provider', providerFilter)
-      params.set('limit', '200')
+      params.set('page', String(page))
+      params.set('limit', String(limit))
 
       const data = await apiFetch(`/admin/users?${params.toString()}`)
       const nextUsers = Array.isArray(data?.users) ? data.users : Array.isArray(data) ? data : []
       setUsers(nextUsers)
+      setUserPagination(data?.pagination || {
+        page,
+        limit,
+        total: nextUsers.length,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: page > 1,
+      })
       setLoadedAdminViews((current) => ({ ...current, users: true }))
 
       if (selectedUser) {
@@ -341,6 +360,25 @@ function Admin() {
     }
   }
 
+  function handleUserFilterChange(setter, value) {
+    setter(value)
+    setUserPage(1)
+    setLoadedAdminViews((current) => ({ ...current, users: false }))
+  }
+
+  function handleUserPageChange(nextPage) {
+    const safePage = Math.max(Number(nextPage) || 1, 1)
+    setUserPage(safePage)
+    loadUsers(safePage, userLimit)
+  }
+
+  function handleUserLimitChange(value) {
+    const nextLimit = Number(value) || 25
+    setUserLimit(nextLimit)
+    setUserPage(1)
+    loadUsers(1, nextLimit)
+  }
+
   function handleSelectUser(item) {
     setSelectedUser(item)
     setResetPassword('')
@@ -355,7 +393,7 @@ function Admin() {
     try {
       await action()
       showToast('success', 'Tudo certo', successMessage)
-      await loadUsers()
+      await loadUsers(userPage, userLimit)
       await loadUserDetails(getUserId(selectedUser))
     } catch (error) {
       console.error(error)
@@ -485,6 +523,17 @@ function Admin() {
       loadUsers()
     }
   }, [activeAdminView, isAdmin])
+
+  useEffect(() => {
+    if (!isAdmin || activeAdminView !== 'users') return
+
+    const timeoutId = window.setTimeout(() => {
+      setUserPage(1)
+      loadUsers(1, userLimit)
+    }, 350)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [roleFilter, statusFilter, providerFilter, query])
 
   const filteredUsers = useMemo(() => {
     const term = query.trim().toLowerCase()
@@ -740,7 +789,7 @@ function Admin() {
 
       {activeAdminView === 'overview' && (
         <section className="space-y-5">
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-6">
             {overviewCards.map(([label, value, Icon]) => (
               <Card key={label} className="ff-admin-stat-card p-4">
                 <div className="relative flex items-center justify-between gap-3">
@@ -915,7 +964,9 @@ function Admin() {
               <div>
                 <h2 className="text-xl font-black text-[var(--ff-text)]">Usuários</h2>
                 <p className="mt-1 text-sm text-[var(--ff-muted)]">
-                  {loading ? 'Carregando...' : `${filteredUsers.length} conta(s)`}
+                  {loading
+                    ? 'Carregando...'
+                    : `${userPagination.total || filteredUsers.length} conta(s) · página ${userPagination.page || userPage}/${userPagination.totalPages || 1}`}
                 </p>
               </div>
 
@@ -929,19 +980,22 @@ function Admin() {
               <input
                 type="search"
                 value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                onChange={(event) => {
+                setQuery(event.target.value)
+                setUserPage(1)
+              }}
                 onKeyDown={(event) => {
-                  if (event.key === 'Enter') loadUsers()
+                  if (event.key === 'Enter') loadUsers(1, userLimit)
                 }}
                 placeholder="Buscar por nome ou e-mail..."
                 className="w-full bg-transparent text-sm text-[var(--ff-text)] outline-none placeholder:text-[var(--ff-muted)]"
               />
             </div>
 
-            <div className="admin-filter-grid mt-3 grid grid-cols-1 gap-2 md:grid-cols-3">
+            <div className="admin-filter-grid mt-3 grid grid-cols-1 gap-2 md:grid-cols-4">
               <select
                 value={roleFilter}
-                onChange={(event) => setRoleFilter(event.target.value)}
+                onChange={(event) => handleUserFilterChange(setRoleFilter, event.target.value)}
                 className="h-10 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 text-xs font-bold text-[var(--ff-text)] outline-none"
               >
                 <option value="all">Todos roles</option>
@@ -951,7 +1005,7 @@ function Admin() {
 
               <select
                 value={statusFilter}
-                onChange={(event) => setStatusFilter(event.target.value)}
+                onChange={(event) => handleUserFilterChange(setStatusFilter, event.target.value)}
                 className="h-10 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 text-xs font-bold text-[var(--ff-text)] outline-none"
               >
                 <option value="all">Todos status</option>
@@ -961,7 +1015,7 @@ function Admin() {
 
               <select
                 value={providerFilter}
-                onChange={(event) => setProviderFilter(event.target.value)}
+                onChange={(event) => handleUserFilterChange(setProviderFilter, event.target.value)}
                 className="h-10 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 text-xs font-bold text-[var(--ff-text)] outline-none"
               >
                 <option value="all">Todos logins</option>
@@ -969,10 +1023,20 @@ function Admin() {
                 <option value="google">Google</option>
                 <option value="both">Ambos</option>
               </select>
+
+              <select
+                value={userLimit}
+                onChange={(event) => handleUserLimitChange(event.target.value)}
+                className="h-10 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 text-xs font-bold text-[var(--ff-text)] outline-none"
+              >
+                <option value="10">10 por página</option>
+                <option value="25">25 por página</option>
+                <option value="50">50 por página</option>
+              </select>
             </div>
 
             <div className="mt-3 flex gap-2">
-              <Button variant="secondary" className="w-full sm:w-auto" onClick={loadUsers} disabled={loading}>
+              <Button variant="secondary" className="w-full sm:w-auto" onClick={() => loadUsers(1, userLimit)} disabled={loading}>
                 {loading ? <Loader2 className="animate-spin" size={16} /> : <Search size={16} />}
                 Buscar
               </Button>
@@ -1028,6 +1092,32 @@ function Admin() {
                 })
               )}
             </div>
+
+          <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs font-bold text-[var(--ff-muted)]">
+              Página {userPagination.page || userPage} de {userPagination.totalPages || 1} · {userPagination.total || 0} usuário(s)
+            </p>
+
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={loading || !(userPagination.hasPreviousPage || userPage > 1)}
+                onClick={() => handleUserPageChange((userPagination.page || userPage) - 1)}
+              >
+                Página anterior
+              </Button>
+
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={loading || !userPagination.hasNextPage}
+                onClick={() => handleUserPageChange((userPagination.page || userPage) + 1)}
+              >
+                Próxima página
+              </Button>
+            </div>
+          </div>
           </Card>
 
           <div className="space-y-5">

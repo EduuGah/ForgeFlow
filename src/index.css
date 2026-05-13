@@ -2467,3 +2467,9 @@ main {
   content-visibility: auto;
   contain-intrinsic-size: 520px;
 }
+
+
+/* Etapa 50 — Admin paginação */
+.ff-admin-v48 .admin-pagination-controls button:disabled {
+  opacity: 0.5;
+}

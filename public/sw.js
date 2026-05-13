@@ -1,5 +1,5 @@
 /* ForgeFlow Service Worker */
-const VERSION = 'forgeflow-pwa-v49-performance-polling-2026-05-13'
+const VERSION = 'forgeflow-pwa-v50-admin-pagination-2026-05-13'
 const STATIC_CACHE = `${VERSION}-static`
 const RUNTIME_CACHE = `${VERSION}-runtime`
 const OFFLINE_URL = '/offline.html'
