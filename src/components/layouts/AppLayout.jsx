@@ -46,6 +46,7 @@ function getRouteShellClass(pathname = '/') {
   if (pathname.startsWith('/exercises')) return 'ff-page-exercises'
   if (pathname.startsWith('/start-workout')) return 'ff-page-start-workout'
   if (pathname.startsWith('/history')) return 'ff-page-history'
+  if (pathname.startsWith('/progress-photos')) return 'ff-page-progress-photos'
   if (pathname.startsWith('/progress')) return 'ff-page-progress'
   if (pathname.startsWith('/exercise-progress')) return 'ff-page-exercise-progress'
   if (pathname.startsWith('/profile')) return 'ff-page-profile'

@@ -50,7 +50,7 @@ const linkGroups = [
       { name: 'Evolução', path: '/progress', icon: TrendingUp },
       { name: 'Por exercício', path: '/exercise-progress', icon: LineChart },
       { name: 'Fotos', path: '/progress-photos', icon: Camera },
-      { name: 'Recuperação', path: '/recovery', icon: HeartPulse },
+      { name: 'Recuperação', path: '/muscle-recovery', icon: HeartPulse },
       { name: 'Metas', path: '/goals', icon: Flag },
     ],
   },

@@ -2406,3 +2406,17 @@ main {
     display: none !important;
   }
 }
+
+
+/* Fotos de evolução — mobile refinado */
+.ff-page-progress-photos img {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+@media (max-width: 640px) {
+  .ff-page-progress-photos .line-clamp-2,
+  .ff-page-progress-photos .line-clamp-3 {
+    word-break: break-word;
+  }
+}

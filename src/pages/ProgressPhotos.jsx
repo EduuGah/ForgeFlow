@@ -434,14 +434,14 @@ function ProgressPhotos() {
         }
       />
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card className="p-4">
+      <section className="grid grid-cols-3 gap-2 sm:gap-4">
+        <Card className="p-3 sm:p-4">
           <div className="flex items-center justify-between">
             <p className="text-sm text-[var(--ff-muted)]">Fotos</p>
             <Camera size={20} className="text-[var(--ff-accent-text)]" />
           </div>
 
-          <h2 className="mt-2 text-3xl font-black text-[var(--ff-text)]">
+          <h2 className="mt-2 text-2xl font-black sm:text-3xl text-[var(--ff-text)]">
             {stats.total}
           </h2>
 
@@ -450,13 +450,13 @@ function ProgressPhotos() {
           </p>
         </Card>
 
-        <Card className="p-4">
+        <Card className="p-3 sm:p-4">
           <div className="flex items-center justify-between">
             <p className="text-sm text-[var(--ff-muted)]">Ângulos</p>
             <ImagePlus size={20} className="text-[var(--ff-accent-text)]" />
           </div>
 
-          <h2 className="mt-2 text-3xl font-black text-[var(--ff-text)]">
+          <h2 className="mt-2 text-2xl font-black sm:text-3xl text-[var(--ff-text)]">
             {stats.angles}
           </h2>
 
@@ -465,13 +465,13 @@ function ProgressPhotos() {
           </p>
         </Card>
 
-        <Card className="p-4">
+        <Card className="p-3 sm:p-4">
           <div className="flex items-center justify-between">
             <p className="text-sm text-[var(--ff-muted)]">Última foto</p>
             <CalendarDays size={20} className="text-[var(--ff-accent-text)]" />
           </div>
 
-          <h2 className="mt-2 text-2xl font-black text-[var(--ff-text)]">
+          <h2 className="mt-2 text-lg font-black text-[var(--ff-text)] sm:text-2xl">
             {stats.lastDate ? formatDate(stats.lastDate) : '—'}
           </h2>
 
@@ -481,8 +481,8 @@ function ProgressPhotos() {
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
-        <aside className="space-y-6">
+      <section className="mt-5 grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
+        <aside className="space-y-4 sm:space-y-6">
           <Card>
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">
@@ -618,7 +618,7 @@ function ProgressPhotos() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_190px_auto]">
+              <div className="grid grid-cols-1 gap-2 sm:gap-3 md:grid-cols-[minmax(0,1fr)_190px_auto]">
                 <div className="flex h-12 items-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] px-3 text-[var(--ff-muted)] shadow-sm">
                   <Search size={17} />
 
@@ -799,7 +799,7 @@ function ProgressPhotos() {
                     </Badge>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+                  <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-2 xl:grid-cols-3">
                     {group.photos.map((photo) => {
                       const isSelectedForCompare = selectedCompareIds.includes(photo.id)
 
@@ -818,7 +818,7 @@ function ProgressPhotos() {
                           )}
 
                           {isSelectedForCompare && (
-                            <div className="pointer-events-none absolute right-3 top-3 z-30 flex h-11 w-11 items-center justify-center rounded-2xl border border-white/30 bg-[var(--ff-accent)] text-base font-black text-white shadow-[0_0_22px_var(--ff-accent-shadow)]">
+                            <div className="pointer-events-none absolute right-2 top-2 z-30 flex h-9 w-9 items-center justify-center rounded-xl border border-white/30 bg-[var(--ff-accent)] text-sm font-black text-white shadow-[0_0_22px_var(--ff-accent-shadow)] sm:right-3 sm:top-3 sm:h-11 sm:w-11 sm:rounded-2xl sm:text-base">
                               ✓
                             </div>
                           )}
@@ -830,7 +830,7 @@ function ProgressPhotos() {
                                 ? toggleComparePhoto(photo.id)
                                 : setSelectedPhoto(photo)
                             }
-                            className="group relative block aspect-[4/5] w-full overflow-hidden bg-[var(--ff-surface-2)]"
+                            className="group relative block aspect-[3/4] w-full overflow-hidden bg-[var(--ff-surface-2)] sm:aspect-[4/5]"
                           >
                             <img
                               src={photo.imageUrl}
@@ -845,7 +845,7 @@ function ProgressPhotos() {
                               <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--ff-accent-soft),transparent_62%)]" />
                             )}
 
-                            <div className="absolute left-3 top-3 z-30 flex flex-wrap gap-2 pr-14">
+                            <div className="absolute left-2 top-2 z-30 flex flex-wrap gap-1.5 pr-10 sm:left-3 sm:top-3 sm:gap-2 sm:pr-14">
                               <Badge variant="purple">
                                 {getAngleLabel(photo.angle)}
                               </Badge>
@@ -879,16 +879,16 @@ function ProgressPhotos() {
                             )}
                           </button>
 
-                          <div className="p-4">
+                          <div className="p-3 sm:p-4">
                             <div className="flex items-start justify-between gap-3">
                               <div>
-                                <p className="flex items-center gap-2 text-sm font-bold text-[var(--ff-text)]">
+                                <p className="flex items-center gap-1.5 text-xs font-bold text-[var(--ff-text)] sm:gap-2 sm:text-sm">
                                   <CalendarDays size={16} />
                                   {formatDate(photo.date)}
                                 </p>
 
                                 {photo.weight !== '' && photo.weight !== null && (
-                                  <p className="mt-2 flex items-center gap-2 text-sm text-[var(--ff-muted)]">
+                                  <p className="mt-1.5 flex items-center gap-1.5 text-xs text-[var(--ff-muted)] sm:mt-2 sm:gap-2 sm:text-sm">
                                     <Weight size={16} />
                                     {photo.weight} kg
                                   </p>
@@ -898,15 +898,15 @@ function ProgressPhotos() {
                               <button
                                 type="button"
                                 onClick={() => handleDeletePhoto(photo.id)}
-                                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10 text-[var(--ff-danger-text)] transition hover:bg-red-500/15"
+                                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-red-500/20 bg-red-500/10 text-[var(--ff-danger-text)] transition hover:bg-red-500/15 sm:h-10 sm:w-10 sm:rounded-2xl"
                                 aria-label="Excluir foto"
                               >
-                                <Trash2 size={17} />
+                                <Trash2 size={15} />
                               </button>
                             </div>
 
                             {photo.note && (
-                              <p className="mt-3 line-clamp-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3 text-sm leading-relaxed text-[var(--ff-muted)]">
+                              <p className="mt-2 line-clamp-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-2 text-xs leading-relaxed text-[var(--ff-muted)] sm:mt-3 sm:line-clamp-3 sm:p-3 sm:text-sm">
                                 {photo.note}
                               </p>
                             )}
@@ -923,7 +923,7 @@ function ProgressPhotos() {
       </section>
 
       {selectedPhoto && (
-        <div className="fixed inset-0 z-[80] overflow-y-auto overscroll-contain bg-black/80 p-3 backdrop-blur-sm sm:p-4">
+        <div className="fixed inset-0 z-[80] overflow-y-auto overscroll-contain bg-black/88 p-2 backdrop-blur-sm sm:p-4">
           <button
             type="button"
             className="fixed inset-0"
@@ -931,8 +931,8 @@ function ProgressPhotos() {
             aria-label="Fechar foto"
           />
 
-          <div className="relative mx-auto my-4 grid w-full max-w-6xl overflow-hidden rounded-3xl border border-white/10 bg-[var(--ff-card)] shadow-2xl sm:my-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-            <div className="relative flex min-h-[260px] items-center justify-center bg-black sm:min-h-[380px]">
+          <div className="relative mx-auto my-2 grid w-full max-w-6xl overflow-hidden rounded-[1.6rem] border border-white/10 bg-[var(--ff-card)] shadow-2xl sm:my-6 sm:rounded-3xl lg:grid-cols-[minmax(0,1fr)_340px]">
+            <div className="relative flex min-h-[58dvh] items-center justify-center bg-black sm:min-h-[380px]">
               <img
                 src={selectedPhoto.imageUrl}
                 alt={`Foto de evolução - ${getAngleLabel(selectedPhoto.angle)}`}
@@ -962,7 +962,7 @@ function ProgressPhotos() {
               )}
             </div>
 
-            <aside className="relative p-5">
+            <aside className="relative max-h-[42dvh] overflow-y-auto p-4 sm:max-h-none sm:p-5">
               <button
                 type="button"
                 onClick={() => setSelectedPhoto(null)}
@@ -977,7 +977,7 @@ function ProgressPhotos() {
                   {getAngleLabel(selectedPhoto.angle)}
                 </Badge>
 
-                <h2 className="mt-4 text-2xl font-black text-[var(--ff-text)]">
+                <h2 className="mt-3 text-xl font-black text-[var(--ff-text)] sm:mt-4 sm:text-2xl">
                   {formatLongDate(selectedPhoto.date)}
                 </h2>
 
@@ -986,8 +986,8 @@ function ProgressPhotos() {
                 </p>
               </div>
 
-              <div className="mt-6 grid grid-cols-1 gap-3">
-                <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+              <div className="mt-4 grid grid-cols-2 gap-2 sm:mt-6 sm:grid-cols-1 sm:gap-3">
+                <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3 sm:p-4">
                   <p className="text-xs font-bold uppercase tracking-wide text-[var(--ff-muted)]">
                     Data
                   </p>
@@ -997,7 +997,7 @@ function ProgressPhotos() {
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+                <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3 sm:p-4">
                   <p className="text-xs font-bold uppercase tracking-wide text-[var(--ff-muted)]">
                     Ângulo
                   </p>
@@ -1007,7 +1007,7 @@ function ProgressPhotos() {
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+                <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3 sm:p-4">
                   <p className="text-xs font-bold uppercase tracking-wide text-[var(--ff-muted)]">
                     Peso no dia
                   </p>
@@ -1019,7 +1019,7 @@ function ProgressPhotos() {
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+                <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3 sm:p-4">
                   <p className="text-xs font-bold uppercase tracking-wide text-[var(--ff-muted)]">
                     Observação
                   </p>
@@ -1030,7 +1030,7 @@ function ProgressPhotos() {
                 </div>
               </div>
 
-              <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="mt-4 grid grid-cols-2 gap-2 sm:mt-5 sm:gap-3">
                 <Button
                   type="button"
                   variant="secondary"
