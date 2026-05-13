@@ -53,28 +53,41 @@ export function logout() {
 
 export async function apiFetch(path, options = {}) {
   const token = getToken()
-  const csrfToken = shouldAttachCsrf(options.method || 'GET')
-    ? await ensureCsrfToken()
-    : ''
+  const method = options.method || 'GET'
+  const csrfToken = shouldAttachCsrf(method) ? await ensureCsrfToken() : ''
 
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
-      ...(options.headers || {}),
-    },
-  })
+  async function makeRequest(nextCsrfToken = csrfToken) {
+    return fetch(`${API_URL}${path}`, {
+      ...options,
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(nextCsrfToken ? { 'X-CSRF-Token': nextCsrfToken } : {}),
+        ...(options.headers || {}),
+      },
+    })
+  }
 
-  const data = await response.json().catch(() => null)
+  let response = await makeRequest()
+  let data = await response.json().catch(() => null)
+
+  if (!response.ok && data?.reason === 'csrf_failed') {
+    cachedCsrfToken = ''
+    const freshCsrfToken = await ensureCsrfToken()
+    response = await makeRequest(freshCsrfToken)
+    data = await response.json().catch(() => null)
+  }
 
   if (!response.ok) {
     const error = new Error(data?.message || 'Erro na requisição.')
     error.status = response.status
     error.data = data
     throw error
+  }
+
+  if (data?.csrfToken) {
+    setCsrfToken(data.csrfToken)
   }
 
   return data
@@ -122,25 +135,38 @@ export async function apiDownload(path, filename, options = {}) {
 
 export async function apiFormData(path, formData, options = {}) {
   const token = getToken()
-  const csrfToken = shouldAttachCsrf(options.method || 'POST')
-    ? await ensureCsrfToken()
-    : ''
+  const method = options.method || 'POST'
+  const csrfToken = shouldAttachCsrf(method) ? await ensureCsrfToken() : ''
 
-  const response = await fetch(`${API_URL}${path}`, {
-    method: options.method || 'POST',
-    credentials: 'include',
-    headers: {
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
-      ...(options.headers || {}),
-    },
-    body: formData,
-  })
+  async function makeRequest(nextCsrfToken = csrfToken) {
+    return fetch(`${API_URL}${path}`, {
+      method,
+      credentials: 'include',
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(nextCsrfToken ? { 'X-CSRF-Token': nextCsrfToken } : {}),
+        ...(options.headers || {}),
+      },
+      body: formData,
+    })
+  }
 
-  const data = await response.json().catch(() => null)
+  let response = await makeRequest()
+  let data = await response.json().catch(() => null)
+
+  if (!response.ok && data?.reason === 'csrf_failed') {
+    cachedCsrfToken = ''
+    const freshCsrfToken = await ensureCsrfToken()
+    response = await makeRequest(freshCsrfToken)
+    data = await response.json().catch(() => null)
+  }
 
   if (!response.ok) {
     throw new Error(data?.message || 'Erro na requisição.')
+  }
+
+  if (data?.csrfToken) {
+    setCsrfToken(data.csrfToken)
   }
 
   return data

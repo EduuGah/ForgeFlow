@@ -1,5 +1,5 @@
 /* ForgeFlow Service Worker */
-const VERSION = 'forgeflow-pwa-v40-2026-05-13'
+const VERSION = 'forgeflow-pwa-v43-login-fix-2026-05-13'
 const STATIC_CACHE = `${VERSION}-static`
 const RUNTIME_CACHE = `${VERSION}-runtime`
 const OFFLINE_URL = '/offline.html'
@@ -61,7 +61,10 @@ async function networkOnlyWithOfflineFallback(request) {
   } catch (error) {
     if (request.mode === 'navigate') {
       const cache = await caches.open(STATIC_CACHE)
-      return (await cache.match(OFFLINE_URL)) || Response.error()
+      return (await cache.match(OFFLINE_URL)) || new Response('<h1>Offline</h1>', {
+        status: 503,
+        headers: { 'Content-Type': 'text/html' },
+      })
     }
 
     return new Response(

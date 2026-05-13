@@ -232,8 +232,10 @@ function getAuthCookieOptions() {
 }
 
 function setAuthCookie(res, token) {
+    const csrfToken = createCsrfToken()
     res.cookie(AUTH_COOKIE_NAME, token, getAuthCookieOptions())
-    setCsrfCookie(res, createCsrfToken())
+    setCsrfCookie(res, csrfToken)
+    return csrfToken
 }
 
 function clearAuthCookie(res) {
@@ -409,12 +411,46 @@ app.use(generalRateLimit)
 app.use(express.json({ limit: '10mb' }))
 app.use(cookieParser())
 
+const allowedCorsOrigins = [
+    normalizedFrontendUrl,
+    process.env.FRONTEND_URL,
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '',
+]
+    .filter(Boolean)
+    .map((origin) => origin.replace(/\/$/, ''))
+
+function getAllowedCorsOrigin(origin, callback) {
+    if (!origin) {
+        return callback(null, true)
+    }
+
+    const normalizedOrigin = origin.replace(/\/$/, '')
+
+    if (allowedCorsOrigins.includes(normalizedOrigin)) {
+        return callback(null, true)
+    }
+
+    return callback(null, false)
+}
+
 app.use(
     cors({
-        origin: normalizedFrontendUrl,
+        origin: getAllowedCorsOrigin,
         credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+        allowedHeaders: [
+            'Content-Type',
+            'Authorization',
+            'X-CSRF-Token',
+            'X-ForgeFlow-Password',
+        ],
     })
 )
+
+app.options('*', cors({
+    origin: getAllowedCorsOrigin,
+    credentials: true,
+}))
 
 app.use(csrfProtection)
 
@@ -3108,10 +3144,11 @@ app.post('/auth/register', authRateLimit, async (req, res) => {
 
     const token = createToken(user)
 
-    setAuthCookie(res, token)
+    const csrfToken = setAuthCookie(res, token)
 
     res.status(201).json({
         authMode: 'cookie',
+        csrfToken,
         user: buildUserResponse(user),
     })
 })
@@ -3163,10 +3200,11 @@ app.post('/auth/login', authRateLimit, async (req, res) => {
 
     const token = createToken(user)
 
-    setAuthCookie(res, token)
+    const csrfToken = setAuthCookie(res, token)
 
     res.json({
         authMode: 'cookie',
+        csrfToken,
         user: buildUserResponse(user),
     })
 })

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { apiFetch, saveAuthToken } from '../services/api'
+import { apiFetch, saveAuthToken, setCsrfToken } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import forgeflowIcon from '../assets/forgeflow-icon.png'
 import { applyAppSettingsToDocument, getAppSettings } from '../utils/settingsUtils'
@@ -32,6 +32,7 @@ function Register() {
             })
 
             saveAuthToken(data.token)
+            setCsrfToken(data.csrfToken)
             setUser(data.user)
 
             if (!data.user?.profileCompleted) {
