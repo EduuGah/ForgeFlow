@@ -2947,7 +2947,7 @@ app.get(
         const token = createToken(req.user)
         setAuthCookie(res, token)
 
-        res.redirect(`${normalizedFrontendUrl}/auth/callback?mode=cookie`)
+        res.redirect(`${normalizedFrontendUrl}/auth/callback?token=${token}&mode=hybrid`)
     }
 )
 
@@ -3143,7 +3143,8 @@ app.post('/auth/register', authRateLimit, async (req, res) => {
     const csrfToken = setAuthCookie(res, token)
 
     res.status(201).json({
-        authMode: 'cookie',
+        token,
+        authMode: 'hybrid',
         csrfToken,
         user: buildUserResponse(user),
     })
@@ -3199,7 +3200,8 @@ app.post('/auth/login', authRateLimit, async (req, res) => {
     const csrfToken = setAuthCookie(res, token)
 
     res.json({
-        authMode: 'cookie',
+        token,
+        authMode: 'hybrid',
         csrfToken,
         user: buildUserResponse(user),
     })

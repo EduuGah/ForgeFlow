@@ -150,7 +150,9 @@ export function WorkoutSessionProvider({ children }) {
         session,
       }
     } catch (error) {
-      console.error('Erro ao buscar treino ativo remoto:', error)
+      if (error?.status !== 401) {
+        console.error('Erro ao buscar treino ativo remoto:', error)
+      }
 
       return {
         ok: false,

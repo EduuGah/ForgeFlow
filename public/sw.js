@@ -1,5 +1,5 @@
 /* ForgeFlow Service Worker */
-const VERSION = 'forgeflow-pwa-v43-login-fix-2026-05-13'
+const VERSION = 'forgeflow-pwa-v43-hybrid-auth-fix-2026-05-13'
 const STATIC_CACHE = `${VERSION}-static`
 const RUNTIME_CACHE = `${VERSION}-runtime`
 const OFFLINE_URL = '/offline.html'

@@ -13,7 +13,6 @@ export function AuthProvider({ children }) {
       clearLegacyAuthToken()
       setUser(data)
     } catch {
-      clearLegacyAuthToken()
       setUser(null)
     } finally {
       setLoadingUser(false)
