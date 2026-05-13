@@ -2460,3 +2460,10 @@ main {
     min-height: 92px;
   }
 }
+
+
+/* Etapa 49 — Performance/Admin lazy */
+.ff-admin-v48 [data-admin-lazy="true"] {
+  content-visibility: auto;
+  contain-intrinsic-size: 520px;
+}

@@ -33,6 +33,33 @@ function safeCryptoId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
+function getSessionSyncHash(session) {
+  if (!session) return ''
+
+  try {
+    return JSON.stringify({
+      id: session.id,
+      workoutId: session.workoutId,
+      name: session.workoutName || session.name,
+      exercises: (session.exercises || []).map((exercise) => ({
+        id: exercise.id || exercise.exercise?.id || exercise.exercise?._id,
+        name: exercise.exercise?.name || exercise.name,
+        sets: (exercise.sets || []).map((set) => ({
+          id: set.id,
+          weight: set.weight,
+          reps: set.reps,
+          completed: set.completed,
+          type: set.type,
+          notes: set.notes || set.note || '',
+        })),
+      })),
+      notes: session.notes || '',
+    })
+  } catch {
+    return `${Date.now()}`
+  }
+}
+
 export function WorkoutSessionProvider({ children }) {
   const { user } = useAuth()
 
@@ -43,6 +70,8 @@ export function WorkoutSessionProvider({ children }) {
   const syncTimeoutRef = useRef(null)
   const isFinishingRef = useRef(false)
   const hasCompletedInitialLoadRef = useRef(false)
+  const lastRemotePollRef = useRef(0)
+  const lastRemoteSaveHashRef = useRef('')
 
   function isMongoId(value) {
     return typeof value === 'string' && /^[a-f\d]{24}$/i.test(value)
@@ -75,7 +104,7 @@ export function WorkoutSessionProvider({ children }) {
   }
 
   function normalizeHistoryFromApi(session) {
-    const payload = session?.historyItem || session?.session || session
+    const payload = session?.session || session
 
     return {
       ...payload,
@@ -83,10 +112,6 @@ export function WorkoutSessionProvider({ children }) {
       duration: payload?.durationSeconds ?? payload?.duration ?? 0,
       workoutName: payload?.workoutName || payload?.name || 'Treino',
       exercises: Array.isArray(payload?.exercises) ? payload.exercises : [],
-      totalVolume: Number(payload?.totalVolume || 0),
-      totalSets: Number(payload?.totalSets || 0),
-      totalReps: Number(payload?.totalReps || 0),
-      prs: Array.isArray(payload?.prs) ? payload.prs : [],
     }
   }
 
@@ -155,9 +180,7 @@ export function WorkoutSessionProvider({ children }) {
       }
     } catch (error) {
       if (error?.status !== 401) {
-        if (error?.status !== 401) {
         console.error('Erro ao buscar treino ativo remoto:', error)
-      }
       }
 
       return {
@@ -171,11 +194,19 @@ export function WorkoutSessionProvider({ children }) {
   async function saveActiveSessionToApi(session) {
     if (!session || isFinishingRef.current) return false
 
+    const nextHash = getSessionSyncHash(session)
+
+    if (nextHash && nextHash === lastRemoteSaveHashRef.current) {
+      return true
+    }
+
     try {
       await apiFetch(ACTIVE_SESSION_ENDPOINT, {
         method: 'PUT',
         body: JSON.stringify({ session }),
       })
+
+      lastRemoteSaveHashRef.current = nextHash
 
       return true
     } catch (error) {
@@ -418,7 +449,7 @@ export function WorkoutSessionProvider({ children }) {
       if (!isFinishingRef.current) {
         saveActiveSessionToApi(activeSession)
       }
-    }, 500)
+    }, 1500)
 
     return () => {
       window.clearTimeout(syncTimeoutRef.current)
@@ -430,8 +461,18 @@ export function WorkoutSessionProvider({ children }) {
 
     let isMounted = true
 
-    async function pollRemoteActiveSession() {
+    async function pollRemoteActiveSession({ force = false } = {}) {
       if (isFinishingRef.current) return
+      if (document.visibilityState === 'hidden') return
+
+      const now = Date.now()
+      const minDelay = activeSession ? 30000 : 120000
+
+      if (!force && now - lastRemotePollRef.current < minDelay) {
+        return
+      }
+
+      lastRemotePollRef.current = now
 
       const remoteState = await fetchActiveSessionState()
 
@@ -441,18 +482,20 @@ export function WorkoutSessionProvider({ children }) {
     }
 
     function handleFocusSync() {
-      pollRemoteActiveSession()
+      pollRemoteActiveSession({ force: true })
     }
 
     function handleVisibilitySync() {
       if (document.visibilityState === 'visible') {
-        pollRemoteActiveSession()
+        pollRemoteActiveSession({ force: true })
       }
     }
 
-    pollRemoteActiveSession()
+    pollRemoteActiveSession({ force: true })
 
-    const intervalId = window.setInterval(pollRemoteActiveSession, 5000)
+    const intervalId = window.setInterval(() => {
+      pollRemoteActiveSession()
+    }, activeSession ? 30000 : 120000)
 
     window.addEventListener('focus', handleFocusSync)
     document.addEventListener('visibilitychange', handleVisibilitySync)
@@ -463,7 +506,7 @@ export function WorkoutSessionProvider({ children }) {
       window.removeEventListener('focus', handleFocusSync)
       document.removeEventListener('visibilitychange', handleVisibilitySync)
     }
-  }, [isLoaded, user])
+  }, [activeSession, isLoaded, user])
 
   useEffect(() => {
     function handleActiveSessionStorage(event) {

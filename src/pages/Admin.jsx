@@ -239,6 +239,11 @@ function Admin() {
   const [copied, setCopied] = useState('')
   const [activeAdminView, setActiveAdminView] = useState('overview')
   const [activeRankingView, setActiveRankingView] = useState('mostWorkouts')
+  const [loadedAdminViews, setLoadedAdminViews] = useState({
+    overview: false,
+    rankings: false,
+    users: false,
+  })
 
   const isAdmin = user?.role === 'admin'
 
@@ -264,6 +269,7 @@ function Admin() {
     try {
       const data = await apiFetch(`/admin/analytics?days=${days}`)
       setAnalytics(data)
+      setLoadedAdminViews((current) => ({ ...current, overview: true }))
     } catch (error) {
       console.error(error)
       showToast('error', 'Erro ao carregar métricas', error.message)
@@ -274,6 +280,7 @@ function Admin() {
     try {
       const data = await apiFetch(`/admin/rankings?days=${days}`)
       setAdminRankings(data)
+      setLoadedAdminViews((current) => ({ ...current, rankings: true }))
     } catch (error) {
       console.error(error)
       showToast('error', 'Erro ao carregar rankings', error.message)
@@ -303,6 +310,7 @@ function Admin() {
       const data = await apiFetch(`/admin/users?${params.toString()}`)
       const nextUsers = Array.isArray(data?.users) ? data.users : Array.isArray(data) ? data : []
       setUsers(nextUsers)
+      setLoadedAdminViews((current) => ({ ...current, users: true }))
 
       if (selectedUser) {
         const current = nextUsers.find((item) => getUserId(item) === getUserId(selectedUser))
@@ -462,10 +470,21 @@ function Admin() {
 
     loadAdminStats()
     loadAnalytics()
-    loadRankings()
-    loadUsers()
+    // rankings e usuários carregam sob demanda ao abrir as abas
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin, roleFilter, statusFilter, providerFilter])
+
+  useEffect(() => {
+    if (!isAdmin) return
+
+    if (activeAdminView === 'rankings' && !loadedAdminViews.rankings) {
+      loadRankings(analyticsDays)
+    }
+
+    if (activeAdminView === 'users' && !loadedAdminViews.users) {
+      loadUsers()
+    }
+  }, [activeAdminView, isAdmin])
 
   const filteredUsers = useMemo(() => {
     const term = query.trim().toLowerCase()
@@ -654,8 +673,8 @@ function Admin() {
                   type="button"
                   onClick={() => {
                     setAnalyticsDays(days)
-                    loadAnalytics(days)
-                    loadRankings(days)
+                    if (activeAdminView === 'overview') loadAnalytics(days)
+                    if (activeAdminView === 'rankings') loadRankings(days)
                   }}
                   className={[
                     'h-10 rounded-2xl border px-3 text-xs font-black transition',
@@ -672,10 +691,10 @@ function Admin() {
             <button
               type="button"
               onClick={() => {
-                loadAnalytics(analyticsDays)
-                loadRankings(analyticsDays)
                 loadAdminStats()
-                loadUsers()
+                if (activeAdminView === 'overview') loadAnalytics(analyticsDays)
+                if (activeAdminView === 'rankings') loadRankings(analyticsDays)
+                if (activeAdminView === 'users') loadUsers()
               }}
               className="h-10 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-xs font-black text-[var(--ff-text)] transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-card-hover)]"
             >
