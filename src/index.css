@@ -2432,3 +2432,31 @@ main {
 .ff-hevy-admin .ff-ranking-card {
   min-width: 0;
 }
+
+
+/* Etapa 48 — Admin reformulado */
+.ff-admin-v48 {
+  --admin-card-blur: saturate(140%) blur(10px);
+}
+
+.ff-admin-v48 details > summary {
+  list-style: none;
+}
+
+.ff-admin-v48 details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.ff-admin-v48 .admin-user-row {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 640px) {
+  .ff-admin-v48 {
+    padding-bottom: 0.5rem;
+  }
+
+  .ff-admin-v48 .ff-admin-stat-card {
+    min-height: 92px;
+  }
+}
