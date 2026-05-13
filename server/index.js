@@ -22,6 +22,7 @@ import {
     setCsrfCookie,
     usesCookieAuth,
 } from './utils/authCookie.js'
+import { csrfProtection } from './utils/csrfProtection.js'
 import {
     normalizeActiveWorkoutPayload,
     normalizeBackupPayload,
