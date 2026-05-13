@@ -34,6 +34,17 @@ function ensureLink(rel, href, attributes = {}) {
   })
 }
 
+export function isStandalonePwaMode() {
+  if (typeof window === 'undefined') return false
+
+  return (
+    window.matchMedia?.('(display-mode: standalone)').matches ||
+    window.matchMedia?.('(display-mode: fullscreen)').matches ||
+    window.navigator.standalone === true ||
+    document.referrer?.startsWith('android-app://')
+  )
+}
+
 export function setupPwaHeadTags() {
   if (typeof document === 'undefined') return
 
@@ -49,25 +60,59 @@ export function setupPwaHeadTags() {
   ensureMeta('mobile-web-app-capable', 'yes')
   ensureMeta('theme-color', '#0b0b0f')
   ensureMeta('msapplication-TileColor', '#0b0b0f')
-  ensureMeta(
-    'description',
-    'ForgeFlow é um app de treinos para registrar cargas, acompanhar evolução, metas e histórico.'
-  )
+  ensureMeta('description', 'ForgeFlow é um app de treinos para registrar cargas, acompanhar evolução, metas e histórico.')
+}
+
+export function notifyPwaStatus(status) {
+  if (typeof window === 'undefined') return
+
+  window.__FORGEFLOW_PWA_STATUS__ = status
+  window.dispatchEvent(new CustomEvent('forgeflow:pwa-ready', { detail: { status } }))
 }
 
 export function registerForgeFlowServiceWorker() {
   if (typeof window === 'undefined') return
-  if (!('serviceWorker' in navigator)) return
-  if (import.meta.env.DEV) return
+  if (!('serviceWorker' in navigator)) {
+    notifyPwaStatus('service worker indisponível')
+    return
+  }
+  if (import.meta.env.DEV) {
+    notifyPwaStatus('desenvolvimento')
+    return
+  }
 
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('/sw.js')
       .then((registration) => {
+        notifyPwaStatus('service worker registrado')
+
         registration.update?.()
+
+        if (registration.waiting) {
+          notifyPwaStatus('atualização disponível')
+        }
+
+        registration.addEventListener('updatefound', () => {
+          const worker = registration.installing
+
+          if (!worker) return
+
+          worker.addEventListener('statechange', () => {
+            if (worker.state === 'installed') {
+              if (navigator.serviceWorker.controller) {
+                notifyPwaStatus('nova versão disponível')
+                window.dispatchEvent(new CustomEvent('forgeflow:pwa-update-available'))
+              } else {
+                notifyPwaStatus('pronto para instalar')
+              }
+            }
+          })
+        })
       })
       .catch((error) => {
         console.warn('[ForgeFlow PWA] Service worker não registrado:', error)
+        notifyPwaStatus('falha no service worker')
       })
   })
 }
@@ -85,4 +130,22 @@ export function listenForPwaInstallPrompt(callback) {
   return () => {
     window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
   }
+}
+
+export async function clearForgeFlowPwaCache() {
+  if (typeof window === 'undefined') return false
+
+  if ('caches' in window) {
+    const keys = await window.caches.keys()
+    await Promise.all(keys.map((key) => window.caches.delete(key)))
+  }
+
+  if ('serviceWorker' in navigator) {
+    const registrations = await navigator.serviceWorker.getRegistrations()
+    registrations.forEach((registration) => {
+      registration.update?.()
+    })
+  }
+
+  return true
 }

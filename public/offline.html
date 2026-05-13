@@ -2,56 +2,50 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="theme-color" content="#0ea5e9" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b0b0f" />
     <title>ForgeFlow offline</title>
     <style>
-      :root {
-        color-scheme: dark;
-        font-family: Arial, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: #05070a;
-        color: #f8fafc;
-      }
-
+      * { box-sizing: border-box; }
       body {
         min-height: 100vh;
         margin: 0;
         display: grid;
         place-items: center;
+        background: #000;
+        color: #f4f4f5;
+        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         padding: 24px;
-        background:
-          radial-gradient(circle at top, rgba(14, 165, 233, 0.20), transparent 34%),
-          #05070a;
       }
-
-      main {
-        width: min(420px, 100%);
-        border: 1px solid rgba(148, 163, 184, 0.22);
+      .card {
+        width: min(100%, 440px);
+        border: 1px solid rgba(255,255,255,.14);
+        background: #18181b;
         border-radius: 28px;
-        background: rgba(15, 23, 42, 0.88);
         padding: 28px;
-        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+        box-shadow: 0 24px 80px rgba(0,0,0,.35);
       }
-
-      h1 {
-        margin: 0;
-        font-size: 28px;
-        line-height: 1.1;
+      .badge {
+        display: inline-flex;
+        border: 1px solid rgba(139,92,246,.32);
+        background: rgba(139,92,246,.12);
+        color: #c4b5fd;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: .12em;
+        text-transform: uppercase;
       }
-
-      p {
-        margin: 12px 0 0;
-        color: #94a3b8;
-        line-height: 1.6;
-      }
-
+      h1 { margin: 18px 0 8px; font-size: 28px; line-height: 1.05; }
+      p { color: #a1a1aa; line-height: 1.6; }
       button {
-        margin-top: 22px;
         width: 100%;
         height: 48px;
         border: 0;
         border-radius: 18px;
-        background: #0ea5e9;
+        margin-top: 18px;
+        background: #8b5cf6;
         color: white;
         font-weight: 900;
         cursor: pointer;
@@ -59,9 +53,10 @@
     </style>
   </head>
   <body>
-    <main>
-      <h1>Você está offline</h1>
-      <p>O ForgeFlow não conseguiu carregar os dados agora. Verifique a conexão e tente novamente.</p>
+    <main class="card">
+      <span class="badge">ForgeFlow offline</span>
+      <h1>Sem conexão no momento</h1>
+      <p>Não foi possível carregar a versão online agora. Confira sua internet e tente novamente.</p>
       <button onclick="window.location.reload()">Tentar novamente</button>
     </main>
   </body>

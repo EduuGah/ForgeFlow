@@ -2391,3 +2391,18 @@ main {
     overflow: hidden;
   }
 }
+
+
+/* =========================================================
+   ForgeFlow — Etapa 40 PWA/cache/install
+   ========================================================= */
+
+.ff-pwa-safe-modal {
+  max-width: calc(100vw - 1rem);
+}
+
+@media (display-mode: standalone) {
+  .ff-hide-when-installed {
+    display: none !important;
+  }
+}

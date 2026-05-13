@@ -17,6 +17,7 @@ import {
 import MobileBottomNav from './MobileBottomNav'
 import NotificationBell from '../notifications/NotificationBell'
 import { generateSmartNotifications } from '../../utils/notificationUtils'
+import { isStandalonePwaMode } from '../../utils/pwaUtils'
 
 const Sidebar = lazy(() => import('./Sidebar'))
 const ActiveWorkoutMini = lazy(() => import('../workout/ActiveWorkoutMini'))
@@ -63,6 +64,7 @@ function AppLayout() {
   const [popupNotification, setPopupNotification] = useState(null)
   const [isHeaderVisible, setIsHeaderVisible] = useState(true)
   const [isHeaderCompact, setIsHeaderCompact] = useState(false)
+  const [isPwaStandalone, setIsPwaStandalone] = useState(() => isStandalonePwaMode())
   const lastScrollYRef = useRef(0)
   const tickingRef = useRef(false)
 
@@ -79,6 +81,26 @@ function AppLayout() {
 
     window.dispatchEvent(new CustomEvent('forgeflow:route-scroll-top'))
   }, [location.pathname])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+
+    const media = window.matchMedia?.('(display-mode: standalone)')
+
+    function handleStandaloneChange() {
+      setIsPwaStandalone(isStandalonePwaMode())
+    }
+
+    handleStandaloneChange()
+
+    media?.addEventListener?.('change', handleStandaloneChange)
+    window.addEventListener('appinstalled', handleStandaloneChange)
+
+    return () => {
+      media?.removeEventListener?.('change', handleStandaloneChange)
+      window.removeEventListener('appinstalled', handleStandaloneChange)
+    }
+  }, [])
 
 
   useEffect(() => {
@@ -233,7 +255,8 @@ function AppLayout() {
 
             <div className="flex shrink-0 items-center gap-2">
               <div className="hidden rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-3 py-1 text-xs font-bold text-[var(--ff-accent-text)] sm:block">Beta</div>
-              <button
+              {!isPwaStandalone && (
+                <button
                 type="button"
                 onClick={() => window.dispatchEvent(new CustomEvent('forgeflow:show-install-app'))}
                 className="flex h-11 items-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface)] px-3 text-xs font-black text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)] sm:flex"
@@ -243,6 +266,7 @@ function AppLayout() {
                 <Download size={16} />
                 App
               </button>
+              )}
 
               <NotificationBell />
             </div>

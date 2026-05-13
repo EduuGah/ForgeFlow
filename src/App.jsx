@@ -31,6 +31,8 @@ const Admin = lazy(() => import('./pages/Admin'))
 const Login = lazy(() => import('./pages/Login'))
 const Register = lazy(() => import('./pages/Register'))
 const AuthCallback = lazy(() => import('./pages/AuthCallback'))
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
+const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 
 function AppLoadingFallback() {
   return (
@@ -72,6 +74,24 @@ function App() {
               />
 
               <Route path="/auth/callback" element={<AuthCallback />} />
+
+              <Route
+                path="/forgot-password"
+                element={
+                  <PublicRoute>
+                    <ForgotPassword />
+                  </PublicRoute>
+                }
+              />
+
+              <Route
+                path="/reset-password/:token"
+                element={
+                  <PublicRoute>
+                    <ResetPassword />
+                  </PublicRoute>
+                }
+              />
 
               <Route
                 path="/complete-profile"

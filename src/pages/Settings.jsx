@@ -39,6 +39,7 @@ import {
   getUserAppSettings,
   saveUserAppSettings,
 } from '../utils/settingsUtils'
+import { clearForgeFlowPwaCache } from '../utils/pwaUtils'
 
 function SectionTitle({ icon: Icon, title, description }) {
   return (
@@ -240,6 +241,12 @@ function Settings() {
 
   const [savingPassword, setSavingPassword] = useState(false)
   const [exportingType, setExportingType] = useState('')
+  const [exportPassword, setExportPassword] = useState('')
+  const [deletingAccount, setDeletingAccount] = useState(false)
+  const [deleteAccountForm, setDeleteAccountForm] = useState({
+    password: '',
+    confirmText: '',
+  })
 
   const currentAccent = useMemo(() => {
     return accentColors[settings.accentColor] || accentColors.purple || Object.values(accentColors)[0]
@@ -342,10 +349,20 @@ function Settings() {
 
     loadSettings()
 
-  return () => {
+    return () => {
       isMounted = false
     }
   }, [user])
+
+  async function handleClearPwaCache() {
+    try {
+      await clearForgeFlowPwaCache()
+      showToast('success', 'Cache limpo', 'Recarregue o app para buscar a versão mais recente.')
+    } catch (error) {
+      console.error(error)
+      showToast('error', 'Erro ao limpar cache', 'Não foi possível limpar o cache automaticamente.')
+    }
+  }
 
   async function handleSetPassword(event) {
     event.preventDefault()
@@ -424,6 +441,40 @@ function Settings() {
     }
   }
 
+  async function handleDeleteAccount() {
+    if (deleteAccountForm.confirmText.trim().toUpperCase() !== 'EXCLUIR') {
+      showToast('error', 'Confirmação inválida', 'Digite EXCLUIR para confirmar a exclusão.')
+      return
+    }
+
+    setConfirmModal({
+      title: 'Excluir conta permanentemente?',
+      description:
+        'Esta ação remove sua conta e seus dados associados. Não será possível desfazer.',
+      confirmText: 'Excluir conta',
+      variant: 'danger',
+      onConfirm: async () => {
+        setDeletingAccount(true)
+
+        try {
+          await apiFetch('/me', {
+            method: 'DELETE',
+            body: JSON.stringify(deleteAccountForm),
+          })
+
+          localStorage.removeItem('forgeflow:token')
+          setConfirmModal(null)
+          window.location.href = '/login'
+        } catch (error) {
+          console.error(error)
+          showToast('error', 'Erro ao excluir conta', error.message || 'Não foi possível excluir sua conta.')
+        } finally {
+          setDeletingAccount(false)
+        }
+      },
+    })
+  }
+
   function handleResetSettings() {
     setConfirmModal({
       title: 'Restaurar configurações?',
@@ -469,7 +520,7 @@ function Settings() {
       setExportingType('json')
       const date = new Date().toISOString().slice(0, 10)
 
-      await apiDownload('/export-data', `forgeflow-backup-${date}.json`)
+      await apiDownload('/export-data', `forgeflow-backup-${date}.json`, { password: exportPassword })
 
       showToast(
         'success',
@@ -496,7 +547,8 @@ function Settings() {
 
       await apiDownload(
         '/export/workout-history.csv',
-        `forgeflow-historico-${date}.csv`
+        `forgeflow-historico-${date}.csv`,
+        { password: exportPassword }
       )
 
       showToast(
@@ -715,6 +767,36 @@ function Settings() {
               <RotateCcwIcon size={16} />
               Resetar tutorial inicial
             </button>
+          </Card>
+
+          <Card>
+            <SectionTitle
+              icon={Smartphone}
+              title="Manutenção do app"
+              description="Ferramentas úteis para quando o ForgeFlow estiver instalado como aplicativo."
+            />
+
+            <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('forgeflow:show-install-app'))}
+                className="flex h-12 items-center justify-center rounded-2xl bg-[var(--ff-accent)] px-4 text-sm font-black text-white shadow-[0_0_18px_var(--ff-accent-shadow)]"
+              >
+                Ver instalação
+              </button>
+
+              <button
+                type="button"
+                onClick={handleClearPwaCache}
+                className="flex h-12 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-sm font-black text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)]"
+              >
+                Limpar cache do app
+              </button>
+            </div>
+
+            <p className="mt-3 text-xs leading-relaxed text-[var(--ff-muted)]">
+              Use a limpeza de cache quando o celular continuar mostrando uma versão antiga após uma atualização.
+            </p>
           </Card>
 
           <Card>
@@ -987,6 +1069,16 @@ function Settings() {
               description="Exporte seus dados do ForgeFlow, importe um backup JSON e baixe seu histórico em formatos úteis."
             />
 
+            <div className="mt-5">
+              <Input
+                type="password"
+                label="Senha para exportar"
+                value={exportPassword}
+                onChange={(event) => setExportPassword(event.target.value)}
+                placeholder="Confirme sua senha antes de exportar"
+              />
+            </div>
+
             <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2">
               <Button
                 type="button"
@@ -1137,6 +1229,52 @@ function Settings() {
               Restaurar configurações padrão
             </Button>
           </Card>
+          <Card className="border-red-500/20">
+            <SectionTitle
+              icon={AlertTriangle}
+              title="Excluir minha conta"
+              description="Remova sua conta e os dados associados ao ForgeFlow. Esta ação é permanente."
+            />
+
+            <div className="mt-5 space-y-3">
+              {user?.hasPassword && (
+                <Input
+                  type="password"
+                  label="Senha atual"
+                  value={deleteAccountForm.password}
+                  onChange={(event) =>
+                    setDeleteAccountForm((current) => ({
+                      ...current,
+                      password: event.target.value,
+                    }))
+                  }
+                  placeholder="Digite sua senha"
+                />
+              )}
+
+              <Input
+                label="Confirmação"
+                value={deleteAccountForm.confirmText}
+                onChange={(event) =>
+                  setDeleteAccountForm((current) => ({
+                    ...current,
+                    confirmText: event.target.value,
+                  }))
+                }
+                placeholder="Digite EXCLUIR"
+              />
+
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={deletingAccount}
+                className="flex h-12 w-full items-center justify-center rounded-2xl border border-red-500/30 bg-red-500/10 px-4 text-sm font-black text-red-200 transition hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {deletingAccount ? 'Excluindo...' : 'Excluir conta permanentemente'}
+              </button>
+            </div>
+          </Card>
+
         </aside>
       </section>
 

@@ -1,38 +1,48 @@
 {
   "name": "ForgeFlow",
   "short_name": "ForgeFlow",
-  "description": "Workout Tracker para treinos, progresso, metas e evolução.",
+  "description": "ForgeFlow é um app de treinos para registrar cargas, acompanhar evolução, metas e histórico.",
   "id": "/",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui", "browser"],
-  "orientation": "portrait-primary",
-  "background_color": "#05070a",
-  "theme_color": "#0ea5e9",
-  "categories": ["fitness", "health", "productivity"],
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "portrait",
+  "theme_color": "#0b0b0f",
+  "background_color": "#000000",
+  "categories": [
+    "health",
+    "fitness",
+    "sports",
+    "productivity"
+  ],
   "lang": "pt-BR",
+  "dir": "ltr",
   "icons": [
     {
-      "src": "/icons/icon-192.png",
+      "src": "/icons/pwa-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "/icons/pwa-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/maskable-192.png",
+      "src": "/icons/pwa-maskable-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/icons/maskable-512.png",
+      "src": "/icons/pwa-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -40,28 +50,38 @@
   ],
   "shortcuts": [
     {
-      "name": "Iniciar treino",
+      "name": "Meus treinos",
+      "short_name": "Treinos",
+      "description": "Abrir rotinas de treino",
+      "url": "/workouts?source=pwa-shortcut",
+      "icons": [
+        {
+          "src": "/icons/pwa-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Treino ativo",
       "short_name": "Treino",
       "description": "Abrir treino ativo",
       "url": "/start-workout?source=pwa-shortcut",
       "icons": [
         {
-          "src": "/icons/icon-192.png",
-          "sizes": "192x192",
-          "type": "image/png"
+          "src": "/icons/pwa-192.png",
+          "sizes": "192x192"
         }
       ]
     },
     {
-      "name": "Dashboard",
-      "short_name": "Dashboard",
-      "description": "Abrir resumo do ForgeFlow",
-      "url": "/dashboard?source=pwa-shortcut",
+      "name": "Exercícios",
+      "short_name": "Exercícios",
+      "description": "Abrir biblioteca de exercícios",
+      "url": "/exercises?source=pwa-shortcut",
       "icons": [
         {
-          "src": "/icons/icon-192.png",
-          "sizes": "192x192",
-          "type": "image/png"
+          "src": "/icons/pwa-192.png",
+          "sizes": "192x192"
         }
       ]
     }

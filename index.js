@@ -192,82 +192,12 @@ const normalizedFrontendUrl = FRONTEND_URL.replace(/\/$/, '')
 const normalizedBackendUrl = BACKEND_URL.replace(/\/$/, '')
 
 
-
-const AUTH_COOKIE_NAME = 'forgeflow_session'
-
-function getAuthCookieOptions() {
-    return {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        path: '/',
-        maxAge: 1000 * 60 * 60 * 24,
-    }
-}
-
-function setAuthCookie(res, token) {
-    res.cookie(AUTH_COOKIE_NAME, token, getAuthCookieOptions())
-}
-
-function clearAuthCookie(res) {
-    res.clearCookie(AUTH_COOKIE_NAME, {
-        ...getAuthCookieOptions(),
-        maxAge: undefined,
-    })
-}
-
-function getTokenFromRequest(req) {
-    const authHeader = req.headers.authorization
-
-    if (authHeader?.startsWith('Bearer ')) {
-        return authHeader.split(' ')[1]
-    }
-
-    return req.cookies?.[AUTH_COOKIE_NAME] || ''
-}
-
-function requireRecentPassword(user, password) {
-    if (!user?.passwordHash) {
-        return {
-            ok: false,
-            message: 'Esta ação exige uma senha tradicional. Crie uma senha antes de continuar.',
-        }
-    }
-
-    if (!password?.trim()) {
-        return {
-            ok: false,
-            message: 'Informe sua senha para confirmar esta ação.',
-        }
-    }
-
-    return {
-        ok: true,
-    }
-}
-
-
 function securityHeaders(req, res, next) {
     res.setHeader('X-Content-Type-Options', 'nosniff')
     res.setHeader('X-Frame-Options', 'DENY')
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
     res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups')
-    res.setHeader(
-        'Content-Security-Policy',
-        [
-            "default-src 'self'",
-            "base-uri 'self'",
-            "frame-ancestors 'none'",
-            "object-src 'none'",
-            "img-src 'self' data: https:",
-            "media-src 'self' https:",
-            "font-src 'self' data:",
-            "connect-src 'self' https:",
-            "script-src 'self' 'unsafe-inline'",
-            "style-src 'self' 'unsafe-inline'",
-        ].join('; ')
-    )
 
     if (process.env.NODE_ENV === 'production') {
         res.setHeader(
@@ -1665,13 +1595,15 @@ function getHistoryRows(history = []) {
 }
 
 async function authMiddleware(req, res, next) {
-    const token = getTokenFromRequest(req)
+    const authHeader = req.headers.authorization
 
-    if (!token) {
+    if (!authHeader?.startsWith('Bearer ')) {
         return res.status(401).json({
             message: 'Você precisa estar logado.',
         })
     }
+
+    const token = authHeader.split(' ')[1]
 
     try {
         req.user = jwt.verify(token, JWT_SECRET)
@@ -2043,9 +1975,17 @@ app.patch('/admin/users/:userId/block', authMiddleware, requireAdmin, async (req
     }
 })
 
-app.post('/admin/users/:userId/reset-password', authMiddleware, requireAdmin, sensitiveRateLimit, async (req, res) => {
+app.post('/admin/users/:userId/reset-password', authMiddleware, requireAdmin, async (req, res) => {
     try {
         const { userId } = req.params
+        const password = String(req.body?.password || '')
+
+        if (password.length < 6) {
+            return res.status(400).json({
+                message: 'A senha precisa ter pelo menos 6 caracteres.',
+            })
+        }
+
         const user = await User.findById(userId)
 
         if (!user) {
@@ -2054,39 +1994,25 @@ app.post('/admin/users/:userId/reset-password', authMiddleware, requireAdmin, se
             })
         }
 
-        const resetToken = createPasswordResetToken()
-        user.resetPasswordTokenHash = resetToken.tokenHash
-        user.resetPasswordExpiresAt = resetToken.expiresAt
-        await user.save()
+        user.passwordHash = await bcrypt.hash(password, 10)
+        user.provider = user.googleId ? 'both' : 'credentials'
 
-        const resetUrl = buildResetPasswordUrl(resetToken.rawToken)
-        const emailResult = await sendPasswordResetEmail(user.email, resetUrl)
+        await user.save()
 
         await writeAdminLog(req, {
             targetUserId: userId,
-            action: 'password_reset_link_created',
-            message: 'Link temporário de redefinição de senha gerado pelo admin.',
-            metadata: {
-                emailSent: emailResult.sent,
-                emailReason: emailResult.reason,
-            },
+            action: 'password_reset_by_admin',
+            message: 'Senha redefinida manualmente pelo admin.',
         })
 
         return res.json({
-            message: emailResult.sent
-                ? 'Link de redefinição enviado ao usuário.'
-                : 'Link de redefinição gerado. Configure o provedor de e-mail para envio automático.',
-            emailSent: emailResult.sent,
-            emailReason: emailResult.reason,
-            ...(process.env.NODE_ENV !== 'production' || req.body?.debugReturnLink
-                ? { resetUrl }
-                : {}),
+            message: 'Senha redefinida pelo admin.',
         })
     } catch (error) {
         console.error(error)
 
         return res.status(500).json({
-            message: 'Erro ao gerar link de redefinição de senha.',
+            message: 'Erro ao redefinir senha pelo admin.',
         })
     }
 })
@@ -2843,9 +2769,8 @@ app.get(
     async (req, res) => {
         await writeLoginEvent(req, req.user, 'google')
         const token = createToken(req.user)
-        setAuthCookie(res, token)
 
-        res.redirect(`${normalizedFrontendUrl}/auth/callback?token=${token}&mode=cookie`)
+        res.redirect(`${normalizedFrontendUrl}/auth/callback?token=${token}`)
     }
 )
 
@@ -3038,11 +2963,8 @@ app.post('/auth/register', authRateLimit, async (req, res) => {
 
     const token = createToken(user)
 
-    setAuthCookie(res, token)
-
     res.status(201).json({
         token,
-        authMode: 'cookie',
         user: buildUserResponse(user),
     })
 })
@@ -3094,24 +3016,11 @@ app.post('/auth/login', authRateLimit, async (req, res) => {
 
     const token = createToken(user)
 
-    setAuthCookie(res, token)
-
     res.json({
         token,
-        authMode: 'cookie',
         user: buildUserResponse(user),
     })
 })
-
-
-app.post('/auth/logout', authMiddleware, async (req, res) => {
-    clearAuthCookie(res)
-
-    return res.json({
-        message: 'Logout realizado.',
-    })
-})
-
 
 app.get('/me', authMiddleware, async (req, res) => {
     const user = await User.findById(req.user.userId)
@@ -3176,7 +3085,6 @@ app.delete('/me', authMiddleware, sensitiveRateLimit, async (req, res) => {
         ])
 
         await User.findByIdAndDelete(userId)
-        clearAuthCookie(res)
 
         return res.json({
             message: 'Conta e dados associados removidos.',
@@ -5793,49 +5701,7 @@ app.get('/dashboard', authMiddleware, async (req, res) => {
 })
 
 
-
-async function verifyUserPasswordForSensitiveAction(req, res, next) {
-    try {
-        const password = String(req.headers['x-forgeflow-password'] || req.body?.password || '')
-        const user = await User.findById(req.user.userId)
-
-        if (!user) {
-            return res.status(404).json({
-                message: 'Usuário não encontrado.',
-            })
-        }
-
-        const requirement = requireRecentPassword(user, password)
-
-        if (!requirement.ok) {
-            return res.status(401).json({
-                message: requirement.message,
-                reason: 'reauth_required',
-            })
-        }
-
-        const passwordIsValid = await bcrypt.compare(password, user.passwordHash)
-
-        if (!passwordIsValid) {
-            return res.status(401).json({
-                message: 'Senha inválida.',
-                reason: 'reauth_failed',
-            })
-        }
-
-        req.currentUser = user
-        return next()
-    } catch (error) {
-        console.error(error)
-
-        return res.status(500).json({
-            message: 'Erro ao confirmar senha.',
-        })
-    }
-}
-
-
-app.get('/export-data', authMiddleware, verifyUserPasswordForSensitiveAction, async (req, res) => {
+app.get('/export-data', authMiddleware, async (req, res) => {
     try {
         const userId = req.user.userId
 
@@ -6082,7 +5948,7 @@ app.post('/import-data', authMiddleware, async (req, res) => {
     }
 })
 
-app.get('/export/workout-history.csv', authMiddleware, verifyUserPasswordForSensitiveAction, async (req, res) => {
+app.get('/export/workout-history.csv', authMiddleware, async (req, res) => {
     try {
         const history = await WorkoutHistory.find({
             userId: req.user.userId,

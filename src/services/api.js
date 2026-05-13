@@ -19,6 +19,7 @@ export async function apiFetch(path, options = {}) {
 
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -38,13 +39,16 @@ export async function apiFetch(path, options = {}) {
   return data
 }
 
-export async function apiDownload(path, filename) {
+export async function apiDownload(path, filename, options = {}) {
   const token = getToken()
 
   const response = await fetch(`${API_URL}${path}`, {
     method: 'GET',
+    credentials: 'include',
     headers: {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(options.password ? { 'X-ForgeFlow-Password': options.password } : {}),
+      ...(options.headers || {}),
     },
   })
 
@@ -80,6 +84,7 @@ export async function apiFormData(path, formData, options = {}) {
 
   const response = await fetch(`${API_URL}${path}`, {
     method: options.method || 'POST',
+    credentials: 'include',
     headers: {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers || {}),
@@ -98,4 +103,15 @@ export async function apiFormData(path, formData, options = {}) {
 
 export async function getCurrentUser() {
   return apiFetch('/me')
+}
+
+
+export async function logoutFromApi() {
+  try {
+    await apiFetch('/auth/logout', {
+      method: 'POST',
+    })
+  } catch {
+    // fallback local continua sendo executado no AuthContext
+  }
 }

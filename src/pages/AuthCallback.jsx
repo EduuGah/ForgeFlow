@@ -14,8 +14,9 @@ function AuthCallback() {
     async function finishLogin() {
       const params = new URLSearchParams(window.location.search)
       const token = params.get('token')
+      const mode = params.get('mode')
 
-      if (!token) {
+      if (!token && mode !== 'cookie') {
         setError('Token não encontrado na URL de callback.')
 
         setTimeout(() => {
@@ -25,7 +26,9 @@ function AuthCallback() {
         return
       }
 
-      localStorage.setItem('forgeflow:token', token)
+      if (token) {
+        localStorage.setItem('forgeflow:token', token)
+      }
 
       try {
         const user = await getCurrentUser()

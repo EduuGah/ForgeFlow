@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import { apiFetch, getToken, logout as logoutService } from '../services/api'
+import { apiFetch, getToken, logout as logoutService, logoutFromApi } from '../services/api'
 
 const AuthContext = createContext(null)
 
@@ -8,14 +8,6 @@ export function AuthProvider({ children }) {
   const [loadingUser, setLoadingUser] = useState(true)
 
   async function loadUser() {
-    const token = getToken()
-
-    if (!token) {
-      setUser(null)
-      setLoadingUser(false)
-      return
-    }
-
     try {
       const data = await apiFetch('/me')
       setUser(data)
@@ -27,8 +19,9 @@ export function AuthProvider({ children }) {
     }
   }
 
-  function logout() {
+  async function logout() {
     setUser(null)
+    await logoutFromApi()
     logoutService()
   }
 

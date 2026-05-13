@@ -11,14 +11,10 @@ import {
 } from 'lucide-react'
 
 import forgeflowIcon from '../../assets/forgeflow-icon.png'
+import { clearForgeFlowPwaCache, isStandalonePwaMode } from '../../utils/pwaUtils'
 
 function isStandaloneMode() {
-  if (typeof window === 'undefined') return false
-
-  return (
-    window.matchMedia?.('(display-mode: standalone)').matches ||
-    window.navigator.standalone === true
-  )
+  return isStandalonePwaMode()
 }
 
 function isIosDevice() {
@@ -44,6 +40,8 @@ function PwaInstallButton() {
   const [isOpen, setIsOpen] = useState(false)
   const [installed, setInstalled] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
+  const [updateAvailable, setUpdateAvailable] = useState(false)
+  const [cacheLoading, setCacheLoading] = useState(false)
   const [pwaStatus, setPwaStatus] = useState(getPwaStatus())
   const isIos = useMemo(() => isIosDevice(), [])
   const isAndroid = useMemo(() => isAndroidDevice(), [])
@@ -75,8 +73,20 @@ function PwaInstallButton() {
 
     function handleShowInstallApp() {
       refreshStatus()
+
+      if (isStandaloneMode()) {
+        setInstalled(true)
+        setStatusMessage('O ForgeFlow já está aberto como aplicativo instalado.')
+        return
+      }
+
       setIsOpen(true)
       setStatusMessage('')
+    }
+
+    function handleUpdateAvailable() {
+      setUpdateAvailable(true)
+      setStatusMessage('Existe uma nova versão disponível. Atualize para aplicar as mudanças.')
     }
 
     const intervalId = window.setInterval(refreshStatus, 1000)
@@ -85,6 +95,7 @@ function PwaInstallButton() {
     window.addEventListener('appinstalled', handleAppInstalled)
     window.addEventListener('forgeflow:show-install-app', handleShowInstallApp)
     window.addEventListener('forgeflow:pwa-ready', refreshStatus)
+    window.addEventListener('forgeflow:pwa-update-available', handleUpdateAvailable)
 
     return () => {
       window.clearInterval(intervalId)
@@ -92,6 +103,7 @@ function PwaInstallButton() {
       window.removeEventListener('appinstalled', handleAppInstalled)
       window.removeEventListener('forgeflow:show-install-app', handleShowInstallApp)
       window.removeEventListener('forgeflow:pwa-ready', refreshStatus)
+      window.removeEventListener('forgeflow:pwa-update-available', handleUpdateAvailable)
     }
   }, [])
 
@@ -129,6 +141,25 @@ function PwaInstallButton() {
         'Não foi possível abrir o instalador automático. Siga as instruções exibidas nesta janela.'
       )
     }
+  }
+
+  async function handleClearCache() {
+    setCacheLoading(true)
+
+    try {
+      await clearForgeFlowPwaCache()
+      setStatusMessage('Cache limpo. Recarregue a página para buscar a versão mais recente.')
+      setUpdateAvailable(false)
+    } catch (error) {
+      console.error(error)
+      setStatusMessage('Não foi possível limpar o cache automaticamente.')
+    } finally {
+      setCacheLoading(false)
+    }
+  }
+
+  function handleReload() {
+    window.location.reload()
   }
 
   if (!isOpen) return null
@@ -234,6 +265,22 @@ function PwaInstallButton() {
             </div>
           )}
 
+          {updateAvailable && (
+            <div className="mt-4 rounded-2xl border border-amber-400/25 bg-amber-500/10 p-4 text-sm leading-relaxed text-amber-200">
+              <p className="font-black">Nova versão disponível</p>
+              <p className="mt-1 text-amber-100/80">
+                Atualize para aplicar os arquivos mais recentes do ForgeFlow.
+              </p>
+              <button
+                type="button"
+                onClick={handleReload}
+                className="mt-3 h-10 rounded-2xl bg-amber-400 px-4 text-xs font-black text-black"
+              >
+                Recarregar agora
+              </button>
+            </div>
+          )}
+
           {statusMessage && (
             <div className="mt-4 flex items-start gap-3 rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] p-3 text-sm leading-relaxed text-[var(--ff-accent-text)]">
               <Info size={17} className="mt-0.5 shrink-0" />
@@ -241,14 +288,14 @@ function PwaInstallButton() {
             </div>
           )}
 
-          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
             <button
               type="button"
               onClick={handleInstall}
-              className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] text-sm font-black text-white shadow-[0_0_18px_var(--ff-accent-shadow)] active:scale-[0.98]"
+              className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] text-sm font-black text-white shadow-[0_0_18px_var(--ff-accent-shadow)] active:scale-[0.98] sm:col-span-2"
             >
               <Download size={17} />
-              {installPrompt ? 'Instalar agora' : 'Verificar instalação'}
+              {installPrompt ? 'Instalar agora' : 'Verificar'}
             </button>
 
             <button
@@ -257,6 +304,15 @@ function PwaInstallButton() {
               className="flex h-12 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-sm font-black text-[var(--ff-text-soft)] active:scale-[0.98]"
             >
               Fechar
+            </button>
+
+            <button
+              type="button"
+              onClick={handleClearCache}
+              disabled={cacheLoading}
+              className="flex h-11 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-transparent text-xs font-black text-[var(--ff-muted)] transition hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)] disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-3"
+            >
+              {cacheLoading ? 'Limpando cache...' : 'Limpar cache do app'}
             </button>
           </div>
         </div>

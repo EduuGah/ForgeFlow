@@ -1,145 +1,122 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, CheckCircle2, KeyRound } from 'lucide-react'
 
 import { apiFetch } from '../services/api'
 import forgeflowIcon from '../assets/forgeflow-icon.png'
-import { applyAppSettingsToDocument, getAppSettings } from '../utils/settingsUtils'
 
 function ResetPassword() {
-  const navigate = useNavigate()
   const { token } = useParams()
+  const navigate = useNavigate()
 
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [success, setSuccess] = useState(false)
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    applyAppSettingsToDocument(getAppSettings())
-  }, [])
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
 
   async function handleSubmit(event) {
     event.preventDefault()
-
+    setLoading(true)
+    setMessage('')
     setError('')
 
-    if (password.length < 6) {
-      setError('A senha precisa ter pelo menos 6 caracteres.')
-      return
-    }
-
-    if (password !== confirmPassword) {
-      setError('As senhas não conferem.')
-      return
-    }
-
-    setLoading(true)
-
     try {
-      await apiFetch(`/auth/reset-password/${token}`, {
+      const result = await apiFetch(`/auth/reset-password/${token}`, {
         method: 'POST',
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({
+          password,
+          confirmPassword,
+        }),
       })
 
-      setSuccess(true)
-      window.setTimeout(() => navigate('/login'), 1800)
-    } catch (err) {
-      setError(err.message)
+      setMessage(result?.message || 'Senha redefinida com sucesso.')
+
+      window.setTimeout(() => {
+        navigate('/login')
+      }, 1200)
+    } catch (requestError) {
+      console.error(requestError)
+      setError(requestError.message || 'Não foi possível redefinir a senha.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--ff-bg)] px-4 py-10 text-[var(--ff-text)]">
-      <div className="w-full max-w-md rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-8 shadow-2xl">
-        <div className="login-logo-card mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-3xl bg-white">
-          <img src={forgeflowIcon} alt="ForgeFlow" className="h-full w-full object-cover" />
-        </div>
-
-        <div className="mt-6 text-center">
-          <p className="text-sm font-bold text-[var(--ff-accent-text)]">ForgeFlow</p>
-          <h1 className="mt-2 text-3xl font-black">Redefinir senha</h1>
-          <p className="mt-3 text-sm leading-relaxed text-[var(--ff-muted)]">
-            Crie uma nova senha para acessar sua conta.
-          </p>
-        </div>
-
-        {success ? (
-          <div className="mt-7 rounded-3xl border border-emerald-500/25 bg-emerald-500/10 p-5 text-center">
-            <CheckCircle2 className="mx-auto text-emerald-300" size={34} />
-            <h2 className="mt-3 text-lg font-black text-emerald-100">
-              Senha alterada
-            </h2>
-            <p className="mt-2 text-sm text-emerald-100/75">
-              Redirecionando para o login...
-            </p>
+    <main className="flex min-h-screen items-center justify-center bg-black px-4 py-8 text-white">
+      <section className="w-full max-w-md rounded-[2rem] border border-zinc-800 bg-zinc-950 p-6 shadow-2xl">
+        <div className="flex items-center gap-3">
+          <img
+            src={forgeflowIcon}
+            alt="ForgeFlow"
+            className="h-12 w-12 rounded-2xl object-cover"
+          />
+          <div>
+            <h1 className="text-2xl font-black">Nova senha</h1>
+            <p className="text-sm text-zinc-400">ForgeFlow</p>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="mt-7 space-y-4">
-            <div>
-              <label className="mb-2 block text-sm font-bold text-[var(--ff-text)]">
-                Nova senha
-              </label>
-              <div className="flex h-12 items-center gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4">
-                <KeyRound size={18} className="text-[var(--ff-muted)]" />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  required
-                  autoComplete="new-password"
-                  className="w-full bg-transparent text-sm font-bold text-[var(--ff-text)] outline-none placeholder:text-[var(--ff-muted)]"
-                  placeholder="Mínimo 6 caracteres"
-                />
-              </div>
-            </div>
+        </div>
 
-            <div>
-              <label className="mb-2 block text-sm font-bold text-[var(--ff-text)]">
-                Confirmar senha
-              </label>
-              <div className="flex h-12 items-center gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4">
-                <KeyRound size={18} className="text-[var(--ff-muted)]" />
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(event) => setConfirmPassword(event.target.value)}
-                  required
-                  autoComplete="new-password"
-                  className="w-full bg-transparent text-sm font-bold text-[var(--ff-text)] outline-none placeholder:text-[var(--ff-muted)]"
-                  placeholder="Repita a nova senha"
-                />
-              </div>
-            </div>
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          <label className="block">
+            <span className="mb-2 block text-xs font-black uppercase tracking-[0.14em] text-zinc-500">
+              Nova senha
+            </span>
+            <input
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              required
+              minLength={6}
+              className="h-12 w-full rounded-2xl border border-zinc-800 bg-zinc-900 px-4 text-sm font-bold outline-none transition focus:border-violet-500"
+              placeholder="Mínimo 6 caracteres"
+            />
+          </label>
 
-            {error && (
-              <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
-                {error}
-              </div>
-            )}
+          <label className="block">
+            <span className="mb-2 block text-xs font-black uppercase tracking-[0.14em] text-zinc-500">
+              Confirmar senha
+            </span>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              required
+              minLength={6}
+              className="h-12 w-full rounded-2xl border border-zinc-800 bg-zinc-900 px-4 text-sm font-bold outline-none transition focus:border-violet-500"
+              placeholder="Repita a senha"
+            />
+          </label>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex h-12 w-full items-center justify-center rounded-2xl bg-[var(--ff-accent)] text-sm font-black text-white shadow-[0_0_20px_var(--ff-accent-shadow)] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {loading ? 'Salvando...' : 'Redefinir senha'}
-            </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="h-12 w-full rounded-2xl bg-violet-600 text-sm font-black text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? 'Salvando...' : 'Redefinir senha'}
+          </button>
+        </form>
 
-            <Link
-              to="/login"
-              className="flex h-11 items-center justify-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-sm font-black text-[var(--ff-text-soft)]"
-            >
-              <ArrowLeft size={16} />
-              Voltar ao login
-            </Link>
-          </form>
+        {message && (
+          <div className="mt-4 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-4 text-sm leading-relaxed text-emerald-200">
+            {message}
+          </div>
         )}
-      </div>
-    </div>
+
+        {error && (
+          <div className="mt-4 rounded-2xl border border-red-500/25 bg-red-500/10 p-4 text-sm leading-relaxed text-red-200">
+            {error}
+          </div>
+        )}
+
+        <Link
+          to="/login"
+          className="mt-5 block text-center text-sm font-bold text-zinc-400 transition hover:text-white"
+        >
+          Voltar para login
+        </Link>
+      </section>
+    </main>
   )
 }
 

@@ -308,25 +308,27 @@ function Admin() {
   async function handleAdminResetPassword() {
     if (!selectedUser) return
 
-    const safePassword = resetPassword.trim()
+    setActionLoading(true)
 
-    if (safePassword.length < 6) {
-      showToast('error', 'Senha muito curta', 'Use pelo menos 6 caracteres.')
-      return
+    try {
+      const data = await apiFetch(`/admin/users/${getUserId(selectedUser)}/reset-password`, {
+        method: 'POST',
+        body: JSON.stringify({ debugReturnLink: true }),
+      })
+
+      setResetPassword(data.resetUrl || '')
+      showToast(
+        'success',
+        data.emailSent ? 'Link enviado' : 'Link gerado',
+        data.message || 'Link temporário de redefinição criado.'
+      )
+      await loadUserDetails(getUserId(selectedUser))
+    } catch (error) {
+      console.error(error)
+      showToast('error', 'Erro ao gerar link', error.message)
+    } finally {
+      setActionLoading(false)
     }
-
-    await runUserAction(
-      () =>
-        apiFetch(`/admin/users/${getUserId(selectedUser)}/reset-password`, {
-          method: 'POST',
-          body: JSON.stringify({
-            password: safePassword,
-          }),
-        }),
-      'Senha temporária aplicada.'
-    )
-
-    setResetPassword('')
   }
 
   async function handleToggleRole() {
@@ -891,9 +893,9 @@ function Admin() {
                   </div>
 
                   <div>
-                    <h2 className="text-xl font-black text-[var(--ff-text)]">Resetar senha</h2>
+                    <h2 className="text-xl font-black text-[var(--ff-text)]">Gerar link de reset</h2>
                     <p className="mt-1 text-sm leading-relaxed text-[var(--ff-muted)]">
-                      Define uma senha temporária. A senha atual não é exibida nem recuperável.
+                      Gera um link temporário. O admin não define nem visualiza a senha do usuário.
                     </p>
                   </div>
                 </div>
@@ -902,29 +904,40 @@ function Admin() {
                   <input
                     type="text"
                     value={resetPassword}
-                    onChange={(event) => setResetPassword(event.target.value)}
-                    placeholder="Nova senha temporária"
+                    readOnly
+                    placeholder="O link temporário aparecerá aqui após gerar"
                     className="h-12 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-sm font-bold text-[var(--ff-text)] outline-none transition focus:border-[var(--ff-accent-border)]"
                   />
 
-                  <Button
-                    type="button"
-                    onClick={() =>
-                      setConfirmModal({
-                        title: 'Resetar senha?',
-                        description: `A senha de ${selectedUser.email} será alterada para a senha informada.`,
-                        confirmText: 'Resetar senha',
-                        variant: 'danger',
-                        onConfirm: () => {
-                          setConfirmModal(null)
-                          handleAdminResetPassword()
-                        },
-                      })
-                    }
-                    disabled={actionLoading}
-                  >
-                    Resetar
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      onClick={() =>
+                        setConfirmModal({
+                          title: 'Gerar link de reset?',
+                          description: `Será gerado um link temporário de redefinição para ${selectedUser.email}. O admin não verá nem definirá a senha final.`,
+                          confirmText: 'Gerar link de reset',
+                          variant: 'danger',
+                          onConfirm: () => {
+                            setConfirmModal(null)
+                            handleAdminResetPassword()
+                          },
+                        })
+                      }
+                      disabled={actionLoading}
+                    >
+                      {actionLoading ? 'Gerando...' : 'Gerar link'}
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => copyText(resetPassword, 'Link de reset')}
+                      disabled={!resetPassword}
+                    >
+                      Copiar
+                    </Button>
+                  </div>
                 </div>
               </Card>
 
