@@ -23,6 +23,9 @@ import {
   PlayCircle,
   RotateCcw,
   Dumbbell,
+  ArrowDown,
+  ArrowUp,
+  GripVertical,
   Flame,
   ListChecks,
 } from 'lucide-react'
@@ -147,11 +150,23 @@ function getLiveSetPrStatus(set, performance) {
   const bestWeight = Number(performance?.bestWeightPerformance?.weight || 0)
   const bestVolume = Number(performance?.bestVolumePerformance?.volume || 0)
 
-  const hasValidSet = weight > 0 && reps > 0
+  const hasPreviousWeightRecord = Boolean(performance?.bestWeightPerformance?.weight)
+  const hasPreviousVolumeRecord = Boolean(performance?.bestVolumePerformance?.volume)
+  const hasValidSet = Boolean(set.completed) && set.type !== 'warmup' && weight > 0 && reps > 0
 
   return {
-    isWeightPR: Boolean(set.isWeightPR) || (hasValidSet && weight > bestWeight),
-    isVolumePR: Boolean(set.isVolumePR) || (hasValidSet && volume > bestVolume),
+    isWeightPR:
+      Boolean(set.isWeightPR) ||
+      (hasValidSet &&
+        hasPreviousWeightRecord &&
+        performance?.weightPRSetId === set.id &&
+        weight > bestWeight),
+    isVolumePR:
+      Boolean(set.isVolumePR) ||
+      (hasValidSet &&
+        hasPreviousVolumeRecord &&
+        performance?.volumePRSetId === set.id &&
+        volume > bestVolume),
   }
 }
 
@@ -257,6 +272,7 @@ function StartWorkout() {
     addSet,
     removeSet,
     toggleSetWarmup,
+    moveSet,
     removeExercise,
     skipExercise,
     replaceExercise,
@@ -1090,17 +1106,20 @@ function StartWorkout() {
 
                 {!isCollapsed && (
                   <div className="mt-5">
-                    <div className="mb-3 hidden grid-cols-[58px_minmax(170px,1fr)_minmax(170px,1fr)_150px_54px] gap-3 px-3 text-xs font-bold uppercase tracking-wide text-[var(--ff-muted)] lg:grid">
+                    <div className="mb-3 hidden grid-cols-[58px_minmax(170px,1fr)_minmax(170px,1fr)_150px_92px_54px] gap-3 px-3 text-xs font-bold uppercase tracking-wide text-[var(--ff-muted)] lg:grid">
                       <span>Série</span>
                       <span>KG</span>
                       <span>Reps</span>
                       <span>Recordes</span>
+                      <span>Ordem</span>
                       <span>Status</span>
                     </div>
 
                     <div className="ff-sets-scroll space-y-3 pb-2">
-                      {(sessionExercise.sets || []).map((set) => {
+                      {(sessionExercise.sets || []).map((set, setIndex) => {
                         const isWarmup = set?.type === 'warmup'
+                        const canMoveUp = setIndex > 0
+                        const canMoveDown = setIndex < (sessionExercise.sets || []).length - 1
 
                         const isWeightPR =
                           appSettings.showPRDuringWorkout &&
@@ -1121,7 +1140,7 @@ function StartWorkout() {
                         return (
                           <div
                             key={set.id}
-                            className={`grid w-full grid-cols-[52px_minmax(0,1fr)_52px] gap-3 rounded-[1.75rem] border p-4 shadow-lg shadow-black/10 transition sm:grid-cols-[56px_minmax(0,1fr)_minmax(0,1fr)_56px] lg:grid-cols-[58px_minmax(170px,1fr)_minmax(170px,1fr)_150px_54px] lg:items-center lg:gap-3 lg:p-3 ${
+                            className={`grid w-full grid-cols-[52px_minmax(0,1fr)_52px] gap-3 rounded-[1.75rem] border p-4 shadow-lg shadow-black/10 transition sm:grid-cols-[56px_minmax(0,1fr)_minmax(0,1fr)_56px] lg:grid-cols-[58px_minmax(170px,1fr)_minmax(170px,1fr)_150px_92px_54px] lg:items-center lg:gap-3 lg:p-3 ${
                               set.completed
                                 ? 'border-emerald-400/35 bg-emerald-500/10 shadow-[0_0_20px_rgba(16,185,129,0.10)]'
                                 : 'border-[var(--ff-border)] bg-[linear-gradient(180deg,var(--ff-card),var(--ff-surface-2))]'
@@ -1201,6 +1220,35 @@ function StartWorkout() {
                               >
                                 {set.type === 'warmup' ? 'Aquec.' : 'Normal'}
                               </button>
+                            </div>
+
+                            <div className="col-span-3 row-start-5 flex items-center justify-between gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-2 py-2 lg:col-auto lg:row-auto lg:justify-center lg:bg-transparent lg:border-transparent lg:p-0">
+                              <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.14em] text-[var(--ff-muted)] lg:hidden">
+                                <GripVertical size={14} />
+                                Ordem
+                              </div>
+
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => moveSet(sessionExercise.id, set.id, 'up')}
+                                  disabled={!canMoveUp}
+                                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--ff-border)] bg-[var(--ff-card)] text-[var(--ff-muted)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)] disabled:cursor-not-allowed disabled:opacity-35"
+                                  aria-label="Mover série para cima"
+                                >
+                                  <ArrowUp size={15} />
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => moveSet(sessionExercise.id, set.id, 'down')}
+                                  disabled={!canMoveDown}
+                                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--ff-border)] bg-[var(--ff-card)] text-[var(--ff-muted)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)] disabled:cursor-not-allowed disabled:opacity-35"
+                                  aria-label="Mover série para baixo"
+                                >
+                                  <ArrowDown size={15} />
+                                </button>
+                              </div>
                             </div>
 
                             <button

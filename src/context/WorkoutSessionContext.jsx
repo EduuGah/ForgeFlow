@@ -700,6 +700,34 @@ export function WorkoutSessionProvider({ children }) {
     })
   }
 
+  function moveSet(exerciseId, setId, direction) {
+    setActiveSession((current) => {
+      if (!current) return current
+
+      return markSessionUpdated({
+        ...current,
+        exercises: current.exercises.map((exercise) => {
+          if (exercise.id !== exerciseId) return exercise
+
+          const currentIndex = exercise.sets.findIndex((set) => set.id === setId)
+          if (currentIndex === -1) return exercise
+
+          const nextIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
+          if (nextIndex < 0 || nextIndex >= exercise.sets.length) return exercise
+
+          const nextSets = [...exercise.sets]
+          const [movedSet] = nextSets.splice(currentIndex, 1)
+          nextSets.splice(nextIndex, 0, movedSet)
+
+          return {
+            ...exercise,
+            sets: renumberExerciseSets(nextSets),
+          }
+        }),
+      })
+    })
+  }
+
   function removeExercise(exerciseId) {
     setActiveSession((current) => {
       if (!current) return current
@@ -927,6 +955,7 @@ export function WorkoutSessionProvider({ children }) {
         addSet,
         removeSet,
         toggleSetWarmup,
+        moveSet,
         removeExercise,
         skipExercise,
         replaceExercise,

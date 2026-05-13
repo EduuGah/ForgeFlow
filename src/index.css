@@ -2332,3 +2332,18 @@ main {
 .ff-admin-stat-card {
   min-width: 0;
 }
+
+
+/* =========================================================
+   ForgeFlow — Fix PR e reordenação de séries
+   ========================================================= */
+
+.ff-sets-scroll [aria-label="Mover série para cima"],
+.ff-sets-scroll [aria-label="Mover série para baixo"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ff-sets-scroll [aria-label="Mover série para cima"]:not(:disabled):hover,
+.ff-sets-scroll [aria-label="Mover série para baixo"]:not(:disabled):hover {
+  box-shadow: 0 0 16px var(--ff-accent-shadow);
+}

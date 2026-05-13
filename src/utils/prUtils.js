@@ -108,33 +108,42 @@ export function getSessionPRTypes(exerciseName, sets, user) {
   const previousBestWeight = getBestWeightPerformance(exerciseName, user)
   const previousBestVolume = getBestVolumePerformance(exerciseName, user)
 
-  let bestWeight = previousBestWeight?.weight || 0
-  let bestVolume = previousBestVolume?.volume || 0
+  const hasPreviousWeightRecord = Boolean(previousBestWeight?.weight)
+  const hasPreviousVolumeRecord = Boolean(previousBestVolume?.volume)
 
-  let weightPRSetId = null
-  let volumePRSetId = null
+  const previousWeight = Number(previousBestWeight?.weight || 0)
+  const previousVolume = Number(previousBestVolume?.volume || 0)
+
+  let bestWeightSet = null
+  let bestVolumeSet = null
 
   sets.forEach((set) => {
     const weight = Number(set.weight)
     const reps = Number(set.reps)
     const volume = weight * reps
 
-    if (!set.completed || !weight || !reps) return
+    if (!set.completed || set.type === 'warmup' || !weight || !reps) return
 
-    if (weight > bestWeight) {
-      bestWeight = weight
-      weightPRSetId = set.id
+    if (
+      hasPreviousWeightRecord &&
+      weight > previousWeight &&
+      (!bestWeightSet || weight > Number(bestWeightSet.weight || 0))
+    ) {
+      bestWeightSet = set
     }
 
-    if (volume > bestVolume) {
-      bestVolume = volume
-      volumePRSetId = set.id
+    if (
+      hasPreviousVolumeRecord &&
+      volume > previousVolume &&
+      (!bestVolumeSet || volume > Number(bestVolumeSet.weight || 0) * Number(bestVolumeSet.reps || 0))
+    ) {
+      bestVolumeSet = set
     }
   })
 
   return {
-    weightPRSetId,
-    volumePRSetId,
+    weightPRSetId: bestWeightSet?.id || null,
+    volumePRSetId: bestVolumeSet?.id || null,
   }
 }
 
