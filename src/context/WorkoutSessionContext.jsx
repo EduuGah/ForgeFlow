@@ -151,7 +151,9 @@ export function WorkoutSessionProvider({ children }) {
       }
     } catch (error) {
       if (error?.status !== 401) {
+        if (error?.status !== 401) {
         console.error('Erro ao buscar treino ativo remoto:', error)
+      }
       }
 
       return {
@@ -348,6 +350,13 @@ export function WorkoutSessionProvider({ children }) {
     async function loadActiveSession() {
       hasCompletedInitialLoadRef.current = false
       setIsLoaded(false)
+
+      if (!user) {
+        setActiveSession(null)
+        hasCompletedInitialLoadRef.current = true
+        setIsLoaded(true)
+        return
+      }
 
       const savedSession = getUserStorageData(user, ACTIVE_SESSION_STORAGE_KEY, null)
       const remoteState = await fetchActiveSessionState()

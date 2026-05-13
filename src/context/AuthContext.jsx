@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import { clearLegacyAuthToken, getCurrentUser, logout as logoutService, logoutFromApi } from '../services/api'
+import { getCurrentUser, logout as logoutService, logoutFromApi } from '../services/api'
 
 const AuthContext = createContext(null)
 
@@ -10,7 +10,6 @@ export function AuthProvider({ children }) {
   async function loadUser() {
     try {
       const data = await getCurrentUser()
-      clearLegacyAuthToken()
       setUser(data)
     } catch {
       setUser(null)
