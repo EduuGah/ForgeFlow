@@ -447,10 +447,6 @@ app.use(
     })
 )
 
-app.options('*', cors({
-    origin: getAllowedCorsOrigin,
-    credentials: true,
-}))
 
 app.use(csrfProtection)
 
