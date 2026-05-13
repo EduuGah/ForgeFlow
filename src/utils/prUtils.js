@@ -18,17 +18,45 @@ export function getWorkoutHistory(user) {
   }
 }
 
+function normalizeExerciseKey(value = '') {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+}
+
+function getExerciseName(sessionExercise = {}) {
+  return (
+    sessionExercise.exercise?.name ||
+    sessionExercise.exerciseName ||
+    sessionExercise.name ||
+    ''
+  )
+}
+
+function isCompletedSet(set = {}) {
+  return set.completed === true || set.isCompleted === true || set.done === true
+}
+
+function isWarmupSet(set = {}) {
+  return set.type === 'warmup' || set.isWarmup === true || set.warmup === true
+}
+
 export function getExerciseHistory(exerciseName, user) {
   const history = getWorkoutHistory(user)
   const exerciseHistory = []
+  const targetKey = normalizeExerciseKey(exerciseName)
 
   history.forEach((session) => {
-    session.exercises.forEach((sessionExercise) => {
-      if (sessionExercise.exercise.name === exerciseName) {
+    const exercises = Array.isArray(session.exercises) ? session.exercises : []
+
+    exercises.forEach((sessionExercise) => {
+      if (normalizeExerciseKey(getExerciseName(sessionExercise)) === targetKey) {
         exerciseHistory.push({
           workoutName: session.workoutName,
           date: session.finishedAt || session.startedAt,
-          sets: sessionExercise.sets,
+          sets: Array.isArray(sessionExercise.sets) ? sessionExercise.sets : [],
         })
       }
     })
@@ -56,7 +84,7 @@ export function getBestWeightPerformance(exerciseName, user) {
       const weight = Number(set.weight)
       const reps = Number(set.reps)
 
-      if (!weight || !reps || !set.completed) return
+      if (!weight || !reps || !isCompletedSet(set) || isWarmupSet(set)) return
 
       if (!best || weight > best.weight) {
         best = {
@@ -83,7 +111,7 @@ export function getBestVolumePerformance(exerciseName, user) {
       const reps = Number(set.reps)
       const volume = weight * reps
 
-      if (!weight || !reps || !set.completed) return
+      if (!weight || !reps || !isCompletedSet(set) || isWarmupSet(set)) return
 
       if (!best || volume > best.volume) {
         best = {
@@ -122,7 +150,7 @@ export function getSessionPRTypes(exerciseName, sets, user) {
     const reps = Number(set.reps)
     const volume = weight * reps
 
-    if (!set.completed || set.type === 'warmup' || !weight || !reps) return
+    if (!isCompletedSet(set) || isWarmupSet(set) || !weight || !reps) return
 
     if (
       hasPreviousWeightRecord &&
@@ -192,8 +220,8 @@ export function getExerciseComparison(exerciseName, currentSet, user) {
     weightDiffFromLast: lastCompletedSet ? currentWeight - lastWeight : null,
     repsDiffFromLast: lastCompletedSet ? currentReps - lastReps : null,
     volumeDiffFromLast: lastCompletedSet ? currentVolume - lastVolume : null,
-    isWeightPR: bestWeight ? currentWeight > bestWeight.weight : true,
-    isVolumePR: bestVolume ? currentVolume > bestVolume.volume : true,
+    isWeightPR: bestWeight ? currentWeight > bestWeight.weight : false,
+    isVolumePR: bestVolume ? currentVolume > bestVolume.volume : false,
   }
 }
 

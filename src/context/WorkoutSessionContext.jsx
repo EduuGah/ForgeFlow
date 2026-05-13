@@ -75,7 +75,7 @@ export function WorkoutSessionProvider({ children }) {
   }
 
   function normalizeHistoryFromApi(session) {
-    const payload = session?.session || session
+    const payload = session?.historyItem || session?.session || session
 
     return {
       ...payload,
@@ -83,6 +83,10 @@ export function WorkoutSessionProvider({ children }) {
       duration: payload?.durationSeconds ?? payload?.duration ?? 0,
       workoutName: payload?.workoutName || payload?.name || 'Treino',
       exercises: Array.isArray(payload?.exercises) ? payload.exercises : [],
+      totalVolume: Number(payload?.totalVolume || 0),
+      totalSets: Number(payload?.totalSets || 0),
+      totalReps: Number(payload?.totalReps || 0),
+      prs: Array.isArray(payload?.prs) ? payload.prs : [],
     }
   }
 

@@ -12,6 +12,12 @@ import bcrypt from 'bcryptjs'
 import multer from 'multer'
 import { v2 as cloudinary } from 'cloudinary'
 import crypto from 'crypto'
+import {
+    normalizeActiveWorkoutPayload,
+    normalizeBackupPayload,
+    validateWorkoutHistoryPayload,
+} from './utils/workoutValidation.js'
+
 
 dotenv.config()
 
@@ -2643,13 +2649,15 @@ async function saveActiveWorkoutSession(req, res) {
             })
         }
 
+        const normalizedSession = normalizeActiveWorkoutPayload(session)
+
         const record = await ActiveWorkoutSession.findOneAndUpdate(
             {
                 userId: req.user.userId,
             },
             {
                 userId: req.user.userId,
-                session,
+                session: normalizedSession,
             },
             {
                 new: true,
@@ -2686,44 +2694,46 @@ async function finishActiveWorkoutSession(req, res) {
             })
         }
 
-        const {
-            workoutId = activeSession.workoutId || null,
-            workoutName = activeSession.workoutName || activeSession.name,
-            name,
-            exercises = activeSession.exercises || [],
-            durationSeconds = activeSession.durationSeconds || activeSession.duration || 0,
-            startedAt = activeSession.startedAt || null,
-            finishedAt = activeSession.finishedAt || new Date(),
-            prs = [],
-            notes = activeSession.notes || '',
-        } = req.body
+        const validation = validateWorkoutHistoryPayload({
+            ...activeSession,
+            ...req.body,
+            exercises: Array.isArray(req.body.exercises) && req.body.exercises.length > 0
+                ? req.body.exercises
+                : activeSession.exercises || [],
+            workoutName: req.body.workoutName || req.body.name || activeSession.workoutName || activeSession.name,
+        })
 
-        const finalWorkoutName = workoutName || name || activeSession.workoutName || activeSession.name
-
-        if (!finalWorkoutName?.trim()) {
+        if (!validation.valid) {
             return res.status(400).json({
-                message: 'Informe o nome do treino finalizado.',
+                message: validation.message,
             })
         }
 
-        const finalExercises = Array.isArray(exercises) && exercises.length > 0
-            ? exercises
-            : activeSession.exercises || []
+        const {
+            workoutId = activeSession.workoutId || null,
+            workoutName: finalWorkoutName,
+            exercises: finalExercises,
+            durationSeconds,
+            startedAt,
+            finishedAt,
+            notes,
+        } = validation.value
 
-        const summary = calculateWorkoutHistorySummary(finalExercises)
+        const backendPrResult = await buildWorkoutBackendPrResult(req.user.userId, finalExercises)
+        const summary = calculateWorkoutHistorySummary(backendPrResult.exercises)
 
         const historyItem = await WorkoutHistory.create({
             userId: req.user.userId,
             workoutId: workoutId || null,
             workoutName: finalWorkoutName.trim(),
-            exercises: finalExercises,
-            durationSeconds: Number(durationSeconds) || 0,
-            startedAt: startedAt || null,
-            finishedAt: finishedAt || new Date(),
+            exercises: backendPrResult.exercises,
+            durationSeconds,
+            startedAt,
+            finishedAt,
             totalVolume: summary.totalVolume,
             totalSets: summary.totalSets,
             totalReps: summary.totalReps,
-            prs: Array.isArray(prs) ? prs : [],
+            prs: backendPrResult.prs,
             notes,
         })
 
@@ -3538,6 +3548,54 @@ app.put('/me/profile', authMiddleware, async (req, res) => {
     res.json(buildUserResponse(user))
 })
 
+function isCompletedWorkoutSet(set = {}) {
+    return (
+        set.completed === true ||
+        set.isCompleted === true ||
+        set.done === true
+    )
+}
+
+function isWarmupWorkoutSet(set = {}) {
+    return (
+        set.type === 'warmup' ||
+        set.isWarmup === true ||
+        set.warmup === true
+    )
+}
+
+function getSetWeight(set = {}) {
+    const value = Number(set.weight ?? set.load ?? set.carga ?? 0)
+    return Number.isFinite(value) && value > 0 ? value : 0
+}
+
+function getSetReps(set = {}) {
+    const value = Number(set.reps ?? set.repetitions ?? 0)
+    return Number.isFinite(value) && value > 0 ? value : 0
+}
+
+function getSetVolume(set = {}) {
+    return getSetWeight(set) * getSetReps(set)
+}
+
+function getExerciseNameFromHistoryExercise(item = {}) {
+    return String(
+        item.exercise?.name ||
+        item.exerciseName ||
+        item.name ||
+        item.title ||
+        ''
+    ).trim()
+}
+
+function normalizeExerciseKey(value = '') {
+    return String(value || '')
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+}
+
 function calculateWorkoutHistorySummary(exercises = []) {
     let totalVolume = 0
     let totalSets = 0
@@ -3547,22 +3605,14 @@ function calculateWorkoutHistorySummary(exercises = []) {
         const sets = Array.isArray(item.sets) ? item.sets : []
 
         for (const set of sets) {
-            const isCompleted =
-                set.completed === true ||
-                set.isCompleted === true ||
-                set.done === true
+            if (!isCompletedWorkoutSet(set)) continue
 
-            if (!isCompleted) continue
-
-            const weight = Number(set.weight || set.load || 0)
-            const reps = Number(set.reps || 0)
+            const weight = getSetWeight(set)
+            const reps = getSetReps(set)
 
             totalSets += 1
-            totalReps += Number.isFinite(reps) ? reps : 0
-
-            if (Number.isFinite(weight) && Number.isFinite(reps)) {
-                totalVolume += weight * reps
-            }
+            totalReps += reps
+            totalVolume += weight * reps
         }
     }
 
@@ -3572,6 +3622,182 @@ function calculateWorkoutHistorySummary(exercises = []) {
         totalReps,
     }
 }
+
+function buildPreviousExerciseRecords(historyItems = []) {
+    const records = new Map()
+
+    for (const historyItem of historyItems) {
+        const exercises = Array.isArray(historyItem.exercises)
+            ? historyItem.exercises
+            : []
+
+        for (const exerciseItem of exercises) {
+            const exerciseName = getExerciseNameFromHistoryExercise(exerciseItem)
+            const exerciseKey = normalizeExerciseKey(exerciseName)
+
+            if (!exerciseKey) continue
+
+            const current = records.get(exerciseKey) || {
+                exerciseName,
+                bestWeight: 0,
+                bestVolume: 0,
+            }
+
+            const sets = Array.isArray(exerciseItem.sets)
+                ? exerciseItem.sets
+                : []
+
+            for (const set of sets) {
+                if (!isCompletedWorkoutSet(set) || isWarmupWorkoutSet(set)) continue
+
+                const weight = getSetWeight(set)
+                const reps = getSetReps(set)
+                const volume = weight * reps
+
+                if (weight > current.bestWeight) {
+                    current.bestWeight = weight
+                }
+
+                if (volume > current.bestVolume) {
+                    current.bestVolume = volume
+                }
+            }
+
+            records.set(exerciseKey, current)
+        }
+    }
+
+    return records
+}
+
+async function buildWorkoutBackendPrResult(userId, exercises = []) {
+    const previousHistory = await WorkoutHistory.find({ userId })
+        .sort({ finishedAt: -1, createdAt: -1 })
+        .select('exercises finishedAt createdAt')
+        .lean()
+
+    const previousRecords = buildPreviousExerciseRecords(previousHistory)
+    const prs = []
+
+    const normalizedExercises = exercises.map((exerciseItem) => {
+        const exerciseName = getExerciseNameFromHistoryExercise(exerciseItem)
+        const exerciseKey = normalizeExerciseKey(exerciseName)
+        const previousRecord = previousRecords.get(exerciseKey)
+
+        let bestWeightSetId = null
+        let bestWeight = previousRecord?.bestWeight || 0
+        let bestVolumeSetId = null
+        let bestVolume = previousRecord?.bestVolume || 0
+
+        const sets = Array.isArray(exerciseItem.sets)
+            ? exerciseItem.sets.map((set, index) => {
+                const weight = getSetWeight(set)
+                const reps = getSetReps(set)
+                const volume = weight * reps
+                const isValidForPr =
+                    isCompletedWorkoutSet(set) &&
+                    !isWarmupWorkoutSet(set) &&
+                    weight > 0 &&
+                    reps > 0
+
+                const setId = set.id || set._id || `${exerciseKey || 'set'}-${index}`
+
+                if (
+                    isValidForPr &&
+                    previousRecord?.bestWeight > 0 &&
+                    weight > bestWeight
+                ) {
+                    bestWeight = weight
+                    bestWeightSetId = setId
+                }
+
+                if (
+                    isValidForPr &&
+                    previousRecord?.bestVolume > 0 &&
+                    volume > bestVolume
+                ) {
+                    bestVolume = volume
+                    bestVolumeSetId = setId
+                }
+
+                return {
+                    ...set,
+                    id: set.id || setId,
+                    volume,
+                    isPR: false,
+                    isWeightPR: false,
+                    isVolumePR: false,
+                }
+            })
+            : []
+
+        const nextSets = sets.map((set) => {
+            const isWeightPR = Boolean(bestWeightSetId && set.id === bestWeightSetId)
+            const isVolumePR = Boolean(bestVolumeSetId && set.id === bestVolumeSetId)
+
+            return {
+                ...set,
+                isWeightPR,
+                isVolumePR,
+                isPR: isWeightPR || isVolumePR,
+            }
+        })
+
+        if (bestWeightSetId) {
+            prs.push({
+                type: 'weight',
+                exerciseName,
+                setId: bestWeightSetId,
+                previousValue: previousRecord.bestWeight,
+                value: bestWeight,
+                unit: 'kg',
+            })
+        }
+
+        if (bestVolumeSetId) {
+            prs.push({
+                type: 'volume',
+                exerciseName,
+                setId: bestVolumeSetId,
+                previousValue: previousRecord.bestVolume,
+                value: bestVolume,
+                unit: 'kg',
+            })
+        }
+
+        return {
+            ...exerciseItem,
+            exerciseName: exerciseItem.exerciseName || exerciseName,
+            sets: nextSets,
+        }
+    })
+
+    return {
+        exercises: normalizedExercises,
+        prs,
+    }
+}
+
+function normalizeWorkoutHistoryForResponse(historyItem) {
+    if (!historyItem) return historyItem
+
+    const payload = typeof historyItem.toObject === 'function'
+        ? historyItem.toObject()
+        : { ...historyItem }
+
+    const summary = calculateWorkoutHistorySummary(payload.exercises || [])
+
+    return {
+        ...payload,
+        id: String(payload._id || payload.id || ''),
+        totalVolume: Number(payload.totalVolume || 0) || summary.totalVolume,
+        totalSets: Number(payload.totalSets || 0) || summary.totalSets,
+        totalReps: Number(payload.totalReps || 0) || summary.totalReps,
+        prs: Array.isArray(payload.prs) ? payload.prs : [],
+    }
+}
+
+
 
 
 function getStartOfWeek(date = new Date()) {
@@ -4813,7 +5039,7 @@ app.get('/workout-history', authMiddleware, async (req, res) => {
             createdAt: -1,
         })
 
-        res.json(history)
+        res.json(history.map(normalizeWorkoutHistoryForResponse))
     } catch (error) {
         console.error(error)
 
@@ -4836,7 +5062,7 @@ app.get('/workout-history/:id', authMiddleware, async (req, res) => {
             })
         }
 
-        res.json(historyItem)
+        res.json(normalizeWorkoutHistoryForResponse(historyItem))
     } catch (error) {
         console.error(error)
 
@@ -4848,40 +5074,39 @@ app.get('/workout-history/:id', authMiddleware, async (req, res) => {
 
 app.post('/workout-history', authMiddleware, async (req, res) => {
     try {
-        const {
-            workoutId = null,
-            workoutName,
-            name,
-            exercises = [],
-            durationSeconds = 0,
-            startedAt = null,
-            finishedAt = new Date(),
-            prs = [],
-            notes = '',
-        } = req.body
+        const validation = validateWorkoutHistoryPayload(req.body)
 
-        const finalWorkoutName = workoutName || name
-
-        if (!finalWorkoutName?.trim()) {
+        if (!validation.valid) {
             return res.status(400).json({
-                message: 'Informe o nome do treino finalizado.',
+                message: validation.message,
             })
         }
 
-        const summary = calculateWorkoutHistorySummary(exercises)
+        const {
+            workoutId = null,
+            workoutName: finalWorkoutName,
+            exercises,
+            durationSeconds,
+            startedAt,
+            finishedAt,
+            notes,
+        } = validation.value
+
+        const backendPrResult = await buildWorkoutBackendPrResult(req.user.userId, exercises)
+        const summary = calculateWorkoutHistorySummary(backendPrResult.exercises)
 
         const historyItem = await WorkoutHistory.create({
             userId: req.user.userId,
             workoutId: workoutId || null,
             workoutName: finalWorkoutName.trim(),
-            exercises,
-            durationSeconds: Number(durationSeconds) || 0,
-            startedAt: startedAt || null,
-            finishedAt: finishedAt || new Date(),
+            exercises: backendPrResult.exercises,
+            durationSeconds,
+            startedAt,
+            finishedAt,
             totalVolume: summary.totalVolume,
             totalSets: summary.totalSets,
             totalReps: summary.totalReps,
-            prs: Array.isArray(prs) ? prs : [],
+            prs: backendPrResult.prs,
             notes,
         })
 
@@ -6056,12 +6281,15 @@ app.post('/import-data', authMiddleware, async (req, res) => {
     try {
         const { backup, mode = 'merge' } = req.body
 
-        if (!backup || backup.app !== 'ForgeFlow' || !backup.data) {
+        const backupValidation = normalizeBackupPayload(backup)
+
+        if (!backupValidation.valid) {
             return res.status(400).json({
-                message: 'Arquivo de backup inválido.',
+                message: backupValidation.message,
             })
         }
 
+        const safeBackup = backupValidation.value
         const userId = req.user.userId
 
         const {
@@ -6073,7 +6301,7 @@ app.post('/import-data', authMiddleware, async (req, res) => {
             progressPhotos = [],
             goals = [],
             notifications = [],
-        } = backup.data
+        } = safeBackup.data
 
         const imported = {
             exercises: 0,
@@ -6110,7 +6338,7 @@ app.post('/import-data', authMiddleware, async (req, res) => {
 
         if (exercisesToCreate.length > 0) {
             const created = await Exercise.insertMany(exercisesToCreate, {
-                ordered: false,
+                ordered: true,
             })
 
             imported.exercises = created.length
@@ -6118,7 +6346,7 @@ app.post('/import-data', authMiddleware, async (req, res) => {
 
         if (workoutsToCreate.length > 0) {
             const created = await Workout.insertMany(workoutsToCreate, {
-                ordered: false,
+                ordered: true,
             })
 
             imported.workouts = created.length
@@ -6126,7 +6354,7 @@ app.post('/import-data', authMiddleware, async (req, res) => {
 
         if (historyToCreate.length > 0) {
             const created = await WorkoutHistory.insertMany(historyToCreate, {
-                ordered: false,
+                ordered: true,
             })
 
             imported.workoutHistory = created.length
@@ -6134,7 +6362,7 @@ app.post('/import-data', authMiddleware, async (req, res) => {
 
         if (bodyWeightToCreate.length > 0) {
             const created = await BodyWeight.insertMany(bodyWeightToCreate, {
-                ordered: false,
+                ordered: true,
             })
 
             imported.bodyWeight = created.length
@@ -6142,7 +6370,7 @@ app.post('/import-data', authMiddleware, async (req, res) => {
 
         if (templatesToCreate.length > 0) {
             const created = await WorkoutTemplate.insertMany(templatesToCreate, {
-                ordered: false,
+                ordered: true,
             })
 
             imported.workoutTemplates = created.length
@@ -6150,7 +6378,7 @@ app.post('/import-data', authMiddleware, async (req, res) => {
 
         if (progressPhotosToCreate.length > 0) {
             const created = await ProgressPhoto.insertMany(progressPhotosToCreate, {
-                ordered: false,
+                ordered: true,
             })
 
             imported.progressPhotos = created.length
@@ -6158,7 +6386,7 @@ app.post('/import-data', authMiddleware, async (req, res) => {
 
         if (goalsToCreate.length > 0) {
             const created = await Goal.insertMany(goalsToCreate, {
-                ordered: false,
+                ordered: true,
             })
 
             imported.goals = created.length
@@ -6166,41 +6394,41 @@ app.post('/import-data', authMiddleware, async (req, res) => {
 
         if (notificationsToCreate.length > 0) {
             const created = await Notification.insertMany(notificationsToCreate, {
-                ordered: false,
+                ordered: true,
             })
 
             imported.notifications = created.length
         }
 
-        if (backup.user?.profile) {
+        if (safeBackup.user?.profile) {
             const user = await User.findById(userId)
 
             if (user) {
                 user.profile = {
                     ...user.profile,
-                    ...backup.user.profile,
+                    ...safeBackup.user.profile,
                 }
 
                 user.profileCompleted = buildProfileCompletion(user.profile)
 
-                if (backup.user.name) {
-                    user.name = backup.user.name
+                if (safeBackup.user.name) {
+                    user.name = safeBackup.user.name
                 }
 
-                if (backup.user.avatarUrl) {
-                    user.avatarUrl = backup.user.avatarUrl
+                if (safeBackup.user.avatarUrl) {
+                    user.avatarUrl = safeBackup.user.avatarUrl
                 }
 
                 await user.save()
             }
         }
 
-        if (backup.settings) {
+        if (safeBackup.settings) {
             await AppSettings.findOneAndUpdate(
                 { userId },
                 {
                     userId,
-                    data: backup.settings,
+                    data: safeBackup.settings,
                 },
                 {
                     new: true,
