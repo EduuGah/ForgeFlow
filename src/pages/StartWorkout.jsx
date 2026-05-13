@@ -962,21 +962,21 @@ function StartWorkout() {
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-2 sm:min-w-[190px]">
-                            <div className="rounded-2xl border border-white/10 bg-black/10 p-2 text-center">
-                              <p className="text-[10px] font-black uppercase opacity-60">
+                          <div className="grid w-full grid-cols-2 gap-2 sm:w-auto sm:min-w-[150px] sm:max-w-[170px]">
+                            <div className="min-w-0 rounded-2xl border border-white/10 bg-black/10 px-2 py-2 text-center">
+                              <p className="truncate text-[9px] font-black uppercase opacity-60">
                                 Anterior
                               </p>
-                              <p className="text-sm font-black">
+                              <p className="truncate text-xs font-black sm:text-sm">
                                 {progressionSuggestion.lastVolume || 0} kg
                               </p>
                             </div>
 
-                            <div className="rounded-2xl border border-white/10 bg-black/10 p-2 text-center">
-                              <p className="text-[10px] font-black uppercase opacity-60">
+                            <div className="min-w-0 rounded-2xl border border-white/10 bg-black/10 px-2 py-2 text-center">
+                              <p className="truncate text-[9px] font-black uppercase opacity-60">
                                 Atual
                               </p>
-                              <p className="text-sm font-black">
+                              <p className="truncate text-xs font-black sm:text-sm">
                                 {progressionSuggestion.currentVolume || 0} kg
                               </p>
                             </div>
@@ -1173,8 +1173,8 @@ function StartWorkout() {
                             />
                           </div>
 
-                            <div className="col-span-3 row-start-4 grid grid-cols-2 gap-2 lg:hidden">
-                              <div className="min-w-0 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)]/70 p-2">
+                            <div className="col-span-3 row-start-4 flex flex-wrap items-center gap-2 lg:hidden">
+                              <div className="min-w-0 flex-1 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)]/70 p-2">
                                 <SetPrBadges set={set} performance={performance} compact />
                               </div>
 
@@ -1182,10 +1182,10 @@ function StartWorkout() {
                                 type="button"
                                 onClick={() => toggleSetWarmup(sessionExercise.id, set.id)}
                                 className={set.type === 'warmup'
-                                  ? 'rounded-2xl border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-xs font-black text-amber-200'
-                                  : 'rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 py-2 text-xs font-black text-[var(--ff-muted)]'}
+                                  ? 'rounded-full border border-amber-400/30 bg-amber-500/10 px-2.5 py-1 text-[10px] font-black text-amber-200'
+                                  : 'rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-2.5 py-1 text-[10px] font-black text-[var(--ff-muted)]'}
                               >
-                                {set.type === 'warmup' ? 'Aquecimento' : 'Normal'}
+                                {set.type === 'warmup' ? 'Aquec.' : 'Normal'}
                               </button>
                             </div>
 
@@ -1196,10 +1196,10 @@ function StartWorkout() {
                                 type="button"
                                 onClick={() => toggleSetWarmup(sessionExercise.id, set.id)}
                                 className={set.type === 'warmup'
-                                  ? 'rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-1 text-[10px] font-black text-amber-200'
-                                  : 'rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-2 py-1 text-[10px] font-black text-[var(--ff-muted)]'}
+                                  ? 'rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-0.5 text-[9px] font-black text-amber-200'
+                                  : 'rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-2 py-0.5 text-[9px] font-black text-[var(--ff-muted)]'}
                               >
-                                {set.type === 'warmup' ? 'Aquecimento' : 'Normal'}
+                                {set.type === 'warmup' ? 'Aquec.' : 'Normal'}
                               </button>
                             </div>
 
@@ -1410,7 +1410,7 @@ function StartWorkout() {
       </div>
 
       {restTimer && (
-        <div className="ff-rest-timer-card fixed bottom-[88px] left-3 right-3 z-50 rounded-3xl border border-[var(--ff-accent-border)]/30 bg-[#121212]/95 p-3 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)] backdrop-blur-xl sm:left-1/2 sm:right-auto sm:w-[calc(100%-32px)] sm:max-w-md sm:-translate-x-1/2 sm:p-4 xl:bottom-4">
+        <div className="ff-rest-timer-card fixed left-3 right-3 top-[calc(5rem+env(safe-area-inset-top))] z-50 rounded-3xl border border-[var(--ff-accent-border)]/30 bg-[#121212]/95 p-3 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)] backdrop-blur-xl sm:left-auto sm:right-5 sm:w-[min(420px,calc(100vw-32px))] sm:p-4 xl:top-5">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)] sm:h-12 sm:w-12">

@@ -509,6 +509,8 @@ export function WorkoutSessionProvider({ children }) {
       id: safeCryptoId(),
       workoutId: workout.id,
       workoutName: workout.name,
+      isTutorial: Boolean(workout.isTutorial || workout.tutorialOnly),
+      tutorialOnly: Boolean(workout.isTutorial || workout.tutorialOnly),
       startedAt: nowIso(),
       notes: '',
       exercises: workout.exercises.map((item) => {
@@ -807,6 +809,27 @@ export function WorkoutSessionProvider({ children }) {
           }),
         }
       }),
+    }
+
+    if (finishedSession.isTutorial || finishedSession.tutorialOnly) {
+      rememberFinishedActiveSession(finishedSession.id)
+      persistActiveSessionLocally(null)
+      setActiveSession(null)
+
+      try {
+        await clearActiveSessionFromApi()
+      } catch (error) {
+        console.error(error)
+      }
+
+      window.setTimeout(() => {
+        isFinishingRef.current = false
+      }, 600)
+
+      return {
+        ...finishedSession,
+        skippedHistorySave: true,
+      }
     }
 
     const payload = {

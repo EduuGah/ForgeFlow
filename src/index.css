@@ -2268,3 +2268,30 @@ main {
     }
   }
 }
+
+
+/* =========================================================
+   ForgeFlow — Tutorial workout demo clean + UI fixes
+   ========================================================= */
+
+.ff-rest-timer-card {
+  animation: ff-rest-popup-in 180ms ease-out;
+}
+
+@keyframes ff-rest-popup-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .ff-rest-timer-card {
+    border-radius: 1.35rem;
+  }
+}

@@ -90,6 +90,8 @@ export function TutorialProvider({ children }) {
     return {
       id: 'tutorial-workout',
       name: 'Tutorial ForgeFlow',
+      isTutorial: true,
+      tutorialOnly: true,
       exercises: [
         {
           id: 'tutorial-supino',
