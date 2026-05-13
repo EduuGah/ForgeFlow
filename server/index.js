@@ -194,6 +194,32 @@ const normalizedBackendUrl = BACKEND_URL.replace(/\/$/, '')
 
 
 const AUTH_COOKIE_NAME = 'forgeflow_session'
+const CSRF_COOKIE_NAME = 'forgeflow_csrf'
+
+function createCsrfToken() {
+    return crypto.randomBytes(32).toString('hex')
+}
+
+function getCsrfCookieOptions() {
+    return {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        path: '/',
+        maxAge: 1000 * 60 * 60 * 24,
+    }
+}
+
+function setCsrfCookie(res, csrfToken) {
+    res.cookie(CSRF_COOKIE_NAME, csrfToken, getCsrfCookieOptions())
+}
+
+function clearCsrfCookie(res) {
+    res.clearCookie(CSRF_COOKIE_NAME, {
+        ...getCsrfCookieOptions(),
+        maxAge: undefined,
+    })
+}
 
 function getAuthCookieOptions() {
     return {
@@ -207,6 +233,7 @@ function getAuthCookieOptions() {
 
 function setAuthCookie(res, token) {
     res.cookie(AUTH_COOKIE_NAME, token, getAuthCookieOptions())
+    setCsrfCookie(res, createCsrfToken())
 }
 
 function clearAuthCookie(res) {
@@ -214,6 +241,7 @@ function clearAuthCookie(res) {
         ...getAuthCookieOptions(),
         maxAge: undefined,
     })
+    clearCsrfCookie(res)
 }
 
 function getTokenFromRequest(req) {
@@ -224,6 +252,32 @@ function getTokenFromRequest(req) {
     }
 
     return req.cookies?.[AUTH_COOKIE_NAME] || ''
+}
+
+function usesCookieAuth(req) {
+    return Boolean(req.cookies?.[AUTH_COOKIE_NAME])
+}
+
+function csrfProtection(req, res, next) {
+    if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
+        return next()
+    }
+
+    if (!usesCookieAuth(req)) {
+        return next()
+    }
+
+    const cookieToken = req.cookies?.[CSRF_COOKIE_NAME]
+    const headerToken = req.headers['x-csrf-token']
+
+    if (!cookieToken || !headerToken || cookieToken !== headerToken) {
+        return res.status(403).json({
+            message: 'Falha de segurança CSRF. Recarregue a página e tente novamente.',
+            reason: 'csrf_failed',
+        })
+    }
+
+    return next()
 }
 
 function requireRecentPassword(user, password) {
@@ -340,6 +394,7 @@ app.use(securityHeaders)
 app.use(generalRateLimit)
 app.use(express.json({ limit: '10mb' }))
 app.use(cookieParser())
+app.use(csrfProtection)
 
 app.use(
     cors({
@@ -2845,7 +2900,7 @@ app.get(
         const token = createToken(req.user)
         setAuthCookie(res, token)
 
-        res.redirect(`${normalizedFrontendUrl}/auth/callback?token=${token}&mode=cookie`)
+        res.redirect(`${normalizedFrontendUrl}/auth/callback?mode=cookie`)
     }
 )
 
@@ -3041,7 +3096,6 @@ app.post('/auth/register', authRateLimit, async (req, res) => {
     setAuthCookie(res, token)
 
     res.status(201).json({
-        token,
         authMode: 'cookie',
         user: buildUserResponse(user),
     })
@@ -3097,14 +3151,29 @@ app.post('/auth/login', authRateLimit, async (req, res) => {
     setAuthCookie(res, token)
 
     res.json({
-        token,
         authMode: 'cookie',
         user: buildUserResponse(user),
     })
 })
 
 
-app.post('/auth/logout', authMiddleware, async (req, res) => {
+app.get('/auth/session', authMiddleware, async (req, res) => {
+    const user = await User.findById(req.user.userId)
+
+    if (!user) {
+        return res.status(404).json({
+            message: 'Usuário não encontrado.',
+        })
+    }
+
+    if (!req.cookies?.[CSRF_COOKIE_NAME]) {
+        setCsrfCookie(res, createCsrfToken())
+    }
+
+    return res.json(buildUserResponse(user))
+})
+
+app.post('/auth/logout', async (req, res) => {
     clearAuthCookie(res)
 
     return res.json({

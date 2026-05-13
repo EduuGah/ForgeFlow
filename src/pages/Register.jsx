@@ -31,7 +31,7 @@ function Register() {
                 body: JSON.stringify({ name, email, password }),
             })
 
-            if (data.token) saveAuthToken(data.token)
+            saveAuthToken(data.token)
             setUser(data.user)
 
             if (!data.user?.profileCompleted) {

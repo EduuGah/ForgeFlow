@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import { apiFetch, getToken, logout as logoutService, logoutFromApi } from '../services/api'
+import { clearLegacyAuthToken, getCurrentUser, logout as logoutService, logoutFromApi } from '../services/api'
 
 const AuthContext = createContext(null)
 
@@ -9,10 +9,11 @@ export function AuthProvider({ children }) {
 
   async function loadUser() {
     try {
-      const data = await apiFetch('/me')
+      const data = await getCurrentUser()
+      clearLegacyAuthToken()
       setUser(data)
     } catch {
-      localStorage.removeItem('forgeflow:token')
+      clearLegacyAuthToken()
       setUser(null)
     } finally {
       setLoadingUser(false)

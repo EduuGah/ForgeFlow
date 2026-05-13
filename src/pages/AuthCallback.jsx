@@ -28,6 +28,8 @@ function AuthCallback() {
 
       if (token) {
         localStorage.setItem('forgeflow:token', token)
+      } else {
+        localStorage.removeItem('forgeflow:token')
       }
 
       try {

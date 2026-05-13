@@ -59,7 +59,7 @@ function Login() {
                 body: JSON.stringify({ email, password }),
             })
 
-            if (data.token) saveAuthToken(data.token)
+            saveAuthToken(data.token)
             setUser(data.user)
 
             if (!data.user?.profileCompleted) {
