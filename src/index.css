@@ -2206,3 +2206,26 @@ main {
     overflow-y: auto;
   }
 }
+
+
+/* =========================================================
+   ForgeFlow — Fix 38.2 Tutorial menos intrusivo
+   ========================================================= */
+
+.ff-tutorial-card {
+  border-color: color-mix(in srgb, var(--ff-accent) 20%, var(--ff-border));
+}
+
+@media (min-width: 768px) {
+  .ff-tutorial-card {
+    max-height: min(74dvh, 540px);
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 767px) {
+  .ff-tutorial-card {
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+  }
+}

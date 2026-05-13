@@ -41,38 +41,6 @@ import {
 } from '../utils/settingsUtils'
 
 function SectionTitle({ icon: Icon, title, description }) {
-  function startGuidedTutorial(flowId = 'welcome') {
-    window.dispatchEvent(
-      new CustomEvent('forgeflow:start-tutorial', {
-        detail: { flowId },
-      })
-    )
-
-    showToast(
-      'success',
-      'Tutorial aberto',
-      'O guia foi iniciado. Você pode pular etapas ou encerrar quando quiser.'
-    )
-  }
-
-  function resetGuidedTutorial() {
-    window.dispatchEvent(new CustomEvent('forgeflow:reset-tutorial'))
-
-    showToast(
-      'success',
-      'Tutorial reiniciado',
-      'O tutorial inicial voltará a aparecer para esta conta.'
-    )
-  }
-
-  function toggleContextualTips() {
-    window.dispatchEvent(
-      new CustomEvent('forgeflow:start-tutorial', {
-        detail: { flowId: 'settings' },
-      })
-    )
-  }
-
   return (
     <div className="flex items-start gap-3">
       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)] shadow-[0_0_22px_var(--ff-accent-shadow)]/20">
@@ -374,7 +342,31 @@ function Settings() {
 
     loadSettings()
 
-    return () => {
+    function startGuidedTutorial(flowId = 'welcome') {
+    window.dispatchEvent(
+      new CustomEvent('forgeflow:start-tutorial', {
+        detail: { flowId },
+      })
+    )
+
+    showToast(
+      'success',
+      'Tutorial aberto',
+      'O guia foi iniciado. Você pode pular etapas ou encerrar quando quiser.'
+    )
+  }
+
+  function resetGuidedTutorial() {
+    window.dispatchEvent(new CustomEvent('forgeflow:reset-tutorial'))
+
+    showToast(
+      'success',
+      'Tutorial reiniciado',
+      'O tutorial inicial voltará a aparecer para esta conta.'
+    )
+  }
+
+  return () => {
       isMounted = false
     }
   }, [user])
