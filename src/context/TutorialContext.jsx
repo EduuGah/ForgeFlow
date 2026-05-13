@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import { useAuth } from './AuthContext'
+import { useWorkoutSession } from './WorkoutSessionContext'
 import {
   getFlowForPath,
   getTutorialState,
@@ -15,6 +16,7 @@ const TutorialContext = createContext(null)
 
 export function TutorialProvider({ children }) {
   const { user } = useAuth()
+  const { activeSession, startSession } = useWorkoutSession()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -84,8 +86,83 @@ export function TutorialProvider({ children }) {
     [user]
   )
 
+  function createTutorialWorkout() {
+    return {
+      id: 'tutorial-workout',
+      name: 'Tutorial ForgeFlow',
+      exercises: [
+        {
+          id: 'tutorial-supino',
+          exercise: {
+            id: 'tutorial-exercise-supino',
+            name: 'Supino reto — Teste',
+            muscleGroup: 'Peito',
+            equipment: 'Barra',
+            instructions: 'Exercício de exemplo para aprender a registrar séries.',
+            tips: 'Use valores fictícios. Este treino é apenas para teste.',
+          },
+          note: 'Exercício de teste para aprender carga, reps e aquecimento.',
+          restTimer: '60s',
+          sets: [
+            {
+              id: 'tutorial-supino-warmup',
+              description: 'Aquecimento',
+              type: 'warmup',
+            },
+            {
+              id: 'tutorial-supino-1',
+              description: '8-12 Rep',
+              type: 'working',
+            },
+            {
+              id: 'tutorial-supino-2',
+              description: '8-12 Rep',
+              type: 'working',
+            },
+          ],
+        },
+        {
+          id: 'tutorial-remada',
+          exercise: {
+            id: 'tutorial-exercise-remada',
+            name: 'Remada baixa — Teste',
+            muscleGroup: 'Costas',
+            equipment: 'Máquina',
+            instructions: 'Exercício de exemplo para praticar troca de exercício.',
+            tips: 'Clique na barra “Ir para exercício” para chegar até aqui.',
+          },
+          note: 'Use este exercício para testar navegação por exercício.',
+          restTimer: '60s',
+          sets: [
+            {
+              id: 'tutorial-remada-1',
+              description: '10-12 Rep',
+              type: 'working',
+            },
+            {
+              id: 'tutorial-remada-2',
+              description: '10-12 Rep',
+              type: 'working',
+            },
+          ],
+        },
+      ],
+    }
+  }
+
+  function startTutorialWorkoutSession() {
+    if (activeSession) return
+
+    const tutorialWorkout = createTutorialWorkout()
+    startSession(tutorialWorkout)
+  }
+
   function startTutorial(flowId = 'welcome') {
     const flow = tutorialFlows[flowId] || tutorialFlows.welcome
+
+    if (flow.id === 'workout') {
+      startTutorialWorkoutSession()
+    }
 
     setWelcomePromptVisible(false)
     setActiveFlowId(flow.id)
