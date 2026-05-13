@@ -203,8 +203,8 @@ function TutorialArrow({ rect }) {
     <div
       className="pointer-events-none fixed z-[93] hidden items-center gap-2 rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent)] px-3 py-2 text-xs font-black text-white shadow-[0_0_18px_var(--ff-accent-shadow)] md:flex"
       style={{
-        left: Math.min(window.innerWidth - 190, Math.max(18, rect.left + rect.width + 14)),
-        top: Math.min(window.innerHeight - 64, Math.max(18, rect.top + rect.height / 2 - 20)),
+        left: Math.min((typeof window !== 'undefined' ? window.innerWidth : 1200) - 190, Math.max(18, rect.left + rect.width + 14)),
+        top: Math.min((typeof window !== 'undefined' ? window.innerHeight : 800) - 64, Math.max(18, rect.top + rect.height / 2 - 20)),
       }}
       aria-hidden="true"
     >

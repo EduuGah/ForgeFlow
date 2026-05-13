@@ -2347,3 +2347,47 @@ main {
 .ff-sets-scroll [aria-label="Mover série para baixo"]:not(:disabled):hover {
   box-shadow: 0 0 16px var(--ff-accent-shadow);
 }
+
+
+/* =========================================================
+   ForgeFlow — Etapa 39 Stabilization Pass
+   ========================================================= */
+
+.ff-stable-scroll,
+.ff-sets-scroll,
+.ff-exercise-quick-filter {
+  overscroll-behavior: contain;
+}
+
+.ff-sets-scroll {
+  max-width: 100%;
+}
+
+.ff-sets-scroll > * {
+  min-width: 0;
+}
+
+.ff-rest-timer-card {
+  max-width: calc(100vw - 1.5rem);
+}
+
+.ff-tutorial-side-panel {
+  max-width: calc(100vw - 1rem);
+}
+
+.ff-admin-stat-card p,
+.ff-active-exercise-card p,
+.ff-active-exercise-card span {
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .ff-rest-timer-card {
+    left: 0.75rem;
+    right: 0.75rem;
+  }
+
+  .ff-active-exercise-card {
+    overflow: hidden;
+  }
+}

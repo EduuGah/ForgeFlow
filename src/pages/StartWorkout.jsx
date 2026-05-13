@@ -228,14 +228,23 @@ function WorkoutSetInput({
   min,
   inputMode,
   onChange,
+  suggestedValue = '',
+  suggestionLabel = '',
 }) {
+  const hasSuggestion = suggestedValue !== '' && suggestedValue !== null && suggestedValue !== undefined
+
   return (
     <label className="group block">
-      <span className="mb-1.5 hidden text-[10px] font-black uppercase tracking-[0.18em] text-[var(--ff-muted)] sm:block">
-        {label}
+      <span className="mb-1.5 hidden items-center justify-between gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--ff-muted)] sm:flex">
+        <span>{label}</span>
+        {hasSuggestion && (
+          <span className="max-w-[110px] truncate rounded-full border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 px-2 py-0.5 text-[9px] text-[var(--ff-accent-text)] opacity-70 transition group-hover:opacity-100">
+            {suggestionLabel || `Último: ${suggestedValue}`}
+          </span>
+        )}
       </span>
 
-      <div className="flex h-14 items-center overflow-hidden rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] transition group-focus-within:border-[var(--ff-accent-border)] group-focus-within:shadow-[0_0_18px_var(--ff-accent-shadow)]/20">
+      <div className={`flex h-14 items-center overflow-hidden rounded-2xl border bg-[var(--ff-card)] transition group-focus-within:border-[var(--ff-accent-border)] group-focus-within:shadow-[0_0_18px_var(--ff-accent-shadow)]/20 ${hasSuggestion ? 'border-[var(--ff-accent-border)]/20 group-hover:border-[var(--ff-accent-border)]/45' : 'border-[var(--ff-border)]'}`}>
         <div className="flex h-full w-11 shrink-0 items-center justify-center border-r border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-accent-text)]">
           <Icon size={18} />
         </div>
@@ -443,7 +452,13 @@ function StartWorkout() {
     setSavingWorkout(true)
 
     try {
-      await finishSession()
+      const savedSession = await finishSession()
+
+      if (savedSession?.skippedHistorySave) {
+        setIsFinishModalOpen(false)
+        showToast('success', 'Tutorial encerrado', 'O treino de teste foi descartado e não entrou no histórico.')
+        return
+      }
 
       generateSmartNotifications({
         user,
@@ -1458,7 +1473,7 @@ function StartWorkout() {
       </div>
 
       {restTimer && (
-        <div className="ff-rest-timer-card fixed left-3 right-3 top-[calc(5rem+env(safe-area-inset-top))] z-50 rounded-3xl border border-[var(--ff-accent-border)]/30 bg-[#121212]/95 p-3 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)] backdrop-blur-xl sm:left-auto sm:right-5 sm:w-[min(420px,calc(100vw-32px))] sm:p-4 xl:top-5">
+        <div className="ff-rest-timer-card fixed left-3 right-3 top-[calc(4.25rem+env(safe-area-inset-top))] z-50 rounded-3xl border border-[var(--ff-accent-border)]/30 bg-[#121212]/95 p-3 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)] backdrop-blur-xl sm:left-auto sm:right-5 sm:w-[min(420px,calc(100vw-32px))] sm:p-4 xl:top-5">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)] sm:h-12 sm:w-12">

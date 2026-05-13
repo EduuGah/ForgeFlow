@@ -465,6 +465,17 @@ function Admin() {
               </button>
             )}
 
+            <button
+              type="button"
+              onClick={() => {
+                loadAnalytics(analyticsDays)
+                loadAdminStats()
+              }}
+              className="h-10 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 text-xs font-black text-[var(--ff-muted)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)]"
+            >
+              Atualizar métricas
+            </button>
+
             {[7, 14, 30, 90].map((days) => (
               <button
                 key={days}

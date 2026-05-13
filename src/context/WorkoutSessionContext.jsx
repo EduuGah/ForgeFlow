@@ -581,6 +581,13 @@ export function WorkoutSessionProvider({ children }) {
                   ? {
                     ...set,
                     [field]: safeValue,
+                    ...(field === 'weight' || field === 'reps'
+                      ? {
+                        isPR: false,
+                        isWeightPR: false,
+                        isVolumePR: false,
+                      }
+                      : {}),
                   }
                   : set
               ),
@@ -687,6 +694,9 @@ export function WorkoutSessionProvider({ children }) {
                 ...set,
                 type: set.type === 'warmup' ? 'working' : 'warmup',
                 completed: false,
+                isPR: false,
+                isWeightPR: false,
+                isVolumePR: false,
               }
               : set
           )
