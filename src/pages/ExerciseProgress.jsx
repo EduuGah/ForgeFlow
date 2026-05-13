@@ -17,7 +17,7 @@ import {
   XAxis,
   YAxis
 } from 'recharts'
-import ResponsiveContainer from '../components/ui/SafeResponsiveContainer'
+import SafeResponsiveContainer from '../components/ui/SafeResponsiveContainer'
 
 import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
