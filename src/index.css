@@ -2319,3 +2319,16 @@ main {
 .ff-admin-stat-card > * {
   position: relative;
 }
+
+
+/* =========================================================
+   ForgeFlow — Fix Admin Analytics v2
+   ========================================================= */
+
+.ff-admin-stat-card p {
+  overflow-wrap: anywhere;
+}
+
+.ff-admin-stat-card {
+  min-width: 0;
+}

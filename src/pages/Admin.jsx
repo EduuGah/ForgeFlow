@@ -56,10 +56,14 @@ function formatDate(value, withTime = false) {
   })
 }
 
-function formatLastLogin(value) {
-  if (!value) return 'Ainda não registrado'
+function formatLastLogin(value, fallbackCreatedAt = null) {
+  if (value) return formatDate(value, true)
 
-  return formatDate(value, true)
+  if (fallbackCreatedAt) {
+    return `Sem login registrado · criado em ${formatDate(fallbackCreatedAt)}`
+  }
+
+  return 'Ainda não registrado'
 }
 
 function formatDuration(seconds = 0) {
@@ -111,23 +115,29 @@ function MiniBarChart({ title, description, series = [], valueKey = 'count' }) {
       </div>
 
       <div className="mt-4 flex h-28 items-end gap-1.5 overflow-hidden rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
-        {series.map((item) => {
-          const value = Number(item?.[valueKey] || 0)
-          const height = Math.max(6, Math.round((value / max) * 100))
+        {series.length === 0 || series.every((item) => Number(item?.[valueKey] || 0) === 0) ? (
+          <div className="flex h-full w-full items-center justify-center text-center text-xs font-bold text-[var(--ff-muted)]">
+            Sem dados neste período
+          </div>
+        ) : (
+          series.map((item) => {
+            const value = Number(item?.[valueKey] || 0)
+            const height = Math.max(6, Math.round((value / max) * 100))
 
-          return (
-            <div
-              key={item.date}
-              className="group relative flex min-w-[10px] flex-1 items-end justify-center"
-              title={`${formatShortDate(item.date)}: ${value}`}
-            >
+            return (
               <div
-                className="w-full max-w-5 rounded-t-lg bg-[var(--ff-accent)]/75 transition group-hover:bg-[var(--ff-accent)]"
-                style={{ height: `${height}%` }}
-              />
-            </div>
-          )
-        })}
+                key={item.date}
+                className="group relative flex min-w-[10px] flex-1 items-end justify-center"
+                title={`${formatShortDate(item.date)}: ${value}`}
+              >
+                <div
+                  className="w-full max-w-5 rounded-t-lg bg-[var(--ff-accent)]/75 transition group-hover:bg-[var(--ff-accent)]"
+                  style={{ height: `${height}%` }}
+                />
+              </div>
+            )
+          })
+        )}
       </div>
 
       <div className="mt-2 flex justify-between text-[10px] font-bold text-[var(--ff-muted)]">
@@ -158,6 +168,7 @@ function Admin() {
   const [loading, setLoading] = useState(true)
   const [loadingDetails, setLoadingDetails] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
+  const [cleanupLoading, setCleanupLoading] = useState(false)
   const [resetPassword, setResetPassword] = useState('')
   const [confirmModal, setConfirmModal] = useState(null)
   const [toast, setToast] = useState(null)
@@ -267,6 +278,30 @@ function Admin() {
       showToast('error', 'Erro na ação admin', error.message)
     } finally {
       setActionLoading(false)
+    }
+  }
+
+  async function handleCleanupOrphanHistory() {
+    setCleanupLoading(true)
+
+    try {
+      const result = await apiFetch('/admin/analytics/orphan-history', {
+        method: 'DELETE',
+      })
+
+      showToast(
+        'success',
+        'Limpeza concluída',
+        `${result.deletedCount || 0} histórico(s) órfão(s) removido(s).`
+      )
+
+      await loadAnalytics(analyticsDays)
+      await loadAdminStats()
+    } catch (error) {
+      console.error(error)
+      showToast('error', 'Erro ao limpar históricos órfãos', error.message)
+    } finally {
+      setCleanupLoading(false)
     }
   }
 
@@ -418,7 +453,18 @@ function Admin() {
             </p>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            {Number(analyticsCards.orphanHistoryCount || 0) > 0 && (
+              <button
+                type="button"
+                onClick={handleCleanupOrphanHistory}
+                disabled={cleanupLoading}
+                className="h-10 rounded-2xl border border-red-500/25 bg-red-500/10 px-3 text-xs font-black text-red-200 transition hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {cleanupLoading ? 'Limpando...' : 'Limpar órfãos'}
+              </button>
+            )}
+
             {[7, 14, 30, 90].map((days) => (
               <button
                 key={days}
@@ -446,8 +492,9 @@ function Admin() {
             ['Acessos', analyticsCards.loginEvents ?? '—', Clock3],
             ['Treinos', analyticsCards.totalWorkouts ?? '—', Dumbbell],
             ['Históricos', analyticsCards.totalHistory ?? '—', History],
+            ['Órfãos', analyticsCards.orphanHistoryCount ?? 0, AlertTriangle],
             ['Séries', analyticsCards.totalSets ?? '—', ListChecks],
-            ['Volume', analyticsCards.totalVolume ? `${formatCompactNumber(analyticsCards.totalVolume)} kg` : '—', Trophy],
+            ['Volume total', analyticsCards.totalVolume ? `${formatCompactNumber(analyticsCards.totalVolume)} kg` : '—', Trophy],
             ['Admins', analyticsCards.totalAdmins ?? '—', ShieldCheck],
             ['Bloqueados', analyticsCards.blockedUsers ?? '—', Ban],
             ['Ativos agora', analyticsCards.activeWorkoutSessions ?? '—', Activity],
@@ -461,7 +508,7 @@ function Admin() {
                   <p className="truncate text-xs font-black uppercase tracking-[0.14em] text-[var(--ff-muted)]">
                     {label}
                   </p>
-                  <p className="mt-2 truncate text-2xl font-black text-[var(--ff-text)]">
+                  <p className="mt-2 break-words text-xl font-black leading-tight text-[var(--ff-text)] sm:text-2xl">
                     {value}
                   </p>
                 </div>
@@ -502,7 +549,7 @@ function Admin() {
                   Últimos acessos
                 </h3>
                 <p className="mt-1 text-xs text-[var(--ff-muted)]">
-                  Acessos registrados após esta atualização.
+                  Acessos registrados após esta atualização. Cadastros novos já entram aqui.
                 </p>
               </div>
 
@@ -692,7 +739,7 @@ function Admin() {
                       </p>
                       <p className="truncate text-xs text-[var(--ff-muted)]">{item.email}</p>
                       <p className="mt-1 text-[11px] text-[var(--ff-muted)]">
-                        Último login: {formatLastLogin(item.lastLoginAt)}
+                        Último login: {formatLastLogin(item.lastLoginAt, item.createdAt)}
                       </p>
                     </div>
 
@@ -750,7 +797,7 @@ function Admin() {
 
                   <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
                     <p className="text-xs text-[var(--ff-muted)]">Último login</p>
-                    <p className="mt-1 text-sm font-black text-[var(--ff-text)]">{formatLastLogin(selectedUser.lastLoginAt)}</p>
+                    <p className="mt-1 text-sm font-black text-[var(--ff-text)]">{formatLastLogin(selectedUser.lastLoginAt, selectedUser.createdAt)}</p>
                   </div>
 
                   <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">

@@ -1905,6 +1905,36 @@ function mapAggregationToSeries(aggregation = [], days = 14) {
     }))
 }
 
+
+app.delete('/admin/analytics/orphan-history', authMiddleware, requireAdmin, async (req, res) => {
+    try {
+        const userIds = await User.distinct('_id')
+        const result = await WorkoutHistory.deleteMany({
+            userId: { $nin: userIds },
+        })
+
+        await writeAdminLog(req, {
+            action: 'orphan_history_deleted',
+            message: `Históricos órfãos removidos: ${result.deletedCount || 0}.`,
+            metadata: {
+                deletedCount: result.deletedCount || 0,
+            },
+        })
+
+        return res.json({
+            message: 'Históricos órfãos removidos.',
+            deletedCount: result.deletedCount || 0,
+        })
+    } catch (error) {
+        console.error(error)
+
+        return res.status(500).json({
+            message: 'Erro ao remover históricos órfãos.',
+        })
+    }
+})
+
+
 app.get('/admin/analytics', authMiddleware, requireAdmin, async (req, res) => {
     try {
         const days = Math.min(Math.max(Number(req.query.days) || 14, 7), 90)
@@ -1931,6 +1961,7 @@ app.get('/admin/analytics', authMiddleware, requireAdmin, async (req, res) => {
             recentUsers,
             recentLogins,
             topWorkoutUsers,
+            orphanHistoryCount,
         ] = await Promise.all([
             User.countDocuments({}),
             User.countDocuments({ role: 'admin' }),
@@ -2023,7 +2054,8 @@ app.get('/admin/analytics', authMiddleware, requireAdmin, async (req, res) => {
                         as: 'user',
                     },
                 },
-                { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+                { $unwind: { path: '$user', preserveNullAndEmptyArrays: false } },
+                { $match: { 'user._id': { $exists: true } } },
                 {
                     $project: {
                         userId: '$_id',
@@ -2033,6 +2065,18 @@ app.get('/admin/analytics', authMiddleware, requireAdmin, async (req, res) => {
                         email: '$user.email',
                     },
                 },
+            ]),
+            WorkoutHistory.aggregate([
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'userId',
+                        foreignField: '_id',
+                        as: 'user',
+                    },
+                },
+                { $match: { user: { $size: 0 } } },
+                { $count: 'count' },
             ]),
         ])
 
@@ -2086,6 +2130,7 @@ app.get('/admin/analytics', authMiddleware, requireAdmin, async (req, res) => {
                 totalReps: totals.totalReps || 0,
                 totalVolume: totals.totalVolume || 0,
                 totalDurationSeconds: totals.totalDurationSeconds || 0,
+                orphanHistoryCount: orphanHistoryCount?.[0]?.count || 0,
             },
             series: {
                 logins: loginSeries,
@@ -2631,6 +2676,10 @@ app.post('/auth/register', async (req, res) => {
             profileCompleted,
         })
     }
+
+    user.lastLoginAt = new Date()
+    await user.save()
+    await writeLoginEvent(req, user, 'credentials')
 
     const token = createToken(user)
 
