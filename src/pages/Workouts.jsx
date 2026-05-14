@@ -15,15 +15,11 @@ import {
   Star,
   Trash2,
   X,
-  Sparkles,
-  Timer,
-  Target,
 } from 'lucide-react'
 
 import { getAppSettings } from '../utils/settingsUtils'
 import { getInitialExercises } from '../utils/exerciseStorage'
 
-import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
@@ -42,6 +38,22 @@ import {
     saveUserStorageData,
     removeUserStorageData,
 } from '../utils/userStorage'
+import {
+    getWorkoutId,
+    normalizeHistoryFromApi,
+    normalizeWorkoutFromApi,
+    normalizeWorkoutTemplateFromApi,
+} from '../utils/workoutNormalizers'
+import {
+    buildSmartDefaultTemplatePayloads,
+    getSmartTemplateKind,
+} from '../features/workouts/smartTemplates'
+import {
+    WorkoutsHeader,
+    WorkoutStatsGrid,
+    WorkoutTemplatesPreview,
+    WorkoutFolderFilter,
+} from '../features/workouts/components/WorkoutsOverview'
 
 import defaultExercises from '../data/defaultExercises'
 
@@ -108,21 +120,6 @@ function Workouts() {
     const { user } = useAuth()
     const navigate = useNavigate()
 
-    function getWorkoutId(workout) {
-        return workout?._id || workout?.id
-    }
-
-    function normalizeHistoryFromApi(session) {
-        return {
-            ...session,
-            id: session._id || session.id,
-            duration: session.durationSeconds ?? session.duration ?? 0,
-            workoutName: session.workoutName || session.name || 'Treino',
-            exercises: Array.isArray(session.exercises) ? session.exercises : [],
-            finishedAt: session.finishedAt || session.createdAt,
-        }
-    }
-
     async function handleImportDefaultExercises() {
         try {
             const result = await apiFetch('/exercises/import-defaults', {
@@ -159,24 +156,6 @@ function Workouts() {
         }
     }
 
-    function normalizeWorkoutTemplateFromApi(template) {
-        return {
-            ...template,
-            id: template._id || template.id,
-            exercises: Array.isArray(template.exercises) ? template.exercises : [],
-            isFavorite: Boolean(template.isFavorite),
-        }
-    }
-
-    function normalizeWorkoutFromApi(workout) {
-        return {
-            ...workout,
-            id: workout._id || workout.id,
-            folderId: workout.folderId || null,
-            exercises: Array.isArray(workout.exercises) ? workout.exercises : [],
-        }
-    }
-
     function buildWorkoutPayload() {
         return {
             name: workoutName.trim(),
@@ -186,276 +165,6 @@ function Workouts() {
     }
 
     const [showAllWorkouts, setShowAllWorkouts] = useState(false)
-
-
-    const SMART_DEFAULT_TEMPLATE_BLUEPRINTS = [
-        {
-            kind: 'push',
-            name: 'Push - Peito, Ombros e Tríceps',
-            description: 'Treino pronto de empurrar com exercícios para peito, ombros e tríceps.',
-            category: 'Push Pull Legs',
-            goal: 'Hipertrofia',
-            difficulty: 'Intermediário',
-            estimatedDuration: 60,
-            groups: ['Peito', 'Peito', 'Ombros', 'Ombros', 'Tríceps', 'Tríceps'],
-            fallbackKeywords: ['supino', 'peito', 'chest', 'desenvolvimento', 'ombro', 'triceps', 'tríceps'],
-            limit: 6,
-        },
-        {
-            kind: 'pull',
-            name: 'Pull - Costas e Bíceps',
-            description: 'Treino pronto de puxar com exercícios para costas, bíceps e posterior de ombro.',
-            category: 'Push Pull Legs',
-            goal: 'Hipertrofia',
-            difficulty: 'Intermediário',
-            estimatedDuration: 60,
-            groups: ['Costas', 'Costas', 'Costas', 'Bíceps', 'Bíceps', 'Ombros'],
-            fallbackKeywords: ['puxada', 'remada', 'costas', 'back', 'rosca', 'bíceps', 'biceps', 'face pull'],
-            limit: 6,
-        },
-        {
-            kind: 'legs',
-            name: 'Legs - Pernas completo',
-            description: 'Treino pronto de pernas com foco em quadríceps, posterior, glúteos e panturrilhas.',
-            category: 'Push Pull Legs',
-            goal: 'Hipertrofia',
-            difficulty: 'Intermediário',
-            estimatedDuration: 70,
-            groups: ['Quadríceps', 'Quadríceps', 'Posterior de coxa', 'Glúteos', 'Panturrilhas', 'Abdômen'],
-            fallbackKeywords: ['agachamento', 'leg press', 'cadeira', 'mesa', 'posterior', 'panturrilha', 'gluteo', 'glúteo', 'perna'],
-            limit: 6,
-        },
-        {
-            kind: 'upper',
-            name: 'Upper - Superiores',
-            description: 'Treino pronto para membros superiores em divisão Upper/Lower.',
-            category: 'Upper Lower',
-            goal: 'Força e hipertrofia',
-            difficulty: 'Intermediário',
-            estimatedDuration: 65,
-            groups: ['Peito', 'Costas', 'Ombros', 'Bíceps', 'Tríceps'],
-            fallbackKeywords: ['supino', 'puxada', 'remada', 'desenvolvimento', 'rosca', 'triceps', 'tríceps'],
-            limit: 5,
-        },
-        {
-            kind: 'lower',
-            name: 'Lower - Inferiores',
-            description: 'Treino pronto para membros inferiores em divisão Upper/Lower.',
-            category: 'Upper Lower',
-            goal: 'Força e hipertrofia',
-            difficulty: 'Intermediário',
-            estimatedDuration: 65,
-            groups: ['Quadríceps', 'Posterior de coxa', 'Glúteos', 'Panturrilhas', 'Abdômen'],
-            fallbackKeywords: ['agachamento', 'leg press', 'posterior', 'panturrilha', 'gluteo', 'glúteo', 'abdomen', 'abdômen'],
-            limit: 5,
-        },
-        {
-            kind: 'full-body',
-            name: 'Full Body - Corpo inteiro',
-            description: 'Treino pronto de corpo inteiro misturando os principais grupos musculares.',
-            category: 'Full Body',
-            goal: 'Condicionamento geral',
-            difficulty: 'Iniciante',
-            estimatedDuration: 50,
-            groups: ['Peito', 'Costas', 'Quadríceps', 'Ombros', 'Abdômen'],
-            fallbackKeywords: ['supino', 'remada', 'agachamento', 'desenvolvimento', 'prancha', 'abdomen', 'abdômen'],
-            limit: 5,
-        },
-    ]
-
-    function normalizeSmartText(value) {
-        return String(value || '')
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .toLowerCase()
-            .trim()
-    }
-
-    function normalizeSmartGroup(group) {
-        const normalized = normalizeSmartText(group)
-
-        const aliases = {
-            peito: 'peito',
-            peitoral: 'peito',
-            chest: 'peito',
-            costas: 'costas',
-            dorsal: 'costas',
-            back: 'costas',
-            ombro: 'ombros',
-            ombros: 'ombros',
-            deltoide: 'ombros',
-            deltoides: 'ombros',
-            shoulder: 'ombros',
-            shoulders: 'ombros',
-            biceps: 'bíceps',
-            triceps: 'tríceps',
-            quadriceps: 'quadríceps',
-            pernas: 'quadríceps',
-            perna: 'quadríceps',
-            quads: 'quadríceps',
-            posterior: 'posterior de coxa',
-            posteriores: 'posterior de coxa',
-            hamstrings: 'posterior de coxa',
-            posterior_de_coxa: 'posterior de coxa',
-            gluteos: 'glúteos',
-            glutes: 'glúteos',
-            panturrilha: 'panturrilhas',
-            panturrilhas: 'panturrilhas',
-            calves: 'panturrilhas',
-            abdomen: 'abdômen',
-            abdomem: 'abdômen',
-            abdome: 'abdômen',
-            abs: 'abdômen',
-            core: 'abdômen',
-            lombar: 'lombar',
-            lowerback: 'lombar',
-            cardio: 'cardio',
-            corpo_inteiro: 'corpo inteiro',
-            fullbody: 'corpo inteiro',
-        }
-
-        return aliases[normalized.replace(/\s+/g, '_')] || aliases[normalized] || normalized
-    }
-
-    function getSmartExerciseGroup(exercise) {
-        return normalizeSmartGroup(
-            exercise?.muscleGroup ||
-            exercise?.normalizedGroup ||
-            exercise?.group ||
-            exercise?.targetMuscle ||
-            exercise?.bodyPart
-        )
-    }
-
-    function getSmartTemplateKind(templateName) {
-        const name = normalizeSmartText(templateName)
-
-        if (name.includes('push')) return 'push'
-        if (name.includes('pull')) return 'pull'
-        if (name.includes('legs')) return 'legs'
-        if (name.includes('upper')) return 'upper'
-        if (name.includes('lower')) return 'lower'
-        if (name.includes('full body') || name.includes('corpo inteiro')) return 'full-body'
-
-        return ''
-    }
-
-    function getExerciseUniqueKey(exercise) {
-        return String(
-            exercise?._id ||
-            exercise?.id ||
-            `${exercise?.name || ''}-${exercise?.muscleGroup || ''}-${exercise?.equipment || ''}`
-        )
-    }
-
-    function normalizeExerciseForTemplate(exercise) {
-        const id = exercise?._id || exercise?.id || crypto.randomUUID()
-
-        return {
-            ...exercise,
-            id: String(id),
-            _id: exercise?._id,
-            isFavorite: Boolean(exercise?.isFavorite),
-        }
-    }
-
-    function createSmartTemplateExerciseItem(exercise) {
-        return {
-            id: crypto.randomUUID(),
-            exercise: normalizeExerciseForTemplate(exercise),
-            sets: ['12 Rep', '10-12 Rep', '8-10 Rep'].map((description) => ({
-                id: crypto.randomUUID(),
-                description,
-                type: 'working',
-            })),
-            note: '',
-            restTimer: appSettings.defaultRestTimer || 'Desligado',
-        }
-    }
-
-    function buildSmartExerciseLibrary() {
-        const map = new Map()
-        const localDefaults = Array.isArray(defaultExercises) ? defaultExercises : []
-
-        ;[...exercises, ...localDefaults].forEach((exercise) => {
-            if (!exercise?.name) return
-
-            const key = getExerciseUniqueKey(exercise)
-
-            if (!map.has(key)) {
-                map.set(key, normalizeExerciseForTemplate(exercise))
-            }
-        })
-
-        return Array.from(map.values())
-    }
-
-    function pickSmartExercisesForTemplate(blueprint, library) {
-        const selected = []
-        const usedKeys = new Set()
-        const targetGroups = blueprint.groups.map(normalizeSmartGroup)
-
-        function addExercise(exercise) {
-            if (!exercise || selected.length >= blueprint.limit) return
-
-            const key = getExerciseUniqueKey(exercise)
-
-            if (usedKeys.has(key)) return
-
-            usedKeys.add(key)
-            selected.push(exercise)
-        }
-
-        targetGroups.forEach((group) => {
-            const found = library.find((exercise) => {
-                return !usedKeys.has(getExerciseUniqueKey(exercise)) && getSmartExerciseGroup(exercise) === group
-            })
-
-            addExercise(found)
-        })
-
-        if (selected.length < blueprint.limit) {
-            const keywords = blueprint.fallbackKeywords.map(normalizeSmartText)
-
-            library.forEach((exercise) => {
-                if (selected.length >= blueprint.limit) return
-                if (usedKeys.has(getExerciseUniqueKey(exercise))) return
-
-                const searchable = normalizeSmartText(
-                    `${exercise.name} ${exercise.originalName || ''} ${exercise.muscleGroup || ''} ${exercise.targetMuscle || ''} ${exercise.equipment || ''}`
-                )
-
-                if (keywords.some((keyword) => searchable.includes(keyword))) {
-                    addExercise(exercise)
-                }
-            })
-        }
-
-        if (selected.length < blueprint.limit) {
-            library.forEach((exercise) => {
-                if (selected.length >= blueprint.limit) return
-                addExercise(exercise)
-            })
-        }
-
-        return selected.slice(0, blueprint.limit)
-    }
-
-    function buildSmartDefaultTemplatePayloads() {
-        const library = buildSmartExerciseLibrary()
-
-        return SMART_DEFAULT_TEMPLATE_BLUEPRINTS.map((blueprint) => ({
-            kind: blueprint.kind,
-            name: blueprint.name,
-            description: blueprint.description,
-            category: blueprint.category,
-            goal: blueprint.goal,
-            difficulty: blueprint.difficulty,
-            estimatedDuration: blueprint.estimatedDuration,
-            source: 'ForgeFlow',
-            exercises: pickSmartExercisesForTemplate(blueprint, library).map(createSmartTemplateExerciseItem),
-        }))
-    }
 
     useEffect(() => {
         const settings = getAppSettings()
@@ -1531,7 +1240,11 @@ function Workouts() {
 
 
     async function handleRebuildDefaultTemplates() {
-        const templatePayloads = buildSmartDefaultTemplatePayloads()
+        const templatePayloads = buildSmartDefaultTemplatePayloads({
+            exercises,
+            defaultExercises,
+            appSettings,
+        })
         const totalExercisesSuggested = templatePayloads.reduce(
             (total, template) => total + template.exercises.length,
             0
@@ -1908,223 +1621,41 @@ function Workouts() {
 
     return (
         <>
-            <PageHeader
-                title="Treinos"
-                description="Monte treinos, organize exercícios e inicie seus treinos salvos."
-                action={
-                    <div className="flex flex-wrap items-center justify-end gap-2">
-                        {isSyncingData && (
-                            <Badge variant="purple">
-                                Sincronizando
-                            </Badge>
-                        )}
-
-                        <button
-                            type="button"
-                            onClick={openCreateBuilder}
-                            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-bold text-white shadow-[0_0_20px_var(--ff-accent-shadow)] transition hover:bg-[var(--ff-accent-hover)] hover:shadow-[0_0_20px_var(--ff-accent-shadow)]"
-                        >
-                            <Plus size={18} />
-                            Novo treino
-                        </button>
-                    </div>
-                }
+            <WorkoutsHeader
+                isSyncingData={isSyncingData}
+                onCreateWorkout={openCreateBuilder}
             />
 
-            <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <Card className="p-4">
-                    <p className="text-sm text-zinc-500">Treinos salvos</p>
-                    <h3 className="mt-2 text-3xl font-bold">{workouts.length}</h3>
-                    <p className="mt-2 text-xs text-[var(--ff-accent-text)]
-">Treinos disponíveis</p>
-                </Card>
+            <WorkoutStatsGrid
+                workoutsCount={workouts.length}
+                exercisesCount={exercises.length}
+                totalExercisesInSavedWorkouts={totalExercisesInSavedWorkouts}
+                templatesCount={workoutTemplates.length}
+            />
 
-                <Card className="p-4">
-                    <p className="text-sm text-zinc-500">Biblioteca</p>
-                    <h3 className="mt-2 text-3xl font-bold">{exercises.length}</h3>
-                    <p className="mt-2 text-xs text-[var(--ff-accent-text)]
-">Exercícios cadastrados</p>
-                </Card>
+            <WorkoutTemplatesPreview
+                workoutTemplates={workoutTemplates}
+                onCreateTemplate={() => {
+                    setBuilderMode('template')
+                    setEditingTemplateId(null)
+                    setEditingWorkoutId(null)
+                    setWorkoutName('')
+                    setWorkoutExercises([])
+                    setIsBuilderOpen(true)
+                }}
+                onCreateWorkoutFromTemplate={handleCreateWorkoutFromTemplate}
+                onEditTemplate={handleEditTemplate}
+            />
 
-                <Card className="p-4">
-                    <p className="text-sm text-zinc-500">Itens nos treinos</p>
-                    <h3 className="mt-2 text-3xl font-bold text-[var(--ff-accent-text)]
-">
-                        {totalExercisesInSavedWorkouts}
-                    </h3>
-                    <p className="mt-2 text-xs text-[var(--ff-accent-text)]
-">Exercícios usados</p>
-                </Card>
-                <Card className="p-4">
-                    <p className="text-sm text-zinc-500">Templates</p>
-
-                    <h3 className="mt-2 text-3xl font-bold text-yellow-300">
-                        {workoutTemplates.length}
-                    </h3>
-
-                    <p className="mt-2 text-xs text-[var(--ff-accent-text)]">
-                        modelos salvos
-                    </p>
-                </Card>
-            </section>
-
-            {workoutTemplates.length > 0 && (
-                <section className="mt-5 rounded-3xl border border-[var(--ff-border)] bg-[linear-gradient(180deg,var(--ff-card),var(--ff-surface-2))] p-4 shadow-xl shadow-black/10">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--ff-accent-text)]">
-                                Templates avançados
-                            </p>
-                            <h2 className="mt-1 text-xl font-black text-[var(--ff-text)]">
-                                Comece por um modelo pronto
-                            </h2>
-                            <p className="mt-1 text-sm text-[var(--ff-muted)]">
-                                Use favoritos ou modelos recentes para criar uma rotina sem começar do zero.
-                            </p>
-                        </div>
-
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setBuilderMode('template')
-                                setEditingTemplateId(null)
-                                setEditingWorkoutId(null)
-                                setWorkoutName('')
-                                setWorkoutExercises([])
-                                setIsBuilderOpen(true)
-                            }}
-                            className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-sm font-black text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)]"
-                        >
-                            <Sparkles size={16} />
-                            Novo template
-                        </button>
-                    </div>
-
-                    <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                        {workoutTemplates
-                            .slice()
-                            .sort((a, b) => Number(Boolean(b.isFavorite)) - Number(Boolean(a.isFavorite)))
-                            .slice(0, 3)
-                            .map((template) => (
-                                <div
-                                    key={template.id}
-                                    className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4"
-                                >
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div className="min-w-0">
-                                            <h3 className="truncate text-base font-black text-[var(--ff-text)]">
-                                                {template.name}
-                                            </h3>
-                                            <p className="mt-1 text-xs text-[var(--ff-muted)]">
-                                                {(template.exercises || []).length} exercícios
-                                            </p>
-                                        </div>
-
-                                        {template.isFavorite && (
-                                            <span className="rounded-full border border-yellow-400/30 bg-yellow-500/10 px-2 py-1 text-[10px] font-black uppercase text-yellow-200">
-                                                Favorito
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    <div className="mt-3 flex flex-wrap gap-2">
-                                        {(template.exercises || []).slice(0, 3).map((item, index) => (
-                                            <span
-                                                key={`${template.id}-${index}`}
-                                                className="rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-2.5 py-1 text-[10px] font-bold text-[var(--ff-muted)]"
-                                            >
-                                                {item.exercise?.name || item.name || `Exercício ${index + 1}`}
-                                            </span>
-                                        ))}
-                                    </div>
-
-                                    <div className="mt-4 grid grid-cols-2 gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => handleCreateWorkoutFromTemplate(template)}
-                                            className="h-10 rounded-2xl bg-[var(--ff-accent)] text-xs font-black text-white shadow-[0_0_16px_var(--ff-accent-shadow)]"
-                                        >
-                                            Usar
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            onClick={() => handleEditTemplate(template)}
-                                            className="h-10 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-xs font-black text-[var(--ff-text-soft)]"
-                                        >
-                                            Editar
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                    </div>
-                </section>
-            )}
-
-            <div className="mt-5 rounded-3xl border border-zinc-800 bg-[#18181b] p-3">
-                <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm font-bold text-zinc-300">Pastas</p>
-
-                    <button
-                        type="button"
-                        onClick={() => setIsFolderModalOpen(true)}
-                        className="text-xs font-bold text-[var(--ff-accent-text)]
- transition hover:text-[var(--ff-accent-text)]
-"
-                    >
-                        + Nova pasta
-                    </button>
-                </div>
-
-                <div className="mt-3 flex gap-2 ff-mobile-chip-scroll overflow-x-auto overscroll-x-contain pb-2">
-                    <button
-                        type="button"
-                        onClick={() => setSelectedFolderId(null)}
-                        className={
-                            selectedFolderId === null
-                                ? 'shrink-0 rounded-2xl bg-[var(--ff-accent)] px-4 py-2 text-sm font-bold text-white shadow-[0_0_20px_var(--ff-accent-shadow)]'
-                                : 'shrink-0 rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-[var(--ff-accent-border)]/40 hover:text-white'
-                        }
-                    >
-                        Todas
-                        <span className="ml-2 text-xs opacity-70">{workouts.length}</span>
-                    </button>
-
-                    {folders.map((folder) => {
-                        const total = folderWorkoutCounts.get(folder.id) || 0
-
-                        return (
-                            <div
-                                key={folder.id}
-                                className={
-                                    selectedFolderId === folder.id
-                                        ? 'group flex shrink-0 items-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-4 py-2 text-sm font-bold text-white shadow-[0_0_20px_var(--ff-accent-shadow)]'
-                                        : 'group flex shrink-0 items-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-[var(--ff-accent-border)]/40 hover:text-white'
-                                }
-                            >
-                                <button
-                                    type="button"
-                                    onClick={() => setSelectedFolderId(folder.id)}
-                                    className="flex items-center gap-2"
-                                >
-                                    {folder.name}
-
-                                    <span className="text-xs opacity-70">{total}</span>
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={() => handleDeleteFolder(folder.id)}
-                                    className="rounded-full p-1 text-zinc-400 transition hover:bg-red-500/20 hover:text-red-300 sm:opacity-0 sm:group-hover:opacity-100"
-                                    title="Excluir pasta"
-                                >
-                                    ×
-                                </button>
-                            </div>
-                        )
-                    })}
-                </div>
-            </div>
+            <WorkoutFolderFilter
+                folders={folders}
+                folderWorkoutCounts={folderWorkoutCounts}
+                selectedFolderId={selectedFolderId}
+                workoutsCount={workouts.length}
+                onSelectFolder={setSelectedFolderId}
+                onCreateFolder={() => setIsFolderModalOpen(true)}
+                onDeleteFolder={handleDeleteFolder}
+            />
 
             <section className="mt-6 grid grid-cols-1 gap-4 2xl:grid-cols-3 2xl:gap-6">
                 <div className="xl:col-span-2">

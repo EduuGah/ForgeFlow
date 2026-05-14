@@ -8,39 +8,16 @@ const rootDir = path.resolve(__dirname, '..')
 const packagePath = path.join(rootDir, 'package.json')
 const srcDir = path.join(rootDir, 'src')
 
-const ignoredDirs = new Set([
-  'node_modules',
-  'dist',
-  'build',
-  '.git',
-  '.vite',
-  'coverage',
-])
-
-const importNameMap = {
-  '@vitejs/plugin-react': '@vitejs/plugin-react',
-  vite: 'vite',
-  react: 'react',
-  'react-dom': 'react-dom',
-  'react-router-dom': 'react-router-dom',
-  recharts: 'recharts',
-  'lucide-react': 'lucide-react',
-  '@capacitor/core': '@capacitor/core',
-  '@capacitor/cli': '@capacitor/cli',
-  '@capacitor/android': '@capacitor/android',
-  '@vite-pwa/assets-generator': '@vite-pwa/assets-generator',
-  'vite-plugin-pwa': 'vite-plugin-pwa',
-}
+const ignoredDirs = new Set(['node_modules', 'dist', 'build', '.git', '.vite', 'coverage', 'server', 'android', 'ios'])
+const extraConfigFiles = ['vite.config.js', 'vite.config.mjs', 'eslint.config.js', 'eslint.config.mjs', 'postcss.config.js', 'tailwind.config.js', 'index.html']
 
 async function walk(dir) {
   if (!existsSync(dir)) return []
-
   const entries = await readdir(dir, { withFileTypes: true })
   const files = []
 
   for (const entry of entries) {
     if (ignoredDirs.has(entry.name)) continue
-
     const fullPath = path.join(dir, entry.name)
 
     if (entry.isDirectory()) {
@@ -54,13 +31,11 @@ async function walk(dir) {
 }
 
 function getPackageFromImport(source) {
-  if (source.startsWith('.') || source.startsWith('/')) return null
-
+  if (source.startsWith('.') || source.startsWith('/') || source.startsWith('node:')) return null
   if (source.startsWith('@')) {
     const [scope, name] = source.split('/')
     return `${scope}/${name}`
   }
-
   return source.split('/')[0]
 }
 
@@ -70,16 +45,11 @@ if (!existsSync(packagePath)) {
 }
 
 const packageJson = JSON.parse(await readFile(packagePath, 'utf8'))
-const dependencies = {
-  ...(packageJson.dependencies || {}),
-  ...(packageJson.devDependencies || {}),
-}
+const dependencies = { ...(packageJson.dependencies || {}), ...(packageJson.devDependencies || {}) }
 
 const files = [
   ...await walk(srcDir),
-  ...['vite.config.js', 'vite.config.mjs', 'index.html']
-    .map((item) => path.join(rootDir, item))
-    .filter((item) => existsSync(item)),
+  ...extraConfigFiles.map((item) => path.join(rootDir, item)).filter((item) => existsSync(item)),
 ]
 
 const usedPackages = new Set()
@@ -92,50 +62,39 @@ for (const file of files) {
     const pkg = getPackageFromImport(match[1])
     if (pkg) usedPackages.add(pkg)
   }
-
-  for (const [needle, pkg] of Object.entries(importNameMap)) {
-    if (source.includes(needle)) usedPackages.add(pkg)
-  }
 }
 
+const alwaysKeep = new Set(['@vitejs/plugin-react', 'vite', 'react', 'react-dom', 'eslint', '@eslint/js', 'globals', 'typescript'])
 const dependencyNames = Object.keys(dependencies)
-const likelyUnused = dependencyNames.filter((pkg) => {
-  if (pkg.startsWith('@types/')) return false
-  if (pkg === 'typescript') return false
-  if (pkg === 'eslint') return false
-  if (pkg.startsWith('eslint-')) return false
 
+const likelyUnused = dependencyNames.filter((pkg) => {
+  if (alwaysKeep.has(pkg)) return false
+  if (pkg.startsWith('@types/')) return false
+  if (pkg.startsWith('eslint-')) return false
   return !usedPackages.has(pkg)
 })
 
-const missingFromPackageJson = Array.from(usedPackages).filter((pkg) => {
-  if (pkg.startsWith('node:')) return false
-  return !dependencies[pkg]
-})
+const missingFromPackageJson = Array.from(usedPackages).filter((pkg) => !dependencies[pkg])
 
 console.log('\nForgeFlow Frontend Dependency Audit')
 console.log('===================================')
 console.log(`Arquivos analisados: ${files.length}`)
 console.log(`Dependências no package.json: ${dependencyNames.length}`)
-console.log(`Pacotes detectados em imports: ${usedPackages.size}`)
+console.log(`Pacotes detectados em imports/config: ${usedPackages.size}`)
 
 console.log('\nPossivelmente não usadas:')
 if (likelyUnused.length === 0) {
   console.log('  Nenhuma dependência suspeita encontrada.')
 } else {
-  for (const pkg of likelyUnused.sort()) {
-    console.log(`  - ${pkg}`)
-  }
+  for (const pkg of likelyUnused.sort()) console.log(`  - ${pkg}`)
 }
 
-console.log('\nUsadas em código mas ausentes no package.json:')
+console.log('\nUsadas em código/config mas ausentes no package.json:')
 if (missingFromPackageJson.length === 0) {
   console.log('  Nenhuma ausência detectada.')
 } else {
-  for (const pkg of missingFromPackageJson.sort()) {
-    console.log(`  - ${pkg}`)
-  }
+  for (const pkg of missingFromPackageJson.sort()) console.log(`  - ${pkg}`)
 }
 
 console.log('\nObservação:')
-console.log('  Revise manualmente antes de remover dependências. Algumas podem ser usadas por plugins, scripts ou configuração externa.')
+console.log('  Revise manualmente antes de remover dependências. Este script ignora server/, android/, ios/, dist/ e lockfiles.')

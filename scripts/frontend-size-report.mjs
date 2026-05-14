@@ -6,33 +6,18 @@ import { fileURLToPath } from 'node:url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.resolve(__dirname, '..')
 
-const ignoredDirs = new Set([
-  'node_modules',
-  'dist',
-  'build',
-  '.git',
-  '.vite',
-  'coverage',
-])
-
-const extensions = new Set([
-  '.js',
-  '.jsx',
-  '.ts',
-  '.tsx',
-  '.css',
-  '.html',
-  '.json',
-])
+const ignoredDirs = new Set(['node_modules', 'dist', 'build', '.git', '.vite', 'coverage', 'server', 'android', 'ios'])
+const ignoredFiles = new Set(['package-lock.json', 'pnpm-lock.yaml', 'yarn.lock'])
+const extensions = new Set(['.js', '.jsx', '.ts', '.tsx', '.css', '.html', '.json'])
 
 async function walk(dir) {
   if (!existsSync(dir)) return []
-
   const entries = await readdir(dir, { withFileTypes: true })
   const files = []
 
   for (const entry of entries) {
     if (ignoredDirs.has(entry.name)) continue
+    if (ignoredFiles.has(entry.name)) continue
 
     const fullPath = path.join(dir, entry.name)
 
