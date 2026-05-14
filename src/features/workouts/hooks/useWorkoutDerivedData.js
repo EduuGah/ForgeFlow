@@ -30,7 +30,6 @@ function formatRecentExerciseDate(dateString) {
 export function useWorkoutDerivedData({
     exercises,
     history,
-    workoutTemplates,
     workouts,
     workoutExercises,
     quickSearch,
@@ -62,29 +61,6 @@ export function useWorkoutDerivedData({
         }
     }, [exercises])
 
-    const sortedWorkoutTemplates = useMemo(() => {
-        return workoutTemplates
-            .slice()
-            .sort((a, b) => {
-                if (a.isFavorite && !b.isFavorite) return -1
-                if (!a.isFavorite && b.isFavorite) return 1
-
-                return getComparableDateValue(b) - getComparableDateValue(a)
-            })
-    }, [workoutTemplates])
-
-    const hasEmptyDefaultTemplates = useMemo(() => {
-        return workoutTemplates.some((template) => {
-            return (
-                template.source === 'ForgeFlow' &&
-                (!template.exercises || template.exercises.length === 0)
-            )
-        })
-    }, [workoutTemplates])
-
-    const hasDefaultTemplates = useMemo(() => {
-        return workoutTemplates.some((template) => template.source === 'ForgeFlow')
-    }, [workoutTemplates])
 
     const recentExerciseMap = useMemo(() => {
         const map = new Map()
@@ -285,9 +261,6 @@ export function useWorkoutDerivedData({
 
     return {
         ...exerciseLibraryStats,
-        sortedWorkoutTemplates,
-        hasEmptyDefaultTemplates,
-        hasDefaultTemplates,
         sortedExercisesForSelect,
         filteredQuickExercises,
         visibleQuickExercises,

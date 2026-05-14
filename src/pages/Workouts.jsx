@@ -42,12 +42,7 @@ import {
     getWorkoutId,
     normalizeHistoryFromApi,
     normalizeWorkoutFromApi,
-    normalizeWorkoutTemplateFromApi,
 } from '../utils/workoutNormalizers'
-import {
-    buildSmartDefaultTemplatePayloads,
-    getSmartTemplateKind,
-} from '../features/workouts/smartTemplates'
 import {
     WorkoutsHeader,
     WorkoutStatsGrid,
@@ -61,7 +56,6 @@ function Workouts() {
     const [workouts, setWorkouts] = useState([])
     const [exercises, setExercises] = useState([])
     const [history, setHistory] = useState([])
-    const [workoutTemplates, setWorkoutTemplates] = useState([])
 
     const [quickSearch, setQuickSearch] = useState('')
     const [quickGroupFilter, setQuickGroupFilter] = useState('')
@@ -81,8 +75,6 @@ function Workouts() {
 
     const [expandedWorkoutId, setExpandedWorkoutId] = useState(null)
     const [editingWorkoutId, setEditingWorkoutId] = useState(null)
-    const [editingTemplateId, setEditingTemplateId] = useState(null)
-    const [builderMode, setBuilderMode] = useState('workout')
     const [isLoaded, setIsLoaded] = useState(false)
     const [isSyncingData, setIsSyncingData] = useState(false)
     const [isBuilderOpen, setIsBuilderOpen] = useState(false)
@@ -150,13 +142,6 @@ function Workouts() {
 
     const [showAllWorkouts, setShowAllWorkouts] = useState(false)
 
-    useEffect(() => {
-        const settings = getAppSettings()
-
-        setAppSettings(settings)
-        setDefaultSetModel(settings.defaultSetModel)
-        setIsWorkoutsListCollapsed(settings.collapseWorkoutsByDefault)
-    }, [])
 
     useEffect(() => {
         function handleSettingsChanged(event) {
@@ -185,7 +170,6 @@ function Workouts() {
             const cachedWorkouts = getUserStorageData(user, 'workouts', [])
             const cachedHistory = getUserStorageData(user, 'history', [])
             const savedExercises = getUserStorageData(user, 'exercises', null)
-            const cachedTemplates = getUserStorageData(user, 'workout-templates', [])
             const savedFolders = getUserStorageData(user, 'folders', [])
             const savedSetModels = getUserStorageData(user, 'set-models', [])
             const draft = getUserStorageData(user, 'workout-draft', null)
@@ -198,7 +182,6 @@ function Workouts() {
             setWorkouts(cachedWorkouts)
             setHistory(cachedHistory)
             setExercises(initialExercises)
-            setWorkoutTemplates(cachedTemplates)
             setFolders(savedFolders)
             setCustomSetModels(savedSetModels)
 
@@ -209,8 +192,6 @@ function Workouts() {
                 setExerciseSets(draft.exerciseSets || [])
                 setWorkoutExercises(draft.workoutExercises || [])
                 setEditingWorkoutId(draft.editingWorkoutId || null)
-                setEditingTemplateId(draft.editingTemplateId || null)
-                setBuilderMode(draft.builderMode || 'workout')
                 setSelectedFolderId(draft.selectedFolderId || null)
                 setDefaultSetModel(
                     draft.defaultSetModel || getAppSettings().defaultSetModel
@@ -220,11 +201,10 @@ function Workouts() {
             setIsLoaded(true)
             setIsSyncingData(true)
 
-            const [workoutsResult, exercisesResult, historyResult, templatesResult] = await Promise.allSettled([
+            const [workoutsResult, exercisesResult, historyResult] = await Promise.allSettled([
                 apiFetch('/workouts'),
                 apiFetch('/exercises'),
                 apiFetch('/workout-history'),
-                apiFetch('/workout-templates'),
             ])
 
             if (!isMounted) return
@@ -248,10 +228,6 @@ function Workouts() {
                     ? historyResult.value.map(normalizeHistoryFromApi)
                     : cachedHistory
 
-            const normalizedTemplates =
-                templatesResult.status === 'fulfilled' && Array.isArray(templatesResult.value)
-                    ? templatesResult.value.map(normalizeWorkoutTemplateFromApi)
-                    : cachedTemplates
 
             const mergedExercisesMap = new Map()
 
@@ -277,19 +253,16 @@ function Workouts() {
             setWorkouts(normalizedWorkouts)
             setHistory(normalizedHistory)
             setExercises(finalExercises)
-            setWorkoutTemplates(normalizedTemplates)
             setIsSyncingData(false)
 
             saveUserStorageData(user, 'workouts', normalizedWorkouts)
             saveUserStorageData(user, 'history', normalizedHistory)
             saveUserStorageData(user, 'exercises', finalExercises)
-            saveUserStorageData(user, 'workout-templates', normalizedTemplates)
 
             const allRequestsFailed = [
                 workoutsResult,
                 exercisesResult,
                 historyResult,
-                templatesResult,
             ].every((result) => result.status === 'rejected')
 
             if (allRequestsFailed) {
@@ -354,8 +327,6 @@ function Workouts() {
             exerciseSets,
             workoutExercises,
             editingWorkoutId,
-            editingTemplateId,
-            builderMode,
             selectedFolderId,
             defaultSetModel,
         }
@@ -368,8 +339,6 @@ function Workouts() {
         exerciseSets,
         workoutExercises,
         editingWorkoutId,
-        editingTemplateId,
-        builderMode,
         selectedFolderId,
         defaultSetModel,
         isLoaded,
@@ -396,11 +365,6 @@ function Workouts() {
         }
     }, [isBuilderOpen])
 
-    useEffect(() => {
-        if (!isLoaded || !user) return
-
-        saveUserStorageData(user, 'workout-templates', workoutTemplates)
-    }, [workoutTemplates, isLoaded, user])
 
     const {
         muscleGroups,
@@ -420,7 +384,6 @@ function Workouts() {
     } = useWorkoutDerivedData({
         exercises,
         history,
-        workoutTemplates,
         workouts,
         workoutExercises,
         quickSearch,
@@ -490,8 +453,6 @@ function Workouts() {
         setExerciseSets([])
         setWorkoutExercises([])
         setEditingWorkoutId(null)
-        setEditingTemplateId(null)
-        setBuilderMode('workout')
         setSelectedFolderId(null)
         setQuickSearch('')
         setQuickGroupFilter('')
@@ -503,7 +464,6 @@ function Workouts() {
 
     function openCreateBuilder() {
         resetForm()
-        setBuilderMode('workout')
         setIsBuilderOpen(true)
     }
 
@@ -712,18 +672,6 @@ function Workouts() {
         )
     }
 
-    function handleUpdateExerciseRest(id, value) {
-        setWorkoutExercises(
-            workoutExercises.map((item) =>
-                item.id === id
-                    ? {
-                        ...item,
-                        restTimer: value,
-                    }
-                    : item
-            )
-        )
-    }
 
     function handleAddSetToWorkoutExercise(id, type = 'working') {
         setWorkoutExercises(
@@ -801,10 +749,6 @@ function Workouts() {
     async function handleSubmit(event) {
         event.preventDefault()
 
-        if (builderMode === 'template') {
-            await handleSubmitTemplate()
-            return
-        }
 
         if (!workoutName.trim() || workoutExercises.length === 0) {
             showToast(
@@ -863,26 +807,10 @@ function Workouts() {
     }
 
     function handleEditWorkout(workout) {
-        setBuilderMode('workout')
-        setEditingTemplateId(null)
         setEditingWorkoutId(getWorkoutId(workout))
         setWorkoutName(workout.name)
         setWorkoutExercises(workout.exercises || [])
         setSelectedFolderId(workout.folderId || null)
-        setSelectedExercise('')
-        setSetDescription('')
-        setExerciseSets([])
-        setExpandedWorkoutId(null)
-        setIsBuilderOpen(true)
-    }
-
-    function handleEditTemplate(template) {
-        setBuilderMode('template')
-        setEditingTemplateId(template.id)
-        setEditingWorkoutId(null)
-        setWorkoutName(template.name || '')
-        setWorkoutExercises(template.exercises || [])
-        setSelectedFolderId(null)
         setSelectedExercise('')
         setSetDescription('')
         setExerciseSets([])
@@ -955,367 +883,6 @@ function Workouts() {
                 'error',
                 'Erro ao favoritar',
                 error.message || 'Não foi possível atualizar o favorito.'
-            )
-        }
-    }
-
-    async function handleSeedDefaultTemplates() {
-        try {
-            const result = await apiFetch('/workout-templates/seed-defaults', {
-                method: 'POST',
-            })
-
-            const templatesFromApi = Array.isArray(result?.templates)
-                ? result.templates.map(normalizeWorkoutTemplateFromApi)
-                : []
-
-            setWorkoutTemplates(templatesFromApi)
-            saveUserStorageData(user, 'workout-templates', templatesFromApi)
-
-            showToast(
-                'success',
-                'Templates criados',
-                result?.message || 'Templates padrão adicionados.'
-            )
-        } catch (error) {
-            console.error(error)
-
-            showToast(
-                'error',
-                'Erro ao criar templates',
-                error.message || 'Não foi possível criar os templates padrão.'
-            )
-        }
-    }
-
-
-    async function handleRebuildDefaultTemplates() {
-        const templatePayloads = buildSmartDefaultTemplatePayloads({
-            exercises,
-            defaultExercises,
-            appSettings,
-        })
-        const totalExercisesSuggested = templatePayloads.reduce(
-            (total, template) => total + template.exercises.length,
-            0
-        )
-
-        if (totalExercisesSuggested === 0) {
-            showToast(
-                'error',
-                'Biblioteca vazia',
-                'Importe ou cadastre exercícios antes de criar templates prontos.'
-            )
-            return
-        }
-
-        try {
-            for (const payload of templatePayloads) {
-                const existingTemplate = workoutTemplates.find((template) => {
-                    return (
-                        template.source === 'ForgeFlow' &&
-                        getSmartTemplateKind(template.name) === payload.kind
-                    )
-                })
-
-                const body = JSON.stringify({
-                    name: payload.name,
-                    description: payload.description,
-                    category: payload.category,
-                    goal: payload.goal,
-                    difficulty: payload.difficulty,
-                    estimatedDuration: payload.estimatedDuration,
-                    exercises: payload.exercises,
-                    source: 'ForgeFlow',
-                })
-
-                if (existingTemplate) {
-                    await apiFetch(`/workout-templates/${existingTemplate.id}`, {
-                        method: 'PUT',
-                        body,
-                    })
-                } else {
-                    await apiFetch('/workout-templates', {
-                        method: 'POST',
-                        body,
-                    })
-                }
-            }
-
-            const templatesFromApi = await apiFetch('/workout-templates')
-            const normalizedTemplates = Array.isArray(templatesFromApi)
-                ? templatesFromApi.map(normalizeWorkoutTemplateFromApi)
-                : []
-
-            setWorkoutTemplates(normalizedTemplates)
-            saveUserStorageData(user, 'workout-templates', normalizedTemplates)
-
-            showToast(
-                'success',
-                'Templates corrigidos',
-                'Os 6 templates padrão foram recriados com exercícios sugeridos.'
-            )
-        } catch (error) {
-            console.error(error)
-
-            showToast(
-                'error',
-                'Erro ao corrigir templates',
-                error.message || 'Não foi possível recriar os templates padrão.'
-            )
-        }
-    }
-
-    async function handleCreateWorkoutFromTemplate(template) {
-        if (!template.exercises || template.exercises.length === 0) {
-            showToast(
-                'error',
-                'Template vazio',
-                'Esse template ainda não possui exercícios. Edite ou crie um template com exercícios primeiro.'
-            )
-
-            return
-        }
-
-        try {
-            const createdWorkoutFromApi = await apiFetch(
-                `/workout-templates/${template.id}/create-workout`,
-                {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        name: template.name,
-                        folderId: selectedFolderId || null,
-                    }),
-                }
-            )
-
-            const createdWorkout = normalizeWorkoutFromApi(createdWorkoutFromApi)
-
-            setWorkouts([createdWorkout, ...workouts])
-
-            showToast(
-                'success',
-                'Treino criado',
-                `O template "${template.name}" virou um treino.`
-            )
-        } catch (error) {
-            console.error(error)
-
-            showToast(
-                'error',
-                'Erro ao usar template',
-                error.message || 'Não foi possível criar um treino a partir do template.'
-            )
-        }
-    }
-
-    async function handleToggleTemplateFavorite(template) {
-        try {
-            const updatedTemplateFromApi = await apiFetch(
-                `/workout-templates/${template.id}/favorite`,
-                {
-                    method: 'PATCH',
-                }
-            )
-
-            const updatedTemplate = normalizeWorkoutTemplateFromApi(updatedTemplateFromApi)
-
-            setWorkoutTemplates(
-                workoutTemplates.map((item) =>
-                    item.id === template.id ? updatedTemplate : item
-                )
-            )
-
-            showToast(
-                'success',
-                updatedTemplate.isFavorite ? 'Template favoritado' : 'Favorito removido',
-                updatedTemplate.isFavorite
-                    ? 'O template foi marcado como favorito.'
-                    : 'O template saiu dos favoritos.'
-            )
-        } catch (error) {
-            console.error(error)
-
-            showToast(
-                'error',
-                'Erro ao favoritar',
-                error.message || 'Não foi possível atualizar o template.'
-            )
-        }
-    }
-
-    async function handleDeleteTemplate(templateId) {
-        const template = workoutTemplates.find((item) => item.id === templateId)
-
-        setConfirmModal({
-            title: 'Excluir template?',
-            description: `O template "${template?.name || 'selecionado'}" será removido.`,
-            confirmText: 'Excluir',
-            variant: 'danger',
-            onConfirm: async () => {
-                try {
-                    await apiFetch(`/workout-templates/${templateId}`, {
-                        method: 'DELETE',
-                    })
-
-                    setWorkoutTemplates(
-                        workoutTemplates.filter((item) => item.id !== templateId)
-                    )
-
-                    setConfirmModal(null)
-
-                    showToast(
-                        'success',
-                        'Template excluído',
-                        'O template foi removido com sucesso.'
-                    )
-                } catch (error) {
-                    console.error(error)
-
-                    showToast(
-                        'error',
-                        'Erro ao excluir',
-                        error.message || 'Não foi possível excluir o template.'
-                    )
-                }
-            },
-        })
-    }
-
-    async function handleSubmitTemplate() {
-        if (!workoutName.trim() || workoutExercises.length === 0) {
-            showToast(
-                'error',
-                'Template incompleto',
-                'Informe o nome do template e adicione pelo menos um exercício.'
-            )
-            return
-        }
-
-        try {
-            if (editingTemplateId) {
-                const currentTemplate = workoutTemplates.find(
-                    (item) => item.id === editingTemplateId
-                )
-
-                const updatedTemplateFromApi = await apiFetch(
-                    `/workout-templates/${editingTemplateId}`,
-                    {
-                        method: 'PUT',
-                        body: JSON.stringify({
-                            name: workoutName.trim(),
-                            description: currentTemplate?.description || '',
-                            category: currentTemplate?.category || 'Personalizado',
-                            goal: currentTemplate?.goal || '',
-                            difficulty: currentTemplate?.difficulty || '',
-                            estimatedDuration: currentTemplate?.estimatedDuration || null,
-                            exercises: workoutExercises,
-                            source: currentTemplate?.source || 'User',
-                        }),
-                    }
-                )
-
-                const updatedTemplate =
-                    normalizeWorkoutTemplateFromApi(updatedTemplateFromApi)
-
-                setWorkoutTemplates(
-                    workoutTemplates.map((item) =>
-                        item.id === editingTemplateId ? updatedTemplate : item
-                    )
-                )
-
-                resetForm()
-                setIsBuilderOpen(false)
-
-                showToast(
-                    'success',
-                    'Template atualizado',
-                    'As alterações foram salvas no template.'
-                )
-
-                return
-            }
-
-            const createdTemplateFromApi = await apiFetch('/workout-templates', {
-                method: 'POST',
-                body: JSON.stringify({
-                    name: workoutName.trim(),
-                    description: '',
-                    category: 'Personalizado',
-                    goal: '',
-                    difficulty: '',
-                    estimatedDuration: null,
-                    exercises: workoutExercises,
-                    source: 'User',
-                }),
-            })
-
-            const createdTemplate =
-                normalizeWorkoutTemplateFromApi(createdTemplateFromApi)
-
-            setWorkoutTemplates([createdTemplate, ...workoutTemplates])
-
-            resetForm()
-            setIsBuilderOpen(false)
-
-            showToast(
-                'success',
-                'Template criado',
-                'O template foi salvo com sucesso.'
-            )
-        } catch (error) {
-            console.error(error)
-
-            showToast(
-                'error',
-                'Erro ao salvar template',
-                error.message || 'Não foi possível salvar o template.'
-            )
-        }
-    }
-
-    async function handleSaveCurrentWorkoutAsTemplate() {
-        if (!workoutName.trim() || workoutExercises.length === 0) {
-            showToast(
-                'error',
-                'Template incompleto',
-                'Informe o nome do treino e adicione pelo menos um exercício.'
-            )
-            return
-        }
-
-        try {
-            const createdTemplateFromApi = await apiFetch('/workout-templates', {
-                method: 'POST',
-                body: JSON.stringify({
-                    name: workoutName.trim(),
-                    description: '',
-                    category: 'Personalizado',
-                    goal: '',
-                    difficulty: '',
-                    estimatedDuration: null,
-                    exercises: workoutExercises,
-                    source: 'User',
-                }),
-            })
-
-            const createdTemplate =
-                normalizeWorkoutTemplateFromApi(createdTemplateFromApi)
-
-            setWorkoutTemplates([createdTemplate, ...workoutTemplates])
-
-            showToast(
-                'success',
-                'Template salvo',
-                'Esse treino agora também está salvo como template.'
-            )
-        } catch (error) {
-            console.error(error)
-
-            showToast(
-                'error',
-                'Erro ao salvar template',
-                error.message || 'Não foi possível salvar o template.'
             )
         }
     }
@@ -1753,45 +1320,23 @@ function Workouts() {
                                         <div className="min-w-0">
                                             <p className="text-xs font-bold uppercase tracking-wide text-[var(--ff-accent-text)]
 ">
-                                                {builderMode === 'template'
-                                                    ? editingTemplateId
-                                                        ? 'Editar template'
-                                                        : 'Novo template'
-                                                    : editingWorkoutId
-                                                        ? 'Editar rotina'
-                                                        : 'Nova rotina'}
+                                                {editingWorkoutId ? 'Editar rotina' : 'Nova rotina'}
                                             </p>
 
                                             <h1 className="truncate text-2xl font-black sm:text-3xl">
-                                                {builderMode === 'template'
-                                                    ? editingTemplateId
-                                                        ? 'Editar template'
-                                                        : 'Criar template'
-                                                    : editingWorkoutId
-                                                        ? 'Editar treino'
-                                                        : 'Criar treino'}
+                                                {editingWorkoutId ? 'Editar treino' : 'Criar treino'}
                                             </h1>
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center">
-                                        {builderMode === 'workout' && (
-                                            <button
-                                                type="button"
-                                                onClick={handleSaveCurrentWorkoutAsTemplate}
-                                                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 px-5 text-sm font-bold text-yellow-300 transition hover:bg-yellow-500/20 sm:w-auto"
-                                            >
-                                                <Star size={18} />
-                                                Salvar template
-                                            </button>
-                                        )}
 
                                         <button
                                             type="submit"
                                             className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-bold text-white transition hover:bg-[var(--ff-accent-hover)] sm:w-auto"
                                         >
                                             <Save size={18} />
-                                            {builderMode === 'template' ? 'Salvar template' : 'Salvar treino'}
+                                            Salvar treino
                                         </button>
                                     </div>
                                 </div>
@@ -1802,14 +1347,13 @@ function Workouts() {
                                     <Card>
                                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                             <Input
-                                                label={builderMode === 'template' ? 'Título do template' : 'Título do treino'}
-                                                placeholder={builderMode === 'template' ? 'Ex: Push, Pull, Upper...' : 'Ex: Push A, Costas pesado...'}
+                                                label="Título do treino"
+                                                placeholder="Ex: Push A, Costas pesado..."
                                                 value={workoutName}
                                                 onChange={(event) => setWorkoutName(event.target.value)}
                                             />
 
-                                            {builderMode === 'workout' ? (
-                                                <div>
+                                            <div>
                                                     <div className="mb-2 flex items-center justify-between gap-3">
                                                         <label className="block text-sm font-bold text-zinc-300">
                                                             Pasta
@@ -1839,18 +1383,7 @@ function Workouts() {
                                                             </option>
                                                         ))}
                                                     </select>
-                                                </div>
-                                            ) : (
-                                                <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4">
-                                                    <p className="text-sm font-bold text-yellow-300">
-                                                        Editando template
-                                                    </p>
-
-                                                    <p className="mt-1 text-xs text-yellow-100/70">
-                                                        Templates não usam pasta. Adicione os exercícios e salve o modelo.
-                                                    </p>
-                                                </div>
-                                            )}
+                                            </div>
                                         </div>
                                     </Card>
 
@@ -2399,7 +1932,7 @@ function Workouts() {
                                         className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-black text-white shadow-[0_0_20px_var(--ff-accent-shadow)] transition active:scale-[0.98]"
                                     >
                                         <Save size={18} />
-                                        {builderMode === 'template' ? 'Salvar template' : 'Salvar treino'}
+                                        Salvar treino
                                     </button>
                                 </div>
                             </div>
