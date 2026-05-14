@@ -32,6 +32,7 @@ import {
     getUserStorageData,
     saveUserStorageData,
     removeUserStorageData,
+    migrateLegacyUserStorageData,
 } from '../utils/userStorage'
 import {
     getWorkoutId,
@@ -66,9 +67,7 @@ function Workouts() {
     const [setDescription, setSetDescription] = useState('')
     const [exerciseSets, setExerciseSets] = useState([])
     const [workoutExercises, setWorkoutExercises] = useState([])
-    const [isWorkoutsListCollapsed, setIsWorkoutsListCollapsed] = useState(
-        getAppSettings().collapseWorkoutsByDefault
-    )
+    const [isWorkoutsListCollapsed, setIsWorkoutsListCollapsed] = useState(false)
 
     const [expandedWorkoutId, setExpandedWorkoutId] = useState(null)
     const [editingWorkoutId, setEditingWorkoutId] = useState(null)
@@ -137,6 +136,35 @@ function Workouts() {
         }
     }
 
+    function mergeWorkoutsFromCacheAndApi(cachedList = [], apiList = []) {
+        const cachedWorkouts = Array.isArray(cachedList) ? cachedList : []
+        const apiWorkouts = Array.isArray(apiList) ? apiList : []
+
+        if (apiWorkouts.length === 0) return cachedWorkouts
+        if (cachedWorkouts.length === 0) return apiWorkouts
+
+        const map = new Map()
+
+        cachedWorkouts.forEach((workout) => {
+            const workoutId = getWorkoutId(workout)
+            if (!workoutId) return
+            map.set(String(workoutId), workout)
+        })
+
+        apiWorkouts.forEach((workout) => {
+            const workoutId = getWorkoutId(workout)
+            if (!workoutId) return
+            map.set(String(workoutId), workout)
+        })
+
+        return Array.from(map.values()).sort((a, b) => {
+            const aDate = new Date(a.updatedAt || a.createdAt || 0).getTime()
+            const bDate = new Date(b.updatedAt || b.createdAt || 0).getTime()
+
+            return (Number.isNaN(bDate) ? 0 : bDate) - (Number.isNaN(aDate) ? 0 : aDate)
+        })
+    }
+
     const [showAllWorkouts, setShowAllWorkouts] = useState(false)
 
 
@@ -164,11 +192,11 @@ function Workouts() {
         async function loadWorkoutsData() {
             setIsLoaded(false)
 
-            const cachedWorkouts = getUserStorageData(user, 'workouts', [])
-            const cachedHistory = getUserStorageData(user, 'history', [])
-            const savedExercises = getUserStorageData(user, 'exercises', null)
-            const savedFolders = getUserStorageData(user, 'folders', [])
-            const savedSetModels = getUserStorageData(user, 'set-models', [])
+            const cachedWorkouts = migrateLegacyUserStorageData(user, 'workouts', [])
+            const cachedHistory = migrateLegacyUserStorageData(user, 'history', [])
+            const savedExercises = migrateLegacyUserStorageData(user, 'exercises', null)
+            const savedFolders = migrateLegacyUserStorageData(user, 'folders', [])
+            const savedSetModels = migrateLegacyUserStorageData(user, 'set-models', [])
             const draft = getUserStorageData(user, 'workout-draft', null)
 
             const initialExercises =
@@ -206,10 +234,15 @@ function Workouts() {
 
             if (!isMounted) return
 
-            const normalizedWorkouts =
+            const apiWorkouts =
                 workoutsResult.status === 'fulfilled' && Array.isArray(workoutsResult.value)
                     ? workoutsResult.value.map(normalizeWorkoutFromApi)
-                    : cachedWorkouts
+                    : []
+
+            const normalizedWorkouts = mergeWorkoutsFromCacheAndApi(
+                cachedWorkouts,
+                apiWorkouts
+            )
 
             const normalizedExercises =
                 exercisesResult.status === 'fulfilled' && Array.isArray(exercisesResult.value)
@@ -391,7 +424,6 @@ function Workouts() {
         showAllWorkouts,
         workoutsVisibleLimit: appSettings.workoutsVisibleLimit,
     })
-
     function showToast(type, title, message = '') {
         setToast({
             type,
