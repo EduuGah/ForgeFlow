@@ -1,4 +1,4 @@
-import { Plus, Sparkles } from 'lucide-react'
+import { Plus } from 'lucide-react'
 
 import PageHeader from '../../../components/ui/PageHeader'
 import Card from '../../../components/ui/Card'
@@ -35,10 +35,9 @@ export function WorkoutStatsGrid({
     workoutsCount,
     exercisesCount,
     totalExercisesInSavedWorkouts,
-    templatesCount,
 }) {
     return (
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Card className="p-4">
                 <p className="text-sm text-zinc-500">Treinos salvos</p>
                 <h3 className="mt-2 text-3xl font-bold">{workoutsCount}</h3>
@@ -58,108 +57,6 @@ export function WorkoutStatsGrid({
                 </h3>
                 <p className="mt-2 text-xs text-[var(--ff-accent-text)]">Exercícios usados</p>
             </Card>
-
-            <Card className="p-4">
-                <p className="text-sm text-zinc-500">Templates</p>
-                <h3 className="mt-2 text-3xl font-bold text-yellow-300">{templatesCount}</h3>
-                <p className="mt-2 text-xs text-[var(--ff-accent-text)]">modelos salvos</p>
-            </Card>
-        </section>
-    )
-}
-
-export function WorkoutTemplatesPreview({
-    workoutTemplates,
-    onCreateTemplate,
-    onCreateWorkoutFromTemplate,
-    onEditTemplate,
-}) {
-    if (workoutTemplates.length === 0) return null
-
-    const highlightedTemplates = workoutTemplates
-        .slice()
-        .sort((a, b) => Number(Boolean(b.isFavorite)) - Number(Boolean(a.isFavorite)))
-        .slice(0, 3)
-
-    return (
-        <section className="mt-5 rounded-3xl border border-[var(--ff-border)] bg-[linear-gradient(180deg,var(--ff-card),var(--ff-surface-2))] p-4 shadow-xl shadow-black/10">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--ff-accent-text)]">
-                        Templates avançados
-                    </p>
-                    <h2 className="mt-1 text-xl font-black text-[var(--ff-text)]">
-                        Comece por um modelo pronto
-                    </h2>
-                    <p className="mt-1 text-sm text-[var(--ff-muted)]">
-                        Use favoritos ou modelos recentes para criar uma rotina sem começar do zero.
-                    </p>
-                </div>
-
-                <button
-                    type="button"
-                    onClick={onCreateTemplate}
-                    className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-sm font-black text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)]"
-                >
-                    <Sparkles size={16} />
-                    Novo template
-                </button>
-            </div>
-
-            <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {highlightedTemplates.map((template) => (
-                    <div
-                        key={template.id}
-                        className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4"
-                    >
-                        <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                                <h3 className="truncate text-base font-black text-[var(--ff-text)]">
-                                    {template.name}
-                                </h3>
-                                <p className="mt-1 text-xs text-[var(--ff-muted)]">
-                                    {(template.exercises || []).length} exercícios
-                                </p>
-                            </div>
-
-                            {template.isFavorite && (
-                                <span className="rounded-full border border-yellow-400/30 bg-yellow-500/10 px-2 py-1 text-[10px] font-black uppercase text-yellow-200">
-                                    Favorito
-                                </span>
-                            )}
-                        </div>
-
-                        <div className="mt-3 flex flex-wrap gap-2">
-                            {(template.exercises || []).slice(0, 3).map((item, index) => (
-                                <span
-                                    key={`${template.id}-${index}`}
-                                    className="rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-2.5 py-1 text-[10px] font-bold text-[var(--ff-muted)]"
-                                >
-                                    {item.exercise?.name || item.name || `Exercício ${index + 1}`}
-                                </span>
-                            ))}
-                        </div>
-
-                        <div className="mt-4 grid grid-cols-2 gap-2">
-                            <button
-                                type="button"
-                                onClick={() => onCreateWorkoutFromTemplate(template)}
-                                className="h-10 rounded-2xl bg-[var(--ff-accent)] text-xs font-black text-white shadow-[0_0_16px_var(--ff-accent-shadow)]"
-                            >
-                                Usar
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={() => onEditTemplate(template)}
-                                className="h-10 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-xs font-black text-[var(--ff-text-soft)]"
-                            >
-                                Editar
-                            </button>
-                        </div>
-                    </div>
-                ))}
-            </div>
         </section>
     )
 }

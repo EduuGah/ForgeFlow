@@ -51,7 +51,6 @@ import {
 import {
     WorkoutsHeader,
     WorkoutStatsGrid,
-    WorkoutTemplatesPreview,
     WorkoutFolderFilter,
 } from '../features/workouts/components/WorkoutsOverview'
 import { useWorkoutDerivedData } from '../features/workouts/hooks/useWorkoutDerivedData'
@@ -408,9 +407,6 @@ function Workouts() {
         equipmentList,
         favoriteExercisesCount,
         hasImportedLibrary,
-        sortedWorkoutTemplates,
-        hasEmptyDefaultTemplates,
-        hasDefaultTemplates,
         sortedExercisesForSelect,
         filteredQuickExercises,
         visibleQuickExercises,
@@ -1384,21 +1380,6 @@ function Workouts() {
                 workoutsCount={workouts.length}
                 exercisesCount={exercises.length}
                 totalExercisesInSavedWorkouts={totalExercisesInSavedWorkouts}
-                templatesCount={workoutTemplates.length}
-            />
-
-            <WorkoutTemplatesPreview
-                workoutTemplates={workoutTemplates}
-                onCreateTemplate={() => {
-                    setBuilderMode('template')
-                    setEditingTemplateId(null)
-                    setEditingWorkoutId(null)
-                    setWorkoutName('')
-                    setWorkoutExercises([])
-                    setIsBuilderOpen(true)
-                }}
-                onCreateWorkoutFromTemplate={handleCreateWorkoutFromTemplate}
-                onEditTemplate={handleEditTemplate}
             />
 
             <WorkoutFolderFilter
@@ -1742,186 +1723,6 @@ function Workouts() {
                 </div>
             </section>
 
-
-            <section className="mt-6">
-                <Card>
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                        <div>
-                            <h2 className="text-2xl font-black">
-                                Templates de treino
-                            </h2>
-
-                            <p className="mt-1 text-sm text-zinc-500">
-                                Use modelos prontos para criar treinos mais rápido.
-                            </p>
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-2">
-                            <Badge>
-                                {workoutTemplates.length} template(s)
-                            </Badge>
-
-                            <Button variant="secondary" onClick={handleRebuildDefaultTemplates}>
-                                Recriar padrões
-                            </Button>
-                        </div>
-                    </div>
-
-                    {(hasEmptyDefaultTemplates || !hasDefaultTemplates) && (
-                        <div className="mt-5 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4">
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                <div>
-                                    <p className="text-sm font-bold text-yellow-300">
-                                        Templates padrão precisam ser corrigidos
-                                    </p>
-
-                                    <p className="mt-1 text-xs text-yellow-100/70">
-                                        Use esta opção para criar ou recriar os 6 modelos padrão já com exercícios sugeridos. Ela corrige templates vazios ou incompletos.
-                                    </p>
-                                </div>
-
-                                <Button onClick={handleRebuildDefaultTemplates}>
-                                    Corrigir templates padrão
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-
-
-                    <div className="mt-5">
-                        {sortedWorkoutTemplates.length === 0 ? (
-                            <EmptyState
-                                title="Nenhum template salvo"
-                                description="Crie templates próprios ou gere alguns modelos padrão do ForgeFlow."
-                                action={
-                                    <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center sm:justify-center">
-                                        <Button onClick={handleRebuildDefaultTemplates}>
-                                            Criar templates prontos
-                                        </Button>
-
-                                        <Button variant="secondary" onClick={openCreateBuilder}>
-                                            Criar treino
-                                        </Button>
-                                    </div>
-                                }
-                            />
-                        ) : (
-                            <div className="grid max-h-[760px] grid-cols-1 gap-3 overflow-y-auto pr-1 lg:grid-cols-2">
-                                {sortedWorkoutTemplates.map((template) => (
-                                    <div
-                                        key={template.id}
-                                        className="rounded-3xl border border-zinc-800 bg-[#18181b] p-4 transition hover:border-[var(--ff-accent-border)]/40 hover:bg-[#1f1f23]"
-                                    >
-                                        <div className="flex items-start justify-between gap-3">
-                                            <div className="min-w-0">
-                                                <div className="flex flex-wrap items-center gap-2">
-                                                    <h3 className="line-clamp-2 text-lg font-black text-white">
-                                                        {template.name}
-                                                    </h3>
-
-                                                    {template.isFavorite && (
-                                                        <Badge>
-                                                            ⭐ Favorito
-                                                        </Badge>
-                                                    )}
-                                                </div>
-
-                                                <p className="mt-2 text-sm text-zinc-500">
-                                                    {template.category || 'Personalizado'} •{' '}
-                                                    {template.exercises.length > 0
-                                                        ? `${template.exercises.length} exercício(s)`
-                                                        : 'sem exercícios'}
-                                                </p>
-                                            </div>
-
-                                            <button
-                                                type="button"
-                                                onClick={() => handleToggleTemplateFavorite(template)}
-                                                title={
-                                                    template.isFavorite
-                                                        ? 'Remover dos favoritos'
-                                                        : 'Adicionar aos favoritos'
-                                                }
-                                                className={
-                                                    template.isFavorite
-                                                        ? 'flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-yellow-500/30 bg-yellow-500/10 text-yellow-300 transition hover:bg-yellow-500/20'
-                                                        : 'flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-950 text-zinc-500 transition hover:border-yellow-500/30 hover:bg-yellow-500/10 hover:text-yellow-300'
-                                                }
-                                            >
-                                                <Star
-                                                    size={18}
-                                                    fill={template.isFavorite ? 'currentColor' : 'none'}
-                                                />
-                                            </button>
-                                        </div>
-
-                                        {template.description && (
-                                            <p className="mt-3 line-clamp-2 text-sm text-zinc-500">
-                                                {template.description}
-                                            </p>
-                                        )}
-
-                                        <div className="mt-4 flex flex-wrap gap-2">
-                                            {template.goal && (
-                                                <Badge variant="purple">
-                                                    {template.goal}
-                                                </Badge>
-                                            )}
-
-                                            {template.difficulty && (
-                                                <Badge>
-                                                    {template.difficulty}
-                                                </Badge>
-                                            )}
-
-                                            {template.source === 'ForgeFlow' && (
-                                                <Badge>
-                                                    ForgeFlow
-                                                </Badge>
-                                            )}
-                                        </div>
-
-                                        {template.exercises.length === 0 && (
-                                            <p className="mt-3 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-3 text-xs font-bold text-yellow-300">
-                                                Template vazio ou incompleto. Use "Corrigir templates padrão" para preencher automaticamente.
-                                            </p>
-                                        )}
-
-                                        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                                            <button
-                                                type="button"
-                                                onClick={() => handleCreateWorkoutFromTemplate(template)}
-                                                className="flex h-11 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] text-sm font-bold text-white transition hover:bg-[var(--ff-accent-hover)]"
-                                            >
-                                                <Plus size={17} />
-                                                Usar
-                                            </button>
-
-                                            <button
-                                                type="button"
-                                                onClick={() => handleEditTemplate(template)}
-                                                className="flex h-11 items-center justify-center gap-2 rounded-2xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 text-sm font-bold text-[var(--ff-accent-text)] transition hover:bg-[var(--ff-accent-soft)]/20"
-                                            >
-                                                <Edit3 size={17} />
-                                                Editar
-                                            </button>
-
-                                            <button
-                                                type="button"
-                                                onClick={() => handleDeleteTemplate(template.id)}
-                                                className="flex h-11 items-center justify-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 text-sm font-bold text-red-300 transition hover:bg-red-500/20"
-                                            >
-                                                <Trash2 size={17} />
-                                                Excluir
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                </Card>
-            </section>
 
             {!isBuilderOpen && (
                 <button
