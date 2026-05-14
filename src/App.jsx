@@ -33,6 +33,9 @@ const Register = lazy(() => import('./pages/Register'))
 const AuthCallback = lazy(() => import('./pages/AuthCallback'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
 const ResetPassword = lazy(() => import('./pages/ResetPassword'))
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'))
+const DeleteAccountInfo = lazy(() => import('./pages/DeleteAccountInfo'))
+const DataSafety = lazy(() => import('./pages/DataSafety'))
 
 function AppLoadingFallback() {
   return (
@@ -92,6 +95,11 @@ function App() {
                   </PublicRoute>
                 }
               />
+
+
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/delete-account" element={<DeleteAccountInfo />} />
+              <Route path="/data-safety" element={<DataSafety />} />
 
               <Route
                 path="/complete-profile"

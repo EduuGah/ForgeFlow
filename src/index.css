@@ -2473,3 +2473,9 @@ main {
 .ff-admin-v48 .admin-pagination-controls button:disabled {
   opacity: 0.5;
 }
+
+
+/* Etapa 54 — páginas públicas legais */
+.legal-document p {
+  margin: 0;
+}

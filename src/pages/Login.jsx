@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { apiFetch, saveAuthToken, setCsrfToken } from '../services/api'
+import { apiFetch, saveAuthToken } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import forgeflowIcon from '../assets/forgeflow-icon.png'
 import { applyAppSettingsToDocument, getAppSettings } from '../utils/settingsUtils'
@@ -60,7 +60,6 @@ function Login() {
             })
 
             saveAuthToken(data.token)
-            setCsrfToken(data.csrfToken)
             setUser(data.user)
 
             if (!data.user?.profileCompleted) {
@@ -158,6 +157,18 @@ function Login() {
                         {loading ? 'Entrando...' : 'Entrar'}
                     </button>
                 </form>
+
+          <div className="mt-5 flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs font-bold text-[var(--ff-muted)]">
+            <Link to="/privacy" className="transition hover:text-[var(--ff-accent-text)]">
+              Privacidade
+            </Link>
+            <Link to="/delete-account" className="transition hover:text-[var(--ff-accent-text)]">
+              Excluir conta
+            </Link>
+            <Link to="/data-safety" className="transition hover:text-[var(--ff-accent-text)]">
+              Data Safety
+            </Link>
+          </div>
 
                 <div className="my-6 flex items-center gap-3">
                     <div className="h-px flex-1 bg-[var(--ff-border)]" />

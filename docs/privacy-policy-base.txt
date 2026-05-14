@@ -1,0 +1,74 @@
+Política de Privacidade do ForgeFlow
+
+Última atualização: 13/05/2026
+
+O ForgeFlow é um aplicativo de acompanhamento de treinos, exercícios, histórico, progresso e metas. Esta política explica, de forma simples, quais dados podem ser tratados pelo aplicativo e como eles são usados.
+
+1. Dados que podem ser coletados
+
+O ForgeFlow pode armazenar dados fornecidos pelo próprio usuário, como:
+
+- nome;
+- e-mail;
+- senha criptografada, quando a conta é criada com e-mail e senha;
+- foto/avatar, se o usuário enviar;
+- perfil de treino;
+- treinos criados;
+- exercícios cadastrados;
+- séries, cargas, repetições, notas e histórico;
+- metas;
+- notificações internas;
+- fotos de progresso, se o usuário decidir enviar;
+- informações de login, como data do último acesso e método de autenticação;
+- dados técnicos básicos necessários para segurança e funcionamento do serviço.
+
+2. Como os dados são usados
+
+Os dados são usados para:
+
+- permitir login e uso da conta;
+- salvar treinos e histórico;
+- calcular progresso, volume, séries e recordes pessoais;
+- exibir gráficos, rankings e estatísticas;
+- permitir recuperação de senha;
+- melhorar segurança;
+- permitir administração e suporte do serviço;
+- manter o funcionamento do aplicativo.
+
+3. Fotos de progresso
+
+As fotos de progresso são opcionais. O usuário só envia se quiser. Elas podem ser usadas dentro do próprio aplicativo para acompanhamento visual da evolução.
+
+4. Compartilhamento de dados
+
+O ForgeFlow não vende dados pessoais.
+
+Dados podem ser processados por serviços necessários ao funcionamento do aplicativo, como hospedagem, banco de dados, autenticação, armazenamento de imagens e envio de e-mails, quando configurado.
+
+5. Segurança
+
+O ForgeFlow usa medidas técnicas para proteger os dados, como senha criptografada, autenticação, controles administrativos e validações no backend. Nenhum sistema é completamente imune a falhas, mas o projeto busca reduzir riscos e proteger as informações dos usuários.
+
+6. Exclusão de conta
+
+O usuário pode solicitar ou realizar a exclusão da conta. Ao excluir a conta, os dados principais associados ao usuário são removidos ou desvinculados conforme as regras técnicas do sistema.
+
+A página pública com instruções de exclusão está disponível em:
+
+/delete-account
+
+7. Retenção de dados
+
+Os dados são mantidos enquanto a conta existir ou enquanto forem necessários para funcionamento, segurança, auditoria e cumprimento de obrigações aplicáveis.
+
+8. Crianças
+
+O ForgeFlow não é direcionado especificamente a crianças. Caso seja necessário adequar o app a faixas etárias específicas na Play Store, a configuração deve ser feita de acordo com o público real do aplicativo.
+
+9. Alterações nesta política
+
+Esta política pode ser atualizada conforme o aplicativo evoluir. A data da última atualização será alterada quando houver mudanças relevantes.
+
+10. Contato
+
+Para dúvidas sobre privacidade, dados ou exclusão de conta, entre em contato pelo e-mail de suporte definido pelo responsável do aplicativo.

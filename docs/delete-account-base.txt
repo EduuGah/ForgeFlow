@@ -1,0 +1,35 @@
+Exclusão de Conta — ForgeFlow
+
+Última atualização: 13/05/2026
+
+O ForgeFlow permite que o usuário exclua sua conta e dados associados.
+
+Como excluir pelo aplicativo:
+
+1. Entre na sua conta.
+2. Acesse Configurações.
+3. Procure a área de conta, privacidade ou zona de perigo.
+4. Escolha Excluir conta.
+5. Confirme a ação solicitada pelo aplicativo.
+
+O que pode ser removido:
+
+- dados da conta;
+- treinos;
+- exercícios criados pelo usuário;
+- histórico de treinos;
+- metas;
+- notificações;
+- fotos de progresso;
+- dados de sessão ativa;
+- configurações vinculadas à conta.
+
+Observações importantes:
+
+- A exclusão pode ser irreversível.
+- Alguns dados técnicos mínimos podem ser mantidos temporariamente para segurança, auditoria ou exigências legais.
+- Se você não conseguir acessar sua conta, entre em contato com o suporte informando o e-mail cadastrado.
+
+Contato:
+
+Use o canal de suporte ou e-mail oficial definido pelo responsável do ForgeFlow.
