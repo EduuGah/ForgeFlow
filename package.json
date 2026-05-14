@@ -8,15 +8,15 @@
     "build": "vite build",
     "import:exercisedb": "node scripts/importExerciseDb.js",
     "import:exercisedgifs": "node scripts/downloadExerciseGifs.js",
+    "deps:audit": "node scripts/frontend-dependency-audit.mjs",
+    "size:report": "node scripts/frontend-size-report.mjs",
+    "check:frontend": "npm run deps:audit && npm run size:report",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.4",
-    "axios": "^1.15.2",
-    "dotenv": "^17.4.2",
     "lucide-react": "^1.14.0",
-    "nodemailer": "^8.0.7",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-router-dom": "^7.14.2",
