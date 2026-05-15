@@ -1,27 +1,5 @@
 import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  Archive,
-  Bell,
-  BellRing,
-  CheckCheck,
-  Clock3,
-  Eye,
-  EyeOff,
-  Info,
-  RefreshCcw,
-  Search,
-  Trash2,
-  X,
-} from 'lucide-react'
-
-import PageHeader from '../components/ui/PageHeader'
-import Card from '../components/ui/Card'
-import Badge from '../components/ui/Badge'
-import Button from '../components/ui/Button'
-import EmptyState from '../components/ui/EmptyState'
-import ConfirmModal from '../components/ui/ConfirmModal'
-import Toast from '../components/ui/Toast'
 
 import { useAuth } from '../context/AuthContext'
 import { apiFetch } from '../services/api'
@@ -32,15 +10,8 @@ import {
   saveUserStorageData,
 } from '../utils/userStorage'
 
-import {
-  formatDateTime,
-  getNotificationMeta,
-  normalizeNotificationFromApi,
-} from '../features/notifications/notificationUtils'
-import {
-  NotificationDetailModal,
-  NotificationStatusPill,
-} from '../features/notifications/components/NotificationComponents'
+import { normalizeNotificationFromApi } from '../features/notifications/notificationUtils'
+import NotificationsPageSections from '../features/notifications/components/NotificationsPageSections'
 
 function Notifications() {
   const { user } = useAuth()
@@ -431,275 +402,33 @@ function Notifications() {
   }
 
   return (
-    <>
-      <PageHeader
-        title="Notificações"
-        description="Acompanhe alertas inteligentes sobre treino, metas, peso e evolução."
-        action={
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant={source === 'database' ? 'purple' : 'default'}>
-              {loading ? 'Carregando...' : source === 'database' ? 'Sincronizado' : 'Local'}
-            </Badge>
-
-            <Button type="button" variant="secondary" onClick={() => loadNotifications()}>
-              <RefreshCcw size={16} />
-              Atualizar
-            </Button>
-
-            <Button type="button" onClick={handleGenerateNotifications}>
-              <BellRing size={16} />
-              Verificar agora
-            </Button>
-          </div>
-        }
-      />
-
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-[var(--ff-muted)]">Não lidas</p>
-            <BellRing size={20} className="text-[var(--ff-accent-text)]" />
-          </div>
-          <h2 className="mt-2 text-3xl font-black text-[var(--ff-accent-text)]">{stats.unread}</h2>
-          <p className="mt-2 text-xs text-[var(--ff-muted)]">precisam da sua atenção</p>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-[var(--ff-muted)]">Lidas</p>
-            <Eye size={20} className="text-[var(--ff-success-text)]" />
-          </div>
-          <h2 className="mt-2 text-3xl font-black text-[var(--ff-text)]">{stats.read}</h2>
-          <p className="mt-2 text-xs text-[var(--ff-muted)]">já foram abertas</p>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-[var(--ff-muted)]">Arquivadas</p>
-            <Archive size={20} className="text-[var(--ff-muted)]" />
-          </div>
-          <h2 className="mt-2 text-3xl font-black text-[var(--ff-text)]">{stats.archived}</h2>
-          <p className="mt-2 text-xs text-[var(--ff-muted)]">guardadas</p>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-[var(--ff-muted)]">Total exibido</p>
-            <Bell size={20} className="text-[var(--ff-accent-text)]" />
-          </div>
-          <h2 className="mt-2 text-3xl font-black text-[var(--ff-text)]">{stats.total}</h2>
-          <p className="mt-2 text-xs text-[var(--ff-muted)]">no filtro atual</p>
-        </Card>
-      </section>
-
-      <Card className="mt-6">
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_220px_auto]">
-          <div className="flex h-12 items-center gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-[var(--ff-muted)]">
-            <Search size={18} />
-            <input
-              type="text"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Buscar por título, mensagem, tipo ou status..."
-              className="w-full bg-transparent text-sm text-[var(--ff-text)] outline-none placeholder:text-[var(--ff-muted)]"
-            />
-            {search && (
-              <button type="button" onClick={() => setSearch('')}>
-                <X size={16} />
-              </button>
-            )}
-          </div>
-
-          <select
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
-            className="h-12 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-sm font-bold text-[var(--ff-text)] outline-none"
-          >
-            <option value="">Todas</option>
-            <option value="unread">Não lidas</option>
-            <option value="read">Lidas</option>
-            <option value="archived">Arquivadas</option>
-          </select>
-
-          <Button type="button" variant="secondary" onClick={handleMarkAllAsRead}>
-            <CheckCheck size={16} />
-            Marcar todas como lidas
-          </Button>
-        </div>
-      </Card>
-
-      <section className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2">
-        {filteredNotifications.length === 0 ? (
-          <Card>
-            <EmptyState
-              title="Nenhuma notificação encontrada"
-              description="Clique em verificar agora ou altere o filtro para ver outros alertas."
-              action={
-                <Button type="button" onClick={handleGenerateNotifications}>
-                  <BellRing size={16} />
-                  Verificar agora
-                </Button>
-              }
-            />
-          </Card>
-        ) : (
-          visibleNotifications.map((notification) => {
-            const meta = getNotificationMeta(notification.type)
-            const Icon = meta.icon
-            const isUnread = notification.status === 'unread'
-
-            return (
-              <article
-                key={notification.id}
-                className={
-                  isUnread
-                    ? 'group relative flex h-full flex-col overflow-hidden rounded-3xl border border-[var(--ff-accent-border)] bg-[var(--ff-card)] p-4 shadow-[0_0_28px_var(--ff-accent-shadow)]/10 transition hover:-translate-y-0.5 hover:bg-[var(--ff-card-hover)]'
-                    : 'group relative flex h-full flex-col overflow-hidden rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 opacity-85 transition hover:-translate-y-0.5 hover:opacity-100 hover:bg-[var(--ff-card-hover)]'
-                }
-              >
-                {isUnread && (
-                  <div className="absolute left-0 top-0 h-full w-1.5 bg-[var(--ff-accent)]" />
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => handleOpenNotification(notification)}
-                  className="flex w-full flex-col gap-4 text-left sm:flex-row sm:items-start"
-                >
-                  <div
-                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${meta.border} ${meta.bg} ${meta.tone}`}
-                  >
-                    <Icon size={23} />
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <NotificationStatusPill status={notification.status} />
-
-                      <Badge>{meta.label}</Badge>
-
-                      {isUnread && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-[var(--ff-accent-soft)] px-2.5 py-1 text-[11px] font-black text-[var(--ff-accent-text)]">
-                          <EyeOff size={12} />
-                          Clique para abrir
-                        </span>
-                      )}
-                    </div>
-
-                    <h2
-                      className={
-                        isUnread
-                          ? 'mt-3 text-lg font-black text-[var(--ff-text)]'
-                          : 'mt-3 text-lg font-bold text-[var(--ff-text)]'
-                      }
-                    >
-                      {notification.title}
-                    </h2>
-
-                    <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-[var(--ff-muted)]">
-                      {notification.message || 'Sem mensagem detalhada.'}
-                    </p>
-
-                    <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-[var(--ff-muted)]">
-                      <span className="inline-flex items-center gap-1">
-                        <Clock3 size={13} />
-                        {formatDateTime(notification.createdAt)}
-                      </span>
-
-                      {notification.readAt && (
-                        <span className="inline-flex items-center gap-1">
-                          <Eye size={13} />
-                          Lida em {formatDateTime(notification.readAt)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </button>
-
-                <div className="mt-4 flex flex-wrap justify-end gap-2 border-t border-[var(--ff-border)] pt-4">
-                  {notification.status === 'unread' && (
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={() => handleMarkAsRead(notification.id)}
-                    >
-                      <Eye size={16} />
-                      Marcar como lida
-                    </Button>
-                  )}
-
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => handleOpenNotification(notification)}
-                  >
-                    <Info size={16} />
-                    Detalhes
-                  </Button>
-
-                  {notification.status !== 'archived' && (
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={() => handleArchiveNotification(notification.id)}
-                    >
-                      <Archive size={16} />
-                      Arquivar
-                    </Button>
-                  )}
-
-                  <Button
-                    type="button"
-                    variant="danger"
-                    onClick={() => handleDeleteNotification(notification.id)}
-                  >
-                    <Trash2 size={16} />
-                    Excluir
-                  </Button>
-                </div>
-              </article>
-            )
-          })
-        )}
-
-        {visibleCount < filteredNotifications.length && (
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => setVisibleCount((current) => current + 30)}
-            className="w-full"
-          >
-            Carregar mais notificações
-          </Button>
-        )}
-      </section>
-
-      <NotificationDetailModal
-        notification={selectedNotification}
-        onClose={() => setSelectedNotification(null)}
-        onArchive={handleArchiveNotification}
-        onDelete={handleDeleteNotification}
-        onOpenAction={handleOpenAction}
-      />
-
-      <ConfirmModal
-        open={Boolean(confirmModal)}
-        title={confirmModal?.title}
-        description={confirmModal?.description}
-        confirmText={confirmModal?.confirmText}
-        variant={confirmModal?.variant}
-        onConfirm={confirmModal?.onConfirm}
-        onCancel={() => setConfirmModal(null)}
-      />
-
-      <Toast
-        show={Boolean(toast)}
-        type={toast?.type}
-        title={toast?.title}
-        message={toast?.message}
-        onClose={() => setToast(null)}
-      />
-    </>
+    <NotificationsPageSections
+      source={source}
+      loading={loading}
+      stats={stats}
+      search={search}
+      statusFilter={statusFilter}
+      filteredNotifications={filteredNotifications}
+      visibleNotifications={visibleNotifications}
+      visibleCount={visibleCount}
+      selectedNotification={selectedNotification}
+      confirmModal={confirmModal}
+      toast={toast}
+      onRefresh={() => loadNotifications()}
+      onGenerate={handleGenerateNotifications}
+      onSearchChange={setSearch}
+      onStatusFilterChange={setStatusFilter}
+      onMarkAllAsRead={handleMarkAllAsRead}
+      onLoadMore={() => setVisibleCount((current) => current + 30)}
+      onOpenNotification={handleOpenNotification}
+      onMarkAsRead={handleMarkAsRead}
+      onArchiveNotification={handleArchiveNotification}
+      onDeleteNotification={handleDeleteNotification}
+      onOpenAction={handleOpenAction}
+      onCloseDetail={() => setSelectedNotification(null)}
+      onCancelConfirm={() => setConfirmModal(null)}
+      onCloseToast={() => setToast(null)}
+    />
   )
 }
 
