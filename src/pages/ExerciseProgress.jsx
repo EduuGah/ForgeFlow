@@ -29,35 +29,13 @@ import { getUserStorageData, saveUserStorageData } from '../utils/userStorage'
 import { getCompletedSets } from '../utils/analyticsUtils'
 import { chartItemStyle, chartLabelStyle, getChartTooltipStyle } from '../utils/chartUtils'
 
-function getExerciseMedia(exercise = {}) {
-  return (
-    exercise.imageUrl ||
-    exercise.gifUrl ||
-    exercise.mediaUrl ||
-    exercise.media?.image ||
-    exercise.media?.gif ||
-    exercise.image ||
-    exercise.gif ||
-    ''
-  )
-}
-
-function normalizeExerciseName(value) {
-  return String(value || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-}
-
-function formatDate(value) {
-  if (!value) return '—'
-  return new Date(value).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })
-}
-
-function formatLongDate(value) {
-  if (!value) return 'Sem data'
-  return new Date(value).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
-}
-
-function formatWeight(value) { return `${Number(value || 0).toLocaleString('pt-BR')} kg` }
-function formatVolume(value) { return `${Number(value || 0).toLocaleString('pt-BR')} kg` }
+import {
+  formatDate,
+  formatLongDate,
+  formatVolume,
+  formatWeight,
+  normalizeExerciseName,
+} from '../features/exerciseProgress/exerciseProgressUtils'
 
 function ExerciseProgress() {
   const { user } = useAuth()
@@ -117,7 +95,9 @@ function ExerciseProgress() {
   }, [completedSets])
 
   useEffect(() => {
-    if (!selectedExerciseName && exerciseOptions.length > 0) setSelectedExerciseName(exerciseOptions[0].normalizedName)
+    if (!selectedExerciseName && exerciseOptions.length > 0) {
+      queueMicrotask(() => setSelectedExerciseName(exerciseOptions[0].normalizedName))
+    }
   }, [exerciseOptions, selectedExerciseName])
 
   const filteredExerciseOptions = useMemo(() => {
@@ -127,17 +107,6 @@ function ExerciseProgress() {
   }, [exerciseOptions, search])
 
   const selectedSets = useMemo(() => completedSets.filter((set) => set.normalizedExerciseName === selectedExerciseName), [completedSets, selectedExerciseName])
-
-  const chartData = useMemo(() => selectedSets.map((set, index) => ({
-    index: index + 1,
-    axisLabel: String(index + 1),
-    dateLabel: formatDate(set.date),
-    setNumber: set.setNumber,
-    workoutName: set.workoutName,
-    weight: Number(set.weight || 0),
-    reps: Number(set.reps || 0),
-    volume: Number(set.volume || 0),
-  })), [selectedSets])
 
   const stats = useMemo(() => {
     if (selectedSets.length === 0) return { maxWeight: 0, maxVolume: 0, totalVolume: 0, totalSets: 0, lastSet: null }

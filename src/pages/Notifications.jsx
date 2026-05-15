@@ -4,20 +4,14 @@ import {
   Archive,
   Bell,
   BellRing,
-  Camera,
   CheckCheck,
-  CheckCircle2,
   Clock3,
-  Dumbbell,
   Eye,
   EyeOff,
-  Flag,
   Info,
   RefreshCcw,
   Search,
-  Target,
   Trash2,
-  Weight,
   X,
 } from 'lucide-react'
 
@@ -31,318 +25,34 @@ import Toast from '../components/ui/Toast'
 
 import { useAuth } from '../context/AuthContext'
 import { apiFetch } from '../services/api'
-import { generateSmartNotifications, notifyNotificationsChanged } from '../utils/notificationUtils'
+import { generateSmartNotifications } from '../utils/notificationUtils'
 import {
   clearLegacyForgeFlowStorage,
   getUserStorageData,
   saveUserStorageData,
 } from '../utils/userStorage'
 
-function normalizeNotificationFromApi(notification = {}) {
-  return {
-    ...notification,
-    id: notification._id || notification.id,
-    title: notification.title || 'Notificação',
-    message: notification.message || '',
-    type: notification.type || 'info',
-    status: notification.status || 'unread',
-    actionUrl: notification.actionUrl || '',
-    source: notification.source || 'system',
-    dedupeKey: notification.dedupeKey || '',
-    readAt: notification.readAt || null,
-    createdAt: notification.createdAt || new Date().toISOString(),
-    updatedAt: notification.updatedAt || notification.createdAt || new Date().toISOString(),
-  }
-}
-
-function formatDateTime(dateString) {
-  if (!dateString) return 'Sem data'
-
-  return new Date(dateString).toLocaleString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-function formatLongDateTime(dateString) {
-  if (!dateString) return 'Sem data'
-
-  return new Date(dateString).toLocaleString('pt-BR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-function getNotificationMeta(type) {
-  const metas = {
-    success: {
-      label: 'Sucesso',
-      icon: CheckCircle2,
-      tone: 'text-[var(--ff-success-text)]',
-      bg: 'bg-emerald-500/10',
-      border: 'border-emerald-500/25',
-    },
-    warning: {
-      label: 'Atenção',
-      icon: Info,
-      tone: 'text-[var(--ff-warning-text)]',
-      bg: 'bg-yellow-500/10',
-      border: 'border-yellow-500/25',
-    },
-    danger: {
-      label: 'Importante',
-      icon: Info,
-      tone: 'text-[var(--ff-danger-text)]',
-      bg: 'bg-red-500/10',
-      border: 'border-red-500/25',
-    },
-    goal: {
-      label: 'Meta',
-      icon: Target,
-      tone: 'text-[var(--ff-accent-text)]',
-      bg: 'bg-[var(--ff-accent-soft)]',
-      border: 'border-[var(--ff-accent-border)]',
-    },
-    workout: {
-      label: 'Treino',
-      icon: Dumbbell,
-      tone: 'text-[var(--ff-accent-text)]',
-      bg: 'bg-[var(--ff-accent-soft)]',
-      border: 'border-[var(--ff-accent-border)]',
-    },
-    weight: {
-      label: 'Peso',
-      icon: Weight,
-      tone: 'text-[var(--ff-accent-text)]',
-      bg: 'bg-[var(--ff-accent-soft)]',
-      border: 'border-[var(--ff-accent-border)]',
-    },
-    photo: {
-      label: 'Foto',
-      icon: Camera,
-      tone: 'text-[var(--ff-accent-text)]',
-      bg: 'bg-[var(--ff-accent-soft)]',
-      border: 'border-[var(--ff-accent-border)]',
-    },
-    recovery: {
-      label: 'Recuperação',
-      icon: Flag,
-      tone: 'text-[var(--ff-accent-text)]',
-      bg: 'bg-[var(--ff-accent-soft)]',
-      border: 'border-[var(--ff-accent-border)]',
-    },
-    info: {
-      label: 'Informação',
-      icon: Bell,
-      tone: 'text-[var(--ff-accent-text)]',
-      bg: 'bg-[var(--ff-accent-soft)]',
-      border: 'border-[var(--ff-accent-border)]',
-    },
-  }
-
-  return metas[type] || metas.info
-}
-
-function getStatusLabel(status) {
-  if (status === 'unread') return 'Não lida'
-  if (status === 'read') return 'Lida'
-  if (status === 'archived') return 'Arquivada'
-
-  return 'Notificação'
-}
-
-function getStatusDescription(status) {
-  if (status === 'unread') return 'Você ainda não abriu essa notificação.'
-  if (status === 'read') return 'Você já abriu essa notificação.'
-  if (status === 'archived') return 'Essa notificação está arquivada.'
-
-  return ''
-}
-
-function NotificationStatusPill({ status }) {
-  const isUnread = status === 'unread'
-  const isRead = status === 'read'
-  const isArchived = status === 'archived'
-
-  return (
-    <span
-      className={
-        isUnread
-          ? 'inline-flex items-center gap-1.5 rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent)] px-2.5 py-1 text-[11px] font-black text-white shadow-[0_0_16px_var(--ff-accent-shadow)]'
-          : isRead
-            ? 'inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-black text-[var(--ff-success-text)]'
-            : 'inline-flex items-center gap-1.5 rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-2.5 py-1 text-[11px] font-black text-[var(--ff-muted)]'
-      }
-    >
-      {isUnread && <BellRing size={12} />}
-      {isRead && <Eye size={12} />}
-      {isArchived && <Archive size={12} />}
-      {getStatusLabel(status)}
-    </span>
-  )
-}
-
-function NotificationDetailModal({
-  notification,
-  onClose,
-  onArchive,
-  onDelete,
-  onOpenAction,
-}) {
-  if (!notification) return null
-
-  const meta = getNotificationMeta(notification.type)
-  const Icon = meta.icon
-
-  return (
-    <div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/70 p-3 backdrop-blur-sm sm:items-center sm:p-4">
-      <div className="max-h-[92vh] w-full max-w-2xl overflow-hidden rounded-t-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] shadow-2xl sm:rounded-[2rem]">
-        <div className="flex items-start justify-between gap-4 border-b border-[var(--ff-border)] p-5">
-          <div className="flex min-w-0 items-start gap-4">
-            <div
-              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${meta.border} ${meta.bg} ${meta.tone}`}
-            >
-              <Icon size={24} />
-            </div>
-
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge>{meta.label}</Badge>
-                <NotificationStatusPill status={notification.status} />
-              </div>
-
-              <h2 className="mt-3 text-2xl font-black text-[var(--ff-text)]">
-                {notification.title}
-              </h2>
-
-              <p className="mt-1 text-sm text-[var(--ff-muted)]">
-                Criada em {formatLongDateTime(notification.createdAt)}
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-muted)] transition hover:text-[var(--ff-text)]"
-            aria-label="Fechar detalhes"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        <div className="space-y-5 p-5">
-          <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
-            <p className="text-xs font-black uppercase tracking-wide text-[var(--ff-muted)]">
-              Mensagem completa
-            </p>
-
-            <p className="mt-3 whitespace-pre-line text-base leading-relaxed text-[var(--ff-text)]">
-              {notification.message || 'Essa notificação não possui mensagem detalhada.'}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
-              <p className="text-xs font-black uppercase tracking-wide text-[var(--ff-muted)]">
-                Status
-              </p>
-
-              <div className="mt-2">
-                <NotificationStatusPill status={notification.status} />
-              </div>
-
-              <p className="mt-2 text-xs leading-relaxed text-[var(--ff-muted)]">
-                {getStatusDescription(notification.status)}
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
-              <p className="text-xs font-black uppercase tracking-wide text-[var(--ff-muted)]">
-                Leitura
-              </p>
-
-              <p className="mt-2 font-bold text-[var(--ff-text)]">
-                {notification.readAt
-                  ? formatLongDateTime(notification.readAt)
-                  : 'Ainda não tinha sido lida'}
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
-              <p className="text-xs font-black uppercase tracking-wide text-[var(--ff-muted)]">
-                Origem
-              </p>
-
-              <p className="mt-2 font-bold text-[var(--ff-text)]">
-                {notification.source || 'system'}
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
-              <p className="text-xs font-black uppercase tracking-wide text-[var(--ff-muted)]">
-                Destino sugerido
-              </p>
-
-              <p className="mt-2 font-bold text-[var(--ff-text)]">
-                {notification.actionUrl || 'Nenhum'}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-            {notification.actionUrl && (
-              <Button
-                type="button"
-                onClick={() => onOpenAction(notification)}
-              >
-                Abrir destino
-              </Button>
-            )}
-
-            {notification.status !== 'archived' && (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => onArchive(notification.id)}
-              >
-                <Archive size={16} />
-                Arquivar
-              </Button>
-            )}
-
-            <Button
-              type="button"
-              variant="danger"
-              onClick={() => onDelete(notification.id)}
-            >
-              <Trash2 size={16} />
-              Excluir
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
+import {
+  formatDateTime,
+  getNotificationMeta,
+  normalizeNotificationFromApi,
+} from '../features/notifications/notificationUtils'
+import {
+  NotificationDetailModal,
+  NotificationStatusPill,
+} from '../features/notifications/components/NotificationComponents'
 
 function Notifications() {
   const { user } = useAuth()
   const navigate = useNavigate()
 
   const [notifications, setNotifications] = useState([])
-  const [unreadCount, setUnreadCount] = useState(0)
+  const [, setUnreadCount] = useState(0)
   const [statusFilter, setStatusFilter] = useState('')
   const [search, setSearch] = useState('')
   const deferredSearch = useDeferredValue(search)
   const [visibleCount, setVisibleCount] = useState(30)
-  const [syncing, setSyncing] = useState(false)
+  const [, setSyncing] = useState(false)
   const [loading, setLoading] = useState(true)
   const [source, setSource] = useState('local')
   const [toast, setToast] = useState(null)
@@ -404,15 +114,17 @@ function Notifications() {
   }
 
   useEffect(() => {
-    setNotifications([])
-    setUnreadCount(0)
-    setSelectedNotification(null)
-    loadNotifications()
+    queueMicrotask(() => {
+      setNotifications([])
+      setUnreadCount(0)
+      setSelectedNotification(null)
+      loadNotifications()
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, statusFilter])
 
   useEffect(() => {
-    setVisibleCount(30)
+    queueMicrotask(() => setVisibleCount(30))
   }, [deferredSearch, statusFilter])
 
   const stats = useMemo(() => {
@@ -507,7 +219,7 @@ function Notifications() {
       notifyBellToRefresh()
 
       return updatedNotification
-    } catch (error) {
+    } catch {
       const updatedNotification = {
         ...notification,
         status: 'read',
@@ -620,7 +332,7 @@ function Notifications() {
       notifyBellToRefresh()
 
       showToast('success', 'Notificação arquivada', 'A notificação foi arquivada.')
-    } catch (error) {
+    } catch {
       const notificationBeforeUpdate = notifications.find((item) => item.id === notificationId)
       const updatedNotification = {
         ...notificationBeforeUpdate,
@@ -685,7 +397,7 @@ function Notifications() {
             'Notificação excluída',
             'A notificação foi removida.'
           )
-        } catch (error) {
+        } catch {
           const updatedNotifications = notifications.filter(
             (item) => item.id !== notificationId
           )

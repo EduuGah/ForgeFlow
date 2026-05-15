@@ -11,8 +11,6 @@ import {
   X,
 } from 'lucide-react'
 
-import { getAppSettings } from '../utils/settingsUtils'
-
 import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
@@ -29,181 +27,21 @@ import {
   removeUserStorageData,
 } from '../utils/userStorage'
 
-const INITIAL_VISIBLE_SESSIONS = 10
-const LOAD_MORE_SESSIONS = 10
-
-function normalizeText(value) {
-  return String(value || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim()
-}
-
-function normalizeHistoryFromApi(session) {
-  return {
-    ...session,
-    id: session._id || session.id,
-    duration: session.durationSeconds ?? session.duration ?? 0,
-    workoutName: session.workoutName || session.name || 'Treino',
-    exercises: Array.isArray(session.exercises) ? session.exercises : [],
-    finishedAt: session.finishedAt || session.createdAt,
-  }
-}
-
-function formatTime(seconds) {
-  const safeSeconds = Number(seconds) || 0
-  const hours = Math.floor(safeSeconds / 3600)
-  const minutes = Math.floor((safeSeconds % 3600) / 60)
-  const secs = safeSeconds % 60
-
-  return [hours, minutes, secs]
-    .map((value) => String(value).padStart(2, '0'))
-    .join(':')
-}
-
-function formatDate(dateString) {
-  if (!dateString) return 'Sem data'
-
-  const date = new Date(dateString)
-
-  return date.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  })
-}
-
-function formatShortDate(dateString) {
-  if (!dateString) return 'Sem data'
-
-  const date = new Date(dateString)
-
-  return date.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: '2-digit',
-  })
-}
-
-function formatHour(dateString) {
-  if (!dateString) return ''
-
-  const date = new Date(dateString)
-
-  return date.toLocaleTimeString('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-function formatVolume(value) {
-  return `${Number(value || 0).toLocaleString('pt-BR')}kg`
-}
-
-function isValidWorkingSet(set) {
-  return (
-    set.type !== 'warmup' &&
-    set.completed &&
-    set.weight &&
-    set.reps &&
-    Number(set.weight) > 0 &&
-    Number(set.reps) > 0
-  )
-}
-
-function getSessionCompletedSets(session) {
-  return session.exercises.flatMap((exercise) =>
-    (exercise.sets || [])
-      .filter(isValidWorkingSet)
-      .map((set) => ({
-        ...set,
-        exerciseName: exercise.exercise?.name,
-        muscleGroup: exercise.exercise?.muscleGroup,
-        equipment: exercise.exercise?.equipment,
-      }))
-  )
-}
-
-function getSessionVolumeFromSets(sets = []) {
-  return sets.reduce((total, set) => {
-    const weight = Number(set.weight) || 0
-    const reps = Number(set.reps) || 0
-
-    return total + weight * reps
-  }, 0)
-}
-
-function getSessionPRsFromSets(sets = []) {
-  return sets.filter((set) => set.isPR || set.isWeightPR || set.isVolumePR)
-}
-
-function getExerciseVolume(exercise) {
-  return (exercise.sets || []).reduce((total, set) => {
-    if (!set.completed) return total
-
-    const weight = Number(set.weight) || 0
-    const reps = Number(set.reps) || 0
-
-    return total + weight * reps
-  }, 0)
-}
-
-function buildSessionMeta(session, index, totalSessions) {
-  const completedSets = getSessionCompletedSets(session)
-  const sessionVolume = getSessionVolumeFromSets(completedSets)
-  const sessionPRs = getSessionPRsFromSets(completedSets)
-  const exerciseNames = session.exercises
-    .map((item) => item.exercise?.name)
-    .filter(Boolean)
-    .join(' ')
-
-  const searchableText = normalizeText(`${session.workoutName} ${exerciseNames}`)
-
-  return {
-    id: session.id,
-    indexLabel: totalSessions - index,
-    completedSets,
-    sessionVolume,
-    sessionPRs,
-    searchableText,
-    finishedDate: session.finishedAt ? new Date(session.finishedAt) : null,
-  }
-}
-
-function StatCard({ title, value, description, icon: Icon, accent = false }) {
-  return (
-    <Card className="p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm text-zinc-500">
-            {title}
-          </p>
-
-          <h3
-            className={
-              accent
-                ? 'mt-2 text-3xl font-black text-[var(--ff-accent-text)]'
-                : 'mt-2 text-3xl font-black text-[var(--ff-text)]'
-            }
-          >
-            {value}
-          </h3>
-
-          <p className="mt-2 text-xs text-[var(--ff-accent-text)]">
-            {description}
-          </p>
-        </div>
-
-        {Icon && (
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
-            <Icon size={21} />
-          </div>
-        )}
-      </div>
-    </Card>
-  )
-}
+import {
+  INITIAL_VISIBLE_SESSIONS,
+  LOAD_MORE_SESSIONS,
+  buildSessionMeta,
+  formatDate,
+  formatHour,
+  formatShortDate,
+  formatTime,
+  formatVolume,
+  getExerciseVolume,
+  isValidWorkingSet,
+  normalizeHistoryFromApi,
+  normalizeText,
+} from '../features/history/historyUtils'
+import HistoryStatCard from '../features/history/components/HistoryStatCard'
 
 function History() {
   const { user } = useAuth()
@@ -224,8 +62,6 @@ function History() {
 
   const [confirmModal, setConfirmModal] = useState(null)
   const [toast, setToast] = useState(null)
-
-  const settings = getAppSettings()
 
   useEffect(() => {
     if (!user) return undefined
@@ -283,8 +119,10 @@ function History() {
   }, [user])
 
   useEffect(() => {
-    setVisibleCount(INITIAL_VISIBLE_SESSIONS)
-    setExpandedSessionId(null)
+    queueMicrotask(() => {
+      setVisibleCount(INITIAL_VISIBLE_SESSIONS)
+      setExpandedSessionId(null)
+    })
   }, [deferredSearch, startDate, endDate])
 
   const historyMetaMap = useMemo(() => {
@@ -471,21 +309,21 @@ function History() {
       />
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
+        <HistoryStatCard
           title="Treinos"
           value={history.length}
           description="Finalizados"
           icon={CalendarDays}
         />
 
-        <StatCard
+        <HistoryStatCard
           title="Séries concluídas"
           value={summary.totalCompletedSets}
           description="Registradas"
           icon={Medal}
         />
 
-        <StatCard
+        <HistoryStatCard
           title="Volume total"
           value={formatVolume(summary.totalVolume)}
           description="Peso × reps"
@@ -493,7 +331,7 @@ function History() {
           accent
         />
 
-        <StatCard
+        <HistoryStatCard
           title="PRs"
           value={`🏆 ${summary.totalPRs}`}
           description="Recordes batidos"
