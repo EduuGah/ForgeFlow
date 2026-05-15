@@ -7,7 +7,6 @@ import {
   Bell,
   Trophy,
   Target,
-  LineChart,
   Clock3,
   CalendarDays,
   CheckCircle2,
@@ -36,184 +35,9 @@ import ConfirmModal from '../components/ui/ConfirmModal'
 import Toast from '../components/ui/Toast'
 import { apiFetch } from '../services/api'
 import { useAuth } from '../context/AuthContext'
-
-function formatDate(value, withTime = false) {
-  if (!value) return '—'
-
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) return '—'
-
-  return date.toLocaleString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: '2-digit',
-    ...(withTime
-      ? {
-          hour: '2-digit',
-          minute: '2-digit',
-        }
-      : {}),
-  })
-}
-
-function formatLastLogin(value, fallbackCreatedAt = null) {
-  if (value) return formatDate(value, true)
-
-  if (fallbackCreatedAt) {
-    return `Sem login registrado · criado em ${formatDate(fallbackCreatedAt)}`
-  }
-
-  return 'Ainda não registrado'
-}
-
-function formatDuration(seconds = 0) {
-  const total = Number(seconds || 0)
-  const minutes = Math.floor(total / 60)
-  const hours = Math.floor(minutes / 60)
-  const rest = minutes % 60
-
-  if (hours > 0) return `${hours}h ${rest}min`
-  return `${minutes}min`
-}
-
-function formatCompactNumber(value = 0) {
-  const number = Number(value || 0)
-
-  return new Intl.NumberFormat('pt-BR', {
-    notation: Math.abs(number) >= 10000 ? 'compact' : 'standard',
-    maximumFractionDigits: 1,
-  }).format(number)
-}
-
-function formatShortDate(value) {
-  if (!value) return '—'
-
-  const [year, month, day] = String(value).split('-')
-  if (!year || !month || !day) return value
-
-  return `${day}/${month}`
-}
-
-function getSeriesMax(series = [], key = 'count') {
-  return Math.max(1, ...series.map((item) => Number(item?.[key] || 0)))
-}
-
-function MiniBarChart({ title, description, series = [], valueKey = 'count' }) {
-  const max = getSeriesMax(series, valueKey)
-
-  return (
-    <Card className="p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-base font-black text-[var(--ff-text)]">{title}</h3>
-          {description && (
-            <p className="mt-1 text-xs text-[var(--ff-muted)]">{description}</p>
-          )}
-        </div>
-
-        <LineChart size={19} className="text-[var(--ff-accent-text)]" />
-      </div>
-
-      <div className="mt-4 flex h-28 items-end gap-1.5 overflow-hidden rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
-        {series.length === 0 || series.every((item) => Number(item?.[valueKey] || 0) === 0) ? (
-          <div className="flex h-full w-full items-center justify-center text-center text-xs font-bold text-[var(--ff-muted)]">
-            Sem dados neste período
-          </div>
-        ) : (
-          series.map((item) => {
-            const value = Number(item?.[valueKey] || 0)
-            const height = Math.max(6, Math.round((value / max) * 100))
-
-            return (
-              <div
-                key={item.date}
-                className="group relative flex min-w-[10px] flex-1 items-end justify-center"
-                title={`${formatShortDate(item.date)}: ${value}`}
-              >
-                <div
-                  className="w-full max-w-5 rounded-t-lg bg-[var(--ff-accent)]/75 transition group-hover:bg-[var(--ff-accent)]"
-                  style={{ height: `${height}%` }}
-                />
-              </div>
-            )
-          })
-        )}
-      </div>
-
-      <div className="mt-2 flex justify-between text-[10px] font-bold text-[var(--ff-muted)]">
-        <span>{formatShortDate(series[0]?.date)}</span>
-        <span>{formatShortDate(series[series.length - 1]?.date)}</span>
-      </div>
-    </Card>
-  )
-}
-
-
-function RankingCard({ title, description, icon: Icon = Trophy, items = [], valueLabel = '', formatValue = (value) => value, empty = 'Sem dados neste período.' }) {
-  return (
-    <Card className="p-4">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h3 className="text-base font-black text-[var(--ff-text)]">{title}</h3>
-          {description && (
-            <p className="mt-1 text-xs text-[var(--ff-muted)]">{description}</p>
-          )}
-        </div>
-
-        <Icon size={19} className="text-[var(--ff-accent-text)]" />
-      </div>
-
-      <div className="mt-4 space-y-2">
-        {items.length === 0 ? (
-          <p className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3 text-sm text-[var(--ff-muted)]">
-            {empty}
-          </p>
-        ) : (
-          items.map((item, index) => (
-            <div
-              key={item.userId || item.email || item.id || index}
-              className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3"
-            >
-              <div className="min-w-0">
-                <p className="truncate text-sm font-black text-[var(--ff-text)]">
-                  {index + 1}. {item.name || 'Usuário'}
-                </p>
-                <p className="truncate text-xs text-[var(--ff-muted)]">
-                  {item.email || 'sem e-mail'}
-                </p>
-                {item.lastLoginAt && (
-                  <p className="truncate text-[11px] text-[var(--ff-muted-2)]">
-                    Último acesso: {formatDate(item.lastLoginAt, true)}
-                  </p>
-                )}
-                {item.updatedAt && (
-                  <p className="truncate text-[11px] text-[var(--ff-muted-2)]">
-                    Atualizado: {formatDate(item.updatedAt, true)}
-                  </p>
-                )}
-              </div>
-
-              <div className="shrink-0 text-right">
-                <p className="text-sm font-black text-[var(--ff-text)]">
-                  {formatValue(item.value ?? item.count ?? item.exerciseCount ?? 0)}
-                </p>
-                <p className="text-[11px] text-[var(--ff-muted)]">
-                  {valueLabel}
-                </p>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-    </Card>
-  )
-}
-
-
-function getUserId(item) {
-  return item?.id || item?._id || ''
-}
+import AdminOverviewSection from '../features/admin/components/AdminOverviewSection'
+import AdminRankingsSection from '../features/admin/components/AdminRankingsSection'
+import { formatCompactNumber, formatDate, formatDuration, formatLastLogin, getUserId } from '../features/admin/adminUtils'
 
 function Admin() {
   const { user } = useAuth()
@@ -500,17 +324,16 @@ function Admin() {
     )
   }
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    if (!isAdmin) {
-      setLoading(false)
-      return
-    }
+    if (!isAdmin) return
 
     loadAdminStats()
     loadAnalytics()
     // rankings e usuários carregam sob demanda ao abrir as abas
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin, roleFilter, statusFilter, providerFilter])
+
 
   useEffect(() => {
     if (!isAdmin) return
@@ -522,7 +345,9 @@ function Admin() {
     if (activeAdminView === 'users' && !loadedAdminViews.users) {
       loadUsers()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeAdminView, isAdmin])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     if (!isAdmin || activeAdminView !== 'users') return
@@ -533,6 +358,7 @@ function Admin() {
     }, 350)
 
     return () => window.clearTimeout(timeoutId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roleFilter, statusFilter, providerFilter, query])
 
   const filteredUsers = useMemo(() => {
@@ -788,173 +614,24 @@ function Admin() {
       </section>
 
       {activeAdminView === 'overview' && (
-        <section className="space-y-5">
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-6">
-            {overviewCards.map(([label, value, Icon]) => (
-              <Card key={label} className="ff-admin-stat-card p-4">
-                <div className="relative flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-xs font-black uppercase tracking-[0.14em] text-[var(--ff-muted)]">
-                      {label}
-                    </p>
-                    <p className="mt-2 break-words text-xl font-black leading-tight text-[var(--ff-text)] sm:text-2xl">
-                      {value}
-                    </p>
-                  </div>
-
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">
-                    <Icon size={19} />
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-
-          <details className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
-            <summary className="cursor-pointer text-sm font-black text-[var(--ff-text)]">
-              Métricas de sistema
-            </summary>
-
-            <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-              {systemCards.map(([label, value, Icon]) => (
-                <Card key={label} className="ff-admin-stat-card p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-xs font-black uppercase tracking-[0.14em] text-[var(--ff-muted)]">
-                        {label}
-                      </p>
-                      <p className="mt-2 break-words text-xl font-black leading-tight text-[var(--ff-text)]">
-                        {value}
-                      </p>
-                    </div>
-
-                    <Icon size={18} className="shrink-0 text-[var(--ff-accent-text)]" />
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </details>
-
-          <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-            <MiniBarChart
-              title="Acessos por dia"
-              description={`Últimos ${analytics?.period?.days || analyticsDays} dias`}
-              series={analyticsSeries.logins || []}
-            />
-
-            <MiniBarChart
-              title="Novos usuários"
-              description="Cadastros por dia"
-              series={analyticsSeries.newUsers || []}
-            />
-
-            <MiniBarChart
-              title="Treinos finalizados"
-              description="Históricos salvos por dia"
-              series={analyticsSeries.history || []}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-            <Card className="p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h3 className="text-base font-black text-[var(--ff-text)]">
-                    Últimos acessos
-                  </h3>
-                  <p className="mt-1 text-xs text-[var(--ff-muted)]">
-                    Entradas recentes registradas pelo sistema.
-                  </p>
-                </div>
-
-                <CalendarDays size={19} className="text-[var(--ff-accent-text)]" />
-              </div>
-
-              <div className="mt-4 space-y-2">
-                {recentLogins.length === 0 ? (
-                  <p className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3 text-sm text-[var(--ff-muted)]">
-                    Nenhum acesso registrado ainda.
-                  </p>
-                ) : (
-                  recentLogins.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-black text-[var(--ff-text)]">
-                          {item.email}
-                        </p>
-                        <p className="text-xs text-[var(--ff-muted)]">
-                          {item.provider} · {formatDate(item.createdAt, true)}
-                        </p>
-                      </div>
-
-                      <Badge>{item.provider}</Badge>
-                    </div>
-                  ))
-                )}
-              </div>
-            </Card>
-
-            <RankingCard
-              title="Top treinos"
-              description="Ranking rápido por treinos finalizados."
-              icon={Trophy}
-              items={topWorkoutUsers}
-              valueLabel="treinos"
-              empty="Nenhum histórico encontrado ainda."
-            />
-          </div>
-        </section>
+        <AdminOverviewSection
+          overviewCards={overviewCards}
+          systemCards={systemCards}
+          analytics={analytics}
+          analyticsDays={analyticsDays}
+          analyticsSeries={analyticsSeries}
+          recentLogins={recentLogins}
+          topWorkoutUsers={topWorkoutUsers}
+        />
       )}
 
       {activeAdminView === 'rankings' && (
-        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[320px_minmax(0,1fr)]">
-          <Card className="p-4">
-            <div>
-              <h2 className="text-xl font-black text-[var(--ff-text)]">
-                Rankings
-              </h2>
-              <p className="mt-1 text-sm leading-relaxed text-[var(--ff-muted)]">
-                Escolha um ranking para analisar o período selecionado.
-              </p>
-            </div>
-
-            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-1">
-              {rankingOptions.map((item) => {
-                const Icon = item.icon
-
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setActiveRankingView(item.id)}
-                    className={[
-                      'flex min-h-12 items-center gap-3 rounded-2xl border p-3 text-left transition',
-                      activeRankingView === item.id
-                        ? 'border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]'
-                        : 'border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-muted)] hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)]',
-                    ].join(' ')}
-                  >
-                    <Icon size={18} />
-                    <span className="text-sm font-black">{item.label}</span>
-                  </button>
-                )
-              })}
-            </div>
-          </Card>
-
-          <RankingCard
-            title={selectedRanking.label}
-            description={selectedRanking.description}
-            icon={selectedRanking.icon}
-            items={selectedRanking.items}
-            valueLabel={selectedRanking.valueLabel}
-            formatValue={selectedRanking.formatValue || ((value) => value)}
-            empty={selectedRanking.empty}
-          />
-        </section>
+        <AdminRankingsSection
+          rankingOptions={rankingOptions}
+          selectedRanking={selectedRanking}
+          activeRankingView={activeRankingView}
+          setActiveRankingView={setActiveRankingView}
+        />
       )}
 
       {activeAdminView === 'users' && (
