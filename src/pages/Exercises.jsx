@@ -17,10 +17,6 @@ import {
   Activity,
   Wrench,
   Info,
-  Upload,
-  FileImage,
-  LinkIcon,
-  HelpCircle,
   Star,
 } from 'lucide-react'
 
@@ -40,525 +36,34 @@ import Select from '../components/ui/Select'
 import Textarea from '../components/ui/Textarea'
 import Badge from '../components/ui/Badge'
 import EmptyState from '../components/ui/EmptyState'
-
-const INITIAL_VISIBLE_COUNT = 8
-const LOAD_MORE_COUNT = 8
-
-const muscleGroupOrder = [
-  'Peito',
-  'Costas',
-  'Ombros',
-  'Bíceps',
-  'Tríceps',
-  'Antebraço',
-  'Abdômen',
-  'Lombar',
-  'Glúteos',
-  'Quadríceps',
-  'Posterior de coxa',
-  'Panturrilhas',
-  'Adutores',
-  'Abdutores',
-  'Cardio',
-  'Mobilidade',
-  'Alongamento',
-  'Corpo inteiro',
-]
-
-const defaultEquipmentList = [
-  'Barra',
-  'Halteres',
-  'Máquina',
-  'Cabo',
-  'Peso corporal',
-  'Banco',
-  'Paralelas',
-  'Máquina Smith',
-  'Anilha',
-  'Roda abdominal',
-  'Barra fixa',
-  'Mobilidade',
-]
-
-function normalizeText(value) {
-  return String(value || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim()
-}
-
-function normalizeMuscleGroup(group) {
-  if (!group) return 'Outros'
-
-  const normalized = String(group).trim()
-
-  const aliases = {
-    Core: 'Abdômen',
-    Abdomen: 'Abdômen',
-    Abs: 'Abdômen',
-    Pernas: 'Pernas',
-    Ombro: 'Ombros',
-    Costas: 'Costas',
-    Peito: 'Peito',
-    Biceps: 'Bíceps',
-    Bíceps: 'Bíceps',
-    Triceps: 'Tríceps',
-    Tríceps: 'Tríceps',
-    'Posterior de Coxa': 'Posterior de coxa',
-    'Corpo Inteiro': 'Corpo inteiro',
-  }
-
-  const normalizedKey = normalized.toLowerCase()
-
-  if (normalizedKey.includes('barra') && (normalizedKey.includes('w') || normalizedKey.includes('z') || normalizedKey.includes('ez') || normalizedKey.includes('reta') || normalizedKey.includes('curva'))) {
-    return 'Barra'
-  }
-
-  return aliases[normalized] || aliases[normalizedKey] || normalized
-}
-
-function normalizeEquipment(equipment) {
-  if (!equipment) return 'Não informado'
-
-  const normalized = String(equipment).trim()
-
-  const aliases = {
-    Halter: 'Halteres',
-    Dumbbell: 'Halteres',
-    Dumbbells: 'Halteres',
-    Bodyweight: 'Peso corporal',
-    'Peso Corporal': 'Peso corporal',
-    Machine: 'Máquina',
-    Cable: 'Cabo',
-    Barbell: 'Barra',
-    Bench: 'Banco',
-    'Barra EZ': 'Barra',
-    'Barra W': 'Barra',
-    'Barra Z': 'Barra',
-    'EZ Bar': 'Barra',
-    'EZ-bar': 'Barra',
-    'W Bar': 'Barra',
-    'Z Bar': 'Barra',
-    'Barra curva': 'Barra',
-    'Barra reta': 'Barra',
-  }
-
-  const normalizedKey = normalized.toLowerCase()
-
-  if (normalizedKey.includes('barra') && (normalizedKey.includes('w') || normalizedKey.includes('z') || normalizedKey.includes('ez') || normalizedKey.includes('reta') || normalizedKey.includes('curva'))) {
-    return 'Barra'
-  }
-
-  return aliases[normalized] || aliases[normalizedKey] || normalized
-}
-
-function getSubgroup(exercise) {
-  return (
-    exercise.targetMuscle ||
-    exercise.subgroup ||
-    exercise.muscle ||
-    exercise.primaryMuscle ||
-    normalizeMuscleGroup(exercise.muscleGroup)
-  )
-}
-
-function getExerciseMedia(exercise) {
-  if (exercise.media?.gif) return exercise.media.gif
-  if (exercise.media?.image) return exercise.media.image
-  if (exercise.gifUrl) return exercise.gifUrl
-  if (exercise.mediaUrl) return exercise.mediaUrl
-
-  return ''
-}
-
-function getExerciseIdentityKey(exercise = {}) {
-  const possibleId = exercise.originalLocalId || exercise.localId
-
-  if (possibleId) {
-    return `local:${String(possibleId)}`
-  }
-
-  const name = normalizeText(exercise.originalName || exercise.name)
-  const group = normalizeText(exercise.muscleGroup || exercise.normalizedGroup)
-  const equipment = normalizeText(exercise.equipment || exercise.normalizedEquipment)
-
-  if (name) {
-    return `exercise:${name}:${group}:${equipment}`
-  }
-
-  return `id:${String(exercise.id || exercise._id || crypto.randomUUID())}`
-}
-
-function isApiExercise(exercise = {}) {
-  return typeof (exercise._id || exercise.id) === 'string' && /^[a-f\d]{24}$/i.test(exercise._id || exercise.id)
-}
-
-function normalizeExerciseFromApi(exercise) {
-  const normalizedGroup = normalizeMuscleGroup(exercise.muscleGroup)
-  const normalizedEquipment = normalizeEquipment(exercise.equipment)
-  const subgroup = getSubgroup({
-    ...exercise,
-    muscleGroup: normalizedGroup,
-  })
-
-  return {
-    ...exercise,
-    id: exercise._id || exercise.id,
-    normalizedGroup,
-    normalizedEquipment,
-    subgroup,
-    isFavorite: Boolean(exercise.isFavorite),
-  }
-}
-
-function normalizeExerciseForList(exercise) {
-  const normalizedGroup = normalizeMuscleGroup(exercise.muscleGroup || exercise.normalizedGroup)
-  const normalizedEquipment = normalizeEquipment(exercise.equipment || exercise.normalizedEquipment)
-  const subgroup = getSubgroup({
-    ...exercise,
-    muscleGroup: normalizedGroup,
-  })
-
-  return {
-    ...exercise,
-    id: exercise._id || exercise.id || crypto.randomUUID(),
-    normalizedGroup,
-    normalizedEquipment,
-    subgroup,
-    isFavorite: Boolean(exercise.isFavorite),
-  }
-}
-
-function mergeExercisesWithoutDuplicates(...lists) {
-  const merged = new Map()
-
-  lists.flat().filter(Boolean).forEach((exercise) => {
-    const normalized = normalizeExerciseForList(exercise)
-    const identityKey = getExerciseIdentityKey(normalized)
-    const current = merged.get(identityKey)
-
-    if (!current) {
-      merged.set(identityKey, normalized)
-      return
-    }
-
-    const shouldReplace =
-      isApiExercise(normalized) ||
-      (!isApiExercise(current) && new Date(normalized.updatedAt || 0) > new Date(current.updatedAt || 0)) ||
-      (normalized.isFavorite && !current.isFavorite)
-
-    if (shouldReplace) {
-      merged.set(identityKey, {
-        ...current,
-        ...normalized,
-        isFavorite: Boolean(current.isFavorite || normalized.isFavorite),
-      })
-    }
-  })
-
-  return Array.from(merged.values())
-}
-
-function normalizeList(value) {
-  if (Array.isArray(value)) return value
-  if (typeof value === 'string' && value.trim()) return [value]
-
-  return []
-}
-
-function textToList(text) {
-  return text
-    .split('\n')
-    .map((item) => item.trim())
-    .filter(Boolean)
-}
-
-function listToText(list) {
-  if (Array.isArray(list)) return list.join('\n')
-  return list || ''
-}
-
-function getSortedUnique(values, preferredOrder = []) {
-  const uniqueValues = [...new Set(values.filter(Boolean))]
-
-  return uniqueValues.sort((a, b) => {
-    const indexA = preferredOrder.indexOf(a)
-    const indexB = preferredOrder.indexOf(b)
-
-    if (indexA !== -1 && indexB !== -1) return indexA - indexB
-    if (indexA !== -1) return -1
-    if (indexB !== -1) return 1
-
-    return String(a).localeCompare(String(b))
-  })
-}
-
-function buildStatsMap(items, key) {
-  const map = new Map()
-
-  items.forEach((item) => {
-    const value = item[key]
-
-    if (!value) return
-
-    map.set(value, (map.get(value) || 0) + 1)
-  })
-
-  return map
-}
-
-function getStatsFromMap(map, preferredOrder = []) {
-  return Array.from(map.entries())
-    .map(([name, count]) => ({
-      name,
-      count,
-    }))
-    .sort((a, b) => {
-      const indexA = preferredOrder.indexOf(a.name)
-      const indexB = preferredOrder.indexOf(b.name)
-
-      if (indexA !== -1 && indexB !== -1) return indexA - indexB
-      if (indexA !== -1) return -1
-      if (indexB !== -1) return 1
-
-      return a.name.localeCompare(b.name)
-    })
-}
-
-function StatCard({ title, value, description, icon: Icon }) {
-  return (
-    <Card className="group overflow-hidden border border-zinc-800 bg-gradient-to-br from-[#17171b] to-[#101014] p-4 transition hover:border-[var(--ff-accent-border)]/30 hover:shadow-[0_0_24px_var(--ff-accent-shadow)]/10">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-medium text-zinc-500">
-            {title}
-          </p>
-
-          <h3 className="mt-2 text-3xl font-black text-white">
-            {value}
-          </h3>
-
-          <p className="mt-2 text-xs font-semibold tracking-wide text-[var(--ff-accent-text)]">
-            {description}
-          </p>
-        </div>
-
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)] transition group-hover:scale-105">
-          <Icon size={22} />
-        </div>
-      </div>
-    </Card>
-  )
-}
-
-function FilterListButton({ active, title, count, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={
-        active
-          ? 'w-full rounded-2xl border border-[var(--ff-accent-border)]/50 bg-[var(--ff-accent-soft)]/15 p-3 text-left shadow-[0_0_16px_var(--ff-accent-shadow)]/15'
-          : 'w-full rounded-2xl border border-zinc-800 bg-[#18181b] p-3 text-left transition hover:border-[var(--ff-accent-border)]/30 hover:bg-[#1f1f23]'
-      }
-    >
-      <div className="flex items-center justify-between gap-3">
-        <span
-          className={
-            active
-              ? 'font-bold text-[var(--ff-accent-text)]'
-              : 'font-bold text-white'
-          }
-        >
-          {title}
-        </span>
-
-        <span className="rounded-full border border-zinc-800 bg-zinc-950 px-2 py-1 text-[11px] font-bold text-zinc-500">
-          {count}
-        </span>
-      </div>
-    </button>
-  )
-}
-
-function DetailMiniCard({ icon: Icon, title, value, accent = false }) {
-  return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-      <div className="flex items-center gap-2">
-        <div
-          className={
-            accent
-              ? 'flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]'
-              : 'flex h-8 w-8 items-center justify-center rounded-xl bg-zinc-900 text-zinc-400'
-          }
-        >
-          <Icon size={16} />
-        </div>
-
-        <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-          {title}
-        </p>
-      </div>
-
-      <p className={accent ? 'mt-3 text-sm font-bold text-[var(--ff-accent-text)]' : 'mt-3 text-sm font-bold text-white'}>
-        {value}
-      </p>
-    </div>
-  )
-}
-
-function HelperTextarea({
-  label,
-  value,
-  onChange,
-  placeholder,
-  rows = 4,
-  helper,
-  examples = [],
-}) {
-  return (
-    <div>
-      <Textarea
-        label={label}
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-        rows={rows}
-      />
-
-      <div className="mt-2 rounded-2xl border border-zinc-800 bg-zinc-950/70 p-3">
-        <div className="flex items-start gap-2">
-          <HelpCircle
-            size={16}
-            className="mt-0.5 shrink-0 text-[var(--ff-accent-text)]"
-          />
-
-          <div>
-            <p className="text-xs leading-relaxed text-zinc-400">
-              {helper}
-            </p>
-
-            {examples.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-2">
-                {examples.map((example) => (
-                  <span
-                    key={example}
-                    className="rounded-full border border-zinc-800 bg-zinc-900 px-2.5 py-1 text-[11px] font-semibold text-zinc-400"
-                  >
-                    {example}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function MediaUploader({
-  mediaUrl,
-  uploadedFileName,
-  onUrlChange,
-  onFileChange,
-  onClear,
-}) {
-  return (
-    <div className="md:col-span-2">
-      <label className="mb-2 block text-sm font-semibold text-zinc-300">
-        Imagem ou GIF do exercício
-      </label>
-
-      <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-4">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-[160px_minmax(0,1fr)]">
-          <div className="flex h-40 items-center justify-center overflow-hidden rounded-2xl border border-zinc-800 bg-white">
-            {mediaUrl ? (
-              <img
-                src={mediaUrl}
-                alt="Preview do exercício"
-                className="h-full w-full object-cover"
-                loading="lazy"
-                decoding="async"
-              />
-            ) : (
-              <div className="text-center text-zinc-900">
-                <FileImage size={34} className="mx-auto" />
-
-                <p className="mt-2 text-xs font-bold">
-                  Preview
-                </p>
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 xl:grid-cols-1">
-            <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--ff-accent-border)]/40 bg-[var(--ff-accent-soft)]/10 p-5 text-center transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-accent-soft)]/20">
-              <Upload size={24} className="text-[var(--ff-accent-text)]" />
-
-              <span className="mt-2 text-sm font-bold text-white">
-                Enviar imagem ou GIF
-              </span>
-
-              <span className="mt-1 text-xs leading-relaxed text-zinc-500">
-                Funciona no computador e no celular. Use PNG, JPG, WEBP ou GIF.
-              </span>
-
-              <input
-                type="file"
-                accept="image/png,image/jpeg,image/webp,image/gif"
-                onChange={onFileChange}
-                className="hidden"
-              />
-            </label>
-
-            {uploadedFileName && (
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-3">
-                <p className="text-xs text-zinc-500">
-                  Arquivo selecionado
-                </p>
-
-                <p className="mt-1 truncate text-sm font-bold text-[var(--ff-accent-text)]">
-                  {uploadedFileName}
-                </p>
-              </div>
-            )}
-
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-3">
-              <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                <LinkIcon size={14} />
-                Ou use uma URL
-              </div>
-
-              <Input
-                placeholder="/exercise-media/chest/exemplo.gif ou https://..."
-                value={mediaUrl}
-                onChange={onUrlChange}
-              />
-            </div>
-
-            {mediaUrl && (
-              <button
-                type="button"
-                onClick={onClear}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 text-sm font-bold text-red-300 transition hover:bg-red-500/20"
-              >
-                <X size={16} />
-                Remover mídia
-              </button>
-            )}
-
-            <p className="text-xs leading-relaxed text-zinc-500">
-              Para melhor performance no app, prefira URLs externas ou imagens leves. Base64 grande pesa no LocalStorage e deixa a biblioteca mais lenta.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
+import {
+  DetailMiniCard,
+  FilterListButton,
+  HelperTextarea,
+  MediaUploader,
+  StatCard,
+} from '../features/exercises/components/ExerciseLibraryUi'
+
+import {
+  INITIAL_VISIBLE_COUNT,
+  LOAD_MORE_COUNT,
+  buildStatsMap,
+  defaultEquipmentList,
+  getExerciseMedia,
+  getSortedUnique,
+  getStatsFromMap,
+  getSubgroup,
+  listToText,
+  mergeExercisesWithoutDuplicates,
+  muscleGroupOrder,
+  normalizeEquipment,
+  normalizeExerciseForList,
+  normalizeExerciseFromApi,
+  normalizeList,
+  normalizeMuscleGroup,
+  normalizeText,
+  textToList,
+} from '../features/exercises/exerciseLibraryUtils'
 function Exercises() {
   const { user } = useAuth()
 
@@ -592,7 +97,7 @@ function Exercises() {
   const [isSyncing, setIsSyncing] = useState(false)
   const [dataSource, setDataSource] = useState('local')
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT)
+  const [visibleState, setVisibleState] = useState({ key: '', count: INITIAL_VISIBLE_COUNT })
 
   const [exercises, setExercises] = useState([])
 
@@ -666,11 +171,6 @@ function Exercises() {
 
     saveUserStorageData(user, 'exercises', exercises)
   }, [exercises, isLoaded, user])
-
-  useEffect(() => {
-    setVisibleCount(INITIAL_VISIBLE_COUNT)
-    setExpandedExerciseId(null)
-  }, [deferredSearch, groupFilter, subgroupFilter, equipmentFilter, showOnlyFavorites])
 
   const indexedExercises = useMemo(() => {
     return exercises.map((exercise) => {
@@ -778,6 +278,15 @@ function Exercises() {
     equipmentFilter,
     showOnlyFavorites,
   ])
+
+  const filterKey = useMemo(
+    () => [deferredSearch, groupFilter, subgroupFilter, equipmentFilter, showOnlyFavorites].join('|'),
+    [deferredSearch, groupFilter, subgroupFilter, equipmentFilter, showOnlyFavorites]
+  )
+
+  const visibleCount = visibleState.key === filterKey
+    ? visibleState.count
+    : INITIAL_VISIBLE_COUNT
 
   const displayedExercises = useMemo(() => {
     return filteredExercises.slice(0, visibleCount)
@@ -1752,7 +1261,7 @@ function Exercises() {
                       <Button
                         type="button"
                         variant="secondary"
-                        onClick={() => setVisibleCount((current) => current + LOAD_MORE_COUNT)}
+                        onClick={() => setVisibleState({ key: filterKey, count: visibleCount + LOAD_MORE_COUNT })}
                         className="w-full"
                       >
                         Carregar mais 8 exercícios
