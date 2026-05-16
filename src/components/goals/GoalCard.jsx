@@ -2,14 +2,12 @@ import {
   Archive,
   CheckCircle2,
   Edit3,
-  Flag,
   RotateCcw,
   Target,
   Trash2,
 } from 'lucide-react'
 
 import Badge from '../ui/Badge'
-import Button from '../ui/Button'
 import Card from '../ui/Card'
 import GoalProgressBar from './GoalProgressBar'
 

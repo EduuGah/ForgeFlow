@@ -129,7 +129,7 @@ function createBasicTips(exercise) {
   ]
 }
 
-function createBasicMistakes(exercise) {
+function createBasicMistakes() {
   return [
     'Executar o movimento rápido demais.',
     'Perder a postura durante a repetição.',

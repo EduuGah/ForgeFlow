@@ -58,7 +58,7 @@ function isApiRequest(request) {
 async function networkOnlyWithOfflineFallback(request) {
   try {
     return await fetch(request)
-  } catch (error) {
+  } catch {
     if (request.mode === 'navigate') {
       const cache = await caches.open(STATIC_CACHE)
       return (await cache.match(OFFLINE_URL)) || new Response('<h1>Offline</h1>', {
@@ -105,7 +105,7 @@ async function handleNavigation(request) {
     const cache = await caches.open(RUNTIME_CACHE)
     cache.put('/', networkResponse.clone())
     return networkResponse
-  } catch (error) {
+  } catch {
     const runtimeCache = await caches.open(RUNTIME_CACHE)
     const staticCache = await caches.open(STATIC_CACHE)
 

@@ -6,7 +6,6 @@ import {
   Info,
   MoreVertical,
   Share,
-  Smartphone,
   X,
 } from 'lucide-react'
 

@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { ClipboardList, Download, Dumbbell, Home, TrendingUp, UserRound } from 'lucide-react'
+import { ClipboardList, Dumbbell, Home, TrendingUp, UserRound } from 'lucide-react'
 
 const links = [
   { name: 'Início', path: '/', icon: Home },

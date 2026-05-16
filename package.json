@@ -10,9 +10,11 @@
     "import:exercisedgifs": "node scripts/downloadExerciseGifs.js",
     "deps:audit": "node scripts/frontend-dependency-audit.mjs",
     "size:report": "node scripts/frontend-size-report.mjs",
-    "check:frontend": "npm run deps:audit && npm run size:report",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "check:frontend": "npm run lint:frontend && npm run build && npm run deps:audit && npm run size:report",
+    "lint": "eslint src public scripts",
+    "preview": "vite preview",
+    "lint:frontend": "eslint src public scripts",
+    "check:frontend:quick": "npm run deps:audit && npm run size:report"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.4",

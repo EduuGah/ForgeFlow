@@ -67,7 +67,7 @@ export function getInitialExercises() {
     localStorage.setItem(EXERCISES_VERSION_KEY, CURRENT_EXERCISES_VERSION)
 
     return mergedExercises
-  } catch (error) {
+  } catch {
     localStorage.setItem(EXERCISES_KEY, JSON.stringify(defaultExercises))
     localStorage.setItem(EXERCISES_VERSION_KEY, CURRENT_EXERCISES_VERSION)
 

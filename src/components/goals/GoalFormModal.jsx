@@ -11,7 +11,6 @@ import {
 
 import Button from '../ui/Button'
 import Input from '../ui/Input'
-import Select from '../ui/Select'
 import Textarea from '../ui/Textarea'
 
 const GOAL_TYPES = [
@@ -153,7 +152,6 @@ function GoalFormModal({
   const [unit, setUnit] = useState('treinos')
   const [exerciseName, setExerciseName] = useState('')
   const [deadline, setDeadline] = useState('')
-  const [customMode, setCustomMode] = useState(false)
 
   const selectedConfig = useMemo(() => {
     return getGoalTypeConfig(type)
@@ -171,7 +169,6 @@ function GoalFormModal({
       setUnit(goal.unit || getGoalTypeConfig(goal.type).unit || '')
       setExerciseName(goal.exerciseName || '')
       setDeadline(goal.deadline ? String(goal.deadline).slice(0, 10) : '')
-      setCustomMode(goal.type === 'custom')
       return
     }
 
@@ -186,7 +183,6 @@ function GoalFormModal({
     setUnit(config.unit)
     setExerciseName('')
     setDeadline('')
-    setCustomMode(false)
   }, [open, goal])
 
   if (!open) return null
@@ -198,7 +194,6 @@ function GoalFormModal({
     setUnit(config.unit)
     setCurrentValue('')
     setExerciseName('')
-    setCustomMode(nextType === 'custom')
 
     if (!goal) {
       setTitle(config.titleExample)
