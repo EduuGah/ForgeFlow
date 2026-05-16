@@ -33,6 +33,7 @@ import {
 } from './workoutSession/workoutSessionUtils'
 
 import { WorkoutSessionContext } from './workoutSession/WorkoutSessionContextValue'
+export { useWorkoutSession } from './useWorkoutSession'
 
 export function WorkoutSessionProvider({ children }) {
   const { user } = useAuth()
