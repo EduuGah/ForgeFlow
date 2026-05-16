@@ -14,7 +14,9 @@
     "lint": "eslint src public scripts",
     "preview": "vite preview",
     "lint:frontend": "eslint src public scripts",
-    "check:frontend:quick": "npm run deps:audit && npm run size:report"
+    "check:frontend:quick": "npm run deps:audit && npm run size:report",
+    "check:server": "npm --prefix server run check:backend",
+    "check:all": "npm run check:frontend && npm run check:server"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.4",

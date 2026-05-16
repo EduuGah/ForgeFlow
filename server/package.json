@@ -7,7 +7,9 @@
     "check": "node --check index.js",
     "test": "node scripts/sanity-check.mjs && node scripts/workout-validation.test.mjs",
     "sanity": "node scripts/sanity-check.mjs",
-    "smoke:health": "node scripts/smoke-health.mjs"
+    "smoke:health": "node scripts/smoke-health.mjs",
+    "audit:routes": "node scripts/backend-route-audit.mjs",
+    "check:backend": "npm run check && npm run test && npm run audit:routes"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
