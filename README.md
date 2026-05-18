@@ -18,9 +18,11 @@ O projeto começou como uma forma de praticar React, JavaScript e Tailwind CSS, 
 - [Administração](#administração)
 - [Como rodar localmente](#como-rodar-localmente)
 - [Rodando a API](#rodando-a-api)
+- [Scripts de qualidade](#scripts-de-qualidade)
 - [Estrutura geral](#estrutura-geral)
 - [LocalStorage e banco de dados](#localstorage-e-banco-de-dados)
 - [Segurança e boas práticas](#segurança-e-boas-práticas)
+- [Manutenção técnica recente](#manutenção-técnica-recente)
 - [Etapas concluídas](#etapas-concluídas)
 - [Roadmap](#roadmap)
 - [Possível versão mobile](#possível-versão-mobile)
@@ -82,7 +84,15 @@ O projeto já possui uma estrutura funcional com:
 - painel administrativo para suporte;
 - reset manual de senha pelo admin;
 - deploy do frontend na Vercel;
-- deploy da API no Render.
+- deploy da API no Render;
+- scripts de check, test e build centralizados;
+- validação básica automatizada do backend;
+- auditoria de rotas administrativas;
+- tratamento global de erros no backend;
+- resposta JSON padronizada para rotas inexistentes;
+- proteção CSRF reforçada em rotas sensíveis;
+- rate limit em memória com limpeza preventiva;
+- fallback seguro para URL da API em desenvolvimento e produção.
 
 ---
 
@@ -118,6 +128,10 @@ O projeto já possui uma estrutura funcional com:
 - PDFKit
 - Dotenv
 - CORS
+- Helmet/headers de segurança customizados
+- Rate limiting
+- Proteção CSRF
+- Validações internas
 
 ### Deploy e infraestrutura
 
@@ -524,7 +538,13 @@ Principais responsabilidades:
 - exportação/importação de dados;
 - integração com Cloudinary;
 - painel administrativo;
-- ações de suporte, como reset manual de senha e limpeza de treino ativo travado.
+- ações de suporte, como reset manual de senha e limpeza de treino ativo travado;
+- headers de segurança;
+- proteção CSRF;
+- rate limit;
+- tratamento global de erros;
+- resposta padronizada para rotas não encontradas;
+- scripts de sanity check e auditoria de rotas.
 
 Exemplo de variáveis usadas no servidor:
 
@@ -612,11 +632,13 @@ npm install
 
 ### 4. Criar o arquivo `.env` do frontend
 
-Exemplo:
+Na raiz do projeto, crie um arquivo `.env` com:
 
 ```env
 VITE_API_URL=http://localhost:5000
 ```
+
+> Observação: em desenvolvimento, caso `VITE_API_URL` não esteja definida, o frontend usa fallback para `http://localhost:3001`. Em produção, se a variável não existir, o app tenta usar a mesma origem do frontend. Mesmo assim, o recomendado é sempre configurar a URL real da API.
 
 ### 5. Rodar o frontend
 
@@ -624,7 +646,11 @@ VITE_API_URL=http://localhost:5000
 npm run dev
 ```
 
----
+Por padrão, o Vite costuma abrir em:
+
+```txt
+http://localhost:5173
+```
 
 ## Rodando a API
 
@@ -642,7 +668,7 @@ npm install
 
 ### 3. Criar o `.env` do servidor
 
-Exemplo:
+Exemplo para desenvolvimento local:
 
 ```env
 PORT=5000
@@ -656,16 +682,59 @@ GOOGLE_CLIENT_SECRET=sua_client_secret
 CLOUDINARY_CLOUD_NAME=seu_cloud_name
 CLOUDINARY_API_KEY=sua_api_key
 CLOUDINARY_API_SECRET=seu_api_secret
-
-
 ```
+
+Variáveis sensíveis não devem ser versionadas no GitHub.
+
 ### 4. Rodar em desenvolvimento
 
 ```bash
 npm run dev
 ```
 
+### 5. Rodar em produção/local simples
+
+```bash
+npm start
+```
+
 ---
+
+## Scripts de qualidade
+
+O projeto possui scripts para validar frontend, backend, testes e build.
+
+Na raiz do projeto:
+
+```bash
+npm install
+npm run check
+npm run test
+npm run build
+npm run check:client
+npm run check:server
+```
+
+Principais scripts:
+
+| Script | O que faz |
+| --- | --- |
+| `npm run dev` | inicia o frontend com Vite |
+| `npm run build` | gera o build de produção do frontend |
+| `npm run preview` | abre uma prévia local do build |
+| `npm run lint:frontend` | roda ESLint no frontend |
+| `npm run check:client` | valida lint e build do frontend |
+| `npm run check:server` | roda validações/testes do backend |
+| `npm run test` | roda a suíte de validações do projeto |
+| `npm run check` | roda a validação geral do projeto |
+
+No backend, os checks incluem:
+
+- verificação de sintaxe do `server/index.js`;
+- sanity check de arquivos obrigatórios;
+- validação das regras de treino;
+- auditoria básica de proteção de rotas administrativas;
+- verificação dos handlers globais de erro.
 
 ## Estrutura geral
 
@@ -732,6 +801,18 @@ server/
 ├── index.js
 ├── package.json
 ├── package-lock.json
+├── scripts/
+│   ├── audit-routes.mjs
+│   ├── sanity-check.mjs
+│   └── workout-validation.test.mjs
+├── utils/
+│   ├── authCookie.js
+│   ├── csrfProtection.js
+│   ├── errorHandling.js
+│   ├── rateLimit.js
+│   ├── securityHeaders.js
+│   ├── sensitiveSecurity.js
+│   └── workoutValidation.js
 └── .env
 ```
 
@@ -781,17 +862,67 @@ Alguns cuidados já foram considerados no projeto:
 - senhas armazenadas com hash;
 - permissões por `role`;
 - rotas protegidas por usuário;
+- rotas administrativas protegidas no backend;
 - validação de usuário nas operações;
+- proteção contra IDOR nas operações por usuário;
 - upload de imagem via Cloudinary;
 - imagens não são salvas em Base64 no banco;
 - limite de tamanho para upload;
+- tratamento específico para erros de upload;
 - separação entre frontend e backend;
 - CORS configurado por ambiente;
+- cookies com configuração por ambiente;
+- proteção CSRF em rotas sensíveis;
+- headers de segurança customizados;
+- rate limit para reduzir abuso de requisições;
+- tratamento global de erros em JSON;
+- resposta padronizada para rotas inexistentes;
 - backup e exportação de dados do usuário;
 - cache separado por conta;
-- fallback local controlado.
+- fallback local controlado;
+- scripts de auditoria básica para rotas administrativas.
 
-Ainda há espaço para melhorias antes de transformar o projeto em app mobile publicado.
+Pontos que ainda exigem cuidado antes de produção real:
+
+- revisar variáveis reais no ambiente de deploy;
+- garantir HTTPS em produção;
+- manter `JWT_SECRET` e `SESSION_SECRET` fortes;
+- revisar permissões administrativas no MongoDB;
+- testar fluxo completo de autenticação em dispositivos reais;
+- evoluir testes automatizados para cobrir rotas HTTP integradas.
+
+---
+
+## Manutenção técnica recente
+
+Foi feita uma rodada de correções técnicas com foco em estabilidade, segurança, build e validação do projeto.
+
+Principais ajustes:
+
+- adicionados scripts principais de qualidade na raiz do projeto;
+- criado script central para checks do projeto;
+- criado script central para testes;
+- corrigido o build do frontend após reinstalação das dependências;
+- removidos warnings de ESLint;
+- criado tratamento global de erros no backend;
+- criada resposta JSON padronizada para rotas não encontradas;
+- reforçada a proteção CSRF no logout;
+- melhorado o rate limit em memória com limpeza preventiva;
+- melhorado fallback da URL da API no frontend;
+- atualizado sanity check para validar arquivos críticos;
+- mantida auditoria de rotas admin.
+
+Comandos validados na rodada:
+
+```bash
+npm install
+npm run check:server
+npm run check:client
+npm run test
+npm run check
+```
+
+Observação: a auditoria ainda aponta rotas antigas de `workout-templates` como possivelmente não usadas pelo frontend atual. Elas foram mantidas por segurança, já que podem servir compatibilidade com dados ou fluxos antigos.
 
 ---
 
@@ -936,6 +1067,25 @@ Situação atual:
 - reset de senha mantido apenas pelo admin;
 - backend sem dependência de `nodemailer` ou `RESEND_API_KEY`.
 
+### Etapa 30 — Correções técnicas, segurança e checks
+
+A Etapa 30 focou em deixar o projeto mais estável para manutenção e preparação futura de produção.
+
+Principais melhorias:
+
+- scripts de `check`, `test`, `check:client` e `check:server`;
+- build do frontend validado;
+- lint do frontend sem warnings;
+- checks básicos do backend;
+- validação dos utilitários de treino;
+- auditoria das rotas administrativas;
+- tratamento global de erros no backend;
+- handler JSON para rotas inexistentes;
+- reforço da proteção CSRF no logout;
+- rate limit com limpeza preventiva;
+- fallback seguro para URL da API no frontend;
+- sanity check atualizado para proteger arquivos críticos.
+
 
 ---
 
@@ -952,7 +1102,12 @@ Próximas melhorias planejadas:
 - preparar Capacitor para empacotar o app;
 - testar APK/app Android;
 - criar testes automatizados para rotas críticas;
-- refatorar gradualmente o backend em módulos separados.
+- refatorar gradualmente o backend em módulos separados;
+- separar `server/index.js` em rotas, controllers, services e validators;
+- reduzir gradualmente o tamanho do `src/index.css`;
+- ampliar testes automatizados com rotas HTTP reais;
+- revisar rotas legadas de `workout-templates`;
+- criar pipeline de CI para rodar checks automaticamente.
 
 Melhorias futuras:
 
