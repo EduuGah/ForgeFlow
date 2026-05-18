@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { RefreshCcw } from 'lucide-react'
 
@@ -39,6 +39,7 @@ function Progress() {
   const { user } = useAuth()
 
   const [progressData, setProgressData] = useState(null)
+  const progressDataRef = useRef(null)
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [source, setSource] = useState('local')
@@ -77,12 +78,13 @@ function Progress() {
     let isMounted = true
 
     async function loadProgress() {
-      setLoading((current) => current && !progressData)
+      setLoading((current) => current && !progressDataRef.current)
       setSyncing(true)
 
       const cachedProgress = getUserStorageData(user, 'progress-stats', null)
 
       if (cachedProgress && !deferredSelectedExercise) {
+        progressDataRef.current = cachedProgress
         setProgressData(cachedProgress)
         setSource('local')
         setLoading(false)
@@ -97,6 +99,7 @@ function Progress() {
 
         if (!isMounted) return
 
+        progressDataRef.current = data
         setProgressData(data)
 
         if (!deferredSelectedExercise) {
@@ -109,7 +112,11 @@ function Progress() {
 
         if (!isMounted) return
 
-        setProgressData((current) => current || cachedProgress)
+        setProgressData((current) => {
+          const fallbackProgress = current || cachedProgress || null
+          progressDataRef.current = fallbackProgress
+          return fallbackProgress
+        })
         setSource('local')
       } finally {
         if (isMounted) {
@@ -124,7 +131,7 @@ function Progress() {
     return () => {
       isMounted = false
     }
-  }, [user, deferredSelectedExercise, refreshKey, progressData])
+  }, [user, deferredSelectedExercise, refreshKey])
 
   const normalizedProgress = useMemo(() => {
     const summary = progressData?.summary || {}

@@ -225,13 +225,24 @@ app.use(generalRateLimit)
 app.use(express.json({ limit: '10mb' }))
 app.use(cookieParser())
 
-const allowedCorsOrigins = [
-    normalizedFrontendUrl,
-    process.env.FRONTEND_URL,
-    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '',
-]
-    .filter(Boolean)
-    .map((origin) => origin.replace(/\/$/, ''))
+function splitEnvUrls(value = '') {
+    return String(value)
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean)
+}
+
+const allowedCorsOrigins = Array.from(
+    new Set([
+        normalizedFrontendUrl,
+        process.env.FRONTEND_URL,
+        ...splitEnvUrls(process.env.CORS_ORIGINS),
+        process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '',
+        'https://forge-flow-five.vercel.app',
+    ]
+        .filter(Boolean)
+        .map((origin) => origin.replace(/\/$/, '')))
+)
 
 function getAllowedCorsOrigin(origin, callback) {
     if (!origin) {
@@ -244,6 +255,7 @@ function getAllowedCorsOrigin(origin, callback) {
         return callback(null, true)
     }
 
+    console.warn(`[cors] Origem bloqueada: ${normalizedOrigin}`)
     return callback(null, false)
 }
 
