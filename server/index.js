@@ -30,6 +30,7 @@ import {
     sensitiveRateLimit,
 } from './utils/rateLimit.js'
 import { requireRecentPassword } from './utils/sensitiveSecurity.js'
+import { globalErrorHandler, notFoundHandler } from './utils/errorHandling.js'
 import {
     normalizeActiveWorkoutPayload,
     normalizeBackupPayload,
@@ -57,7 +58,9 @@ const upload = multer({
         ]
 
         if (!allowedMimeTypes.includes(file.mimetype)) {
-            return callback(new Error('Formato de imagem inválido. Use JPG, PNG ou WEBP.'))
+            const error = new Error('Formato de imagem inválido. Use JPG, PNG ou WEBP.')
+            error.statusCode = 400
+            return callback(error)
         }
 
         callback(null, true)
@@ -7424,6 +7427,9 @@ app.delete('/exercises/:id', authMiddleware, async (req, res) => {
         message: 'Exercício removido com sucesso.',
     })
 })
+
+app.use(notFoundHandler)
+app.use(globalErrorHandler)
 
 app.listen(PORT, () => {
     console.log(`API rodando em http://localhost:${PORT}`)

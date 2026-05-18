@@ -45,6 +45,7 @@ const requiredFiles = [
     'utils/securityHeaders.js',
     'utils/rateLimit.js',
     'utils/sensitiveSecurity.js',
+    'utils/errorHandling.js',
 ]
 
 for (const relativePath of requiredFiles) {
@@ -63,6 +64,7 @@ const requiredImports = [
     './utils/securityHeaders.js',
     './utils/rateLimit.js',
     './utils/sensitiveSecurity.js',
+    './utils/errorHandling.js',
 ]
 
 for (const importPath of requiredImports) {
@@ -89,6 +91,8 @@ assert(!indexSource.includes("app.options('*'"), "não usa app.options('*'), inc
 assert(indexSource.includes('app.use(csrfProtection)'), 'CSRF protection está registrado')
 assert(indexSource.includes('app.use(securityHeaders)'), 'securityHeaders está registrado')
 assert(indexSource.includes('app.use(generalRateLimit)'), 'rate limit geral está registrado')
+assert(indexSource.includes('app.use(notFoundHandler)'), 'handler 404 JSON está registrado')
+assert(indexSource.includes('app.use(globalErrorHandler)'), 'handler global de erro JSON está registrado')
 
 if (process.exitCode) {
     console.error('\nSanity check encontrou problemas.')

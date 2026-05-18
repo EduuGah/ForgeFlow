@@ -10,13 +10,18 @@
     "import:exercisedgifs": "node scripts/downloadExerciseGifs.js",
     "deps:audit": "node scripts/frontend-dependency-audit.mjs",
     "size:report": "node scripts/frontend-size-report.mjs",
-    "check:frontend": "npm run lint:frontend && npm run build && npm run deps:audit && npm run size:report",
+    "check:frontend": "npm run lint:frontend && npm run build",
     "lint": "eslint src public scripts",
     "preview": "vite preview",
     "lint:frontend": "eslint src public scripts",
     "check:frontend:quick": "npm run deps:audit && npm run size:report",
-    "check:server": "npm --prefix server run check:backend",
-    "check:all": "npm run check:frontend && npm run check:server"
+    "check:server": "node scripts/run-project-checks.mjs check:server",
+    "check:all": "npm run check:server && npm run build",
+    "check": "npm run check:all",
+    "test": "node scripts/run-tests.mjs",
+    "test:frontend": "eslint src public scripts",
+    "test:server": "node server/scripts/sanity-check.mjs && node server/scripts/workout-validation.test.mjs",
+    "check:client": "npm run build"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.4",

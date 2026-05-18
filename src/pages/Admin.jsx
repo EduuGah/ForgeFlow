@@ -318,14 +318,14 @@ function Admin() {
     )
   }
 
-  /* eslint-disable react-hooks/set-state-in-effect */
+   
   useEffect(() => {
     if (!isAdmin) return
 
     loadAdminStats()
     loadAnalytics()
     // rankings e usuários carregam sob demanda ao abrir as abas
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [isAdmin, roleFilter, statusFilter, providerFilter])
 
 
@@ -339,9 +339,9 @@ function Admin() {
     if (activeAdminView === 'users' && !loadedAdminViews.users) {
       loadUsers()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [activeAdminView, isAdmin])
-  /* eslint-enable react-hooks/set-state-in-effect */
+   
 
   useEffect(() => {
     if (!isAdmin || activeAdminView !== 'users') return
@@ -352,7 +352,7 @@ function Admin() {
     }, 350)
 
     return () => window.clearTimeout(timeoutId)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [roleFilter, statusFilter, providerFilter, query])
 
   const filteredUsers = useMemo(() => {

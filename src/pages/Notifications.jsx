@@ -91,7 +91,7 @@ function Notifications() {
       setSelectedNotification(null)
       loadNotifications()
     })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [user, statusFilter])
 
   useEffect(() => {

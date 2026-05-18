@@ -65,7 +65,7 @@ export function TutorialProvider({ children }) {
       window.removeEventListener('forgeflow:start-tutorial', handleOpenTutorial)
       window.removeEventListener('forgeflow:reset-tutorial', handleResetTutorial)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [user])
 
   useEffect(() => {

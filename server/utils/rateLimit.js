@@ -1,4 +1,15 @@
 const rateLimitStore = new Map()
+const MAX_RATE_LIMIT_KEYS = 10_000
+
+function cleanupExpiredKeys(now = Date.now()) {
+    if (rateLimitStore.size < MAX_RATE_LIMIT_KEYS) return
+
+    for (const [key, value] of rateLimitStore.entries()) {
+        if (value.expiresAt <= now) {
+            rateLimitStore.delete(key)
+        }
+    }
+}
 
 export function createRateLimiter({ windowMs = 60_000, max = 60, keyPrefix = 'global' } = {}) {
     return (req, res, next) => {
@@ -9,6 +20,8 @@ export function createRateLimiter({ windowMs = 60_000, max = 60, keyPrefix = 'gl
 
         const key = `${keyPrefix}:${ip}`
         const now = Date.now()
+
+        cleanupExpiredKeys(now)
         const current = rateLimitStore.get(key)
 
         if (!current || current.expiresAt <= now) {

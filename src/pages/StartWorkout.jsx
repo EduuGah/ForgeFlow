@@ -438,7 +438,7 @@ function StartWorkout() {
     if (!user) return
 
     // Hidrata a biblioteca local quando o usuário muda.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setExercises(getUserStorageData(user, 'exercises', []))
   }, [user])
 
@@ -473,7 +473,7 @@ function StartWorkout() {
 
     if (!selectedExerciseId && focusExercise?.id) {
       // Mantém o foco inicial alinhado com o primeiro exercício pendente.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setSelectedExerciseId(focusExercise.id)
     }
 

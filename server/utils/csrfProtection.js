@@ -8,7 +8,6 @@ export function csrfProtection(req, res, next) {
     const publicAuthPaths = [
         '/auth/login',
         '/auth/register',
-        '/auth/logout',
         '/auth/forgot-password',
     ]
 
