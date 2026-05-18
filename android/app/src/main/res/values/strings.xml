@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ForgeFlow</string>
+    <string name="title_activity_main">ForgeFlow</string>
+    <string name="package_name">com.edugah3.forgeflow</string>
+    <string name="custom_url_scheme">com.edugah3.forgeflow</string>
+</resources>
