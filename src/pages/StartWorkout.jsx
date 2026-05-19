@@ -107,6 +107,20 @@ function getSessionExerciseMedia(sessionExercise) {
 }
 
 
+function hasValidCompletedWorkoutSet(sessionExercises) {
+  return sessionExercises.some((sessionExercise) =>
+    (sessionExercise.sets || []).some((set) => {
+      const reps = Number(set?.reps || 0)
+
+      return set?.completed && reps > 0
+    })
+  )
+}
+
+const EMPTY_WORKOUT_ERROR =
+  'Você ainda não concluiu nenhuma série válida. Preencha as repetições e marque pelo menos uma série como concluída antes de finalizar.'
+
+
 
 function StartWorkout() {
   const { user } = useAuth()
@@ -176,6 +190,10 @@ function StartWorkout() {
       skippedExercises,
       totalPRs,
     }
+  }, [sessionExercises])
+
+  const hasValidCompletedSet = useMemo(() => {
+    return hasValidCompletedWorkoutSet(sessionExercises)
   }, [sessionExercises])
 
   const focusExercise = useMemo(() => {
@@ -286,8 +304,30 @@ function StartWorkout() {
     window.location.href = '/workouts'
   }
 
+  function handleRequestFinishWorkout() {
+    if (!hasValidCompletedSet) {
+      showToast(
+        'error',
+        'Treino incompleto',
+        EMPTY_WORKOUT_ERROR
+      )
+      return
+    }
+
+    setIsFinishModalOpen(true)
+  }
+
   async function handleFinishWorkout() {
     if (savingWorkout) return
+
+    if (!hasValidCompletedSet) {
+      showToast(
+        'error',
+        'Treino incompleto',
+        EMPTY_WORKOUT_ERROR
+      )
+      return
+    }
 
     setSavingWorkout(true)
 
@@ -321,7 +361,7 @@ function StartWorkout() {
       showToast(
         'error',
         'Erro ao finalizar',
-        'Não foi possível finalizar o treino.'
+        error?.message || 'Não foi possível finalizar o treino.'
       )
     } finally {
       setSavingWorkout(false)
@@ -507,7 +547,7 @@ function StartWorkout() {
         getExerciseName={getExerciseName}
         getExerciseSubtitle={getExerciseSubtitle}
         onStartRestTimer={startManualRestTimer}
-        onRequestFinish={() => setIsFinishModalOpen(true)}
+        onRequestFinish={handleRequestFinishWorkout}
         onFinishWorkout={handleFinishWorkout}
         onFocusExercise={focusExerciseCard}
       />
@@ -570,7 +610,7 @@ function StartWorkout() {
           formatTime={formatTime}
           onStartRestTimer={startManualRestTimer}
           onUpdateNotes={updateNotes}
-          onRequestFinish={() => setIsFinishModalOpen(true)}
+          onRequestFinish={handleRequestFinishWorkout}
           onCancelWorkout={handleCancelWorkout}
         />
       </section>
@@ -584,7 +624,7 @@ function StartWorkout() {
         formatTime={formatTime}
         onCancelWorkout={handleCancelWorkout}
         onStartRestTimer={startManualRestTimer}
-        onRequestFinish={() => setIsFinishModalOpen(true)}
+        onRequestFinish={handleRequestFinishWorkout}
       />
 
       <RestTimerCard
