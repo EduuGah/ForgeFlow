@@ -7,6 +7,7 @@ import { TutorialProvider } from './context/TutorialContext'
 
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import PublicRoute from './components/auth/PublicRoute'
+import AppUrlListener from './components/auth/AppUrlListener'
 
 const AppLayout = lazy(() => import('./components/layouts/AppLayout'))
 
@@ -56,6 +57,7 @@ function App() {
       <AuthProvider>
         <WorkoutSessionProvider>
           <TutorialProvider>
+            <AppUrlListener />
             <Suspense fallback={<AppLoadingFallback />}>
               <Routes>
               <Route

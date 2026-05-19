@@ -1,26 +1,16 @@
-export function getWindowOrigin() {
-  if (typeof window === 'undefined') return ''
+import { Capacitor } from '@capacitor/core'
 
-  return window.location?.origin || ''
+export function isNativeApp() {
+  try {
+    return Capacitor.isNativePlatform()
+  } catch {
+    return false
+  }
 }
 
-export function isNativeAppRuntime() {
-  if (typeof window === 'undefined') return false
+export function getGoogleLoginUrl(apiUrl) {
+  const baseUrl = String(apiUrl || '').replace(/\/$/, '')
+  const platformParam = isNativeApp() ? '?platform=mobile' : ''
 
-  const origin = getWindowOrigin()
-
-  return (
-    origin.startsWith('capacitor://') ||
-    origin.startsWith('ionic://') ||
-    Boolean(window.Capacitor?.isNativePlatform?.()) ||
-    Boolean(window.Capacitor?.getPlatform && window.Capacitor.getPlatform() !== 'web')
-  )
-}
-
-export function isLocalWebRuntime() {
-  if (typeof window === 'undefined') return false
-
-  const hostname = window.location?.hostname || ''
-
-  return ['localhost', '127.0.0.1', '0.0.0.0'].includes(hostname)
+  return `${baseUrl}/auth/google${platformParam}`
 }

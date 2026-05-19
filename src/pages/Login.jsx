@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { API_BASE_URL, apiFetch, saveAuthToken } from '../services/api'
+import { apiFetch, saveAuthToken } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import forgeflowIcon from '../assets/forgeflow-icon.png'
 import { applyAppSettingsToDocument, getAppSettings } from '../utils/settingsUtils'
-import { isNativeAppRuntime } from '../utils/platformUtils'
+import { getGoogleLoginUrl } from '../utils/platformUtils'
+
+const API_URL = (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3001' : 'https://forgeflow-citr.onrender.com')).replace(/\/$/, '')
 
 function GoogleIcon() {
     return (
@@ -37,14 +39,13 @@ function Login() {
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
-    const isNativeApp = isNativeAppRuntime()
 
     useEffect(() => {
         applyAppSettingsToDocument(getAppSettings())
     }, [])
 
     function handleGoogleLogin() {
-        window.location.href = `${API_BASE_URL}/auth/google`
+        window.location.href = getGoogleLoginUrl(API_URL)
     }
 
     async function handleSubmit(event) {
@@ -170,33 +171,25 @@ function Login() {
             </Link>
           </div>
 
-                {!isNativeApp ? (
-                    <>
-                        <div className="my-6 flex items-center gap-3">
-                            <div className="h-px flex-1 bg-[var(--ff-border)]" />
-                            <span className="text-xs font-bold uppercase tracking-wide text-[var(--ff-muted-2)]">
-                                ou
-                            </span>
-                            <div className="h-px flex-1 bg-[var(--ff-border)]" />
-                        </div>
+                <div className="my-6 flex items-center gap-3">
+                    <div className="h-px flex-1 bg-[var(--ff-border)]" />
+                    <span className="text-xs font-bold uppercase tracking-wide text-[var(--ff-muted-2)]">
+                        ou
+                    </span>
+                    <div className="h-px flex-1 bg-[var(--ff-border)]" />
+                </div>
 
-                        <button
-                            type="button"
-                            onClick={handleGoogleLogin}
-                            className="group flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-sm font-black text-[var(--ff-text)] shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-card-hover)] active:translate-y-0"
-                        >
-                            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white shadow-sm transition group-hover:scale-105">
-                                <GoogleIcon />
-                            </span>
+                <button
+                    type="button"
+                    onClick={handleGoogleLogin}
+                    className="group flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-sm font-black text-[var(--ff-text)] shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-card-hover)] active:translate-y-0"
+                >
+                    <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white shadow-sm transition group-hover:scale-105">
+                        <GoogleIcon />
+                    </span>
 
-                            <span>Entrar com Google</span>
-                        </button>
-                    </>
-                ) : (
-                    <div className="mt-6 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3 text-center text-xs font-semibold leading-relaxed text-[var(--ff-muted)]">
-                        No app Android, use e-mail e senha. O login com Google permanece disponível na versão web até o fluxo nativo por deep link ser configurado.
-                    </div>
-                )}
+                    <span>Entrar com Google</span>
+                </button>
 
                 <p className="mt-5 text-center text-sm text-[var(--ff-muted)]">
                     Não tem conta?{' '}

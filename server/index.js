@@ -74,6 +74,7 @@ const {
     MONGODB_URI,
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
+    MOBILE_REDIRECT_URL = 'forgeflow://auth/callback',
     JWT_SECRET,
     SESSION_SECRET,
     CLOUDINARY_CLOUD_NAME,
@@ -217,6 +218,7 @@ cloudinary.config({
 
 const normalizedFrontendUrl = FRONTEND_URL.replace(/\/$/, '')
 const normalizedBackendUrl = BACKEND_URL.replace(/\/$/, '')
+const normalizedMobileRedirectUrl = MOBILE_REDIRECT_URL.replace(/\/$/, '')
 
 
 
@@ -3053,13 +3055,14 @@ app.get('/health', (req, res) => {
     })
 })
 
-app.get(
-    '/auth/google',
-    authRateLimit,
+app.get('/auth/google', authRateLimit, (req, res, next) => {
+    const platform = req.query?.platform === 'mobile' ? 'mobile' : 'web'
+
     passport.authenticate('google', {
         scope: ['profile', 'email'],
-    })
-)
+        state: platform,
+    })(req, res, next)
+})
 
 app.get(
     '/auth/google/callback',
@@ -3072,7 +3075,14 @@ app.get(
         const token = createToken(req.user)
         setAuthCookie(res, token)
 
-        res.redirect(`${normalizedFrontendUrl}/auth/callback?token=${token}&mode=hybrid`)
+        const encodedToken = encodeURIComponent(token)
+        const isMobileLogin = req.query?.state === 'mobile'
+
+        if (isMobileLogin) {
+            return res.redirect(`${normalizedMobileRedirectUrl}?token=${encodedToken}&mode=hybrid`)
+        }
+
+        return res.redirect(`${normalizedFrontendUrl}/auth/callback?token=${encodedToken}&mode=hybrid`)
     }
 )
 
