@@ -1,3 +1,5 @@
+import { isNativeAppRuntime } from './platformUtils'
+
 const APP_NAME = 'ForgeFlow'
 const MANIFEST_PATH = '/manifest.webmanifest'
 
@@ -47,6 +49,10 @@ export function isStandalonePwaMode() {
 
 export function setupPwaHeadTags() {
   if (typeof document === 'undefined') return
+  if (isNativeAppRuntime()) {
+    document.title = APP_NAME
+    return
+  }
 
   document.title = APP_NAME
 
@@ -72,6 +78,10 @@ export function notifyPwaStatus(status) {
 
 export function registerForgeFlowServiceWorker() {
   if (typeof window === 'undefined') return
+  if (isNativeAppRuntime()) {
+    notifyPwaStatus('app nativo')
+    return
+  }
   if (!('serviceWorker' in navigator)) {
     notifyPwaStatus('service worker indisponível')
     return
