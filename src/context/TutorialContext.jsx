@@ -171,7 +171,7 @@ export function TutorialProvider({ children }) {
     setActiveStepIndex(0)
   }
 
-  function closeWelcomePrompt({ dontShowAgain = false } = {}) {
+  function closeWelcomePrompt({ dontShowAgain = true } = {}) {
     setWelcomePromptVisible(false)
 
     if (dontShowAgain) {

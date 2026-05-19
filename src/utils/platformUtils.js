@@ -2,15 +2,32 @@ import { Capacitor } from '@capacitor/core'
 
 export function isNativeApp() {
   try {
-    return Capacitor.isNativePlatform()
+    if (Capacitor.isNativePlatform()) return true
   } catch {
-    return false
+    // Continua com os fallbacks abaixo.
   }
+
+  if (typeof window === 'undefined') return false
+
+  const protocol = window.location.protocol
+  const hostname = window.location.hostname
+
+  // No Capacitor Android o app normalmente roda como http://localhost em build de produção.
+  // Esse fallback evita esconder/errar o fluxo mobile quando Capacitor.isNativePlatform()
+  // não estiver disponível cedo o suficiente no bundle.
+  return (
+    protocol === 'capacitor:' ||
+    protocol === 'ionic:' ||
+    (import.meta.env.PROD && ['localhost', '127.0.0.1'].includes(hostname))
+  )
 }
 
 export function getGoogleLoginUrl(apiUrl) {
   const baseUrl = String(apiUrl || '').replace(/\/$/, '')
-  const platformParam = isNativeApp() ? '?platform=mobile' : ''
 
-  return `${baseUrl}/auth/google${platformParam}`
+  if (isNativeApp()) {
+    return `${baseUrl}/auth/google/mobile`
+  }
+
+  return `${baseUrl}/auth/google`
 }

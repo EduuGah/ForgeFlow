@@ -3055,13 +3055,23 @@ app.get('/health', (req, res) => {
     })
 })
 
+function authenticateWithGoogle(platform = 'web') {
+    const state = platform === 'mobile' ? 'forgeflow-mobile' : 'forgeflow-web'
+
+    return passport.authenticate('google', {
+        scope: ['profile', 'email'],
+        state,
+    })
+}
+
 app.get('/auth/google', authRateLimit, (req, res, next) => {
     const platform = req.query?.platform === 'mobile' ? 'mobile' : 'web'
 
-    passport.authenticate('google', {
-        scope: ['profile', 'email'],
-        state: platform,
-    })(req, res, next)
+    authenticateWithGoogle(platform)(req, res, next)
+})
+
+app.get('/auth/google/mobile', authRateLimit, (req, res, next) => {
+    authenticateWithGoogle('mobile')(req, res, next)
 })
 
 app.get(
@@ -3076,7 +3086,8 @@ app.get(
         setAuthCookie(res, token)
 
         const encodedToken = encodeURIComponent(token)
-        const isMobileLogin = req.query?.state === 'mobile'
+        const oauthState = String(req.query?.state || '').toLowerCase()
+        const isMobileLogin = oauthState.includes('mobile')
 
         if (isMobileLogin) {
             return res.redirect(`${normalizedMobileRedirectUrl}?token=${encodedToken}&mode=hybrid`)

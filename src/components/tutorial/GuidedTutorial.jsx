@@ -162,7 +162,7 @@ function WelcomePrompt() {
             onClick={() => closeWelcomePrompt()}
             className="flex h-12 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-sm font-bold text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)]"
           >
-            Agora não
+            Não mostrar agora
           </button>
         </div>
 
