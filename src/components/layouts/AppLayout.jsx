@@ -71,6 +71,7 @@ function AppLayout() {
   const [isRunningNativeApp, setIsRunningNativeApp] = useState(() => isNativeApp())
   const lastScrollYRef = useRef(0)
   const tickingRef = useRef(false)
+  const pageScrollRef = useRef(null)
 
   useEffect(() => {
     const native = isNativeApp()
@@ -85,18 +86,28 @@ function AppLayout() {
   }, [])
 
   useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      left: 0,
-      behavior: 'auto',
-    })
+    const scrollContainer = pageScrollRef.current
+
+    if (isRunningNativeApp && scrollContainer) {
+      scrollContainer.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: 'auto',
+      })
+    } else {
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: 'auto',
+      })
+    }
 
     lastScrollYRef.current = 0
     setIsHeaderVisible(true)
     setIsHeaderCompact(false)
 
     window.dispatchEvent(new CustomEvent('forgeflow:route-scroll-top'))
-  }, [location.pathname])
+  }, [isRunningNativeApp, location.pathname])
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined
@@ -125,8 +136,15 @@ function AppLayout() {
   }, [])
 
   useEffect(() => {
+    const scrollContainer = isRunningNativeApp ? pageScrollRef.current : window
+
+    function getCurrentScrollY() {
+      if (isRunningNativeApp && pageScrollRef.current) return pageScrollRef.current.scrollTop || 0
+      return window.scrollY || 0
+    }
+
     function handleScrollDirection() {
-      const currentScrollY = window.scrollY || 0
+      const currentScrollY = getCurrentScrollY()
       const lastScrollY = lastScrollYRef.current
       const difference = currentScrollY - lastScrollY
 
@@ -150,16 +168,16 @@ function AppLayout() {
       window.requestAnimationFrame(handleScrollDirection)
     }
 
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    window.addEventListener('wheel', handleScroll, { passive: true })
-    window.addEventListener('touchmove', handleScroll, { passive: true })
+    scrollContainer?.addEventListener?.('scroll', handleScroll, { passive: true })
+    scrollContainer?.addEventListener?.('wheel', handleScroll, { passive: true })
+    scrollContainer?.addEventListener?.('touchmove', handleScroll, { passive: true })
 
     return () => {
-      window.removeEventListener('scroll', handleScroll)
-      window.removeEventListener('wheel', handleScroll)
-      window.removeEventListener('touchmove', handleScroll)
+      scrollContainer?.removeEventListener?.('scroll', handleScroll)
+      scrollContainer?.removeEventListener?.('wheel', handleScroll)
+      scrollContainer?.removeEventListener?.('touchmove', handleScroll)
     }
-  }, [])
+  }, [isRunningNativeApp])
 
   useEffect(() => {
     if (!user) return undefined
@@ -296,7 +314,7 @@ function AppLayout() {
         </Suspense>
       )}
 
-      <main className={`ff-hevy-shell ${getRouteShellClass(location.pathname)} relative min-h-0 overflow-visible px-4 pb-36 pt-[calc(6.25rem+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[calc(6.25rem+env(safe-area-inset-top))]`}>
+      <main ref={pageScrollRef} className={`ff-hevy-shell ${getRouteShellClass(location.pathname)} relative min-h-0 overflow-visible px-4 pb-36 pt-[calc(6.25rem+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[calc(6.25rem+env(safe-area-inset-top))]`}>
         <div className="mx-auto w-full max-w-[1600px]">
           <Outlet />
         </div>

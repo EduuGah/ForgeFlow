@@ -2498,3 +2498,43 @@ body.is-native-app input,
 body.is-native-app select {
   touch-action: manipulation;
 }
+
+/* Correção APK — libera scroll das páginas no WebView do Capacitor
+   O WebView do Android pode falhar quando a página depende do scroll do body
+   junto de header/navbar fixed. No APK, o main vira o container de scroll. */
+html.is-native-app,
+body.is-native-app {
+  height: 100%;
+  min-height: 100%;
+  overflow: hidden !important;
+  overscroll-behavior-y: none;
+}
+
+body.is-native-app #root {
+  height: 100dvh;
+  min-height: 100dvh;
+  overflow: hidden !important;
+}
+
+body.is-native-app .ff-hevy-shell {
+  height: 100dvh;
+  min-height: 100dvh;
+  max-height: 100dvh;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
+  padding-top: calc(5.75rem + env(safe-area-inset-top)) !important;
+  padding-bottom: calc(8.75rem + env(safe-area-inset-bottom)) !important;
+}
+
+body.is-native-app .ff-hevy-shell > div {
+  min-height: max-content;
+}
+
+body.is-native-app .ff-mobile-scroll-x,
+body.is-native-app [class*='overflow-x-auto'] {
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
+}
