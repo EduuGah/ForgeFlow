@@ -9,6 +9,7 @@ import DashboardMetricsSection from '../features/dashboard/components/DashboardM
 import DashboardQuickAccessSection from '../features/dashboard/components/DashboardQuickAccessSection'
 import DashboardChartsSection from '../features/dashboard/components/DashboardChartsSection'
 import DashboardPrsSection from '../features/dashboard/components/DashboardPrsSection'
+import TodayScheduledWorkout from '../components/dashboard/TodayScheduledWorkout'
 
 import { useWorkoutSession } from '../context/useWorkoutSession'
 import { useAuth } from '../context/AuthContext'
@@ -112,6 +113,11 @@ function Dashboard() {
         history={history}
         recentPRs={recentPRs}
         formatShortDate={formatShortDate}
+      />
+
+      <TodayScheduledWorkout
+        workouts={workouts}
+        onStartWorkout={handleStartWorkout}
       />
 
       <DashboardOverviewSection

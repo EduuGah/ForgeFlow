@@ -17,6 +17,21 @@ export const defaultSettings = {
   confirmBeforeFinishWorkout: true,
   confirmBeforeCancelWorkout: true,
 
+  // Agenda e notificações nativas
+  weeklySchedule: {
+    monday: { type: 'empty' },
+    tuesday: { type: 'empty' },
+    wednesday: { type: 'empty' },
+    thursday: { type: 'empty' },
+    friday: { type: 'empty' },
+    saturday: { type: 'empty' },
+    sunday: { type: 'empty' },
+  },
+  weightReminderEnabled: false,
+  weightReminderTime: '08:00',
+  workoutReminderEnabled: false,
+  workoutReminderTime: '18:00',
+
   // Mantidos só por compatibilidade com backups/configs antigas.
   // Não aparecem mais na tela de configurações.
   autoOpenCalendar: false,
@@ -270,6 +285,14 @@ export function normalizeSettings(settings = {}) {
   normalized.themeMode = normalizeThemeMode(normalized.themeMode)
   normalized.accentColor = normalizeAccentColor(normalized.accentColor)
   normalized.workoutsVisibleLimit = Number(normalized.workoutsVisibleLimit) || defaultSettings.workoutsVisibleLimit
+  normalized.weightReminderEnabled = Boolean(normalized.weightReminderEnabled)
+  normalized.workoutReminderEnabled = Boolean(normalized.workoutReminderEnabled)
+  normalized.weightReminderTime = /^\d{2}:\d{2}$/.test(String(normalized.weightReminderTime || ''))
+    ? normalized.weightReminderTime
+    : defaultSettings.weightReminderTime
+  normalized.workoutReminderTime = /^\d{2}:\d{2}$/.test(String(normalized.workoutReminderTime || ''))
+    ? normalized.workoutReminderTime
+    : defaultSettings.workoutReminderTime
 
   return normalized
 }

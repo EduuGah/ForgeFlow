@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 
 import App from './App.jsx'
 import './index.css'
+import { isNativeApp } from './utils/platformUtils.js'
 
 
 function ensurePwaHeadTags() {
@@ -71,8 +72,14 @@ function registerForgeFlowServiceWorker() {
   })
 }
 
-ensurePwaHeadTags()
-registerForgeFlowServiceWorker()
+if (isNativeApp()) {
+  document.body?.classList.add('is-native-app')
+  document.documentElement?.classList.add('is-native-app')
+  window.__FORGEFLOW_PWA_STATUS__ = 'native-app-skip-service-worker'
+} else {
+  ensurePwaHeadTags()
+  registerForgeFlowServiceWorker()
+}
 
 const rootElement = document.getElementById('root')
 

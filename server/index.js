@@ -2996,6 +2996,11 @@ const allowedSettingsKeys = [
     'showLastWorkoutComparison',
     'confirmBeforeFinishWorkout',
     'confirmBeforeCancelWorkout',
+    'weeklySchedule',
+    'weightReminderEnabled',
+    'weightReminderTime',
+    'workoutReminderEnabled',
+    'workoutReminderTime',
 ]
 
 function sanitizeSettings(input) {

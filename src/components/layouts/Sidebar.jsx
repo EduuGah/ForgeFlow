@@ -39,6 +39,7 @@ const linkGroups = [
     links: [
       { name: 'Dashboard', path: '/', icon: Home },
       { name: 'Treinos', path: '/workouts', icon: ClipboardList },
+      { name: 'Agenda', path: '/schedule', icon: CalendarDays },
       { name: 'Exercícios', path: '/exercises', icon: Dumbbell },
     ],
   },

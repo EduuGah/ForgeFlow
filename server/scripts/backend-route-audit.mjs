@@ -13,6 +13,7 @@ const routePathRegex = /app\.(get|post|put|patch|delete)\s*\(\s*['"]([^'"]+)['"]
 const publicRouteMatchers = [
   /^GET \/health$/,
   /^GET \/auth\/google$/,
+  /^GET \/auth\/google\/mobile$/,
   /^GET \/auth\/google\/callback$/,
   /^GET \/auth\/csrf$/,
   /^POST \/auth\/register$/,

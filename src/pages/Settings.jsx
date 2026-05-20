@@ -4,8 +4,11 @@ import PageHeader from '../components/ui/PageHeader'
 import Badge from '../components/ui/Badge'
 import ConfirmModal from '../components/ui/ConfirmModal'
 import Toast from '../components/ui/Toast'
+import NotificationSettingsSection from '../components/settings/NotificationSettingsSection'
 
 import { useAuth } from '../context/AuthContext'
+import { getUserStorageData } from '../utils/userStorage'
+import { normalizeWorkoutFromApi } from '../utils/workoutNormalizers'
 import { apiDownload, apiFetch } from '../services/api'
 
 import {
@@ -31,6 +34,7 @@ function Settings() {
   const { user, setUser } = useAuth()
 
   const [settings, setSettings] = useState(defaultSettings)
+  const [workouts, setWorkouts] = useState([])
   const [confirmModal, setConfirmModal] = useState(null)
   const [toast, setToast] = useState(null)
   const [syncStatus, setSyncStatus] = useState('idle')
@@ -129,7 +133,10 @@ function Settings() {
       setSyncStatus('loading')
 
       try {
-        const settingsFromDatabase = await apiFetch('/settings')
+        const [settingsFromDatabase, remoteWorkouts] = await Promise.all([
+          apiFetch('/settings'),
+          apiFetch('/workouts').catch(() => null),
+        ])
 
         if (!isMounted) return
 
@@ -138,6 +145,12 @@ function Settings() {
           ...settingsFromDatabase,
         })
 
+        if (Array.isArray(remoteWorkouts)) {
+          setWorkouts(remoteWorkouts.map((workout) => normalizeWorkoutFromApi(workout)))
+        } else {
+          setWorkouts(getUserStorageData(user, 'workouts', []))
+        }
+
         setSettings(mergedSettings)
         applyAppSettingsToDocument(mergedSettings)
         setSyncStatus('idle')
@@ -145,6 +158,7 @@ function Settings() {
         if (!isMounted) return
 
         setSettings(cachedSettings)
+        setWorkouts(getUserStorageData(user, 'workouts', []))
         applyAppSettingsToDocument(cachedSettings)
         setSyncStatus('local')
       }
@@ -438,6 +452,13 @@ function Settings() {
           <SettingsTrainingPreferencesSection
             settings={settings}
             onUpdateSetting={handleUpdateSetting}
+          />
+
+          <NotificationSettingsSection
+            settings={settings}
+            workouts={workouts}
+            onUpdateSetting={handleUpdateSetting}
+            onShowToast={showToast}
           />
 
           <SettingsBackupSection

@@ -18,6 +18,7 @@ import MobileBottomNav from './MobileBottomNav'
 import NotificationBell from '../notifications/NotificationBell'
 import { generateSmartNotifications } from '../../utils/notificationUtils'
 import { isStandalonePwaMode } from '../../utils/pwaUtils'
+import { isNativeApp } from '../../utils/platformUtils'
 
 const Sidebar = lazy(() => import('./Sidebar'))
 const ActiveWorkoutMini = lazy(() => import('../workout/ActiveWorkoutMini'))
@@ -46,6 +47,7 @@ function getRouteShellClass(pathname = '/') {
   if (pathname.startsWith('/exercises')) return 'ff-page-exercises'
   if (pathname.startsWith('/start-workout')) return 'ff-page-start-workout'
   if (pathname.startsWith('/history')) return 'ff-page-history'
+  if (pathname.startsWith('/schedule')) return 'ff-page-schedule'
   if (pathname.startsWith('/progress-photos')) return 'ff-page-progress-photos'
   if (pathname.startsWith('/progress')) return 'ff-page-progress'
   if (pathname.startsWith('/exercise-progress')) return 'ff-page-exercise-progress'
@@ -66,8 +68,21 @@ function AppLayout() {
   const [isHeaderVisible, setIsHeaderVisible] = useState(true)
   const [isHeaderCompact, setIsHeaderCompact] = useState(false)
   const [isPwaStandalone, setIsPwaStandalone] = useState(() => isStandalonePwaMode())
+  const [isRunningNativeApp, setIsRunningNativeApp] = useState(() => isNativeApp())
   const lastScrollYRef = useRef(0)
   const tickingRef = useRef(false)
+
+  useEffect(() => {
+    const native = isNativeApp()
+    setIsRunningNativeApp(native)
+    document.body.classList.toggle('is-native-app', native)
+    document.documentElement.classList.toggle('is-native-app', native)
+
+    return () => {
+      document.body.classList.remove('is-native-app')
+      document.documentElement.classList.remove('is-native-app')
+    }
+  }, [])
 
   useEffect(() => {
     window.scrollTo({
@@ -256,7 +271,7 @@ function AppLayout() {
 
             <div className="flex shrink-0 items-center gap-2">
               <div className="hidden rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-3 py-1 text-xs font-bold text-[var(--ff-accent-text)] sm:block">Beta</div>
-              {!isPwaStandalone && (
+              {!isPwaStandalone && !isRunningNativeApp && (
                 <button
                 type="button"
                 onClick={() => window.dispatchEvent(new CustomEvent('forgeflow:show-install-app'))}
@@ -301,7 +316,7 @@ function AppLayout() {
         </Suspense>
       )}
       <Suspense fallback={null}>
-        <PwaInstallButton />
+        {!isRunningNativeApp && <PwaInstallButton />}
       </Suspense>
 
       <Suspense fallback={null}>

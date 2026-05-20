@@ -21,6 +21,7 @@ const Profile = lazy(() => import('./pages/Profile'))
 const Settings = lazy(() => import('./pages/Settings'))
 const CompleteProfile = lazy(() => import('./pages/CompleteProfile'))
 const WorkoutCalendar = lazy(() => import('./pages/WorkoutCalendar'))
+const WorkoutSchedule = lazy(() => import('./pages/WorkoutSchedule'))
 const MuscleRecovery = lazy(() => import('./pages/MuscleRecovery'))
 const Progress = lazy(() => import('./pages/Progress'))
 const ExerciseProgress = lazy(() => import('./pages/ExerciseProgress'))
@@ -128,6 +129,7 @@ function App() {
                 <Route path="start-workout" element={<StartWorkout />} />
                 <Route path="history" element={<History />} />
                 <Route path="calendar" element={<WorkoutCalendar />} />
+                <Route path="schedule" element={<WorkoutSchedule />} />
                 <Route path="muscle-recovery" element={<MuscleRecovery />} />
                 <Route path="progress" element={<Progress />} />
                 <Route path="exercise-progress" element={<ExerciseProgress />} />

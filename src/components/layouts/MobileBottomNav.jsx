@@ -1,10 +1,10 @@
 import { NavLink } from 'react-router-dom'
-import { ClipboardList, Dumbbell, Home, TrendingUp, UserRound } from 'lucide-react'
+import { CalendarCheck, ClipboardList, Home, TrendingUp, UserRound } from 'lucide-react'
 
 const links = [
   { name: 'Início', path: '/', icon: Home },
   { name: 'Treinos', path: '/workouts', icon: ClipboardList },
-  { name: 'Exercícios', path: '/exercises', icon: Dumbbell },
+  { name: 'Agenda', path: '/schedule', icon: CalendarCheck },
   { name: 'Evolução', path: '/progress', icon: TrendingUp },
   { name: 'Perfil', path: '/profile', icon: UserRound },
 ]

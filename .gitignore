@@ -33,3 +33,13 @@ server/node_modules
 
 .DS_Store
 npm-debug.log*
+# Android/Capacitor build output
+android/.gradle/
+android/.idea/
+android/build/
+android/app/build/
+android/local.properties
+
+# Generated APK/AAB
+*.apk
+*.aab

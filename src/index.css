@@ -2479,3 +2479,22 @@ main {
 .legal-document p {
   margin: 0;
 }
+
+/* Ajustes específicos para APK/Capacitor */
+.is-native-app body,
+body.is-native-app {
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body.is-native-app .ff-hevy-shell {
+  padding-top: calc(5.75rem + env(safe-area-inset-top));
+  padding-bottom: calc(8.5rem + env(safe-area-inset-bottom));
+}
+
+body.is-native-app button,
+body.is-native-app a,
+body.is-native-app input,
+body.is-native-app select {
+  touch-action: manipulation;
+}
