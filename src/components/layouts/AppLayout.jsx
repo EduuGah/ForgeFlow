@@ -86,6 +86,16 @@ function AppLayout() {
   }, [])
 
   useEffect(() => {
+    document.body.classList.toggle('ff-sidebar-open', isSidebarOpen)
+    document.documentElement.classList.toggle('ff-sidebar-open', isSidebarOpen)
+
+    return () => {
+      document.body.classList.remove('ff-sidebar-open')
+      document.documentElement.classList.remove('ff-sidebar-open')
+    }
+  }, [isSidebarOpen])
+
+  useEffect(() => {
     const scrollContainer = pageScrollRef.current
 
     if (isRunningNativeApp && scrollContainer) {
@@ -129,11 +139,6 @@ function AppLayout() {
     }
   }, [])
 
-
-  useEffect(() => {
-    document.body.style.overflow = ''
-    document.documentElement.style.overflow = ''
-  }, [])
 
   useEffect(() => {
     const scrollContainer = isRunningNativeApp ? pageScrollRef.current : window
@@ -249,7 +254,7 @@ function AppLayout() {
   }, [])
 
   return (
-    <div className="min-h-dvh bg-[var(--ff-bg)] text-[var(--ff-text)] transition-colors duration-300">
+    <div className="ff-app-layout min-h-dvh bg-[var(--ff-bg)] text-[var(--ff-text)] transition-colors duration-300">
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,var(--ff-accent-shadow),transparent_34%),radial-gradient(circle_at_bottom_right,var(--ff-accent-soft),transparent_32%)] opacity-80" />
 
       <header
@@ -314,7 +319,7 @@ function AppLayout() {
         </Suspense>
       )}
 
-      <main ref={pageScrollRef} className={`ff-hevy-shell ${getRouteShellClass(location.pathname)} relative min-h-0 overflow-visible px-4 pb-36 pt-[calc(6.25rem+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[calc(6.25rem+env(safe-area-inset-top))]`}>
+      <main ref={pageScrollRef} className={`ff-hevy-shell ${getRouteShellClass(location.pathname)} relative z-0 min-h-0 overflow-visible px-4 pb-36 pt-[calc(6.25rem+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[calc(6.25rem+env(safe-area-inset-top))]`}>
         <div className="mx-auto w-full max-w-[1600px]">
           <Outlet />
         </div>

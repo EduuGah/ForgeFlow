@@ -73,11 +73,18 @@ function Sidebar({ isOpen = false, onClose }) {
     onClose?.()
   }
 
+  function stopBackgroundScroll(event) {
+    event.preventDefault()
+    event.stopPropagation()
+  }
+
   return (
     <>
       <button
         type="button"
         onClick={onClose}
+        onTouchMove={stopBackgroundScroll}
+        onWheel={stopBackgroundScroll}
         className={[
           'fixed inset-0 z-50 bg-[var(--ff-overlay)] backdrop-blur-sm transition-opacity duration-300 ease-out',
           isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
@@ -88,7 +95,7 @@ function Sidebar({ isOpen = false, onClose }) {
 
       <aside
         className={[
-          'fixed left-0 top-0 z-[60] flex h-dvh w-[86vw] max-w-[300px] flex-col overflow-hidden border-r border-[var(--ff-border)] bg-[var(--ff-sidebar)] text-[var(--ff-text)] shadow-2xl shadow-black/20 transition-transform duration-300 ease-out will-change-transform',
+          'fixed left-0 top-0 z-[60] flex h-dvh w-[86vw] max-w-[300px] touch-pan-y flex-col overflow-hidden overscroll-contain border-r border-[var(--ff-border)] bg-[var(--ff-sidebar)] text-[var(--ff-text)] shadow-2xl shadow-black/20 transition-transform duration-300 ease-out will-change-transform',
           isOpen ? 'translate-x-0' : '-translate-x-full',
         ].join(' ')}
       >
