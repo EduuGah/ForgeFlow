@@ -1,4 +1,5 @@
 const BASE_STORAGE_KEY = 'forgeflow:tutorial-state'
+const GLOBAL_DISMISSED_KEY = 'forgeflow:tutorial-welcome-dismissed'
 
 export const tutorialRouteFlows = {
   '/': 'dashboard',
@@ -272,10 +273,11 @@ export function getTutorialState(user) {
   try {
     const rawValue = window.localStorage.getItem(getTutorialStorageKey(user))
     const parsed = JSON.parse(rawValue || '{}')
+    const globalDismissed = window.localStorage.getItem(GLOBAL_DISMISSED_KEY) === 'true'
 
     return {
-      hasSeenWelcome: Boolean(parsed.hasSeenWelcome),
-      dismissedWelcome: Boolean(parsed.dismissedWelcome),
+      hasSeenWelcome: Boolean(parsed.hasSeenWelcome || globalDismissed),
+      dismissedWelcome: Boolean(parsed.dismissedWelcome || globalDismissed),
       contextualTipsEnabled: parsed.contextualTipsEnabled !== false,
       completedFlows: parsed.completedFlows || {},
       updatedAt: parsed.updatedAt || '',
@@ -299,14 +301,20 @@ export function saveTutorialState(user, nextState) {
 
   window.localStorage.setItem(getTutorialStorageKey(user), JSON.stringify(safeState))
 
+  if (safeState.dismissedWelcome || safeState.hasSeenWelcome) {
+    window.localStorage.setItem(GLOBAL_DISMISSED_KEY, 'true')
+  }
+
   return safeState
 }
 
 export function resetTutorialState(user) {
   window.localStorage.removeItem(getTutorialStorageKey(user))
+  window.localStorage.removeItem(GLOBAL_DISMISSED_KEY)
 }
 
-export function shouldShowWelcomeTutorial(user) {
-  const state = getTutorialState(user)
-  return !state.hasSeenWelcome && !state.dismissedWelcome
+export function shouldShowWelcomeTutorial() {
+  // Não abre mais o card automaticamente a cada sessão.
+  // O tutorial continua disponível manualmente em Configurações ou pelo botão de ajuda.
+  return false
 }

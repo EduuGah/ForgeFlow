@@ -1,9 +1,52 @@
-import { Save, UserRound } from 'lucide-react'
+import { ImageUp, Save, Trash2, UserRound } from 'lucide-react'
 
 import Button from '../../../components/ui/Button'
 import Input from '../../../components/ui/Input'
 import Select from '../../../components/ui/Select'
 import Textarea from '../../../components/ui/Textarea'
+
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = () => reject(new Error('Não foi possível ler a imagem.'))
+    reader.readAsDataURL(file)
+  })
+}
+
+async function compressAvatarImage(file) {
+  if (!file?.type?.startsWith('image/')) {
+    throw new Error('Selecione um arquivo de imagem válido.')
+  }
+
+  if (file.size > 6 * 1024 * 1024) {
+    throw new Error('A imagem precisa ter no máximo 6 MB.')
+  }
+
+  const dataUrl = await readFileAsDataUrl(file)
+  const image = new Image()
+
+  await new Promise((resolve, reject) => {
+    image.onload = resolve
+    image.onerror = () => reject(new Error('Não foi possível processar a imagem.'))
+    image.src = dataUrl
+  })
+
+  const maxSize = 512
+  const scale = Math.min(1, maxSize / Math.max(image.width, image.height))
+  const width = Math.max(1, Math.round(image.width * scale))
+  const height = Math.max(1, Math.round(image.height * scale))
+
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+
+  const context = canvas.getContext('2d')
+  context.drawImage(image, 0, 0, width, height)
+
+  return canvas.toDataURL('image/jpeg', 0.82)
+}
 
 export default function ProfileEditModal({
   open,
@@ -12,6 +55,21 @@ export default function ProfileEditModal({
   onSave,
   onUpdateField,
 }) {
+  async function handleAvatarFileChange(event) {
+    const file = event.target.files?.[0]
+
+    if (!file) return
+
+    try {
+      const compressedAvatar = await compressAvatarImage(file)
+      onUpdateField('avatarUrl', compressedAvatar)
+    } catch (error) {
+      window.alert(error.message || 'Não foi possível carregar a foto.')
+    } finally {
+      event.target.value = ''
+    }
+  }
+
   if (!open) return null
 
   return (
@@ -60,27 +118,32 @@ export default function ProfileEditModal({
                 <p className="text-sm font-bold text-zinc-200">Foto de perfil</p>
 
                 <p className="mt-1 text-xs leading-relaxed text-zinc-500">
-                  Use uma URL de imagem. Upload próprio será adicionado depois com Cloudinary/S3.
+                  Selecione uma imagem do seu celular ou computador. O ForgeFlow comprime a foto antes de salvar para carregar rápido no app.
                 </p>
 
-                <div className="mt-3">
-                  <Input
-                    label="URL da foto de perfil"
-                    placeholder="https://..."
-                    value={profile.avatarUrl}
-                    onChange={(event) => onUpdateField('avatarUrl', event.target.value)}
-                  />
-                </div>
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                  <label className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-4 text-sm font-black text-[var(--ff-accent-text)] transition hover:bg-[var(--ff-card-hover)]">
+                    <ImageUp size={17} />
+                    Selecionar foto
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="sr-only"
+                      onChange={handleAvatarFileChange}
+                    />
+                  </label>
 
-                {profile.avatarUrl && (
-                  <button
-                    type="button"
-                    onClick={() => onUpdateField('avatarUrl', '')}
-                    className="mt-3 inline-flex h-10 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10 px-4 text-xs font-bold text-red-300 transition hover:bg-red-500/20"
-                  >
-                    Remover foto
-                  </button>
-                )}
+                  {profile.avatarUrl && (
+                    <button
+                      type="button"
+                      onClick={() => onUpdateField('avatarUrl', '')}
+                      className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 text-sm font-bold text-red-300 transition hover:bg-red-500/20"
+                    >
+                      <Trash2 size={16} />
+                      Remover foto
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>

@@ -3583,6 +3583,29 @@ function validateAvatarUrl(value) {
 
     const trimmed = value.trim()
 
+    if (trimmed.startsWith('data:image/')) {
+        const isAllowedDataImage = /^data:image\/(png|jpe?g|webp);base64,[a-z0-9+/=]+$/i.test(trimmed)
+
+        if (!isAllowedDataImage) {
+            return {
+                valid: false,
+                message: 'A foto enviada precisa ser PNG, JPG ou WebP.',
+            }
+        }
+
+        if (trimmed.length > 900000) {
+            return {
+                valid: false,
+                message: 'A foto de perfil é muito grande. Selecione uma imagem menor.',
+            }
+        }
+
+        return {
+            valid: true,
+            value: trimmed,
+        }
+    }
+
     if (trimmed.length > 500) {
         return {
             valid: false,
@@ -3590,10 +3613,10 @@ function validateAvatarUrl(value) {
         }
     }
 
-    if (trimmed.startsWith('data:') || trimmed.includes('base64,')) {
+    if (trimmed.includes('base64,')) {
         return {
             valid: false,
-            message: 'Imagem em Base64 não é permitida como foto de perfil.',
+            message: 'Imagem em Base64 inválida.',
         }
     }
 
