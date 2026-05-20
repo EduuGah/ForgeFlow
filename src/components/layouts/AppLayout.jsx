@@ -96,6 +96,13 @@ function AppLayout() {
       }
     }
 
+    if (isRunningNativeApp) {
+      return () => {
+        document.body.classList.remove('ff-sidebar-open')
+        document.documentElement.classList.remove('ff-sidebar-open')
+      }
+    }
+
     const scrollY = window.scrollY || document.documentElement.scrollTop || 0
     const previousBodyStyles = {
       position: document.body.style.position,
@@ -124,7 +131,7 @@ function AppLayout() {
       document.body.style.overflow = previousBodyStyles.overflow
       window.scrollTo(0, scrollY)
     }
-  }, [isSidebarOpen])
+  }, [isSidebarOpen, isRunningNativeApp])
 
   useEffect(() => {
     const nativeScroller = pageScrollRef.current

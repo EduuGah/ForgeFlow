@@ -2633,3 +2633,115 @@ body.is-native-app aside nav {
   overscroll-behavior-y: contain !important;
   touch-action: pan-y !important;
 }
+
+/* =========================================================
+   ForgeFlow — FIX DEFINITIVO DO SCROLL NO APK/CAPACITOR
+   Regra: no APK existe apenas 1 dono do scroll: .ff-page-scroll-shell.
+   Header e bottom nav entram no fluxo flex, sem position: fixed.
+   Isso evita o bug do Android WebView onde o header/footer arrastam,
+   mas a página não recebe o gesto de scroll.
+   ========================================================= */
+html.is-native-app,
+body.is-native-app,
+body.is-native-app #root {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  max-height: 100% !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  position: fixed !important;
+  inset: 0 !important;
+}
+
+body.is-native-app .ff-app-layout {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100dvh !important;
+  min-height: 0 !important;
+  max-height: 100dvh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
+body.is-native-app #app-header {
+  position: relative !important;
+  inset: auto !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  flex: 0 0 auto !important;
+  transform: none !important;
+  opacity: 1 !important;
+  z-index: 40 !important;
+  touch-action: manipulation !important;
+}
+
+body.is-native-app .ff-page-scroll-shell {
+  position: relative !important;
+  inset: auto !important;
+  z-index: 1 !important;
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain !important;
+  touch-action: pan-y !important;
+  padding-top: 1rem !important;
+  padding-bottom: 1rem !important;
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  will-change: scroll-position !important;
+}
+
+body.is-native-app .ff-page-scroll-shell > div {
+  min-height: calc(100% + 1px) !important;
+  width: 100% !important;
+}
+
+body.is-native-app .mobile-bottom-nav,
+body.is-native-app nav[aria-label='Navegação inferior'] {
+  position: relative !important;
+  inset: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  flex: 0 0 auto !important;
+  z-index: 40 !important;
+  touch-action: manipulation !important;
+}
+
+body.is-native-app.ff-sidebar-open .ff-page-scroll-shell {
+  overflow: hidden !important;
+  pointer-events: none !important;
+  touch-action: none !important;
+}
+
+body.is-native-app.ff-sidebar-open .mobile-bottom-nav,
+body.is-native-app.ff-sidebar-open #app-header {
+  pointer-events: none !important;
+}
+
+body.is-native-app aside {
+  position: fixed !important;
+  z-index: 60 !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+  touch-action: pan-y !important;
+}
+
+body.is-native-app aside nav {
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain !important;
+  touch-action: pan-y !important;
+}
