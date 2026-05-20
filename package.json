@@ -21,7 +21,8 @@
     "test": "node scripts/run-tests.mjs",
     "test:frontend": "eslint src public scripts",
     "test:server": "node server/scripts/sanity-check.mjs && node server/scripts/workout-validation.test.mjs",
-    "check:client": "npm run build"
+    "check:client": "npm run build",
+    "postinstall": "node scripts/patch-capacitor-gradle.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.4",
