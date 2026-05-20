@@ -89,35 +89,56 @@ function AppLayout() {
     document.body.classList.toggle('ff-sidebar-open', isSidebarOpen)
     document.documentElement.classList.toggle('ff-sidebar-open', isSidebarOpen)
 
+    if (!isSidebarOpen) {
+      return () => {
+        document.body.classList.remove('ff-sidebar-open')
+        document.documentElement.classList.remove('ff-sidebar-open')
+      }
+    }
+
+    const scrollY = window.scrollY || document.documentElement.scrollTop || 0
+    const previousBodyStyles = {
+      position: document.body.style.position,
+      top: document.body.style.top,
+      left: document.body.style.left,
+      right: document.body.style.right,
+      width: document.body.style.width,
+      overflow: document.body.style.overflow,
+    }
+
+    document.body.style.position = 'fixed'
+    document.body.style.top = `-${scrollY}px`
+    document.body.style.left = '0'
+    document.body.style.right = '0'
+    document.body.style.width = '100%'
+    document.body.style.overflow = 'hidden'
+
     return () => {
       document.body.classList.remove('ff-sidebar-open')
       document.documentElement.classList.remove('ff-sidebar-open')
+      document.body.style.position = previousBodyStyles.position
+      document.body.style.top = previousBodyStyles.top
+      document.body.style.left = previousBodyStyles.left
+      document.body.style.right = previousBodyStyles.right
+      document.body.style.width = previousBodyStyles.width
+      document.body.style.overflow = previousBodyStyles.overflow
+      window.scrollTo(0, scrollY)
     }
   }, [isSidebarOpen])
 
   useEffect(() => {
-    const scrollContainer = pageScrollRef.current
-
-    if (isRunningNativeApp && scrollContainer) {
-      scrollContainer.scrollTo({
-        top: 0,
-        left: 0,
-        behavior: 'auto',
-      })
-    } else {
-      window.scrollTo({
-        top: 0,
-        left: 0,
-        behavior: 'auto',
-      })
-    }
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'auto',
+    })
 
     lastScrollYRef.current = 0
     setIsHeaderVisible(true)
     setIsHeaderCompact(false)
 
     window.dispatchEvent(new CustomEvent('forgeflow:route-scroll-top'))
-  }, [isRunningNativeApp, location.pathname])
+  }, [location.pathname])
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined
@@ -141,11 +162,10 @@ function AppLayout() {
 
 
   useEffect(() => {
-    const scrollContainer = isRunningNativeApp ? pageScrollRef.current : window
+    const scrollContainer = window
 
     function getCurrentScrollY() {
-      if (isRunningNativeApp && pageScrollRef.current) return pageScrollRef.current.scrollTop || 0
-      return window.scrollY || 0
+      return window.scrollY || document.documentElement.scrollTop || 0
     }
 
     function handleScrollDirection() {
@@ -182,7 +202,7 @@ function AppLayout() {
       scrollContainer?.removeEventListener?.('wheel', handleScroll)
       scrollContainer?.removeEventListener?.('touchmove', handleScroll)
     }
-  }, [isRunningNativeApp])
+  }, [])
 
   useEffect(() => {
     if (!user) return undefined

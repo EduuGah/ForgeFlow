@@ -2603,3 +2603,86 @@ body.is-native-app aside nav {
   overscroll-behavior-y: contain;
   touch-action: pan-y;
 }
+
+/* =========================================================
+   FIX DEFINITIVO APK SCROLL v3
+   ---------------------------------------------------------
+   Volta o scroll principal para o documento/window no APK.
+   A tentativa anterior colocou o <main> como scroller fixo e, em alguns
+   WebViews Android, isso trava o gesto vertical. Agora o body rola normal
+   e a sidebar bloqueia o fundo via JS enquanto estiver aberta.
+   ========================================================= */
+html.is-native-app,
+body.is-native-app {
+  position: static !important;
+  inset: auto !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 100% !important;
+  max-height: none !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior-y: auto !important;
+  touch-action: auto !important;
+}
+
+body.is-native-app #root,
+body.is-native-app .ff-app-layout {
+  position: relative !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 100dvh !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+body.is-native-app .ff-hevy-shell {
+  position: relative !important;
+  inset: auto !important;
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 100dvh !important;
+  max-height: none !important;
+  overflow: visible !important;
+  overflow-x: clip !important;
+  overflow-y: visible !important;
+  -webkit-overflow-scrolling: auto !important;
+  overscroll-behavior-y: auto !important;
+  touch-action: pan-y !important;
+  padding-top: calc(6rem + env(safe-area-inset-top)) !important;
+  padding-bottom: calc(9rem + env(safe-area-inset-bottom)) !important;
+}
+
+body.is-native-app .ff-hevy-shell > div {
+  min-height: 0 !important;
+}
+
+body.is-native-app.ff-sidebar-open,
+html.ff-sidebar-open body.is-native-app {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
+body.is-native-app.ff-sidebar-open .ff-hevy-shell {
+  pointer-events: none !important;
+}
+
+body.is-native-app aside,
+body.is-native-app aside nav {
+  pointer-events: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain !important;
+  touch-action: pan-y !important;
+}
+
+/* Sidebar aberta no APK: congela somente o body no ponto atual.
+   O top negativo é aplicado via JS para preservar a posição da página. */
+body.is-native-app.ff-sidebar-open {
+  position: fixed !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
