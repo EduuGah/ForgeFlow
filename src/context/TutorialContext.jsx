@@ -230,7 +230,7 @@ export function TutorialProvider({ children }) {
     setState(nextState)
     setActiveFlowId('')
     setActiveStepIndex(0)
-    setWelcomePromptVisible(true)
+    setWelcomePromptVisible(false)
   }
 
   function toggleContextualTips() {

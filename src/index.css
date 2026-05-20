@@ -2565,3 +2565,71 @@ body.is-native-app aside nav {
   touch-action: pan-y !important;
 }
 
+
+/* =========================================================
+   ForgeFlow — correção definitiva do scroll no APK/WebView
+   Usa um único scroller real: .ff-page-scroll-shell.
+   Remove a briga entre body/window/main que travava o toque no conteúdo.
+   ========================================================= */
+html.is-native-app,
+body.is-native-app,
+body.is-native-app #root,
+body.is-native-app .ff-app-layout {
+  width: 100% !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  position: relative !important;
+  touch-action: auto !important;
+}
+
+body.is-native-app {
+  margin: 0 !important;
+}
+
+body.is-native-app .ff-app-layout {
+  position: fixed !important;
+  inset: 0 !important;
+  display: block !important;
+}
+
+body.is-native-app .ff-page-scroll-shell {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  width: 100% !important;
+  height: 100dvh !important;
+  min-height: 0 !important;
+  max-height: 100dvh !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain !important;
+  touch-action: pan-y !important;
+  padding-top: calc(6rem + env(safe-area-inset-top)) !important;
+  padding-bottom: calc(8.75rem + env(safe-area-inset-bottom)) !important;
+  will-change: scroll-position !important;
+}
+
+body.is-native-app.ff-sidebar-open .ff-page-scroll-shell {
+  overflow: hidden !important;
+  pointer-events: none !important;
+  touch-action: none !important;
+}
+
+body.is-native-app #app-header,
+body.is-native-app nav[aria-label='Navegação inferior'],
+body.is-native-app .mobile-bottom-nav,
+body.is-native-app aside {
+  touch-action: manipulation !important;
+}
+
+body.is-native-app aside,
+body.is-native-app aside nav {
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain !important;
+  touch-action: pan-y !important;
+}

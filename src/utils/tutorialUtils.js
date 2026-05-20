@@ -278,7 +278,7 @@ export function getTutorialState(user) {
     return {
       hasSeenWelcome: Boolean(parsed.hasSeenWelcome || globalDismissed),
       dismissedWelcome: Boolean(parsed.dismissedWelcome || globalDismissed),
-      contextualTipsEnabled: parsed.contextualTipsEnabled !== false,
+      contextualTipsEnabled: parsed.contextualTipsEnabled === true,
       completedFlows: parsed.completedFlows || {},
       updatedAt: parsed.updatedAt || '',
     }
@@ -286,7 +286,7 @@ export function getTutorialState(user) {
     return {
       hasSeenWelcome: false,
       dismissedWelcome: false,
-      contextualTipsEnabled: true,
+      contextualTipsEnabled: false,
       completedFlows: {},
       updatedAt: '',
     }
