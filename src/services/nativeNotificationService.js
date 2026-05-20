@@ -7,10 +7,12 @@ const LocalNotifications = registerPlugin('LocalNotifications')
 
 const WEIGHT_REMINDER_ID = 9001
 const WORKOUT_REMINDER_BASE_ID = 9100
+const TEST_REMINDER_ID = 9999
 const DEFAULT_WEIGHT_TIME = '08:00'
 const DEFAULT_WORKOUT_TIME = '18:00'
+const REMINDER_CHANNEL_ID = 'forgeflow-reminders'
 
-function parseTime(time = '08:00') {
+function parseTime(time = DEFAULT_WEIGHT_TIME) {
   const [rawHour, rawMinute] = String(time || '').split(':')
   const hour = Math.min(23, Math.max(0, Number(rawHour) || 0))
   const minute = Math.min(59, Math.max(0, Number(rawMinute) || 0))
@@ -18,25 +20,36 @@ function parseTime(time = '08:00') {
   return { hour, minute }
 }
 
-function getNextWeekdayDate(weekday, time) {
-  const { hour, minute } = parseTime(time)
-  const now = new Date()
-  const target = new Date(now)
-  const currentCapacitorWeekday = now.getDay() === 0 ? 1 : now.getDay() + 1
-  let daysUntilTarget = weekday - currentCapacitorWeekday
-
-  if (daysUntilTarget < 0) daysUntilTarget += 7
-
-  target.setDate(now.getDate() + daysUntilTarget)
-  target.setHours(hour, minute, 0, 0)
-
-  if (target <= now) target.setDate(target.getDate() + 7)
-
-  return target
-}
-
 function canUseNativeNotifications() {
   return isNativeApp() && Boolean(LocalNotifications)
+}
+
+function buildScheduleOn(time, weekday) {
+  const { hour, minute } = parseTime(time)
+  const on = { hour, minute, second: 0 }
+
+  if (weekday) on.weekday = weekday
+
+  return {
+    on,
+    repeats: true,
+    allowWhileIdle: true,
+  }
+}
+
+function buildOneShotSchedule(secondsFromNow = 10) {
+  return {
+    at: new Date(Date.now() + Math.max(1, secondsFromNow) * 1000),
+    allowWhileIdle: true,
+  }
+}
+
+function buildNotification(payload) {
+  return {
+    channelId: REMINDER_CHANNEL_ID,
+    autoCancel: true,
+    ...payload,
+  }
 }
 
 async function ensureAndroidChannel() {
@@ -44,7 +57,7 @@ async function ensureAndroidChannel() {
 
   try {
     await LocalNotifications.createChannel?.({
-      id: 'forgeflow-reminders',
+      id: REMINDER_CHANNEL_ID,
       name: 'Lembretes ForgeFlow',
       description: 'Lembretes de treino e registro de peso.',
       importance: 4,
@@ -64,6 +77,30 @@ export async function checkNotificationPermission() {
     return await LocalNotifications.checkPermissions()
   } catch {
     return { display: 'prompt' }
+  }
+}
+
+export async function checkExactNotificationPermission() {
+  if (!canUseNativeNotifications()) {
+    return { exact_alarm: 'granted', source: 'web-fallback' }
+  }
+
+  try {
+    return await LocalNotifications.checkExactNotificationSetting?.()
+  } catch {
+    return { exact_alarm: 'unknown' }
+  }
+}
+
+export async function requestExactNotificationPermission() {
+  if (!canUseNativeNotifications()) {
+    return { exact_alarm: 'granted', source: 'web-fallback' }
+  }
+
+  try {
+    return await LocalNotifications.changeExactNotificationSetting?.()
+  } catch {
+    return { exact_alarm: 'unknown' }
   }
 }
 
@@ -105,11 +142,39 @@ export async function cancelWorkoutReminders() {
   await cancelNotificationsByIds(WEEK_DAYS.map((_, index) => WORKOUT_REMINDER_BASE_ID + index))
 }
 
+export async function cancelTestReminder() {
+  await cancelNotificationsByIds([TEST_REMINDER_ID])
+}
+
 export async function cancelAllForgeFlowNotifications() {
   await cancelNotificationsByIds([
     WEIGHT_REMINDER_ID,
+    TEST_REMINDER_ID,
     ...WEEK_DAYS.map((_, index) => WORKOUT_REMINDER_BASE_ID + index),
   ])
+}
+
+export async function scheduleTestNotification(secondsFromNow = 10) {
+  if (!canUseNativeNotifications()) return { scheduled: false, reason: 'not-native' }
+
+  const permission = await requestNotificationPermission()
+  if (permission?.display !== 'granted') return { scheduled: false, reason: 'permission-denied' }
+
+  await ensureAndroidChannel()
+  await cancelTestReminder()
+
+  await LocalNotifications.schedule({
+    notifications: [
+      buildNotification({
+        id: TEST_REMINDER_ID,
+        title: 'Teste de lembrete ForgeFlow',
+        body: 'Se você recebeu esta notificação, os lembretes estão funcionando no APK.',
+        schedule: buildOneShotSchedule(secondsFromNow),
+      }),
+    ],
+  })
+
+  return { scheduled: true, secondsFromNow }
 }
 
 export async function scheduleDailyWeightReminder(time = DEFAULT_WEIGHT_TIME) {
@@ -121,22 +186,14 @@ export async function scheduleDailyWeightReminder(time = DEFAULT_WEIGHT_TIME) {
   await ensureAndroidChannel()
   await cancelDailyWeightReminder()
 
-  const { hour, minute } = parseTime(time)
-
   await LocalNotifications.schedule({
     notifications: [
-      {
+      buildNotification({
         id: WEIGHT_REMINDER_ID,
         title: 'Hora de registrar seu peso',
         body: 'Atualize seu peso de hoje no ForgeFlow e acompanhe sua evolução.',
-        schedule: {
-          on: { hour, minute },
-          repeats: true,
-          every: 'day',
-        },
-        channelId: 'forgeflow-reminders',
-        smallIcon: 'ic_stat_icon_config_sample',
-      },
+        schedule: buildScheduleOn(time),
+      }),
     ],
   })
 
@@ -162,18 +219,12 @@ export async function scheduleWeeklyWorkoutReminders({ schedule, workouts, time 
     const workoutName = getWorkoutName(workout)
 
     return [
-      {
+      buildNotification({
         id: WORKOUT_REMINDER_BASE_ID + index,
         title: `Treino de hoje: ${workoutName}`,
         body: `Seu treino ${workoutName} está programado para hoje. Bora manter a consistência.`,
-        schedule: {
-          at: getNextWeekdayDate(day.weekday, time),
-          repeats: true,
-          every: 'week',
-        },
-        channelId: 'forgeflow-reminders',
-        smallIcon: 'ic_stat_icon_config_sample',
-      },
+        schedule: buildScheduleOn(time, day.weekday),
+      }),
     ]
   })
 
@@ -206,4 +257,4 @@ export async function rescheduleConfiguredNotifications({ settings, workouts }) 
   return { scheduled: true }
 }
 
-export { WEIGHT_REMINDER_ID, WORKOUT_REMINDER_BASE_ID }
+export { WEIGHT_REMINDER_ID, WORKOUT_REMINDER_BASE_ID, TEST_REMINDER_ID }

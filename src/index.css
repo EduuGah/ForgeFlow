@@ -2480,166 +2480,296 @@ main {
   margin: 0;
 }
 
-/* Ajustes específicos para APK/Capacitor */
-.is-native-app body,
-body.is-native-app {
-  overscroll-behavior-y: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-body.is-native-app .ff-hevy-shell {
-  padding-top: calc(5.75rem + env(safe-area-inset-top));
-  padding-bottom: calc(8.5rem + env(safe-area-inset-bottom));
-}
-
-body.is-native-app button,
-body.is-native-app a,
-body.is-native-app input,
-body.is-native-app select {
-  touch-action: manipulation;
-}
-
-/* Correção final APK — scroll natural das páginas
-   O tutorial/sidebars podem abrir overlays, mas o conteúdo principal deve rolar
-   pelo WebView normalmente. Evita hacks com main/body fixed que travavam toque. */
-html.is-native-app,
-body.is-native-app {
-  width: 100% !important;
-  min-height: 100% !important;
-  height: auto !important;
-  overflow-x: hidden !important;
-  overflow-y: auto !important;
-  overscroll-behavior-y: auto !important;
-  touch-action: pan-y !important;
-  position: static !important;
-}
-
-body.is-native-app #root,
-body.is-native-app .ff-app-layout {
-  width: 100% !important;
-  min-height: 100dvh !important;
-  height: auto !important;
-  overflow: visible !important;
-  position: relative !important;
-}
-
-body.is-native-app .ff-hevy-shell {
-  position: relative !important;
-  display: block !important;
-  width: 100% !important;
-  min-height: 100dvh !important;
-  height: auto !important;
-  max-height: none !important;
-  overflow: visible !important;
-  overflow-x: clip !important;
-  overflow-y: visible !important;
-  overscroll-behavior-y: auto !important;
-  touch-action: pan-y !important;
-  padding-top: calc(6rem + env(safe-area-inset-top)) !important;
-  padding-bottom: calc(9rem + env(safe-area-inset-bottom)) !important;
-}
-
-body.ff-sidebar-open {
-  position: fixed !important;
-  left: 0 !important;
-  right: 0 !important;
-  width: 100% !important;
-  overflow: hidden !important;
-  overscroll-behavior: none !important;
-}
-
-body.ff-sidebar-open .ff-hevy-shell {
-  pointer-events: none !important;
-}
-
-body.ff-sidebar-open aside,
-body.ff-sidebar-open aside *,
-body.ff-sidebar-open [aria-label="Fechar menu"] {
-  pointer-events: auto !important;
-}
-
-body.is-native-app aside,
-body.is-native-app aside nav {
-  -webkit-overflow-scrolling: touch !important;
-  overscroll-behavior-y: contain !important;
-  touch-action: pan-y !important;
-}
-
-
 /* =========================================================
-   ForgeFlow — correção definitiva do scroll no APK/WebView
-   Usa um único scroller real: .ff-page-scroll-shell.
-   Remove a briga entre body/window/main que travava o toque no conteúdo.
+   ForgeFlow — Mobile/APK layout reformulado
+   Objetivo: visual de app nativo, lembretes mais usáveis e scroll estável.
    ========================================================= */
-html.is-native-app,
-body.is-native-app,
-body.is-native-app #root,
-body.is-native-app .ff-app-layout {
-  width: 100% !important;
-  height: 100dvh !important;
-  min-height: 100dvh !important;
-  max-height: 100dvh !important;
-  overflow: hidden !important;
-  overscroll-behavior: none !important;
-  position: relative !important;
-  touch-action: auto !important;
+@media (max-width: 768px) {
+  .ff-app-layout {
+    background:
+      radial-gradient(circle at 20% 0%, var(--ff-accent-soft), transparent 30%),
+      var(--ff-bg);
+  }
+
+  #app-header {
+    border-bottom-color: color-mix(in srgb, var(--ff-border) 70%, transparent);
+  }
+
+  #app-header .safe-top > div {
+    min-height: 58px;
+  }
+
+  #app-header h1 {
+    font-size: 1rem;
+    letter-spacing: -0.03em;
+  }
+
+  #app-header button[aria-label='Abrir menu'],
+  #app-header button[aria-label='Instalar APP'] {
+    height: 42px;
+    width: 42px;
+    border-radius: 1.15rem;
+  }
+
+  .ff-hevy-shell {
+    padding-left: 0.875rem;
+    padding-right: 0.875rem;
+  }
+
+  .ff-hevy-shell > div {
+    max-width: 100%;
+  }
+
+  .ff-hevy-shell .rounded-3xl {
+    border-radius: 1.45rem;
+  }
+
+  .ff-hevy-shell .p-5,
+  .ff-hevy-shell .p-6 {
+    padding: 1rem;
+  }
+
+  .mobile-bottom-nav {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .mobile-bottom-nav > div {
+    border: 1px solid var(--ff-border);
+    border-radius: 1.65rem;
+    background: color-mix(in srgb, var(--ff-header) 88%, transparent);
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.22);
+    padding: 0.35rem;
+  }
+
+  .mobile-bottom-nav a {
+    min-height: 54px !important;
+    border-radius: 1.25rem !important;
+  }
+
+  .mobile-bottom-nav a span {
+    font-size: 0.62rem;
+  }
 }
 
-body.is-native-app {
-  margin: 0 !important;
+/* Lembretes — layout mobile-first */
+.ff-reminders-card {
+  overflow: hidden;
 }
 
-body.is-native-app .ff-app-layout {
-  position: fixed !important;
-  inset: 0 !important;
-  display: block !important;
+.ff-reminder-status-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
 }
 
-body.is-native-app .ff-page-scroll-shell {
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: 0 !important;
-  width: 100% !important;
-  height: 100dvh !important;
-  min-height: 0 !important;
-  max-height: 100dvh !important;
-  overflow-x: hidden !important;
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch !important;
-  overscroll-behavior-y: contain !important;
-  touch-action: pan-y !important;
-  padding-top: calc(6rem + env(safe-area-inset-top)) !important;
-  padding-bottom: calc(8.75rem + env(safe-area-inset-bottom)) !important;
-  will-change: scroll-position !important;
+.ff-reminder-status-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  border: 1px solid var(--ff-border);
+  background: var(--ff-surface-2);
+  border-radius: 1.25rem;
+  padding: 0.85rem;
 }
 
-body.is-native-app.ff-sidebar-open .ff-page-scroll-shell {
-  overflow: hidden !important;
-  pointer-events: none !important;
-  touch-action: none !important;
+.ff-reminder-status-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 0.95rem;
+  background: var(--ff-surface);
+  color: var(--ff-text-soft);
 }
 
-body.is-native-app #app-header,
-body.is-native-app nav[aria-label='Navegação inferior'],
-body.is-native-app .mobile-bottom-nav,
-body.is-native-app aside {
-  touch-action: manipulation !important;
+.ff-reminder-status-label {
+  display: block;
+  color: var(--ff-muted);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
-body.is-native-app aside,
-body.is-native-app aside nav {
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch !important;
-  overscroll-behavior-y: contain !important;
-  touch-action: pan-y !important;
+.ff-reminder-status-value {
+  display: block;
+  margin-top: 0.25rem;
+  overflow: hidden;
+  color: var(--ff-text);
+  font-size: 0.88rem;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-reminder-status-pill--success .ff-reminder-status-icon {
+  background: color-mix(in srgb, var(--ff-success, #22c55e) 16%, transparent);
+  color: var(--ff-success-text, #86efac);
+}
+
+.ff-reminder-status-pill--warning .ff-reminder-status-icon {
+  background: rgba(245, 158, 11, 0.14);
+  color: #fbbf24;
+}
+
+.ff-reminder-status-pill--danger .ff-reminder-status-icon {
+  background: rgba(239, 68, 68, 0.14);
+  color: var(--ff-danger-text, #fca5a5);
+}
+
+.ff-reminder-permission-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 1.5rem;
+  background: linear-gradient(135deg, var(--ff-surface-2), color-mix(in srgb, var(--ff-accent-soft) 42%, transparent));
+  padding: 1rem;
+}
+
+.ff-reminder-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.ff-reminder-item {
+  border: 1px solid var(--ff-border);
+  border-radius: 1.6rem;
+  background: color-mix(in srgb, var(--ff-surface-2) 82%, transparent);
+  padding: 1rem;
+}
+
+.ff-reminder-item-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.ff-reminder-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 2.6rem;
+  height: 2.6rem;
+  border: 1px solid var(--ff-accent-border);
+  border-radius: 1.05rem;
+  background: var(--ff-accent-soft);
+  color: var(--ff-accent-text);
+}
+
+.ff-reminder-item h3 {
+  margin: 0;
+  color: var(--ff-text);
+  font-size: 1rem;
+  font-weight: 950;
+  letter-spacing: -0.02em;
+}
+
+.ff-reminder-item p {
+  margin: 0.2rem 0 0;
+  color: var(--ff-muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.ff-reminder-item-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 160px;
+  gap: 0.85rem;
+  align-items: end;
+}
+
+@media (max-width: 768px) {
+  .ff-section-title {
+    gap: 0.75rem;
+  }
+
+  .ff-section-title-icon {
+    width: 2.7rem !important;
+    height: 2.7rem !important;
+    border-radius: 1.05rem !important;
+  }
+
+  .ff-section-title h2 {
+    font-size: 1.08rem;
+  }
+
+  .ff-section-title p {
+    font-size: 0.82rem;
+  }
+
+  .ff-reminder-status-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+
+  .ff-reminder-status-pill {
+    align-items: flex-start;
+    gap: 0.55rem;
+    border-radius: 1.15rem;
+    padding: 0.75rem;
+  }
+
+  .ff-reminder-status-icon {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .ff-reminder-permission-panel {
+    align-items: stretch;
+    flex-direction: column;
+    border-radius: 1.25rem;
+    padding: 0.9rem;
+  }
+
+  .ff-reminder-primary-action {
+    width: 100%;
+  }
+
+  .ff-reminder-item {
+    border-radius: 1.3rem;
+    padding: 0.85rem;
+  }
+
+  .ff-reminder-item-control {
+    grid-template-columns: 1fr;
+  }
+
+  .ff-setting-toggle-card {
+    min-height: auto !important;
+    border-radius: 1.15rem !important;
+    padding: 0.9rem !important;
+  }
+
+  .ff-setting-toggle-card > div {
+    gap: 0.75rem;
+  }
+
+  .ff-toggle-switch {
+    min-width: 96px !important;
+    transform: scale(0.92);
+    transform-origin: right center;
+  }
+
+  .ff-toggle-switch span:first-child {
+    height: 1.65rem !important;
+    width: 1.65rem !important;
+  }
 }
 
 /* =========================================================
-   ForgeFlow — FIX DEFINITIVO DO SCROLL NO APK/CAPACITOR
-   Regra: no APK existe apenas 1 dono do scroll: .ff-page-scroll-shell.
-   Header e bottom nav entram no fluxo flex, sem position: fixed.
-   Isso evita o bug do Android WebView onde o header/footer arrastam,
-   mas a página não recebe o gesto de scroll.
+   APK/Capacitor — scroll estável com visual de app nativo.
+   Regra: html/body/root não rolam; somente .ff-page-scroll-shell rola.
+   Header e bottom nav ficam no fluxo flex para não roubar o gesto dos cards.
    ========================================================= */
 html.is-native-app,
 body.is-native-app,
@@ -2653,6 +2783,7 @@ body.is-native-app #root {
   overscroll-behavior: none !important;
   position: fixed !important;
   inset: 0 !important;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body.is-native-app .ff-app-layout {
@@ -2666,6 +2797,9 @@ body.is-native-app .ff-app-layout {
   flex-direction: column !important;
   overflow: hidden !important;
   overscroll-behavior: none !important;
+  background:
+    radial-gradient(circle at 22% 0%, var(--ff-accent-soft), transparent 30%),
+    var(--ff-bg) !important;
 }
 
 body.is-native-app #app-header {
@@ -2678,7 +2812,32 @@ body.is-native-app #app-header {
   transform: none !important;
   opacity: 1 !important;
   z-index: 40 !important;
+  border-bottom: 0 !important;
+  background: color-mix(in srgb, var(--ff-bg) 88%, transparent) !important;
+  box-shadow: none !important;
   touch-action: manipulation !important;
+}
+
+body.is-native-app #app-header .safe-top > div {
+  height: 56px !important;
+  min-height: 56px !important;
+  padding-left: 0.9rem !important;
+  padding-right: 0.9rem !important;
+}
+
+body.is-native-app #app-header h1 {
+  font-size: 1rem !important;
+}
+
+body.is-native-app #app-header p,
+body.is-native-app #app-header .hidden.rounded-full {
+  display: none !important;
+}
+
+body.is-native-app #app-header button {
+  min-height: 42px !important;
+  height: 42px !important;
+  border-radius: 1.1rem !important;
 }
 
 body.is-native-app .ff-page-scroll-shell {
@@ -2695,16 +2854,26 @@ body.is-native-app .ff-page-scroll-shell {
   -webkit-overflow-scrolling: touch !important;
   overscroll-behavior-y: contain !important;
   touch-action: pan-y !important;
-  padding-top: 1rem !important;
-  padding-bottom: 1rem !important;
-  padding-left: 1rem !important;
-  padding-right: 1rem !important;
+  padding-top: 0.75rem !important;
+  padding-bottom: 0.85rem !important;
+  padding-left: 0.85rem !important;
+  padding-right: 0.85rem !important;
   will-change: scroll-position !important;
 }
 
 body.is-native-app .ff-page-scroll-shell > div {
   min-height: calc(100% + 1px) !important;
   width: 100% !important;
+  padding-bottom: 0.25rem;
+}
+
+body.is-native-app .ff-page-scroll-shell .rounded-3xl {
+  border-radius: 1.35rem !important;
+}
+
+body.is-native-app .ff-page-scroll-shell .p-5,
+body.is-native-app .ff-page-scroll-shell .p-6 {
+  padding: 0.95rem !important;
 }
 
 body.is-native-app .mobile-bottom-nav,
@@ -2716,7 +2885,26 @@ body.is-native-app nav[aria-label='Navegação inferior'] {
   bottom: auto !important;
   flex: 0 0 auto !important;
   z-index: 40 !important;
+  border-top: 0 !important;
+  background: transparent !important;
+  padding: 0.35rem 0.75rem calc(0.55rem + env(safe-area-inset-bottom)) !important;
   touch-action: manipulation !important;
+}
+
+body.is-native-app .mobile-bottom-nav > div {
+  border: 1px solid color-mix(in srgb, var(--ff-border) 86%, transparent) !important;
+  border-radius: 1.65rem !important;
+  background: color-mix(in srgb, var(--ff-header) 88%, transparent) !important;
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.24) !important;
+  padding: 0.35rem !important;
+  backdrop-filter: blur(18px) !important;
+}
+
+body.is-native-app .mobile-bottom-nav a {
+  min-height: 52px !important;
+  border-radius: 1.25rem !important;
+  padding-top: 0.4rem !important;
+  padding-bottom: 0.4rem !important;
 }
 
 body.is-native-app.ff-sidebar-open .ff-page-scroll-shell {
@@ -2744,4 +2932,54 @@ body.is-native-app aside nav {
   -webkit-overflow-scrolling: touch !important;
   overscroll-behavior-y: contain !important;
   touch-action: pan-y !important;
+}
+
+
+
+/* Ajustes v3: lembretes/agenda mobile */
+.ff-reminder-action-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  width: 100%;
+}
+
+.ff-reminder-action-stack .ff-reminder-primary-action {
+  width: 100%;
+  justify-content: center;
+}
+
+.ff-schedule-day-card select,
+.ff-reminder-item input[type='time'] {
+  min-height: 48px;
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  .ff-reminder-status-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .ff-reminder-permission-panel {
+    align-items: stretch !important;
+  }
+
+  .ff-reminder-item {
+    padding: 0.95rem !important;
+  }
+
+  .ff-reminder-item-control {
+    gap: 0.8rem !important;
+  }
+
+  .ff-schedule-day-card {
+    padding: 0.95rem !important;
+    border-radius: 1.25rem !important;
+  }
+
+  body.is-native-app #app-header {
+    transform: none !important;
+    opacity: 1 !important;
+    min-height: calc(56px + env(safe-area-inset-top)) !important;
+  }
 }

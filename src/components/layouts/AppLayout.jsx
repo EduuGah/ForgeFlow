@@ -96,6 +96,9 @@ function AppLayout() {
       }
     }
 
+    // No APK/Capacitor o scroll real fica dentro de .ff-page-scroll-shell.
+    // Não podemos colocar o body como fixed aqui, porque isso quebra o scroller
+    // interno do Android WebView e faz o toque rolar header/footer em vez da página.
     if (isRunningNativeApp) {
       return () => {
         document.body.classList.remove('ff-sidebar-open')
@@ -181,8 +184,16 @@ function AppLayout() {
   useEffect(() => {
     if (typeof window === 'undefined') return undefined
 
-    const nativeScroller = pageScrollRef.current
-    const scrollContainer = isRunningNativeApp && nativeScroller ? nativeScroller : window
+    // No APK o header deve ficar estável. O auto-hide estava deixando um
+    // espaço vazio no topo porque o header saía visualmente, mas o layout flex
+    // continuava reservando sua altura.
+    if (isRunningNativeApp) {
+      setIsHeaderVisible(true)
+      setIsHeaderCompact(false)
+      return undefined
+    }
+
+    const scrollContainer = window
 
     function getCurrentScrollY() {
       if (scrollContainer === window) {
@@ -305,12 +316,12 @@ function AppLayout() {
         id="app-header"
         className={[
           'fixed inset-x-0 top-0 z-40 border-b border-[var(--ff-border)] bg-[var(--ff-header)] backdrop-blur-xl transition-all duration-300 ease-out',
-          isHeaderVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0',
-          isHeaderCompact ? 'shadow-lg shadow-black/10' : '',
+          isRunningNativeApp || isHeaderVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0',
+          !isRunningNativeApp && isHeaderCompact ? 'shadow-lg shadow-black/10' : '',
         ].join(' ')}
       >
         <div className="safe-top">
-          <div className={['flex items-center justify-between gap-3 px-4 transition-all duration-300 sm:px-6', isHeaderCompact ? 'h-14' : 'h-16'].join(' ')}>
+          <div className={['flex items-center justify-between gap-3 px-4 transition-all duration-300 sm:px-6', !isRunningNativeApp && isHeaderCompact ? 'h-14' : 'h-16'].join(' ')}>
             <div className="flex min-w-0 items-center gap-3">
               <button
                 type="button"

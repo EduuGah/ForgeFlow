@@ -50,6 +50,9 @@ function WorkoutSchedule() {
   )
 
   const summary = useMemo(() => getScheduleSummary(weeklySchedule), [weeklySchedule])
+  const hasUnsavedChanges = useMemo(() => {
+    return JSON.stringify(normalizeWeeklySchedule(weeklySchedule)) !== JSON.stringify(normalizeWeeklySchedule(settings.weeklySchedule))
+  }, [settings.weeklySchedule, weeklySchedule])
 
   function showToast(type, title, message = '') {
     setToast({ type, title, message })
@@ -169,6 +172,17 @@ function WorkoutSchedule() {
 
       if (key === 'workoutReminderEnabled' || key === 'workoutReminderTime') {
         if (savedSettings.workoutReminderEnabled) {
+          if (getScheduleSummary(weeklySchedule).workoutDays === 0) {
+            const disabledSettings = await saveScheduleSettings(user, {
+              ...savedSettings,
+              workoutReminderEnabled: false,
+              weeklySchedule,
+            })
+            setSettings(disabledSettings)
+            showToast('error', 'Agenda vazia', 'Selecione pelo menos um treino na semana antes de ativar lembrete.')
+            return
+          }
+
           const result = await scheduleWeeklyWorkoutReminders({
             schedule: weeklySchedule,
             workouts,
@@ -213,7 +227,7 @@ function WorkoutSchedule() {
       <PageHeader
         title="Agenda semanal"
         description="Defina qual treino você faz em cada dia e use isso para lembretes no APK."
-        action={<Badge>{summary.workoutDays} dia(s) com treino</Badge>}
+        action={<Badge>{hasUnsavedChanges ? 'Alterações pendentes' : `${summary.workoutDays} dia(s) com treino`}</Badge>}
       />
 
       <section className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
@@ -264,6 +278,12 @@ function WorkoutSchedule() {
             </div>
           </Card>
 
+          {hasUnsavedChanges && (
+            <div className="rounded-3xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] p-4 text-sm font-bold text-[var(--ff-accent-text)]">
+              Você alterou a agenda. Toque em “Salvar alterações” para atualizar os lembretes do APK.
+            </div>
+          )}
+
           <Card>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
@@ -275,7 +295,7 @@ function WorkoutSchedule() {
 
               <Button type="button" onClick={() => handleSaveSchedule()} disabled={isSaving || isLoading}>
                 <Save size={18} />
-                {isSaving ? 'Salvando...' : 'Salvar agenda'}
+                {isSaving ? 'Salvando...' : hasUnsavedChanges ? 'Salvar alterações' : 'Salvar agenda'}
               </Button>
             </div>
 
@@ -288,7 +308,7 @@ function WorkoutSchedule() {
                 return (
                   <div
                     key={day.key}
-                    className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4"
+                    className="ff-schedule-day-card rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4"
                   >
                     <div className="mb-3 flex items-center justify-between gap-3">
                       <div>

@@ -226,13 +226,15 @@ function Settings() {
   }
 
   async function handleUpdateSetting(key, value) {
+    const patch = typeof key === 'object' && key !== null ? key : { [key]: value }
     const updatedSettings = {
       ...settings,
-      [key]: value,
+      ...patch,
     }
+    const pendingKey = typeof key === 'string' ? key : Object.keys(patch)[0] || 'settings'
 
     setSettings(updatedSettings)
-    setPendingSettingKey(key)
+    setPendingSettingKey(pendingKey)
     setSyncStatus('syncing')
     saveUserAppSettings(user, updatedSettings)
     applyAppSettingsToDocument(updatedSettings)
@@ -256,6 +258,8 @@ function Settings() {
     } finally {
       setPendingSettingKey('')
     }
+
+    return updatedSettings
   }
 
   async function handleDeleteAccount() {

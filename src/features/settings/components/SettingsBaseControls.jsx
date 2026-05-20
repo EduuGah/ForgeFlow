@@ -2,12 +2,12 @@ import { Check, X } from 'lucide-react'
 
 export function SectionTitle({ icon: Icon, title, description }) {
   return (
-    <div className="flex items-start gap-3">
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)] shadow-[0_0_22px_var(--ff-accent-shadow)]/20">
+    <div className="ff-section-title flex items-start gap-3">
+      <div className="ff-section-title-icon flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)] shadow-[0_0_22px_var(--ff-accent-shadow)]/20">
         <Icon size={23} />
       </div>
 
-      <div>
+      <div className="min-w-0">
         <h2 className="text-xl font-black tracking-tight text-[var(--ff-text)]">
           {title}
         </h2>
@@ -23,7 +23,7 @@ export function SectionTitle({ icon: Icon, title, description }) {
 }
 
 
-export function ToggleSwitch({ active, onChange, label }) {
+export function ToggleSwitch({ active, onChange, label, disabled = false }) {
   const isActive = Boolean(active)
 
   return (
@@ -32,10 +32,15 @@ export function ToggleSwitch({ active, onChange, label }) {
       role="switch"
       aria-checked={isActive}
       aria-label={label}
-      onClick={() => onChange(!isActive)}
+      disabled={disabled}
+      onClick={(event) => {
+        event.stopPropagation()
+        if (!disabled) onChange(!isActive)
+      }}
       className={[
-        'group inline-flex min-w-[112px] items-center justify-between gap-2 rounded-full border p-1.5 transition-all duration-200',
+        'ff-toggle-switch group inline-flex min-w-[112px] items-center justify-between gap-2 rounded-full border p-1.5 transition-all duration-200',
         'focus:outline-none focus:ring-2 focus:ring-[var(--ff-accent)]/50 focus:ring-offset-2 focus:ring-offset-[var(--ff-bg)]',
+        disabled ? 'cursor-not-allowed opacity-60' : '',
         isActive
           ? 'border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)] shadow-[0_0_20px_var(--ff-accent-shadow)]/25'
           : 'border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-muted)] hover:border-[var(--ff-border-strong)] hover:text-[var(--ff-text)]',
@@ -65,23 +70,28 @@ export function ToggleSwitch({ active, onChange, label }) {
 }
 
 
-export function SettingToggleCard({ title, description, active, onChange }) {
+export function SettingToggleCard({ title, description, active, onChange, disabled = false }) {
   const isActive = Boolean(active)
 
   return (
-    <button
-      type="button"
-      onClick={() => onChange(!isActive)}
+    <div
+      role="group"
+      aria-label={title}
       className={[
-        'group flex min-h-[132px] w-full flex-col justify-between rounded-3xl border p-5 text-left transition-all duration-200',
-        'hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[var(--ff-accent)]/40',
+        'ff-setting-toggle-card group flex min-h-[132px] w-full flex-col justify-between rounded-3xl border p-5 text-left transition-all duration-200',
+        disabled ? 'opacity-70' : '',
         isActive
           ? 'border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] shadow-[0_0_26px_var(--ff-accent-shadow)]/15'
-          : 'border-[var(--ff-border)] bg-[var(--ff-surface-2)] hover:border-[var(--ff-border-strong)]',
+          : 'border-[var(--ff-border)] bg-[var(--ff-surface-2)]',
       ].join(' ')}
     >
       <div className="flex items-start justify-between gap-4">
-        <div>
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => !disabled && onChange(!isActive)}
+          className="min-w-0 flex-1 text-left focus:outline-none disabled:cursor-not-allowed"
+        >
           <div className="flex items-center gap-2">
             <span
               className={[
@@ -100,15 +110,16 @@ export function SettingToggleCard({ title, description, active, onChange }) {
               {description}
             </p>
           )}
-        </div>
+        </button>
 
         <ToggleSwitch
           active={isActive}
           label={title}
+          disabled={disabled}
           onChange={onChange}
         />
       </div>
-    </button>
+    </div>
   )
 }
 
