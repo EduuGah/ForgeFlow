@@ -1,4 +1,5 @@
 import {
+  MapPin,
   Trophy,
   Pause,
   PlayCircle,
@@ -369,7 +370,21 @@ export function FinishWorkoutModal({
           </div>
         )}
 
-        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="mt-5 rounded-3xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 p-4">
+          <div className="flex gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">
+              <MapPin size={18} />
+            </span>
+            <div>
+              <h3 className="font-black text-[var(--ff-text)]">Deseja salvar a localização deste treino?</h3>
+              <p className="mt-1 text-sm leading-relaxed text-[var(--ff-muted)]">
+                Isso ajuda você a ver nos relatórios onde seus treinos foram concluídos. A localização é opcional e só é pedida agora.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <Button
             type="button"
             variant="secondary"
@@ -381,11 +396,21 @@ export function FinishWorkoutModal({
 
           <Button
             type="button"
-            onClick={onFinishWorkout}
+            variant="secondary"
+            onClick={() => onFinishWorkout({ saveLocation: false })}
             disabled={savingWorkout}
             className="w-full"
           >
-            {savingWorkout ? 'Salvando...' : 'Salvar no histórico'}
+            Não salvar
+          </Button>
+
+          <Button
+            type="button"
+            onClick={() => onFinishWorkout({ saveLocation: true })}
+            disabled={savingWorkout}
+            className="w-full"
+          >
+            {savingWorkout ? 'Salvando...' : 'Salvar localização'}
           </Button>
         </div>
       </div>

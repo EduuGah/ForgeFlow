@@ -16,6 +16,7 @@ import {
   UserRound,
   X,
   ShieldCheck,
+  Utensils,
 } from 'lucide-react'
 import { Link, NavLink } from 'react-router-dom'
 
@@ -60,6 +61,7 @@ const linkGroups = [
     links: [
       { name: 'Notificações', path: '/notifications', icon: Bell },
       { name: 'Perfil', path: '/profile', icon: UserRound },
+      { name: 'Nutrição', path: '/nutrition', icon: Utensils },
       { name: 'Definições', path: '/settings', icon: Settings },
     ],
   },

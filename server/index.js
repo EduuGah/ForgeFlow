@@ -1233,6 +1233,11 @@ const workoutHistorySchema = new mongoose.Schema(
             type: String,
             default: '',
         },
+
+        location: {
+            type: Object,
+            default: null,
+        },
     },
     {
         timestamps: true,
@@ -2834,6 +2839,7 @@ async function finishActiveWorkoutSession(req, res) {
             startedAt,
             finishedAt,
             notes,
+            location,
         } = validation.value
 
         const backendPrResult = await buildWorkoutBackendPrResult(req.user.userId, finalExercises)
@@ -2852,6 +2858,7 @@ async function finishActiveWorkoutSession(req, res) {
             totalReps: summary.totalReps,
             prs: backendPrResult.prs,
             notes,
+            location: location || null,
         })
 
         if (workoutId) {
@@ -3001,6 +3008,16 @@ const allowedSettingsKeys = [
     'weightReminderTime',
     'workoutReminderEnabled',
     'workoutReminderTime',
+    'hydrationReminderEnabled',
+    'hydrationReminderTime',
+    'preWorkoutMealReminderEnabled',
+    'preWorkoutMealReminderTime',
+    'postWorkoutMealReminderEnabled',
+    'postWorkoutMealReminderTime',
+    'progressPhotoReminderEnabled',
+    'progressPhotoReminderTime',
+    'sleepReminderEnabled',
+    'sleepReminderTime',
 ]
 
 function sanitizeSettings(input) {
@@ -5254,6 +5271,7 @@ app.post('/workout-history', authMiddleware, async (req, res) => {
             startedAt,
             finishedAt,
             notes,
+            location,
         } = validation.value
 
         const backendPrResult = await buildWorkoutBackendPrResult(req.user.userId, exercises)
@@ -5272,6 +5290,7 @@ app.post('/workout-history', authMiddleware, async (req, res) => {
             totalReps: summary.totalReps,
             prs: backendPrResult.prs,
             notes,
+            location: location || null,
         })
 
         if (workoutId) {

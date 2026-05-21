@@ -31,6 +31,7 @@ import { getAppSettings } from '../utils/settingsUtils'
 import { generateSmartNotifications } from '../utils/notificationUtils'
 import { getExerciseMedia } from '../utils/exerciseMediaUtils'
 import { getExerciseProgressionSuggestion } from '../utils/progressionSuggestionUtils'
+import { requestWorkoutLocation } from '../services/geolocationService'
 
 function formatTime(seconds) {
   const safeSeconds = Number(seconds) || 0
@@ -317,7 +318,7 @@ function StartWorkout() {
     setIsFinishModalOpen(true)
   }
 
-  async function handleFinishWorkout() {
+  async function handleFinishWorkout({ saveLocation = false } = {}) {
     if (savingWorkout) return
 
     if (!hasValidCompletedSet) {
@@ -332,7 +333,17 @@ function StartWorkout() {
     setSavingWorkout(true)
 
     try {
-      const savedSession = await finishSession()
+      let location = null
+
+      if (saveLocation) {
+        try {
+          location = await requestWorkoutLocation()
+        } catch (error) {
+          showToast('error', 'Localização não salva', error?.message || 'Não foi possível capturar a localização. O treino será salvo normalmente.')
+        }
+      }
+
+      const savedSession = await finishSession({ location })
 
       if (savedSession?.skippedHistorySave) {
         setIsFinishModalOpen(false)
@@ -353,7 +364,7 @@ function StartWorkout() {
       showToast(
         'success',
         'Treino salvo',
-        'O treino foi salvo no histórico.'
+        savedSession?.location ? 'O treino foi salvo com localização.' : 'O treino foi salvo no histórico.'
       )
     } catch (error) {
       console.error(error)

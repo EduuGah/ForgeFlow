@@ -39,6 +39,13 @@ export function ActiveWorkoutHero({
             <p className="mt-1 text-sm text-[var(--ff-muted)]">
               {completedSets}/{totalSets} séries concluídas • {progressPercent}%
             </p>
+
+            <div className="ff-active-workout-status-line">
+              <span>{formatTime(elapsedSeconds)}</span>
+              <span>{activeSession.exercises?.length || 0} exercícios</span>
+              <span>{completedSets}/{totalSets} séries</span>
+              <span>{progressPercent}% concluído</span>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">

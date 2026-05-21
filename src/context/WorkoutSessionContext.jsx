@@ -628,7 +628,7 @@ export function WorkoutSessionProvider({ children }) {
     clearActiveSessionEverywhere(activeSession)
   }
 
-  async function finishSession() {
+  async function finishSession(options = {}) {
     if (!activeSession) return null
 
     isFinishingRef.current = true
@@ -691,6 +691,7 @@ export function WorkoutSessionProvider({ children }) {
 
       return {
         ...finishedSession,
+        location: options.location || null,
         skippedHistorySave: true,
       }
     }
@@ -706,7 +707,11 @@ export function WorkoutSessionProvider({ children }) {
       finishedAt: finishedSession.finishedAt,
       prs: getSessionPrs(finishedSession),
       notes: finishedSession.notes || '',
-      session: finishedSession,
+      location: options.location || null,
+      session: {
+        ...finishedSession,
+        location: options.location || null,
+      },
     }
 
     try {
@@ -740,7 +745,7 @@ export function WorkoutSessionProvider({ children }) {
     } catch (error) {
       console.error(error)
 
-      saveUserStorageData(user, 'history', [finishedSession, ...history])
+      saveUserStorageData(user, 'history', [{ ...finishedSession, location: options.location || null }, ...history])
 
       rememberFinishedActiveSession(finishedSession.id)
       persistActiveSessionLocally(null)
@@ -748,7 +753,7 @@ export function WorkoutSessionProvider({ children }) {
 
       await clearActiveSessionFromApi()
 
-      return finishedSession
+      return { ...finishedSession, location: options.location || null }
     } finally {
       window.setTimeout(() => {
         isFinishingRef.current = false

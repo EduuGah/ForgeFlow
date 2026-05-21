@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Bell, BellRing, CalendarCheck, Clock3, Smartphone, TestTube2, Weight } from 'lucide-react'
+import { Bell, BellRing, CalendarCheck, Clock3, Droplets, Moon, Smartphone, TestTube2, Utensils, Weight, Camera } from 'lucide-react'
 
 import Card from '../ui/Card'
 import Button from '../ui/Button'
@@ -17,6 +17,8 @@ import {
   scheduleTestNotification,
   scheduleDailyWeightReminder,
   scheduleWeeklyWorkoutReminders,
+  scheduleSmartReminder,
+  cancelSmartReminder,
 } from '../../services/nativeNotificationService'
 import { isNativeApp } from '../../utils/platformUtils'
 
@@ -230,6 +232,86 @@ function NotificationSettingsSection({ settings, workouts = [], onUpdateSetting,
     refreshNativeStatus()
   }
 
+
+  async function handleSmartReminderToggle(key, enabledKey, value) {
+    setIsBusy(true)
+    try {
+      const nextSettings = { ...settings, [enabledKey]: value }
+      await onUpdateSetting(enabledKey, value)
+
+      if (value) {
+        const permissionResult = await ensurePermission()
+        if (nativeApp && permissionResult?.display !== 'granted') {
+          onShowToast?.('error', 'Notificação bloqueada', 'Permita notificações do ForgeFlow no Android para ativar este lembrete.')
+          return
+        }
+
+        const result = await scheduleSmartReminder(key, nextSettings)
+        if (result?.reason === 'not-native') {
+          onShowToast?.('success', 'Preferência salva', 'No navegador fica salvo; no APK vira notificação real.')
+        } else {
+          onShowToast?.('success', 'Lembrete ativado', 'Esse lembrete inteligente foi configurado.')
+        }
+      } else {
+        await cancelSmartReminder(key)
+        onShowToast?.('success', 'Lembrete desativado', 'Esse lembrete foi cancelado.')
+      }
+    } finally {
+      setIsBusy(false)
+      refreshNativeStatus()
+    }
+  }
+
+  async function handleSmartReminderTimeChange(key, timeKey, value) {
+    const nextSettings = { ...settings, [timeKey]: value }
+    await onUpdateSetting(timeKey, value)
+    await scheduleSmartReminder(key, nextSettings)
+    refreshNativeStatus()
+  }
+
+  const smartReminderItems = [
+    {
+      key: 'hydration',
+      icon: Droplets,
+      title: 'Beber água',
+      description: 'Um aviso humano para hidratação durante o dia.',
+      enabledKey: 'hydrationReminderEnabled',
+      timeKey: 'hydrationReminderTime',
+    },
+    {
+      key: 'preWorkoutMeal',
+      icon: Utensils,
+      title: 'Pré-treino',
+      description: 'Lembra de se alimentar antes do horário que você costuma treinar.',
+      enabledKey: 'preWorkoutMealReminderEnabled',
+      timeKey: 'preWorkoutMealReminderTime',
+    },
+    {
+      key: 'postWorkoutMeal',
+      icon: Utensils,
+      title: 'Pós-treino',
+      description: 'Ajuda a manter a rotina de recuperação depois do treino.',
+      enabledKey: 'postWorkoutMealReminderEnabled',
+      timeKey: 'postWorkoutMealReminderTime',
+    },
+    {
+      key: 'progressPhoto',
+      icon: Camera,
+      title: 'Foto de progresso',
+      description: 'Um lembrete leve para registrar evolução visual.',
+      enabledKey: 'progressPhotoReminderEnabled',
+      timeKey: 'progressPhotoReminderTime',
+    },
+    {
+      key: 'sleep',
+      icon: Moon,
+      title: 'Dormir bem',
+      description: 'O ForgeFlow também lembra que descanso faz parte do treino.',
+      enabledKey: 'sleepReminderEnabled',
+      timeKey: 'sleepReminderTime',
+    },
+  ]
+
   return (
     <Card className="ff-reminders-card">
       <SectionTitle
@@ -370,6 +452,49 @@ function NotificationSettingsSection({ settings, workouts = [], onUpdateSetting,
               disabled={!settings.workoutReminderEnabled || isBusy || scheduledWorkoutDays === 0}
               onChange={(event) => handleWorkoutTimeChange(event.target.value)}
             />
+          </div>
+        </section>
+
+
+        <section className="ff-reminder-smart-section">
+          <div className="mb-3">
+            <h3 className="text-lg font-black text-[var(--ff-text)]">Lembretes inteligentes</h3>
+            <p className="mt-1 text-sm text-[var(--ff-muted)]">Avisos opcionais para deixar o app mais vivo sem virar spam.</p>
+          </div>
+
+          <div className="ff-smart-reminder-grid">
+            {smartReminderItems.map((item) => {
+              const Icon = item.icon
+              const enabled = Boolean(settings[item.enabledKey])
+              return (
+                <div key={item.key} className="ff-smart-reminder-card">
+                  <div className="ff-reminder-item-head">
+                    <span className="ff-reminder-item-icon"><Icon size={18} /></span>
+                    <div className="min-w-0">
+                      <h3>{item.title}</h3>
+                      <p>{item.description}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_140px]">
+                    <SettingToggleCard
+                      title={enabled ? 'Ativado' : 'Desativado'}
+                      description={enabled ? 'Toque para desligar este aviso.' : 'Toque para ativar este aviso.'}
+                      active={enabled}
+                      disabled={isBusy}
+                      onChange={(value) => handleSmartReminderToggle(item.key, item.enabledKey, value)}
+                    />
+                    <Input
+                      label="Horário"
+                      type="time"
+                      value={settings[item.timeKey]}
+                      disabled={!enabled || isBusy}
+                      onChange={(event) => handleSmartReminderTimeChange(item.key, item.timeKey, event.target.value)}
+                    />
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </section>
       </div>

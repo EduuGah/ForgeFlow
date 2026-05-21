@@ -95,6 +95,27 @@ function normalizeExercise(exercise = {}, index = 0) {
     }
 }
 
+
+function normalizeWorkoutLocation(input = null) {
+    if (!input || typeof input !== 'object') return null
+
+    const latitude = Number(input.latitude)
+    const longitude = Number(input.longitude)
+
+    if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90) return null
+    if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) return null
+
+    const accuracy = Number(input.accuracy)
+
+    return {
+        enabled: true,
+        latitude,
+        longitude,
+        accuracy: Number.isFinite(accuracy) && accuracy >= 0 ? accuracy : null,
+        capturedAt: safeDate(input.capturedAt, new Date()),
+    }
+}
+
 export function normalizeWorkoutHistoryPayload(input = {}) {
     const exercises = Array.isArray(input.exercises)
         ? input.exercises.slice(0, 80).map(normalizeExercise)
@@ -117,6 +138,7 @@ export function normalizeWorkoutHistoryPayload(input = {}) {
         startedAt: safeDate(input.startedAt, null),
         finishedAt: safeDate(input.finishedAt, new Date()),
         notes: sanitizeString(input.notes || '', 2000),
+        location: normalizeWorkoutLocation(input.location || input.session?.location || null),
     }
 }
 

@@ -3100,3 +3100,269 @@ body.is-native-app .ff-app-sidebar nav {
     transform: none !important;
   }
 }
+
+/* =========================================================
+   Etapa app real — layout mobile/desktop sem sobreposição
+   ========================================================= */
+:root {
+  --ff-radius-sm: 0.85rem;
+  --ff-radius-md: 1.15rem;
+  --ff-radius-lg: 1.5rem;
+  --ff-radius-xl: 1.9rem;
+  --ff-space-page-mobile: 0.9rem;
+  --ff-space-page-desktop: 1.5rem;
+}
+
+.ff-app-layout {
+  isolation: isolate;
+}
+
+.ff-page-scroll-shell,
+.ff-page-scroll-shell * {
+  box-sizing: border-box;
+}
+
+.ff-page-scroll-shell {
+  overflow-x: clip;
+}
+
+.ff-page-scroll-shell > div,
+.ff-page-scroll-shell section,
+.ff-page-scroll-shell article,
+.ff-page-scroll-shell aside {
+  min-width: 0;
+}
+
+.ff-page-scroll-shell img,
+.ff-page-scroll-shell video,
+.ff-page-scroll-shell canvas,
+.ff-page-scroll-shell svg {
+  max-width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .ff-page-scroll-shell {
+    padding-left: clamp(1.25rem, 2vw, 2.25rem) !important;
+    padding-right: clamp(1.25rem, 2vw, 2.25rem) !important;
+  }
+
+  .ff-page-dashboard .grid,
+  .ff-page-progress .grid,
+  .ff-page-settings .grid,
+  .ff-page-history .grid {
+    align-items: start;
+  }
+}
+
+@media (max-width: 768px) {
+  body:not(.is-native-app) .ff-page-scroll-shell {
+    padding-left: var(--ff-space-page-mobile) !important;
+    padding-right: var(--ff-space-page-mobile) !important;
+    padding-bottom: calc(7rem + env(safe-area-inset-bottom)) !important;
+  }
+
+  .ff-page-scroll-shell .rounded-3xl {
+    border-radius: var(--ff-radius-lg) !important;
+  }
+
+  .ff-page-scroll-shell .p-6,
+  .ff-page-scroll-shell .p-5 {
+    padding: 1rem !important;
+  }
+
+  .ff-page-scroll-shell h1 {
+    line-height: 1.05;
+  }
+}
+
+body.is-native-app,
+html.is-native-app {
+  width: 100%;
+  height: 100%;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
+body.is-native-app #root {
+  height: 100dvh !important;
+  overflow: hidden !important;
+}
+
+body.is-native-app .ff-app-layout {
+  position: fixed !important;
+  inset: 0 !important;
+  display: flex !important;
+  min-height: 0 !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  background: var(--ff-bg) !important;
+}
+
+body.is-native-app #app-header {
+  position: relative !important;
+  inset: auto !important;
+  flex: 0 0 auto !important;
+  transform: none !important;
+  opacity: 1 !important;
+  min-height: auto !important;
+  border-bottom-color: color-mix(in srgb, var(--ff-border) 70%, transparent) !important;
+  box-shadow: none !important;
+}
+
+body.is-native-app #app-header .safe-top > div {
+  height: auto !important;
+  min-height: calc(3.45rem + env(safe-area-inset-top)) !important;
+  padding-top: env(safe-area-inset-top) !important;
+  padding-left: 0.85rem !important;
+  padding-right: 0.85rem !important;
+}
+
+body.is-native-app .ff-page-scroll-shell {
+  position: relative !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain !important;
+  touch-action: pan-y !important;
+  padding: 0.9rem 0.9rem 1rem !important;
+  scroll-padding-top: 1rem !important;
+}
+
+body.is-native-app .mobile-bottom-nav {
+  position: relative !important;
+  inset: auto !important;
+  flex: 0 0 auto !important;
+  background: transparent !important;
+  border-top: 0 !important;
+  padding: 0.4rem 0.75rem calc(0.55rem + env(safe-area-inset-bottom)) !important;
+}
+
+body.is-native-app .mobile-bottom-nav > div {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 0.25rem !important;
+  border: 1px solid color-mix(in srgb, var(--ff-border) 72%, transparent) !important;
+  border-radius: 1.65rem !important;
+  background: color-mix(in srgb, var(--ff-header) 90%, transparent) !important;
+  padding: 0.35rem !important;
+  box-shadow: 0 -8px 30px rgba(0,0,0,.26) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+body.is-native-app .mobile-bottom-nav a {
+  min-width: 0 !important;
+  min-height: 50px !important;
+  border-radius: 1.2rem !important;
+  padding: 0.35rem 0.2rem !important;
+}
+
+body.is-native-app .mobile-bottom-nav span {
+  max-width: 100%;
+}
+
+body.is-native-app .ff-app-sidebar {
+  position: fixed !important;
+  z-index: 70 !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+}
+
+body.is-native-app.ff-sidebar-open .ff-page-scroll-shell,
+body.is-native-app.ff-sidebar-open #app-header,
+body.is-native-app.ff-sidebar-open .mobile-bottom-nav {
+  pointer-events: none !important;
+  touch-action: none !important;
+}
+
+/* Cards e grids seguros no mobile */
+@media (max-width: 900px) {
+  .ff-page-scroll-shell [class*='grid-cols-['],
+  .ff-page-scroll-shell [class*='2xl:grid-cols'],
+  .ff-page-scroll-shell [class*='xl:grid-cols'],
+  .ff-page-scroll-shell [class*='lg:grid-cols'] {
+    min-width: 0 !important;
+  }
+
+  .ff-page-settings .ff-settings-layout,
+  .ff-page-settings .ff-hevy-settings,
+  .ff-page-settings .ff-settings-risk-sidebar,
+  .ff-page-settings aside:not(.ff-app-sidebar) {
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    transform: none !important;
+    z-index: auto !important;
+  }
+
+  .ff-page-settings [class*='grid-cols'],
+  .ff-page-profile [class*='grid-cols'],
+  .ff-page-schedule [class*='grid-cols'] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+/* Treino ativo mais compacto e útil no mobile */
+@media (max-width: 768px) {
+  .ff-page-start-workout .ff-active-workout-hero {
+    padding: 0.85rem !important;
+    border-radius: 1.35rem !important;
+  }
+
+  .ff-page-start-workout .ff-exercise-jump-nav {
+    border-radius: 1.25rem !important;
+    padding: 0.75rem !important;
+  }
+
+  .ff-page-start-workout .ff-active-exercise-card {
+    border-radius: 1.35rem !important;
+  }
+
+  .ff-page-start-workout .ff-workout-input-polish {
+    padding-bottom: 6.5rem !important;
+  }
+}
+
+.ff-active-workout-status-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+}
+
+.ff-active-workout-status-line span {
+  border: 1px solid var(--ff-border);
+  border-radius: 999px;
+  background: var(--ff-surface-2);
+  padding: 0.35rem 0.65rem;
+  color: var(--ff-text-soft);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.ff-smart-reminder-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 0.85rem;
+}
+
+.ff-smart-reminder-card {
+  min-width: 0;
+  border: 1px solid var(--ff-border);
+  border-radius: 1.35rem;
+  background: var(--ff-surface-2);
+  padding: 0.95rem;
+}
+
+.ff-location-report-card a {
+  text-decoration: none;
+}

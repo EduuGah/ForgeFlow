@@ -31,6 +31,16 @@ export const defaultSettings = {
   weightReminderTime: '08:00',
   workoutReminderEnabled: false,
   workoutReminderTime: '18:00',
+  hydrationReminderEnabled: false,
+  hydrationReminderTime: '10:00',
+  preWorkoutMealReminderEnabled: false,
+  preWorkoutMealReminderTime: '16:30',
+  postWorkoutMealReminderEnabled: false,
+  postWorkoutMealReminderTime: '20:30',
+  progressPhotoReminderEnabled: false,
+  progressPhotoReminderTime: '09:00',
+  sleepReminderEnabled: false,
+  sleepReminderTime: '22:30',
 
   // Mantidos só por compatibilidade com backups/configs antigas.
   // Não aparecem mais na tela de configurações.

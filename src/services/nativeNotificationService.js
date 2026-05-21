@@ -8,9 +8,16 @@ const LocalNotifications = registerPlugin('LocalNotifications')
 const WEIGHT_REMINDER_ID = 9001
 const WORKOUT_REMINDER_BASE_ID = 9100
 const TEST_REMINDER_ID = 9999
+const ACTIVE_WORKOUT_NOTIFICATION_ID = 9301
+const HYDRATION_REMINDER_ID = 9401
+const PRE_WORKOUT_MEAL_REMINDER_ID = 9402
+const POST_WORKOUT_MEAL_REMINDER_ID = 9403
+const PROGRESS_PHOTO_REMINDER_ID = 9404
+const SLEEP_REMINDER_ID = 9405
 const DEFAULT_WEIGHT_TIME = '08:00'
 const DEFAULT_WORKOUT_TIME = '18:00'
 const REMINDER_CHANNEL_ID = 'forgeflow-reminders'
+const ACTIVE_WORKOUT_CHANNEL_ID = 'forgeflow-active-workout'
 
 function parseTime(time = DEFAULT_WEIGHT_TIME) {
   const [rawHour, rawMinute] = String(time || '').split(':')
@@ -59,14 +66,27 @@ async function ensureAndroidChannel() {
     await LocalNotifications.createChannel?.({
       id: REMINDER_CHANNEL_ID,
       name: 'Lembretes ForgeFlow',
-      description: 'Lembretes de treino e registro de peso.',
+      description: 'Lembretes de treino, água, refeições e registro de peso.',
       importance: 4,
       visibility: 1,
     })
   } catch {
     // Canais podem não existir em todas as plataformas/versões do plugin.
   }
+
+  try {
+    await LocalNotifications.createChannel?.({
+      id: ACTIVE_WORKOUT_CHANNEL_ID,
+      name: 'Treino em andamento',
+      description: 'Resumo persistente do treino ativo.',
+      importance: 3,
+      visibility: 1,
+    })
+  } catch {
+    // Canais podem não existir em todas as plataformas/versões do plugin.
+  }
 }
+
 
 export async function checkNotificationPermission() {
   if (!canUseNativeNotifications()) {
@@ -150,6 +170,12 @@ export async function cancelAllForgeFlowNotifications() {
   await cancelNotificationsByIds([
     WEIGHT_REMINDER_ID,
     TEST_REMINDER_ID,
+    ACTIVE_WORKOUT_NOTIFICATION_ID,
+    HYDRATION_REMINDER_ID,
+    PRE_WORKOUT_MEAL_REMINDER_ID,
+    POST_WORKOUT_MEAL_REMINDER_ID,
+    PROGRESS_PHOTO_REMINDER_ID,
+    SLEEP_REMINDER_ID,
     ...WEEK_DAYS.map((_, index) => WORKOUT_REMINDER_BASE_ID + index),
   ])
 }
@@ -235,6 +261,127 @@ export async function scheduleWeeklyWorkoutReminders({ schedule, workouts, time 
   return { scheduled: true, count: notifications.length }
 }
 
+
+
+export async function cancelActiveWorkoutNotification() {
+  await cancelNotificationsByIds([ACTIVE_WORKOUT_NOTIFICATION_ID])
+}
+
+export async function updateActiveWorkoutNotification({ workoutName, elapsedLabel, completedSets = 0, totalSets = 0, progressPercent = 0 }) {
+  if (!canUseNativeNotifications()) return { scheduled: false, reason: 'not-native' }
+
+  const permission = await requestNotificationPermission()
+  if (permission?.display !== 'granted') return { scheduled: false, reason: 'permission-denied' }
+
+  await ensureAndroidChannel()
+
+  const safeWorkoutName = workoutName || 'Treino em andamento'
+  const safeProgress = Math.max(0, Math.min(100, Number(progressPercent) || 0))
+  const body = `${safeWorkoutName} · ${elapsedLabel || '00:00:00'} · ${completedSets}/${totalSets} séries · ${safeProgress}%`
+
+  await LocalNotifications.schedule({
+    notifications: [
+      {
+        id: ACTIVE_WORKOUT_NOTIFICATION_ID,
+        channelId: ACTIVE_WORKOUT_CHANNEL_ID,
+        title: 'ForgeFlow · Treino em andamento',
+        body,
+        ongoing: true,
+        autoCancel: false,
+        schedule: buildOneShotSchedule(1),
+      },
+    ],
+  })
+
+  return { scheduled: true }
+}
+
+const SMART_REMINDERS = {
+  hydration: {
+    id: HYDRATION_REMINDER_ID,
+    enabledKey: 'hydrationReminderEnabled',
+    timeKey: 'hydrationReminderTime',
+    defaultTime: '10:00',
+    title: 'Hora da água 💧',
+    body: 'Beba um pouco de água para manter o treino e o dia em dia em ordem.',
+  },
+  preWorkoutMeal: {
+    id: PRE_WORKOUT_MEAL_REMINDER_ID,
+    enabledKey: 'preWorkoutMealReminderEnabled',
+    timeKey: 'preWorkoutMealReminderTime',
+    defaultTime: '16:30',
+    title: 'Refeição pré-treino 🍌',
+    body: 'Se for treinar em breve, vale garantir energia antes do treino.',
+  },
+  postWorkoutMeal: {
+    id: POST_WORKOUT_MEAL_REMINDER_ID,
+    enabledKey: 'postWorkoutMealReminderEnabled',
+    timeKey: 'postWorkoutMealReminderTime',
+    defaultTime: '20:30',
+    title: 'Pós-treino em ordem 🍽️',
+    body: 'Depois do treino, uma boa refeição ajuda na recuperação.',
+  },
+  progressPhoto: {
+    id: PROGRESS_PHOTO_REMINDER_ID,
+    enabledKey: 'progressPhotoReminderEnabled',
+    timeKey: 'progressPhotoReminderTime',
+    defaultTime: '09:00',
+    title: 'Registrar progresso 📸',
+    body: 'Uma foto semanal ajuda você a enxergar evolução além da balança.',
+  },
+  sleep: {
+    id: SLEEP_REMINDER_ID,
+    enabledKey: 'sleepReminderEnabled',
+    timeKey: 'sleepReminderTime',
+    defaultTime: '22:30',
+    title: 'Dormir bem também é treino 🌙',
+    body: 'Organize seu descanso para recuperar melhor e evoluir com consistência.',
+  },
+}
+
+export async function scheduleSmartReminder(key, settings = {}) {
+  const reminder = SMART_REMINDERS[key]
+  if (!reminder) return { scheduled: false, reason: 'unknown-reminder' }
+  if (!canUseNativeNotifications()) return { scheduled: false, reason: 'not-native' }
+
+  const permission = await requestNotificationPermission()
+  if (permission?.display !== 'granted') return { scheduled: false, reason: 'permission-denied' }
+
+  await ensureAndroidChannel()
+  await cancelNotificationsByIds([reminder.id])
+
+  await LocalNotifications.schedule({
+    notifications: [
+      buildNotification({
+        id: reminder.id,
+        title: reminder.title,
+        body: reminder.body,
+        schedule: buildScheduleOn(settings[reminder.timeKey] || reminder.defaultTime),
+      }),
+    ],
+  })
+
+  return { scheduled: true }
+}
+
+export async function cancelSmartReminder(key) {
+  const reminder = SMART_REMINDERS[key]
+  if (!reminder) return
+  await cancelNotificationsByIds([reminder.id])
+}
+
+export async function rescheduleSmartReminders(settings = {}) {
+  for (const [key, reminder] of Object.entries(SMART_REMINDERS)) {
+    if (settings?.[reminder.enabledKey]) {
+      await scheduleSmartReminder(key, settings)
+    } else {
+      await cancelSmartReminder(key)
+    }
+  }
+}
+
+export { SMART_REMINDERS }
+
 export async function rescheduleConfiguredNotifications({ settings, workouts }) {
   if (!canUseNativeNotifications()) return { scheduled: false, reason: 'not-native' }
 
@@ -254,7 +401,9 @@ export async function rescheduleConfiguredNotifications({ settings, workouts }) 
     await cancelWorkoutReminders()
   }
 
+  await rescheduleSmartReminders(settings)
+
   return { scheduled: true }
 }
 
-export { WEIGHT_REMINDER_ID, WORKOUT_REMINDER_BASE_ID, TEST_REMINDER_ID }
+export { WEIGHT_REMINDER_ID, WORKOUT_REMINDER_BASE_ID, TEST_REMINDER_ID, ACTIVE_WORKOUT_NOTIFICATION_ID }

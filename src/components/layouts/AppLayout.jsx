@@ -6,6 +6,7 @@ import forgeflowIcon from '../../assets/forgeflow-icon.png'
 import { useAuth } from '../../context/AuthContext'
 import { useWorkoutSession } from '../../context/WorkoutSessionContext'
 import { apiFetch } from '../../services/api'
+import { cancelActiveWorkoutNotification, updateActiveWorkoutNotification } from '../../services/nativeNotificationService'
 
 import {
   applyAppSettingsToDocument,
@@ -41,6 +42,18 @@ function runWhenBrowserIsIdle(callback) {
 }
 
 
+
+function formatActiveWorkoutTime(seconds = 0) {
+  const safeSeconds = Math.max(0, Number(seconds) || 0)
+  const hours = Math.floor(safeSeconds / 3600)
+  const minutes = Math.floor((safeSeconds % 3600) / 60)
+  const secs = safeSeconds % 60
+
+  return [hours, minutes, secs]
+    .map((value) => String(value).padStart(2, '0'))
+    .join(':')
+}
+
 function getRouteShellClass(pathname = '/') {
   if (pathname === '/') return 'ff-page-dashboard'
   if (pathname.startsWith('/workouts')) return 'ff-page-workouts'
@@ -61,7 +74,7 @@ function getRouteShellClass(pathname = '/') {
 function AppLayout() {
   const { user } = useAuth()
   const location = useLocation()
-  const { activeSession } = useWorkoutSession()
+  const { activeSession, elapsedSeconds, completedSets, totalSets } = useWorkoutSession()
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [popupNotification, setPopupNotification] = useState(null)
@@ -289,6 +302,34 @@ function AppLayout() {
       }).catch((error) => console.error(error))
     })
   }, [user])
+
+  useEffect(() => {
+    if (!isRunningNativeApp) return undefined
+
+    if (!activeSession) {
+      cancelActiveWorkoutNotification().catch(() => {})
+      return undefined
+    }
+
+    const progressPercent = totalSets
+      ? Math.min(100, Math.round((completedSets / totalSets) * 100))
+      : 0
+
+    function syncActiveWorkoutNotification() {
+      updateActiveWorkoutNotification({
+        workoutName: activeSession.workoutName,
+        elapsedLabel: formatActiveWorkoutTime(elapsedSeconds),
+        completedSets,
+        totalSets,
+        progressPercent,
+      }).catch(() => {})
+    }
+
+    syncActiveWorkoutNotification()
+    const intervalId = window.setInterval(syncActiveWorkoutNotification, 60000)
+
+    return () => window.clearInterval(intervalId)
+  }, [activeSession, activeSession?.workoutName, completedSets, elapsedSeconds, isRunningNativeApp, totalSets])
 
   useEffect(() => {
     function handleNotificationPopup(event) {

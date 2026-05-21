@@ -3,6 +3,7 @@ import {
   ChevronDown,
   Dumbbell,
   Flame,
+  MapPin,
   Medal,
   Search,
   Trash2,
@@ -26,6 +27,7 @@ import {
   isValidWorkingSet,
 } from '../historyUtils'
 import HistoryStatCard from './HistoryStatCard'
+import { formatLocationLabel, getMapsUrl } from '../../../services/geolocationService'
 
 export function HistorySummaryCards({ historyCount, summary }) {
   return (
@@ -268,6 +270,29 @@ function HistoryExerciseDetails({ exercise, exerciseIndex }) {
   )
 }
 
+
+function HistoryLocationDetails({ location }) {
+  const mapsUrl = getMapsUrl(location)
+
+  if (!mapsUrl) {
+    return (
+      <div className="mt-5 rounded-3xl border border-zinc-800 bg-zinc-950 p-5">
+        <h3 className="flex items-center gap-2 font-bold text-zinc-300"><MapPin size={17} /> Local do treino</h3>
+        <p className="mt-2 text-sm text-zinc-500">Localização não salva para este treino.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mt-5 rounded-3xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 p-5">
+      <h3 className="flex items-center gap-2 font-bold text-[var(--ff-accent-text)]"><MapPin size={17} /> Local do treino</h3>
+      <p className="mt-2 text-sm text-[var(--ff-text-soft)]">Local salvo: {formatLocationLabel(location)}</p>
+      {location?.accuracy && <p className="mt-1 text-xs text-[var(--ff-muted)]">Precisão aproximada: {Math.round(location.accuracy)}m</p>}
+      <a className="mt-3 inline-flex rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] px-4 py-2 text-sm font-black text-[var(--ff-accent-text)]" href={mapsUrl} target="_blank" rel="noreferrer">Abrir no mapa</a>
+    </div>
+  )
+}
+
 function HistorySessionCard({
   session,
   meta,
@@ -355,6 +380,8 @@ function HistorySessionCard({
               />
             ))}
           </div>
+
+          <HistoryLocationDetails location={session.location} />
 
           {session.notes && (
             <div className="mt-5 rounded-3xl border border-zinc-800 bg-zinc-950 p-5">

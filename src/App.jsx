@@ -28,6 +28,7 @@ const ExerciseProgress = lazy(() => import('./pages/ExerciseProgress'))
 const ProgressPhotos = lazy(() => import('./pages/ProgressPhotos'))
 const Goals = lazy(() => import('./pages/Goals'))
 const Notifications = lazy(() => import('./pages/Notifications'))
+const Nutrition = lazy(() => import('./pages/Nutrition'))
 const Admin = lazy(() => import('./pages/Admin'))
 
 const Login = lazy(() => import('./pages/Login'))
@@ -136,6 +137,7 @@ function App() {
                 <Route path="progress-photos" element={<ProgressPhotos />} />
                 <Route path="goals" element={<Goals />} />
                 <Route path="notifications" element={<Notifications />} />
+                <Route path="nutrition" element={<Nutrition />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="admin" element={<Admin />} />

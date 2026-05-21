@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { RefreshCcw } from 'lucide-react'
+import { MapPin, RefreshCcw } from 'lucide-react'
 
 import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
@@ -20,6 +20,8 @@ import {
   getAllRecentSetRows,
   runWhenBrowserIsIdle,
 } from '../features/progress/progressUtils'
+import { formatLocationLabel, getMapsUrl } from '../services/geolocationService'
+
 import {
   BodyWeightLog,
   ChartLoadingCard,
@@ -34,6 +36,50 @@ import {
 const BodyWeightChart = lazy(() => import('../components/progress/BodyWeightChart'))
 const TrainingVolumeChart = lazy(() => import('../components/progress/TrainingVolumeChart'))
 const MuscleGroupChart = lazy(() => import('../components/progress/MuscleGroupChart'))
+
+
+function WorkoutLocationReport({ workouts = [] }) {
+  const workoutsWithLocation = workouts.filter((workout) => getMapsUrl(workout.location))
+  const latest = workoutsWithLocation.slice(0, 4)
+
+  return (
+    <Card className="ff-location-report-card">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--ff-accent-text)]">Localização</p>
+          <h2 className="mt-1 text-xl font-black">Treinos com local salvo</h2>
+          <p className="mt-1 text-sm text-[var(--ff-muted)]">Registro opcional usado só quando você escolhe salvar ao finalizar.</p>
+        </div>
+        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]"><MapPin size={20} /></span>
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+          <p className="text-xs text-[var(--ff-muted)]">Com localização</p>
+          <p className="mt-1 text-2xl font-black text-[var(--ff-accent-text)]">{workoutsWithLocation.length}</p>
+        </div>
+        <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+          <p className="text-xs text-[var(--ff-muted)]">Sem localização</p>
+          <p className="mt-1 text-2xl font-black">{Math.max(0, workouts.length - workoutsWithLocation.length)}</p>
+        </div>
+      </div>
+
+      <div className="mt-4 space-y-2">
+        {latest.length === 0 ? (
+          <p className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4 text-sm text-[var(--ff-muted)]">Nenhum treino recente possui localização salva.</p>
+        ) : latest.map((workout) => (
+          <a key={workout.id || workout._id || workout.finishedAt} href={getMapsUrl(workout.location)} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3 transition hover:border-[var(--ff-accent-border)]">
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-black">{workout.workoutName}</span>
+              <span className="block truncate text-xs text-[var(--ff-muted)]">{formatLocationLabel(workout.location)}</span>
+            </span>
+            <span className="shrink-0 text-xs font-black text-[var(--ff-accent-text)]">Mapa</span>
+          </a>
+        ))}
+      </div>
+    </Card>
+  )
+}
 
 function Progress() {
   const { user } = useAuth()
@@ -278,6 +324,8 @@ function Progress() {
 
             <BodyWeightLog data={normalizedProgress.bodyWeight} />
           </section>
+
+          <WorkoutLocationReport workouts={normalizedProgress.recentWorkouts} />
 
           <ProgressPhotosAndReadingSection normalizedProgress={normalizedProgress} />
         </div>
