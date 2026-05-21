@@ -322,6 +322,7 @@ function AppLayout() {
         completedSets,
         totalSets,
         progressPercent,
+        startedAt: activeSession.startedAt,
       }).catch(() => {})
     }
 
@@ -329,7 +330,7 @@ function AppLayout() {
     const intervalId = window.setInterval(syncActiveWorkoutNotification, 60000)
 
     return () => window.clearInterval(intervalId)
-  }, [activeSession, activeSession?.workoutName, completedSets, elapsedSeconds, isRunningNativeApp, totalSets])
+  }, [activeSession, activeSession?.startedAt, activeSession?.workoutName, completedSets, elapsedSeconds, isRunningNativeApp, totalSets])
 
   useEffect(() => {
     function handleNotificationPopup(event) {
@@ -417,15 +418,20 @@ function AppLayout() {
 
       <main ref={pageScrollRef} className={`ff-page-scroll-shell ff-hevy-shell ${getRouteShellClass(location.pathname)} relative z-0 min-h-0 px-4 pb-36 pt-[calc(6.25rem+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[calc(6.25rem+env(safe-area-inset-top))]`}>
         <div className="mx-auto w-full max-w-[1600px]">
+          {activeSession && (
+            <Suspense fallback={null}>
+              <ActiveWorkoutMini variant="inline" />
+            </Suspense>
+          )}
           <Outlet />
         </div>
       </main>
 
       <MobileBottomNav />
 
-      {activeSession && (
+      {activeSession && !isRunningNativeApp && (
         <Suspense fallback={null}>
-          <ActiveWorkoutMini />
+          <ActiveWorkoutMini variant="floating" />
         </Suspense>
       )}
 

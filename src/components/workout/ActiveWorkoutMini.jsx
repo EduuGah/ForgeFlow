@@ -13,7 +13,7 @@ function formatTime(seconds) {
     .join(':')
 }
 
-function ActiveWorkoutMini() {
+function ActiveWorkoutMini({ variant = 'floating' }) {
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -22,6 +22,8 @@ function ActiveWorkoutMini() {
 
   if (!activeSession) return null
   if (location.pathname === '/start-workout') return null
+
+  const isInline = variant === 'inline'
 
   const progress = totalSets
     ? Math.min((completedSets / totalSets) * 100, 100)
@@ -37,7 +39,7 @@ function ActiveWorkoutMini() {
     <button
       type="button"
       onClick={handleOpenWorkout}
-      className="safe-bottom fixed bottom-20 left-4 right-4 z-50 overflow-hidden rounded-3xl border border-[var(--ff-accent-border)] bg-[var(--ff-card)]/95 p-3 text-left text-[var(--ff-text)] shadow-2xl shadow-black/20 backdrop-blur-xl transition hover:shadow-[0_0_28px_var(--ff-accent-shadow)] sm:p-4 lg:bottom-4 lg:left-auto lg:w-[420px]"
+      className={`ff-active-workout-mini ${isInline ? 'ff-active-workout-mini-inline' : 'ff-active-workout-mini-floating'} overflow-hidden rounded-3xl border border-[var(--ff-accent-border)] bg-[var(--ff-card)]/95 p-3 text-left text-[var(--ff-text)] shadow-2xl shadow-black/20 backdrop-blur-xl transition hover:shadow-[0_0_28px_var(--ff-accent-shadow)] sm:p-4`}
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,var(--ff-accent-soft),transparent_34%)]" />
 

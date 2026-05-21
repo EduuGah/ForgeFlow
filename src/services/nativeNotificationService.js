@@ -4,6 +4,7 @@ import { isNativeApp } from '../utils/platformUtils'
 import { WEEK_DAYS, findWorkoutByScheduleEntry, getWorkoutName, normalizeWeeklySchedule } from '../utils/workoutScheduleUtils'
 
 const LocalNotifications = registerPlugin('LocalNotifications')
+const ActiveWorkoutForeground = registerPlugin('ActiveWorkoutForeground')
 
 const WEIGHT_REMINDER_ID = 9001
 const WORKOUT_REMINDER_BASE_ID = 9100
@@ -264,20 +265,55 @@ export async function scheduleWeeklyWorkoutReminders({ schedule, workouts, time 
 
 
 export async function cancelActiveWorkoutNotification() {
+  try {
+    if (isNativeApp()) {
+      await ActiveWorkoutForeground?.stop?.()
+    }
+  } catch {
+    // Foreground service é um recurso Android local. Se não existir, seguimos com fallback.
+  }
+
   await cancelNotificationsByIds([ACTIVE_WORKOUT_NOTIFICATION_ID])
 }
 
-export async function updateActiveWorkoutNotification({ workoutName, elapsedLabel, completedSets = 0, totalSets = 0, progressPercent = 0 }) {
+export async function updateActiveWorkoutNotification({
+  workoutName,
+  elapsedLabel,
+  completedSets = 0,
+  totalSets = 0,
+  progressPercent = 0,
+  startedAt,
+}) {
   if (!canUseNativeNotifications()) return { scheduled: false, reason: 'not-native' }
 
   const permission = await requestNotificationPermission()
   if (permission?.display !== 'granted') return { scheduled: false, reason: 'permission-denied' }
 
+  const safeWorkoutName = workoutName || 'Treino em andamento'
+  const safeProgress = Math.max(0, Math.min(100, Math.round(Number(progressPercent) || 0)))
+  const safeCompletedSets = Math.max(0, Number(completedSets) || 0)
+  const safeTotalSets = Math.max(0, Number(totalSets) || 0)
+  const safeStartedAt = startedAt ? new Date(startedAt).getTime() : Date.now()
+  const summary = `${elapsedLabel || '00:00:00'} · ${safeCompletedSets}/${safeTotalSets} séries · ${safeProgress}% concluído`
+
+  // Preferência no Android: foreground service nativo.
+  // Ele mantém uma notificação constante na barra mesmo com o app em segundo plano.
+  try {
+    await ActiveWorkoutForeground?.start?.({
+      workoutName: safeWorkoutName,
+      summary,
+      progress: safeProgress,
+      startedAt: Number.isFinite(safeStartedAt) ? safeStartedAt : Date.now(),
+    })
+
+    return { scheduled: true, source: 'foreground-service' }
+  } catch {
+    // Fallback: local notification atualizável. Não é tão constante quanto foreground service.
+  }
+
   await ensureAndroidChannel()
 
-  const safeWorkoutName = workoutName || 'Treino em andamento'
-  const safeProgress = Math.max(0, Math.min(100, Number(progressPercent) || 0))
-  const body = `${safeWorkoutName} · ${elapsedLabel || '00:00:00'} · ${completedSets}/${totalSets} séries · ${safeProgress}%`
+  const body = `${safeWorkoutName} · ${summary}`
 
   await LocalNotifications.schedule({
     notifications: [
@@ -293,7 +329,7 @@ export async function updateActiveWorkoutNotification({ workoutName, elapsedLabe
     ],
   })
 
-  return { scheduled: true }
+  return { scheduled: true, source: 'local-notification-fallback' }
 }
 
 const SMART_REMINDERS = {

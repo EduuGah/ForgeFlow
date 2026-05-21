@@ -3366,3 +3366,54 @@ body.is-native-app.ff-sidebar-open .mobile-bottom-nav {
 .ff-location-report-card a {
   text-decoration: none;
 }
+
+/* =========================================================
+   ForgeFlow — treino ativo sem card sobreposto no mobile
+   ========================================================= */
+.ff-active-workout-mini {
+  width: 100%;
+  min-width: 0;
+}
+
+.ff-active-workout-mini-floating {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 50;
+  width: min(420px, calc(100vw - 2rem));
+}
+
+.ff-active-workout-mini-inline {
+  display: none;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 1023px) {
+  .ff-active-workout-mini-floating {
+    display: none !important;
+  }
+
+  .ff-active-workout-mini-inline {
+    display: block !important;
+    position: relative !important;
+    inset: auto !important;
+    z-index: 1 !important;
+    box-shadow: 0 14px 34px rgba(0,0,0,.18) !important;
+  }
+
+  body.is-native-app .ff-active-workout-mini-inline {
+    margin-bottom: 0.9rem !important;
+    border-radius: 1.35rem !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .ff-active-workout-mini-inline {
+    display: none !important;
+  }
+}
+
+/* A tela de treino ativo não deve receber barra flutuante por cima dela. */
+.ff-page-start-workout .ff-active-workout-mini {
+  display: none !important;
+}
