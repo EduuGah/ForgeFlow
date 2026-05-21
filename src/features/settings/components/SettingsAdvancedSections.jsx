@@ -234,7 +234,7 @@ export function SettingsRiskSidebar({
   onDeleteAccount,
 }) {
   return (
-    <aside className="space-y-6">
+    <aside className="ff-settings-risk-sidebar space-y-6">
       <Card>
         <SectionTitle
           icon={AlertTriangle}

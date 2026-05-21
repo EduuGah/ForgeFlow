@@ -95,7 +95,7 @@ function Sidebar({ isOpen = false, onClose }) {
 
       <aside
         className={[
-          'fixed left-0 top-0 z-[60] flex h-dvh w-[86vw] max-w-[300px] touch-pan-y flex-col overflow-hidden overscroll-contain border-r border-[var(--ff-border)] bg-[var(--ff-sidebar)] text-[var(--ff-text)] shadow-2xl shadow-black/20 transition-transform duration-300 ease-out will-change-transform',
+          'ff-app-sidebar fixed left-0 top-0 z-[60] flex h-dvh w-[86vw] max-w-[300px] touch-pan-y flex-col overflow-hidden overscroll-contain border-r border-[var(--ff-border)] bg-[var(--ff-sidebar)] text-[var(--ff-text)] shadow-2xl shadow-black/20 transition-transform duration-300 ease-out will-change-transform',
           isOpen ? 'translate-x-0' : '-translate-x-full',
         ].join(' ')}
       >

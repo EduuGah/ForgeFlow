@@ -2918,7 +2918,7 @@ body.is-native-app.ff-sidebar-open #app-header {
   pointer-events: none !important;
 }
 
-body.is-native-app aside {
+body.is-native-app .ff-app-sidebar {
   position: fixed !important;
   z-index: 60 !important;
   height: 100dvh !important;
@@ -2927,7 +2927,7 @@ body.is-native-app aside {
   touch-action: pan-y !important;
 }
 
-body.is-native-app aside nav {
+body.is-native-app .ff-app-sidebar nav {
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch !important;
   overscroll-behavior-y: contain !important;
@@ -2981,5 +2981,122 @@ body.is-native-app aside nav {
     transform: none !important;
     opacity: 1 !important;
     min-height: calc(56px + env(safe-area-inset-top)) !important;
+  }
+}
+
+
+/* =========================================================
+   Correção v4 — cards de Configurações não podem virar overlay.
+   O seletor antigo `body.is-native-app aside` atingia também a
+   lateral de risco da página Configurações. Agora apenas `.ff-app-sidebar`
+   recebe comportamento fixo; os cards internos da página ficam no fluxo.
+   ========================================================= */
+.ff-settings-layout,
+.ff-settings-layout > *,
+.ff-hevy-settings,
+.ff-settings-risk-sidebar {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+.ff-settings-risk-sidebar {
+  position: static !important;
+  inset: auto !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  transform: none !important;
+  z-index: auto !important;
+  pointer-events: auto !important;
+  touch-action: auto !important;
+}
+
+.ff-settings-layout .grid,
+.ff-settings-layout [class*='grid-cols'],
+.ff-hevy-settings .grid,
+.ff-hevy-settings [class*='grid-cols'] {
+  min-width: 0 !important;
+}
+
+.ff-settings-layout select,
+.ff-settings-layout input,
+.ff-settings-layout textarea,
+.ff-settings-layout button,
+.ff-hevy-settings select,
+.ff-hevy-settings input,
+.ff-hevy-settings textarea,
+.ff-hevy-settings button {
+  max-width: 100% !important;
+}
+
+@media (max-width: 1023px) {
+  .ff-settings-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+
+  .ff-hevy-settings,
+  .ff-settings-risk-sidebar {
+    width: 100% !important;
+  }
+
+  .ff-hevy-settings > *,
+  .ff-settings-risk-sidebar > * {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .ff-page-settings .ff-settings-layout,
+  .ff-page-settings .ff-hevy-settings {
+    overflow: visible !important;
+  }
+
+  .ff-page-settings .ff-section-title {
+    align-items: flex-start !important;
+  }
+
+  .ff-page-settings .ff-section-title h2 {
+    overflow-wrap: anywhere;
+  }
+
+  .ff-page-settings .ff-section-title p,
+  .ff-page-settings p,
+  .ff-page-settings h2,
+  .ff-page-settings h3 {
+    max-width: 100% !important;
+  }
+
+  .ff-page-settings [class*='md:grid-cols'],
+  .ff-page-settings [class*='lg:grid-cols'],
+  .ff-page-settings [class*='xl:grid-cols'],
+  .ff-page-settings [class*='2xl:grid-cols'] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .ff-page-settings [class*='sm:flex-row'],
+  .ff-page-settings [class*='lg:flex-row'] {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .ff-page-settings .ff-reminder-status-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .ff-page-settings .ff-reminder-status-pill {
+    width: 100% !important;
+  }
+
+  .ff-page-settings .ff-setting-toggle-card > div {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .ff-page-settings .ff-toggle-switch {
+    align-self: flex-start !important;
+    transform: none !important;
   }
 }
