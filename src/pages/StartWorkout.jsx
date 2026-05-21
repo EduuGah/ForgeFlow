@@ -318,7 +318,8 @@ function StartWorkout() {
     setIsFinishModalOpen(true)
   }
 
-  async function handleFinishWorkout({ saveLocation = false } = {}) {
+  async function handleFinishWorkout(options = {}) {
+    const { saveLocation = false } = options
     if (savingWorkout) return
 
     if (!hasValidCompletedSet) {
@@ -338,6 +339,13 @@ function StartWorkout() {
       if (saveLocation) {
         try {
           location = await requestWorkoutLocation()
+          const label = String(options.locationLabel || '').trim().slice(0, 60)
+          if (location && label) {
+            location = {
+              ...location,
+              label,
+            }
+          }
         } catch (error) {
           showToast('error', 'Localização não salva', error?.message || 'Não foi possível capturar a localização. O treino será salvo normalmente.')
         }

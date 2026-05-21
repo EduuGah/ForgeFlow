@@ -109,6 +109,7 @@ function normalizeWorkoutLocation(input = null) {
 
     return {
         enabled: true,
+        label: sanitizeString(input.label || input.name || '', 60),
         latitude,
         longitude,
         accuracy: Number.isFinite(accuracy) && accuracy >= 0 ? accuracy : null,

@@ -80,10 +80,22 @@ export function getMapsUrl(location) {
 export function formatLocationLabel(location) {
   const latitude = Number(location?.latitude)
   const longitude = Number(location?.longitude)
+  const label = String(location?.label || location?.name || '').trim()
 
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
     return 'Localização não salva'
   }
+
+  if (label) return label
+
+  return `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`
+}
+
+export function formatLocationCoordinates(location) {
+  const latitude = Number(location?.latitude)
+  const longitude = Number(location?.longitude)
+
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return ''
 
   return `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`
 }

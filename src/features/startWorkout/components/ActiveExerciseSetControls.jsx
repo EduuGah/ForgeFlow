@@ -112,6 +112,15 @@ export function WorkoutSetInput({
           inputMode={inputMode}
           value={value}
           onChange={onChange}
+          onFocus={(event) => {
+            window.setTimeout(() => {
+              event.target?.scrollIntoView?.({
+                behavior: 'smooth',
+                block: 'center',
+                inline: 'nearest',
+              })
+            }, 260)
+          }}
           placeholder="0"
           className="min-w-0 flex-1 bg-transparent px-2 text-center text-xl font-black tabular-nums text-[var(--ff-text)] outline-none placeholder:text-[var(--ff-muted-2)]"
         />
