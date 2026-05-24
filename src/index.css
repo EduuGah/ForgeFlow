@@ -3694,3 +3694,301 @@ body.is-native-app.ff-sidebar-open .mobile-bottom-nav {
     z-index: 1 !important;
   }
 }
+
+/* =========================================================
+   ForgeFlow — Redesign premium Hevy-inspired 2026
+   Escopo: web + APK. Foco em identidade própria, dark premium,
+   densidade mobile, safe-area e correção de overlays.
+   ========================================================= */
+:root {
+  --ff-accent: #1594ff;
+  --ff-accent-hover: #38a7ff;
+  --ff-accent-soft: rgba(21, 148, 255, 0.13);
+  --ff-accent-border: rgba(21, 148, 255, 0.38);
+  --ff-accent-text: #4bb0ff;
+  --ff-accent-shadow: rgba(21, 148, 255, 0.24);
+  --ff-bg: #000000;
+  --ff-bg-soft: #050506;
+  --ff-card: #171719;
+  --ff-card-hover: #1f2024;
+  --ff-surface: #1a1b1f;
+  --ff-surface-2: #101114;
+  --ff-surface-3: #26272d;
+  --ff-input: #101114;
+  --ff-header: rgba(24, 25, 29, 0.94);
+  --ff-sidebar: #111216;
+  --ff-border: rgba(255, 255, 255, 0.08);
+  --ff-border-soft: rgba(255, 255, 255, 0.055);
+  --ff-border-strong: rgba(255, 255, 255, 0.16);
+  --ff-muted: #9b9ca3;
+  --ff-muted-2: #686b74;
+  --ff-radius-sm: 0.9rem;
+  --ff-radius-md: 1.15rem;
+  --ff-radius-lg: 1.45rem;
+  --ff-radius-xl: 1.85rem;
+  --ff-shadow-card: 0 18px 48px rgba(0, 0, 0, 0.28);
+}
+
+body {
+  background: #000;
+}
+
+.ff-app-layout::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 14% -12%, rgba(21,148,255,.16), transparent 34%),
+    radial-gradient(circle at 110% 0%, rgba(139,92,246,.10), transparent 28%),
+    #000;
+  z-index: 0;
+}
+
+.ff-hevy-shell {
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ff-hevy-shell > div {
+  position: relative;
+  z-index: 1;
+}
+
+.ff-hevy-shell .ff-card,
+.ff-hevy-shell article,
+.ff-hevy-shell section > .rounded-3xl,
+.ff-hevy-shell [class*='rounded-3xl'][class*='border'],
+.ff-hevy-shell [class*='rounded-[2rem]'][class*='border'] {
+  box-shadow: var(--ff-shadow-card);
+}
+
+#app-header {
+  background: var(--ff-header) !important;
+  border-bottom-color: rgba(255,255,255,.075) !important;
+}
+
+#app-header .safe-top > div {
+  height: 4.25rem !important;
+}
+
+.mobile-bottom-nav {
+  background: rgba(24, 25, 29, 0.96) !important;
+  border-top-color: rgba(255,255,255,.08) !important;
+  box-shadow: 0 -18px 44px rgba(0,0,0,.42);
+}
+
+.mobile-bottom-nav a {
+  min-height: 58px;
+}
+
+.mobile-bottom-nav a[aria-current='page'],
+.mobile-bottom-nav .active {
+  background: transparent !important;
+  color: var(--ff-accent-text) !important;
+}
+
+.mobile-bottom-nav a[aria-current='page'] svg,
+.mobile-bottom-nav .active svg {
+  filter: drop-shadow(0 0 10px var(--ff-accent-shadow));
+}
+
+.ff-profile-hero-card,
+.ff-nutrition-hero,
+.ff-active-workout-hero,
+.ff-dashboard-hero-card,
+.ff-workout-focus-card,
+.ff-exercise-library-card {
+  background:
+    radial-gradient(circle at 14% 0%, rgba(21,148,255,.18), transparent 36%),
+    linear-gradient(180deg, rgba(255,255,255,.04), transparent 46%),
+    var(--ff-card) !important;
+}
+
+.ff-hevy-metric-card,
+.ff-nutrition-metric-card,
+.ff-hydration-card,
+.ff-meal-list-item,
+.ff-exercise-detail-page .rounded-\[1\.5rem\] {
+  border-color: var(--ff-border) !important;
+}
+
+.ff-meal-list-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  border: 1px solid var(--ff-border);
+  background: var(--ff-surface-2);
+  border-radius: 1.35rem;
+  padding: 0.75rem;
+}
+
+.ff-quick-water-button {
+  min-height: 2.75rem;
+  border: 1px solid rgba(34, 211, 238, .18);
+  border-radius: 1rem;
+  background: rgba(34, 211, 238, .09);
+  color: #a5f3fc;
+  font-weight: 900;
+  transition: transform .16s ease, background .16s ease, border-color .16s ease;
+}
+
+.ff-quick-water-button-muted {
+  border-color: var(--ff-border);
+  background: var(--ff-surface-2);
+  color: var(--ff-muted);
+}
+
+.ff-quick-water-button:active {
+  transform: scale(.97);
+}
+
+.ff-exercise-detail-page .overflow-x-auto {
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ff-exercise-detail-page .overflow-x-auto::-webkit-scrollbar {
+  display: none;
+}
+
+.ff-page-nutrition .ff-hevy-shell,
+.ff-page-admin .ff-hevy-shell {
+  padding-left: clamp(.85rem, 2vw, 2.25rem) !important;
+  padding-right: clamp(.85rem, 2vw, 2.25rem) !important;
+}
+
+.ff-page-scroll-shell {
+  padding-bottom: calc(7.75rem + env(safe-area-inset-bottom)) !important;
+}
+
+.ff-page-start-workout .ff-page-scroll-shell {
+  padding-bottom: calc(2rem + env(safe-area-inset-bottom)) !important;
+}
+
+.mobile-bottom-sheet,
+[role='dialog'] [class*='bottom-0'],
+[class*='BottomSheet'] {
+  max-height: min(82dvh, 720px) !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  border-top-left-radius: 1.7rem !important;
+  border-top-right-radius: 1.7rem !important;
+}
+
+@media (min-width: 1024px) {
+  .ff-hevy-shell > div {
+    max-width: 1480px !important;
+  }
+
+  .ff-settings-layout,
+  .ff-page-profile section,
+  .ff-page-nutrition section {
+    align-items: start;
+  }
+}
+
+@media (max-width: 640px) {
+  #app-header .safe-top > div {
+    height: 4rem !important;
+    padding-left: .9rem !important;
+    padding-right: .9rem !important;
+  }
+
+  #app-header h1 {
+    font-size: 1.05rem !important;
+  }
+
+  #app-header p,
+  #app-header .hidden.rounded-full {
+    display: none !important;
+  }
+
+  #app-header button {
+    height: 2.75rem !important;
+    width: 2.75rem;
+    border-radius: 1rem !important;
+  }
+
+  .ff-hevy-shell {
+    padding-top: calc(5rem + env(safe-area-inset-top)) !important;
+    padding-left: .9rem !important;
+    padding-right: .9rem !important;
+  }
+
+  .ff-page-scroll-shell {
+    padding-bottom: calc(7.9rem + env(safe-area-inset-bottom)) !important;
+  }
+
+  .ff-page-start-workout .ff-page-scroll-shell {
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom)) !important;
+  }
+
+  .ff-profile-hero-card {
+    border-radius: 1.6rem !important;
+    padding: 1rem !important;
+  }
+
+  .ff-profile-hero-card h1 {
+    font-size: 1.35rem !important;
+  }
+
+  .ff-hevy-metric-card {
+    padding: .9rem !important;
+    border-radius: 1.2rem !important;
+  }
+
+  .ff-hevy-metric-card h3 {
+    font-size: 1.35rem !important;
+  }
+
+  .ff-nutrition-page {
+    gap: .9rem;
+  }
+
+  .ff-nutrition-page .grid {
+    min-width: 0;
+  }
+
+  .ff-nutrition-metric-card,
+  .ff-hydration-card,
+  .ff-meal-list-item {
+    border-radius: 1.25rem !important;
+  }
+
+  .ff-meal-list-item {
+    align-items: flex-start;
+  }
+
+  .ff-meal-list-item img,
+  .ff-meal-list-item > span:first-child {
+    width: 4.25rem !important;
+    height: 4.25rem !important;
+  }
+
+  .ff-exercise-detail-page {
+    margin-inline: -0.05rem;
+  }
+
+  .ff-exercise-detail-page h1 {
+    font-size: 1.45rem !important;
+  }
+
+  .ff-exercise-detail-page .rounded-\[1\.5rem\] {
+    border-radius: 1.25rem !important;
+  }
+
+  .mobile-bottom-nav {
+    padding-top: .35rem !important;
+  }
+
+  .mobile-bottom-nav span {
+    font-size: 10px !important;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}

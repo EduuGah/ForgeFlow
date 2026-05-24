@@ -67,6 +67,8 @@ function getRouteShellClass(pathname = '/') {
   if (pathname.startsWith('/profile')) return 'ff-page-profile'
   if (pathname.startsWith('/notifications')) return 'ff-page-notifications'
   if (pathname.startsWith('/settings')) return 'ff-page-settings'
+  if (pathname.startsWith('/nutrition')) return 'ff-page-nutrition'
+  if (pathname.startsWith('/admin')) return 'ff-page-admin'
 
   return 'ff-page-default'
 }
@@ -75,6 +77,7 @@ function AppLayout() {
   const { user } = useAuth()
   const location = useLocation()
   const { activeSession, elapsedSeconds, completedSets, totalSets } = useWorkoutSession()
+  const isWorkoutExecutionRoute = location.pathname.startsWith('/start-workout')
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [popupNotification, setPopupNotification] = useState(null)
@@ -418,7 +421,7 @@ function AppLayout() {
 
       <main ref={pageScrollRef} className={`ff-page-scroll-shell ff-hevy-shell ${getRouteShellClass(location.pathname)} relative z-0 min-h-0 px-4 pb-36 pt-[calc(6.25rem+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[calc(6.25rem+env(safe-area-inset-top))]`}>
         <div className="mx-auto w-full max-w-[1600px]">
-          {activeSession && (
+          {activeSession && !isWorkoutExecutionRoute && (
             <Suspense fallback={null}>
               <ActiveWorkoutMini variant="inline" />
             </Suspense>
@@ -429,7 +432,7 @@ function AppLayout() {
 
       <MobileBottomNav />
 
-      {activeSession && !isRunningNativeApp && (
+      {activeSession && !isRunningNativeApp && !isWorkoutExecutionRoute && (
         <Suspense fallback={null}>
           <ActiveWorkoutMini variant="floating" />
         </Suspense>
