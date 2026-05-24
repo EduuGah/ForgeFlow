@@ -1,10 +1,8 @@
 function PageHeader({ title, description, action }) {
   return (
-    <div className="mb-6 flex min-w-0 flex-col gap-4 sm:mb-8 sm:flex-row sm:items-start sm:justify-between">
+    <div data-page-header="true" className="mb-5 flex min-w-0 flex-col gap-4 sm:mb-7 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
-        <div className="mb-3 h-1 w-16 rounded-full bg-[var(--ff-accent)] shadow-[0_0_22px_var(--ff-accent-shadow)] sm:mb-4 sm:w-20" />
-
-        <h1 className="break-words text-2xl font-black tracking-tight text-[var(--ff-text)] sm:text-3xl lg:text-4xl">
+        <h1 className="break-words text-[1.9rem] font-black tracking-[-0.04em] text-[var(--ff-text)] sm:text-4xl">
           {title}
         </h1>
 

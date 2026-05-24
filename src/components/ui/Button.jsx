@@ -12,11 +12,11 @@ function Button({
     items-center
     justify-center
     gap-2
-    rounded-2xl
+    rounded-[1rem]
     px-4
     py-2.5
     text-sm
-    font-bold
+    font-black
     leading-tight
     transition
     duration-200
@@ -27,9 +27,10 @@ function Button({
 
   const variants = {
     primary: `
+      border
+      border-transparent
       bg-[var(--ff-accent)]
       text-white
-      shadow-[0_0_18px_var(--ff-accent-shadow)]
       hover:bg-[var(--ff-accent-hover)]
     `,
 
@@ -38,11 +39,13 @@ function Button({
       border-[var(--ff-border)]
       bg-[var(--ff-surface-2)]
       text-[var(--ff-text)]
-      hover:border-[var(--ff-accent-border)]
+      hover:border-[var(--ff-border-strong)]
       hover:bg-[var(--ff-card-hover)]
     `,
 
     ghost: `
+      border
+      border-transparent
       bg-transparent
       text-[var(--ff-muted)]
       hover:bg-[var(--ff-surface-2)]
