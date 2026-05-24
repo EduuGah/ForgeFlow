@@ -1,8 +1,12 @@
 function PageHeader({ title, description, action }) {
   return (
-    <div data-page-header="true" className="mb-5 flex min-w-0 flex-col gap-4 sm:mb-7 sm:flex-row sm:items-end sm:justify-between">
+    <div className="ff-page-header mb-5 flex min-w-0 flex-col gap-4 sm:mb-7 sm:flex-row sm:items-start sm:justify-between">
       <div className="min-w-0">
-        <h1 className="break-words text-[1.9rem] font-black tracking-[-0.04em] text-[var(--ff-text)] sm:text-4xl">
+        <p className="mb-2 text-[11px] font-black uppercase tracking-[0.22em] text-[var(--ff-accent-text)]">
+          ForgeFlow
+        </p>
+
+        <h1 className="break-words text-2xl font-black tracking-tight text-[var(--ff-text)] sm:text-3xl lg:text-4xl">
           {title}
         </h1>
 

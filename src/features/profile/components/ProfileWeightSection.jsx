@@ -10,11 +10,11 @@ import {
 
 import AccountSecurityCard from '../../../components/profile/AccountSecurityCard'
 import ResponsiveContainer from '../../../components/ui/SafeResponsiveContainer'
-import Badge from '../../../components/ui/Badge'
 import Button from '../../../components/ui/Button'
 import Card from '../../../components/ui/Card'
 import EmptyState from '../../../components/ui/EmptyState'
 import Input from '../../../components/ui/Input'
+import ExerciseRecordCard from '../../../components/fitness/ExerciseRecordCard'
 import { formatShortDate, getTodayDateInputValue, isFutureDate } from '../profileUtils'
 
 export default function ProfileWeightSection({
@@ -108,22 +108,26 @@ export default function ProfileWeightSection({
             </div>
 
             <div className="mt-5 space-y-3">
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-                <p className="text-xs text-zinc-500">Maior carga registrada</p>
-
-                {heaviestExercise ? (
-                  <>
-                    <h3 className="mt-1 text-2xl font-black text-[var(--ff-accent-text)]">
-                      {heaviestExercise.weight} kg
-                    </h3>
-                    <p className="mt-1 text-sm text-zinc-400">
-                      {heaviestExercise.exerciseName} × {heaviestExercise.reps} reps
-                    </p>
-                  </>
-                ) : (
+              {heaviestExercise ? (
+                <ExerciseRecordCard
+                  compact
+                  badge="Maior carga"
+                  exerciseName={heaviestExercise.exerciseName}
+                  muscleGroup={heaviestExercise.muscleGroup}
+                  date={heaviestExercise.date}
+                  workoutName={heaviestExercise.workoutName}
+                  setNumber={heaviestExercise.setNumber}
+                  weight={heaviestExercise.weight}
+                  reps={heaviestExercise.reps}
+                  volume={heaviestExercise.volume}
+                  emphasis="blue"
+                />
+              ) : (
+                <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+                  <p className="text-xs text-zinc-500">Maior carga registrada</p>
                   <p className="mt-2 text-sm text-zinc-500">Sem dados ainda.</p>
-                )}
-              </div>
+                </div>
+              )}
 
               <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
                 <p className="text-xs text-zinc-500">Exercício mais feito</p>
@@ -166,27 +170,20 @@ export default function ProfileWeightSection({
               )}
 
               {prs.map((pr, index) => (
-                <div
+                <ExerciseRecordCard
                   key={pr.exerciseName}
-                  className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 text-sm font-bold text-[var(--ff-accent-text)]">
-                          #{index + 1}
-                        </span>
-
-                        <div className="min-w-0">
-                          <p className="truncate font-bold">{pr.exerciseName}</p>
-                          <p className="mt-1 text-xs text-zinc-500">{pr.muscleGroup}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <Badge>{pr.weight} kg × {pr.reps}</Badge>
-                  </div>
-                </div>
+                  rank={index + 1}
+                  badge="PR"
+                  exerciseName={pr.exerciseName}
+                  muscleGroup={pr.muscleGroup}
+                  date={pr.date}
+                  workoutName={pr.workoutName}
+                  setNumber={pr.setNumber}
+                  weight={pr.weight}
+                  reps={pr.reps}
+                  volume={pr.volume}
+                  emphasis="blue"
+                />
               ))}
             </div>
           </Card>

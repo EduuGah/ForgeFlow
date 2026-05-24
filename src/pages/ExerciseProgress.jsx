@@ -28,6 +28,8 @@ import { apiFetch } from '../services/api'
 import { getUserStorageData, saveUserStorageData } from '../utils/userStorage'
 import { getCompletedSets } from '../utils/analyticsUtils'
 import { chartItemStyle, chartLabelStyle, getChartTooltipStyle } from '../utils/chartUtils'
+import defaultExercises from '../data/defaultExercises'
+import { getExerciseMedia } from '../utils/exerciseMediaUtils'
 
 import {
   formatDate,
@@ -36,6 +38,16 @@ import {
   formatWeight,
   normalizeExerciseName,
 } from '../features/exerciseProgress/exerciseProgressUtils'
+
+
+function getExerciseFallback(name = '') {
+  const normalized = normalizeExerciseName(name)
+  return defaultExercises.find((exercise) => {
+    return [exercise.name, exercise.originalName, exercise.title]
+      .filter(Boolean)
+      .some((item) => normalizeExerciseName(item) === normalized)
+  }) || null
+}
 
 function ExerciseProgress() {
   const { user } = useAuth()
@@ -84,7 +96,8 @@ function ExerciseProgress() {
     completedSets.forEach((set) => {
       const key = set.normalizedExerciseName
       if (!key) return
-      const current = map.get(key) || { name: set.exerciseName, normalizedName: key, muscleGroup: set.muscleGroup, mediaUrl: set.mediaUrl || set.imageUrl || '', count: 0, maxWeight: 0, maxVolume: 0, lastDate: set.date }
+      const fallbackExercise = getExerciseFallback(set.exerciseName)
+      const current = map.get(key) || { name: set.exerciseName, normalizedName: key, muscleGroup: set.muscleGroup || fallbackExercise?.muscleGroup, mediaUrl: set.mediaUrl || set.imageUrl || (fallbackExercise ? getExerciseMedia(fallbackExercise) : ''), count: 0, maxWeight: 0, maxVolume: 0, lastDate: set.date }
       current.count += 1
       current.maxWeight = Math.max(current.maxWeight, set.weight)
       current.maxVolume = Math.max(current.maxVolume, set.volume)
@@ -185,10 +198,20 @@ function ExerciseProgress() {
                 key={exercise.normalizedName}
                 type="button"
                 onClick={() => setSelectedExerciseName(exercise.normalizedName)}
-                className="flex w-full items-center justify-between gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 py-2 text-left"
+                className="flex w-full items-center justify-between gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-2 text-left"
               >
-                <span className="min-w-0 truncate text-sm font-black text-[var(--ff-text)]">
-                  #{index + 1} {exercise.name}
+                <span className="flex min-w-0 items-center gap-3">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[var(--ff-border)] bg-white">
+                    {exercise.mediaUrl ? (
+                      <img src={exercise.mediaUrl} alt={exercise.name} className="h-full w-full object-contain" loading="lazy" decoding="async" />
+                    ) : (
+                      <BarChart3 size={20} className="text-zinc-500" />
+                    )}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-black text-[var(--ff-text)]">#{index + 1} {exercise.name}</span>
+                    <span className="block truncate text-xs text-[var(--ff-muted)]">{exercise.muscleGroup || 'Sem grupo'}</span>
+                  </span>
                 </span>
                 <span className="shrink-0 text-sm font-black text-yellow-200">
                   {formatWeight(exercise.maxWeight)}
@@ -217,10 +240,20 @@ function ExerciseProgress() {
                 key={exercise.normalizedName}
                 type="button"
                 onClick={() => setSelectedExerciseName(exercise.normalizedName)}
-                className="flex w-full items-center justify-between gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 py-2 text-left"
+                className="flex w-full items-center justify-between gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-2 text-left"
               >
-                <span className="min-w-0 truncate text-sm font-black text-[var(--ff-text)]">
-                  #{index + 1} {exercise.name}
+                <span className="flex min-w-0 items-center gap-3">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[var(--ff-border)] bg-white">
+                    {exercise.mediaUrl ? (
+                      <img src={exercise.mediaUrl} alt={exercise.name} className="h-full w-full object-contain" loading="lazy" decoding="async" />
+                    ) : (
+                      <BarChart3 size={20} className="text-zinc-500" />
+                    )}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-black text-[var(--ff-text)]">#{index + 1} {exercise.name}</span>
+                    <span className="block truncate text-xs text-[var(--ff-muted)]">{exercise.muscleGroup || 'Sem grupo'}</span>
+                  </span>
                 </span>
                 <span className="shrink-0 text-sm font-black text-sky-200">
                   {formatVolume(exercise.maxVolume)}

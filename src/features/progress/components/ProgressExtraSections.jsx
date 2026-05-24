@@ -11,6 +11,7 @@ import {
 import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import EmptyState from '../../../components/ui/EmptyState'
+import ExerciseRecordCard from '../../../components/fitness/ExerciseRecordCard'
 import { formatDuration, formatVolume } from '../../../components/progress/ProgressSummaryCards'
 import { formatDate, formatLongDate, formatWeight, getSessionDate } from '../progressUtils'
 import { DetailStat } from './ProgressChartSections'
@@ -62,50 +63,80 @@ export function ProgressQuickLinksSection() {
 
 
 export function ProgressRecentHighlights({ recentSetSummary }) {
+  const strongest = recentSetSummary.strongestRecentSet
+  const biggestVolume = recentSetSummary.biggestVolumeRecentSet
+
   return (
-    <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <DetailStat
-        icon={Medal}
-        label="Melhor série recente"
-        value={recentSetSummary.strongestRecentSet ? formatWeight(recentSetSummary.strongestRecentSet.weight) : '—'}
-        description={
-          recentSetSummary.strongestRecentSet
-            ? `${recentSetSummary.strongestRecentSet.exerciseName} • Série ${recentSetSummary.strongestRecentSet.setNumber} • ${recentSetSummary.strongestRecentSet.reps} reps • ${formatDate(recentSetSummary.strongestRecentSet.date)}`
-            : 'Sem séries recentes válidas.'
-        }
-      />
+    <section className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1.1fr)_minmax(280px,0.8fr)]">
+      {strongest ? (
+        <ExerciseRecordCard
+          badge="Melhor série"
+          exerciseName={strongest.exerciseName}
+          muscleGroup={strongest.muscleGroup}
+          equipment={strongest.equipment}
+          date={strongest.date}
+          workoutName={strongest.workoutName}
+          setNumber={strongest.setNumber}
+          weight={strongest.weight}
+          reps={strongest.reps}
+          volume={strongest.volume}
+          emphasis="blue"
+        />
+      ) : (
+        <DetailStat
+          icon={Medal}
+          label="Melhor série recente"
+          value="—"
+          description="Sem séries recentes válidas."
+        />
+      )}
 
-      <DetailStat
-        icon={Flame}
-        label="Maior volume recente"
-        value={recentSetSummary.biggestVolumeRecentSet ? formatVolume(recentSetSummary.biggestVolumeRecentSet.volume) : '—'}
-        description={
-          recentSetSummary.biggestVolumeRecentSet
-            ? `${recentSetSummary.biggestVolumeRecentSet.exerciseName} • ${formatWeight(recentSetSummary.biggestVolumeRecentSet.weight)} × ${recentSetSummary.biggestVolumeRecentSet.reps}`
-            : 'Sem volume recente.'
-        }
-      />
+      {biggestVolume ? (
+        <ExerciseRecordCard
+          badge="Maior volume"
+          exerciseName={biggestVolume.exerciseName}
+          muscleGroup={biggestVolume.muscleGroup}
+          equipment={biggestVolume.equipment}
+          date={biggestVolume.date}
+          workoutName={biggestVolume.workoutName}
+          setNumber={biggestVolume.setNumber}
+          weight={biggestVolume.weight}
+          reps={biggestVolume.reps}
+          volume={biggestVolume.volume}
+          emphasis="gold"
+        />
+      ) : (
+        <DetailStat
+          icon={Flame}
+          label="Maior volume recente"
+          value="—"
+          description="Sem volume recente."
+        />
+      )}
 
-      <DetailStat
-        icon={Clock3}
-        label="Último treino"
-        value={recentSetSummary.latestWorkout?.workoutName || '—'}
-        description={
-          recentSetSummary.latestWorkout
-            ? `${formatLongDate(getSessionDate(recentSetSummary.latestWorkout))} • ${formatDuration(recentSetSummary.latestWorkout.durationSeconds || recentSetSummary.latestWorkout.duration)}`
-            : 'Nenhum treino recente encontrado.'
-        }
-      />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-1">
+        <DetailStat
+          icon={Clock3}
+          label="Último treino"
+          value={recentSetSummary.latestWorkout?.workoutName || '—'}
+          description={
+            recentSetSummary.latestWorkout
+              ? `${formatLongDate(getSessionDate(recentSetSummary.latestWorkout))} • ${formatDuration(recentSetSummary.latestWorkout.durationSeconds || recentSetSummary.latestWorkout.duration)}`
+              : 'Nenhum treino recente encontrado.'
+          }
+        />
 
-      <DetailStat
-        icon={Target}
-        label="Séries recentes"
-        value={recentSetSummary.validRecentSetRows.length}
-        description="Quantidade de séries válidas nos últimos treinos retornados pela rota de evolução."
-      />
+        <DetailStat
+          icon={Target}
+          label="Séries recentes"
+          value={recentSetSummary.validRecentSetRows.length}
+          description="Séries válidas nos últimos treinos."
+        />
+      </div>
     </section>
   )
 }
+
 
 
 export function ProgressPhotosAndReadingSection({ normalizedProgress }) {
