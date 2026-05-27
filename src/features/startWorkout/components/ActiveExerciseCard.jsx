@@ -91,7 +91,7 @@ export default function ActiveExerciseCard({
           type="button"
           onClick={() => onToggleReplace(sessionExercise.id)}
           className="ff-hevy-active-exercise__menu"
-          aria-label="Opções do exercício"
+          aria-label={replaceExerciseId === sessionExercise.id ? 'Fechar opções do exercício' : 'Abrir opções do exercício'}
         >
           <MoreVertical size={22} />
         </button>
@@ -144,7 +144,13 @@ export default function ActiveExerciseCard({
                 inputMode="decimal"
                 value={set.weight}
                 onChange={(event) => onUpdateSet(sessionExercise.id, set.id, 'weight', event.target.value)}
-                onFocus={(event) => window.setTimeout(() => event.target?.scrollIntoView?.({ behavior: 'smooth', block: 'center' }), 250)}
+                onFocus={(event) => {
+                  if (Number(event.target.value) === 0) onUpdateSet(sessionExercise.id, set.id, 'weight', '')
+                  window.setTimeout(() => {
+                    event.target?.select?.()
+                    event.target?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
+                  }, 120)
+                }}
                 aria-label="Carga"
               />
 
@@ -154,7 +160,13 @@ export default function ActiveExerciseCard({
                 inputMode="numeric"
                 value={set.reps}
                 onChange={(event) => onUpdateSet(sessionExercise.id, set.id, 'reps', event.target.value)}
-                onFocus={(event) => window.setTimeout(() => event.target?.scrollIntoView?.({ behavior: 'smooth', block: 'center' }), 250)}
+                onFocus={(event) => {
+                  if (Number(event.target.value) === 0) onUpdateSet(sessionExercise.id, set.id, 'reps', '')
+                  window.setTimeout(() => {
+                    event.target?.select?.()
+                    event.target?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
+                  }, 120)
+                }}
                 aria-label="Repetições"
               />
 
@@ -199,6 +211,11 @@ export default function ActiveExerciseCard({
 
       {replaceExerciseId === sessionExercise.id && (
         <div className="ff-hevy-exercise-options">
+          <div className="ff-hevy-options-title">
+            <strong>Opções de {getExerciseName(sessionExercise)}</strong>
+            <span>Substituir, pular ou remover do treino.</span>
+          </div>
+
           <Input
             label="Buscar substituto"
             placeholder="Pesquisar exercício..."

@@ -549,7 +549,6 @@ function StartWorkout() {
         formatTime={formatTime}
         getExerciseName={getExerciseName}
         getExerciseSubtitle={getExerciseSubtitle}
-        onStartRestTimer={startManualRestTimer}
         onRequestFinish={handleRequestFinishWorkout}
         onFinishWorkout={handleFinishWorkout}
         onFocusExercise={focusExerciseCard}
@@ -626,7 +625,6 @@ function StartWorkout() {
         savingWorkout={savingWorkout}
         formatTime={formatTime}
         onCancelWorkout={handleCancelWorkout}
-        onStartRestTimer={startManualRestTimer}
         onRequestFinish={handleRequestFinishWorkout}
       />
 

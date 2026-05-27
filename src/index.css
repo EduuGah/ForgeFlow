@@ -6507,3 +6507,310 @@ body,
   font-size: .68rem;
   font-weight: 900;
 }
+
+/* Ajustes ForgeFlow pós-Hevy: mantém inspiração, mas corrige UX mobile real */
+.ff-start-workout-native-page .ff-hevy-workout-header {
+  margin-top: 0 !important;
+  border-radius: 0 !important;
+  background: #000 !important;
+}
+
+.ff-hevy-workout-topbar {
+  grid-template-columns: 40px minmax(0,1fr) auto !important;
+  background: #191a1d !important;
+}
+
+.ff-hevy-workout-finish {
+  position: relative !important;
+  isolation: isolate;
+  overflow: hidden !important;
+  border: 0 !important;
+  background: var(--ff-accent, #0a84ff) !important;
+  box-shadow: none !important;
+}
+
+.ff-hevy-workout-finish::before,
+.ff-hevy-workout-finish::after {
+  content: none !important;
+}
+
+.ff-hevy-workout-title h1 {
+  font-size: 1.18rem !important;
+}
+
+.ff-hevy-workout-title p {
+  color: var(--ff-accent-text, #0a84ff) !important;
+  font-weight: 800 !important;
+}
+
+.ff-hevy-workout-metrics {
+  background: #050506 !important;
+}
+
+.ff-hevy-workout-metrics > * {
+  background: #050506 !important;
+  padding: 10px 14px !important;
+}
+
+.ff-hevy-focus-strip {
+  display: none !important;
+}
+
+.ff-start-workout-native-page .ff-exercise-jump-nav {
+  display: block !important;
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 0 12px !important;
+}
+
+.ff-start-workout-native-page .ff-exercise-jump-nav > div:first-child {
+  display: none !important;
+}
+
+.ff-start-workout-native-page .ff-exercise-jump-nav > div:last-child {
+  gap: 8px !important;
+  padding: 4px 0 8px !important;
+  scrollbar-width: none;
+}
+
+.ff-start-workout-native-page .ff-exercise-jump-nav > div:last-child::-webkit-scrollbar {
+  display: none !important;
+}
+
+.ff-start-workout-native-page .ff-exercise-jump-nav button {
+  min-width: 118px !important;
+  max-width: 148px !important;
+  border-radius: 999px !important;
+  padding: 9px 12px !important;
+}
+
+.ff-start-workout-native-page .ff-exercise-jump-nav button span:first-child {
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 999px !important;
+}
+
+.ff-hevy-rest-row {
+  margin: 0 6px 12px !important;
+  padding: 10px 12px !important;
+  border-radius: 14px !important;
+  background: rgba(10,132,255,.08) !important;
+  font-size: .92rem !important;
+}
+
+.ff-rest-timer-card {
+  top: calc(5rem + env(safe-area-inset-top)) !important;
+  z-index: 80 !important;
+  border-radius: 22px !important;
+}
+
+.ff-hevy-current-exercise {
+  display: none !important;
+}
+
+.ff-hevy-set-pr :is(span, .ff-badge, [class*='rounded']) {
+  min-height: 24px !important;
+  padding: 2px 6px !important;
+  border-radius: 999px !important;
+  font-size: 10px !important;
+  line-height: 1 !important;
+}
+
+.ff-hevy-exercise-options {
+  position: relative !important;
+  z-index: 5 !important;
+  background: #15161a !important;
+}
+
+.ff-hevy-options-title strong {
+  display: block;
+  color: var(--ff-text);
+  font-size: .95rem;
+  font-weight: 900;
+}
+
+.ff-hevy-options-title span {
+  display: block;
+  margin-top: 3px;
+  color: var(--ff-muted);
+  font-size: .78rem;
+}
+
+.ff-active-workout-mini-inline {
+  display: none !important;
+}
+
+.ff-active-workout-mini-floating {
+  position: fixed !important;
+  left: 14px !important;
+  right: 14px !important;
+  bottom: calc(5.95rem + env(safe-area-inset-bottom)) !important;
+  z-index: 45 !important;
+  width: auto !important;
+  max-width: 520px !important;
+  margin: 0 auto !important;
+  padding: 10px 12px !important;
+  border-radius: 22px !important;
+  background: rgba(16,17,20,.96) !important;
+  box-shadow: 0 16px 40px rgba(0,0,0,.45) !important;
+}
+
+.ff-active-workout-mini-floating .h-11,
+.ff-active-workout-mini-floating .sm\:h-12 {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 14px !important;
+}
+
+.ff-active-workout-mini-floating h3 {
+  font-size: .9rem !important;
+}
+
+.ff-active-workout-mini-floating p {
+  font-size: .72rem !important;
+}
+
+.ff-exercises-native-page {
+  padding-top: 0 !important;
+}
+
+.ff-exercises-native-page .ff-exercise-list-shell {
+  margin-top: 0 !important;
+}
+
+.ff-exercises-native-page .ff-exercise-list-shell::before,
+.ff-exercises-native-page .ff-exercise-list-shell::after {
+  content: none !important;
+}
+
+.ff-exercises-native-page .ff-exercise-list-shell h2,
+.ff-exercises-native-page .ff-exercise-list-shell h2 * {
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.ff-exercise-search {
+  border-radius: 16px !important;
+}
+
+.ff-exercise-search input {
+  border-radius: 0 !important;
+}
+
+.ff-history-detail-page {
+  max-width: 920px !important;
+  margin: 0 auto !important;
+  padding-bottom: 120px !important;
+}
+
+.ff-history-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  padding-bottom: 16px;
+}
+
+.ff-history-detail-header button {
+  display: flex;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: #18191b;
+  color: var(--ff-text);
+}
+
+.ff-history-detail-header p {
+  color: var(--ff-muted);
+  font-size: .85rem;
+}
+
+.ff-history-detail-header h1 {
+  margin-top: 2px;
+  color: var(--ff-text);
+  font-size: 1.8rem;
+  font-weight: 900;
+  letter-spacing: -.04em;
+}
+
+.ff-history-detail-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.ff-history-detail-metrics span {
+  min-width: 0;
+  border-radius: 18px;
+  background: #111114;
+  padding: 13px;
+}
+
+.ff-history-detail-metrics small {
+  display: block;
+  color: var(--ff-muted);
+  font-size: .76rem;
+}
+
+.ff-history-detail-metrics strong {
+  display: block;
+  margin-top: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ff-text);
+  font-size: 1.05rem;
+}
+
+.ff-history-detail-section h2 {
+  margin-bottom: 12px;
+  color: var(--ff-text);
+  font-size: 1.15rem;
+  font-weight: 900;
+}
+
+.ff-history-open-label {
+  color: var(--ff-accent-text);
+  font-size: .82rem;
+  font-weight: 900;
+}
+
+.ff-hevy-page-login {
+  min-height: 100dvh !important;
+  height: auto !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding: max(16px, env(safe-area-inset-top)) 0 max(24px, env(safe-area-inset-bottom)) !important;
+}
+
+.ff-hevy-page-login > .flex.min-h-screen {
+  min-height: auto !important;
+  align-items: flex-start !important;
+  padding-top: 12px !important;
+  padding-bottom: 28px !important;
+}
+
+.ff-hevy-page-login .ff-app-page-intro {
+  display: none !important;
+}
+
+@media (max-width: 767px) {
+  .ff-hevy-workout-topbar {
+    grid-template-columns: 36px minmax(0,1fr) auto !important;
+  }
+
+  .ff-hevy-workout-metrics {
+    grid-template-columns: repeat(3, minmax(0,1fr)) !important;
+  }
+
+  .ff-history-detail-metrics {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+}

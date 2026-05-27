@@ -1,6 +1,6 @@
 import {
   CalendarDays,
-  ChevronDown,
+  ArrowLeft,
   Dumbbell,
   Flame,
   MapPin,
@@ -255,10 +255,7 @@ function HistorySessionCard({
           </div>
         </div>
 
-        <ChevronDown
-          size={24}
-          className={isExpanded ? 'rotate-180 text-[var(--ff-accent-text)] transition' : 'text-zinc-500 transition'}
-        />
+        <span className="ff-history-open-label">Ver</span>
       </button>
 
       {isExpanded && (
@@ -294,6 +291,70 @@ function HistorySessionCard({
         </div>
       )}
     </article>
+  )
+}
+
+
+export function HistorySessionDetailView({
+  session,
+  meta,
+  onBack,
+  onDeleteSession,
+}) {
+  const sessionVolume = meta?.sessionVolume || 0
+  const sessionPRs = meta?.sessionPRs || []
+
+  return (
+    <div className="ff-hevy-page ff-hevy-page-history ff-history-native-page ff-history-detail-page">
+      <header className="ff-history-detail-header">
+        <button type="button" onClick={onBack} aria-label="Voltar ao histórico">
+          <ArrowLeft size={22} />
+        </button>
+        <div>
+          <p>{formatDate(session.finishedAt)} às {formatHour(session.finishedAt)}</p>
+          <h1>{session.workoutName}</h1>
+        </div>
+      </header>
+
+      <section className="ff-history-detail-metrics">
+        <span><small>Duração</small><strong>{formatTime(session.duration || 0)}</strong></span>
+        <span><small>Volume</small><strong>{formatVolume(sessionVolume)}</strong></span>
+        <span><small>Exercícios</small><strong>{session.exercises.length}</strong></span>
+        <span><small>Recordes</small><strong>{sessionPRs.length}</strong></span>
+      </section>
+
+      <section className="ff-history-detail-section">
+        <h2>Exercícios</h2>
+        <div className="ff-history-exercise-list">
+          {session.exercises.map((exercise, exerciseIndex) => (
+            <HistoryExerciseDetails
+              key={exercise.id}
+              exercise={exercise}
+              exerciseIndex={exerciseIndex}
+            />
+          ))}
+        </div>
+      </section>
+
+      <HistoryLocationDetails location={session.location} />
+
+      {session.notes && (
+        <div className="ff-history-note-card">
+          <h3>Observações finais</h3>
+          <p>{session.notes}</p>
+        </div>
+      )}
+
+      <Button
+        type="button"
+        variant="danger"
+        onClick={() => onDeleteSession(session.id)}
+        className="mt-4 w-full sm:w-auto"
+      >
+        <Trash2 size={17} />
+        Excluir este treino
+      </Button>
+    </div>
   )
 }
 

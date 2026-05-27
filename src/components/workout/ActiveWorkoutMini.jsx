@@ -29,6 +29,18 @@ function ActiveWorkoutMini({ variant = 'floating' }) {
     ? Math.min((completedSets / totalSets) * 100, 100)
     : 0
 
+  const currentExercise =
+    activeSession.exercises?.find((exercise) =>
+      (exercise.sets || []).some((set) => !set.completed && set.type !== 'warmup')
+    ) || activeSession.exercises?.[0]
+
+  const exerciseCount = activeSession.exercises?.length || 0
+  const currentExerciseName =
+    currentExercise?.exercise?.name ||
+    currentExercise?.exerciseName ||
+    currentExercise?.name ||
+    'Próximo exercício'
+
   function handleOpenWorkout() {
     if (location.pathname === '/start-workout') return
 
@@ -63,8 +75,11 @@ function ActiveWorkoutMini({ variant = 'floating' }) {
                 {activeSession.workoutName}
               </h3>
 
-              <p className="mt-1 text-xs text-[var(--ff-muted)]">
-                {completedSets}/{totalSets} séries concluídas
+              <p className="mt-1 truncate text-xs text-[var(--ff-muted)]">
+                {completedSets}/{totalSets} séries · {exerciseCount} exercícios · {Math.round(progress)}%
+              </p>
+              <p className="mt-0.5 truncate text-[11px] font-semibold text-[var(--ff-muted-2)]">
+                Atual: {currentExerciseName}
               </p>
             </div>
           </div>

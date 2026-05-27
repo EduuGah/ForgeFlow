@@ -1,7 +1,6 @@
 import {
   Dumbbell,
   ListChecks,
-  Timer,
 } from 'lucide-react'
 
 
@@ -18,7 +17,6 @@ export function ActiveWorkoutHero({
   formatTime,
   getExerciseName,
   getExerciseSubtitle,
-  onStartRestTimer,
   onRequestFinish,
   onFinishWorkout,
   onFocusExercise,
@@ -37,15 +35,6 @@ export function ActiveWorkoutHero({
           <h1>Treinamento</h1>
           <p>{activeSession.workoutName}</p>
         </div>
-
-        <button
-          type="button"
-          onClick={() => onStartRestTimer()}
-          className="ff-hevy-workout-timer"
-          title="Iniciar descanso manual"
-        >
-          <Timer size={24} />
-        </button>
 
         <button
           type="button"

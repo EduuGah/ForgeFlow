@@ -19,6 +19,7 @@ import {
 } from '../features/history/historyUtils'
 import {
   HistoryListSection,
+  HistorySessionDetailView,
   HistorySidebar,
   HistorySummaryCards,
 } from '../features/history/components/HistorySections'
@@ -29,6 +30,7 @@ function History() {
 
   const [history, setHistory] = useState([])
   const [expandedSessionId, setExpandedSessionId] = useState(null)
+  const [selectedSessionId, setSelectedSessionId] = useState(null)
   const [search, setSearch] = useState('')
   const deferredSearch = useDeferredValue(search)
   const [startDate, setStartDate] = useState('')
@@ -103,6 +105,7 @@ function History() {
     queueMicrotask(() => {
       setVisibleCount(INITIAL_VISIBLE_SESSIONS)
       setExpandedSessionId(null)
+      setSelectedSessionId(null)
     })
   }, [deferredSearch, startDate, endDate])
 
@@ -146,6 +149,12 @@ function History() {
     return filteredHistory.slice(0, visibleCount)
   }, [filteredHistory, visibleCount])
 
+
+  const selectedSession = useMemo(() => {
+    if (!selectedSessionId) return null
+    return history.find((session) => session.id === selectedSessionId) || null
+  }, [history, selectedSessionId])
+
   const summary = useMemo(() => {
     let totalVolume = 0
     let totalPRs = 0
@@ -168,7 +177,7 @@ function History() {
   }, [history, historyMetaMap])
 
   function handleToggleSession(id) {
-    setExpandedSessionId(expandedSessionId === id ? null : id)
+    setSelectedSessionId(id)
   }
 
   function showToast(type, title, message = '') {
@@ -262,6 +271,37 @@ function History() {
   }
 
   const hasActiveFilters = Boolean(search || startDate || endDate)
+
+  if (selectedSession) {
+    return (
+      <>
+        <HistorySessionDetailView
+          session={selectedSession}
+          meta={historyMetaMap.get(selectedSession.id)}
+          onBack={() => setSelectedSessionId(null)}
+          onDeleteSession={handleDeleteSession}
+        />
+
+        <ConfirmModal
+          open={Boolean(confirmModal)}
+          title={confirmModal?.title}
+          description={confirmModal?.description}
+          confirmText={confirmModal?.confirmText}
+          variant={confirmModal?.variant}
+          onConfirm={confirmModal?.onConfirm}
+          onCancel={() => setConfirmModal(null)}
+        />
+
+        <Toast
+          show={Boolean(toast)}
+          type={toast?.type}
+          title={toast?.title}
+          message={toast?.message}
+          onClose={() => setToast(null)}
+        />
+      </>
+    )
+  }
 
   return (
     <div className="ff-hevy-page ff-hevy-page-history ff-history-native-page">
