@@ -63,6 +63,21 @@ function buildRadarData(completedSets) {
   }))
 }
 
+function formatShortDate(date) {
+  return date.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+  })
+}
+
+function getMonday(date) {
+  const copy = new Date(date)
+  const day = copy.getDay() || 7
+  copy.setHours(0, 0, 0, 0)
+  copy.setDate(copy.getDate() - day + 1)
+  return copy
+}
+
 function buildWorkoutWeekData(history) {
   const map = new Map()
 
@@ -70,19 +85,23 @@ function buildWorkoutWeekData(history) {
     if (!session.finishedAt) return
 
     const date = new Date(session.finishedAt)
-    const year = date.getFullYear()
-    const firstDayOfYear = new Date(year, 0, 1)
-    const pastDaysOfYear = (date - firstDayOfYear) / 86400000
-    const week = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7)
-    const key = `Sem ${week}`
+    if (Number.isNaN(date.getTime())) return
 
-    map.set(key, (map.get(key) || 0) + 1)
+    const start = getMonday(date)
+    const end = new Date(start)
+    end.setDate(start.getDate() + 6)
+
+    const key = start.toISOString().slice(0, 10)
+    const label = `${formatShortDate(start)}–${formatShortDate(end)}`
+
+    const current = map.get(key) || { week: label, fullWeek: label, total: 0, sortDate: start.getTime() }
+    current.total += 1
+    map.set(key, current)
   })
 
-  return Array.from(map.entries()).map(([week, total]) => ({
-    week,
-    total,
-  }))
+  return Array.from(map.values())
+    .sort((a, b) => a.sortDate - b.sortDate)
+    .map((item) => ({ week: item.week, fullWeek: item.fullWeek, total: item.total }))
 }
 
 function buildExercisePRs(completedSets, search) {

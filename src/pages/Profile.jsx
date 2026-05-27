@@ -470,10 +470,10 @@ function Profile() {
             </div>
             <span className="text-sm font-bold text-[var(--ff-accent)]">Últimos registros</span>
           </div>
-          <div className="mt-5 grid h-36 grid-cols-8 items-end gap-2 border-b border-[var(--ff-border)] pb-2" aria-label="Gráfico resumido de treinos">
+          <div className="ff-profile-mini-chart mt-5 grid h-36 grid-cols-8 items-end gap-2 border-b border-[var(--ff-border)] pb-2" aria-label="Gráfico resumido de treinos">
             {Array.from({ length: 8 }).map((_, index) => {
               const value = Math.max(16, Math.min(100, ((history[index]?.exercises?.length || index + 1) * 16) + (index % 3) * 10))
-              return <span key={index} className="rounded-t-md bg-[var(--ff-accent)]" style={{ height: `${value}%` }} />
+              return <span key={index} className="block w-full self-end rounded-t-md bg-[var(--ff-accent)]" style={{ height: `${value}%` }} />
             })}
           </div>
           <div className="mt-4 flex gap-3 overflow-x-auto">

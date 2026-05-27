@@ -380,8 +380,8 @@ function AppLayout() {
               </button>
 
               <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)] shadow-[0_0_18px_var(--ff-accent-shadow)]">
-                  <img src={forgeflowIcon} alt="ForgeFlow" className="h-full w-full object-cover" />
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-border)] bg-black p-1">
+                  <img src={forgeflowIcon} alt="ForgeFlow" className="h-full w-full object-contain" />
                 </div>
 
                 <div className="min-w-0">

@@ -98,7 +98,7 @@ function DashboardChartsSection({
         />
       ) : (
         <ResponsiveContainer height={320}>
-          <BarChart data={volumeByWorkout}>
+          <BarChart data={volumeByWorkout} margin={{ top: 12, right: 10, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
 
             <XAxis
@@ -131,6 +131,8 @@ function DashboardChartsSection({
             />
 
             <Bar
+              isAnimationActive={false}
+              maxBarSize={72}
               dataKey="volume"
               fill={chartAccentColor}
               radius={[8, 8, 0, 0]}
@@ -224,9 +226,9 @@ function DashboardChartsSection({
         />
       ) : (
         <ResponsiveContainer height={320}>
-          <BarChart data={workoutsByWeek}>
+          <BarChart data={workoutsByWeek} margin={{ top: 12, right: 10, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
-            <XAxis dataKey="week" stroke="var(--ff-muted)" />
+            <XAxis dataKey="week" stroke="var(--ff-muted)" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
 
             <YAxis
               stroke="var(--ff-muted)"
@@ -240,7 +242,7 @@ function DashboardChartsSection({
 
             <Tooltip
               formatter={(value) => [`${value} treino(s)`, 'Treinos']}
-              labelFormatter={(label) => `Semana: ${label}`}
+              labelFormatter={(label, payload) => payload?.[0]?.payload?.fullWeek || label}
               contentStyle={{
                 background: '#09090b',
                 border: '1px solid #27272a',
@@ -254,6 +256,8 @@ function DashboardChartsSection({
             />
 
             <Bar
+              isAnimationActive={false}
+              maxBarSize={72}
               dataKey="total"
               fill={chartAccentColor}
               radius={[8, 8, 0, 0]}
@@ -291,7 +295,7 @@ function DashboardChartsSection({
         />
       ) : (
         <ResponsiveContainer height={320}>
-          <BarChart data={setsByWorkout}>
+          <BarChart data={setsByWorkout} margin={{ top: 12, right: 10, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
 
             <XAxis
@@ -331,6 +335,8 @@ function DashboardChartsSection({
             />
 
             <Bar
+              isAnimationActive={false}
+              maxBarSize={72}
               dataKey="sets"
               fill={chartAccentColor}
               radius={[8, 8, 0, 0]}
@@ -368,9 +374,9 @@ function DashboardChartsSection({
         />
       ) : (
         <ResponsiveContainer height={320}>
-          <BarChart data={muscleVolumeChartData}>
+          <BarChart data={muscleVolumeChartData} margin={{ top: 12, right: 10, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
-            <XAxis dataKey="group" stroke="var(--ff-muted)" />
+            <XAxis dataKey="group" stroke="var(--ff-muted)" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
 
             <YAxis
               stroke="var(--ff-muted)"
@@ -397,6 +403,8 @@ function DashboardChartsSection({
             />
 
             <Bar
+              isAnimationActive={false}
+              maxBarSize={72}
               dataKey="volume"
               fill={chartAccentColor}
               radius={[8, 8, 0, 0]}

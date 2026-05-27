@@ -5014,3 +5014,152 @@ body,
     display: block;
   }
 }
+
+
+/* Correções da revisão visual: menos site, mais app nativo. */
+.ff-hevy-shell {
+  background: #000;
+}
+
+.ff-hevy-page {
+  width: 100%;
+  color: var(--ff-text);
+}
+
+.ff-native-search {
+  position: relative;
+  overflow: hidden;
+}
+
+.ff-native-search input,
+.ff-hevy-page .ff-native-search input {
+  min-height: 0 !important;
+  height: auto !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.ff-exercise-app-card {
+  background: var(--ff-card) !important;
+  border-color: var(--ff-border) !important;
+}
+
+.ff-exercise-row-card img {
+  image-rendering: auto;
+}
+
+.ff-limited-badges > :nth-child(n + 4) {
+  display: none;
+}
+
+.ff-profile-mini-chart > span {
+  display: block;
+  width: 100%;
+  align-self: end;
+  min-height: 10px;
+}
+
+.recharts-wrapper,
+.recharts-surface {
+  touch-action: manipulation;
+}
+
+.recharts-tooltip-wrapper {
+  pointer-events: none;
+}
+
+.ff-settings-native {
+  padding-inline: 6px;
+}
+
+.ff-settings-native-group {
+  margin-bottom: 22px;
+}
+
+.ff-settings-native-title {
+  padding: 0 12px 10px;
+  color: var(--ff-muted);
+  font-size: .95rem;
+  font-weight: 700;
+}
+
+.ff-settings-native-list {
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid var(--ff-border);
+  background: var(--ff-card);
+}
+
+.ff-settings-native-row {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 18px;
+  border-bottom: 1px solid var(--ff-border-soft);
+  color: var(--ff-text);
+  background: var(--ff-card);
+}
+
+.ff-settings-native-row:last-child {
+  border-bottom: 0;
+}
+
+.ff-settings-native-row .chev {
+  margin-left: auto;
+  color: var(--ff-muted-2);
+}
+
+.ff-settings-native-row small {
+  display: block;
+  margin-top: 2px;
+  color: var(--ff-muted);
+  font-size: .78rem;
+}
+
+.ff-settings-native-danger {
+  justify-content: center;
+  color: var(--ff-danger-text) !important;
+}
+
+@media (max-width: 767px) {
+  .ff-page-scroll-shell {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom)) !important;
+  }
+
+  .ff-hevy-page-settings > header:first-child,
+  .ff-hevy-page-exercisedetails > .ff-exercise-detail-page > .flex:first-child {
+    position: static !important;
+    top: auto !important;
+    z-index: auto !important;
+    margin-inline: 0 !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+  }
+
+  .ff-hevy-page-exercises .ff-exercise-row-card {
+    border-radius: 18px !important;
+  }
+
+  .ff-hevy-page-exercises .ff-exercise-row-card button:first-child {
+    min-height: 0;
+  }
+
+  .ff-hevy-page-exercises .ff-limited-badges > :nth-child(n + 3) {
+    display: none;
+  }
+
+  .mobile-bottom-nav {
+    left: 10px !important;
+    right: 10px !important;
+    bottom: calc(8px + env(safe-area-inset-bottom)) !important;
+    border: 1px solid var(--ff-border) !important;
+    border-radius: 22px !important;
+    background: rgba(16, 17, 19, .96) !important;
+    padding-bottom: 4px !important;
+  }
+}

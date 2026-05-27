@@ -37,36 +37,36 @@ const settingsGroups = [
     title: 'Conta',
     rows: [
       { icon: UserRound, label: 'Perfil', href: '/profile' },
-      { icon: Lock, label: 'Conta', hint: 'Senha e acesso' },
-      { label: 'Gerenciar Subscrição', pro: true, hint: 'ForgeFlow Pro' },
-      { icon: Bell, label: 'Notificações' },
+      { icon: Lock, label: 'Conta', target: 'security', hint: 'Senha e acesso' },
+      { label: 'Gerenciar Subscrição', pro: true, disabled: true, hint: 'Em breve' },
+      { icon: Bell, label: 'Notificações', target: 'notifications' },
     ],
   },
   {
     title: 'Preferências',
     rows: [
-      { icon: Dumbbell, label: 'Treinamentos' },
-      { icon: Shield, label: 'Privacidade e social' },
-      { icon: ClipboardList, label: 'Unidades' },
-      { icon: Languages, label: 'Idioma' },
-      { icon: Download, label: 'Integrações' },
-      { icon: Moon, label: 'Tema' },
-      { icon: Download, label: 'Exportar e importar dados' },
+      { icon: Dumbbell, label: 'Treinamentos', target: 'training' },
+      { icon: Shield, label: 'Privacidade e social', href: '/privacy' },
+      { icon: ClipboardList, label: 'Unidades', target: 'training' },
+      { icon: Languages, label: 'Idioma', disabled: true, hint: 'Em breve' },
+      { icon: Download, label: 'Integrações', disabled: true, hint: 'Em breve' },
+      { icon: Moon, label: 'Tema', target: 'appearance' },
+      { icon: Download, label: 'Exportar e importar dados', target: 'backup' },
     ],
   },
   {
     title: 'Ajuda',
     rows: [
-      { icon: Info, label: 'Guia de Arranque' },
-      { icon: ClipboardList, label: 'Ajuda de Rotina' },
-      { icon: HelpCircle, label: 'Perguntas Frequentes' },
-      { icon: Download, label: 'Contactar-nos' },
-      { icon: Info, label: 'Sobre' },
+      { icon: Info, label: 'Guia de Arranque', target: 'tutorial' },
+      { icon: ClipboardList, label: 'Ajuda de Rotina', href: '/schedule' },
+      { icon: HelpCircle, label: 'Perguntas Frequentes', disabled: true, hint: 'Em breve' },
+      { icon: Download, label: 'Contactar-nos', disabled: true, hint: 'Em breve' },
+      { icon: Info, label: 'Sobre', href: '/data-safety' },
     ],
   },
 ]
 
-function SettingsNativeDirectory() {
+function SettingsNativeDirectory({ onNavigate }) {
   return (
     <section className="ff-settings-native mb-6 lg:hidden">
       {settingsGroups.map((group) => (
@@ -90,7 +90,17 @@ function SettingsNativeDirectory() {
                 return <a key={row.label} href={row.href} className="ff-settings-native-row">{content}</a>
               }
 
-              return <button key={row.label} type="button" className="ff-settings-native-row w-full text-left">{content}</button>
+              return (
+                <button
+                  key={row.label}
+                  type="button"
+                  disabled={row.disabled}
+                  onClick={() => onNavigate?.(row)}
+                  className="ff-settings-native-row w-full text-left disabled:opacity-55"
+                >
+                  {content}
+                </button>
+              )
             })}
           </div>
         </div>
@@ -495,6 +505,23 @@ function Settings() {
     }
   }
 
+
+  function handleNativeSettingsNavigate(row) {
+    if (!row?.target) {
+      showToast('info', row?.label || 'Em breve', 'Essa opção ainda será adicionada no ForgeFlow.')
+      return
+    }
+
+    const element = document.getElementById(`settings-${row.target}`)
+
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      return
+    }
+
+    showToast('info', row.label, 'Seção não encontrada nesta tela.')
+  }
+
   return (
     <div className="ff-hevy-page ff-hevy-page-settings">
 
@@ -515,55 +542,69 @@ function Settings() {
         </div>
       </div>
 
-      <SettingsNativeDirectory />
+      <SettingsNativeDirectory onNavigate={handleNativeSettingsNavigate} />
 
       <GooglePasswordNotice user={user} />
 
       <section className="ff-settings-layout grid grid-cols-1 gap-6 2xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="ff-hevy-settings space-y-5 sm:space-y-6">
-          <SettingsTutorialSection />
+          <div id="settings-tutorial" className="scroll-mt-24">
+            <SettingsTutorialSection />
+          </div>
 
-          <SettingsMaintenanceSection onClearPwaCache={handleClearPwaCache} />
+          <div id="settings-maintenance" className="scroll-mt-24">
+            <SettingsMaintenanceSection onClearPwaCache={handleClearPwaCache} />
+          </div>
 
-          <SettingsAppearanceSection
-            settings={settings}
-            currentAccent={currentAccent}
-            colorSearch={colorSearch}
-            onColorSearchChange={setColorSearch}
-            visibleAccentColors={visibleAccentColors}
-            pendingSettingKey={pendingSettingKey}
-            onUpdateSetting={handleUpdateSetting}
-          />
+          <div id="settings-appearance" className="scroll-mt-24">
+            <SettingsAppearanceSection
+              settings={settings}
+              currentAccent={currentAccent}
+              colorSearch={colorSearch}
+              onColorSearchChange={setColorSearch}
+              visibleAccentColors={visibleAccentColors}
+              pendingSettingKey={pendingSettingKey}
+              onUpdateSetting={handleUpdateSetting}
+            />
+          </div>
 
-          <SettingsTrainingPreferencesSection
-            settings={settings}
-            onUpdateSetting={handleUpdateSetting}
-          />
+          <div id="settings-training" className="scroll-mt-24">
+            <SettingsTrainingPreferencesSection
+              settings={settings}
+              onUpdateSetting={handleUpdateSetting}
+            />
+          </div>
 
-          <NotificationSettingsSection
-            settings={settings}
-            workouts={workouts}
-            onUpdateSetting={handleUpdateSetting}
-            onShowToast={showToast}
-          />
+          <div id="settings-notifications" className="scroll-mt-24">
+            <NotificationSettingsSection
+              settings={settings}
+              workouts={workouts}
+              onUpdateSetting={handleUpdateSetting}
+              onShowToast={showToast}
+            />
+          </div>
 
-          <SettingsBackupSection
-            exportPassword={exportPassword}
-            exportingType={exportingType}
-            onExportPasswordChange={setExportPassword}
-            onExportJson={handleExportJson}
-            onExportCsv={handleExportCsv}
-            onExportPdf={handleExportPdf}
-            onImportJson={handleImportJson}
-          />
+          <div id="settings-backup" className="scroll-mt-24">
+            <SettingsBackupSection
+              exportPassword={exportPassword}
+              exportingType={exportingType}
+              onExportPasswordChange={setExportPassword}
+              onExportJson={handleExportJson}
+              onExportCsv={handleExportCsv}
+              onExportPdf={handleExportPdf}
+              onImportJson={handleImportJson}
+            />
+          </div>
 
-          <SettingsPasswordSection
-            user={user}
-            passwordForm={passwordForm}
-            savingPassword={savingPassword}
-            onPasswordFormChange={setPasswordForm}
-            onSubmit={handleSetPassword}
-          />
+          <div id="settings-security" className="scroll-mt-24">
+            <SettingsPasswordSection
+              user={user}
+              passwordForm={passwordForm}
+              savingPassword={savingPassword}
+              onPasswordFormChange={setPasswordForm}
+              onSubmit={handleSetPassword}
+            />
+          </div>
         </div>
 
         <SettingsRiskSidebar

@@ -95,13 +95,13 @@ function ExerciseLibrarySection({
 }) {
   return (
     <main className="order-1 xl:order-2">
-      <Card className="overflow-visible border border-zinc-800 bg-gradient-to-b from-[#17171b] to-[#121216]">
-        <div className="border-b border-zinc-800 p-5">
+      <Card className="ff-exercise-app-card overflow-visible">
+        <div className="border-b border-[var(--ff-border)] p-4 sm:p-5">
           <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <h2 className="text-2xl font-black">
-                  Biblioteca
+                <h2 className="text-2xl font-black tracking-[-0.04em]">
+                  Exercícios
                 </h2>
 
                 <Badge variant="purple">
@@ -109,8 +109,8 @@ function ExerciseLibrarySection({
                 </Badge>
               </div>
 
-              <p className="mt-1 text-sm text-zinc-500">
-                {filteredExercises.length} exercícios encontrados • exibindo {displayedExercises.length}
+              <p className="mt-1 text-sm text-[var(--ff-muted)]">
+                {filteredExercises.length} encontrados • {displayedExercises.length} visíveis
               </p>
 
               <div className="mt-4 hidden min-w-0 max-w-full xl:block">
@@ -145,7 +145,7 @@ function ExerciseLibrarySection({
               </div>
 
               <div className="mt-4 space-y-3 xl:hidden">
-                <div className="flex h-12 items-center gap-3 rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-zinc-400">
+                <div className="ff-native-search flex h-12 items-center gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-input)] px-4 text-[var(--ff-muted)]">
                   <Search size={18} />
 
                   <input
@@ -153,7 +153,7 @@ function ExerciseLibrarySection({
                     placeholder="Buscar exercício..."
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-500"
+                    className="min-w-0 flex-1 border-0 bg-transparent p-0 text-base text-[var(--ff-text)] outline-none placeholder:text-[var(--ff-muted-2)]"
                   />
 
                   {search && (
@@ -216,7 +216,7 @@ function ExerciseLibrarySection({
             <button
               type="button"
               onClick={openCreateModal}
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-bold text-white shadow-[0_0_20px_var(--ff-accent-shadow)] transition hover:bg-[var(--ff-accent-hover)]"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-bold text-white transition hover:bg-[var(--ff-accent-hover)] active:scale-[0.98]"
             >
               <Dumbbell size={18} />
               Adicionar exercício
@@ -224,7 +224,7 @@ function ExerciseLibrarySection({
           </div>
         </div>
 
-        <div className="max-h-[65vh] overflow-y-auto overscroll-contain p-4 xl:max-h-[900px]">
+        <div className="p-3 sm:p-4">
           {!isLoaded && (
             <EmptyState
               title="Carregando biblioteca"
@@ -240,7 +240,7 @@ function ExerciseLibrarySection({
           )}
 
           {displayedExercises.length > 0 && (
-            <div className="grid grid-cols-2 gap-3 xl:grid-cols-1">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-1">
               {displayedExercises.map((exercise) => {
                 const isExpanded = expandedExerciseId === exercise.id
                 const media = getExerciseMedia(exercise)
@@ -249,20 +249,20 @@ function ExerciseLibrarySection({
                 return (
                   <div
                     key={exercise.id}
-                    className="overflow-hidden rounded-3xl border border-zinc-800 bg-[#18181b] transition hover:border-[var(--ff-accent-border)]/40 hover:bg-[#1f1f23]"
+                    className="ff-exercise-row-card overflow-hidden rounded-[18px] border border-[var(--ff-border)] bg-[var(--ff-surface)] transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-surface-2)]"
                   >
                     <button
                       type="button"
                       onClick={() => handleToggleExercise(exercise.id)}
                       className="relative w-full p-3 text-left sm:p-4"
                     >
-                      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:gap-4">
-                        <div className="flex aspect-square w-full shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-zinc-700 bg-white shadow-inner xl:h-20 xl:w-20">
+                      <div className="flex items-center gap-3 sm:gap-4">
+                        <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-border)] bg-white shadow-inner sm:h-24 sm:w-24 xl:h-20 xl:w-20">
                           {media ? (
                             <img
                               src={media}
                               alt={exercise.name}
-                              className="h-full w-full object-cover"
+                              className="h-full w-full object-contain"
                               loading="lazy"
                               decoding="async"
                             />
@@ -273,7 +273,7 @@ function ExerciseLibrarySection({
 
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="line-clamp-2 text-sm font-black leading-tight text-white xl:truncate xl:text-base">
+                            <h3 className="line-clamp-2 text-base font-black leading-tight tracking-[-0.03em] text-[var(--ff-text)] xl:truncate">
                               {exercise.name}
                             </h3>
 
@@ -291,7 +291,7 @@ function ExerciseLibrarySection({
                             </p>
                           )}
 
-                          <div className="mt-2 flex flex-wrap gap-1.5 xl:mt-3 xl:gap-2">
+                          <div className="mt-2 flex flex-wrap gap-1.5 xl:mt-3 xl:gap-2 ff-limited-badges">
                             <Badge variant="purple">
                               {exercise.normalizedGroup}
                             </Badge>
