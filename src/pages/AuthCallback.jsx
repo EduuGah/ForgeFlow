@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom'
 import { getCurrentUser } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 
+import AppPageIntro from '../components/app/AppPageIntro'
+
 function AuthCallback() {
   const navigate = useNavigate()
   const { setUser } = useAuth()
@@ -55,6 +57,8 @@ function AuthCallback() {
 
   return (
     <div className="ff-hevy-page ff-hevy-page-authcallback">
+
+      <AppPageIntro eyebrow="Autenticação" title="Conectando" description="Finalizando login com segurança." />
 
     <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4 text-white">
       <div className="rounded-3xl border border-zinc-800 bg-[#121216] p-8 text-center">

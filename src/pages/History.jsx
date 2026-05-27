@@ -25,6 +25,8 @@ import {
   HistorySummaryCards,
 } from '../features/history/components/HistorySections'
 
+import AppPageIntro from '../components/app/AppPageIntro'
+
 function History() {
   const { user } = useAuth()
 
@@ -266,6 +268,17 @@ function History() {
 
   return (
     <div className="ff-hevy-page ff-hevy-page-history">
+
+      <AppPageIntro
+        eyebrow="Histórico"
+        title="Treinos finalizados"
+        description="Uma linha do tempo mais limpa para revisar volume, duração e recordes."
+        metrics={[
+          { label: 'Treinos', value: history.length },
+          { label: 'Filtrados', value: filteredHistory.length },
+          { label: 'Fonte', value: source === 'database' ? 'API' : 'Local' },
+        ]}
+      />
 
     <>
       <PageHeader

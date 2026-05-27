@@ -1,5 +1,5 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
-import { Plus, Dumbbell, Layers3, Target, Star } from 'lucide-react'
+import { Plus, Dumbbell, Layers3, Target, Star, Search } from 'lucide-react'
 
 import { getInitialExercises } from '../utils/exerciseStorage'
 import { useAuth } from '../context/AuthContext'
@@ -35,6 +35,8 @@ import {
   normalizeText,
   textToList,
 } from '../features/exercises/exerciseLibraryUtils'
+
+import AppPageIntro from '../components/app/AppPageIntro'
 
 function Exercises() {
   const { user } = useAuth()
@@ -521,6 +523,22 @@ function Exercises() {
 
   return (
     <div className="ff-hevy-page ff-hevy-page-exercises">
+
+      <AppPageIntro
+        eyebrow="Biblioteca"
+        title="Exercícios"
+        description="Busque, favorite e abra detalhes dos exercícios em uma lista compacta de app."
+        metrics={[
+          { label: 'Total', value: indexedExercises.length },
+          { label: 'Grupos', value: stats.groupStats.length },
+          { label: 'Favoritos', value: stats.favoriteExercisesCount },
+        ]}
+      />
+
+      <div className="ff-exercise-top-search">
+        <Search size={18} />
+        <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar exercício..." />
+      </div>
 
     <>
       <PageHeader

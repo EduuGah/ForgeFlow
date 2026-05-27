@@ -28,6 +28,8 @@ import {
 } from '../utils/workoutScheduleUtils'
 import { defaultSettings } from '../utils/settingsUtils'
 
+import AppPageIntro from '../components/app/AppPageIntro'
+
 function normalizeWorkouts(workouts = []) {
   return workouts.map((workout) => normalizeWorkoutFromApi(workout))
 }
@@ -223,7 +225,18 @@ function WorkoutSchedule() {
   }
 
   return (
-    <>
+    <div className="ff-hevy-page ff-hevy-page-workoutschedule">
+
+      <AppPageIntro
+        eyebrow="Agenda"
+        title="Semana de treino"
+        description="Organize sua rotina por dia e inicie o treino certo rapidamente."
+        metrics={[
+          { label: 'Rotinas', value: workouts.length },
+          { label: 'Dias', value: summary.workoutDays },
+          { label: 'Descanso', value: summary.restDays },
+        ]}
+      />
       <PageHeader
         title="Agenda semanal"
         description="Defina qual treino você faz em cada dia e use isso para lembretes no APK."
@@ -306,8 +319,6 @@ function WorkoutSchedule() {
                 const workoutMissing = entry.type === 'workout' && !findWorkoutByScheduleEntry(workouts, entry)
 
                 return (
-    <div className="ff-hevy-page ff-hevy-page-workoutschedule">
-
                   <div
                     key={day.key}
                     className="ff-schedule-day-card rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4"
@@ -341,9 +352,7 @@ function WorkoutSchedule() {
                       </p>
                     )}
                   </div>
-                
-    </div>
-  )
+                )
               })}
             </div>
 
@@ -415,7 +424,7 @@ function WorkoutSchedule() {
         message={toast?.message}
         onClose={() => setToast(null)}
       />
-    </>
+    </div>
   )
 }
 

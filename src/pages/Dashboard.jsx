@@ -24,6 +24,8 @@ import {
   getRecoveryStyle,
 } from '../features/dashboard/dashboardUtils'
 
+import AppPageIntro from '../components/app/AppPageIntro'
+
 function Dashboard() {
   const { user } = useAuth()
   const [prSearch, setPrSearch] = useState('')
@@ -107,6 +109,17 @@ function Dashboard() {
 
   return (
     <div className="ff-hevy-page ff-hevy-page-dashboard">
+
+      <AppPageIntro
+        eyebrow="Início"
+        title="ForgeFlow"
+        description="Resumo rápido para decidir seu próximo treino sem parecer painel de site."
+        metrics={[
+          { label: 'Treinos', value: history.length },
+          { label: 'Rotinas', value: workouts.length },
+          { label: 'PRs', value: prCount },
+        ]}
+      />
 
     <>
       <DashboardTopSection

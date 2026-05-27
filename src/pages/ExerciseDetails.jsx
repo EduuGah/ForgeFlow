@@ -35,6 +35,8 @@ const TABS = [
   { id: 'ranking', label: 'Classificações' },
 ]
 
+import AppPageIntro from '../components/app/AppPageIntro'
+
 function ExerciseTabButton({ active, children, onClick }) {
   return (
     <button
@@ -122,6 +124,12 @@ function ExerciseDetails() {
 
   return (
     <div className="ff-hevy-page ff-hevy-page-exercisedetails">
+
+      <AppPageIntro
+        eyebrow="Exercício"
+        title={exercise?.name || 'Detalhes'}
+        description="Resumo, histórico, instruções e recordes em visual mais próximo de app."
+      />
 
     <div className="ff-exercise-detail-page space-y-5">
       <div className="flex items-center justify-between gap-3">

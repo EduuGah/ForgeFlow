@@ -42,6 +42,8 @@ const MEAL_TYPES = [
   { value: 'post-workout', label: 'Pós-treino', icon: Salad },
 ]
 
+import AppPageIntro from '../components/app/AppPageIntro'
+
 function clampPercent(value, goal) {
   const safeGoal = Math.max(1, Number(goal) || 1)
   return Math.max(0, Math.min(100, Math.round(((Number(value) || 0) / safeGoal) * 100)))
@@ -211,6 +213,17 @@ function Nutrition() {
 
   return (
     <div className="ff-hevy-page ff-hevy-page-nutrition">
+
+      <AppPageIntro
+        eyebrow="Nutrição"
+        title="Hoje"
+        description="Registre água, refeições e macros em blocos rápidos."
+        metrics={[
+          { label: 'Refeições', value: nutrition.meals.length },
+          { label: 'Kcal', value: nutrition.calories },
+          { label: 'Proteína', value: `${nutrition.proteinG}g` },
+        ]}
+      />
 
     <div className="ff-nutrition-page space-y-5">
       <PageHeader

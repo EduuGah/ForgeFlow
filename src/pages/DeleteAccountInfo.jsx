@@ -1,8 +1,12 @@
 import { Link } from 'react-router-dom'
 
+import AppPageIntro from '../components/app/AppPageIntro'
+
 function DeleteAccountInfo() {
   return (
     <div className="ff-hevy-page ff-hevy-page-deleteaccount">
+
+      <AppPageIntro eyebrow="Conta" title="Excluir conta" description="Orientações para remoção de conta e dados." />
 
     <main className="min-h-screen bg-[var(--ff-bg)] px-4 py-8 text-[var(--ff-text)]">
       <div className="mx-auto max-w-4xl space-y-5">

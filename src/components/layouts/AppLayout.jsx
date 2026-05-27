@@ -420,7 +420,7 @@ function AppLayout() {
         </Suspense>
       )}
 
-      <main ref={pageScrollRef} className={`ff-page-scroll-shell ff-hevy-shell ${getRouteShellClass(location.pathname)} relative z-0 min-h-0 px-4 pb-36 pt-[calc(6.25rem+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[calc(6.25rem+env(safe-area-inset-top))]`}>
+      <main ref={pageScrollRef} className={`ff-page-scroll-shell ff-hevy-shell ff-mobile-app-shell ${getRouteShellClass(location.pathname)} relative z-0 min-h-0 px-4 pb-36 pt-[calc(6.25rem+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[calc(6.25rem+env(safe-area-inset-top))]`}>
         <div className="mx-auto w-full max-w-[1600px]">
           {activeSession && !isActiveWorkoutRoute && (
             <Suspense fallback={null}>

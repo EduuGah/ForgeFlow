@@ -8,6 +8,8 @@ import { getGoogleLoginUrl } from '../utils/platformUtils'
 
 const API_URL = (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3001' : 'https://forgeflow-citr.onrender.com')).replace(/\/$/, '')
 
+import AppPageIntro from '../components/app/AppPageIntro'
+
 function GoogleIcon() {
     return (
         <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
@@ -78,6 +80,8 @@ function Login() {
 
     return (
     <div className="ff-hevy-page ff-hevy-page-login">
+
+      <AppPageIntro eyebrow="Entrar" title="ForgeFlow" description="Acesse seus treinos, histórico e progresso." />
 
         <div className="flex min-h-screen items-center justify-center bg-[var(--ff-bg)] px-4 text-[var(--ff-text)]">
             <div className="w-full max-w-md rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-8 shadow-2xl">

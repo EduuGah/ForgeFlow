@@ -13,6 +13,8 @@ import {
 import { normalizeNotificationFromApi } from '../features/notifications/notificationUtils'
 import NotificationsPageSections from '../features/notifications/components/NotificationsPageSections'
 
+import AppPageIntro from '../components/app/AppPageIntro'
+
 function Notifications() {
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -403,6 +405,17 @@ function Notifications() {
 
   return (
     <div className="ff-hevy-page ff-hevy-page-notifications">
+
+      <AppPageIntro
+        eyebrow="Central"
+        title="Notificações"
+        description="Avisos, lembretes e alertas agrupados em uma experiência mais nativa."
+        metrics={[
+          { label: 'Total', value: stats.total },
+          { label: 'Não lidas', value: stats.unread },
+          { label: 'Fonte', value: source === 'database' ? 'API' : 'Local' },
+        ]}
+      />
 
     <NotificationsPageSections
       source={source}

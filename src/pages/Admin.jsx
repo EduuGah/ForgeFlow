@@ -30,6 +30,8 @@ import AdminRankingsSection from '../features/admin/components/AdminRankingsSect
 import AdminUsersSection from '../features/admin/components/AdminUsersSection'
 import { formatCompactNumber, getUserId } from '../features/admin/adminUtils'
 
+import AppPageIntro from '../components/app/AppPageIntro'
+
 function Admin() {
   const { user } = useAuth()
 
@@ -509,6 +511,8 @@ function Admin() {
 
   return (
     <div className="ff-hevy-page ff-hevy-page-admin">
+
+      <AppPageIntro eyebrow="Admin" title="Painel" description="Visão administrativa com cards mais compactos e leitura melhor no celular." />
 
     <div className="ff-hevy-admin ff-admin-v48 space-y-6">
       <PageHeader

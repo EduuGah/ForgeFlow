@@ -12,6 +12,8 @@ import { apiFetch } from '../services/api'
 import { getUserStorageData, saveUserStorageData } from '../utils/userStorage'
 import { getCompletedSets, getTotalVolume } from '../utils/analyticsUtils'
 
+import AppPageIntro from '../components/app/AppPageIntro'
+
 function toDateKey(value) {
   if (!value) return ''
   const date = new Date(value)
@@ -140,7 +142,18 @@ function WorkoutCalendar() {
   const monthLabel = currentMonth.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
 
   return (
-    <>
+    <div className="ff-hevy-page ff-hevy-page-workoutcalendar">
+
+      <AppPageIntro
+        eyebrow="Calendário"
+        title="Treinos no mês"
+        description="Visualize os dias treinados sem cara de tabela web."
+        metrics={[
+          { label: 'Treinos', value: history.length },
+          { label: 'Mês', value: monthLabel },
+          { label: 'Fonte', value: source === 'database' ? 'API' : 'Local' },
+        ]}
+      />
       <PageHeader
         title="Calendário"
         description="Veja seus dias treinados e os treinos feitos em cada data."
@@ -220,22 +233,18 @@ function WorkoutCalendar() {
               {selectedSessions.map((session) => {
                 const sets = getCompletedSets([session])
                 return (
-    <div className="ff-hevy-page ff-hevy-page-workoutcalendar">
-
                   <div key={session.id || session._id || `${session.workoutName}-${getSessionDate(session)}`} className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
                     <p className="font-black text-[var(--ff-text)]">{session.workoutName || session.name || 'Treino'}</p>
                     <p className="mt-1 text-xs text-[var(--ff-muted)]">{formatShortDate(getSessionDate(session))} • {formatDuration(session.durationSeconds || session.duration || 0)} • {sets.length} séries</p>
                     <p className="mt-2 text-xs font-bold text-[var(--ff-accent-text)]">{formatVolume(getTotalVolume(sets))}</p>
                   </div>
-                
-    </div>
-  )
+                )
               })}
             </div>
           </Card>
         </aside>
       </section>
-    </>
+    </div>
   )
 }
 

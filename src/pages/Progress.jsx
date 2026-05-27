@@ -38,6 +38,8 @@ const TrainingVolumeChart = lazy(() => import('../components/progress/TrainingVo
 const MuscleGroupChart = lazy(() => import('../components/progress/MuscleGroupChart'))
 
 
+import AppPageIntro from '../components/app/AppPageIntro'
+
 function WorkoutLocationReport({ workouts = [] }) {
   const workoutsWithLocation = workouts.filter((workout) => getMapsUrl(workout.location))
   const latest = workoutsWithLocation.slice(0, 4)
@@ -228,6 +230,17 @@ function Progress() {
 
   return (
     <div className="ff-hevy-page ff-hevy-page-progress">
+
+      <AppPageIntro
+        eyebrow="Evolução"
+        title="Progresso"
+        description="Cards, gráficos e detalhes organizados para consultar rápido no celular."
+        metrics={[
+          { label: 'Status', value: loading || syncing ? 'Sync' : 'OK' },
+          { label: 'Fonte', value: source === 'database' ? 'API' : 'Local' },
+          { label: 'Séries', value: recentSetRows.length },
+        ]}
+      />
 
     <>
       <PageHeader

@@ -66,6 +66,8 @@ const settingsGroups = [
   },
 ]
 
+import AppPageIntro from '../components/app/AppPageIntro'
+
 function SettingsNativeDirectory({ onNavigate }) {
   return (
     <section className="ff-settings-native mb-6 lg:hidden">
@@ -524,6 +526,12 @@ function Settings() {
 
   return (
     <div className="ff-hevy-page ff-hevy-page-settings">
+
+      <AppPageIntro
+        eyebrow="Ajustes"
+        title="Configurações"
+        description="Preferências e recursos organizados em lista de aplicativo."
+      />
 
     <>
       <header className="mb-5 flex items-center justify-between gap-3 lg:hidden">

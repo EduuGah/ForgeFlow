@@ -15,6 +15,8 @@ import {
 
 import { normalizeGoal } from '../features/goals/goalUtils'
 
+import AppPageIntro from '../components/app/AppPageIntro'
+
 function Goals() {
   const { user } = useAuth()
 
@@ -350,6 +352,17 @@ function Goals() {
 
   return (
     <div className="ff-hevy-page ff-hevy-page-goals">
+
+      <AppPageIntro
+        eyebrow="Metas"
+        title="Objetivos"
+        description="Acompanhe metas com visual de app, ações claras e menos poluição."
+        metrics={[
+          { label: 'Total', value: goals.length },
+          { label: 'Ativas', value: stats.active },
+          { label: 'Concluídas', value: stats.completed },
+        ]}
+      />
 
     <GoalsPageSections
       source={source}

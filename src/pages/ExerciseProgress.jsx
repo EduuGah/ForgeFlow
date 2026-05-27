@@ -40,6 +40,8 @@ import {
 } from '../features/exerciseProgress/exerciseProgressUtils'
 
 
+import AppPageIntro from '../components/app/AppPageIntro'
+
 function getExerciseFallback(name = '') {
   const normalized = normalizeExerciseName(name)
   return defaultExercises.find((exercise) => {
@@ -174,6 +176,17 @@ function ExerciseProgress() {
 
   return (
     <div className="ff-hevy-page ff-hevy-page-exerciseprogress">
+
+      <AppPageIntro
+        eyebrow="Exercício"
+        title="Progresso por exercício"
+        description="Escolha um exercício e veja PRs, séries e gráficos em uma tela mais limpa."
+        metrics={[
+          { label: 'Exercícios', value: exerciseOptions.length },
+          { label: 'Treinos', value: history.length },
+          { label: 'Fonte', value: source === 'database' ? 'API' : 'Local' },
+        ]}
+      />
 
     <>
       <PageHeader

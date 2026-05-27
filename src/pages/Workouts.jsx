@@ -44,6 +44,8 @@ import {
 
 import defaultExercises from '../data/defaultExercises'
 
+import AppPageIntro from '../components/app/AppPageIntro'
+
 function Workouts() {
     const [workouts, setWorkouts] = useState([])
     const [exercises, setExercises] = useState([])
@@ -893,6 +895,17 @@ function Workouts() {
 
     return (
     <div className="ff-hevy-page ff-hevy-page-workouts">
+
+            <AppPageIntro
+                eyebrow="Treino"
+                title="Rotinas"
+                description="Escolha, edite ou inicie seus treinos com cards mais diretos para uso no celular."
+                metrics={[
+                    { label: 'Rotinas', value: workouts.length },
+                    { label: 'Exercícios', value: exercises.length },
+                    { label: 'Itens', value: totalExercisesInSavedWorkouts },
+                ]}
+            />
 
         <>
             <WorkoutsHeader

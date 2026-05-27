@@ -5163,3 +5163,483 @@ body,
     padding-bottom: 4px !important;
   }
 }
+
+/* =========================================================
+   ForgeFlow — Etapa 40: polimento mobile real para TODAS as páginas
+   Objetivo: reduzir aparência de site responsivo e aproximar de app nativo.
+   ========================================================= */
+
+@media (max-width: 767px) {
+  html,
+  body,
+  #root {
+    background: #000 !important;
+  }
+
+  .ff-app-layout::before,
+  .ff-app-layout > div[aria-hidden='true'] {
+    opacity: .28 !important;
+  }
+
+  #app-header {
+    border-bottom-color: rgba(255, 255, 255, .07) !important;
+    background: rgba(12, 13, 15, .96) !important;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .04) !important;
+  }
+
+  #app-header .safe-top > div {
+    height: 56px !important;
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  #app-header button {
+    width: 40px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    border-radius: 14px !important;
+    background: rgba(255, 255, 255, .035) !important;
+  }
+
+  #app-header img[alt='ForgeFlow'] {
+    object-fit: contain !important;
+  }
+
+  #app-header .rounded-2xl:has(img[alt='ForgeFlow']) {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 13px !important;
+    padding: 4px !important;
+  }
+
+  #app-header h1 {
+    font-size: 1.05rem !important;
+    letter-spacing: -.045em !important;
+  }
+
+  #app-header p,
+  #app-header .hidden.rounded-full {
+    display: none !important;
+  }
+
+  .ff-page-scroll-shell,
+  .ff-hevy-shell {
+    padding-top: calc(4.85rem + env(safe-area-inset-top)) !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    padding-bottom: calc(6.8rem + env(safe-area-inset-bottom)) !important;
+    background: #000 !important;
+  }
+
+  .ff-page-scroll-shell > div {
+    max-width: 100% !important;
+  }
+
+  .ff-hevy-page {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: auto;
+    padding-bottom: 4px;
+  }
+
+  .ff-native-page-header,
+  .ff-hevy-page > header:first-child,
+  .ff-hevy-page > .flex:first-child,
+  .ff-hevy-page > div:first-child:is(.flex) {
+    margin-bottom: 2px !important;
+    padding: 0 2px !important;
+  }
+
+  .ff-native-page-header h1,
+  .ff-hevy-page h1 {
+    font-size: clamp(1.35rem, 6.2vw, 1.85rem) !important;
+    line-height: 1.05 !important;
+    letter-spacing: -.055em !important;
+  }
+
+  .ff-native-page-header p,
+  .ff-hevy-page > header:first-child p,
+  .ff-hevy-page > .flex:first-child p {
+    display: -webkit-box;
+    max-width: 100% !important;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: .82rem !important;
+    line-height: 1.35 !important;
+    color: var(--ff-muted) !important;
+  }
+
+  .ff-native-card,
+  .ff-hevy-page :is(article, section, aside, .ff-card, [class*='rounded-3xl'][class*='border'], [class*='rounded-[2rem]'][class*='border']) {
+    border-radius: 18px !important;
+    border-color: rgba(255, 255, 255, .075) !important;
+    background: #18191b !important;
+    box-shadow: none !important;
+  }
+
+  .ff-hevy-page :is(.p-10, .p-9, .p-8, .p-7, .p-6, .sm\:p-7, .sm\:p-6) {
+    padding: 14px !important;
+  }
+
+  .ff-hevy-page :is(.gap-8, .gap-7, .gap-6, .gap-5) {
+    gap: 12px !important;
+  }
+
+  .ff-hevy-page :is(.mt-10, .mt-8, .mt-7, .mt-6, .mt-5) {
+    margin-top: 14px !important;
+  }
+
+  .ff-hevy-page :is(.mb-10, .mb-8, .mb-7, .mb-6, .mb-5) {
+    margin-bottom: 14px !important;
+  }
+
+  .ff-hevy-page :is([class*='grid-cols-'], [class*='md:grid-cols'], [class*='lg:grid-cols'], [class*='xl:grid-cols'], [class*='2xl:grid-cols']) {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .ff-hevy-page :is(input, select, textarea) {
+    min-height: 46px !important;
+    width: 100% !important;
+    border-radius: 16px !important;
+    border-color: rgba(255, 255, 255, .08) !important;
+    background: #101114 !important;
+    color: var(--ff-text) !important;
+    font-size: 16px !important;
+    box-shadow: none !important;
+  }
+
+  .ff-hevy-page :is(input, select, textarea):focus {
+    border-color: rgba(10, 132, 255, .65) !important;
+    box-shadow: 0 0 0 3px rgba(10, 132, 255, .14) !important;
+    outline: none !important;
+  }
+
+  .ff-hevy-page :is(button, a[role='button'], .ff-native-action) {
+    border-radius: 15px !important;
+  }
+
+  .ff-hevy-page :is(button, a) {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ff-hevy-page :is(button:active, a:active) {
+    transform: scale(.985);
+  }
+
+  .ff-hevy-page :is([class*='bg-gradient-to'], [class*='shadow-2xl'], [class*='shadow-xl'], [class*='shadow-lg']) {
+    box-shadow: none !important;
+  }
+
+  .ff-hevy-page :is([class*='overflow-x-auto']) {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .ff-hevy-page :is([class*='overflow-x-auto'])::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ff-hevy-page-dashboard > section,
+  .ff-hevy-page-dashboard > div,
+  .ff-hevy-page-progress > section,
+  .ff-hevy-page-progress > div,
+  .ff-hevy-page-history > section,
+  .ff-hevy-page-history > div,
+  .ff-hevy-page-workouts > section,
+  .ff-hevy-page-workouts > div,
+  .ff-hevy-page-goals > section,
+  .ff-hevy-page-goals > div,
+  .ff-hevy-page-notifications > section,
+  .ff-hevy-page-notifications > div,
+  .ff-hevy-page-nutrition > section,
+  .ff-hevy-page-nutrition > div,
+  .ff-hevy-page-musclerecovery > section,
+  .ff-hevy-page-musclerecovery > div,
+  .ff-hevy-page-progressphotos > section,
+  .ff-hevy-page-progressphotos > div,
+  .ff-hevy-page-workoutcalendar > section,
+  .ff-hevy-page-workoutcalendar > div,
+  .ff-hevy-page-workoutschedule > section,
+  .ff-hevy-page-workoutschedule > div,
+  .ff-hevy-page-exerciseprogress > section,
+  .ff-hevy-page-exerciseprogress > div {
+    width: 100%;
+  }
+
+  .ff-hevy-page-dashboard :is(.recharts-wrapper, .recharts-surface),
+  .ff-hevy-page-progress :is(.recharts-wrapper, .recharts-surface),
+  .ff-hevy-page-profile :is(.recharts-wrapper, .recharts-surface),
+  .ff-hevy-page-exerciseprogress :is(.recharts-wrapper, .recharts-surface) {
+    max-width: 100% !important;
+    overflow: visible !important;
+    touch-action: pan-x pan-y;
+  }
+
+  .ff-hevy-page-dashboard :is(.recharts-responsive-container, .recharts-wrapper),
+  .ff-hevy-page-progress :is(.recharts-responsive-container, .recharts-wrapper),
+  .ff-hevy-page-exerciseprogress :is(.recharts-responsive-container, .recharts-wrapper) {
+    min-height: 230px !important;
+  }
+
+  .ff-hevy-page-dashboard :is([class*='h-[300px]'], [class*='min-h-[300px]']),
+  .ff-hevy-page-progress :is([class*='h-[300px]'], [class*='min-h-[300px]']),
+  .ff-hevy-page-exerciseprogress :is([class*='h-[300px]'], [class*='min-h-[300px]']) {
+    height: 250px !important;
+    min-height: 250px !important;
+  }
+
+  .ff-hevy-page-workouts :is(article, .ff-workout-focus-card),
+  .ff-hevy-page-history :is(article),
+  .ff-hevy-page-notifications :is(article),
+  .ff-hevy-page-goals :is(article),
+  .ff-hevy-page-progressphotos :is(article) {
+    overflow: hidden;
+  }
+
+  .ff-hevy-page-workouts :is(img, picture),
+  .ff-hevy-page-history :is(img, picture),
+  .ff-hevy-page-progressphotos :is(img, picture),
+  .ff-hevy-page-nutrition :is(img, picture) {
+    max-width: 100%;
+  }
+
+  .ff-hevy-page :is(.text-5xl, .text-4xl, .text-3xl) {
+    font-size: clamp(1.45rem, 7vw, 2rem) !important;
+    line-height: 1.05 !important;
+  }
+
+  .ff-hevy-page :is(.text-2xl) {
+    font-size: 1.25rem !important;
+  }
+
+  .ff-hevy-page :is(.text-xl) {
+    font-size: 1.08rem !important;
+  }
+
+  .ff-hevy-page :is(.rounded-full) {
+    white-space: nowrap;
+  }
+
+  .ff-hevy-page-startworkout {
+    gap: 12px;
+  }
+
+  .ff-hevy-page-startworkout :is(input[type='number'], input[inputmode='numeric'], input[inputmode='decimal']) {
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ff-hevy-page-workoutcalendar :is(table),
+  .ff-hevy-page-workoutschedule :is(table),
+  .ff-hevy-page-admin :is(table) {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ff-hevy-page-login,
+  .ff-hevy-page-register,
+  .ff-hevy-page-completeprofile,
+  .ff-hevy-page-forgotpassword,
+  .ff-hevy-page-resetpassword,
+  .ff-hevy-page-authcallback {
+    justify-content: center;
+    min-height: calc(100dvh - 8rem);
+  }
+
+  .mobile-bottom-nav {
+    min-height: 62px !important;
+    box-shadow: 0 -12px 34px rgba(0, 0, 0, .34) !important;
+  }
+
+  .mobile-bottom-nav a {
+    min-height: 50px !important;
+    border-radius: 16px !important;
+  }
+
+  .mobile-bottom-nav a[aria-current='page'] {
+    background: rgba(10, 132, 255, .09) !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .ff-hevy-page {
+    width: 100%;
+  }
+
+  .ff-hevy-page :is(.ff-native-card, article, section) {
+    scroll-margin-top: 96px;
+  }
+}
+
+/* Page-level native app redesign: applied inside each src/pages/*.jsx page, not only as a global color overlay. */
+.ff-native-page-intro {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 16px;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,.075);
+  border-radius: 26px;
+  background: linear-gradient(180deg, rgba(28,29,34,.98), rgba(13,14,17,.98));
+  box-shadow: 0 18px 44px rgba(0,0,0,.28);
+}
+
+.ff-native-page-intro__head {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ff-native-page-intro__eyebrow {
+  margin: 0 0 6px;
+  color: var(--ff-accent-text, #0a84ff);
+  font-size: .72rem;
+  font-weight: 950;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.ff-native-page-intro h1 {
+  margin: 0;
+  color: var(--ff-text, #fff);
+  font-size: clamp(1.55rem, 6vw, 2.2rem);
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: -.055em;
+}
+
+.ff-native-page-intro p:not(.ff-native-page-intro__eyebrow) {
+  margin: 8px 0 0;
+  max-width: 760px;
+  color: var(--ff-muted, #9b9ba1);
+  font-size: .92rem;
+  line-height: 1.5;
+}
+
+.ff-native-page-intro__action { flex-shrink: 0; }
+
+.ff-native-page-intro__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ff-native-page-intro__metric {
+  min-width: 0;
+  border-radius: 18px;
+  background: rgba(255,255,255,.045);
+  padding: 12px;
+}
+
+.ff-native-page-intro__metric span,
+.ff-native-page-intro__metric strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-native-page-intro__metric span {
+  color: var(--ff-muted, #9b9ba1);
+  font-size: .68rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.ff-native-page-intro__metric strong {
+  margin-top: 4px;
+  color: var(--ff-text, #fff);
+  font-size: 1.1rem;
+  font-weight: 950;
+  letter-spacing: -.04em;
+}
+
+.ff-exercise-top-search {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .ff-native-page-intro {
+    margin: 0 0 12px;
+    padding: 16px;
+    border-radius: 24px;
+  }
+
+  .ff-native-page-intro__head { align-items: center; }
+  .ff-native-page-intro h1 { font-size: 1.55rem; }
+  .ff-native-page-intro p:not(.ff-native-page-intro__eyebrow) { font-size: .86rem; }
+  .ff-native-page-intro__metric { padding: 10px; border-radius: 16px; }
+  .ff-native-page-intro__metric strong { font-size: 1rem; }
+
+  .ff-hevy-page :is(.ff-native-page-header) {
+    display: none !important;
+  }
+
+  .ff-exercise-top-search {
+    display: flex;
+    height: 50px;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 18px;
+    background: #0f1013;
+    padding: 0 14px;
+    color: var(--ff-muted, #9b9ba1);
+  }
+
+  .ff-exercise-top-search input {
+    min-width: 0;
+    flex: 1;
+    border: 0 !important;
+    background: transparent !important;
+    padding: 0 !important;
+    color: var(--ff-text, #fff) !important;
+    box-shadow: none !important;
+  }
+
+  .ff-hevy-page-exercises aside,
+  .ff-hevy-page-workouts aside,
+  .ff-hevy-page-history aside,
+  .ff-hevy-page-progress aside,
+  .ff-hevy-page-exerciseprogress aside {
+    display: none !important;
+  }
+
+  .ff-hevy-page-exercises .grid,
+  .ff-hevy-page-workouts .grid,
+  .ff-hevy-page-history .grid,
+  .ff-hevy-page-progress .grid,
+  .ff-hevy-page-startworkout .grid,
+  .ff-hevy-page-exerciseprogress .grid {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+
+  .ff-exercise-app-card {
+    border: 0 !important;
+    background: transparent !important;
+    padding: 0 !important;
+  }
+
+  .ff-exercise-app-card > div:first-child { display: none !important; }
+  .ff-exercise-app-card > div:last-child { padding: 0 !important; }
+  .ff-exercise-row-card { border-radius: 20px !important; background: #18191b !important; }
+  .ff-exercise-row-card button.relative { padding: 10px !important; }
+  .ff-exercise-row-card .h-20.w-20,
+  .ff-exercise-row-card .sm\:h-24.sm\:w-24 {
+    width: 72px !important;
+    height: 72px !important;
+    border-radius: 18px !important;
+  }
+  .ff-exercise-row-card h3 { font-size: .96rem !important; }
+  .ff-exercise-row-card .ff-limited-badges > *:nth-child(n+4) { display: none !important; }
+
+  .ff-hevy-page :is(.p-10,.p-9,.p-8,.p-7,.p-6,.sm\:p-7,.sm\:p-6) { padding: 14px !important; }
+  .ff-hevy-page :is(.gap-8,.gap-7,.gap-6,.gap-5) { gap: 12px !important; }
+}

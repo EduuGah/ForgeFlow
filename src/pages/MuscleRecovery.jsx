@@ -9,6 +9,8 @@ import {
     getRecoveryStateByDayDiff,
 } from '../features/muscleRecovery/muscleRecoveryUtils'
 
+import AppPageIntro from '../components/app/AppPageIntro'
+
 function MuscleRecovery() {
     const { user } = useAuth()
 
@@ -122,6 +124,17 @@ function MuscleRecovery() {
 
     return (
     <div className="ff-hevy-page ff-hevy-page-musclerecovery">
+
+      <AppPageIntro
+        eyebrow="Recuperação"
+        title="Músculos"
+        description="Veja rapidamente o que está pronto para treinar e o que ainda precisa recuperar."
+        metrics={[
+          { label: 'Status', value: loading ? 'Carregando' : 'OK' },
+          { label: 'Fonte', value: source === 'database' ? 'API' : 'Local' },
+          { label: 'Hoje', value: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) },
+        ]}
+      />
 
         <MuscleRecoveryPageSections
             source={source}

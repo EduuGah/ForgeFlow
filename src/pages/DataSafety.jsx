@@ -1,8 +1,12 @@
 import { Link } from 'react-router-dom'
 
+import AppPageIntro from '../components/app/AppPageIntro'
+
 function DataSafety() {
   return (
     <div className="ff-hevy-page ff-hevy-page-datasafety">
+
+      <AppPageIntro eyebrow="Legal" title="Segurança de dados" description="Informações importantes para publicação e uso do app." />
 
     <main className="min-h-screen bg-[var(--ff-bg)] px-4 py-8 text-[var(--ff-text)]">
       <div className="mx-auto max-w-4xl space-y-5">

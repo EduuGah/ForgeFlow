@@ -28,6 +28,8 @@ import {
   ProgressPhotosStats,
 } from '../features/progressPhotos/components/ProgressPhotosSections'
 
+import AppPageIntro from '../components/app/AppPageIntro'
+
 function ProgressPhotos() {
   const { user } = useAuth()
 
@@ -321,6 +323,17 @@ function ProgressPhotos() {
 
   return (
     <div className="ff-hevy-page ff-hevy-page-progressphotos">
+
+      <AppPageIntro
+        eyebrow="Fotos"
+        title="Evolução visual"
+        description="Galeria e comparação corporal em cards próprios para celular."
+        metrics={[
+          { label: 'Fotos', value: photos.length },
+          { label: 'Ângulos', value: stats.anglesCount },
+          { label: 'Fonte', value: source === 'database' ? 'API' : 'Local' },
+        ]}
+      />
 
     <>
       <PageHeader
