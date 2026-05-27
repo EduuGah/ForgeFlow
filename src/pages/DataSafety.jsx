@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom'
 
 function DataSafety() {
   return (
+    <div className="ff-hevy-page ff-hevy-page-datasafety">
+
     <main className="min-h-screen bg-[var(--ff-bg)] px-4 py-8 text-[var(--ff-text)]">
       <div className="mx-auto max-w-4xl space-y-5">
         <header className="rounded-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] p-6 shadow-sm">
@@ -79,6 +81,8 @@ function DataSafety() {
         </div>
       </div>
     </main>
+  
+    </div>
   )
 }
 

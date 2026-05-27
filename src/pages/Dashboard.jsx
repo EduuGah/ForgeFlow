@@ -106,6 +106,8 @@ function Dashboard() {
   }
 
   return (
+    <div className="ff-hevy-page ff-hevy-page-dashboard">
+
     <>
       <DashboardTopSection
         dashboardSource={dashboardSource}
@@ -197,6 +199,8 @@ function Dashboard() {
         formatVolume={formatVolume}
       />
     </>
+  
+    </div>
   )
 }
 

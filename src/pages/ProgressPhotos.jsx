@@ -320,6 +320,8 @@ function ProgressPhotos() {
   }
 
   return (
+    <div className="ff-hevy-page ff-hevy-page-progressphotos">
+
     <>
       <PageHeader
         title="Fotos de evolução"
@@ -414,6 +416,8 @@ function ProgressPhotos() {
         onClose={() => setToast(null)}
       />
     </>
+  
+    </div>
   )
 }
 

@@ -496,6 +496,8 @@ function Settings() {
   }
 
   return (
+    <div className="ff-hevy-page ff-hevy-page-settings">
+
     <>
       <header className="mb-5 flex items-center justify-between gap-3 lg:hidden">
         <div className="w-10" />
@@ -593,6 +595,8 @@ function Settings() {
         onClose={() => setToast(null)}
       />
     </>
+  
+    </div>
   )
 }
 

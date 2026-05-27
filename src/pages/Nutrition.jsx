@@ -210,6 +210,8 @@ function Nutrition() {
   }
 
   return (
+    <div className="ff-hevy-page ff-hevy-page-nutrition">
+
     <div className="ff-nutrition-page space-y-5">
       <PageHeader
         title="Nutrição"
@@ -364,6 +366,8 @@ function Nutrition() {
           </div>
         </Card>
       </section>
+    </div>
+  
     </div>
   )
 }

@@ -892,6 +892,8 @@ function Workouts() {
     }
 
     return (
+    <div className="ff-hevy-page ff-hevy-page-workouts">
+
         <>
             <WorkoutsHeader
                 isSyncingData={isSyncingData}
@@ -1050,7 +1052,9 @@ function Workouts() {
                 onClose={() => setToast(null)}
             />
         </>
-    )
+    
+    </div>
+  )
 }
 
 export default Workouts

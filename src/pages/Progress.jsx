@@ -227,6 +227,8 @@ function Progress() {
   }, [recentSetRows, normalizedProgress.recentWorkouts])
 
   return (
+    <div className="ff-hevy-page ff-hevy-page-progress">
+
     <>
       <PageHeader
         title="Evolução"
@@ -331,6 +333,8 @@ function Progress() {
         </div>
       )}
     </>
+  
+    </div>
   )
 }
 

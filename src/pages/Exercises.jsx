@@ -520,6 +520,8 @@ function Exercises() {
   )
 
   return (
+    <div className="ff-hevy-page ff-hevy-page-exercises">
+
     <>
       <PageHeader
         title="Exercícios"
@@ -669,6 +671,8 @@ function Exercises() {
         />
       )}
     </>
+  
+    </div>
   )
 }
 

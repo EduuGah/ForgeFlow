@@ -173,6 +173,8 @@ function ExerciseProgress() {
   const selectedExercise = exerciseOptions.find((exercise) => exercise.normalizedName === selectedExerciseName)
 
   return (
+    <div className="ff-hevy-page ff-hevy-page-exerciseprogress">
+
     <>
       <PageHeader
         title="Progresso por exercício"
@@ -473,6 +475,8 @@ function ExerciseProgress() {
         </div>
       </section>
     </>
+  
+    </div>
   )
 }
 

@@ -78,6 +78,8 @@ function Register() {
     }
 
     return (
+    <div className="ff-hevy-page ff-hevy-page-register">
+
         <div className="flex min-h-screen items-center justify-center bg-[var(--ff-bg)] px-4 py-10 text-[var(--ff-text)]">
             <div className="w-full max-w-md rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-8 shadow-2xl">
                 <div className="login-logo-card mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-3xl bg-white">
@@ -208,7 +210,9 @@ function Register() {
           </div>
             </div>
         </div>
-    )
+    
+    </div>
+  )
 }
 
 export default Register

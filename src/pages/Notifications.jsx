@@ -402,6 +402,8 @@ function Notifications() {
   }
 
   return (
+    <div className="ff-hevy-page ff-hevy-page-notifications">
+
     <NotificationsPageSections
       source={source}
       loading={loading}
@@ -429,6 +431,8 @@ function Notifications() {
       onCancelConfirm={() => setConfirmModal(null)}
       onCloseToast={() => setToast(null)}
     />
+  
+    </div>
   )
 }
 

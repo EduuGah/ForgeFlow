@@ -54,6 +54,8 @@ function AuthCallback() {
   }, [navigate, setUser])
 
   return (
+    <div className="ff-hevy-page ff-hevy-page-authcallback">
+
     <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4 text-white">
       <div className="rounded-3xl border border-zinc-800 bg-[#121216] p-8 text-center">
         {!error ? (
@@ -80,6 +82,8 @@ function AuthCallback() {
           </>
         )}
       </div>
+    </div>
+  
     </div>
   )
 }

@@ -349,6 +349,8 @@ function Goals() {
   }
 
   return (
+    <div className="ff-hevy-page ff-hevy-page-goals">
+
     <GoalsPageSections
       source={source}
       loading={loading}
@@ -377,6 +379,8 @@ function Goals() {
       onCancelConfirm={() => setConfirmModal(null)}
       onCloseToast={() => setToast(null)}
     />
+  
+    </div>
   )
 }
 

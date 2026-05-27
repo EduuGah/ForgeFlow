@@ -4738,3 +4738,279 @@ body,
     top: calc(52px + env(safe-area-inset-top));
   }
 }
+
+/* =========================================================
+   ForgeFlow Hevy pass 2 — applied directly to every page file
+   Each src/pages/*.jsx now has ff-hevy-page + ff-hevy-page-* wrapper.
+   ========================================================= */
+.ff-hevy-page {
+  --ff-page-max: 1180px;
+  color: var(--ff-text);
+}
+
+.ff-hevy-page > :is(.space-y-6, .space-y-5, .space-y-4),
+.ff-hevy-page > section,
+.ff-hevy-page > div,
+.ff-hevy-page > main,
+.ff-hevy-page > form {
+  isolation: isolate;
+}
+
+.ff-hevy-page :is([class*='bg-violet'], [class*='bg-purple'], [class*='from-violet'], [class*='from-purple'], [class*='to-fuchsia']) {
+  --tw-gradient-from: var(--ff-accent) !important;
+  --tw-gradient-to: #006bd6 !important;
+}
+
+.ff-hevy-page :is([class*='rounded-3xl'], [class*='rounded-[2rem]']) {
+  border-radius: 18px !important;
+}
+
+.ff-hevy-page :is(.shadow-2xl, .shadow-xl, .shadow-lg) {
+  box-shadow: none !important;
+}
+
+.ff-hevy-page :is(input, select, textarea) {
+  min-height: 46px;
+  border-color: var(--ff-border) !important;
+  background: var(--ff-surface-2) !important;
+  color: var(--ff-text) !important;
+  font-size: 16px;
+}
+
+.ff-hevy-page :is(input, select, textarea):focus {
+  border-color: var(--ff-accent) !important;
+  box-shadow: 0 0 0 3px rgba(10, 132, 255, .16) !important;
+}
+
+.ff-hevy-page :is(button, a[role='button'], .ff-button) {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ff-hevy-page :is(.recharts-wrapper, .recharts-surface) {
+  max-width: 100% !important;
+}
+
+.ff-hevy-page :is(.recharts-cartesian-axis-tick-value) {
+  fill: var(--ff-muted) !important;
+}
+
+.ff-hevy-page .recharts-bar-rectangle path,
+.ff-hevy-page .recharts-line path,
+.ff-hevy-page .recharts-area-area,
+.ff-hevy-page .recharts-sector {
+  filter: saturate(.9);
+}
+
+/* Home/Dashboard */
+.ff-hevy-page-dashboard > :first-child,
+.ff-hevy-page-dashboard section:first-of-type {
+  border-radius: 20px !important;
+}
+.ff-hevy-page-dashboard :is(section, article, [class*='Card'], .ff-card) {
+  border-color: var(--ff-border) !important;
+}
+.ff-hevy-page-dashboard :is(h1, h2) {
+  letter-spacing: -.045em;
+}
+
+/* Workouts + workout routine cards */
+.ff-hevy-page-workouts :is(article, section, [class*='Workout'], [class*='workout'], .ff-card) {
+  border-color: rgba(255,255,255,.08) !important;
+}
+.ff-hevy-page-workouts :is(button[type='button'], a) svg {
+  stroke-width: 2;
+}
+.ff-hevy-page-workouts :is([class*='grid']) {
+  align-items: stretch;
+}
+
+/* Active workout — compact mobile workout logger */
+.ff-hevy-page-startworkout {
+  padding-bottom: calc(96px + env(safe-area-inset-bottom));
+}
+.ff-hevy-page-startworkout :is(table, [role='table']) {
+  width: 100%;
+}
+.ff-hevy-page-startworkout :is(input) {
+  text-align: center;
+  font-weight: 900;
+}
+.ff-hevy-page-startworkout :is(.sticky, [class*='fixed']) {
+  z-index: 30;
+}
+.ff-hevy-page-startworkout :is(article, section, .ff-card) {
+  background: var(--ff-surface) !important;
+}
+
+/* Exercise library */
+.ff-hevy-page-exercises :is(article, section, .ff-card) {
+  overflow: hidden;
+}
+.ff-hevy-page-exercises :is(img, video) {
+  background: #fff;
+}
+.ff-hevy-page-exercises :is([class*='badge'], .ff-badge) {
+  white-space: nowrap;
+}
+
+/* Exercise details: Hevy-like tabs/media */
+.ff-hevy-page-exercisedetails {
+  max-width: 960px;
+  margin-inline: auto;
+}
+.ff-hevy-page-exercisedetails > .ff-exercise-detail-page > .flex:first-child {
+  margin-inline: -4px;
+  border-bottom: 1px solid var(--ff-border);
+  padding-bottom: 10px;
+}
+.ff-hevy-page-exercisedetails [role='tablist'],
+.ff-hevy-page-exercisedetails .ff-segmented-tabs,
+.ff-hevy-page-exercisedetails nav {
+  scrollbar-width: none;
+}
+.ff-hevy-page-exercisedetails :is(img, video) {
+  object-fit: contain;
+}
+
+/* History / calendar timeline */
+.ff-hevy-page-history :is(article, section, .ff-card),
+.ff-hevy-page-workoutcalendar :is(article, section, .ff-card),
+.ff-hevy-page-workoutschedule :is(article, section, .ff-card) {
+  border-radius: 18px !important;
+}
+.ff-hevy-page-history :is([class*='grid-cols-3'], [class*='grid-cols-4']) {
+  gap: .75rem !important;
+}
+
+/* Progress pages */
+.ff-hevy-page-progress :is(.recharts-wrapper, .recharts-responsive-container),
+.ff-hevy-page-exerciseprogress :is(.recharts-wrapper, .recharts-responsive-container) {
+  min-height: 220px;
+}
+.ff-hevy-page-progress :is(section, article, .ff-card),
+.ff-hevy-page-exerciseprogress :is(section, article, .ff-card),
+.ff-hevy-page-progressphotos :is(section, article, .ff-card) {
+  background: var(--ff-surface) !important;
+}
+
+/* Nutrition */
+.ff-hevy-page-nutrition :is(article, section, .ff-card) {
+  border-radius: 18px !important;
+}
+.ff-hevy-page-nutrition img {
+  border-radius: 14px;
+}
+
+/* Goals, notifications, recovery */
+.ff-hevy-page-goals :is(article, section, .ff-card),
+.ff-hevy-page-notifications :is(article, section, .ff-card),
+.ff-hevy-page-musclerecovery :is(article, section, .ff-card) {
+  background: var(--ff-surface) !important;
+  border-color: var(--ff-border) !important;
+}
+
+/* Auth/onboarding/legal pages */
+.ff-hevy-page-login,
+.ff-hevy-page-register,
+.ff-hevy-page-forgotpassword,
+.ff-hevy-page-resetpassword,
+.ff-hevy-page-authcallback,
+.ff-hevy-page-completeprofile,
+.ff-hevy-page-privacypolicy,
+.ff-hevy-page-deleteaccount,
+.ff-hevy-page-datasafety {
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at top, rgba(10, 132, 255, .18), transparent 28rem),
+    #000;
+}
+.ff-hevy-page-login > div,
+.ff-hevy-page-register > div,
+.ff-hevy-page-completeprofile > div,
+.ff-hevy-page-authcallback > div,
+.ff-hevy-page-forgotpassword > main,
+.ff-hevy-page-resetpassword > main,
+.ff-hevy-page-privacypolicy > main,
+.ff-hevy-page-deleteaccount > main,
+.ff-hevy-page-datasafety > main {
+  background: transparent !important;
+}
+
+/* Admin */
+.ff-hevy-page-admin {
+  max-width: 1280px;
+  margin-inline: auto;
+}
+.ff-hevy-page-admin :is(section, article, .ff-card) {
+  border-color: rgba(255,255,255,.08) !important;
+}
+
+@media (max-width: 767px) {
+  .ff-hevy-page {
+    margin-inline: -2px;
+  }
+
+  .ff-hevy-page :is(.grid, [class*='grid-cols']) {
+    gap: .85rem !important;
+  }
+
+  .ff-hevy-page :is(.p-8, .p-7, .p-6) {
+    padding: 1rem !important;
+  }
+
+  .ff-hevy-page :is(h1) {
+    font-size: clamp(1.45rem, 7vw, 2rem) !important;
+    line-height: 1.05 !important;
+  }
+
+  .ff-hevy-page :is(h2) {
+    font-size: clamp(1.05rem, 5.5vw, 1.35rem) !important;
+  }
+
+  .ff-hevy-page :is([class*='grid-cols-5'], [class*='grid-cols-4'], [class*='grid-cols-3']) {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .ff-hevy-page :is([class*='xl:grid-cols'], [class*='lg:grid-cols'], [class*='md:grid-cols']) {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .ff-hevy-page :is([class*='max-h-['], [class*='max-h-']) {
+    max-height: none !important;
+  }
+
+  .ff-hevy-page :is(button, a) {
+    min-height: 42px;
+  }
+
+  .ff-hevy-page-startworkout :is(input) {
+    min-height: 48px;
+  }
+
+  .ff-hevy-page-exercisedetails > .ff-exercise-detail-page > .flex:first-child,
+  .ff-hevy-page-settings > header:first-child {
+    position: sticky;
+    top: calc(env(safe-area-inset-top) + 0px);
+    z-index: 20;
+    margin-inline: -1rem;
+    padding: .7rem 1rem;
+    background: rgba(24,25,27,.96);
+    backdrop-filter: blur(18px);
+  }
+
+  .ff-hevy-page-workouts :is([class*='grid-cols']),
+  .ff-hevy-page-history :is([class*='grid-cols']),
+  .ff-hevy-page-progress :is([class*='grid-cols']),
+  .ff-hevy-page-exerciseprogress :is([class*='grid-cols']) {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .ff-hevy-page-login,
+  .ff-hevy-page-register,
+  .ff-hevy-page-forgotpassword,
+  .ff-hevy-page-resetpassword,
+  .ff-hevy-page-authcallback,
+  .ff-hevy-page-completeprofile {
+    display: block;
+  }
+}

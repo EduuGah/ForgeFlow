@@ -265,6 +265,8 @@ function History() {
   const hasActiveFilters = Boolean(search || startDate || endDate)
 
   return (
+    <div className="ff-hevy-page ff-hevy-page-history">
+
     <>
       <PageHeader
         title="Histórico"
@@ -341,6 +343,8 @@ function History() {
         onClose={() => setToast(null)}
       />
     </>
+  
+    </div>
   )
 }
 

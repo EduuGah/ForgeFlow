@@ -121,6 +121,8 @@ function ExerciseDetails() {
   const secondaryMuscles = normalizeList(exercise.secondaryMuscles)
 
   return (
+    <div className="ff-hevy-page ff-hevy-page-exercisedetails">
+
     <div className="ff-exercise-detail-page space-y-5">
       <div className="flex items-center justify-between gap-3">
         <Link
@@ -292,6 +294,8 @@ function ExerciseDetails() {
           </div>
         </Card>
       </section>
+    </div>
+  
     </div>
   )
 }

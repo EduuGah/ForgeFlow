@@ -306,6 +306,8 @@ function WorkoutSchedule() {
                 const workoutMissing = entry.type === 'workout' && !findWorkoutByScheduleEntry(workouts, entry)
 
                 return (
+    <div className="ff-hevy-page ff-hevy-page-workoutschedule">
+
                   <div
                     key={day.key}
                     className="ff-schedule-day-card rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4"
@@ -339,7 +341,9 @@ function WorkoutSchedule() {
                       </p>
                     )}
                   </div>
-                )
+                
+    </div>
+  )
               })}
             </div>
 

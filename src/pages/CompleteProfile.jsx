@@ -102,6 +102,8 @@ function CompleteProfile() {
     }
 
     return (
+    <div className="ff-hevy-page ff-hevy-page-completeprofile">
+
         <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4 py-10 text-white">
             <div className="w-full max-w-3xl rounded-3xl border border-zinc-800 bg-[#121216] p-8 shadow-2xl">
                 <div className="flex items-center gap-4">
@@ -299,7 +301,9 @@ function CompleteProfile() {
                 </form>
             </div>
         </div>
-    )
+    
+    </div>
+  )
 }
 
 export default CompleteProfile

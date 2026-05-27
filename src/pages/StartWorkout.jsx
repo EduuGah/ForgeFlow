@@ -534,6 +534,8 @@ function StartWorkout() {
   }
 
   return (
+    <div className="ff-hevy-page ff-hevy-page-startworkout">
+
     <>
       <ActiveWorkoutHero
         activeSession={activeSession}
@@ -655,6 +657,8 @@ function StartWorkout() {
         onClose={() => setToast(null)}
       />
     </>
+  
+    </div>
   )
 }
 

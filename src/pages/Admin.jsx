@@ -508,6 +508,8 @@ function Admin() {
   const selectedRanking = rankingOptions.find((item) => item.id === activeRankingView) || rankingOptions[0]
 
   return (
+    <div className="ff-hevy-page ff-hevy-page-admin">
+
     <div className="ff-hevy-admin ff-admin-v48 space-y-6">
       <PageHeader
         title="Admin"
@@ -618,6 +620,8 @@ function Admin() {
           onClose={() => setToast(null)}
         />
       )}
+    </div>
+  
     </div>
   )
 

@@ -121,6 +121,8 @@ function MuscleRecovery() {
     }
 
     return (
+    <div className="ff-hevy-page ff-hevy-page-musclerecovery">
+
         <MuscleRecoveryPageSections
             source={source}
             loading={loading}
@@ -136,7 +138,9 @@ function MuscleRecovery() {
             onStatusFilterChange={setStatusFilter}
             onClearFilters={clearFilters}
         />
-    )
+    
+    </div>
+  )
 }
 
 export default MuscleRecovery

@@ -220,12 +220,16 @@ function WorkoutCalendar() {
               {selectedSessions.map((session) => {
                 const sets = getCompletedSets([session])
                 return (
+    <div className="ff-hevy-page ff-hevy-page-workoutcalendar">
+
                   <div key={session.id || session._id || `${session.workoutName}-${getSessionDate(session)}`} className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
                     <p className="font-black text-[var(--ff-text)]">{session.workoutName || session.name || 'Treino'}</p>
                     <p className="mt-1 text-xs text-[var(--ff-muted)]">{formatShortDate(getSessionDate(session))} • {formatDuration(session.durationSeconds || session.duration || 0)} • {sets.length} séries</p>
                     <p className="mt-2 text-xs font-bold text-[var(--ff-accent-text)]">{formatVolume(getTotalVolume(sets))}</p>
                   </div>
-                )
+                
+    </div>
+  )
               })}
             </div>
           </Card>
