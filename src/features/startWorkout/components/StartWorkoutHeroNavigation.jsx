@@ -24,7 +24,7 @@ export function ActiveWorkoutHero({
   onFocusExercise,
 }) {
   return (
-    <div className="sticky top-0 z-30 -mx-4 mb-5 border-b border-[var(--ff-border)] bg-[var(--ff-bg)]/92 px-4 pb-3 pt-2 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 xl:static xl:mx-0 xl:border-0 xl:bg-transparent xl:p-0 xl:backdrop-blur-none">
+    <div className="relative z-10 mb-5">
       <div className="ff-active-workout-hero rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.22)] sm:p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">

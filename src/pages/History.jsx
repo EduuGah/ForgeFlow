@@ -1,7 +1,5 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 
-import PageHeader from '../components/ui/PageHeader'
-import Badge from '../components/ui/Badge'
 import ConfirmModal from '../components/ui/ConfirmModal'
 import Toast from '../components/ui/Toast'
 
@@ -25,7 +23,6 @@ import {
   HistorySummaryCards,
 } from '../features/history/components/HistorySections'
 
-import AppPageIntro from '../components/app/AppPageIntro'
 
 function History() {
   const { user } = useAuth()
@@ -267,73 +264,39 @@ function History() {
   const hasActiveFilters = Boolean(search || startDate || endDate)
 
   return (
-    <div className="ff-hevy-page ff-hevy-page-history">
+    <div className="ff-hevy-page ff-hevy-page-history ff-history-native-page">
+      <section className="mb-4 rounded-[28px] border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 sm:p-5">
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--ff-accent-text)]">Histórico</p>
+        <h1 className="mt-1 text-3xl font-black tracking-[-0.05em] text-[var(--ff-text)]">Treinos finalizados</h1>
+        <p className="mt-1 text-sm text-[var(--ff-muted)]">{filteredHistory.length} de {history.length} registros · {syncing ? 'sincronizando' : source === 'database' ? 'sincronizado' : 'local'}</p>
+      </section>
 
-      <AppPageIntro
-        eyebrow="Histórico"
-        title="Treinos finalizados"
-        description="Uma linha do tempo mais limpa para revisar volume, duração e recordes."
-        metrics={[
-          { label: 'Treinos', value: history.length },
-          { label: 'Filtrados', value: filteredHistory.length },
-          { label: 'Fonte', value: source === 'database' ? 'API' : 'Local' },
-        ]}
-      />
+      <HistorySummaryCards historyCount={history.length} summary={summary} />
 
-    <>
-      <PageHeader
-        title="Histórico"
-        description="Revise seus treinos finalizados, séries, volume e recordes pessoais."
-        action={
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant={source === 'database' ? 'purple' : 'default'}>
-              {syncing || loading
-                ? 'Sincronizando...'
-                : source === 'database'
-                  ? 'Sincronizado'
-                  : source === 'empty'
-                    ? 'Sem histórico'
-                    : 'Local'}
-            </Badge>
-
-            <Badge variant="purple">
-              {history.length} treinos
-            </Badge>
-          </div>
-        }
-      />
-
-      <HistorySummaryCards
-        historyCount={history.length}
-        summary={summary}
-      />
-
-      <section className="mt-6 grid grid-cols-1 gap-5 2xl:grid-cols-[minmax(0,1fr)_340px] 2xl:gap-6">
-        <div>
-          <HistoryListSection
-            history={history}
-            filteredHistory={filteredHistory}
-            visibleHistory={visibleHistory}
-            historyMetaMap={historyMetaMap}
-            expandedSessionId={expandedSessionId}
-            loading={loading}
-            search={search}
-            setSearch={setSearch}
-            startDate={startDate}
-            setStartDate={setStartDate}
-            endDate={endDate}
-            setEndDate={setEndDate}
-            startDateRef={startDateRef}
-            endDateRef={endDateRef}
-            hasActiveFilters={hasActiveFilters}
-            clearFilters={clearFilters}
-            handleClearHistory={handleClearHistory}
-            handleToggleSession={handleToggleSession}
-            handleDeleteSession={handleDeleteSession}
-            visibleCount={visibleCount}
-            setVisibleCount={setVisibleCount}
-          />
-        </div>
+      <section className="mt-4 grid grid-cols-1 gap-5 2xl:grid-cols-[minmax(0,1fr)_320px] 2xl:gap-6">
+        <HistoryListSection
+          history={history}
+          filteredHistory={filteredHistory}
+          visibleHistory={visibleHistory}
+          historyMetaMap={historyMetaMap}
+          expandedSessionId={expandedSessionId}
+          loading={loading}
+          search={search}
+          setSearch={setSearch}
+          startDate={startDate}
+          setStartDate={setStartDate}
+          endDate={endDate}
+          setEndDate={setEndDate}
+          startDateRef={startDateRef}
+          endDateRef={endDateRef}
+          hasActiveFilters={hasActiveFilters}
+          clearFilters={clearFilters}
+          handleClearHistory={handleClearHistory}
+          handleToggleSession={handleToggleSession}
+          handleDeleteSession={handleDeleteSession}
+          visibleCount={visibleCount}
+          setVisibleCount={setVisibleCount}
+        />
 
         <HistorySidebar summary={summary} />
       </section>
@@ -355,8 +318,6 @@ function History() {
         message={toast?.message}
         onClose={() => setToast(null)}
       />
-    </>
-  
     </div>
   )
 }

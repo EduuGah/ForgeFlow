@@ -283,6 +283,9 @@ export async function updateActiveWorkoutNotification({
   totalSets = 0,
   progressPercent = 0,
   startedAt,
+  currentExerciseName = '',
+  completedExercises = 0,
+  totalExercises = 0,
 }) {
   if (!canUseNativeNotifications()) return { scheduled: false, reason: 'not-native' }
 
@@ -294,16 +297,28 @@ export async function updateActiveWorkoutNotification({
   const safeCompletedSets = Math.max(0, Number(completedSets) || 0)
   const safeTotalSets = Math.max(0, Number(totalSets) || 0)
   const safeStartedAt = startedAt ? new Date(startedAt).getTime() : Date.now()
+  const safeTotalExercises = Math.max(0, Number(totalExercises) || 0)
+  const safeCompletedExercises = Math.max(0, Math.min(safeTotalExercises, Number(completedExercises) || 0))
+  const safeExerciseName = String(currentExerciseName || '').trim()
+  const exerciseSummary = safeTotalExercises > 0
+    ? `${safeCompletedExercises}/${safeTotalExercises} exercícios`
+    : 'Exercícios em andamento'
   const summary = `${elapsedLabel || '00:00:00'} · ${safeCompletedSets}/${safeTotalSets} séries · ${safeProgress}% concluído`
+  const detailedSummary = safeExerciseName
+    ? `${summary} · atual: ${safeExerciseName}`
+    : `${summary} · ${exerciseSummary}`
 
   // Preferência no Android: foreground service nativo.
   // Ele mantém uma notificação constante na barra mesmo com o app em segundo plano.
   try {
     await ActiveWorkoutForeground?.start?.({
       workoutName: safeWorkoutName,
-      summary,
+      summary: detailedSummary,
       progress: safeProgress,
       startedAt: Number.isFinite(safeStartedAt) ? safeStartedAt : Date.now(),
+      currentExerciseName: safeExerciseName,
+      completedExercises: safeCompletedExercises,
+      totalExercises: safeTotalExercises,
     })
 
     return { scheduled: true, source: 'foreground-service' }
@@ -313,7 +328,7 @@ export async function updateActiveWorkoutNotification({
 
   await ensureAndroidChannel()
 
-  const body = `${safeWorkoutName} · ${summary}`
+  const body = `${safeWorkoutName} · ${exerciseSummary} · ${detailedSummary}`
 
   await LocalNotifications.schedule({
     notifications: [

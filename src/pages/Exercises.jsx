@@ -1,5 +1,5 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
-import { Plus, Dumbbell, Layers3, Target, Star, Search } from 'lucide-react'
+import { Plus } from 'lucide-react'
 
 import { getInitialExercises } from '../utils/exerciseStorage'
 import { useAuth } from '../context/AuthContext'
@@ -9,9 +9,6 @@ import {
   saveUserStorageData,
 } from '../utils/userStorage'
 
-import PageHeader from '../components/ui/PageHeader'
-import Badge from '../components/ui/Badge'
-import { StatCard } from '../features/exercises/components/ExerciseLibraryUi'
 import ExerciseFiltersSidebar from '../features/exercises/components/ExerciseFiltersSidebar'
 import ExerciseFormModal from '../features/exercises/components/ExerciseFormModal'
 import ExerciseLibrarySection from '../features/exercises/components/ExerciseLibrarySection'
@@ -36,7 +33,6 @@ import {
   textToList,
 } from '../features/exercises/exerciseLibraryUtils'
 
-import AppPageIntro from '../components/app/AppPageIntro'
 
 function Exercises() {
   const { user } = useAuth()
@@ -522,104 +518,49 @@ function Exercises() {
   )
 
   return (
-    <div className="ff-hevy-page ff-hevy-page-exercises">
-
-      <AppPageIntro
-        eyebrow="Biblioteca"
-        title="Exercícios"
-        description="Busque, favorite e abra detalhes dos exercícios em uma lista compacta de app."
-        metrics={[
-          { label: 'Total', value: indexedExercises.length },
-          { label: 'Grupos', value: stats.groupStats.length },
-          { label: 'Favoritos', value: stats.favoriteExercisesCount },
-        ]}
-      />
-
-      <div className="ff-exercise-top-search">
-        <Search size={18} />
-        <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar exercício..." />
-      </div>
-
-    <>
-      <PageHeader
-        title="Exercícios"
-        description="Biblioteca premium com grupos, subgrupos, equipamentos, GIFs e detalhes completos."
-        action={
-          <div className="flex items-center gap-2">
-            {(isSyncing || dataSource !== 'database') && (
-              <Badge variant={isSyncing ? 'purple' : 'default'}>
-                {isSyncing
-                  ? 'Sincronizando'
-                  : dataSource === 'defaults'
-                    ? 'Padrão local'
-                    : 'Local'}
-              </Badge>
-            )}
-
-            <button
-              type="button"
-              onClick={openCreateModal}
-              className="hidden h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-bold text-white shadow-[0_0_20px_var(--ff-accent-shadow)] transition hover:bg-[var(--ff-accent-hover)] sm:inline-flex"
-            >
-              <Plus size={18} />
-              Adicionar exercício
-            </button>
+    <div className="ff-hevy-page ff-hevy-page-exercises ff-exercises-native-page">
+      <section className="mb-4 rounded-[28px] border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--ff-accent-text)]">Biblioteca</p>
+            <h1 className="mt-1 text-3xl font-black tracking-[-0.05em] text-[var(--ff-text)]">Exercícios</h1>
+            <p className="mt-1 text-sm text-[var(--ff-muted)]">{filteredExercises.length} encontrados · {indexedExercises.length} no total · {isSyncing ? 'sincronizando' : dataSource === 'database' ? 'API' : 'local'}</p>
           </div>
-        }
-      />
-
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          title="Total"
-          value={indexedExercises.length}
-          description="Exercícios cadastrados"
-          icon={Dumbbell}
-        />
-
-        <StatCard
-          title="Grupos"
-          value={stats.groupStats.length}
-          description="Grupos musculares ativos"
-          icon={Layers3}
-        />
-
-        <StatCard
-          title="Subgrupos"
-          value={stats.subgroupStats.length}
-          description="Músculos-alvo mapeados"
-          icon={Target}
-        />
-
-        <StatCard
-          title="Favoritos"
-          value={stats.favoriteExercisesCount}
-          description="Exercícios marcados"
-          icon={Star}
-        />
+          <button
+            type="button"
+            onClick={openCreateModal}
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--ff-accent)] text-white shadow-[0_0_24px_var(--ff-accent-shadow)] sm:hidden"
+            aria-label="Adicionar exercício"
+          >
+            <Plus size={24} />
+          </button>
+        </div>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-[330px_minmax(0,1fr)]">
-        <ExerciseFiltersSidebar
-          groupSearch={groupSearch}
-          setGroupSearch={setGroupSearch}
-          filteredGroupStats={filteredGroupStats}
-          groupFilter={groupFilter}
-          setGroupFilter={setGroupFilter}
-          subgroupSearch={subgroupSearch}
-          setSubgroupSearch={setSubgroupSearch}
-          filteredSubgroupStats={filteredSubgroupStats}
-          subgroupFilter={subgroupFilter}
-          setSubgroupFilter={setSubgroupFilter}
-          search={search}
-          setSearch={setSearch}
-          showOnlyFavorites={showOnlyFavorites}
-          setShowOnlyFavorites={setShowOnlyFavorites}
-          stats={stats}
-          equipmentFilter={equipmentFilter}
-          setEquipmentFilter={setEquipmentFilter}
-          hasActiveFilters={hasActiveFilters}
-          clearFilters={clearFilters}
-        />
+      <section className="grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
+        <div className="hidden xl:block">
+          <ExerciseFiltersSidebar
+            groupSearch={groupSearch}
+            setGroupSearch={setGroupSearch}
+            filteredGroupStats={filteredGroupStats}
+            groupFilter={groupFilter}
+            setGroupFilter={setGroupFilter}
+            subgroupSearch={subgroupSearch}
+            setSubgroupSearch={setSubgroupSearch}
+            filteredSubgroupStats={filteredSubgroupStats}
+            subgroupFilter={subgroupFilter}
+            setSubgroupFilter={setSubgroupFilter}
+            search={search}
+            setSearch={setSearch}
+            showOnlyFavorites={showOnlyFavorites}
+            setShowOnlyFavorites={setShowOnlyFavorites}
+            stats={stats}
+            equipmentFilter={equipmentFilter}
+            setEquipmentFilter={setEquipmentFilter}
+            hasActiveFilters={hasActiveFilters}
+            clearFilters={clearFilters}
+          />
+        </div>
 
         <ExerciseLibrarySection
           isLoaded={isLoaded}
@@ -646,15 +587,6 @@ function Exercises() {
           setVisibleState={setVisibleState}
         />
       </section>
-
-      <button
-        type="button"
-        onClick={openCreateModal}
-        className="fixed bottom-24 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-3xl bg-[var(--ff-accent)] text-white shadow-[0_0_28px_var(--ff-accent-shadow)] transition active:scale-95 sm:hidden"
-        aria-label="Adicionar exercício"
-      >
-        <Plus size={24} />
-      </button>
 
       {isModalOpen && (
         <ExerciseFormModal
@@ -688,8 +620,6 @@ function Exercises() {
           setVariations={setVariations}
         />
       )}
-    </>
-  
     </div>
   )
 }

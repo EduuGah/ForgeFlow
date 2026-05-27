@@ -31,7 +31,6 @@ import { generateSmartNotifications } from '../utils/notificationUtils'
 import { getExerciseMedia } from '../utils/exerciseMediaUtils'
 import { getExerciseProgressionSuggestion } from '../utils/progressionSuggestionUtils'
 
-import AppPageIntro from '../components/app/AppPageIntro'
 
 function formatTime(seconds) {
   const safeSeconds = Number(seconds) || 0
@@ -536,20 +535,7 @@ function StartWorkout() {
   }
 
   return (
-    <div className="ff-hevy-page ff-hevy-page-startworkout">
-
-      <AppPageIntro
-        eyebrow="Treino ativo"
-        title={activeSession.name || activeSession.workoutName || 'Treino em andamento'}
-        description="Registre séries com menos distração e finalize quando concluir."
-        metrics={[
-          { label: 'Tempo', value: formatTime(elapsedSeconds) },
-          { label: 'Séries', value: `${completedSets}/${totalSets}` },
-          { label: 'Progresso', value: `${progressPercent}%` },
-        ]}
-      />
-
-    <>
+    <div className="ff-hevy-page ff-hevy-page-startworkout ff-start-workout-native-page">
       <ActiveWorkoutHero
         activeSession={activeSession}
         completedSets={completedSets}
@@ -669,8 +655,6 @@ function StartWorkout() {
         message={toast?.message}
         onClose={() => setToast(null)}
       />
-    </>
-  
     </div>
   )
 }

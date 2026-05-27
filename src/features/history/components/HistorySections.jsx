@@ -31,7 +31,7 @@ import { formatLocationLabel, getMapsUrl } from '../../../services/geolocationSe
 
 export function HistorySummaryCards({ historyCount, summary }) {
   return (
-    <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
       <HistoryStatCard
         title="Treinos"
         value={historyCount}
@@ -77,7 +77,7 @@ function HistoryFilters({
   clearFilters,
 }) {
   return (
-    <div className="mt-5 grid grid-cols-1 gap-3 2xl:grid-cols-[minmax(0,1fr)_180px_180px_auto]">
+    <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_160px_160px_auto]">
       <div>
         <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-zinc-500">
           Buscar
@@ -305,11 +305,11 @@ function HistorySessionCard({
   const indexLabel = meta?.indexLabel || ''
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-zinc-800 bg-[#18181b] transition hover:border-[var(--ff-accent-border)]/30">
+    <div className="ff-history-session-row overflow-hidden rounded-[26px] border border-[var(--ff-border)] bg-[var(--ff-card)] transition hover:border-[var(--ff-accent-border)]/30">
       <button
         type="button"
         onClick={() => onToggle(session.id)}
-        className="w-full p-4 text-left sm:p-5"
+        className="w-full p-4 text-left"
       >
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
@@ -329,7 +329,7 @@ function HistorySessionCard({
               </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-4">
+            <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
               <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-3">
                 <p className="text-xs text-zinc-500">Duração</p>
                 <p className="mt-1 font-bold text-[var(--ff-accent-text)]">
@@ -371,7 +371,7 @@ function HistorySessionCard({
 
       {isExpanded && (
         <div className="border-t border-zinc-800 p-4 sm:p-5">
-          <div className="max-h-[520px] space-y-4 overflow-y-auto pr-1">
+          <div className="space-y-3">
             {session.exercises.map((exercise, exerciseIndex) => (
               <HistoryExerciseDetails
                 key={exercise.id}
@@ -436,7 +436,7 @@ export function HistoryListSection({
   setVisibleCount,
 }) {
   return (
-    <Card>
+    <section className="rounded-[28px] border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 sm:p-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h2 className="text-2xl font-black">Treinos finalizados</h2>
@@ -515,7 +515,7 @@ export function HistoryListSection({
           </Button>
         )}
       </div>
-    </Card>
+    </section>
   )
 }
 

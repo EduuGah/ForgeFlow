@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
-import { Download, Menu } from 'lucide-react'
+import { Download, Dumbbell, Menu } from 'lucide-react'
 import { Outlet, useLocation } from 'react-router-dom'
 
 import forgeflowIcon from '../../assets/forgeflow-icon.png'
@@ -320,6 +320,15 @@ function AppLayout() {
       : 0
 
     function syncActiveWorkoutNotification() {
+      const sessionExercises = Array.isArray(activeSession.exercises) ? activeSession.exercises : []
+      const currentExercise = sessionExercises.find((exercise) =>
+        Array.isArray(exercise.sets) && exercise.sets.some((set) => !set.completed && set.type !== 'warmup')
+      ) || sessionExercises[0]
+      const completedExercises = sessionExercises.filter((exercise) => {
+        const workingSets = Array.isArray(exercise.sets) ? exercise.sets.filter((set) => set.type !== 'warmup') : []
+        return workingSets.length > 0 && workingSets.every((set) => set.completed)
+      }).length
+
       updateActiveWorkoutNotification({
         workoutName: activeSession.workoutName,
         elapsedLabel: formatActiveWorkoutTime(elapsedSeconds),
@@ -327,6 +336,9 @@ function AppLayout() {
         totalSets,
         progressPercent,
         startedAt: activeSession.startedAt,
+        currentExerciseName: currentExercise?.exercise?.name || currentExercise?.name || currentExercise?.exerciseName || '',
+        completedExercises,
+        totalExercises: sessionExercises.length,
       }).catch(() => {})
     }
 
@@ -380,8 +392,9 @@ function AppLayout() {
               </button>
 
               <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-border)] bg-black p-1">
-                  <img src={forgeflowIcon} alt="ForgeFlow" className="h-full w-full object-contain" />
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-accent)]">
+                  <img src={forgeflowIcon} alt="ForgeFlow" className="h-7 w-7 object-cover opacity-0" aria-hidden="true" />
+                  <Dumbbell size={22} className="absolute" />
                 </div>
 
                 <div className="min-w-0">

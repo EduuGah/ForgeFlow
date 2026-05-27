@@ -5643,3 +5643,106 @@ body,
   .ff-hevy-page :is(.p-10,.p-9,.p-8,.p-7,.p-6,.sm\:p-7,.sm\:p-6) { padding: 14px !important; }
   .ff-hevy-page :is(.gap-8,.gap-7,.gap-6,.gap-5) { gap: 12px !important; }
 }
+
+/* Correções reais: exercícios em lista, histórico mais nativo e treino ativo sem cards presos */
+.ff-exercises-native-page,
+.ff-history-native-page,
+.ff-start-workout-native-page {
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ff-exercises-native-page .ff-app-page-intro,
+.ff-history-native-page .ff-app-page-intro {
+  display: none !important;
+}
+
+.ff-exercises-native-page .ff-exercise-list-shell {
+  max-width: 980px;
+  margin-inline: auto;
+}
+
+.ff-exercise-list-row,
+.ff-exercise-list-row * {
+  touch-action: pan-y;
+}
+
+.ff-exercise-search input,
+.ff-history-native-page input[type='search'],
+.ff-history-native-page input[type='date'] {
+  min-width: 0;
+  font-size: 16px;
+}
+
+.ff-exercise-native-list img {
+  pointer-events: none;
+}
+
+.ff-start-workout-native-page .ff-active-workout-hero,
+.ff-start-workout-native-page .ff-exercise-jump-nav,
+.ff-start-workout-native-page .ff-workout-input-polish > * {
+  position: relative !important;
+  top: auto !important;
+}
+
+.ff-start-workout-native-page .ff-active-workout-hero {
+  background: linear-gradient(180deg, var(--ff-card), var(--ff-surface)) !important;
+}
+
+.ff-start-workout-native-page .ff-mobile-workout-action-bar {
+  bottom: calc(5.75rem + env(safe-area-inset-bottom));
+  padding-bottom: .75rem;
+}
+
+.ff-history-native-page .ff-history-session-row button,
+.ff-history-native-page .ff-history-session-row {
+  touch-action: pan-y;
+}
+
+@media (max-width: 767px) {
+  .ff-page-scroll-shell {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  .ff-exercises-native-page > section:first-child,
+  .ff-history-native-page > section:first-child {
+    border-radius: 24px !important;
+    padding: 16px !important;
+  }
+
+  .ff-exercise-list-shell {
+    border-radius: 24px !important;
+    padding: 12px !important;
+  }
+
+  .ff-exercise-list-row > div:first-child {
+    padding-block: 12px !important;
+  }
+
+  .ff-exercise-list-row h3 {
+    font-size: 15px !important;
+  }
+
+  .ff-history-native-page .grid.grid-cols-2.gap-3.xl\:grid-cols-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .ff-history-native-page .ff-history-session-row .grid.grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .ff-start-workout-native-page .ff-active-workout-hero {
+    border-radius: 24px !important;
+    padding: 16px !important;
+  }
+
+  .ff-start-workout-native-page .ff-active-workout-hero .grid.grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .ff-start-workout-native-page .ff-exercise-jump-nav {
+    border-radius: 24px !important;
+    margin-bottom: 14px !important;
+  }
+}
