@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Bell, ChevronRight, ClipboardList, Download, Dumbbell, HelpCircle, Info, Languages, Lock, Moon, Shield, UserRound } from 'lucide-react'
 
-import PageHeader from '../components/ui/PageHeader'
+
 import Badge from '../components/ui/Badge'
 import ConfirmModal from '../components/ui/ConfirmModal'
 import Toast from '../components/ui/Toast'
@@ -29,6 +30,77 @@ import {
   SettingsTrainingPreferencesSection,
   SettingsTutorialSection,
 } from '../features/settings/components/SettingsSections'
+
+
+const settingsGroups = [
+  {
+    title: 'Conta',
+    rows: [
+      { icon: UserRound, label: 'Perfil', href: '/profile' },
+      { icon: Lock, label: 'Conta', hint: 'Senha e acesso' },
+      { label: 'Gerenciar Subscrição', pro: true, hint: 'ForgeFlow Pro' },
+      { icon: Bell, label: 'Notificações' },
+    ],
+  },
+  {
+    title: 'Preferências',
+    rows: [
+      { icon: Dumbbell, label: 'Treinamentos' },
+      { icon: Shield, label: 'Privacidade e social' },
+      { icon: ClipboardList, label: 'Unidades' },
+      { icon: Languages, label: 'Idioma' },
+      { icon: Download, label: 'Integrações' },
+      { icon: Moon, label: 'Tema' },
+      { icon: Download, label: 'Exportar e importar dados' },
+    ],
+  },
+  {
+    title: 'Ajuda',
+    rows: [
+      { icon: Info, label: 'Guia de Arranque' },
+      { icon: ClipboardList, label: 'Ajuda de Rotina' },
+      { icon: HelpCircle, label: 'Perguntas Frequentes' },
+      { icon: Download, label: 'Contactar-nos' },
+      { icon: Info, label: 'Sobre' },
+    ],
+  },
+]
+
+function SettingsNativeDirectory() {
+  return (
+    <section className="ff-settings-native mb-6 lg:hidden">
+      {settingsGroups.map((group) => (
+        <div key={group.title} className="ff-settings-native-group">
+          <h2 className="ff-settings-native-title">{group.title}</h2>
+          <div className="ff-settings-native-list">
+            {group.rows.map((row) => {
+              const Icon = row.icon
+              const content = (
+                <>
+                  {row.pro ? <span className="w-10 text-xs font-black text-[var(--ff-text)]">PRO</span> : Icon ? <Icon size={25} className="w-10" /> : <span className="w-10" />}
+                  <div className="min-w-0">
+                    <p className="truncate text-lg font-medium">{row.label}</p>
+                    {row.hint && <small>{row.hint}</small>}
+                  </div>
+                  <ChevronRight size={23} className="chev" />
+                </>
+              )
+
+              if (row.href) {
+                return <a key={row.label} href={row.href} className="ff-settings-native-row">{content}</a>
+              }
+
+              return <button key={row.label} type="button" className="ff-settings-native-row w-full text-left">{content}</button>
+            })}
+          </div>
+        </div>
+      ))}
+      <button type="button" className="ff-settings-native-row ff-settings-native-danger w-full bg-[var(--ff-card)] text-center text-lg font-medium">
+        Sair
+      </button>
+    </section>
+  )
+}
 
 function Settings() {
   const { user, setUser } = useAuth()
@@ -425,15 +497,23 @@ function Settings() {
 
   return (
     <>
-      <PageHeader
-        title="Configurações"
-        description="Ajuste visual, preferências úteis, backup e segurança da sua conta."
-        action={
-          <Badge variant={syncStatus === 'idle' ? 'purple' : 'default'}>
-            {syncBadgeText}
-          </Badge>
-        }
-      />
+      <header className="mb-5 flex items-center justify-between gap-3 lg:hidden">
+        <div className="w-10" />
+        <h1 className="text-center text-xl font-medium tracking-[-0.03em]">Configurações</h1>
+        <Badge variant={syncStatus === 'idle' ? 'purple' : 'default'}>{syncBadgeText}</Badge>
+      </header>
+
+      <div className="hidden lg:block">
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-black tracking-[-0.055em]">Configurações</h1>
+            <p className="mt-2 text-sm text-[var(--ff-muted)]">Ajuste visual, preferências úteis, backup e segurança da sua conta.</p>
+          </div>
+          <Badge variant={syncStatus === 'idle' ? 'purple' : 'default'}>{syncBadgeText}</Badge>
+        </div>
+      </div>
+
+      <SettingsNativeDirectory />
 
       <GooglePasswordNotice user={user} />
 

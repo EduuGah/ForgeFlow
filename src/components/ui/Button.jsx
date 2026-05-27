@@ -12,11 +12,11 @@ function Button({
     items-center
     justify-center
     gap-2
-    rounded-[1rem]
+    rounded-[var(--ff-radius-md)]
     px-4
     py-2.5
     text-sm
-    font-black
+    font-bold
     leading-tight
     transition
     duration-200

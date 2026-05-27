@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Pencil } from 'lucide-react'
+import { BarChart3, CalendarDays, Dumbbell, Pencil, Ruler, Settings as SettingsIcon, Share2 } from 'lucide-react'
 
-import PageHeader from '../components/ui/PageHeader'
 import ConfirmModal from '../components/ui/ConfirmModal'
 import Toast from '../components/ui/Toast'
 
 import ProfileEditModal from '../features/profile/components/ProfileEditModal'
-import ProfileOverviewSection from '../features/profile/components/ProfileOverviewSection'
 import ProfileWeightSection from '../features/profile/components/ProfileWeightSection'
 import {
   getSafeBodyWeightList,
@@ -417,30 +415,82 @@ function Profile() {
 
   return (
     <>
-      <PageHeader
-        title="Perfil"
-        description="Dados pessoais, objetivo, evolução corporal e melhores marcas."
-        action={
-          <button
-            type="button"
-            onClick={() => setIsEditOpen(true)}
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-bold text-white shadow-[0_0_20px_var(--ff-accent-shadow)] transition hover:bg-[var(--ff-accent-hover)] hover:shadow-[0_0_20px_var(--ff-accent-shadow)]"
-          >
-            <Pencil size={18} />
-            Editar perfil
-          </button>
-        }
-      />
+      <section className="ff-profile-hevy-hero mb-6">
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="truncate text-3xl font-black tracking-[-0.06em] text-[var(--ff-text)]">
+            {profile.name || user?.name || 'Perfil'}
+          </h1>
+          <div className="flex items-center gap-2 text-[var(--ff-text-soft)]">
+            <button type="button" onClick={() => setIsEditOpen(true)} className="inline-flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-[var(--ff-surface-2)]" aria-label="Editar perfil">
+              <Pencil size={22} />
+            </button>
+            <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-[var(--ff-surface-2)]" aria-label="Compartilhar perfil">
+              <Share2 size={22} />
+            </button>
+            <a href="/settings" className="inline-flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-[var(--ff-surface-2)]" aria-label="Configurações">
+              <SettingsIcon size={22} />
+            </a>
+          </div>
+        </div>
 
-      <ProfileOverviewSection
-        profile={profile}
-        currentWeight={currentWeight}
-        lastWeightRecord={lastWeightRecord}
-        totalWorkouts={totalWorkouts}
-        totalSets={totalSets}
-        weightDifference={weightDifference}
-        prsCount={prs.length}
-      />
+        <div className="ff-profile-hevy-grid">
+          {profile.avatarUrl ? (
+            <img src={profile.avatarUrl} alt={profile.name || 'Perfil'} className="ff-profile-avatar" />
+          ) : (
+            <div className="ff-profile-avatar flex items-center justify-center text-3xl font-black text-[var(--ff-muted)]">
+              {(profile.name || user?.name || 'F').slice(0, 1).toUpperCase()}
+            </div>
+          )}
+
+          <div className="min-w-0">
+            <h2 className="truncate text-xl font-black tracking-[-0.04em]">{profile.name || user?.name || 'Atleta ForgeFlow'}</h2>
+            <div className="ff-profile-stat-row mt-3">
+              <div><strong>{totalWorkouts}</strong><span>Treinos</span></div>
+              <div><strong>{prs.length}</strong><span>Recordes</span></div>
+              <div><strong>{totalSets}</strong><span>Séries</span></div>
+            </div>
+          </div>
+        </div>
+
+        {(profile.notes || profile.goal || profile.preferredSplit) && (
+          <div className="space-y-1 text-[var(--ff-text-soft)]">
+            {profile.notes && <p className="text-base leading-relaxed">{profile.notes}</p>}
+            {profile.goal && <p className="text-sm font-bold text-[var(--ff-accent)]">{profile.goal}</p>}
+            {profile.preferredSplit && <p className="text-sm text-[var(--ff-muted)]">Rotina: {profile.preferredSplit}</p>}
+          </div>
+        )}
+
+        <div className="rounded-[var(--ff-radius-lg)] border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <p className="text-2xl font-black tracking-[-0.05em]">{Math.round((totalWorkouts || 0) * 1.15)} horas <span className="text-base font-medium text-[var(--ff-muted)]">registradas</span></p>
+              <p className="mt-1 text-sm text-[var(--ff-muted)]">Peso atual: {currentWeight || '—'}kg · Último registro: {lastWeightRecord?.date || '—'} · Variação: {weightDifference || '—'}kg</p>
+            </div>
+            <span className="text-sm font-bold text-[var(--ff-accent)]">Últimos registros</span>
+          </div>
+          <div className="mt-5 grid h-36 grid-cols-8 items-end gap-2 border-b border-[var(--ff-border)] pb-2" aria-label="Gráfico resumido de treinos">
+            {Array.from({ length: 8 }).map((_, index) => {
+              const value = Math.max(16, Math.min(100, ((history[index]?.exercises?.length || index + 1) * 16) + (index % 3) * 10))
+              return <span key={index} className="rounded-t-md bg-[var(--ff-accent)]" style={{ height: `${value}%` }} />
+            })}
+          </div>
+          <div className="mt-4 flex gap-3 overflow-x-auto">
+            <span className="shrink-0 rounded-full bg-[var(--ff-accent)] px-5 py-2 text-sm font-bold text-white">Duração</span>
+            <span className="shrink-0 rounded-full bg-[var(--ff-surface-2)] px-5 py-2 text-sm font-bold">Volume</span>
+            <span className="shrink-0 rounded-full bg-[var(--ff-surface-2)] px-5 py-2 text-sm font-bold">Repetições</span>
+          </div>
+        </div>
+
+        <div>
+          <p className="mb-3 text-base font-bold text-[var(--ff-muted)]">Painel</p>
+          <div className="ff-profile-panel-grid">
+            <button type="button" className="ff-hevy-panel-button"><BarChart3 size={25} /> Estatísticas</button>
+            <a href="/exercises" className="ff-hevy-panel-button"><Dumbbell size={25} /> Exercícios</a>
+            <button type="button" className="ff-hevy-panel-button"><Ruler size={25} /> Medições</button>
+            <a href="/calendar" className="ff-hevy-panel-button"><CalendarDays size={25} /> Calendário</a>
+          </div>
+        </div>
+      </section>
 
       <ProfileWeightSection
         profile={profile}

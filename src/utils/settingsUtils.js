@@ -3,7 +3,7 @@ const SETTINGS_KEY = 'forgeflow:settings'
 export const defaultSettings = {
   // Aparência
   themeMode: 'dark',
-  accentColor: 'purple',
+  accentColor: 'blue',
   compactMobile: false,
 
   // Treino

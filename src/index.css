@@ -35,24 +35,24 @@
 }
 
 :root {
-  --ff-accent: #8b5cf6;
-  --ff-accent-hover: #a78bfa;
-  --ff-accent-soft: rgba(139, 92, 246, 0.12);
-  --ff-accent-border: rgba(139, 92, 246, 0.32);
-  --ff-accent-text: #c4b5fd;
-  --ff-accent-shadow: rgba(139, 92, 246, 0.35);
+  --ff-accent: #0a84ff;
+  --ff-accent-hover: #3296ff;
+  --ff-accent-soft: rgba(10, 132, 255, 0.13);
+  --ff-accent-border: rgba(10, 132, 255, 0.36);
+  --ff-accent-text: #4aa3ff;
+  --ff-accent-shadow: rgba(10, 132, 255, 0.28);
 
   --ff-bg: #000000;
-  --ff-bg-soft: #09090b;
-  --ff-card: #18181b;
-  --ff-card-hover: #1f1f23;
-  --ff-surface: #18181b;
-  --ff-surface-2: #101014;
-  --ff-surface-3: #27272a;
-  --ff-input: #101014;
-  --ff-header: rgba(0, 0, 0, 0.78);
-  --ff-sidebar: #121212;
-  --ff-border: rgba(63, 63, 70, 0.9);
+  --ff-bg-soft: #050505;
+  --ff-card: #18191b;
+  --ff-card-hover: #222327;
+  --ff-surface: #1b1c1f;
+  --ff-surface-2: #202124;
+  --ff-surface-3: #2b2c31;
+  --ff-input: #111214;
+  --ff-header: rgba(24, 25, 27, 0.94);
+  --ff-sidebar: #18191b;
+  --ff-border: rgba(48, 49, 54, 0.92);
   --ff-border-soft: rgba(39, 39, 42, 0.9);
   --ff-border-strong: #52525b;
   --ff-text: #ffffff;
@@ -113,9 +113,7 @@ html {
 
 body {
   margin: 0;
-  background:
-    radial-gradient(circle at top left, var(--ff-accent-soft), transparent 32%),
-    var(--ff-bg);
+  background: var(--ff-bg);
   color: var(--ff-text);
   transition:
     background-color 0.25s ease,
@@ -4098,5 +4096,645 @@ body {
   .ff-page-progress .grid.grid-cols-2,
   .ff-page-profile .grid.grid-cols-2 {
     grid-template-columns: 1fr !important;
+  }
+}
+
+
+/* =========================================================
+   ForgeFlow — redesign geral Hevy-like / mobile-first
+   ========================================================= */
+:root {
+  --ff-app-radius: 18px;
+  --ff-app-row-height: 66px;
+  --ff-bottom-nav-height: 72px;
+}
+
+body {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.ff-app-layout > [aria-hidden='true'] {
+  display: none !important;
+}
+
+.ff-hevy-shell {
+  background: var(--ff-bg) !important;
+}
+
+#app-header {
+  background: var(--ff-header) !important;
+  border-color: var(--ff-border) !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,.02) !important;
+}
+
+#app-header img,
+#app-header [class*='shadow-[0_0_18px'] {
+  box-shadow: none !important;
+}
+
+.mobile-bottom-nav {
+  min-height: calc(var(--ff-bottom-nav-height) + env(safe-area-inset-bottom));
+  background: rgba(24, 25, 27, .98) !important;
+  border-top-color: rgba(255,255,255,.07) !important;
+  box-shadow: 0 -12px 35px rgba(0,0,0,.35);
+}
+
+.mobile-bottom-nav a {
+  border-radius: 14px !important;
+}
+
+.mobile-bottom-nav a[aria-current='page'],
+.mobile-bottom-nav a.active {
+  color: var(--ff-accent) !important;
+  background: transparent !important;
+}
+
+.ff-hevy-shell :is(.shadow-2xl,.shadow-xl,.shadow-lg) {
+  box-shadow: none !important;
+}
+
+.ff-hevy-shell :is(article,section,div)[class*='rounded-3xl'][class*='border'],
+.ff-hevy-shell :is(article,section,div)[class*='rounded-[2rem]'][class*='border'],
+.ff-hevy-shell .ff-hevy-card,
+.ff-hevy-shell .ff-27-card,
+.ff-hevy-shell .ff-profile-hero-card {
+  background: var(--ff-card) !important;
+  border-color: var(--ff-border) !important;
+  border-radius: var(--ff-app-radius) !important;
+}
+
+.ff-hevy-shell [class*='bg-gradient-to'] {
+  background-image: none !important;
+}
+
+.ff-hevy-shell [class*='bg-purple'],
+.ff-hevy-shell [class*='bg-violet'],
+.ff-hevy-shell [class*='bg-fuchsia'] {
+  background-color: var(--ff-accent-soft) !important;
+}
+
+.ff-hevy-shell h1 {
+  letter-spacing: -0.05em;
+}
+
+.ff-hevy-shell h2,
+.ff-hevy-shell h3 {
+  letter-spacing: -0.035em;
+}
+
+.ff-hevy-shell :is(input,select,textarea) {
+  min-height: 46px;
+  border-radius: 14px !important;
+  border-color: var(--ff-border) !important;
+  background: var(--ff-input) !important;
+  color: var(--ff-text) !important;
+  font-size: 16px;
+}
+
+.ff-hevy-shell :is(button,a) {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ff-hevy-shell button:not([class*='rounded-full']) {
+  border-radius: 14px !important;
+}
+
+.ff-hevy-shell .recharts-responsive-container {
+  min-height: 240px !important;
+}
+
+.ff-exercise-detail-page > .overflow-hidden,
+.ff-exercise-detail-page .overflow-hidden.bg-white,
+.ff-exercise-detail-page [class*='bg-white'] {
+  background-color: #f6f6f7 !important;
+}
+
+.ff-exercise-detail-page [class*='border-b'] button {
+  min-height: 50px;
+  font-size: 15px;
+}
+
+/* Configurações como lista nativa */
+.ff-page-settings .ff-hevy-settings :is(section,div)[class*='rounded-3xl'][class*='border'] {
+  background: var(--ff-card) !important;
+}
+
+.ff-page-settings main a,
+.ff-page-settings main button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Treino ativo: garantir bottom sheet/modal seguro e inputs acima da nav */
+.ff-page-start-workout [role='dialog'],
+.ff-page-start-workout .fixed.inset-0 {
+  overscroll-behavior: contain;
+}
+
+.ff-page-start-workout .ff-set-input,
+.ff-page-start-workout input[type='number'],
+.ff-page-start-workout input[inputmode='numeric'],
+.ff-page-start-workout input[inputmode='decimal'] {
+  min-height: 50px;
+  text-align: center;
+  font-size: 18px !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.ff-page-start-workout table,
+.ff-page-exercise-progress table,
+.ff-page-history table {
+  min-width: 0;
+}
+
+@media (max-width: 1023px) {
+  .ff-page-scroll-shell {
+    padding-bottom: calc(var(--ff-bottom-nav-height) + 3.5rem + env(safe-area-inset-bottom)) !important;
+  }
+
+  .ff-page-start-workout .ff-page-scroll-shell,
+  .ff-page-start-workout main {
+    padding-bottom: calc(var(--ff-bottom-nav-height) + 5.5rem + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  #app-header .safe-top > div {
+    height: 58px !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  #app-header h1 {
+    font-size: 1.05rem !important;
+  }
+
+  #app-header [class*='rounded-2xl'] {
+    border-radius: 14px !important;
+  }
+
+  .ff-hevy-shell {
+    padding-left: .85rem !important;
+    padding-right: .85rem !important;
+    padding-top: calc(4.7rem + env(safe-area-inset-top)) !important;
+  }
+
+  .ff-hevy-shell :is(.p-8,.p-7,.p-6) {
+    padding: 1rem !important;
+  }
+
+  .ff-hevy-shell :is(.gap-8,.gap-7,.gap-6) {
+    gap: 1rem !important;
+  }
+
+  .ff-hevy-shell h1 {
+    font-size: clamp(1.65rem, 7.2vw, 2.15rem) !important;
+    line-height: 1.04 !important;
+  }
+
+  .ff-hevy-shell h2 {
+    font-size: clamp(1.08rem, 4.8vw, 1.28rem) !important;
+  }
+
+  .ff-page-profile .ff-profile-hero-card .grid.grid-cols-3,
+  .ff-page-profile .ff-profile-hero-card [class*='grid-cols-3'] {
+    background: transparent !important;
+    border: 0 !important;
+    padding: .5rem 0 0 !important;
+  }
+
+  .ff-page-profile .ff-profile-hero-card {
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  .ff-page-profile .ff-hevy-metric-card {
+    border-radius: 14px !important;
+    min-height: 84px;
+  }
+
+  .ff-page-settings main :is(button,a,div)[class*='justify-between'][class*='border'] {
+    min-height: var(--ff-app-row-height);
+  }
+
+  .ff-page-exercises [class*='grid-cols-2'] {
+    grid-template-columns: 1fr !important;
+  }
+
+  .ff-page-exercise-progress [class*='max-h'],
+  .ff-page-history [class*='max-h'],
+  .ff-page-exercises [class*='max-h'] {
+    max-height: none !important;
+  }
+
+  .ff-page-start-workout [class*='sticky'][class*='bottom'],
+  .ff-page-start-workout [class*='fixed'][class*='bottom'] {
+    bottom: calc(var(--ff-bottom-nav-height) + env(safe-area-inset-bottom)) !important;
+  }
+
+  .ff-page-start-workout [role='dialog'] > div,
+  .ff-page-start-workout .mobile-bottom-sheet,
+  .mobile-bottom-sheet {
+    max-height: calc(100dvh - var(--ff-bottom-nav-height) - 32px) !important;
+    padding-bottom: max(1rem, env(safe-area-inset-bottom)) !important;
+  }
+
+  .ff-page-nutrition [class*='grid-cols-4'],
+  .ff-page-nutrition [class*='grid-cols-3'] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* =========================================================
+   ForgeFlow full Hevy-style redesign pass
+   ========================================================= */
+:root,
+[data-theme='dark'] {
+  --ff-bg: #000000;
+  --ff-body: #000000;
+  --ff-header: rgba(24, 25, 27, .96);
+  --ff-surface: #18191b;
+  --ff-surface-2: #202124;
+  --ff-surface-3: #242529;
+  --ff-card: #18191b;
+  --ff-card-hover: #222327;
+  --ff-input: #101113;
+  --ff-border: rgba(255, 255, 255, .075);
+  --ff-border-strong: rgba(255, 255, 255, .14);
+  --ff-text: #f5f5f7;
+  --ff-text-soft: #d7d7dc;
+  --ff-muted: #9b9ba1;
+  --ff-muted-2: #6f7077;
+  --ff-accent: #0a84ff;
+  --ff-accent-hover: #2997ff;
+  --ff-accent-text: #0a84ff;
+  --ff-accent-soft: rgba(10, 132, 255, .14);
+  --ff-accent-border: rgba(10, 132, 255, .38);
+  --ff-accent-shadow: rgba(10, 132, 255, .15);
+  --ff-danger: #ff453a;
+  --ff-danger-text: #ff6961;
+  --ff-success: #30d158;
+  --ff-warning: #ffd60a;
+  --ff-radius-sm: 10px;
+  --ff-radius-md: 14px;
+  --ff-radius-lg: 18px;
+  --ff-radius-xl: 22px;
+  --ff-bottom-nav-height: 76px;
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  background: #000 !important;
+}
+
+.ff-app-layout > .pointer-events-none.fixed.inset-0 {
+  display: none !important;
+}
+
+#app-header {
+  border-bottom: 1px solid rgba(255,255,255,.065) !important;
+  box-shadow: none !important;
+}
+
+#app-header .safe-top > div {
+  background: rgba(24,25,27,.96);
+}
+
+.ff-page-scroll-shell {
+  background: #000;
+}
+
+.ff-native-page-header {
+  padding-bottom: .35rem;
+}
+
+.ff-native-page-header h1,
+.ff-page-profile h1,
+.ff-page-settings h1,
+.ff-exercise-detail-page h1 {
+  letter-spacing: -.055em;
+}
+
+.ff-native-card,
+.ff-hevy-shell :is(.card,[class*='rounded-3xl'][class*='border'],[class*='rounded-[2rem]'][class*='border']) {
+  border-color: var(--ff-border) !important;
+  background: var(--ff-card) !important;
+  box-shadow: none !important;
+}
+
+.ff-hevy-shell :is(.rounded-3xl,.rounded-[2rem],.rounded-[1.5rem]) {
+  border-radius: var(--ff-radius-lg) !important;
+}
+
+.ff-hevy-shell :is([class*='from-violet'],[class*='to-fuchsia'],[class*='from-purple'],[class*='to-purple'],[class*='bg-gradient']) {
+  background-image: none !important;
+}
+
+.ff-hevy-shell :is([class*='text-violet'],[class*='text-purple'],[class*='text-fuchsia']) {
+  color: var(--ff-accent-text) !important;
+}
+
+.ff-hevy-shell :is([class*='bg-violet'],[class*='bg-purple'],[class*='bg-fuchsia']) {
+  background-color: var(--ff-accent-soft) !important;
+}
+
+.ff-hevy-shell :is([class*='border-violet'],[class*='border-purple'],[class*='border-fuchsia']) {
+  border-color: var(--ff-accent-border) !important;
+}
+
+.ff-hevy-shell :is(button,a)[class*='bg-[var(--ff-accent)]'],
+.ff-hevy-shell button[class*='bg-blue'],
+.ff-hevy-shell a[class*='bg-blue'] {
+  box-shadow: none !important;
+}
+
+.ff-hevy-shell :is(input,select,textarea) {
+  min-height: 48px;
+  border-radius: var(--ff-radius-md) !important;
+  border: 1px solid var(--ff-border) !important;
+  background: var(--ff-input) !important;
+  color: var(--ff-text) !important;
+  font-size: 16px !important;
+}
+
+.ff-hevy-shell :is(input,select,textarea):focus {
+  outline: 2px solid rgba(10,132,255,.25) !important;
+  outline-offset: 1px;
+  border-color: var(--ff-accent-border) !important;
+}
+
+.mobile-bottom-nav {
+  min-height: var(--ff-bottom-nav-height);
+  background: rgba(24,25,27,.98) !important;
+  border-top-color: rgba(255,255,255,.075) !important;
+  box-shadow: none !important;
+}
+
+.mobile-bottom-nav a {
+  border-radius: 12px !important;
+}
+
+.mobile-bottom-nav a.active,
+.mobile-bottom-nav a[aria-current='page'] {
+  color: var(--ff-accent) !important;
+  background: transparent !important;
+}
+
+/* Hevy-ish profile */
+.ff-profile-hevy-hero {
+  display: grid;
+  gap: 1rem;
+}
+
+.ff-profile-hevy-grid {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 1rem;
+  align-items: center;
+}
+
+.ff-profile-avatar {
+  width: 92px;
+  height: 92px;
+  border-radius: 999px;
+  object-fit: cover;
+  background: var(--ff-surface-2);
+  border: 1px solid var(--ff-border);
+}
+
+.ff-profile-stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .9rem;
+}
+
+.ff-profile-stat-row strong {
+  display: block;
+  color: var(--ff-text);
+  font-size: 1.15rem;
+  line-height: 1.1;
+}
+
+.ff-profile-stat-row span {
+  display: block;
+  color: var(--ff-muted);
+  font-size: .82rem;
+  margin-top: .18rem;
+}
+
+.ff-profile-panel-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .75rem;
+}
+
+.ff-hevy-panel-button {
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  border: 1px solid var(--ff-border);
+  background: var(--ff-card);
+  border-radius: var(--ff-radius-lg);
+  padding: 1rem;
+  color: var(--ff-text);
+  font-weight: 800;
+}
+
+/* Settings as native rows */
+.ff-settings-native-group {
+  margin-bottom: 1.35rem;
+}
+
+.ff-settings-native-title {
+  padding: 0 .1rem .65rem;
+  color: var(--ff-muted-2);
+  font-size: .92rem;
+  font-weight: 700;
+}
+
+.ff-settings-native-list {
+  overflow: hidden;
+  border-top: 1px solid var(--ff-border);
+  border-bottom: 1px solid var(--ff-border);
+  background: var(--ff-card);
+}
+
+.ff-settings-native-row {
+  display: flex;
+  min-height: 68px;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  padding: 0 1rem;
+  color: var(--ff-text);
+}
+.ff-settings-native-row:last-child { border-bottom: 0; }
+.ff-settings-native-row svg { color: var(--ff-text-soft); }
+.ff-settings-native-row .chev { margin-left: auto; color: var(--ff-muted-2); }
+.ff-settings-native-row small { color: var(--ff-muted); font-weight: 700; }
+.ff-settings-native-danger { color: var(--ff-danger-text) !important; justify-content: center; }
+
+/* Exercise details Hevy */
+.ff-exercise-detail-page > .flex:first-child {
+  position: sticky;
+  top: calc(58px + env(safe-area-inset-top));
+  z-index: 20;
+  margin-inline: -1rem;
+  padding: .6rem 1rem;
+  background: rgba(24,25,27,.98);
+  border-bottom: 1px solid var(--ff-border);
+}
+.ff-exercise-detail-page > section:last-child { display: none; }
+.ff-exercise-detail-page .overflow-x-auto {
+  background: var(--ff-header) !important;
+}
+.ff-exercise-detail-page .overflow-x-auto button {
+  min-width: 120px;
+  color: var(--ff-muted);
+}
+.ff-exercise-detail-page .overflow-x-auto button[class*='accent'] {
+  color: var(--ff-accent) !important;
+}
+
+/* Start workout / routine cards */
+.ff-page-start-workout .ff-native-card,
+.ff-page-start-workout :is(article,section,div)[class*='border'][class*='rounded'] {
+  background: var(--ff-card) !important;
+}
+.ff-page-start-workout input[inputmode='numeric'],
+.ff-page-start-workout input[inputmode='decimal'],
+.ff-page-start-workout input[type='number'] {
+  min-height: 52px !important;
+  text-align: center;
+  font-size: 18px !important;
+  font-variant-numeric: tabular-nums;
+}
+.ff-page-start-workout [class*='sticky'][class*='bottom'],
+.ff-page-start-workout [class*='fixed'][class*='bottom'] {
+  backdrop-filter: blur(18px);
+}
+
+/* Lists/cards closer to Hevy */
+.ff-page-workouts article,
+.ff-page-history article,
+.ff-page-exercises article,
+.ff-page-notifications article,
+.ff-page-goals article {
+  border-radius: var(--ff-radius-lg) !important;
+  background: var(--ff-card) !important;
+}
+
+.ff-page-progress .recharts-wrapper,
+.ff-page-dashboard .recharts-wrapper,
+.ff-page-profile .recharts-wrapper,
+.ff-page-exercise-progress .recharts-wrapper {
+  font-size: 12px;
+}
+
+@media (max-width: 1023px) {
+  .ff-page-scroll-shell {
+    padding-top: calc(5rem + env(safe-area-inset-top)) !important;
+    padding-bottom: calc(var(--ff-bottom-nav-height) + 2rem + env(safe-area-inset-bottom)) !important;
+  }
+
+  .ff-page-profile,
+  .ff-page-settings,
+  .ff-page-exercises,
+  .ff-page-exercise-progress,
+  .ff-page-progress,
+  .ff-page-workouts,
+  .ff-page-history,
+  .ff-page-nutrition,
+  .ff-page-schedule,
+  .ff-page-calendar {
+    max-width: 720px;
+    margin-inline: auto;
+  }
+
+  .ff-native-page-header {
+    margin-bottom: 1rem !important;
+  }
+
+  .ff-hevy-shell .grid[class*='xl:grid-cols'],
+  .ff-hevy-shell .grid[class*='2xl:grid-cols'] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 640px) {
+  #app-header .safe-top > div {
+    height: 52px !important;
+  }
+
+  #app-header img,
+  #app-header p,
+  #app-header .hidden.rounded-full,
+  #app-header button[title='Instalar APP'] {
+    display: none !important;
+  }
+
+  #app-header h1 {
+    font-size: 1.45rem !important;
+  }
+
+  #app-header button[aria-label='Abrir menu'] {
+    width: 42px !important;
+    height: 42px !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  .ff-hevy-shell {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  .ff-hevy-shell :is(.p-8,.p-7,.p-6,.p-5) {
+    padding: 1rem !important;
+  }
+
+  .ff-hevy-shell :is(.gap-8,.gap-7,.gap-6,.gap-5) {
+    gap: 1rem !important;
+  }
+
+  .ff-hevy-shell h1 {
+    font-size: clamp(1.55rem, 7vw, 2rem) !important;
+    line-height: 1.05 !important;
+  }
+
+  .ff-hevy-shell h2 {
+    font-size: clamp(1.08rem, 5vw, 1.3rem) !important;
+  }
+
+  .ff-hevy-shell [class*='grid-cols-4'],
+  .ff-hevy-shell [class*='grid-cols-3'] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .ff-hevy-shell [class*='max-h'] {
+    max-height: none !important;
+  }
+
+  .ff-profile-hevy-grid {
+    grid-template-columns: 92px minmax(0,1fr);
+  }
+
+  .ff-profile-panel-grid {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+
+  .ff-settings-layout {
+    display: block !important;
+  }
+
+  .ff-settings-layout > div:not(:first-child) {
+    margin-top: 1rem;
+  }
+
+  .ff-exercise-detail-page > .flex:first-child {
+    top: calc(52px + env(safe-area-inset-top));
   }
 }
