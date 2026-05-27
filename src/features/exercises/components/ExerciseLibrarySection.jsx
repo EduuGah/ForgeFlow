@@ -189,6 +189,7 @@ function ExerciseLibrarySection({
   search,
   setSearch,
   openCreateModal,
+  syncLabel,
   visibleCount,
   filterKey,
   setVisibleState,
@@ -204,7 +205,7 @@ function ExerciseLibrarySection({
                 <Badge variant="purple">{filteredExercises.length}</Badge>
               </div>
               <p className="mt-1 text-sm text-[var(--ff-muted)]">
-                {filteredExercises.length} exercícios encontrados · exibindo {displayedExercises.length}
+                {filteredExercises.length} exercícios encontrados · exibindo {displayedExercises.length} · {syncLabel}
               </p>
             </div>
 

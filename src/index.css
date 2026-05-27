@@ -5746,3 +5746,764 @@ body,
     margin-bottom: 14px !important;
   }
 }
+
+/* Ajuste final solicitado: exercícios em lista Hevy, histórico feed e treino ativo estilo Hevy */
+.ff-exercises-native-page {
+  padding-top: 0 !important;
+}
+
+.ff-exercises-native-page > section:first-child {
+  margin-top: 0 !important;
+}
+
+.ff-exercises-native-page .ff-exercise-list-shell {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  max-width: 720px !important;
+}
+
+.ff-exercises-native-page .ff-exercise-list-shell > div:first-child {
+  padding: 0 0 12px !important;
+}
+
+.ff-exercise-search {
+  height: 48px !important;
+  border-radius: 16px !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: #101014 !important;
+  overflow: hidden !important;
+}
+
+.ff-exercise-search:focus-within {
+  border-color: var(--ff-accent-border) !important;
+  box-shadow: 0 0 0 1px rgba(10,132,255,.18) !important;
+}
+
+.ff-exercise-search input {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  height: 100% !important;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  line-height: 1 !important;
+}
+
+.ff-exercise-search input:focus,
+.ff-exercise-search input:focus-visible {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+}
+
+.ff-exercise-native-list {
+  border-radius: 0 !important;
+  background: transparent !important;
+  divide-color: transparent !important;
+}
+
+.ff-exercise-list-row {
+  border-color: rgba(255,255,255,.065) !important;
+}
+
+.ff-exercise-list-row > div:first-child {
+  min-height: 76px !important;
+}
+
+.ff-exercise-list-row img {
+  object-fit: contain !important;
+}
+
+@media (max-width: 767px) {
+  .ff-exercises-native-page .ff-filter-chips {
+    margin-inline: -2px !important;
+  }
+
+  .ff-exercises-native-page .ff-filter-chips button {
+    padding: 9px 16px !important;
+    font-size: 13px !important;
+  }
+
+  .ff-exercise-list-row > div:first-child {
+    padding: 12px 0 !important;
+  }
+
+  .ff-exercise-list-row a:first-child {
+    width: 58px !important;
+    height: 58px !important;
+    border-radius: 16px !important;
+  }
+
+  .ff-exercise-list-row h3 {
+    font-size: 1rem !important;
+  }
+}
+
+.ff-history-native-page > section:first-child {
+  display: none !important;
+}
+
+.ff-history-native-page > .grid,
+.ff-history-native-page > section {
+  max-width: 920px;
+  margin-inline: auto;
+}
+
+.ff-history-native-page .ff-history-session-row {
+  display: none !important;
+}
+
+.ff-history-feed-card {
+  overflow: hidden;
+  border-bottom: 1px solid rgba(255,255,255,.075);
+  background: transparent;
+}
+
+.ff-history-feed-card__summary {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 46px minmax(0,1fr) 28px;
+  gap: 12px;
+  padding: 18px 4px;
+  text-align: left;
+}
+
+.ff-history-feed-card__avatar {
+  display: flex;
+  height: 46px;
+  width: 46px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid rgba(255,69,58,.25);
+  background: rgba(255,69,58,.08);
+  color: #ff5d68;
+  font-weight: 900;
+}
+
+.ff-history-feed-card__content {
+  min-width: 0;
+}
+
+.ff-history-feed-card__meta {
+  display: flex;
+  gap: 8px;
+  color: var(--ff-muted);
+  font-size: .78rem;
+}
+
+.ff-history-feed-card h3 {
+  margin-top: 4px;
+  color: var(--ff-text);
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: -.03em;
+}
+
+.ff-history-feed-card__stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.ff-history-feed-card__stats span {
+  min-width: 0;
+}
+
+.ff-history-feed-card__stats small {
+  display: block;
+  color: var(--ff-muted);
+  font-size: .72rem;
+}
+
+.ff-history-feed-card__stats strong {
+  display: block;
+  margin-top: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ff-text);
+  font-size: .98rem;
+}
+
+.ff-history-feed-card__details {
+  padding: 0 4px 18px 62px;
+}
+
+.ff-history-exercise-list {
+  display: grid;
+  gap: 12px;
+}
+
+.ff-history-exercise-row {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 22px;
+  background: #111114;
+}
+
+.ff-history-exercise-row__media {
+  display: flex;
+  width: 54px;
+  height: 54px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #fff;
+  color: #111;
+}
+
+.ff-history-exercise-row__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.ff-history-exercise-row__body {
+  min-width: 0;
+  flex: 1;
+}
+
+.ff-history-exercise-row__title {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.ff-history-exercise-row__title span {
+  color: #ff5d68;
+  font-weight: 900;
+}
+
+.ff-history-exercise-row__title strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ff-text);
+}
+
+.ff-history-exercise-row__body p {
+  margin-top: 4px;
+  color: var(--ff-muted);
+  font-size: .86rem;
+}
+
+.ff-history-exercise-row__chips {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.ff-history-exercise-row__chips span {
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 999px;
+  padding: 4px 10px;
+  color: var(--ff-muted);
+  font-size: .78rem;
+  font-weight: 800;
+}
+
+.ff-history-mini-sets {
+  margin-top: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.ff-history-mini-sets div {
+  display: grid;
+  grid-template-columns: 42px 1fr 1fr 36px;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.035);
+  color: var(--ff-muted);
+}
+
+.ff-history-mini-sets strong {
+  color: var(--ff-text);
+}
+
+.ff-history-mini-sets em {
+  color: #facc15;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.ff-history-note-card {
+  margin-top: 14px;
+  border-radius: 20px;
+  background: #111114;
+  border: 1px solid rgba(255,255,255,.08);
+  padding: 14px;
+}
+
+.ff-history-note-card p {
+  margin-top: 8px;
+  color: var(--ff-muted);
+}
+
+@media (max-width: 767px) {
+  .ff-history-native-page > section:nth-of-type(1) {
+    display: none !important;
+  }
+
+  .ff-history-native-page section.rounded-\[28px\] {
+    border: 0 !important;
+    background: transparent !important;
+    padding: 0 !important;
+  }
+
+  .ff-history-feed-card__summary {
+    grid-template-columns: 42px minmax(0,1fr) 22px;
+    padding: 16px 0;
+  }
+
+  .ff-history-feed-card__stats {
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    gap: 8px;
+  }
+
+  .ff-history-feed-card__details {
+    padding-left: 0;
+  }
+}
+
+.ff-start-workout-native-page {
+  max-width: 100% !important;
+  padding-top: 0 !important;
+}
+
+.ff-hevy-workout-header {
+  margin: -6px -14px 14px;
+  border-bottom: 1px solid rgba(255,255,255,.09);
+  background: #191a1d;
+}
+
+.ff-hevy-workout-topbar {
+  display: grid;
+  grid-template-columns: 40px minmax(0,1fr) 48px auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.ff-hevy-workout-collapse,
+.ff-hevy-workout-timer {
+  display: flex;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: var(--ff-text);
+}
+
+.ff-hevy-workout-collapse span {
+  transform: rotate(90deg);
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.ff-hevy-workout-title h1 {
+  color: var(--ff-text);
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.ff-hevy-workout-title p {
+  margin-top: 1px;
+  color: var(--ff-muted);
+  font-size: .78rem;
+}
+
+.ff-hevy-workout-finish {
+  height: 46px;
+  border-radius: 12px;
+  background: #0a84ff;
+  padding: 0 18px;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.ff-hevy-workout-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 1px;
+  background: #000;
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+
+.ff-hevy-workout-metrics > * {
+  min-width: 0;
+  padding: 12px 14px;
+  background: #000;
+  text-align: left;
+}
+
+.ff-hevy-workout-metrics span,
+.ff-hevy-focus-strip span {
+  display: block;
+  color: var(--ff-muted);
+  font-size: .78rem;
+}
+
+.ff-hevy-workout-metrics strong {
+  display: block;
+  margin-top: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ff-text);
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.ff-hevy-workout-progress {
+  height: 3px;
+  background: rgba(255,255,255,.08);
+}
+
+.ff-hevy-workout-progress div {
+  height: 100%;
+  background: #0a84ff;
+}
+
+.ff-hevy-focus-strip {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  color: #0a84ff;
+  text-align: left;
+}
+
+.ff-hevy-focus-strip strong {
+  margin-left: auto;
+  color: #0a84ff;
+}
+
+.ff-start-workout-native-page .ff-exercise-jump-nav,
+.ff-start-workout-native-page aside,
+.ff-start-workout-native-page .ff-mobile-workout-action-bar {
+  display: none !important;
+}
+
+.ff-start-workout-native-page section.grid {
+  display: block !important;
+}
+
+.ff-start-workout-native-page .ff-workout-input-polish {
+  padding-bottom: 96px !important;
+}
+
+.ff-hevy-active-exercise {
+  padding: 18px 0 22px;
+  border-bottom: 1px solid rgba(255,255,255,.09);
+  background: #000;
+  color: var(--ff-text);
+}
+
+.ff-hevy-active-exercise.is-skipped {
+  opacity: .55;
+}
+
+.ff-hevy-active-exercise__header {
+  display: grid;
+  grid-template-columns: 52px minmax(0,1fr) 40px;
+  gap: 12px;
+  align-items: center;
+  padding: 0 6px 10px;
+}
+
+.ff-hevy-active-exercise__media {
+  display: flex;
+  width: 48px;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #fff;
+  color: #111;
+}
+
+.ff-hevy-active-exercise__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.ff-hevy-active-exercise__title {
+  min-width: 0;
+  text-align: left;
+}
+
+.ff-hevy-active-exercise__title span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #0a84ff;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.ff-hevy-active-exercise__title small {
+  display: block;
+  margin-top: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ff-muted);
+  font-size: .9rem;
+}
+
+.ff-hevy-active-exercise__menu {
+  display: flex;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  color: var(--ff-text);
+}
+
+.ff-hevy-current-exercise {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 4px 6px 10px;
+  color: #ff5d68;
+  font-size: .82rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.ff-hevy-exercise-note {
+  padding: 0 6px 12px;
+  color: var(--ff-muted);
+  font-size: 1rem;
+}
+
+.ff-hevy-rest-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px 14px;
+  color: #0a84ff;
+  font-size: 1.02rem;
+}
+
+.ff-hevy-set-head,
+.ff-hevy-set-row {
+  display: grid;
+  grid-template-columns: 54px minmax(76px,1fr) minmax(56px,.7fr) minmax(56px,.7fr) 60px 52px;
+  align-items: center;
+  gap: 0;
+}
+
+.ff-hevy-set-head {
+  padding: 0 6px 8px;
+  color: var(--ff-muted);
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+
+.ff-hevy-set-row {
+  min-height: 58px;
+  padding: 0 6px;
+  background: #1c1c1e;
+}
+
+.ff-hevy-set-row + .ff-hevy-set-row {
+  border-top: 1px solid rgba(255,255,255,.04);
+}
+
+.ff-hevy-set-row.is-done {
+  background: #2e6718;
+}
+
+.ff-hevy-set-row.is-warmup {
+  background: rgba(245,158,11,.18);
+}
+
+.ff-hevy-set-number,
+.ff-hevy-set-prev,
+.ff-hevy-set-row input,
+.ff-hevy-set-pr,
+.ff-hevy-set-check {
+  min-width: 0;
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.ff-hevy-set-prev {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: rgba(255,255,255,.86);
+}
+
+.ff-hevy-set-row input {
+  width: 100%;
+  height: 100%;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  text-align: center;
+  font-size: 1.15rem !important;
+  color: #fff !important;
+}
+
+.ff-hevy-set-pr {
+  display: flex;
+  justify-content: center;
+}
+
+.ff-hevy-set-check {
+  display: flex;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  justify-self: end;
+  border-radius: 12px;
+  background: rgba(255,255,255,.16);
+}
+
+.ff-hevy-set-row.is-done .ff-hevy-set-check {
+  background: rgba(92,184,51,.95);
+}
+
+.ff-hevy-set-actions {
+  display: grid;
+  gap: 10px;
+  padding: 14px 6px 0;
+}
+
+.ff-hevy-set-actions button {
+  display: flex;
+  height: 58px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 12px;
+  background: #1c1c1e;
+  color: var(--ff-text);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.ff-hevy-exercise-options {
+  margin: 14px 6px 0;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.09);
+  background: #111114;
+  padding: 12px;
+}
+
+.ff-hevy-exercise-options > * + * {
+  margin-top: 10px;
+}
+
+.ff-hevy-option-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: 8px;
+}
+
+.ff-hevy-option-actions button {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 12px;
+  background: #1c1c1e;
+  color: var(--ff-text);
+  font-size: .8rem;
+  font-weight: 800;
+}
+
+.ff-hevy-option-actions .danger {
+  color: #ff5d68;
+  background: rgba(255,69,58,.1);
+}
+
+@media (max-width: 767px) {
+  .ff-hevy-workout-header {
+    margin-left: calc(-1 * var(--ff-mobile-page-pad, 14px));
+    margin-right: calc(-1 * var(--ff-mobile-page-pad, 14px));
+  }
+
+  .ff-hevy-workout-topbar {
+    grid-template-columns: 36px minmax(0,1fr) 42px auto;
+    padding: 10px 12px;
+  }
+
+  .ff-hevy-workout-finish {
+    height: 44px;
+    padding-inline: 16px;
+  }
+
+  .ff-hevy-workout-metrics {
+    grid-template-columns: repeat(3, minmax(0,1fr));
+  }
+
+  .ff-hevy-workout-metrics button {
+    grid-column: 1 / -1;
+  }
+
+  .ff-hevy-set-head,
+  .ff-hevy-set-row {
+    grid-template-columns: 48px minmax(72px,1fr) 56px 56px 48px 46px;
+  }
+
+  .ff-hevy-set-head {
+    font-size: .72rem;
+  }
+
+  .ff-hevy-set-number,
+  .ff-hevy-set-prev,
+  .ff-hevy-set-row input,
+  .ff-hevy-set-pr,
+  .ff-hevy-set-check {
+    font-size: .96rem;
+  }
+}
+
+.ff-hevy-active-exercise__media {
+  position: relative;
+}
+
+.ff-hevy-active-exercise__index {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  display: flex;
+  width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  background: rgba(0,0,0,.72);
+  color: #fff;
+  font-size: .68rem;
+  font-weight: 900;
+}

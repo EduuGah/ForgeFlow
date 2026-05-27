@@ -23,113 +23,77 @@ export function ActiveWorkoutHero({
   onFinishWorkout,
   onFocusExercise,
 }) {
+  const totalExercises = activeSession.exercises?.length || 0
+  const focusName = focusExercise ? getExerciseName(focusExercise) : 'Próximo exercício'
+
   return (
-    <div className="relative z-10 mb-5">
-      <div className="ff-active-workout-hero rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.22)] sm:p-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-wide text-[var(--ff-accent-text)]">
-              Treino ativo
-            </p>
+    <header className="ff-hevy-workout-header">
+      <div className="ff-hevy-workout-topbar">
+        <button type="button" className="ff-hevy-workout-collapse" aria-label="Voltar">
+          <span>⌄</span>
+        </button>
 
-            <h1 className="mt-1 truncate text-2xl font-black text-[var(--ff-text)] sm:text-3xl">
-              {activeSession.workoutName}
-            </h1>
-
-            <p className="mt-1 text-sm text-[var(--ff-muted)]">
-              {completedSets}/{totalSets} séries concluídas • {progressPercent}%
-            </p>
-
-            <div className="ff-active-workout-status-line">
-              <span>{formatTime(elapsedSeconds)}</span>
-              <span>{activeSession.exercises?.length || 0} exercícios</span>
-              <span>{completedSets}/{totalSets} séries</span>
-              <span>{progressPercent}% concluído</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
-            <div className="flex h-12 items-center justify-center gap-2 rounded-2xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 px-4 text-sm font-black text-[var(--ff-accent-text)] sm:h-11">
-              <Timer size={18} />
-              {formatTime(elapsedSeconds)}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => onStartRestTimer()}
-              className="flex h-12 items-center justify-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-sm font-black text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)] sm:h-11"
-              title="Iniciar descanso manual"
-            >
-              <Timer size={17} />
-              Descanso
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                if (appSettings.confirmBeforeFinishWorkout) {
-                  onRequestFinish()
-                } else {
-                  onFinishWorkout()
-                }
-              }}
-              disabled={savingWorkout}
-              className="h-12 rounded-2xl bg-[var(--ff-accent)] px-4 text-sm font-bold text-white shadow-[0_0_20px_var(--ff-accent-shadow)] transition hover:bg-[var(--ff-accent-hover)] hover:shadow-[0_0_20px_var(--ff-accent-shadow)] disabled:cursor-not-allowed disabled:opacity-60 sm:h-11"
-            >
-              {savingWorkout ? 'Salvando...' : 'Finalizar'}
-            </button>
-          </div>
+        <div className="ff-hevy-workout-title">
+          <h1>Treinamento</h1>
+          <p>{activeSession.workoutName}</p>
         </div>
 
-        {focusExercise && (
-          <button
-            type="button"
-            onClick={() => onFocusExercise(focusExercise.id)}
-            className="mt-4 w-full rounded-3xl border border-[var(--ff-accent-border)]/25 bg-[var(--ff-accent-soft)]/10 p-3 text-left transition hover:border-[var(--ff-accent-border)]"
-          >
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">
-                  <Dumbbell size={19} />
-                </div>
+        <button
+          type="button"
+          onClick={() => onStartRestTimer()}
+          className="ff-hevy-workout-timer"
+          title="Iniciar descanso manual"
+        >
+          <Timer size={24} />
+        </button>
 
-                <div className="min-w-0">
-                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[var(--ff-accent-text)]">
-                    Próximo foco
-                  </p>
-                  <p className="truncate text-sm font-black text-[var(--ff-text)]">
-                    {getExerciseName(focusExercise)}
-                  </p>
-                  <p className="truncate text-xs text-[var(--ff-muted)]">
-                    {getExerciseSubtitle(focusExercise)}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 sm:min-w-[210px]">
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--ff-surface-3)]">
-                  <div
-                    className="h-full rounded-full bg-[var(--ff-accent)] transition-all"
-                    style={{ width: `${focusExerciseProgress}%` }}
-                  />
-                </div>
-
-                <span className="text-xs font-black text-[var(--ff-accent-text)]">
-                  {focusExerciseProgress}%
-                </span>
-              </div>
-            </div>
-          </button>
-        )}
-
-        <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--ff-surface-3)]">
-          <div
-            className="h-full rounded-full bg-[var(--ff-accent)] transition-all"
-            style={{ width: `${progressPercent}%` }}
-          />
-        </div>
+        <button
+          type="button"
+          onClick={() => {
+            if (appSettings.confirmBeforeFinishWorkout) {
+              onRequestFinish()
+            } else {
+              onFinishWorkout()
+            }
+          }}
+          disabled={savingWorkout}
+          className="ff-hevy-workout-finish"
+        >
+          {savingWorkout ? 'Salvando...' : 'Concluir'}
+        </button>
       </div>
-    </div>
+
+      <div className="ff-hevy-workout-metrics">
+        <div>
+          <span>Duração</span>
+          <strong>{formatTime(elapsedSeconds)}</strong>
+        </div>
+        <div>
+          <span>Exercícios</span>
+          <strong>{totalExercises}</strong>
+        </div>
+        <div>
+          <span>Séries</span>
+          <strong>{completedSets}/{totalSets}</strong>
+        </div>
+        <button type="button" onClick={() => onFocusExercise(focusExercise?.id)} disabled={!focusExercise}>
+          <span>Atual</span>
+          <strong>{focusName}</strong>
+        </button>
+      </div>
+
+      <div className="ff-hevy-workout-progress" aria-label={`${progressPercent}% concluído`}>
+        <div style={{ width: `${progressPercent}%` }} />
+      </div>
+
+      {focusExercise && (
+        <button type="button" onClick={() => onFocusExercise(focusExercise.id)} className="ff-hevy-focus-strip">
+          <Dumbbell size={18} />
+          <span>{getExerciseSubtitle(focusExercise)}</span>
+          <strong>{focusExerciseProgress}%</strong>
+        </button>
+      )}
+    </header>
   )
 }
 

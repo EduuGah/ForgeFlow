@@ -1,5 +1,4 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
-import { Plus } from 'lucide-react'
 
 import { getInitialExercises } from '../utils/exerciseStorage'
 import { useAuth } from '../context/AuthContext'
@@ -519,24 +518,6 @@ function Exercises() {
 
   return (
     <div className="ff-hevy-page ff-hevy-page-exercises ff-exercises-native-page">
-      <section className="mb-4 rounded-[28px] border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 sm:p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--ff-accent-text)]">Biblioteca</p>
-            <h1 className="mt-1 text-3xl font-black tracking-[-0.05em] text-[var(--ff-text)]">Exercícios</h1>
-            <p className="mt-1 text-sm text-[var(--ff-muted)]">{filteredExercises.length} encontrados · {indexedExercises.length} no total · {isSyncing ? 'sincronizando' : dataSource === 'database' ? 'API' : 'local'}</p>
-          </div>
-          <button
-            type="button"
-            onClick={openCreateModal}
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--ff-accent)] text-white shadow-[0_0_24px_var(--ff-accent-shadow)] sm:hidden"
-            aria-label="Adicionar exercício"
-          >
-            <Plus size={24} />
-          </button>
-        </div>
-      </section>
-
       <section className="grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
         <div className="hidden xl:block">
           <ExerciseFiltersSidebar
@@ -582,6 +563,7 @@ function Exercises() {
           search={search}
           setSearch={setSearch}
           openCreateModal={openCreateModal}
+          syncLabel={isSyncing ? 'sincronizando' : dataSource === 'database' ? 'API' : 'local'}
           visibleCount={visibleCount}
           filterKey={filterKey}
           setVisibleState={setVisibleState}

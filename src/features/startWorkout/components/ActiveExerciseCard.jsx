@@ -1,28 +1,28 @@
 import {
-  ArrowDown,
-  ArrowUp,
-  CheckCircle2,
+  Check,
   ChevronDown,
-  ClipboardCheck,
   Flame,
-  GripVertical,
-  Hash,
   ImageIcon,
   Minus,
+  MoreVertical,
   Plus,
   Repeat2,
-  SkipForward,
   Trash2,
-  TrendingUp,
-  Weight,
 } from 'lucide-react'
-import Card from '../../../components/ui/Card'
 import Input from '../../../components/ui/Input'
 import Select from '../../../components/ui/Select'
-import { formatPerformance } from '../../../utils/prUtils'
-import { getProgressionToneClasses } from '../../../utils/progressionSuggestionUtils'
+import { SetPrBadges } from './ActiveExerciseSetControls'
 
-import { SetPrBadges, WorkoutSetInput } from './ActiveExerciseSetControls'
+function getPreviousLabel(performance) {
+  if (!performance?.lastSet) return '-'
+
+  const weight = performance.lastSet.weight
+  const reps = performance.lastSet.reps
+
+  if (!weight && !reps) return '-'
+
+  return `${weight || 0}kg x ${reps || 0}`
+}
 
 export default function ActiveExerciseCard({
   sessionExercise,
@@ -45,7 +45,6 @@ export default function ActiveExerciseCard({
   onRemoveExercise,
   onUpdateSet,
   onToggleSetWarmup,
-  onMoveSet,
   onCompleteSet,
   onAddSet,
   onRemoveSet,
@@ -54,236 +53,152 @@ export default function ActiveExerciseCard({
   getExerciseSubtitle,
   getSessionExerciseMedia,
 }) {
-  const progressionSuggestion = performance.progressionSuggestion
-  const progressionTone = getProgressionToneClasses(progressionSuggestion?.tone)
-  const exerciseCompletedSets = sessionExercise.sets.filter(
-    (set) => set.completed && set.type !== 'warmup'
-  ).length
-  const exerciseTotalSets = sessionExercise.sets.filter(
-    (set) => set.type !== 'warmup'
-  ).length
+  const workingSets = (sessionExercise.sets || []).filter((set) => set.type !== 'warmup')
+  const exerciseCompletedSets = workingSets.filter((set) => set.completed).length
+  const exerciseTotalSets = workingSets.length
   const exerciseProgressPercent = exerciseTotalSets
     ? Math.min(100, Math.round((exerciseCompletedSets / exerciseTotalSets) * 100))
     : 0
+  const isCurrent = selectedExercise?.id === sessionExercise.id || focusExercise?.id === sessionExercise.id
+  const media = getSessionExerciseMedia(sessionExercise)
+  const previousLabel = getPreviousLabel(performance)
 
   return (
-    <Card
+    <article
       ref={(node) => onRegisterCardRef(sessionExercise.id, node)}
-      className={`ff-active-exercise-card scroll-mt-32 overflow-hidden ${selectedExercise?.id === sessionExercise.id || focusExercise?.id === sessionExercise.id ? 'ring-1 ring-[var(--ff-accent-border)] shadow-[0_0_28px_var(--ff-accent-shadow)]' : ''} ${sessionExercise.skipped ? 'opacity-50' : ''}`}
+      className={`ff-hevy-active-exercise scroll-mt-24 ${isCurrent ? 'is-current' : ''} ${sessionExercise.skipped ? 'is-skipped' : ''}`}
     >
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start gap-4">
-            <div className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-3xl border border-[var(--ff-border)] bg-white shadow-inner sm:h-28 sm:w-28">
-              {getSessionExerciseMedia(sessionExercise) ? (
-                <img
-                  src={getSessionExerciseMedia(sessionExercise)}
-                  alt={getExerciseName(sessionExercise)}
-                  className="h-full w-full object-contain"
-                  loading="lazy"
-                  decoding="async"
-                />
-              ) : (
-                <ImageIcon size={30} className="text-zinc-500" />
-              )}
-
-              <span className="absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-xl bg-black/70 text-xs font-black text-white backdrop-blur">
-                {exerciseIndex + 1}
-              </span>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => onToggleCollapse(sessionExercise.id)}
-              className="min-w-0 flex-1 text-left"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <h2 className="line-clamp-2 text-2xl font-black leading-tight text-[var(--ff-text)]">
-                    {getExerciseName(sessionExercise)}
-                  </h2>
-
-                  <p className="mt-1 text-sm text-[var(--ff-muted)]">
-                    {getExerciseSubtitle(sessionExercise)}
-                  </p>
-
-                  {focusExercise?.id === sessionExercise.id && (
-                    <span className="mt-2 inline-flex rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--ff-accent-text)]">
-                      Exercício atual
-                    </span>
-                  )}
-                </div>
-
-                <ChevronDown
-                  size={20}
-                  className={`mt-1 shrink-0 text-[var(--ff-muted)] transition ${isCollapsed ? '-rotate-90' : ''}`}
-                />
-              </div>
-
-              <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--ff-surface-3)]">
-                <div
-                  className="h-full rounded-full bg-[var(--ff-accent)] transition-all"
-                  style={{ width: `${exerciseProgressPercent}%` }}
-                />
-              </div>
-
-              <p className="mt-2 text-xs font-bold text-[var(--ff-muted)]">
-                {exerciseCompletedSets}/{exerciseTotalSets} séries concluídas
-              </p>
-            </button>
-          </div>
-
-          <div className="mt-4 grid grid-cols-1 gap-2 lg:grid-cols-2">
-            <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
-              <div className="flex items-center gap-2 text-xs text-[var(--ff-muted)]">
-                <ClipboardCheck size={15} />
-                Último treino
-              </div>
-
-              <p className="mt-1 text-sm font-semibold text-[var(--ff-text-soft)]">
-                {performance.lastSet
-                  ? formatPerformance(performance.lastSet)
-                  : 'Sem registro anterior'}
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 p-3">
-              <p className="text-xs font-bold uppercase tracking-wide text-[var(--ff-accent-text)]">
-                Melhores marcas
-              </p>
-
-              <p className="mt-1 text-sm font-semibold text-[var(--ff-accent-text)]">
-                Peso:{' '}
-                {performance.bestWeightPerformance
-                  ? `${performance.bestWeightPerformance.weight}${appSettings.weightUnit || 'kg'}`
-                  : 'Sem registro'}
-              </p>
-
-              <p className="text-sm font-semibold text-[var(--ff-accent-text)]">
-                Volume:{' '}
-                {performance.bestVolumePerformance
-                  ? `${performance.bestVolumePerformance.volume}kg total`
-                  : 'Sem registro'}
-              </p>
-            </div>
-          </div>
-
-          {progressionSuggestion && (
-            <div className={`ff-progression-glow mt-3 rounded-3xl border p-4 ${progressionTone.card}`}>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div className="flex items-start gap-3">
-                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border ${progressionTone.icon}`}>
-                    <TrendingUp size={19} />
-                  </div>
-
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-sm font-black">
-                        {progressionSuggestion.title}
-                      </p>
-
-                      <span className={`rounded-full border px-2.5 py-1 text-[11px] font-black ${progressionTone.badge}`}>
-                        {progressionSuggestion.badge}
-                      </span>
-                    </div>
-
-                    <p className="mt-1 text-sm leading-relaxed opacity-85">
-                      {progressionSuggestion.description}
-                    </p>
-
-                    <p className="mt-2 text-xs font-black uppercase tracking-[0.16em] opacity-70">
-                      {progressionSuggestion.nextTarget}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid w-full grid-cols-2 gap-2 sm:w-auto sm:min-w-[150px] sm:max-w-[170px]">
-                  <div className="min-w-0 rounded-2xl border border-white/10 bg-black/10 px-2 py-2 text-center">
-                    <p className="truncate text-[9px] font-black uppercase opacity-60">
-                      Anterior
-                    </p>
-                    <p className="truncate text-xs font-black sm:text-sm">
-                      {progressionSuggestion.lastVolume || 0} kg
-                    </p>
-                  </div>
-
-                  <div className="min-w-0 rounded-2xl border border-white/10 bg-black/10 px-2 py-2 text-center">
-                    <p className="truncate text-[9px] font-black uppercase opacity-60">
-                      Atual
-                    </p>
-                    <p className="truncate text-xs font-black sm:text-sm">
-                      {progressionSuggestion.currentVolume || 0} kg
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+      <header className="ff-hevy-active-exercise__header">
+        <div className="ff-hevy-active-exercise__media">
+          <span className="ff-hevy-active-exercise__index">{exerciseIndex + 1}</span>
+          {media ? (
+            <img src={media} alt={getExerciseName(sessionExercise)} loading="lazy" decoding="async" />
+          ) : (
+            <ImageIcon size={24} />
           )}
         </div>
 
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:flex lg:justify-end">
-          <button
-            type="button"
-            onClick={() => onToggleReplace(sessionExercise.id)}
-            className="flex h-11 items-center justify-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 text-xs font-bold text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)]/40 hover:bg-zinc-900 hover:text-[var(--ff-text)] lg:px-4 lg:text-sm"
-          >
-            <Repeat2 size={15} />
-            Trocar
-          </button>
+        <button
+          type="button"
+          onClick={() => onToggleCollapse(sessionExercise.id)}
+          className="ff-hevy-active-exercise__title"
+        >
+          <span>{getExerciseName(sessionExercise)}</span>
+          <small>{getExerciseSubtitle(sessionExercise)}</small>
+        </button>
 
-          <button
-            type="button"
-            onClick={() => onSkipExercise(sessionExercise.id)}
-            className="flex h-11 items-center justify-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 text-xs font-bold text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)]/40 hover:bg-zinc-900 hover:text-[var(--ff-text)] lg:px-4 lg:text-sm"
-          >
-            <SkipForward size={15} />
-            {sessionExercise.skipped ? 'Retomar' : 'Pular'}
-          </button>
+        <button
+          type="button"
+          onClick={() => onToggleReplace(sessionExercise.id)}
+          className="ff-hevy-active-exercise__menu"
+          aria-label="Opções do exercício"
+        >
+          <MoreVertical size={22} />
+        </button>
+      </header>
 
-          <button
-            type="button"
-            onClick={() => onRemoveExercise(sessionExercise.id)}
-            className="flex h-11 items-center justify-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 px-3 text-xs font-bold text-red-300 transition hover:border-red-400/40 hover:bg-red-500/20 lg:px-4 lg:text-sm"
-          >
-            <Trash2 size={15} />
-            Excluir
-          </button>
-        </div>
-      </div>
-
-      {isCollapsed && (
-        <div className="mt-4 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-bold text-[var(--ff-text)]">
-                Séries ocultas
-              </p>
-
-              <p className="mt-1 text-xs text-[var(--ff-muted)]">
-                {exerciseCompletedSets}/{exerciseTotalSets} séries concluídas
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => onToggleCollapse(sessionExercise.id)}
-              className="rounded-2xl bg-[var(--ff-accent)] px-4 py-2 text-xs font-bold text-white transition hover:bg-[var(--ff-accent-hover)]"
-            >
-              Ver séries
-            </button>
-          </div>
-
-          <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--ff-surface-3)]">
-            <div
-              className="h-full rounded-full bg-[var(--ff-accent)] transition-all"
-              style={{ width: `${exerciseProgressPercent}%` }}
-            />
-          </div>
+      {isCurrent && (
+        <div className="ff-hevy-current-exercise">
+          <span>Exercício atual</span>
+          <strong>{exerciseCompletedSets}/{exerciseTotalSets} séries · {exerciseProgressPercent}%</strong>
         </div>
       )}
 
+      <p className="ff-hevy-exercise-note">Adicionar notas aqui...</p>
+
+      <div className="ff-hevy-rest-row">
+        <Flame size={18} />
+        <span>Descanso: {sessionExercise.restTimer || 'DESATIVADO'}</span>
+      </div>
+
+      <div className="ff-hevy-set-table" aria-label={`Séries de ${getExerciseName(sessionExercise)}`}>
+        <div className="ff-hevy-set-head">
+          <span>SÉRIE</span>
+          <span>ANTERIOR</span>
+          <span>{(appSettings.weightUnit || 'KG').toUpperCase()}</span>
+          <span>REPS</span>
+          <span>PR</span>
+          <span><Check size={18} /></span>
+        </div>
+
+        {!isCollapsed && (sessionExercise.sets || []).map((set) => {
+          const isWarmup = set?.type === 'warmup'
+          const isCompleted = Boolean(set.completed)
+
+          return (
+            <div key={set.id} className={`ff-hevy-set-row ${isCompleted ? 'is-done' : ''} ${isWarmup ? 'is-warmup' : ''}`}>
+              <button
+                type="button"
+                onClick={() => onToggleSetWarmup(sessionExercise.id, set.id)}
+                className="ff-hevy-set-number"
+                aria-label="Alternar aquecimento"
+              >
+                {isWarmup ? 'A' : set.setNumber}
+              </button>
+
+              <span className="ff-hevy-set-prev">{previousLabel}</span>
+
+              <input
+                type="number"
+                min="0"
+                inputMode="decimal"
+                value={set.weight}
+                onChange={(event) => onUpdateSet(sessionExercise.id, set.id, 'weight', event.target.value)}
+                onFocus={(event) => window.setTimeout(() => event.target?.scrollIntoView?.({ behavior: 'smooth', block: 'center' }), 250)}
+                aria-label="Carga"
+              />
+
+              <input
+                type="number"
+                min="1"
+                inputMode="numeric"
+                value={set.reps}
+                onChange={(event) => onUpdateSet(sessionExercise.id, set.id, 'reps', event.target.value)}
+                onFocus={(event) => window.setTimeout(() => event.target?.scrollIntoView?.({ behavior: 'smooth', block: 'center' }), 250)}
+                aria-label="Repetições"
+              />
+
+              <div className="ff-hevy-set-pr">
+                <SetPrBadges set={set} performance={performance} compact />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => onCompleteSet(sessionExercise, set.id)}
+                className="ff-hevy-set-check"
+                aria-label={isCompleted ? 'Desmarcar série' : 'Concluir série'}
+              >
+                <Check size={20} />
+              </button>
+            </div>
+          )
+        })}
+      </div>
+
+      <div className="ff-hevy-set-actions">
+        <button type="button" onClick={() => onAddSet(sessionExercise.id)}>
+          <Plus size={20} />
+          Adicionar Série
+        </button>
+        <button type="button" onClick={() => onAddSet(sessionExercise.id, { type: 'warmup' })}>
+          <Flame size={18} />
+          Aquecimento
+        </button>
+        <button
+          type="button"
+          disabled={(sessionExercise.sets || []).length <= 1}
+          onClick={() => {
+            const lastSet = [...(sessionExercise.sets || [])].reverse().find(Boolean)
+            if (lastSet) onRemoveSet(sessionExercise.id, lastSet.id)
+          }}
+        >
+          <Minus size={18} />
+          Remover
+        </button>
+      </div>
+
       {replaceExerciseId === sessionExercise.id && (
-        <div className="mt-4 rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+        <div className="ff-hevy-exercise-options">
           <Input
             label="Buscar substituto"
             placeholder="Pesquisar exercício..."
@@ -291,212 +206,39 @@ export default function ActiveExerciseCard({
             onChange={(event) => onReplaceSearchChange(event.target.value)}
           />
 
-          <div className="mt-3">
-            <Select
-              label="Substituir por"
-              defaultValue=""
-              onChange={(event) => onReplaceExercise(sessionExercise.id, event.target.value)}
-            >
-              <option value="">Selecione um exercício</option>
+          <Select
+            label="Substituir por"
+            defaultValue=""
+            onChange={(event) => onReplaceExercise(sessionExercise.id, event.target.value)}
+          >
+            <option value="">Selecione um exercício</option>
+            {replacementOptions.map((exercise) => (
+              <option key={getExerciseId(exercise)} value={getExerciseId(exercise)}>
+                {exercise.name}
+              </option>
+            ))}
+          </Select>
 
-              {replacementOptions.map((exercise) => (
-                <option key={getExerciseId(exercise)} value={getExerciseId(exercise)}>
-                  {exercise.name}
-                </option>
-              ))}
-            </Select>
-
-            {exercises.length > replacementOptions.length && (
-              <p className="mt-2 text-xs text-[var(--ff-muted)]">
-                Exibindo até {replacementOptions.length} opções. Use a busca para filtrar melhor.
-              </p>
-            )}
+          <div className="ff-hevy-option-actions">
+            <button type="button" onClick={() => onToggleReplace(sessionExercise.id)}>
+              <ChevronDown size={17} />
+              Fechar
+            </button>
+            <button type="button" onClick={() => onSkipExercise(sessionExercise.id)}>
+              <Repeat2 size={17} />
+              {sessionExercise.skipped ? 'Retomar' : 'Pular'}
+            </button>
+            <button type="button" onClick={() => onRemoveExercise(sessionExercise.id)} className="danger">
+              <Trash2 size={17} />
+              Excluir
+            </button>
           </div>
+
+          {exercises.length > replacementOptions.length && (
+            <p>Exibindo até {replacementOptions.length} opções. Use a busca para filtrar melhor.</p>
+          )}
         </div>
       )}
-
-      {!isCollapsed && (
-        <div className="mt-5">
-          <div className="mb-3 hidden grid-cols-[58px_minmax(170px,1fr)_minmax(170px,1fr)_150px_92px_54px] gap-3 px-3 text-xs font-bold uppercase tracking-wide text-[var(--ff-muted)] lg:grid">
-            <span>Série</span>
-            <span>KG</span>
-            <span>Reps</span>
-            <span>Recordes</span>
-            <span>Ordem</span>
-            <span>Status</span>
-          </div>
-
-          <div className="ff-sets-scroll space-y-3 pb-2">
-            {(sessionExercise.sets || []).map((set, setIndex) => {
-              const isWarmup = set?.type === 'warmup'
-              const canMoveUp = setIndex > 0
-              const canMoveDown = setIndex < (sessionExercise.sets || []).length - 1
-
-              return (
-                <div
-                  key={set.id}
-                  className={`grid w-full grid-cols-[52px_minmax(0,1fr)_52px] gap-3 rounded-[1.75rem] border p-4 shadow-lg shadow-black/10 transition sm:grid-cols-[56px_minmax(0,1fr)_minmax(0,1fr)_56px] lg:grid-cols-[58px_minmax(170px,1fr)_minmax(170px,1fr)_150px_92px_54px] lg:items-center lg:gap-3 lg:p-3 ${
-                    set.completed
-                      ? 'border-emerald-400/35 bg-emerald-500/10 shadow-[0_0_20px_rgba(16,185,129,0.10)]'
-                      : 'border-[var(--ff-border)] bg-[linear-gradient(180deg,var(--ff-card),var(--ff-surface-2))]'
-                  }`}
-                >
-                  <div className="col-start-1 row-start-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-3)] text-sm font-black text-[var(--ff-text)] shadow-inner shadow-black/20 lg:w-12">
-                    {isWarmup ? 'A' : set.setNumber}
-                  </div>
-
-                  <div className="col-span-3 row-start-2 min-w-0 sm:col-span-1 sm:row-start-1 lg:col-span-1">
-                    <WorkoutSetInput
-                      icon={Weight}
-                      label="Carga"
-                      unit={appSettings.weightUnit || 'kg'}
-                      min="0"
-                      inputMode="decimal"
-                      value={set.weight}
-                      suggestedValue={performance.lastSet?.weight || ''}
-                      suggestionLabel={performance.lastSet?.weight ? `Último: ${performance.lastSet.weight}${appSettings.weightUnit || 'kg'}` : ''}
-                      onChange={(event) =>
-                        onUpdateSet(
-                          sessionExercise.id,
-                          set.id,
-                          'weight',
-                          event.target.value
-                        )
-                      }
-                    />
-                  </div>
-
-                  <div className="col-span-3 row-start-3 min-w-0 sm:col-span-1 sm:row-start-1 lg:col-span-1">
-                    <WorkoutSetInput
-                      icon={Hash}
-                      label="Reps"
-                      unit="reps"
-                      min="1"
-                      inputMode="numeric"
-                      value={set.reps}
-                      suggestedValue={performance.lastSet?.reps || ''}
-                      suggestionLabel={performance.lastSet?.reps ? `Último: ${performance.lastSet.reps} reps` : ''}
-                      onChange={(event) =>
-                        onUpdateSet(
-                          sessionExercise.id,
-                          set.id,
-                          'reps',
-                          event.target.value
-                        )
-                      }
-                    />
-                  </div>
-
-                  <div className="col-span-3 row-start-4 flex flex-wrap items-center gap-2 lg:hidden">
-                    <div className="min-w-0 flex-1 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)]/70 p-2">
-                      <SetPrBadges set={set} performance={performance} compact />
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => onToggleSetWarmup(sessionExercise.id, set.id)}
-                      className={set.type === 'warmup'
-                        ? 'rounded-full border border-amber-400/30 bg-amber-500/10 px-2.5 py-1 text-[10px] font-black text-amber-200'
-                        : 'rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-2.5 py-1 text-[10px] font-black text-[var(--ff-muted)]'}
-                    >
-                      {set.type === 'warmup' ? 'Aquec.' : 'Normal'}
-                    </button>
-                  </div>
-
-                  <div className="hidden min-h-11 flex-col items-start justify-center gap-1 overflow-hidden lg:flex">
-                    <SetPrBadges set={set} performance={performance} />
-
-                    <button
-                      type="button"
-                      onClick={() => onToggleSetWarmup(sessionExercise.id, set.id)}
-                      className={set.type === 'warmup'
-                        ? 'rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-0.5 text-[9px] font-black text-amber-200'
-                        : 'rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-2 py-0.5 text-[9px] font-black text-[var(--ff-muted)]'}
-                    >
-                      {set.type === 'warmup' ? 'Aquec.' : 'Normal'}
-                    </button>
-                  </div>
-
-                  <div className="col-span-3 row-start-5 flex items-center justify-between gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-2 py-2 lg:col-auto lg:row-auto lg:justify-center lg:bg-transparent lg:border-transparent lg:p-0">
-                    <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.14em] text-[var(--ff-muted)] lg:hidden">
-                      <GripVertical size={14} />
-                      Ordem
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => onMoveSet(sessionExercise.id, set.id, 'up')}
-                        disabled={!canMoveUp}
-                        className="flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--ff-border)] bg-[var(--ff-card)] text-[var(--ff-muted)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)] disabled:cursor-not-allowed disabled:opacity-35"
-                        aria-label="Mover série para cima"
-                      >
-                        <ArrowUp size={15} />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => onMoveSet(sessionExercise.id, set.id, 'down')}
-                        disabled={!canMoveDown}
-                        className="flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--ff-border)] bg-[var(--ff-card)] text-[var(--ff-muted)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)] disabled:cursor-not-allowed disabled:opacity-35"
-                        aria-label="Mover série para baixo"
-                      >
-                        <ArrowDown size={15} />
-                      </button>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => onCompleteSet(sessionExercise, set.id)}
-                    className={
-                      set.completed
-                        ? 'col-start-3 row-start-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-emerald-300/30 bg-emerald-500 text-white shadow-[0_0_22px_rgba(16,185,129,0.42)] transition active:scale-95 lg:col-auto lg:row-auto'
-                        : 'col-start-3 row-start-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-3)] text-[var(--ff-muted)] shadow-inner shadow-black/20 transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)] active:scale-95 lg:col-auto lg:row-auto'
-                    }
-                    aria-label={set.completed ? 'Desmarcar série' : 'Concluir série'}
-                  >
-                    {set.completed ? <CheckCircle2 size={22} /> : <span className="h-3 w-3 rounded-full border-2 border-current" />}
-                  </button>
-                </div>
-              )
-            })}
-          </div>
-
-          <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
-            <button
-              type="button"
-              onClick={() => onAddSet(sessionExercise.id)}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--ff-surface-3)] text-sm font-bold transition hover:bg-zinc-700"
-            >
-              <Plus size={17} />
-              Série
-            </button>
-
-            <button
-              type="button"
-              onClick={() => onAddSet(sessionExercise.id, { type: 'warmup' })}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-amber-400/25 bg-amber-500/10 text-sm font-bold text-amber-200 transition hover:bg-amber-500/15"
-            >
-              <Flame size={17} />
-              Aquecimento
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                const lastSet = [...(sessionExercise.sets || [])].reverse().find(Boolean)
-                if (lastSet) onRemoveSet(sessionExercise.id, lastSet.id)
-              }}
-              disabled={(sessionExercise.sets || []).length <= 1}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-red-500/25 bg-red-500/10 text-sm font-bold text-red-200 transition hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <Minus size={17} />
-              Remover
-            </button>
-          </div>
-        </div>
-      )}
-    </Card>
+    </article>
   )
 }
