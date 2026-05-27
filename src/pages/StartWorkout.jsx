@@ -625,6 +625,7 @@ function StartWorkout() {
         savingWorkout={savingWorkout}
         formatTime={formatTime}
         onCancelWorkout={handleCancelWorkout}
+        onStartRestTimer={startManualRestTimer}
         onRequestFinish={handleRequestFinishWorkout}
       />
 

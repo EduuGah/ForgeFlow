@@ -1,6 +1,7 @@
 import {
   Check,
   ChevronDown,
+  ChevronUp,
   Flame,
   ImageIcon,
   Minus,
@@ -87,15 +88,74 @@ export default function ActiveExerciseCard({
           <small>{getExerciseSubtitle(sessionExercise)}</small>
         </button>
 
-        <button
-          type="button"
-          onClick={() => onToggleReplace(sessionExercise.id)}
-          className="ff-hevy-active-exercise__menu"
-          aria-label={replaceExerciseId === sessionExercise.id ? 'Fechar opções do exercício' : 'Abrir opções do exercício'}
-        >
-          <MoreVertical size={22} />
-        </button>
+        <div className="ff-hevy-active-exercise__tools">
+          <button
+            type="button"
+            onClick={() => onToggleCollapse(sessionExercise.id)}
+            className="ff-hevy-active-exercise__minimize"
+            aria-label={isCollapsed ? 'Expandir exercício' : 'Minimizar exercício'}
+          >
+            {isCollapsed ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onToggleReplace(sessionExercise.id)}
+            className="ff-hevy-active-exercise__menu"
+            aria-label={replaceExerciseId === sessionExercise.id ? 'Fechar opções do exercício' : 'Abrir opções do exercício'}
+          >
+            <MoreVertical size={22} />
+          </button>
+        </div>
       </header>
+
+      {replaceExerciseId === sessionExercise.id && (
+        <div className="ff-hevy-exercise-options ff-hevy-exercise-options--top">
+          <div className="ff-hevy-options-title">
+            <strong>Opções de {getExerciseName(sessionExercise)}</strong>
+            <span>Substituir, pular ou remover do treino.</span>
+          </div>
+
+          <Input
+            label="Buscar substituto"
+            placeholder="Pesquisar exercício..."
+            value={replaceSearch}
+            onChange={(event) => onReplaceSearchChange(event.target.value)}
+          />
+
+          <Select
+            label="Substituir por"
+            defaultValue=""
+            onChange={(event) => onReplaceExercise(sessionExercise.id, event.target.value)}
+          >
+            <option value="">Selecione um exercício</option>
+            {replacementOptions.map((exercise) => (
+              <option key={getExerciseId(exercise)} value={getExerciseId(exercise)}>
+                {exercise.name}
+              </option>
+            ))}
+          </Select>
+
+          <div className="ff-hevy-option-actions">
+            <button type="button" onClick={() => onToggleCollapse(sessionExercise.id)}>
+              {isCollapsed ? <ChevronDown size={17} /> : <ChevronUp size={17} />}
+              {isCollapsed ? 'Expandir' : 'Minimizar'}
+            </button>
+            <button type="button" onClick={() => onSkipExercise(sessionExercise.id)}>
+              <Repeat2 size={17} />
+              {sessionExercise.skipped ? 'Retomar' : 'Pular'}
+            </button>
+            <button type="button" onClick={() => onRemoveExercise(sessionExercise.id)} className="danger">
+              <Trash2 size={17} />
+              Excluir
+            </button>
+          </div>
+
+          {exercises.length > replacementOptions.length && (
+            <p>Exibindo até {replacementOptions.length} opções. Use a busca para filtrar melhor.</p>
+          )}
+        </div>
+      )}
 
       {isCurrent && (
         <div className="ff-hevy-current-exercise">
@@ -104,13 +164,9 @@ export default function ActiveExerciseCard({
         </div>
       )}
 
-      <p className="ff-hevy-exercise-note">Adicionar notas aqui...</p>
+      {!isCollapsed && <p className="ff-hevy-exercise-note">Adicionar notas aqui...</p>}
 
-      <div className="ff-hevy-rest-row">
-        <Flame size={18} />
-        <span>Descanso: {sessionExercise.restTimer || 'DESATIVADO'}</span>
-      </div>
-
+      {!isCollapsed && (
       <div className="ff-hevy-set-table" aria-label={`Séries de ${getExerciseName(sessionExercise)}`}>
         <div className="ff-hevy-set-head">
           <span>SÉRIE</span>
@@ -121,7 +177,7 @@ export default function ActiveExerciseCard({
           <span><Check size={18} /></span>
         </div>
 
-        {!isCollapsed && (sessionExercise.sets || []).map((set) => {
+        {(sessionExercise.sets || []).map((set) => {
           const isWarmup = set?.type === 'warmup'
           const isCompleted = Boolean(set.completed)
 
@@ -186,7 +242,9 @@ export default function ActiveExerciseCard({
           )
         })}
       </div>
+      )}
 
+      {!isCollapsed && (
       <div className="ff-hevy-set-actions">
         <button type="button" onClick={() => onAddSet(sessionExercise.id)}>
           <Plus size={20} />
@@ -208,54 +266,8 @@ export default function ActiveExerciseCard({
           Remover
         </button>
       </div>
-
-      {replaceExerciseId === sessionExercise.id && (
-        <div className="ff-hevy-exercise-options">
-          <div className="ff-hevy-options-title">
-            <strong>Opções de {getExerciseName(sessionExercise)}</strong>
-            <span>Substituir, pular ou remover do treino.</span>
-          </div>
-
-          <Input
-            label="Buscar substituto"
-            placeholder="Pesquisar exercício..."
-            value={replaceSearch}
-            onChange={(event) => onReplaceSearchChange(event.target.value)}
-          />
-
-          <Select
-            label="Substituir por"
-            defaultValue=""
-            onChange={(event) => onReplaceExercise(sessionExercise.id, event.target.value)}
-          >
-            <option value="">Selecione um exercício</option>
-            {replacementOptions.map((exercise) => (
-              <option key={getExerciseId(exercise)} value={getExerciseId(exercise)}>
-                {exercise.name}
-              </option>
-            ))}
-          </Select>
-
-          <div className="ff-hevy-option-actions">
-            <button type="button" onClick={() => onToggleReplace(sessionExercise.id)}>
-              <ChevronDown size={17} />
-              Fechar
-            </button>
-            <button type="button" onClick={() => onSkipExercise(sessionExercise.id)}>
-              <Repeat2 size={17} />
-              {sessionExercise.skipped ? 'Retomar' : 'Pular'}
-            </button>
-            <button type="button" onClick={() => onRemoveExercise(sessionExercise.id)} className="danger">
-              <Trash2 size={17} />
-              Excluir
-            </button>
-          </div>
-
-          {exercises.length > replacementOptions.length && (
-            <p>Exibindo até {replacementOptions.length} opções. Use a busca para filtrar melhor.</p>
-          )}
-        </div>
       )}
+
     </article>
   )
 }

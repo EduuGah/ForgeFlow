@@ -35,7 +35,8 @@ export function SetPrBadges({ set, performance, compact = false }) {
   if (isWeightPR) {
     badges.push({
       key: 'weight',
-      label: 'Peso PR',
+      label: compact ? 'P' : 'Peso PR',
+      title: 'Recorde de peso',
       icon: Award,
       className:
         'border-sky-400/30 bg-sky-500/10 text-sky-200 shadow-[0_0_14px_rgba(14,165,233,0.18)]',
@@ -45,7 +46,8 @@ export function SetPrBadges({ set, performance, compact = false }) {
   if (isVolumePR) {
     badges.push({
       key: 'volume',
-      label: 'Volume PR',
+      label: compact ? 'V' : 'Volume PR',
+      title: 'Recorde de volume',
       icon: Zap,
       className:
         'border-amber-400/30 bg-amber-500/10 text-amber-200 shadow-[0_0_14px_rgba(245,158,11,0.18)]',
@@ -53,23 +55,29 @@ export function SetPrBadges({ set, performance, compact = false }) {
   }
 
   if (badges.length === 0) {
-    return compact ? null : (
+    return compact ? <span className="ff-pr-empty">—</span> : (
       <span className="text-xs font-bold text-[var(--ff-muted)]">—</span>
     )
   }
 
   return (
-    <div className={compact ? 'flex flex-wrap gap-2' : 'flex flex-col items-start gap-1.5'}>
+    <div className={compact ? 'ff-pr-badges-compact' : 'flex flex-col items-start gap-1.5'}>
       {badges.map((badge) => {
         const Icon = badge.icon
 
         return (
           <span
             key={badge.key}
-            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${badge.className}`}
+            title={badge.title}
+            aria-label={badge.title}
+            className={`inline-flex items-center justify-center rounded-full border font-black uppercase ${badge.className}`}
           >
-            <Icon size={12} />
-            {badge.label}
+            {compact ? badge.label : (
+              <>
+                <Icon size={12} />
+                {badge.label}
+              </>
+            )}
           </span>
         )
       })}

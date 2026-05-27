@@ -470,24 +470,20 @@ function Profile() {
           </div>
         )}
 
-        <div className="rounded-[var(--ff-radius-lg)] border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
-          <div className="flex items-end justify-between gap-3">
+        <div className="ff-profile-summary-card rounded-[var(--ff-radius-lg)] border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
+          <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-2xl font-black tracking-[-0.05em]">{Math.round((totalWorkouts || 0) * 1.15)} horas <span className="text-base font-medium text-[var(--ff-muted)]">registradas</span></p>
-              <p className="mt-1 text-sm text-[var(--ff-muted)]">Peso atual: {currentWeight || '—'}kg · Último registro: {lastWeightRecord?.date || '—'} · Variação: {weightDifference || '—'}kg</p>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--ff-muted)]">Resumo físico</p>
+              <p className="mt-2 text-2xl font-black tracking-[-0.05em]">{currentWeight || '—'}kg</p>
+              <p className="mt-1 text-sm text-[var(--ff-muted)]">Peso atual · Último registro: {lastWeightRecord?.date || '—'}</p>
             </div>
-            <span className="text-sm font-bold text-[var(--ff-accent)]">Últimos registros</span>
+            <span className="rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-3 py-1 text-xs font-black text-[var(--ff-accent)]">{weightDifference || '—'}kg</span>
           </div>
-          <div className="ff-profile-mini-chart mt-5 grid h-36 grid-cols-8 items-end gap-2 border-b border-[var(--ff-border)] pb-2" aria-label="Gráfico resumido de treinos">
-            {Array.from({ length: 8 }).map((_, index) => {
-              const value = Math.max(16, Math.min(100, ((history[index]?.exercises?.length || index + 1) * 16) + (index % 3) * 10))
-              return <span key={index} className="block w-full self-end rounded-t-md bg-[var(--ff-accent)]" style={{ height: `${value}%` }} />
-            })}
-          </div>
-          <div className="mt-4 flex gap-3 overflow-x-auto">
-            <span className="shrink-0 rounded-full bg-[var(--ff-accent)] px-5 py-2 text-sm font-bold text-white">Duração</span>
-            <span className="shrink-0 rounded-full bg-[var(--ff-surface-2)] px-5 py-2 text-sm font-bold">Volume</span>
-            <span className="shrink-0 rounded-full bg-[var(--ff-surface-2)] px-5 py-2 text-sm font-bold">Repetições</span>
+
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            <div className="ff-profile-summary-pill"><strong>{totalWorkouts}</strong><span>Treinos</span></div>
+            <div className="ff-profile-summary-pill"><strong>{totalSets}</strong><span>Séries</span></div>
+            <div className="ff-profile-summary-pill"><strong>{prs.length}</strong><span>PRs</span></div>
           </div>
         </div>
 
