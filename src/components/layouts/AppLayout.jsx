@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
-import { Download, Dumbbell, Menu } from 'lucide-react'
+import { Download, Menu } from 'lucide-react'
 import { Outlet, useLocation } from 'react-router-dom'
 
 import forgeflowIcon from '../../assets/forgeflow-icon.png'
@@ -392,9 +392,15 @@ function AppLayout() {
               </button>
 
               <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-accent)]">
-                  <img src={forgeflowIcon} alt="ForgeFlow" className="h-7 w-7 object-cover opacity-0" aria-hidden="true" />
-                  <Dumbbell size={22} className="absolute" />
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-accent)] shadow-[0_0_18px_var(--ff-accent-shadow)]">
+                  <img
+                    src={forgeflowIcon}
+                    alt="ForgeFlow"
+                    className="h-8 w-8 object-contain"
+                    onError={(event) => {
+                      event.currentTarget.style.display = 'none'
+                    }}
+                  />
                 </div>
 
                 <div className="min-w-0">

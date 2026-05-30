@@ -30,7 +30,6 @@ import {
   getMostTrainedExercise,
 } from '../utils/analyticsUtils'
 
-import AppPageIntro from '../components/app/AppPageIntro'
 
 function Profile() {
   const { user, setUser } = useAuth()
@@ -417,12 +416,6 @@ function Profile() {
 
   return (
     <div className="ff-hevy-page ff-hevy-page-profile">
-
-      <AppPageIntro
-        eyebrow="Perfil"
-        title={profile?.name || user?.name || 'Meu perfil'}
-        description="Resumo do atleta, histórico recente e atalhos principais."
-      />
 
     <>
       <section className="ff-profile-hevy-hero mb-6">

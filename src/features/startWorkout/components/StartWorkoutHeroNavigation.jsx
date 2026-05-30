@@ -1,8 +1,4 @@
-import {
-  Dumbbell,
-  ListChecks,
-} from 'lucide-react'
-
+import { Dumbbell, ListChecks } from 'lucide-react'
 
 export function ActiveWorkoutHero({
   activeSession,
@@ -24,35 +20,42 @@ export function ActiveWorkoutHero({
   const totalExercises = activeSession.exercises?.length || 0
   const focusName = focusExercise ? getExerciseName(focusExercise) : 'Próximo exercício'
 
+  function handleFinishClick() {
+    if (appSettings.confirmBeforeFinishWorkout) {
+      onRequestFinish()
+      return
+    }
+
+    onFinishWorkout()
+  }
+
   return (
-    <header className="ff-hevy-workout-header">
-      <div className="ff-hevy-workout-topbar">
-        <button type="button" className="ff-hevy-workout-collapse" aria-label="Voltar">
+    <header className="ff-forge-active-hero">
+      <div className="ff-forge-active-hero__top">
+        <button type="button" className="ff-forge-active-hero__back" aria-label="Voltar">
           <span>⌄</span>
         </button>
 
-        <div className="ff-hevy-workout-title">
-          <h1>Treinamento</h1>
-          <p>{activeSession.workoutName}</p>
+        <div className="ff-forge-active-hero__title">
+          <span>Treino ativo</span>
+          <h1>{activeSession.workoutName || 'Treinamento'}</h1>
         </div>
 
         <button
           type="button"
-          onClick={() => {
-            if (appSettings.confirmBeforeFinishWorkout) {
-              onRequestFinish()
-            } else {
-              onFinishWorkout()
-            }
-          }}
+          onClick={handleFinishClick}
           disabled={savingWorkout}
-          className="ff-hevy-workout-finish"
+          className="ff-forge-active-hero__finish"
         >
           {savingWorkout ? 'Salvando...' : 'Concluir'}
         </button>
       </div>
 
-      <div className="ff-hevy-workout-metrics">
+      <div className="ff-forge-active-hero__progress" aria-label={`${progressPercent}% concluído`}>
+        <div style={{ width: `${progressPercent}%` }} />
+      </div>
+
+      <div className="ff-forge-active-hero__metrics">
         <div>
           <span>Duração</span>
           <strong>{formatTime(elapsedSeconds)}</strong>
@@ -65,27 +68,25 @@ export function ActiveWorkoutHero({
           <span>Séries</span>
           <strong>{completedSets}/{totalSets}</strong>
         </div>
-        <button type="button" onClick={() => onFocusExercise(focusExercise?.id)} disabled={!focusExercise}>
-          <span>Atual</span>
-          <strong>{focusName}</strong>
-        </button>
-      </div>
-
-      <div className="ff-hevy-workout-progress" aria-label={`${progressPercent}% concluído`}>
-        <div style={{ width: `${progressPercent}%` }} />
       </div>
 
       {focusExercise && (
-        <button type="button" onClick={() => onFocusExercise(focusExercise.id)} className="ff-hevy-focus-strip">
+        <button
+          type="button"
+          onClick={() => onFocusExercise(focusExercise.id)}
+          className="ff-forge-active-hero__current"
+        >
           <Dumbbell size={18} />
-          <span>{getExerciseSubtitle(focusExercise)}</span>
-          <strong>{focusExerciseProgress}%</strong>
+          <span>
+            <small>Atual · {getExerciseSubtitle(focusExercise)}</small>
+            <strong>{focusName}</strong>
+          </span>
+          <b>{focusExerciseProgress}%</b>
         </button>
       )}
     </header>
   )
 }
-
 
 export function ExerciseJumpNav({
   sessionExercises,
@@ -94,19 +95,14 @@ export function ExerciseJumpNav({
   onFocusExercise,
 }) {
   return (
-    <section className="ff-exercise-jump-nav mb-4 rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3">
-      <div className="mb-2 flex items-center justify-between gap-3 px-1">
-        <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-[var(--ff-muted)]">
-          <ListChecks size={15} />
-          Ir para exercício
-        </div>
-
-        <span className="text-xs font-bold text-[var(--ff-muted)]">
-          {sessionExercises.length} exercício(s)
-        </span>
+    <section className="ff-forge-exercise-strip" aria-label="Lista de exercícios do treino">
+      <div className="ff-forge-exercise-strip__label">
+        <ListChecks size={15} />
+        <span>Exercícios</span>
+        <b>{sessionExercises.length}</b>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="ff-forge-exercise-strip__scroller">
         {sessionExercises.map((exercise, index) => {
           const isActive = selectedExercise?.id === exercise.id
           const completed = (exercise.sets || []).filter((set) => set.completed && set.type !== 'warmup').length
@@ -117,25 +113,11 @@ export function ExerciseJumpNav({
               key={exercise.id}
               type="button"
               onClick={() => onFocusExercise(exercise.id)}
-              className={[
-                'flex min-w-[210px] max-w-[260px] items-center gap-3 rounded-2xl border p-3 text-left transition',
-                isActive
-                  ? 'border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]'
-                  : 'border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-text-soft)] hover:border-[var(--ff-accent-border)]',
-              ].join(' ')}
+              className={`ff-forge-exercise-strip__item ${isActive ? 'is-active' : ''}`}
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-black/30 text-xs font-black">
-                {index + 1}
-              </span>
-
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-black">
-                  {getExerciseName(exercise)}
-                </span>
-                <span className="block text-xs opacity-70">
-                  {completed}/{total} séries
-                </span>
-              </span>
+              <span>{index + 1}</span>
+              <strong>{getExerciseName(exercise)}</strong>
+              <small>{completed}/{total}</small>
             </button>
           )
         })}
