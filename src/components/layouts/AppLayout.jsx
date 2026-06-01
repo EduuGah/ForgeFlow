@@ -392,15 +392,24 @@ function AppLayout() {
               </button>
 
               <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-accent)] shadow-[0_0_18px_var(--ff-accent-shadow)]">
+                <div className="ff-app-header-logo flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-accent)] shadow-[0_0_18px_var(--ff-accent-shadow)]">
                   <img
-                    src={forgeflowIcon}
+                    src={forgeflowIcon || '/icons/icon-192.png'}
                     alt="ForgeFlow"
-                    className="h-8 w-8 object-contain"
+                    className="h-full w-full object-contain p-1"
                     onError={(event) => {
-                      event.currentTarget.style.display = 'none'
+                      const image = event.currentTarget
+                      if (image.dataset.fallbackApplied === 'true') {
+                        image.style.display = 'none'
+                        image.parentElement?.classList.add('ff-app-header-logo--fallback')
+                        return
+                      }
+
+                      image.dataset.fallbackApplied = 'true'
+                      image.src = '/icons/icon-192.png'
                     }}
                   />
+                  <span aria-hidden="true">FF</span>
                 </div>
 
                 <div className="min-w-0">

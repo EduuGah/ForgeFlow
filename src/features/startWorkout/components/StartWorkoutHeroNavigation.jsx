@@ -1,4 +1,14 @@
-import { Dumbbell, ListChecks, Plus } from 'lucide-react'
+import { Dumbbell, ImageIcon, ListChecks, Plus } from 'lucide-react'
+
+function getLastWeightLabel(performance) {
+  const weight = Number(performance?.lastSet?.weight || 0)
+  const reps = Number(performance?.lastSet?.reps || 0)
+
+  if (weight > 0 && reps > 0) return `${weight}kg x ${reps}`
+  if (weight > 0) return `${weight}kg último`
+
+  return 'Sem registro'
+}
 
 export function ActiveWorkoutHero({
   activeSession,
@@ -93,6 +103,8 @@ export function ExerciseJumpNav({
   sessionExercises,
   selectedExercise,
   getExerciseName,
+  getSessionExerciseMedia,
+  exercisePerformanceMap,
   onFocusExercise,
   onAddExercise,
 }) {
@@ -120,6 +132,8 @@ export function ExerciseJumpNav({
           const isActive = selectedExercise?.id === exercise.id
           const completed = (exercise.sets || []).filter((set) => set.completed && set.type !== 'warmup').length
           const total = (exercise.sets || []).filter((set) => set.type !== 'warmup').length || 1
+          const media = getSessionExerciseMedia?.(exercise)
+          const performance = exercisePerformanceMap?.get?.(exercise.id)
 
           return (
             <button
@@ -128,9 +142,18 @@ export function ExerciseJumpNav({
               onClick={() => onFocusExercise(exercise.id)}
               className={`ff-forge-exercise-strip__item ${isActive ? 'is-active' : ''}`}
             >
-              <span>{index + 1}</span>
-              <strong>{getExerciseName(exercise)}</strong>
-              <small>{completed}/{total}</small>
+              <span className="ff-forge-exercise-strip__thumb">
+                {media ? (
+                  <img src={media} alt="" loading="lazy" decoding="async" />
+                ) : (
+                  <ImageIcon size={16} />
+                )}
+              </span>
+              <span className="ff-forge-exercise-strip__body">
+                <small>#{index + 1} · {completed}/{total}</small>
+                <strong>{getExerciseName(exercise)}</strong>
+                <em>{getLastWeightLabel(performance)}</em>
+              </span>
             </button>
           )
         })}

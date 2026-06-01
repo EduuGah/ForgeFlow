@@ -11,7 +11,6 @@ import {
   Trash2,
 } from 'lucide-react'
 import Input from '../../../components/ui/Input'
-import Select from '../../../components/ui/Select'
 import { SetPrBadges } from './ActiveExerciseSetControls'
 
 function getPreviousLabel(performance) {
@@ -127,21 +126,41 @@ export default function ActiveExerciseCard({
             onChange={(event) => onReplaceSearchChange(event.target.value)}
           />
 
-          <Select
-            label="Substituir por"
-            defaultValue=""
-            onChange={(event) => {
-              onReplaceExercise(sessionExercise.id, event.target.value)
-              onCloseOptions?.()
-            }}
-          >
-            <option value="">Selecione um exercício</option>
-            {replacementOptions.map((exercise) => (
-              <option key={getExerciseId(exercise)} value={getExerciseId(exercise)}>
-                {exercise.name}
-              </option>
-            ))}
-          </Select>
+          <div className="ff-hevy-replace-list" aria-label="Exercícios para substituir">
+            {replacementOptions.length === 0 ? (
+              <p className="ff-hevy-replace-list__empty">Nenhum exercício encontrado.</p>
+            ) : (
+              replacementOptions.slice(0, 18).map((exercise) => {
+                const replacementMedia = getSessionExerciseMedia(exercise)
+                const exerciseId = getExerciseId(exercise)
+
+                return (
+                  <button
+                    key={exerciseId}
+                    type="button"
+                    onClick={() => {
+                      onReplaceExercise(sessionExercise.id, exerciseId)
+                      onCloseOptions?.()
+                    }}
+                    className="ff-hevy-replace-list__item"
+                  >
+                    <span className="ff-hevy-replace-list__thumb">
+                      {replacementMedia ? (
+                        <img src={replacementMedia} alt="" loading="lazy" decoding="async" />
+                      ) : (
+                        <ImageIcon size={18} />
+                      )}
+                    </span>
+                    <span className="ff-hevy-replace-list__content">
+                      <strong>{exercise.name || 'Exercício sem nome'}</strong>
+                      <small>{exercise.muscleGroup || 'Sem grupo'} · {exercise.equipment || 'Sem equipamento'}</small>
+                    </span>
+                    <span className="ff-hevy-replace-list__action">Usar</span>
+                  </button>
+                )
+              })
+            )}
+          </div>
 
           <div className="ff-hevy-option-actions">
             <button type="button" onClick={() => {
