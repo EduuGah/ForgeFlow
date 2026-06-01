@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Bell, ChevronRight, Inbox, X } from 'lucide-react'
+import { normalizeNotificationFromApi, formatDateTime, getNotificationMeta } from '../../features/notifications/notificationUtils'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../../context/AuthContext'
@@ -17,6 +18,7 @@ function getUnreadCountFromCache(user) {
 function NotificationBell() {
   const { user } = useAuth()
   const [unreadCount, setUnreadCount] = useState(0)
+  const [previewNotifications, setPreviewNotifications] = useState([])
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const menuRef = useRef(null)
   const isLoadingRef = useRef(false)
@@ -37,12 +39,23 @@ function NotificationBell() {
       setUnreadCount(getUnreadCountFromCache(user))
 
       try {
-        const data = await apiFetch('/notifications?status=unread&limit=1')
+        const data = await apiFetch('/notifications?limit=5')
 
         if (!isMounted) return
 
-        setUnreadCount(Number(data?.unreadCount) || 0)
+        const normalizedNotifications = Array.isArray(data?.notifications)
+          ? data.notifications.map(normalizeNotificationFromApi)
+          : []
+
+        setUnreadCount(Number(data?.unreadCount) || normalizedNotifications.filter((item) => item.status === 'unread').length)
+        setPreviewNotifications(normalizedNotifications)
       } catch (error) {
+        const cachedNotifications = getUserStorageData(user, 'notifications', [])
+        const normalizedCached = Array.isArray(cachedNotifications)
+          ? cachedNotifications.map(normalizeNotificationFromApi).slice(0, 5)
+          : []
+
+        setPreviewNotifications(normalizedCached)
         console.error(error)
       } finally {
         isLoadingRef.current = false
@@ -128,18 +141,45 @@ function NotificationBell() {
             </button>
           </div>
 
-          <button type="button" className="ff-mobile-notification-menu__summary" onClick={openNotificationsPage}>
-            <span><Inbox size={18} /></span>
-            <div>
-              <strong>{unreadCount > 0 ? 'Abrir notificações pendentes' : 'Ver central de notificações'}</strong>
-              <small>Metas, lembretes e avisos do ForgeFlow.</small>
-            </div>
-            <ChevronRight size={18} />
-          </button>
+          <div className="ff-mobile-notification-menu__preview-list">
+            {previewNotifications.length > 0 ? (
+              previewNotifications.map((notification) => {
+                const meta = getNotificationMeta(notification.type)
+                const Icon = meta.icon
+                const isUnread = notification.status === 'unread'
 
-          <Link to="/settings" onClick={() => setIsMenuOpen(false)} className="ff-mobile-notification-menu__link">
-            Ajustar preferências de lembretes
-          </Link>
+                return (
+                  <button
+                    key={notification.id}
+                    type="button"
+                    className={`ff-mobile-notification-menu__preview ${isUnread ? 'is-unread' : ''}`}
+                    onClick={openNotificationsPage}
+                  >
+                    <span className="ff-mobile-notification-menu__preview-icon"><Icon size={16} /></span>
+                    <span className="ff-mobile-notification-menu__preview-copy">
+                      <strong>{notification.title}</strong>
+                      <small>{notification.message || meta.label}</small>
+                      <em>{isUnread ? 'Não lida' : 'Lida'} · {formatDateTime(notification.createdAt)}</em>
+                    </span>
+                  </button>
+                )
+              })
+            ) : (
+              <button type="button" className="ff-mobile-notification-menu__summary" onClick={openNotificationsPage}>
+                <span><Inbox size={18} /></span>
+                <div>
+                  <strong>Tudo em dia</strong>
+                  <small>Sem novas prévias agora.</small>
+                </div>
+                <ChevronRight size={18} />
+              </button>
+            )}
+          </div>
+
+          <div className="ff-mobile-notification-menu__actions">
+            <button type="button" onClick={openNotificationsPage}>Ver todas</button>
+            <Link to="/settings" onClick={() => setIsMenuOpen(false)}>Preferências</Link>
+          </div>
         </div>
       )}
     </div>

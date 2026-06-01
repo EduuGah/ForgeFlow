@@ -126,7 +126,10 @@ export function ExerciseJumpNav({
           const media = getSessionExerciseMedia?.(exercise)
           const performance = exercisePerformanceMap?.get?.(exercise.id) || {}
           const lastSet = performance.lastSet
-          const lastLabel = lastSet?.weight || lastSet?.reps ? `${lastSet.weight || 0}kg × ${lastSet.reps || 0}` : getExerciseSubtitle?.(exercise)
+          const exerciseTitle = getExerciseName(exercise)
+          const subtitle = getExerciseSubtitle?.(exercise)
+          const lastLabel = lastSet?.weight || lastSet?.reps ? `Último: ${lastSet.weight || 0}kg × ${lastSet.reps || 0}` : 'Sem registro anterior'
+          const progressWidth = Math.min(100, Math.round((completed / total) * 100))
 
           return (
             <button
@@ -139,8 +142,13 @@ export function ExerciseJumpNav({
                 {media ? <img src={media} alt="" loading="lazy" decoding="async" /> : index + 1}
               </span>
               <span className="ff-forge-exercise-strip__content">
-                <strong>{getExerciseName(exercise)}</strong>
-                <small>{completed}/{total} séries · {lastLabel}</small>
+                <strong title={exerciseTitle}>{exerciseTitle}</strong>
+                <small className="ff-forge-exercise-strip__subtitle">{subtitle}</small>
+                <small className="ff-forge-exercise-strip__last">{lastLabel}</small>
+                <span className="ff-forge-exercise-strip__meta">
+                  <b>{completed}/{total}</b>
+                  <i><span style={{ width: `${progressWidth}%` }} /></i>
+                </span>
               </span>
             </button>
           )

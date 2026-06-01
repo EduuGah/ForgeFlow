@@ -8300,3 +8300,195 @@ body,
     font-size: 7px !important;
   }
 }
+
+/* ForgeFlow notification preview and active exercise strip final polish */
+.ff-mobile-notification-menu__panel {
+  z-index: 120 !important;
+  max-height: min(70dvh, 520px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.ff-mobile-notification-menu__preview-list {
+  display: grid;
+  gap: 8px;
+}
+
+.ff-mobile-notification-menu__preview {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  border: 1px solid var(--ff-border);
+  border-radius: 16px;
+  background: rgba(0, 0, 0, .26);
+  padding: 10px;
+  text-align: left;
+}
+
+.ff-mobile-notification-menu__preview.is-unread {
+  border-color: var(--ff-accent-border);
+  background: color-mix(in srgb, var(--ff-accent-soft) 28%, rgba(0,0,0,.24));
+}
+
+.ff-mobile-notification-menu__preview-icon {
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 13px;
+  background: var(--ff-accent-soft);
+  color: var(--ff-accent-text);
+}
+
+.ff-mobile-notification-menu__preview-copy {
+  min-width: 0;
+}
+
+.ff-mobile-notification-menu__preview-copy strong,
+.ff-mobile-notification-menu__preview-copy small,
+.ff-mobile-notification-menu__preview-copy em {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-mobile-notification-menu__preview-copy strong {
+  color: var(--ff-text);
+  font-size: .88rem;
+  font-weight: 950;
+}
+
+.ff-mobile-notification-menu__preview-copy small {
+  margin-top: 2px;
+  color: var(--ff-muted);
+  font-size: .75rem;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.ff-mobile-notification-menu__preview-copy em {
+  margin-top: 5px;
+  color: var(--ff-muted-2);
+  font-size: .68rem;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: .02em;
+}
+
+.ff-mobile-notification-menu__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.ff-mobile-notification-menu__actions :is(a, button) {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  border: 1px solid var(--ff-border);
+  background: var(--ff-surface-2);
+  color: var(--ff-text);
+  font-size: .78rem;
+  font-weight: 950;
+}
+
+.ff-mobile-notification-menu__actions button:first-child {
+  border-color: var(--ff-accent-border);
+  background: var(--ff-accent);
+  color: white;
+}
+
+@media (max-width: 767px) {
+  .ff-mobile-notification-menu__panel {
+    position: fixed !important;
+    top: calc(env(safe-area-inset-top) + 72px) !important;
+    right: 12px !important;
+    left: 12px !important;
+    width: auto !important;
+    max-width: none !important;
+    transform: none !important;
+    border-radius: 22px !important;
+  }
+
+  .ff-mobile-notification-menu__panel::before {
+    right: 26px !important;
+  }
+}
+
+.ff-forge-exercise-strip__item {
+  min-width: 286px !important;
+  max-width: 332px !important;
+  grid-template-columns: 54px minmax(0, 1fr) !important;
+  padding: 10px 12px !important;
+}
+
+.ff-forge-exercise-strip__thumb {
+  width: 54px !important;
+  height: 54px !important;
+}
+
+.ff-forge-exercise-strip__content strong {
+  font-size: 1rem !important;
+  line-height: 1.1 !important;
+}
+
+.ff-forge-exercise-strip__subtitle,
+.ff-forge-exercise-strip__last {
+  display: block !important;
+  margin-top: 3px !important;
+  font-size: .72rem !important;
+  line-height: 1.15 !important;
+}
+
+.ff-forge-exercise-strip__subtitle {
+  color: var(--ff-muted) !important;
+}
+
+.ff-forge-exercise-strip__last {
+  color: var(--ff-text-soft) !important;
+  font-weight: 900 !important;
+}
+
+.ff-forge-exercise-strip__meta {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-top: 7px !important;
+}
+
+.ff-forge-exercise-strip__meta b {
+  color: var(--ff-accent-text) !important;
+  font-size: .74rem !important;
+  font-weight: 950 !important;
+}
+
+.ff-forge-exercise-strip__meta i {
+  display: block !important;
+  height: 5px !important;
+  overflow: hidden !important;
+  border-radius: 999px !important;
+  background: var(--ff-surface-3) !important;
+}
+
+.ff-forge-exercise-strip__meta i span {
+  display: block !important;
+  height: 100% !important;
+  border-radius: inherit !important;
+  background: var(--ff-accent) !important;
+}
+
+@media (max-width: 430px) {
+  .ff-forge-exercise-strip__item {
+    min-width: 272px !important;
+    max-width: 300px !important;
+  }
+}
