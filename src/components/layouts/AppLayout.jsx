@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
-import { Download, Menu } from 'lucide-react'
+import { Download, Dumbbell, Menu } from 'lucide-react'
 import { Outlet, useLocation } from 'react-router-dom'
 
 import forgeflowIcon from '../../assets/forgeflow-icon.png'
@@ -392,24 +392,16 @@ function AppLayout() {
               </button>
 
               <div className="flex min-w-0 items-center gap-3">
-                <div className="ff-app-header-logo flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-accent)] shadow-[0_0_18px_var(--ff-accent-shadow)]">
+                <div className="ff-header-brand-icon flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-accent)] shadow-[0_0_18px_var(--ff-accent-shadow)]">
+                  <Dumbbell className="ff-header-brand-icon__fallback" size={22} aria-hidden="true" />
                   <img
-                    src={forgeflowIcon || '/icons/icon-192.png'}
+                    src={forgeflowIcon}
                     alt="ForgeFlow"
-                    className="h-full w-full object-contain p-1"
+                    className="ff-header-brand-icon__img"
                     onError={(event) => {
-                      const image = event.currentTarget
-                      if (image.dataset.fallbackApplied === 'true') {
-                        image.style.display = 'none'
-                        image.parentElement?.classList.add('ff-app-header-logo--fallback')
-                        return
-                      }
-
-                      image.dataset.fallbackApplied = 'true'
-                      image.src = '/icons/icon-192.png'
+                      event.currentTarget.style.display = 'none'
                     }}
                   />
-                  <span aria-hidden="true">FF</span>
                 </div>
 
                 <div className="min-w-0">

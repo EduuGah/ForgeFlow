@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bell, ChevronRight } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { Bell, ChevronRight, Inbox, X } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../../context/AuthContext'
 import { apiFetch } from '../../services/api'
@@ -16,12 +16,11 @@ function getUnreadCountFromCache(user) {
 
 function NotificationBell() {
   const { user } = useAuth()
-  const navigate = useNavigate()
   const [unreadCount, setUnreadCount] = useState(0)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [recentNotifications, setRecentNotifications] = useState([])
-  const isLoadingRef = useRef(false)
   const menuRef = useRef(null)
+  const isLoadingRef = useRef(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
     setUnreadCount(0)
@@ -35,9 +34,7 @@ function NotificationBell() {
 
       isLoadingRef.current = true
       clearLegacyForgeFlowStorage(['notifications'])
-      const cachedNotifications = getUserStorageData(user, 'notifications', [])
       setUnreadCount(getUnreadCountFromCache(user))
-      setRecentNotifications(Array.isArray(cachedNotifications) ? cachedNotifications.slice(0, 4) : [])
 
       try {
         const data = await apiFetch('/notifications?status=unread&limit=1')
@@ -75,20 +72,21 @@ function NotificationBell() {
   useEffect(() => {
     if (!isMenuOpen) return undefined
 
-    function handleClickOutside(event) {
-      if (!menuRef.current) return
-      if (!menuRef.current.contains(event.target)) setIsMenuOpen(false)
+    function handlePointerDown(event) {
+      if (!menuRef.current?.contains(event.target)) {
+        setIsMenuOpen(false)
+      }
     }
 
     function handleEscape(event) {
       if (event.key === 'Escape') setIsMenuOpen(false)
     }
 
-    document.addEventListener('pointerdown', handleClickOutside)
+    document.addEventListener('pointerdown', handlePointerDown)
     document.addEventListener('keydown', handleEscape)
 
     return () => {
-      document.removeEventListener('pointerdown', handleClickOutside)
+      document.removeEventListener('pointerdown', handlePointerDown)
       document.removeEventListener('keydown', handleEscape)
     }
   }, [isMenuOpen])
@@ -99,7 +97,7 @@ function NotificationBell() {
   }
 
   return (
-    <div ref={menuRef} className="ff-notification-bell">
+    <div ref={menuRef} className="ff-mobile-notification-menu">
       <button
       type="button"
       onClick={() => setIsMenuOpen((current) => !current)}
@@ -119,37 +117,29 @@ function NotificationBell() {
       </button>
 
       {isMenuOpen && (
-        <div className="ff-notification-menu" role="menu" aria-label="Menu de notificações">
-          <div className="ff-notification-menu__header">
+        <div className="ff-mobile-notification-menu__panel" role="menu" aria-label="Menu de notificações">
+          <div className="ff-mobile-notification-menu__header">
             <div>
-              <span>Central</span>
-              <strong>Notificações</strong>
+              <span>Notificações</span>
+              <strong>{unreadCount > 0 ? `${unreadCount} não lida${unreadCount > 1 ? 's' : ''}` : 'Tudo em dia'}</strong>
             </div>
-            {unreadCount > 0 && <b>{unreadCount > 9 ? '9+' : unreadCount}</b>}
+            <button type="button" onClick={() => setIsMenuOpen(false)} aria-label="Fechar notificações">
+              <X size={18} />
+            </button>
           </div>
 
-          <div className="ff-notification-menu__list">
-            {recentNotifications.length === 0 ? (
-              <p>Nenhuma notificação recente.</p>
-            ) : (
-              recentNotifications.map((notification, index) => (
-                <button
-                  key={notification.id || `${notification.title || 'notificacao'}-${index}`}
-                  type="button"
-                  onClick={openNotificationsPage}
-                  className={notification.status === 'unread' ? 'is-unread' : ''}
-                >
-                  <span>{notification.title || 'Notificação'}</span>
-                  <small>{notification.message || notification.description || 'Toque para ver detalhes.'}</small>
-                </button>
-              ))
-            )}
-          </div>
-
-          <button type="button" onClick={openNotificationsPage} className="ff-notification-menu__all">
-            Ver todas
-            <ChevronRight size={16} />
+          <button type="button" className="ff-mobile-notification-menu__summary" onClick={openNotificationsPage}>
+            <span><Inbox size={18} /></span>
+            <div>
+              <strong>{unreadCount > 0 ? 'Abrir notificações pendentes' : 'Ver central de notificações'}</strong>
+              <small>Metas, lembretes e avisos do ForgeFlow.</small>
+            </div>
+            <ChevronRight size={18} />
           </button>
+
+          <Link to="/settings" onClick={() => setIsMenuOpen(false)} className="ff-mobile-notification-menu__link">
+            Ajustar preferências de lembretes
+          </Link>
         </div>
       )}
     </div>

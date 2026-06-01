@@ -4,14 +4,15 @@ import {
   ChevronUp,
   Flame,
   ImageIcon,
+  Search,
   Minus,
   MoreVertical,
   Plus,
   Repeat2,
   Trash2,
 } from 'lucide-react'
-import Input from '../../../components/ui/Input'
 import { SetPrBadges } from './ActiveExerciseSetControls'
+import { getExerciseMedia } from '../../../utils/exerciseMediaUtils'
 
 function getPreviousLabel(performance) {
   if (!performance?.lastSet) return '-'
@@ -119,20 +120,23 @@ export default function ActiveExerciseCard({
             <span>Substituir, pular ou remover do treino.</span>
           </div>
 
-          <Input
-            label="Buscar substituto"
-            placeholder="Pesquisar exercício..."
-            value={replaceSearch}
-            onChange={(event) => onReplaceSearchChange(event.target.value)}
-          />
+          <label className="ff-replace-exercise-search">
+            <Search size={17} />
+            <input
+              type="search"
+              placeholder="Buscar substituto..."
+              value={replaceSearch}
+              onChange={(event) => onReplaceSearchChange(event.target.value)}
+            />
+          </label>
 
-          <div className="ff-hevy-replace-list" aria-label="Exercícios para substituir">
+          <div className="ff-replace-exercise-list" aria-label="Exercícios para substituir">
             {replacementOptions.length === 0 ? (
-              <p className="ff-hevy-replace-list__empty">Nenhum exercício encontrado.</p>
+              <p className="ff-replace-exercise-empty">Nenhum exercício encontrado.</p>
             ) : (
-              replacementOptions.slice(0, 18).map((exercise) => {
-                const replacementMedia = getSessionExerciseMedia(exercise)
+              replacementOptions.map((exercise) => {
                 const exerciseId = getExerciseId(exercise)
+                const mediaUrl = getExerciseMedia(exercise)
 
                 return (
                   <button
@@ -142,20 +146,19 @@ export default function ActiveExerciseCard({
                       onReplaceExercise(sessionExercise.id, exerciseId)
                       onCloseOptions?.()
                     }}
-                    className="ff-hevy-replace-list__item"
+                    className="ff-replace-exercise-option"
                   >
-                    <span className="ff-hevy-replace-list__thumb">
-                      {replacementMedia ? (
-                        <img src={replacementMedia} alt="" loading="lazy" decoding="async" />
+                    <span className="ff-replace-exercise-option__media">
+                      {mediaUrl ? (
+                        <img src={mediaUrl} alt="" loading="lazy" decoding="async" />
                       ) : (
                         <ImageIcon size={18} />
                       )}
                     </span>
-                    <span className="ff-hevy-replace-list__content">
+                    <span className="ff-replace-exercise-option__content">
                       <strong>{exercise.name || 'Exercício sem nome'}</strong>
                       <small>{exercise.muscleGroup || 'Sem grupo'} · {exercise.equipment || 'Sem equipamento'}</small>
                     </span>
-                    <span className="ff-hevy-replace-list__action">Usar</span>
                   </button>
                 )
               })

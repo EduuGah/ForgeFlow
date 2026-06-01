@@ -1,14 +1,4 @@
-import { Dumbbell, ImageIcon, ListChecks, Plus } from 'lucide-react'
-
-function getLastWeightLabel(performance) {
-  const weight = Number(performance?.lastSet?.weight || 0)
-  const reps = Number(performance?.lastSet?.reps || 0)
-
-  if (weight > 0 && reps > 0) return `${weight}kg x ${reps}`
-  if (weight > 0) return `${weight}kg último`
-
-  return 'Sem registro'
-}
+import { Dumbbell, ListChecks, Plus } from 'lucide-react'
 
 export function ActiveWorkoutHero({
   activeSession,
@@ -102,9 +92,10 @@ export function ActiveWorkoutHero({
 export function ExerciseJumpNav({
   sessionExercises,
   selectedExercise,
-  getExerciseName,
-  getSessionExerciseMedia,
   exercisePerformanceMap,
+  getExerciseName,
+  getExerciseSubtitle,
+  getSessionExerciseMedia,
   onFocusExercise,
   onAddExercise,
 }) {
@@ -133,7 +124,9 @@ export function ExerciseJumpNav({
           const completed = (exercise.sets || []).filter((set) => set.completed && set.type !== 'warmup').length
           const total = (exercise.sets || []).filter((set) => set.type !== 'warmup').length || 1
           const media = getSessionExerciseMedia?.(exercise)
-          const performance = exercisePerformanceMap?.get?.(exercise.id)
+          const performance = exercisePerformanceMap?.get?.(exercise.id) || {}
+          const lastSet = performance.lastSet
+          const lastLabel = lastSet?.weight || lastSet?.reps ? `${lastSet.weight || 0}kg × ${lastSet.reps || 0}` : getExerciseSubtitle?.(exercise)
 
           return (
             <button
@@ -143,16 +136,11 @@ export function ExerciseJumpNav({
               className={`ff-forge-exercise-strip__item ${isActive ? 'is-active' : ''}`}
             >
               <span className="ff-forge-exercise-strip__thumb">
-                {media ? (
-                  <img src={media} alt="" loading="lazy" decoding="async" />
-                ) : (
-                  <ImageIcon size={16} />
-                )}
+                {media ? <img src={media} alt="" loading="lazy" decoding="async" /> : index + 1}
               </span>
-              <span className="ff-forge-exercise-strip__body">
-                <small>#{index + 1} · {completed}/{total}</small>
+              <span className="ff-forge-exercise-strip__content">
                 <strong>{getExerciseName(exercise)}</strong>
-                <em>{getLastWeightLabel(performance)}</em>
+                <small>{completed}/{total} séries · {lastLabel}</small>
               </span>
             </button>
           )

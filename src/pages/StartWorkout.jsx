@@ -614,9 +614,10 @@ function StartWorkout() {
       <ExerciseJumpNav
         sessionExercises={sessionExercises}
         selectedExercise={selectedExercise}
-        getExerciseName={getExerciseName}
-        getSessionExerciseMedia={getSessionExerciseMedia}
         exercisePerformanceMap={exercisePerformanceMap}
+        getExerciseName={getExerciseName}
+        getExerciseSubtitle={getExerciseSubtitle}
+        getSessionExerciseMedia={getSessionExerciseMedia}
         onFocusExercise={focusExerciseCard}
         onAddExercise={() => setAddExerciseOpen(true)}
       />
@@ -639,7 +640,8 @@ function StartWorkout() {
               exercises={exercises}
               getExerciseId={getExerciseId}
               getExerciseName={getExerciseName}
-                    getSessionExerciseMedia={getSessionExerciseMedia}
+              getExerciseSubtitle={getExerciseSubtitle}
+              getSessionExerciseMedia={getSessionExerciseMedia}
               onRegisterCardRef={(exerciseId, node) => {
                 if (node) exerciseCardRefs.current[exerciseId] = node
               }}
@@ -724,29 +726,16 @@ function StartWorkout() {
               {addExerciseOptions.length === 0 ? (
                 <p className="ff-active-add-exercise-sheet__empty">Nenhum exercício encontrado.</p>
               ) : (
-                addExerciseOptions.map((exercise) => {
-                  const media = getSessionExerciseMedia(exercise)
-
-                  return (
-                    <button
-                      key={getExerciseId(exercise)}
-                      type="button"
-                      onClick={() => handleAddExerciseToSession(getExerciseId(exercise))}
-                    >
-                      <span className="ff-active-add-exercise-sheet__thumb">
-                        {media ? (
-                          <img src={media} alt="" loading="lazy" decoding="async" />
-                        ) : (
-                          '+'
-                        )}
-                      </span>
-                      <span className="ff-active-add-exercise-sheet__content">
-                        <span>{exercise.name || 'Exercício sem nome'}</span>
-                        <small>{exercise.muscleGroup || 'Sem grupo'} · {exercise.equipment || 'Sem equipamento'}</small>
-                      </span>
-                    </button>
-                  )
-                })
+                addExerciseOptions.map((exercise) => (
+                  <button
+                    key={getExerciseId(exercise)}
+                    type="button"
+                    onClick={() => handleAddExerciseToSession(getExerciseId(exercise))}
+                  >
+                    <span>{exercise.name || 'Exercício sem nome'}</span>
+                    <small>{exercise.muscleGroup || 'Sem grupo'} · {exercise.equipment || 'Sem equipamento'}</small>
+                  </button>
+                ))
               )}
             </div>
           </div>
