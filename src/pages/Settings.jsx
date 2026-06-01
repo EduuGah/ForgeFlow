@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Bell, ChevronRight, ClipboardList, Download, Dumbbell, HelpCircle, Info, Languages, Lock, Moon, Shield, UserRound } from 'lucide-react'
 
 
@@ -66,9 +67,30 @@ const settingsGroups = [
   },
 ]
 
-import AppPageIntro from '../components/app/AppPageIntro'
 
-function SettingsNativeDirectory({ onNavigate }) {
+
+function SettingsNativeDirectory({ selectedPanel, onNavigate, onBack }) {
+  if (selectedPanel) {
+    const panelTitle = {
+      account: 'Conta',
+      security: 'Senha e acesso',
+      notifications: 'Notificações',
+      training: 'Treinamentos',
+      appearance: 'Tema',
+      backup: 'Dados e backup',
+      tutorial: 'Guia de arranque',
+      maintenance: 'Manutenção',
+    }[selectedPanel] || 'Configuração'
+
+    return (
+      <section className="ff-settings-native-detail lg:hidden">
+        <button type="button" className="ff-settings-native-back" onClick={onBack}>‹ Voltar</button>
+        <h2>{panelTitle}</h2>
+        <p>Edite esta preferência abaixo. As alterações são salvas automaticamente quando possível.</p>
+      </section>
+    )
+  }
+
   return (
     <section className="ff-settings-native mb-6 lg:hidden">
       {settingsGroups.map((group) => (
@@ -107,15 +129,14 @@ function SettingsNativeDirectory({ onNavigate }) {
           </div>
         </div>
       ))}
-      <button type="button" className="ff-settings-native-row ff-settings-native-danger w-full bg-[var(--ff-card)] text-center text-lg font-medium">
-        Sair
-      </button>
     </section>
   )
 }
 
 function Settings() {
   const { user, setUser } = useAuth()
+  const location = useLocation()
+  const navigate = useNavigate()
 
   const [settings, setSettings] = useState(defaultSettings)
   const [workouts, setWorkouts] = useState([])
@@ -124,6 +145,7 @@ function Settings() {
   const [syncStatus, setSyncStatus] = useState('idle')
   const [pendingSettingKey, setPendingSettingKey] = useState('')
   const [colorSearch, setColorSearch] = useState('')
+  const [selectedMobilePanel, setSelectedMobilePanel] = useState('')
 
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
@@ -203,6 +225,15 @@ function Settings() {
       setToast(null)
     }, 3000)
   }, [])
+
+
+  useEffect(() => {
+    const requestedPanel = location.state?.openSettingsPanel
+    if (requestedPanel) {
+      setSelectedMobilePanel(requestedPanel)
+      navigate(location.pathname, { replace: true, state: {} })
+    }
+  }, [location.pathname, location.state, navigate])
 
   useEffect(() => {
     if (!user) return undefined
@@ -514,26 +545,16 @@ function Settings() {
       return
     }
 
-    const element = document.getElementById(`settings-${row.target}`)
+    setSelectedMobilePanel(row.target)
+  }
 
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      return
-    }
-
-    showToast('info', row.label, 'Seção não encontrada nesta tela.')
+  function panelClass(panel) {
+    return selectedMobilePanel && selectedMobilePanel !== panel ? 'hidden lg:block' : ''
   }
 
   return (
     <div className="ff-hevy-page ff-hevy-page-settings">
 
-      <AppPageIntro
-        eyebrow="Ajustes"
-        title="Configurações"
-        description="Preferências e recursos organizados em lista de aplicativo."
-      />
-
-    <>
       <header className="mb-5 flex items-center justify-between gap-3 lg:hidden">
         <div className="w-10" />
         <h1 className="text-center text-xl font-medium tracking-[-0.03em]">Configurações</h1>
@@ -550,21 +571,21 @@ function Settings() {
         </div>
       </div>
 
-      <SettingsNativeDirectory onNavigate={handleNativeSettingsNavigate} />
+      <SettingsNativeDirectory selectedPanel={selectedMobilePanel} onNavigate={handleNativeSettingsNavigate} onBack={() => setSelectedMobilePanel('')} />
 
-      <GooglePasswordNotice user={user} />
+      {(!selectedMobilePanel || selectedMobilePanel === 'account' || selectedMobilePanel === 'security') && <GooglePasswordNotice user={user} />}
 
-      <section className="ff-settings-layout grid grid-cols-1 gap-6 2xl:grid-cols-[minmax(0,1fr)_320px]">
+      <section className={`ff-settings-layout grid grid-cols-1 gap-6 2xl:grid-cols-[minmax(0,1fr)_320px] ${selectedMobilePanel ? 'is-mobile-panel-open' : 'is-mobile-directory'}`}>
         <div className="ff-hevy-settings space-y-5 sm:space-y-6">
-          <div id="settings-tutorial" className="scroll-mt-24">
+          <div id="settings-tutorial" data-settings-panel="tutorial" className={`scroll-mt-24 ${panelClass('tutorial')}`}>
             <SettingsTutorialSection />
           </div>
 
-          <div id="settings-maintenance" className="scroll-mt-24">
+          <div id="settings-maintenance" data-settings-panel="maintenance" className={`scroll-mt-24 ${panelClass('maintenance')}`}>
             <SettingsMaintenanceSection onClearPwaCache={handleClearPwaCache} />
           </div>
 
-          <div id="settings-appearance" className="scroll-mt-24">
+          <div id="settings-appearance" data-settings-panel="appearance" className={`scroll-mt-24 ${panelClass('appearance')}`}>
             <SettingsAppearanceSection
               settings={settings}
               currentAccent={currentAccent}
@@ -576,14 +597,14 @@ function Settings() {
             />
           </div>
 
-          <div id="settings-training" className="scroll-mt-24">
+          <div id="settings-training" data-settings-panel="training" className={`scroll-mt-24 ${panelClass('training')}`}>
             <SettingsTrainingPreferencesSection
               settings={settings}
               onUpdateSetting={handleUpdateSetting}
             />
           </div>
 
-          <div id="settings-notifications" className="scroll-mt-24">
+          <div id="settings-notifications" data-settings-panel="notifications" className={`scroll-mt-24 ${panelClass('notifications')}`}>
             <NotificationSettingsSection
               settings={settings}
               workouts={workouts}
@@ -592,7 +613,7 @@ function Settings() {
             />
           </div>
 
-          <div id="settings-backup" className="scroll-mt-24">
+          <div id="settings-backup" data-settings-panel="backup" className={`scroll-mt-24 ${panelClass('backup')}`}>
             <SettingsBackupSection
               exportPassword={exportPassword}
               exportingType={exportingType}
@@ -604,7 +625,7 @@ function Settings() {
             />
           </div>
 
-          <div id="settings-security" className="scroll-mt-24">
+          <div id="settings-security" data-settings-panel="security" className={`scroll-mt-24 ${panelClass('security')}`}>
             <SettingsPasswordSection
               user={user}
               passwordForm={passwordForm}
@@ -615,6 +636,7 @@ function Settings() {
           </div>
         </div>
 
+        <div className={selectedMobilePanel && selectedMobilePanel !== 'security' ? 'hidden lg:block' : ''}>
         <SettingsRiskSidebar
           user={user}
           syncBadgeText={syncBadgeText}
@@ -624,6 +646,7 @@ function Settings() {
           onResetSettings={handleResetSettings}
           onDeleteAccount={handleDeleteAccount}
         />
+        </div>
       </section>
 
       <ConfirmModal
@@ -643,8 +666,6 @@ function Settings() {
         message={toast?.message}
         onClose={() => setToast(null)}
       />
-    </>
-  
     </div>
   )
 }

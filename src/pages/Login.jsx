@@ -8,8 +8,6 @@ import { getGoogleLoginUrl, isNativeApp } from '../utils/platformUtils'
 
 const API_URL = (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3001' : 'https://forgeflow-citr.onrender.com')).replace(/\/$/, '')
 
-import AppPageIntro from '../components/app/AppPageIntro'
-
 function GoogleIcon() {
     return (
         <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
@@ -93,13 +91,10 @@ function Login() {
     }
 
     return (
-    <div className="ff-hevy-page ff-hevy-page-login">
-
-      <AppPageIntro eyebrow="Entrar" title="ForgeFlow" description="Acesse seus treinos, histórico e progresso." />
-
-        <div className="flex min-h-screen items-center justify-center bg-[var(--ff-bg)] px-4 text-[var(--ff-text)]">
-            <div className="w-full max-w-md rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-8 shadow-2xl">
-                <div className="login-logo-card mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-3xl bg-white">
+    <div className="ff-login-screen">
+        <div className="ff-login-shell">
+            <div className="ff-login-card">
+                <div className="ff-login-logo login-logo-card">
                     <img
                         src={forgeflowIcon}
                         alt="ForgeFlow"
@@ -107,7 +102,7 @@ function Login() {
                     />
                 </div>
 
-                <div className="mt-6 text-center">
+                <div className="ff-login-title">
                     <div className="flex items-center justify-center gap-1">
                         <span className="text-lg font-black tracking-tight text-[var(--ff-text)]">
                             Forge
@@ -126,7 +121,7 @@ function Login() {
                     </p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="mt-7 space-y-4">
+                <form onSubmit={handleSubmit} className="ff-login-form">
                     <div>
                         <label className="mb-2 block text-sm font-bold text-[var(--ff-text)]">
                             E-mail
@@ -173,7 +168,7 @@ function Login() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="flex h-12 w-full items-center justify-center rounded-2xl bg-[var(--ff-accent)] text-sm font-black text-white transition hover:bg-[var(--ff-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+                        className="ff-login-primary-button"
                     >
                         {loading ? 'Entrando...' : 'Entrar'}
                     </button>
@@ -202,7 +197,7 @@ function Login() {
                 <button
                     type="button"
                     onClick={handleGoogleLogin}
-                    className="group flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-sm font-black text-[var(--ff-text)] shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-card-hover)] active:translate-y-0"
+                    className="ff-login-google-button group"
                 >
                     <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white shadow-sm transition group-hover:scale-105">
                         <GoogleIcon />

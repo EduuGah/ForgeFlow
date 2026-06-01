@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Bell, BellRing, CalendarCheck, Clock3, Droplets, Moon, Smartphone, TestTube2, Utensils, Weight, Camera } from 'lucide-react'
+import { Bell, BellRing, CalendarCheck, Clock3, Droplets, Moon, Smartphone, Utensils, Weight, Camera } from 'lucide-react'
 
 import Card from '../ui/Card'
 import Button from '../ui/Button'
@@ -14,7 +14,6 @@ import {
   getPendingNotifications,
   requestExactNotificationPermission,
   requestNotificationPermission,
-  scheduleTestNotification,
   scheduleDailyWeightReminder,
   scheduleWeeklyWorkoutReminders,
   scheduleSmartReminder,
@@ -126,26 +125,6 @@ function NotificationSettingsSection({ settings, workouts = [], onUpdateSetting,
     }
   }
 
-  async function handleTestNotification() {
-    setIsBusy(true)
-    try {
-      const permissionResult = await ensurePermission()
-      if (nativeApp && permissionResult?.display !== 'granted') {
-        onShowToast?.('error', 'Notificação bloqueada', 'Permita notificações do ForgeFlow no Android antes do teste.')
-        return
-      }
-
-      const result = await scheduleTestNotification(10)
-      if (result?.reason === 'not-native') {
-        onShowToast?.('success', 'Teste salvo', 'O teste real de notificação só aparece no APK Android.')
-      } else {
-        onShowToast?.('success', 'Teste agendado', 'Uma notificação deve aparecer em aproximadamente 10 segundos.')
-      }
-    } finally {
-      setIsBusy(false)
-      refreshNativeStatus()
-    }
-  }
 
   async function handleWeightReminderToggle(value) {
     setIsBusy(true)
@@ -384,15 +363,6 @@ function NotificationSettingsSection({ settings, workouts = [], onUpdateSetting,
               Ajustar alarme exato
             </Button>
           )}
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleTestNotification}
-            disabled={isBusy}
-            className="ff-reminder-primary-action"
-          >
-            <TestTube2 size={16} /> Testar em 10s
-          </Button>
         </div>
       </div>
 

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bell, ChevronRight, Inbox, X } from 'lucide-react'
+import { Bell, ChevronRight, Inbox, Settings, X } from 'lucide-react'
 import { normalizeNotificationFromApi, formatDateTime, getNotificationMeta } from '../../features/notifications/notificationUtils'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../../context/AuthContext'
 import { apiFetch } from '../../services/api'
@@ -13,6 +13,16 @@ function getUnreadCountFromCache(user) {
   return Array.isArray(cachedNotifications)
     ? cachedNotifications.filter((item) => item.status === 'unread').length
     : 0
+}
+
+function getNotificationDateLabel(value) {
+  if (!value) return 'Agora'
+
+  try {
+    return formatDateTime(value)
+  } catch {
+    return 'Agora'
+  }
 }
 
 function NotificationBell() {
@@ -39,7 +49,7 @@ function NotificationBell() {
       setUnreadCount(getUnreadCountFromCache(user))
 
       try {
-        const data = await apiFetch('/notifications?limit=5')
+        const data = await apiFetch('/notifications?limit=6')
 
         if (!isMounted) return
 
@@ -48,11 +58,11 @@ function NotificationBell() {
           : []
 
         setUnreadCount(Number(data?.unreadCount) || normalizedNotifications.filter((item) => item.status === 'unread').length)
-        setPreviewNotifications(normalizedNotifications)
+        setPreviewNotifications(normalizedNotifications.slice(0, 6))
       } catch (error) {
         const cachedNotifications = getUserStorageData(user, 'notifications', [])
         const normalizedCached = Array.isArray(cachedNotifications)
-          ? cachedNotifications.map(normalizeNotificationFromApi).slice(0, 5)
+          ? cachedNotifications.map(normalizeNotificationFromApi).slice(0, 6)
           : []
 
         setPreviewNotifications(normalizedCached)
@@ -81,7 +91,6 @@ function NotificationBell() {
     }
   }, [user])
 
-
   useEffect(() => {
     if (!isMenuOpen) return undefined
 
@@ -109,29 +118,36 @@ function NotificationBell() {
     navigate('/notifications')
   }
 
+  function openNotificationSettings() {
+    setIsMenuOpen(false)
+    navigate('/settings', { state: { openSettingsPanel: 'notifications' } })
+  }
+
+  const hasPreview = previewNotifications.length > 0
+
   return (
     <div ref={menuRef} className="ff-mobile-notification-menu">
       <button
-      type="button"
-      onClick={() => setIsMenuOpen((current) => !current)}
-      className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface)] text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)] active:scale-95"
-      title="Notificações"
-      aria-haspopup="menu"
-      aria-expanded={isMenuOpen}
-      aria-label={unreadCount > 0 ? `${unreadCount} notificações não lidas` : 'Notificações'}
-    >
-      <Bell size={20} />
+        type="button"
+        onClick={() => setIsMenuOpen((current) => !current)}
+        className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface)] text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)] active:scale-95"
+        title="Notificações"
+        aria-haspopup="dialog"
+        aria-expanded={isMenuOpen}
+        aria-label={unreadCount > 0 ? `${unreadCount} notificações não lidas` : 'Notificações'}
+      >
+        <Bell size={20} />
 
-      {unreadCount > 0 && (
-        <span className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[var(--ff-accent)] px-1.5 text-center text-[10px] font-black leading-none text-white shadow-[0_0_14px_var(--ff-accent-shadow)]">
-          {unreadCount > 9 ? '9+' : unreadCount}
-        </span>
-      )}
+        {unreadCount > 0 && (
+          <span className="absolute -right-1 -top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[var(--ff-accent)] px-1.5 text-center text-[10px] font-black leading-none text-white shadow-[0_0_14px_var(--ff-accent-shadow)]">
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
+        )}
       </button>
 
       {isMenuOpen && (
-        <div className="ff-mobile-notification-menu__panel" role="menu" aria-label="Menu de notificações">
-          <div className="ff-mobile-notification-menu__header">
+        <div className="ff-notification-popover" role="dialog" aria-label="Prévia de notificações">
+          <div className="ff-notification-popover__header">
             <div>
               <span>Notificações</span>
               <strong>{unreadCount > 0 ? `${unreadCount} não lida${unreadCount > 1 ? 's' : ''}` : 'Tudo em dia'}</strong>
@@ -141,8 +157,8 @@ function NotificationBell() {
             </button>
           </div>
 
-          <div className="ff-mobile-notification-menu__preview-list">
-            {previewNotifications.length > 0 ? (
+          <div className="ff-notification-popover__list">
+            {hasPreview ? (
               previewNotifications.map((notification) => {
                 const meta = getNotificationMeta(notification.type)
                 const Icon = meta.icon
@@ -152,33 +168,33 @@ function NotificationBell() {
                   <button
                     key={notification.id}
                     type="button"
-                    className={`ff-mobile-notification-menu__preview ${isUnread ? 'is-unread' : ''}`}
+                    className={`ff-notification-popover__item ${isUnread ? 'is-unread' : ''}`}
                     onClick={openNotificationsPage}
                   >
-                    <span className="ff-mobile-notification-menu__preview-icon"><Icon size={16} /></span>
-                    <span className="ff-mobile-notification-menu__preview-copy">
-                      <strong>{notification.title}</strong>
-                      <small>{notification.message || meta.label}</small>
-                      <em>{isUnread ? 'Não lida' : 'Lida'} · {formatDateTime(notification.createdAt)}</em>
+                    <span className="ff-notification-popover__icon"><Icon size={16} /></span>
+                    <span className="ff-notification-popover__copy">
+                      <strong>{notification.title || meta.label || 'Notificação'}</strong>
+                      <small>{notification.message || 'Toque para ver detalhes.'}</small>
+                      <em>{isUnread ? 'Não lida' : 'Lida'} · {getNotificationDateLabel(notification.createdAt)}</em>
                     </span>
                   </button>
                 )
               })
             ) : (
-              <button type="button" className="ff-mobile-notification-menu__summary" onClick={openNotificationsPage}>
-                <span><Inbox size={18} /></span>
+              <button type="button" className="ff-notification-popover__empty" onClick={openNotificationsPage}>
+                <span><Inbox size={20} /></span>
                 <div>
-                  <strong>Tudo em dia</strong>
-                  <small>Sem novas prévias agora.</small>
+                  <strong>Sem notificações recentes</strong>
+                  <small>Quando algo importante acontecer, aparece aqui.</small>
                 </div>
                 <ChevronRight size={18} />
               </button>
             )}
           </div>
 
-          <div className="ff-mobile-notification-menu__actions">
+          <div className="ff-notification-popover__actions">
             <button type="button" onClick={openNotificationsPage}>Ver todas</button>
-            <Link to="/settings" onClick={() => setIsMenuOpen(false)}>Preferências</Link>
+            <button type="button" onClick={openNotificationSettings}><Settings size={15} /> Preferências</button>
           </div>
         </div>
       )}
