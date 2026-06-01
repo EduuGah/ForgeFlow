@@ -44,6 +44,7 @@ export default function ActiveExerciseCard({
   onReplaceExercise,
   onSkipExercise,
   onRemoveExercise,
+  onCloseOptions,
   onUpdateSet,
   onToggleSetWarmup,
   onCompleteSet,
@@ -81,7 +82,10 @@ export default function ActiveExerciseCard({
 
         <button
           type="button"
-          onClick={() => onToggleCollapse(sessionExercise.id)}
+          onClick={() => {
+                onToggleCollapse(sessionExercise.id)
+                onCloseOptions?.()
+              }}
           className="ff-hevy-active-exercise__title"
         >
           <span>{getExerciseName(sessionExercise)}</span>
@@ -126,7 +130,10 @@ export default function ActiveExerciseCard({
           <Select
             label="Substituir por"
             defaultValue=""
-            onChange={(event) => onReplaceExercise(sessionExercise.id, event.target.value)}
+            onChange={(event) => {
+              onReplaceExercise(sessionExercise.id, event.target.value)
+              onCloseOptions?.()
+            }}
           >
             <option value="">Selecione um exercício</option>
             {replacementOptions.map((exercise) => (
@@ -137,15 +144,24 @@ export default function ActiveExerciseCard({
           </Select>
 
           <div className="ff-hevy-option-actions">
-            <button type="button" onClick={() => onToggleCollapse(sessionExercise.id)}>
+            <button type="button" onClick={() => {
+              onToggleCollapse(sessionExercise.id)
+              onCloseOptions?.()
+            }}>
               {isCollapsed ? <ChevronDown size={17} /> : <ChevronUp size={17} />}
               {isCollapsed ? 'Expandir' : 'Minimizar'}
             </button>
-            <button type="button" onClick={() => onSkipExercise(sessionExercise.id)}>
+            <button type="button" onClick={() => {
+              onSkipExercise(sessionExercise.id)
+              onCloseOptions?.()
+            }}>
               <Repeat2 size={17} />
               {sessionExercise.skipped ? 'Retomar' : 'Pular'}
             </button>
-            <button type="button" onClick={() => onRemoveExercise(sessionExercise.id)} className="danger">
+            <button type="button" onClick={() => {
+              onRemoveExercise(sessionExercise.id)
+              onCloseOptions?.()
+            }} className="danger">
               <Trash2 size={17} />
               Excluir
             </button>

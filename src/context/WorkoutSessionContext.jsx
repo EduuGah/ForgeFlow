@@ -563,6 +563,62 @@ export function WorkoutSessionProvider({ children }) {
     })
   }
 
+  function addExerciseToSession(newExercise) {
+    if (!newExercise) return null
+
+    const sessionExerciseId = safeCryptoId()
+
+    setActiveSession((current) => {
+      if (!current) return current
+
+      const baseSets = Array.isArray(newExercise.sets) && newExercise.sets.length > 0
+        ? newExercise.sets
+        : [
+          { type: 'working', description: 'Série 1' },
+          { type: 'working', description: 'Série 2' },
+          { type: 'working', description: 'Série 3' },
+        ]
+
+      let workingSetNumber = 0
+
+      return markSessionUpdated({
+        ...current,
+        exercises: [
+          ...current.exercises,
+          {
+            id: sessionExerciseId,
+            originalExerciseId: newExercise.id || newExercise._id || '',
+            exercise: newExercise,
+            skipped: false,
+            restTimer: 'Desligado',
+            sets: baseSets.map((set) => {
+              const type = set.type === 'warmup' ? 'warmup' : 'working'
+
+              if (type !== 'warmup') {
+                workingSetNumber += 1
+              }
+
+              return {
+                id: safeCryptoId(),
+                plannedDescription: set.description || (type === 'warmup' ? 'Aquecimento' : `Série ${workingSetNumber}`),
+                type,
+                setNumber: type === 'warmup' ? null : workingSetNumber,
+                weight: '',
+                reps: '',
+                completed: false,
+                isPR: false,
+                isWeightPR: false,
+                isVolumePR: false,
+              }
+            }),
+          },
+        ],
+      })
+    })
+
+    return sessionExerciseId
+  }
+
   function removeExercise(exerciseId) {
     setActiveSession((current) => {
       if (!current) return current
@@ -783,6 +839,7 @@ export function WorkoutSessionProvider({ children }) {
         removeSet,
         toggleSetWarmup,
         moveSet,
+        addExerciseToSession,
         removeExercise,
         skipExercise,
         replaceExercise,

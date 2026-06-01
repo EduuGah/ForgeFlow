@@ -1,4 +1,4 @@
-import { Dumbbell, ListChecks } from 'lucide-react'
+import { Dumbbell, ListChecks, Plus } from 'lucide-react'
 
 export function ActiveWorkoutHero({
   activeSession,
@@ -16,6 +16,7 @@ export function ActiveWorkoutHero({
   onRequestFinish,
   onFinishWorkout,
   onFocusExercise,
+  onBack,
 }) {
   const totalExercises = activeSession.exercises?.length || 0
   const focusName = focusExercise ? getExerciseName(focusExercise) : 'Próximo exercício'
@@ -32,8 +33,8 @@ export function ActiveWorkoutHero({
   return (
     <header className="ff-forge-active-hero">
       <div className="ff-forge-active-hero__top">
-        <button type="button" className="ff-forge-active-hero__back" aria-label="Voltar">
-          <span>⌄</span>
+        <button type="button" onClick={onBack} className="ff-forge-active-hero__back" aria-label="Voltar para treinos">
+          <span>‹</span>
         </button>
 
         <div className="ff-forge-active-hero__title">
@@ -93,6 +94,7 @@ export function ExerciseJumpNav({
   selectedExercise,
   getExerciseName,
   onFocusExercise,
+  onAddExercise,
 }) {
   return (
     <section className="ff-forge-exercise-strip" aria-label="Lista de exercícios do treino">
@@ -100,6 +102,17 @@ export function ExerciseJumpNav({
         <ListChecks size={15} />
         <span>Exercícios</span>
         <b>{sessionExercises.length}</b>
+        {onAddExercise && (
+          <button
+            type="button"
+            onClick={onAddExercise}
+            className="ff-forge-exercise-strip__add"
+            aria-label="Adicionar exercício ao treino"
+          >
+            <Plus size={15} />
+            Adicionar
+          </button>
+        )}
       </div>
 
       <div className="ff-forge-exercise-strip__scroller">

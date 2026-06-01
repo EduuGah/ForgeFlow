@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useDeferredValue } from 'react'
+import { useNavigate } from 'react-router-dom'
 import ConfirmModal from '../components/ui/ConfirmModal'
 import Toast from '../components/ui/Toast'
 import {
@@ -136,6 +137,7 @@ function StartWorkout() {
     removeSet,
     toggleSetWarmup,
     moveSet,
+    addExerciseToSession,
     removeExercise,
     skipExercise,
     replaceExercise,
@@ -145,9 +147,14 @@ function StartWorkout() {
   } = useWorkoutSession()
 
   const [exercises, setExercises] = useState([])
+  const navigate = useNavigate()
+
   const [replaceExerciseId, setReplaceExerciseId] = useState(null)
   const [replaceSearch, setReplaceSearch] = useState('')
+  const [addExerciseOpen, setAddExerciseOpen] = useState(false)
+  const [addExerciseSearch, setAddExerciseSearch] = useState('')
   const deferredReplaceSearch = useDeferredValue(replaceSearch)
+  const deferredAddExerciseSearch = useDeferredValue(addExerciseSearch)
 
   const [restTimer, setRestTimer] = useState(null)
   const [manualRestSeconds, setManualRestSeconds] = useState(90)
@@ -284,6 +291,27 @@ function StartWorkout() {
       })
       .slice(0, 80)
   }, [exercises, deferredReplaceSearch])
+
+  const addExerciseOptions = useMemo(() => {
+    const selectedOriginalIds = new Set(
+      sessionExercises
+        .map((exercise) => String(exercise.originalExerciseId || exercise.exercise?.id || exercise.exercise?._id || ''))
+        .filter(Boolean)
+    )
+    const search = String(deferredAddExerciseSearch || '').toLowerCase().trim()
+
+    return exercises
+      .filter((exercise) => {
+        const id = String(getExerciseId(exercise))
+        if (id && selectedOriginalIds.has(id)) return false
+        if (!search) return true
+
+        const searchable = `${exercise.name || ''} ${exercise.muscleGroup || ''} ${exercise.equipment || ''}`.toLowerCase()
+
+        return searchable.includes(search)
+      })
+      .slice(0, 60)
+  }, [deferredAddExerciseSearch, exercises, sessionExercises])
 
   function showToast(type, title, message = '') {
     setToast({
@@ -465,6 +493,34 @@ function StartWorkout() {
     setReplaceSearch('')
   }
 
+  function handleAddExerciseToSession(newExerciseId) {
+    const newExercise = exercises.find(
+      (exercise) => getExerciseId(exercise) === String(newExerciseId)
+    )
+
+    if (!newExercise) return
+
+    const newSessionExerciseId = addExerciseToSession(newExercise)
+    setAddExerciseOpen(false)
+    setAddExerciseSearch('')
+
+    showToast('success', 'Exercício adicionado', `${newExercise.name || 'Exercício'} entrou no treino ativo.`)
+
+    window.setTimeout(() => {
+      if (newSessionExerciseId) focusExerciseCard(newSessionExerciseId)
+    }, 120)
+  }
+
+  function handleRemoveExerciseFromSession(sessionExerciseId) {
+    if (sessionExercises.length <= 1) {
+      showToast('error', 'Não é possível excluir', 'O treino ativo precisa ter pelo menos um exercício.')
+      return
+    }
+
+    removeExercise(sessionExerciseId)
+    setReplaceExerciseId(null)
+  }
+
   useEffect(() => {
     function handleSettingsChanged(event) {
       setAppSettings(event.detail || getAppSettings())
@@ -552,6 +608,7 @@ function StartWorkout() {
         onRequestFinish={handleRequestFinishWorkout}
         onFinishWorkout={handleFinishWorkout}
         onFocusExercise={focusExerciseCard}
+        onBack={() => navigate('/workouts')}
       />
 
       <ExerciseJumpNav
@@ -559,6 +616,7 @@ function StartWorkout() {
         selectedExercise={selectedExercise}
         getExerciseName={getExerciseName}
         onFocusExercise={focusExerciseCard}
+        onAddExercise={() => setAddExerciseOpen(true)}
       />
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-4 xl:gap-6">
@@ -591,7 +649,8 @@ function StartWorkout() {
               onReplaceSearchChange={setReplaceSearch}
               onReplaceExercise={handleReplaceExercise}
               onSkipExercise={skipExercise}
-              onRemoveExercise={removeExercise}
+              onRemoveExercise={handleRemoveExerciseFromSession}
+              onCloseOptions={() => setReplaceExerciseId(null)}
               onUpdateSet={updateSet}
               onToggleSetWarmup={toggleSetWarmup}
               onMoveSet={moveSet}
@@ -636,6 +695,49 @@ function StartWorkout() {
         onRestart={restartRestTimer}
         onClose={() => setRestTimer(null)}
       />
+
+
+      {addExerciseOpen && (
+        <div className="ff-active-add-exercise-sheet" role="dialog" aria-modal="true" aria-label="Adicionar exercício ao treino">
+          <div className="ff-active-add-exercise-sheet__panel">
+            <div className="ff-active-add-exercise-sheet__header">
+              <div>
+                <span>Treino ativo</span>
+                <strong>Adicionar exercício</strong>
+              </div>
+              <button type="button" onClick={() => setAddExerciseOpen(false)} aria-label="Fechar">×</button>
+            </div>
+
+            <label className="ff-active-add-exercise-sheet__search">
+              <span>Buscar</span>
+              <input
+                type="search"
+                value={addExerciseSearch}
+                onChange={(event) => setAddExerciseSearch(event.target.value)}
+                placeholder="Nome, músculo ou equipamento"
+                autoFocus
+              />
+            </label>
+
+            <div className="ff-active-add-exercise-sheet__list">
+              {addExerciseOptions.length === 0 ? (
+                <p className="ff-active-add-exercise-sheet__empty">Nenhum exercício encontrado.</p>
+              ) : (
+                addExerciseOptions.map((exercise) => (
+                  <button
+                    key={getExerciseId(exercise)}
+                    type="button"
+                    onClick={() => handleAddExerciseToSession(getExerciseId(exercise))}
+                  >
+                    <span>{exercise.name || 'Exercício sem nome'}</span>
+                    <small>{exercise.muscleGroup || 'Sem grupo'} · {exercise.equipment || 'Sem equipamento'}</small>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <ConfirmModal
         open={Boolean(confirmModal)}
