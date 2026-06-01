@@ -229,7 +229,7 @@ function Nutrition() {
       <PageHeader
         title="Nutrição"
         description="Acompanhe hidratação, refeições e metas simples junto com seus treinos."
-        action={<Badge>Beta</Badge>}
+        
       />
 
       <Card className="ff-nutrition-hero overflow-hidden p-4 sm:p-5">

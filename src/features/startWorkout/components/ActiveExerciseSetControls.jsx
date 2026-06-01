@@ -35,7 +35,7 @@ export function SetPrBadges({ set, performance, compact = false }) {
   if (isWeightPR) {
     badges.push({
       key: 'weight',
-      label: compact ? 'P' : 'Peso PR',
+      label: compact ? 'Peso' : 'Peso PR',
       title: 'Recorde de peso',
       icon: Award,
       className:
@@ -46,7 +46,7 @@ export function SetPrBadges({ set, performance, compact = false }) {
   if (isVolumePR) {
     badges.push({
       key: 'volume',
-      label: compact ? 'V' : 'Volume PR',
+      label: compact ? 'Vol' : 'Volume PR',
       title: 'Recorde de volume',
       icon: Zap,
       className:

@@ -90,7 +90,7 @@ function ForgotPassword() {
           </div>
         )}
 
-        {debugResetUrl && (
+        {import.meta.env.DEV && debugResetUrl && (
           <div className="mt-3 rounded-2xl border border-amber-400/25 bg-amber-500/10 p-4 text-xs leading-relaxed text-amber-100">
             <p className="font-black">Modo desenvolvimento</p>
             <p className="mt-1 break-all">{debugResetUrl}</p>

@@ -42,6 +42,12 @@ function Login() {
 
     useEffect(() => {
         applyAppSettingsToDocument(getAppSettings())
+
+        const timeoutId = window.setTimeout(() => {
+            apiFetch('/auth/csrf').catch(() => {})
+        }, 350)
+
+        return () => window.clearTimeout(timeoutId)
     }, [])
 
     async function handleGoogleLogin() {

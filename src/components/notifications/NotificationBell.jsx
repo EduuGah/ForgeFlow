@@ -146,56 +146,67 @@ function NotificationBell() {
       </button>
 
       {isMenuOpen && (
-        <div className="ff-notification-popover" role="dialog" aria-label="Prévia de notificações">
-          <div className="ff-notification-popover__header">
-            <div>
-              <span>Notificações</span>
-              <strong>{unreadCount > 0 ? `${unreadCount} não lida${unreadCount > 1 ? 's' : ''}` : 'Tudo em dia'}</strong>
-            </div>
-            <button type="button" onClick={() => setIsMenuOpen(false)} aria-label="Fechar notificações">
-              <X size={18} />
-            </button>
-          </div>
+        <div className="ff-notification-sheet" role="dialog" aria-modal="true" aria-label="Prévia de notificações">
+          <button
+            type="button"
+            className="ff-notification-sheet__backdrop"
+            aria-label="Fechar notificações"
+            onClick={() => setIsMenuOpen(false)}
+          />
 
-          <div className="ff-notification-popover__list">
-            {hasPreview ? (
-              previewNotifications.map((notification) => {
-                const meta = getNotificationMeta(notification.type)
-                const Icon = meta.icon
-                const isUnread = notification.status === 'unread'
+          <section className="ff-notification-sheet__panel">
+            <div className="ff-notification-sheet__handle" aria-hidden="true" />
 
-                return (
-                  <button
-                    key={notification.id}
-                    type="button"
-                    className={`ff-notification-popover__item ${isUnread ? 'is-unread' : ''}`}
-                    onClick={openNotificationsPage}
-                  >
-                    <span className="ff-notification-popover__icon"><Icon size={16} /></span>
-                    <span className="ff-notification-popover__copy">
-                      <strong>{notification.title || meta.label || 'Notificação'}</strong>
-                      <small>{notification.message || 'Toque para ver detalhes.'}</small>
-                      <em>{isUnread ? 'Não lida' : 'Lida'} · {getNotificationDateLabel(notification.createdAt)}</em>
-                    </span>
-                  </button>
-                )
-              })
-            ) : (
-              <button type="button" className="ff-notification-popover__empty" onClick={openNotificationsPage}>
-                <span><Inbox size={20} /></span>
-                <div>
-                  <strong>Sem notificações recentes</strong>
-                  <small>Quando algo importante acontecer, aparece aqui.</small>
-                </div>
-                <ChevronRight size={18} />
+            <div className="ff-notification-sheet__header">
+              <div>
+                <span>Notificações</span>
+                <strong>{unreadCount > 0 ? `${unreadCount} não lida${unreadCount > 1 ? 's' : ''}` : 'Tudo em dia'}</strong>
+              </div>
+              <button type="button" onClick={() => setIsMenuOpen(false)} aria-label="Fechar notificações">
+                <X size={18} />
               </button>
-            )}
-          </div>
+            </div>
 
-          <div className="ff-notification-popover__actions">
-            <button type="button" onClick={openNotificationsPage}>Ver todas</button>
-            <button type="button" onClick={openNotificationSettings}><Settings size={15} /> Preferências</button>
-          </div>
+            <div className="ff-notification-sheet__list">
+              {hasPreview ? (
+                previewNotifications.map((notification) => {
+                  const meta = getNotificationMeta(notification.type)
+                  const Icon = meta.icon
+                  const isUnread = notification.status === 'unread'
+
+                  return (
+                    <button
+                      key={notification.id}
+                      type="button"
+                      className={`ff-notification-sheet__item ${isUnread ? 'is-unread' : ''}`}
+                      onClick={openNotificationsPage}
+                    >
+                      <span className="ff-notification-sheet__icon"><Icon size={17} /></span>
+                      <span className="ff-notification-sheet__copy">
+                        <strong>{notification.title || meta.label || 'Notificação'}</strong>
+                        <small>{notification.message || 'Toque para ver detalhes.'}</small>
+                        <em>{isUnread ? 'Não lida' : 'Lida'} · {getNotificationDateLabel(notification.createdAt)}</em>
+                      </span>
+                    </button>
+                  )
+                })
+              ) : (
+                <button type="button" className="ff-notification-sheet__empty" onClick={openNotificationsPage}>
+                  <span><Inbox size={20} /></span>
+                  <div>
+                    <strong>Sem notificações recentes</strong>
+                    <small>Quando algo importante acontecer, aparece aqui.</small>
+                  </div>
+                  <ChevronRight size={18} />
+                </button>
+              )}
+            </div>
+
+            <div className="ff-notification-sheet__actions">
+              <button type="button" onClick={openNotificationsPage}>Ver todas</button>
+              <button type="button" onClick={openNotificationSettings}><Settings size={15} /> Preferências</button>
+            </div>
+          </section>
         </div>
       )}
     </div>

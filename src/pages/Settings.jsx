@@ -37,32 +37,32 @@ const settingsGroups = [
   {
     title: 'Conta',
     rows: [
-      { icon: UserRound, label: 'Perfil', href: '/profile' },
+      { icon: UserRound, label: 'Perfil', href: '/profile', hint: 'Foto, bio e dados do atleta' },
       { icon: Lock, label: 'Conta', target: 'security', hint: 'Senha e acesso' },
       { label: 'Gerenciar Subscrição', pro: true, disabled: true, hint: 'Em breve' },
-      { icon: Bell, label: 'Notificações', target: 'notifications' },
+      { icon: Bell, label: 'Notificações', target: 'notifications', hint: 'Lembretes e alertas do app' },
     ],
   },
   {
     title: 'Preferências',
     rows: [
-      { icon: Dumbbell, label: 'Treinamentos', target: 'training' },
-      { icon: Shield, label: 'Privacidade e social', href: '/privacy' },
-      { icon: ClipboardList, label: 'Unidades', target: 'training' },
+      { icon: Dumbbell, label: 'Treinamentos', target: 'training', hint: 'Descanso, unidades e preferências' },
+      { icon: Shield, label: 'Privacidade e social', href: '/privacy', hint: 'Dados, visibilidade e segurança' },
+      { icon: ClipboardList, label: 'Unidades', target: 'training', hint: 'Peso e padrões de treino' },
       { icon: Languages, label: 'Idioma', disabled: true, hint: 'Em breve' },
       { icon: Download, label: 'Integrações', disabled: true, hint: 'Em breve' },
-      { icon: Moon, label: 'Tema', target: 'appearance' },
-      { icon: Download, label: 'Exportar e importar dados', target: 'backup' },
+      { icon: Moon, label: 'Tema', target: 'appearance', hint: 'Cor do app e aparência' },
+      { icon: Download, label: 'Exportar e importar dados', target: 'backup', hint: 'Backup e relatórios' },
     ],
   },
   {
     title: 'Ajuda',
     rows: [
-      { icon: Info, label: 'Guia de Arranque', target: 'tutorial' },
-      { icon: ClipboardList, label: 'Ajuda de Rotina', href: '/schedule' },
+      { icon: Info, label: 'Guia de Arranque', target: 'tutorial', hint: 'Rever introdução do app' },
+      { icon: ClipboardList, label: 'Ajuda de Rotina', href: '/schedule', hint: 'Agenda semanal de treinos' },
       { icon: HelpCircle, label: 'Perguntas Frequentes', disabled: true, hint: 'Em breve' },
       { icon: Download, label: 'Contactar-nos', disabled: true, hint: 'Em breve' },
-      { icon: Info, label: 'Sobre', href: '/data-safety' },
+      { icon: Info, label: 'Sobre', href: '/data-safety', hint: 'Segurança de dados' },
     ],
   },
 ]
@@ -93,6 +93,11 @@ function SettingsNativeDirectory({ selectedPanel, onNavigate, onBack }) {
 
   return (
     <section className="ff-settings-native mb-6 lg:hidden">
+      <div className="ff-settings-native-hero">
+        <span>Configurações</span>
+        <h2>Controle do app</h2>
+        <p>Ajuste conta, treino, tema e dados sem sair da experiência mobile.</p>
+      </div>
       {settingsGroups.map((group) => (
         <div key={group.title} className="ff-settings-native-group">
           <h2 className="ff-settings-native-title">{group.title}</h2>

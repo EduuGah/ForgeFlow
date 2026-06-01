@@ -73,8 +73,8 @@ export default function ProfileEditModal({
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/80 px-4 pb-4 backdrop-blur-sm sm:items-center sm:py-6">
-      <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-[2rem] border border-zinc-800 bg-[#121212] p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)] sm:rounded-3xl sm:p-6">
+    <div className="ff-profile-edit-modal fixed inset-0 z-[9999] flex items-end justify-center bg-black/80 px-4 pb-4 backdrop-blur-sm sm:items-center sm:py-6">
+      <div className="ff-profile-edit-modal__panel max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-[2rem] border border-zinc-800 bg-[#121212] p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)] sm:rounded-3xl sm:p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-sm font-bold text-[var(--ff-accent-text)]">
