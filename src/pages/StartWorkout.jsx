@@ -9,6 +9,7 @@ import {
   MobileWorkoutActionBar,
   NoActiveSessionState,
   RestTimerCard,
+  FinishWorkoutModal,
   WorkoutSessionSidebar,
 } from '../features/startWorkout/components/StartWorkoutSections'
 import ActiveExerciseCard from '../features/startWorkout/components/ActiveExerciseCard'
@@ -152,6 +153,7 @@ function StartWorkout() {
   const [replaceExerciseId, setReplaceExerciseId] = useState(null)
   const [replaceSearch, setReplaceSearch] = useState('')
   const [addExerciseOpen, setAddExerciseOpen] = useState(false)
+  const [finishWorkoutModalOpen, setFinishWorkoutModalOpen] = useState(false)
   const [addExerciseSearch, setAddExerciseSearch] = useState('')
   const deferredReplaceSearch = useDeferredValue(replaceSearch)
   const deferredAddExerciseSearch = useDeferredValue(addExerciseSearch)
@@ -341,13 +343,42 @@ function StartWorkout() {
       return
     }
 
-    // No mobile/APK, a tela de confirmação com localização estava virando overlay
-    // sobre o treino e travando a navegação. Agora o botão Finalizar salva direto
-    // o treino no histórico, sem abrir modal intermediário.
-    handleFinishWorkout()
+    setFinishWorkoutModalOpen(true)
   }
 
-  async function handleFinishWorkout() {
+  async function getWorkoutLocation(options = {}) {
+    if (!options?.saveLocation) return null
+
+    const label = String(options.locationLabel || '').trim()
+
+    if (!navigator?.geolocation) {
+      return label ? { label, source: 'manual' } : null
+    }
+
+    try {
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          maximumAge: 60000,
+          timeout: 8000,
+        })
+      })
+
+      return {
+        label: label || 'Local do treino',
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+        capturedAt: new Date().toISOString(),
+        source: 'device',
+      }
+    } catch (error) {
+      console.error(error)
+      return label ? { label, source: 'manual' } : null
+    }
+  }
+
+  async function handleFinishWorkout(options = {}) {
     if (savingWorkout) return
 
     if (!hasValidCompletedSet) {
@@ -362,11 +393,10 @@ function StartWorkout() {
     setSavingWorkout(true)
 
     try {
-      // Finalização direta: salva o treino sem abrir tela/modal de localização.
-      // O fluxo de localização pode voltar depois em uma tela própria, sem overlay.
-      const location = null
+      const location = await getWorkoutLocation(options)
 
       const savedSession = await finishSession({ location })
+      setFinishWorkoutModalOpen(false)
 
       if (savedSession?.skippedHistorySave) {
         showToast('success', 'Tutorial encerrado', 'O treino de teste foi descartado e não entrou no histórico.')
@@ -741,6 +771,19 @@ function StartWorkout() {
           </div>
         </div>
       )}
+
+      <FinishWorkoutModal
+        open={finishWorkoutModalOpen}
+        activeSession={activeSession}
+        elapsedSeconds={elapsedSeconds}
+        completedSets={completedSets}
+        totalSets={totalSets}
+        workoutSummary={workoutSummary}
+        savingWorkout={savingWorkout}
+        formatTime={formatTime}
+        onClose={() => setFinishWorkoutModalOpen(false)}
+        onFinishWorkout={handleFinishWorkout}
+      />
 
       <ConfirmModal
         open={Boolean(confirmModal)}

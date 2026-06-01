@@ -149,7 +149,7 @@ export function MobileWorkoutActionBar({
   onRequestFinish,
 }) {
   return (
-    <div className="ff-mobile-workout-action-bar fixed inset-x-0 bottom-0 z-40 border-t border-[var(--ff-border)] bg-[var(--ff-bg)]/95 px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-16px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl xl:hidden">
+    <div className="ff-mobile-workout-action-bar ff-mobile-workout-action-bar--finish fixed inset-x-0 bottom-0 z-40 border-t border-[var(--ff-border)] bg-[var(--ff-bg)]/95 px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-16px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl xl:hidden">
       <div className="mx-auto flex max-w-[1600px] items-center gap-3">
         <button
           type="button"
@@ -162,7 +162,7 @@ export function MobileWorkoutActionBar({
 
         <div className="min-w-0 flex-1 rounded-2xl border border-[var(--ff-border)] bg-[linear-gradient(180deg,var(--ff-card),var(--ff-surface-2))] px-3 py-2 shadow-inner shadow-black/10">
           <p className="truncate text-xs font-bold text-[var(--ff-muted)]">
-            {completedSets}/{totalSets} séries • {progressPercent}%
+            Pré-resumo · {completedSets}/{totalSets} séries · {progressPercent}%
           </p>
 
           <p className="truncate text-sm font-black text-[var(--ff-accent-text)]">
@@ -183,9 +183,9 @@ export function MobileWorkoutActionBar({
           type="button"
           onClick={onRequestFinish}
           disabled={savingWorkout}
-          className="h-12 shrink-0 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-black text-white shadow-[0_0_24px_var(--ff-accent-shadow)] transition active:scale-95 disabled:opacity-60"
+          className="ff-mobile-workout-action-bar__finish h-12 shrink-0 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-black text-white shadow-[0_0_24px_var(--ff-accent-shadow)] transition active:scale-95 disabled:opacity-60"
         >
-          Finalizar
+          Concluir treino
         </button>
       </div>
     </div>

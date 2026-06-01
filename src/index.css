@@ -9540,3 +9540,198 @@ html:has(.ff-notification-sheet) {
     display: none !important;
   }
 }
+
+/* =========================================================
+   Play Store polish — notificações, espaçamento e finalizar treino
+   ========================================================= */
+.ff-notification-sheet {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 99999 !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  pointer-events: none !important;
+}
+
+.ff-notification-sheet__backdrop {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: rgba(0, 0, 0, .62) !important;
+  backdrop-filter: blur(8px) !important;
+  pointer-events: auto !important;
+}
+
+.ff-notification-sheet__panel {
+  position: relative !important;
+  z-index: 1 !important;
+  width: 100% !important;
+  max-width: 560px !important;
+  max-height: min(72dvh, 620px) !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  border: 1px solid var(--ff-border) !important;
+  border-bottom: 0 !important;
+  border-radius: 28px 28px 0 0 !important;
+  background: #151619 !important;
+  box-shadow: 0 -24px 70px rgba(0, 0, 0, .78) !important;
+  padding-bottom: env(safe-area-inset-bottom) !important;
+  pointer-events: auto !important;
+}
+
+.ff-notification-sheet__header {
+  flex: 0 0 auto !important;
+  padding: 16px 18px 14px !important;
+}
+
+.ff-notification-sheet__list {
+  min-height: 0 !important;
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  padding: 12px 14px !important;
+  gap: 10px !important;
+}
+
+.ff-notification-sheet__item,
+.ff-notification-sheet__empty {
+  width: 100% !important;
+  min-height: 72px !important;
+  display: grid !important;
+  grid-template-columns: 46px minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 12px !important;
+  border-radius: 20px !important;
+  border: 1px solid var(--ff-border) !important;
+  background: rgba(0, 0, 0, .26) !important;
+  text-align: left !important;
+}
+
+.ff-notification-sheet__item.is-unread {
+  border-color: color-mix(in srgb, var(--ff-accent) 48%, transparent) !important;
+  background: color-mix(in srgb, var(--ff-accent-soft) 18%, rgba(0, 0, 0, .32)) !important;
+}
+
+.ff-notification-sheet__icon,
+.ff-notification-sheet__empty > span {
+  width: 46px !important;
+  height: 46px !important;
+  border-radius: 16px !important;
+}
+
+.ff-notification-sheet__copy strong,
+.ff-notification-sheet__empty strong {
+  font-size: .95rem !important;
+  line-height: 1.15 !important;
+}
+
+.ff-notification-sheet__copy small,
+.ff-notification-sheet__empty small {
+  display: -webkit-box !important;
+  overflow: hidden !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  white-space: normal !important;
+  line-height: 1.25 !important;
+}
+
+.ff-notification-sheet__actions {
+  flex: 0 0 auto !important;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+  padding: 12px 14px 14px !important;
+  border-top: 1px solid var(--ff-border) !important;
+}
+
+.ff-notification-sheet__actions button {
+  display: inline-flex !important;
+  min-height: 46px !important;
+  width: 100% !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  border-radius: 16px !important;
+  border: 1px solid var(--ff-border) !important;
+  background: var(--ff-surface-2) !important;
+  color: var(--ff-text) !important;
+  font-weight: 950 !important;
+  grid-template-columns: none !important;
+}
+
+@media (min-width: 768px) {
+  .ff-notification-sheet {
+    align-items: flex-start !important;
+    justify-content: flex-end !important;
+    padding: calc(4.75rem + env(safe-area-inset-top)) 1rem 1rem !important;
+  }
+
+  .ff-notification-sheet__panel {
+    max-width: 420px !important;
+    max-height: min(640px, calc(100dvh - 6rem)) !important;
+    border: 1px solid var(--ff-border) !important;
+    border-radius: 24px !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .ff-hevy-page .ff-native-card,
+  .ff-hevy-page :is(.ff-finish-workout-panel, .ff-settings-native-list, .ff-history-native-card, .ff-active-exercise-card, .ff-forge-active-hero, .ff-forge-exercise-strip) {
+    padding-left: max(16px, env(safe-area-inset-left)) !important;
+    padding-right: max(16px, env(safe-area-inset-right)) !important;
+  }
+
+  .ff-hevy-page :is(.rounded-2xl, .rounded-3xl) > :first-child:not(img):not(svg) {
+    min-width: 0;
+  }
+
+  .ff-mobile-workout-action-bar--finish {
+    z-index: 80 !important;
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom)) !important;
+    background: rgba(0, 0, 0, .94) !important;
+    border-top-color: color-mix(in srgb, var(--ff-accent) 32%, var(--ff-border)) !important;
+  }
+
+  .ff-mobile-workout-action-bar--finish .mx-auto {
+    max-width: 640px !important;
+  }
+
+  .ff-mobile-workout-action-bar__finish {
+    min-width: 132px !important;
+    background: var(--ff-accent) !important;
+    color: #fff !important;
+    box-shadow: 0 0 28px var(--ff-accent-shadow) !important;
+  }
+
+  .ff-finish-workout-modal {
+    z-index: 100000 !important;
+    align-items: flex-end !important;
+    padding-inline: 10px !important;
+  }
+
+  .ff-finish-workout-panel {
+    max-height: calc(92dvh - env(safe-area-inset-top)) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    border-radius: 28px 28px 18px 18px !important;
+  }
+
+  .ff-finish-workout-scroll {
+    min-height: 0 !important;
+    flex: 1 1 auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+  }
+
+  .ff-active-workout-mini-floating {
+    transform: scale(.96) !important;
+    transform-origin: bottom center !important;
+    opacity: .98 !important;
+  }
+}
