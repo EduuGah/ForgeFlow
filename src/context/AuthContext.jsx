@@ -1,6 +1,11 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getCurrentUser, logout as logoutService, logoutFromApi } from '../services/api'
+import {
+  getCurrentUser,
+  getToken,
+  logout as logoutService,
+  logoutFromApi,
+} from '../services/api'
 
 const AuthContext = createContext(null)
 
@@ -8,21 +13,43 @@ export function AuthProvider({ children }) {
   const navigate = useNavigate()
   const [user, setUser] = useState(null)
   const [loadingUser, setLoadingUser] = useState(true)
+  const [authChecked, setAuthChecked] = useState(false)
 
-  async function loadUser() {
+  const loadUser = useCallback(async () => {
+    const token = getToken()
+
+    if (!token) {
+      setUser(null)
+      setLoadingUser(false)
+      setAuthChecked(true)
+      return null
+    }
+
+    setLoadingUser(true)
+
     try {
       const data = await getCurrentUser()
       setUser(data)
-    } catch {
+      return data
+    } catch (error) {
+      console.warn('[ForgeFlow] Sessão inválida ou indisponível:', error)
+
+      if (error?.status === 401 || error?.status === 403) {
+        logoutService()
+      }
+
       setUser(null)
+      return null
     } finally {
       setLoadingUser(false)
+      setAuthChecked(true)
     }
-  }
+  }, [])
 
-  function logout({ redirect = true } = {}) {
+  const logout = useCallback(({ redirect = true } = {}) => {
     setUser(null)
     setLoadingUser(false)
+    setAuthChecked(true)
     logoutService()
 
     if (redirect) {
@@ -32,22 +59,23 @@ export function AuthProvider({ children }) {
     logoutFromApi().catch((error) => {
       console.warn('[ForgeFlow] Não foi possível limpar sessão remota:', error)
     })
-  }
+  }, [navigate])
 
   useEffect(() => {
     loadUser()
-  }, [])
+  }, [loadUser])
 
   const value = useMemo(
     () => ({
       user,
       setUser,
       loadingUser,
+      authChecked,
       isAuthenticated: Boolean(user),
       loadUser,
       logout,
     }),
-    [user, loadingUser, navigate]
+    [user, loadingUser, authChecked, loadUser, logout]
   )
 
   return (

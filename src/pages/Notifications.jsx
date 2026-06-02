@@ -1,452 +1,568 @@
-import { useDeferredValue, useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
-import { useAuth } from '../context/AuthContext'
-import { apiFetch } from '../services/api'
-import { generateSmartNotifications } from '../utils/notificationUtils'
+import { useAuth } from "../context/AuthContext";
+import { apiFetch } from "../services/api";
+import { generateSmartNotifications } from "../utils/notificationUtils";
 import {
   clearLegacyForgeFlowStorage,
   getUserStorageData,
   saveUserStorageData,
-} from '../utils/userStorage'
+} from "../utils/userStorage";
 
-import { normalizeNotificationFromApi } from '../features/notifications/notificationUtils'
-import NotificationsPageSections from '../features/notifications/components/NotificationsPageSections'
+import { normalizeNotificationFromApi } from "../features/notifications/notificationUtils";
+import NotificationsPageSections from "../features/notifications/components/NotificationsPageSections";
 
-import AppPageIntro from '../components/app/AppPageIntro'
+import AppPageIntro from "../components/app/AppPageIntro";
 
 function Notifications() {
-  const { user } = useAuth()
-  const navigate = useNavigate()
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const [notifications, setNotifications] = useState([])
-  const [, setUnreadCount] = useState(0)
-  const [statusFilter, setStatusFilter] = useState('')
-  const [search, setSearch] = useState('')
-  const deferredSearch = useDeferredValue(search)
-  const [visibleCount, setVisibleCount] = useState(30)
-  const [, setSyncing] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [source, setSource] = useState('local')
-  const [toast, setToast] = useState(null)
-  const [confirmModal, setConfirmModal] = useState(null)
-  const [selectedNotification, setSelectedNotification] = useState(null)
+  const [notifications, setNotifications] = useState([]);
+  const [, setUnreadCount] = useState(0);
+  const [statusFilter, setStatusFilter] = useState("");
+  const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
+  const [visibleCount, setVisibleCount] = useState(30);
+  const [, setSyncing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [source, setSource] = useState("local");
+  const [toast, setToast] = useState(null);
+  const [confirmModal, setConfirmModal] = useState(null);
+  const [selectedNotification, setSelectedNotification] = useState(null);
+  const openedNotificationTargetRef = useRef("");
 
-  function showToast(type, title, message = '') {
+  const notifyBellToRefresh = useCallback(() => {
+    window.dispatchEvent(new CustomEvent("forgeflow:notifications-changed"));
+  }, []);
+
+  const showToast = useCallback((type, title, message = "") => {
     setToast({
       type,
       title,
       message,
-    })
+    });
 
-    setTimeout(() => {
-      setToast(null)
-    }, 3200)
-  }
+    window.setTimeout(() => {
+      setToast(null);
+    }, 3200);
+  }, []);
 
+  const loadNotifications = useCallback(
+    async (filter = statusFilter) => {
+      if (!user) return;
 
-  function notifyBellToRefresh() {
-    window.dispatchEvent(new CustomEvent('forgeflow:notifications-changed'))
-  }
+      clearLegacyForgeFlowStorage(["notifications"]);
 
-  async function loadNotifications(filter = statusFilter) {
-    if (!user) return
+      const cachedNotifications = getUserStorageData(user, "notifications", []);
+      const normalizedCached = Array.isArray(cachedNotifications)
+        ? cachedNotifications.map(normalizeNotificationFromApi)
+        : [];
 
-    clearLegacyForgeFlowStorage(['notifications'])
+      setNotifications(normalizedCached);
+      setUnreadCount(
+        normalizedCached.filter((item) => item.status === "unread").length,
+      );
+      setLoading(normalizedCached.length === 0);
+      setSyncing(true);
 
-    const cachedNotifications = getUserStorageData(user, 'notifications', [])
-    const normalizedCached = Array.isArray(cachedNotifications)
-      ? cachedNotifications.map(normalizeNotificationFromApi)
-      : []
+      try {
+        const query = filter ? `?status=${filter}&limit=80` : "?limit=80";
+        const data = await apiFetch(`/notifications${query}`);
 
-    setNotifications(normalizedCached)
-    setUnreadCount(normalizedCached.filter((item) => item.status === 'unread').length)
-    setLoading(normalizedCached.length === 0)
-    setSyncing(true)
+        const normalizedNotifications = Array.isArray(data?.notifications)
+          ? data.notifications.map(normalizeNotificationFromApi)
+          : [];
+
+        setNotifications(normalizedNotifications);
+        setUnreadCount(Number(data?.unreadCount) || 0);
+        saveUserStorageData(user, "notifications", normalizedNotifications);
+        notifyBellToRefresh();
+        setSource("database");
+      } catch (error) {
+        console.error(error);
+        setSource("local");
+      } finally {
+        setLoading(false);
+        setSyncing(false);
+      }
+    },
+    [notifyBellToRefresh, statusFilter, user],
+  );
+
+  const markNotificationAsRead = useCallback(
+    async (notificationId) => {
+      const notification = notifications.find(
+        (item) => String(item.id) === String(notificationId),
+      );
+
+      if (!notification || notification.status !== "unread") {
+        return notification || null;
+      }
+
+      try {
+        const updatedFromApi = await apiFetch(
+          `/notifications/${notificationId}/read`,
+          {
+            method: "PATCH",
+          },
+        );
+
+        const updatedNotification =
+          normalizeNotificationFromApi(updatedFromApi);
+
+        setNotifications((current) => {
+          const updated = current.map((item) =>
+            String(item.id) === String(notificationId)
+              ? updatedNotification
+              : item,
+          );
+
+          saveUserStorageData(user, "notifications", updated);
+
+          return updated;
+        });
+
+        setUnreadCount((current) => Math.max(0, current - 1));
+        notifyBellToRefresh();
+
+        return updatedNotification;
+      } catch {
+        const updatedNotification = {
+          ...notification,
+          status: "read",
+          readAt: new Date().toISOString(),
+        };
+
+        setNotifications((current) => {
+          const updated = current.map((item) =>
+            String(item.id) === String(notificationId)
+              ? updatedNotification
+              : item,
+          );
+
+          saveUserStorageData(user, "notifications", updated);
+
+          return updated;
+        });
+
+        setUnreadCount((current) => Math.max(0, current - 1));
+        notifyBellToRefresh();
+
+        return updatedNotification;
+      }
+    },
+    [notifications, notifyBellToRefresh, user],
+  );
+
+  const handleOpenNotification = useCallback(
+    async (notification) => {
+      const notificationId = notification?.id;
+
+      if (!notificationId) return;
+
+      const updatedNotification = await markNotificationAsRead(notificationId);
+
+      setSelectedNotification(updatedNotification || notification);
+    },
+    [markNotificationAsRead],
+  );
+
+  useEffect(() => {
+    setNotifications([]);
+    setUnreadCount(0);
+    setSelectedNotification(null);
+    openedNotificationTargetRef.current = "";
+
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    loadNotifications();
+  }, [loadNotifications, statusFilter, user]);
+
+  useEffect(() => {
+    setVisibleCount(30);
+  }, [deferredSearch, statusFilter]);
+
+  useEffect(() => {
+    if (!notifications.length) return;
+
+    const params = new URLSearchParams(location.search);
+    const notificationIdFromUrl = params.get("notification");
+    const notificationIdFromState =
+      location.state?.selectedNotificationId ||
+      location.state?.openNotificationId;
+
+    const notificationIdFromStorage = (() => {
+      try {
+        return (
+          window.sessionStorage.getItem("forgeflow:selected-notification-id") ||
+          ""
+        );
+      } catch {
+        return "";
+      }
+    })();
+
+    const targetId =
+      notificationIdFromUrl ||
+      notificationIdFromState ||
+      notificationIdFromStorage;
+
+    if (!targetId) return;
+
+    const targetNotification = notifications.find(
+      (item) => String(item.id) === String(targetId),
+    );
+
+    if (!targetNotification) return;
+
+    setSelectedNotification(targetNotification);
+
+    if (targetNotification.status === "unread") {
+      markNotificationAsRead(targetNotification.id);
+    }
 
     try {
-      const query = filter ? `?status=${filter}&limit=80` : '?limit=80'
-      const data = await apiFetch(`/notifications${query}`)
-
-      const normalizedNotifications = Array.isArray(data?.notifications)
-        ? data.notifications.map(normalizeNotificationFromApi)
-        : []
-
-      setNotifications(normalizedNotifications)
-      setUnreadCount(Number(data?.unreadCount) || 0)
-      saveUserStorageData(user, 'notifications', normalizedNotifications)
-      notifyBellToRefresh()
-      setSource('database')
-    } catch (error) {
-      console.error(error)
-      setSource('local')
-    } finally {
-      setLoading(false)
-      setSyncing(false)
+      window.sessionStorage.removeItem("forgeflow:selected-notification-id");
+    } catch {
+      // Ignora bloqueio do WebView.
     }
-  }
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      setNotifications([])
-      setUnreadCount(0)
-      setSelectedNotification(null)
-      loadNotifications()
-    })
-     
-  }, [user, statusFilter])
-
-  useEffect(() => {
-    queueMicrotask(() => setVisibleCount(30))
-  }, [deferredSearch, statusFilter])
+  }, [notifications, location.search, location.state]);
 
   const stats = useMemo(() => {
-    const unread = notifications.filter((item) => item.status === 'unread').length
-    const read = notifications.filter((item) => item.status === 'read').length
-    const archived = notifications.filter((item) => item.status === 'archived').length
+    const unread = notifications.filter(
+      (item) => item.status === "unread",
+    ).length;
+    const read = notifications.filter((item) => item.status === "read").length;
+    const archived = notifications.filter(
+      (item) => item.status === "archived",
+    ).length;
 
     return {
       unread,
       read,
       archived,
       total: notifications.length,
-    }
-  }, [notifications])
+    };
+  }, [notifications]);
 
   const filteredNotifications = useMemo(() => {
-    const term = deferredSearch.toLowerCase().trim()
+    const term = deferredSearch.toLowerCase().trim();
 
-    if (!term) return notifications
+    if (!term) return notifications;
 
     return notifications.filter((notification) => {
       return `${notification.title} ${notification.message} ${notification.type} ${notification.status}`
         .toLowerCase()
-        .includes(term)
-    })
-  }, [notifications, deferredSearch])
+        .includes(term);
+    });
+  }, [notifications, deferredSearch]);
 
   const visibleNotifications = useMemo(() => {
-    return filteredNotifications.slice(0, visibleCount)
-  }, [filteredNotifications, visibleCount])
+    return filteredNotifications.slice(0, visibleCount);
+  }, [filteredNotifications, visibleCount]);
 
   async function handleGenerateNotifications() {
     try {
       const data = await generateSmartNotifications({
         user,
-        reason: 'manual-check',
+        reason: "manual-check",
         force: true,
-      })
+      });
 
       const normalizedNotifications = Array.isArray(data?.notifications)
         ? data.notifications.map(normalizeNotificationFromApi)
-        : []
+        : [];
 
-      setNotifications(normalizedNotifications)
-      setUnreadCount(Number(data?.unreadCount) || 0)
-      saveUserStorageData(user, 'notifications', normalizedNotifications)
-      notifyBellToRefresh()
+      setNotifications(normalizedNotifications);
+      setUnreadCount(Number(data?.unreadCount) || 0);
+      saveUserStorageData(user, "notifications", normalizedNotifications);
+      notifyBellToRefresh();
 
       showToast(
-        'success',
-        'Notificações verificadas',
+        "success",
+        "Notificações verificadas",
         data?.created > 0
           ? `${data.created} nova(s) notificação(ões) criada(s).`
-          : 'Nenhuma nova notificação no momento.'
-      )
+          : "Nenhuma nova notificação no momento.",
+      );
     } catch (error) {
-      console.error(error)
+      console.error(error);
 
       showToast(
-        'error',
-        'Erro ao verificar',
-        error.message || 'Não foi possível gerar notificações.'
-      )
+        "error",
+        "Erro ao verificar",
+        error.message || "Não foi possível gerar notificações.",
+      );
     }
-  }
-
-  async function markNotificationAsRead(notificationId) {
-    const notification = notifications.find((item) => item.id === notificationId)
-
-    if (!notification || notification.status !== 'unread') {
-      return notification || null
-    }
-
-    try {
-      const updatedFromApi = await apiFetch(`/notifications/${notificationId}/read`, {
-        method: 'PATCH',
-      })
-
-      const updatedNotification = normalizeNotificationFromApi(updatedFromApi)
-
-      setNotifications((current) => {
-        const updated = current.map((item) =>
-          item.id === notificationId ? updatedNotification : item
-        )
-
-        saveUserStorageData(user, 'notifications', updated)
-
-        return updated
-      })
-
-      setUnreadCount((current) => Math.max(0, current - 1))
-      notifyBellToRefresh()
-
-      return updatedNotification
-    } catch {
-      const updatedNotification = {
-        ...notification,
-        status: 'read',
-        readAt: new Date().toISOString(),
-      }
-
-      setNotifications((current) => {
-        const updated = current.map((item) =>
-          item.id === notificationId ? updatedNotification : item
-        )
-
-        saveUserStorageData(user, 'notifications', updated)
-
-        return updated
-      })
-
-      setUnreadCount((current) => Math.max(0, current - 1))
-      notifyBellToRefresh()
-
-      return updatedNotification
-    }
-  }
-
-  async function handleOpenNotification(notification) {
-    const updatedNotification = await markNotificationAsRead(notification.id)
-
-    setSelectedNotification(updatedNotification || notification)
   }
 
   async function handleMarkAsRead(notificationId) {
-    const updatedNotification = await markNotificationAsRead(notificationId)
+    const updatedNotification = await markNotificationAsRead(notificationId);
 
     if (updatedNotification) {
-      showToast('success', 'Notificação lida', 'A notificação foi marcada como lida.')
+      showToast(
+        "success",
+        "Notificação lida",
+        "A notificação foi marcada como lida.",
+      );
     }
   }
 
   async function handleMarkAllAsRead() {
     try {
-      await apiFetch('/notifications/read-all', {
-        method: 'PATCH',
-      })
+      await apiFetch("/notifications/read-all", {
+        method: "PATCH",
+      });
 
       const updatedNotifications = notifications.map((item) => ({
         ...item,
-        status: item.status === 'unread' ? 'read' : item.status,
-        readAt: item.status === 'unread' ? new Date().toISOString() : item.readAt,
-      }))
+        status: item.status === "unread" ? "read" : item.status,
+        readAt:
+          item.status === "unread" ? new Date().toISOString() : item.readAt,
+      }));
 
-      setNotifications(updatedNotifications)
-      saveUserStorageData(user, 'notifications', updatedNotifications)
-      setUnreadCount(0)
-      notifyBellToRefresh()
+      setNotifications(updatedNotifications);
+      saveUserStorageData(user, "notifications", updatedNotifications);
+      setUnreadCount(0);
+      notifyBellToRefresh();
 
-      if (selectedNotification?.status === 'unread') {
+      if (selectedNotification?.status === "unread") {
         setSelectedNotification({
           ...selectedNotification,
-          status: 'read',
+          status: "read",
           readAt: new Date().toISOString(),
-        })
+        });
       }
 
       showToast(
-        'success',
-        'Notificações lidas',
-        'Todas as notificações foram marcadas como lidas.'
-      )
+        "success",
+        "Notificações lidas",
+        "Todas as notificações foram marcadas como lidas.",
+      );
     } catch (error) {
-      console.error(error)
+      console.error(error);
 
       showToast(
-        'error',
-        'Erro ao marcar todas',
-        error.message || 'Não foi possível marcar todas como lidas.'
-      )
+        "error",
+        "Erro ao marcar todas",
+        error.message || "Não foi possível marcar todas como lidas.",
+      );
     }
   }
 
   async function handleArchiveNotification(notificationId) {
     try {
-      const notificationBeforeUpdate = notifications.find((item) => item.id === notificationId)
+      const notificationBeforeUpdate = notifications.find(
+        (item) => String(item.id) === String(notificationId),
+      );
 
       const updatedFromApi = await apiFetch(
         `/notifications/${notificationId}/archive`,
         {
-          method: 'PATCH',
-        }
-      )
+          method: "PATCH",
+        },
+      );
 
-      const updatedNotification = normalizeNotificationFromApi(updatedFromApi)
+      const updatedNotification = normalizeNotificationFromApi(updatedFromApi);
 
       setNotifications((current) => {
         const updated = current.map((item) =>
-          item.id === notificationId ? updatedNotification : item
-        )
+          String(item.id) === String(notificationId)
+            ? updatedNotification
+            : item,
+        );
 
-        saveUserStorageData(user, 'notifications', updated)
+        saveUserStorageData(user, "notifications", updated);
 
-        return updated
-      })
+        return updated;
+      });
 
       setSelectedNotification((current) =>
-        current?.id === notificationId ? updatedNotification : current
-      )
+        String(current?.id) === String(notificationId)
+          ? updatedNotification
+          : current,
+      );
 
-      if (notificationBeforeUpdate?.status === 'unread') {
-        setUnreadCount((current) => Math.max(0, current - 1))
+      if (notificationBeforeUpdate?.status === "unread") {
+        setUnreadCount((current) => Math.max(0, current - 1));
       }
 
-      notifyBellToRefresh()
+      notifyBellToRefresh();
 
-      showToast('success', 'Notificação arquivada', 'A notificação foi arquivada.')
+      showToast(
+        "success",
+        "Notificação arquivada",
+        "A notificação foi arquivada.",
+      );
     } catch {
-      const notificationBeforeUpdate = notifications.find((item) => item.id === notificationId)
+      const notificationBeforeUpdate = notifications.find(
+        (item) => String(item.id) === String(notificationId),
+      );
       const updatedNotification = {
         ...notificationBeforeUpdate,
-        status: 'archived',
+        status: "archived",
         archivedAt: new Date().toISOString(),
-      }
+      };
 
       setNotifications((current) => {
         const updated = current.map((item) =>
-          item.id === notificationId ? updatedNotification : item
-        )
+          String(item.id) === String(notificationId)
+            ? updatedNotification
+            : item,
+        );
 
-        saveUserStorageData(user, 'notifications', updated)
+        saveUserStorageData(user, "notifications", updated);
 
-        return updated
-      })
+        return updated;
+      });
 
       setSelectedNotification((current) =>
-        current?.id === notificationId ? updatedNotification : current
-      )
+        String(current?.id) === String(notificationId)
+          ? updatedNotification
+          : current,
+      );
 
-      if (notificationBeforeUpdate?.status === 'unread') {
-        setUnreadCount((current) => Math.max(0, current - 1))
+      if (notificationBeforeUpdate?.status === "unread") {
+        setUnreadCount((current) => Math.max(0, current - 1));
       }
 
-      notifyBellToRefresh()
-      showToast('success', 'Notificação arquivada', 'A notificação foi arquivada localmente.')
+      notifyBellToRefresh();
+      showToast(
+        "success",
+        "Notificação arquivada",
+        "A notificação foi arquivada localmente.",
+      );
     }
   }
 
   function handleDeleteNotification(notificationId) {
-    const notification = notifications.find((item) => item.id === notificationId)
+    const notification = notifications.find(
+      (item) => String(item.id) === String(notificationId),
+    );
 
     setConfirmModal({
-      title: 'Excluir notificação?',
-      description: `A notificação "${notification?.title || 'selecionada'}" será removida.`,
-      confirmText: 'Excluir',
-      variant: 'danger',
+      title: "Excluir notificação?",
+      description: `A notificação "${
+        notification?.title || "selecionada"
+      }" será removida.`,
+      confirmText: "Excluir",
+      variant: "danger",
       onConfirm: async () => {
         try {
           await apiFetch(`/notifications/${notificationId}`, {
-            method: 'DELETE',
-          })
+            method: "DELETE",
+          });
 
           const updatedNotifications = notifications.filter(
-            (item) => item.id !== notificationId
-          )
+            (item) => String(item.id) !== String(notificationId),
+          );
 
-          setNotifications(updatedNotifications)
-          saveUserStorageData(user, 'notifications', updatedNotifications)
+          setNotifications(updatedNotifications);
+          saveUserStorageData(user, "notifications", updatedNotifications);
           setUnreadCount(
-            updatedNotifications.filter((item) => item.status === 'unread').length
-          )
-          notifyBellToRefresh()
+            updatedNotifications.filter((item) => item.status === "unread")
+              .length,
+          );
+          notifyBellToRefresh();
           setSelectedNotification((current) =>
-            current?.id === notificationId ? null : current
-          )
-          setConfirmModal(null)
+            String(current?.id) === String(notificationId) ? null : current,
+          );
+          setConfirmModal(null);
 
           showToast(
-            'success',
-            'Notificação excluída',
-            'A notificação foi removida.'
-          )
+            "success",
+            "Notificação excluída",
+            "A notificação foi removida.",
+          );
         } catch {
           const updatedNotifications = notifications.filter(
-            (item) => item.id !== notificationId
-          )
+            (item) => String(item.id) !== String(notificationId),
+          );
 
-          setNotifications(updatedNotifications)
-          saveUserStorageData(user, 'notifications', updatedNotifications)
+          setNotifications(updatedNotifications);
+          saveUserStorageData(user, "notifications", updatedNotifications);
           setUnreadCount(
-            updatedNotifications.filter((item) => item.status === 'unread').length
-          )
-          notifyBellToRefresh()
+            updatedNotifications.filter((item) => item.status === "unread")
+              .length,
+          );
+          notifyBellToRefresh();
           setSelectedNotification((current) =>
-            current?.id === notificationId ? null : current
-          )
-          setConfirmModal(null)
+            String(current?.id) === String(notificationId) ? null : current,
+          );
+          setConfirmModal(null);
 
           showToast(
-            'success',
-            'Notificação excluída',
-            'A notificação foi removida localmente.'
-          )
+            "success",
+            "Notificação excluída",
+            "A notificação foi removida localmente.",
+          );
         }
       },
-    })
+    });
   }
 
   function handleOpenAction(notification) {
-    if (!notification?.actionUrl) return
+    if (!notification?.actionUrl) return;
 
-    setSelectedNotification(null)
-    navigate(notification.actionUrl)
+    setSelectedNotification(null);
+    navigate(notification.actionUrl);
   }
 
   return (
     <div className="ff-hevy-page ff-hevy-page-notifications">
-
       <AppPageIntro
         eyebrow="Central"
         title="Notificações"
         description="Avisos, lembretes e alertas agrupados em uma experiência mais nativa."
         metrics={[
-          { label: 'Total', value: stats.total },
-          { label: 'Não lidas', value: stats.unread },
-          { label: 'Fonte', value: source === 'database' ? 'API' : 'Local' },
+          { label: "Total", value: stats.total },
+          { label: "Não lidas", value: stats.unread },
+          { label: "Fonte", value: source === "database" ? "API" : "Local" },
         ]}
       />
 
-    <NotificationsPageSections
-      source={source}
-      loading={loading}
-      stats={stats}
-      search={search}
-      statusFilter={statusFilter}
-      filteredNotifications={filteredNotifications}
-      visibleNotifications={visibleNotifications}
-      visibleCount={visibleCount}
-      selectedNotification={selectedNotification}
-      confirmModal={confirmModal}
-      toast={toast}
-      onRefresh={() => loadNotifications()}
-      onGenerate={handleGenerateNotifications}
-      onSearchChange={setSearch}
-      onStatusFilterChange={setStatusFilter}
-      onMarkAllAsRead={handleMarkAllAsRead}
-      onLoadMore={() => setVisibleCount((current) => current + 30)}
-      onOpenNotification={handleOpenNotification}
-      onMarkAsRead={handleMarkAsRead}
-      onArchiveNotification={handleArchiveNotification}
-      onDeleteNotification={handleDeleteNotification}
-      onOpenAction={handleOpenAction}
-      onCloseDetail={() => setSelectedNotification(null)}
-      onCancelConfirm={() => setConfirmModal(null)}
-      onCloseToast={() => setToast(null)}
-    />
-  
+      <NotificationsPageSections
+        source={source}
+        loading={loading}
+        stats={stats}
+        search={search}
+        statusFilter={statusFilter}
+        filteredNotifications={filteredNotifications}
+        visibleNotifications={visibleNotifications}
+        visibleCount={visibleCount}
+        selectedNotification={selectedNotification}
+        confirmModal={confirmModal}
+        toast={toast}
+        onRefresh={() => loadNotifications()}
+        onGenerate={handleGenerateNotifications}
+        onSearchChange={setSearch}
+        onStatusFilterChange={setStatusFilter}
+        onMarkAllAsRead={handleMarkAllAsRead}
+        onLoadMore={() => setVisibleCount((current) => current + 30)}
+        onOpenNotification={handleOpenNotification}
+        onMarkAsRead={handleMarkAsRead}
+        onArchiveNotification={handleArchiveNotification}
+        onDeleteNotification={handleDeleteNotification}
+        onOpenAction={handleOpenAction}
+        onCloseDetail={() => setSelectedNotification(null)}
+        onCancelConfirm={() => setConfirmModal(null)}
+        onCloseToast={() => setToast(null)}
+      />
     </div>
-  )
+  );
 }
 
-export default Notifications
+export default Notifications;
