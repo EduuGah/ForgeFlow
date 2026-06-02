@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Bell, BellRing, CalendarCheck, Clock3, Droplets, Moon, Smartphone, Utensils, Weight, Camera } from 'lucide-react'
+import { Activity, Bell, Calendar, Camera, Dumbbell, Moon, Smartphone } from 'lucide-react'
 
 import Card from '../ui/Card'
 import Button from '../ui/Button'
@@ -251,7 +251,7 @@ function NotificationSettingsSection({ settings, workouts = [], onUpdateSetting,
   const smartReminderItems = [
     {
       key: 'hydration',
-      icon: Droplets,
+      icon: Activity,
       title: 'Beber água',
       description: 'Um aviso humano para hidratação durante o dia.',
       enabledKey: 'hydrationReminderEnabled',
@@ -259,7 +259,7 @@ function NotificationSettingsSection({ settings, workouts = [], onUpdateSetting,
     },
     {
       key: 'preWorkoutMeal',
-      icon: Utensils,
+      icon: Dumbbell,
       title: 'Pré-treino',
       description: 'Lembra de se alimentar antes do horário que você costuma treinar.',
       enabledKey: 'preWorkoutMealReminderEnabled',
@@ -267,7 +267,7 @@ function NotificationSettingsSection({ settings, workouts = [], onUpdateSetting,
     },
     {
       key: 'postWorkoutMeal',
-      icon: Utensils,
+      icon: Dumbbell,
       title: 'Pós-treino',
       description: 'Ajuda a manter a rotina de recuperação depois do treino.',
       enabledKey: 'postWorkoutMealReminderEnabled',
@@ -294,7 +294,7 @@ function NotificationSettingsSection({ settings, workouts = [], onUpdateSetting,
   return (
     <Card className="ff-reminders-card">
       <SectionTitle
-        icon={BellRing}
+        icon={Bell}
         title="Lembretes no celular"
         description="Configure avisos de peso e treino com uma interface melhor para APK Android."
       />
@@ -313,19 +313,19 @@ function NotificationSettingsSection({ settings, workouts = [], onUpdateSetting,
           tone={getPermissionTone(permission, nativeApp)}
         />
         <NativeStatusPill
-          icon={Clock3}
+          icon={Activity}
           label="Alarme exato"
           value={nativeApp ? (exactAlarm === 'granted' ? 'Permitido' : exactAlarm === 'denied' ? 'Bloqueado' : 'Verificar') : 'Modo web'}
           tone={!nativeApp ? 'neutral' : exactAlarm === 'granted' ? 'success' : exactAlarm === 'denied' ? 'warning' : 'neutral'}
         />
         <NativeStatusPill
-          icon={CalendarCheck}
+          icon={Calendar}
           label="Treinos na agenda"
           value={`${scheduledWorkoutDays} dia(s)`}
           tone={scheduledWorkoutDays > 0 ? 'success' : 'warning'}
         />
         <NativeStatusPill
-          icon={Clock3}
+          icon={Activity}
           label="Pendentes"
           value={`${pendingCount}`}
           tone={pendingCount > 0 ? 'success' : 'neutral'}
@@ -369,7 +369,7 @@ function NotificationSettingsSection({ settings, workouts = [], onUpdateSetting,
       <div className="ff-reminder-list mt-6">
         <section className="ff-reminder-item">
           <div className="ff-reminder-item-head">
-            <span className="ff-reminder-item-icon"><Weight size={18} /></span>
+            <span className="ff-reminder-item-icon"><Activity size={18} /></span>
             <div className="min-w-0">
               <h3>Lembrete de peso</h3>
               <p>Receba um aviso diário para registrar seu peso.</p>
@@ -397,7 +397,7 @@ function NotificationSettingsSection({ settings, workouts = [], onUpdateSetting,
 
         <section className="ff-reminder-item">
           <div className="ff-reminder-item-head">
-            <span className="ff-reminder-item-icon"><CalendarCheck size={18} /></span>
+            <span className="ff-reminder-item-icon"><Calendar size={18} /></span>
             <div className="min-w-0">
               <h3>Lembrete de treino</h3>
               <p>Avisa somente nos dias que têm treino na agenda semanal.</p>

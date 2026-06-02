@@ -295,14 +295,22 @@ export function normalizeSettings(settings = {}) {
   normalized.themeMode = normalizeThemeMode(normalized.themeMode)
   normalized.accentColor = normalizeAccentColor(normalized.accentColor)
   normalized.workoutsVisibleLimit = Number(normalized.workoutsVisibleLimit) || defaultSettings.workoutsVisibleLimit
-  normalized.weightReminderEnabled = Boolean(normalized.weightReminderEnabled)
-  normalized.workoutReminderEnabled = Boolean(normalized.workoutReminderEnabled)
-  normalized.weightReminderTime = /^\d{2}:\d{2}$/.test(String(normalized.weightReminderTime || ''))
-    ? normalized.weightReminderTime
-    : defaultSettings.weightReminderTime
-  normalized.workoutReminderTime = /^\d{2}:\d{2}$/.test(String(normalized.workoutReminderTime || ''))
-    ? normalized.workoutReminderTime
-    : defaultSettings.workoutReminderTime
+  const reminderSettings = [
+    ['weightReminderEnabled', 'weightReminderTime'],
+    ['workoutReminderEnabled', 'workoutReminderTime'],
+    ['hydrationReminderEnabled', 'hydrationReminderTime'],
+    ['preWorkoutMealReminderEnabled', 'preWorkoutMealReminderTime'],
+    ['postWorkoutMealReminderEnabled', 'postWorkoutMealReminderTime'],
+    ['progressPhotoReminderEnabled', 'progressPhotoReminderTime'],
+    ['sleepReminderEnabled', 'sleepReminderTime'],
+  ]
+
+  reminderSettings.forEach(([enabledKey, timeKey]) => {
+    normalized[enabledKey] = Boolean(normalized[enabledKey])
+    normalized[timeKey] = /^\d{2}:\d{2}$/.test(String(normalized[timeKey] || ''))
+      ? normalized[timeKey]
+      : defaultSettings[timeKey]
+  })
 
   return normalized
 }

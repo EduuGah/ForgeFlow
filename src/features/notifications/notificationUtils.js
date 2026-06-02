@@ -1,4 +1,4 @@
-import { Bell, Camera, CheckCircle2, Dumbbell, Flag, Info, Target, Weight } from 'lucide-react'
+import { Activity, Bell, Camera, Dumbbell } from 'lucide-react'
 
 export function normalizeNotificationFromApi(notification = {}) {
   return {
@@ -45,28 +45,28 @@ export function getNotificationMeta(type) {
   const metas = {
     success: {
       label: 'Sucesso',
-      icon: CheckCircle2,
+      icon: Activity,
       tone: 'text-[var(--ff-success-text)]',
       bg: 'bg-emerald-500/10',
       border: 'border-emerald-500/25',
     },
     warning: {
       label: 'Atenção',
-      icon: Info,
+      icon: Activity,
       tone: 'text-[var(--ff-warning-text)]',
       bg: 'bg-yellow-500/10',
       border: 'border-yellow-500/25',
     },
     danger: {
       label: 'Importante',
-      icon: Info,
+      icon: Activity,
       tone: 'text-[var(--ff-danger-text)]',
       bg: 'bg-red-500/10',
       border: 'border-red-500/25',
     },
     goal: {
       label: 'Meta',
-      icon: Target,
+      icon: Activity,
       tone: 'text-[var(--ff-accent-text)]',
       bg: 'bg-[var(--ff-accent-soft)]',
       border: 'border-[var(--ff-accent-border)]',
@@ -80,7 +80,7 @@ export function getNotificationMeta(type) {
     },
     weight: {
       label: 'Peso',
-      icon: Weight,
+      icon: Activity,
       tone: 'text-[var(--ff-accent-text)]',
       bg: 'bg-[var(--ff-accent-soft)]',
       border: 'border-[var(--ff-accent-border)]',
@@ -94,7 +94,7 @@ export function getNotificationMeta(type) {
     },
     recovery: {
       label: 'Recuperação',
-      icon: Flag,
+      icon: Activity,
       tone: 'text-[var(--ff-accent-text)]',
       bg: 'bg-[var(--ff-accent-soft)]',
       border: 'border-[var(--ff-accent-border)]',

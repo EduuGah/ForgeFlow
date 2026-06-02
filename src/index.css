@@ -10026,3 +10026,346 @@ html:has(.ff-notification-sheet) {
     display: none !important;
   }
 }
+
+/* =========================================================
+   Notificações mobile — implementação única e isolada
+   Classes novas para não herdar popovers/sheets antigos.
+   ========================================================= */
+.ff-notification-menu {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 140000 !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  padding: 0 !important;
+  pointer-events: none !important;
+  isolation: isolate !important;
+}
+
+.ff-notification-menu__backdrop {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: rgba(0, 0, 0, .68) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  pointer-events: auto !important;
+}
+
+.ff-notification-menu__panel {
+  position: relative !important;
+  z-index: 1 !important;
+  width: 100% !important;
+  max-width: 560px !important;
+  max-height: calc(88dvh - env(safe-area-inset-top)) !important;
+  min-height: min(520px, 76dvh) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  border: 1px solid var(--ff-border) !important;
+  border-bottom: 0 !important;
+  border-radius: 30px 30px 0 0 !important;
+  background: color-mix(in srgb, var(--ff-card) 96%, #050506 4%) !important;
+  color: var(--ff-text) !important;
+  box-shadow: 0 -26px 80px rgba(0, 0, 0, .82) !important;
+  padding-bottom: env(safe-area-inset-bottom) !important;
+  pointer-events: auto !important;
+  transform: translateZ(0) !important;
+}
+
+.ff-notification-menu__handle {
+  flex: 0 0 auto !important;
+  width: 48px !important;
+  height: 5px !important;
+  margin: 10px auto 2px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, .18) !important;
+}
+
+.ff-notification-menu__header {
+  flex: 0 0 auto !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+  padding: 14px 16px 13px !important;
+  border-bottom: 1px solid var(--ff-border) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,0)) !important;
+}
+
+.ff-notification-menu__header div {
+  min-width: 0 !important;
+}
+
+.ff-notification-menu__header span,
+.ff-notification-menu__section-title span {
+  display: block !important;
+  color: var(--ff-muted) !important;
+  font-size: .69rem !important;
+  font-weight: 950 !important;
+  letter-spacing: .15em !important;
+  line-height: 1.1 !important;
+  text-transform: uppercase !important;
+}
+
+.ff-notification-menu__header strong {
+  display: block !important;
+  margin-top: 5px !important;
+  color: var(--ff-text) !important;
+  font-size: clamp(1.15rem, 5vw, 1.42rem) !important;
+  font-weight: 950 !important;
+  letter-spacing: -.04em !important;
+  line-height: 1.05 !important;
+}
+
+.ff-notification-menu__header small {
+  display: block !important;
+  margin-top: 5px !important;
+  color: var(--ff-muted-2) !important;
+  font-size: .76rem !important;
+  font-weight: 800 !important;
+}
+
+.ff-notification-menu__header button {
+  flex: 0 0 auto !important;
+  width: 42px !important;
+  height: 42px !important;
+  min-height: 42px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1px solid var(--ff-border) !important;
+  border-radius: 16px !important;
+  background: var(--ff-surface-2) !important;
+  color: var(--ff-text-soft) !important;
+}
+
+.ff-notification-menu__content {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding: 13px 14px 14px !important;
+  touch-action: pan-y !important;
+}
+
+.ff-notification-menu__section,
+.ff-notification-menu__list,
+.ff-notification-menu__reminders {
+  display: grid !important;
+  gap: 9px !important;
+}
+
+.ff-notification-menu__section-title {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  padding: 0 2px !important;
+}
+
+.ff-notification-menu__section-title em,
+.ff-notification-menu__section-title button {
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--ff-accent-text) !important;
+  font-size: .72rem !important;
+  font-style: normal !important;
+  font-weight: 950 !important;
+  white-space: nowrap !important;
+}
+
+.ff-notification-menu__item,
+.ff-notification-menu__empty,
+.ff-notification-menu__reminder {
+  width: 100% !important;
+  min-height: 74px !important;
+  display: grid !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 12px !important;
+  border: 1px solid var(--ff-border) !important;
+  border-radius: 21px !important;
+  background: rgba(255, 255, 255, .035) !important;
+  color: var(--ff-text) !important;
+  text-align: left !important;
+  box-shadow: none !important;
+}
+
+.ff-notification-menu__item {
+  grid-template-columns: 46px minmax(0, 1fr) !important;
+}
+
+.ff-notification-menu__empty {
+  grid-template-columns: 46px minmax(0, 1fr) 18px !important;
+}
+
+.ff-notification-menu__reminder {
+  grid-template-columns: 42px minmax(0, 1fr) auto !important;
+}
+
+.ff-notification-menu__item.is-unread,
+.ff-notification-menu__reminder.is-enabled {
+  border-color: color-mix(in srgb, var(--ff-accent) 50%, transparent) !important;
+  background: color-mix(in srgb, var(--ff-accent-soft) 22%, rgba(255,255,255,.04)) !important;
+}
+
+.ff-notification-menu__icon {
+  width: 46px !important;
+  height: 46px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 16px !important;
+  background: var(--ff-accent-soft) !important;
+  color: var(--ff-accent-text) !important;
+}
+
+.ff-notification-menu__reminder .ff-notification-menu__icon {
+  width: 42px !important;
+  height: 42px !important;
+}
+
+.ff-notification-menu__copy {
+  min-width: 0 !important;
+  display: block !important;
+}
+
+.ff-notification-menu__copy strong {
+  display: block !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: var(--ff-text) !important;
+  font-size: .94rem !important;
+  font-weight: 950 !important;
+  line-height: 1.15 !important;
+}
+
+.ff-notification-menu__copy small {
+  display: -webkit-box !important;
+  margin-top: 4px !important;
+  overflow: hidden !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  color: var(--ff-muted) !important;
+  font-size: .76rem !important;
+  font-weight: 650 !important;
+  line-height: 1.3 !important;
+  white-space: normal !important;
+}
+
+.ff-notification-menu__copy em,
+.ff-notification-menu__time em {
+  display: block !important;
+  margin-top: 6px !important;
+  color: var(--ff-muted-2) !important;
+  font-size: .66rem !important;
+  font-style: normal !important;
+  font-weight: 900 !important;
+  letter-spacing: .03em !important;
+}
+
+.ff-notification-menu__time {
+  display: grid !important;
+  justify-items: end !important;
+  gap: 3px !important;
+  white-space: nowrap !important;
+}
+
+.ff-notification-menu__time strong {
+  display: inline-flex !important;
+  align-items: center !important;
+  min-height: 28px !important;
+  padding: 0 9px !important;
+  border: 1px solid var(--ff-border) !important;
+  border-radius: 999px !important;
+  background: rgba(0,0,0,.24) !important;
+  color: var(--ff-text) !important;
+  font-size: .72rem !important;
+  font-weight: 950 !important;
+}
+
+.ff-notification-menu__reminder.is-enabled .ff-notification-menu__time em {
+  color: #5ee1a0 !important;
+}
+
+.ff-notification-menu__actions {
+  flex: 0 0 auto !important;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+  padding: 12px 14px calc(14px + env(safe-area-inset-bottom)) !important;
+  border-top: 1px solid var(--ff-border) !important;
+  background: color-mix(in srgb, var(--ff-card) 96%, #050506 4%) !important;
+}
+
+.ff-notification-menu__actions button {
+  min-height: 46px !important;
+  width: 100% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  border: 1px solid var(--ff-border) !important;
+  border-radius: 16px !important;
+  background: var(--ff-surface-2) !important;
+  color: var(--ff-text) !important;
+  font-size: .82rem !important;
+  font-weight: 950 !important;
+}
+
+.ff-notification-menu__actions button:first-child {
+  border-color: var(--ff-accent-border) !important;
+  background: var(--ff-accent) !important;
+  color: #fff !important;
+}
+
+@media (min-width: 768px) {
+  .ff-notification-menu {
+    align-items: flex-start !important;
+    justify-content: flex-end !important;
+    padding: calc(4.75rem + env(safe-area-inset-top)) 1rem 1rem !important;
+  }
+
+  .ff-notification-menu__panel {
+    width: 420px !important;
+    min-height: 0 !important;
+    max-height: min(640px, calc(100dvh - 6rem)) !important;
+    border: 1px solid var(--ff-border) !important;
+    border-radius: 24px !important;
+  }
+
+  .ff-notification-menu__handle {
+    display: none !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .ff-notification-menu__reminder {
+    grid-template-columns: 40px minmax(0, 1fr) !important;
+  }
+
+  .ff-notification-menu__time {
+    grid-column: 2 !important;
+    justify-items: start !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    margin-top: -4px !important;
+  }
+}
