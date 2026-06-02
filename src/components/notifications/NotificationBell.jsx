@@ -145,14 +145,57 @@ function NotificationBell() {
     }
   }, [isMenuOpen])
 
-  function openNotificationsPage() {
+  function getNotificationId(notification) {
+    const rawId = notification?.id ?? notification?._id ?? notification?.notificationId
+
+    return rawId == null ? null : String(rawId)
+  }
+
+  function openNotificationsPage(notification = null) {
+    const selectedNotificationId = getNotificationId(notification)
+
     setIsMenuOpen(false)
-    navigate('/notifications')
+
+    if (selectedNotificationId) {
+      try {
+        window.sessionStorage.setItem('forgeflow:selected-notification-id', selectedNotificationId)
+        window.dispatchEvent(new CustomEvent('forgeflow:open-notification-detail', {
+          detail: { notificationId: selectedNotificationId },
+        }))
+      } catch {
+        // Navegação continua funcionando mesmo se o WebView bloquear sessionStorage/eventos.
+      }
+
+      navigate({
+        pathname: '/notifications',
+        search: `?notification=${encodeURIComponent(selectedNotificationId)}`,
+      }, {
+        state: {
+          fromNotificationBell: true,
+          selectedNotificationId,
+          openNotificationId: selectedNotificationId,
+        },
+      })
+      return
+    }
+
+    navigate('/notifications', { state: { fromNotificationBell: true } })
   }
 
   function openNotificationSettings() {
     setIsMenuOpen(false)
-    navigate('/settings', { state: { openSettingsPanel: 'notifications' } })
+    navigate({
+      pathname: '/settings',
+      search: '?section=notifications',
+      hash: '#notifications',
+    }, {
+      state: {
+        fromNotificationBell: true,
+        openSettingsPanel: 'notifications',
+        activeSettingsSection: 'notifications',
+        scrollTo: 'notifications',
+      },
+    })
   }
 
   const previewItems = useMemo(
@@ -211,7 +254,7 @@ function NotificationBell() {
                       key={notification.id ?? `${notification.type}-${index}`}
                       type="button"
                       className={`ff-notification-menu__item ${isUnread ? 'is-unread' : ''}`}
-                      onClick={openNotificationsPage}
+                      onClick={() => openNotificationsPage(notification)}
                     >
                       <span className="ff-notification-menu__icon"><Icon size={17} /></span>
                       <span className="ff-notification-menu__copy">
@@ -225,7 +268,7 @@ function NotificationBell() {
                 })}
               </div>
             ) : (
-              <button type="button" className="ff-notification-menu__empty" onClick={openNotificationsPage}>
+              <button type="button" className="ff-notification-menu__empty" onClick={() => openNotificationsPage()}>
                 <span className="ff-notification-menu__icon"><Inbox size={20} /></span>
                 <span className="ff-notification-menu__copy">
                   <strong>Sem notificações recentes</strong>
@@ -238,7 +281,7 @@ function NotificationBell() {
         </main>
 
         <footer className="ff-notification-menu__actions">
-          <button type="button" onClick={openNotificationsPage}>Ver todas</button>
+          <button type="button" onClick={() => openNotificationsPage()}>Ver todas</button>
           <button type="button" onClick={openNotificationSettings}><Settings size={15} /> Personalizar</button>
         </footer>
       </section>
