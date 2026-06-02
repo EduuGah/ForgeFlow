@@ -9735,3 +9735,294 @@ html:has(.ff-notification-sheet) {
     opacity: .98 !important;
   }
 }
+
+/* =========================================================
+   Correção final — menu de notificações estável e customizável
+   ========================================================= */
+.ff-notifications-v2 {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 120000 !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
+  padding: 0 !important;
+}
+
+.ff-notifications-v2__backdrop {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: rgba(0, 0, 0, .72) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.ff-notifications-v2__panel {
+  position: relative !important;
+  z-index: 1 !important;
+  width: 100% !important;
+  max-width: 560px !important;
+  max-height: min(84dvh, 720px) !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  border: 1px solid var(--ff-border) !important;
+  border-bottom: 0 !important;
+  border-radius: 28px 28px 0 0 !important;
+  background: #151619 !important;
+  color: var(--ff-text) !important;
+  box-shadow: 0 -22px 70px rgba(0, 0, 0, .78) !important;
+  padding-bottom: env(safe-area-inset-bottom) !important;
+}
+
+.ff-notifications-v2__handle {
+  width: 46px !important;
+  height: 5px !important;
+  margin: 10px auto 2px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, .18) !important;
+}
+
+.ff-notifications-v2__header {
+  flex: 0 0 auto !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  padding: 14px 16px 12px !important;
+  border-bottom: 1px solid var(--ff-border) !important;
+}
+
+.ff-notifications-v2__header span,
+.ff-notifications-v2__section-title span {
+  display: block !important;
+  color: var(--ff-muted) !important;
+  font-size: .68rem !important;
+  font-weight: 950 !important;
+  letter-spacing: .16em !important;
+  text-transform: uppercase !important;
+}
+
+.ff-notifications-v2__header strong {
+  display: block !important;
+  margin-top: 4px !important;
+  color: var(--ff-text) !important;
+  font-size: 1.2rem !important;
+  font-weight: 950 !important;
+  line-height: 1.1 !important;
+  letter-spacing: -.035em !important;
+}
+
+.ff-notifications-v2__header button {
+  flex: 0 0 auto !important;
+  width: 42px !important;
+  height: 42px !important;
+  min-height: 42px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1px solid var(--ff-border) !important;
+  border-radius: 16px !important;
+  background: var(--ff-surface-2) !important;
+  color: var(--ff-text-soft) !important;
+}
+
+.ff-notifications-v2__content {
+  min-height: 0 !important;
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior: contain !important;
+  display: grid !important;
+  gap: 16px !important;
+  padding: 12px 14px !important;
+}
+
+.ff-notifications-v2__section {
+  display: grid !important;
+  gap: 9px !important;
+}
+
+.ff-notifications-v2__section-title {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  padding: 0 2px !important;
+}
+
+.ff-notifications-v2__section-title em,
+.ff-notifications-v2__section-title button {
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--ff-accent-text) !important;
+  font-size: .72rem !important;
+  font-style: normal !important;
+  font-weight: 950 !important;
+  white-space: nowrap !important;
+}
+
+.ff-notifications-v2__item,
+.ff-notifications-v2__empty,
+.ff-notifications-v2__reminder {
+  width: 100% !important;
+  min-height: 74px !important;
+  display: grid !important;
+  grid-template-columns: 46px minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 12px !important;
+  border: 1px solid var(--ff-border) !important;
+  border-radius: 20px !important;
+  background: rgba(255, 255, 255, .035) !important;
+  color: var(--ff-text) !important;
+  text-align: left !important;
+}
+
+.ff-notifications-v2__empty {
+  grid-template-columns: 46px minmax(0, 1fr) 18px !important;
+}
+
+.ff-notifications-v2__reminder {
+  grid-template-columns: 42px minmax(0, 1fr) auto !important;
+}
+
+.ff-notifications-v2__item.is-unread,
+.ff-notifications-v2__reminder.is-enabled {
+  border-color: color-mix(in srgb, var(--ff-accent) 48%, transparent) !important;
+  background: color-mix(in srgb, var(--ff-accent-soft) 18%, rgba(255,255,255,.035)) !important;
+}
+
+.ff-notifications-v2__icon {
+  width: 46px !important;
+  height: 46px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 16px !important;
+  background: var(--ff-accent-soft) !important;
+  color: var(--ff-accent-text) !important;
+}
+
+.ff-notifications-v2__reminder .ff-notifications-v2__icon {
+  width: 42px !important;
+  height: 42px !important;
+}
+
+.ff-notifications-v2__copy {
+  min-width: 0 !important;
+  display: block !important;
+}
+
+.ff-notifications-v2__copy strong {
+  display: block !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: var(--ff-text) !important;
+  font-size: .94rem !important;
+  font-weight: 950 !important;
+  line-height: 1.15 !important;
+}
+
+.ff-notifications-v2__copy small {
+  display: -webkit-box !important;
+  margin-top: 4px !important;
+  overflow: hidden !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  color: var(--ff-muted) !important;
+  font-size: .76rem !important;
+  font-weight: 650 !important;
+  line-height: 1.3 !important;
+}
+
+.ff-notifications-v2__copy em,
+.ff-notifications-v2__time em {
+  display: block !important;
+  margin-top: 6px !important;
+  color: var(--ff-muted-2) !important;
+  font-size: .66rem !important;
+  font-style: normal !important;
+  font-weight: 900 !important;
+  letter-spacing: .03em !important;
+}
+
+.ff-notifications-v2__time {
+  display: grid !important;
+  justify-items: end !important;
+  gap: 3px !important;
+  white-space: nowrap !important;
+}
+
+.ff-notifications-v2__time strong {
+  display: inline-flex !important;
+  align-items: center !important;
+  min-height: 28px !important;
+  padding: 0 9px !important;
+  border: 1px solid var(--ff-border) !important;
+  border-radius: 999px !important;
+  background: rgba(0,0,0,.24) !important;
+  color: var(--ff-text) !important;
+  font-size: .72rem !important;
+  font-weight: 950 !important;
+}
+
+.ff-notifications-v2__reminder.is-enabled .ff-notifications-v2__time em {
+  color: #5ee1a0 !important;
+}
+
+.ff-notifications-v2__actions {
+  flex: 0 0 auto !important;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+  padding: 12px 14px calc(14px + env(safe-area-inset-bottom)) !important;
+  border-top: 1px solid var(--ff-border) !important;
+  background: #151619 !important;
+}
+
+.ff-notifications-v2__actions button {
+  min-height: 46px !important;
+  width: 100% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  border: 1px solid var(--ff-border) !important;
+  border-radius: 16px !important;
+  background: var(--ff-surface-2) !important;
+  color: var(--ff-text) !important;
+  font-size: .82rem !important;
+  font-weight: 950 !important;
+}
+
+.ff-notifications-v2__actions button:first-child {
+  border-color: var(--ff-accent-border) !important;
+  background: var(--ff-accent) !important;
+  color: #fff !important;
+}
+
+@media (min-width: 768px) {
+  .ff-notifications-v2 {
+    align-items: flex-start !important;
+    justify-content: flex-end !important;
+    padding: calc(4.75rem + env(safe-area-inset-top)) 1rem 1rem !important;
+  }
+
+  .ff-notifications-v2__panel {
+    width: 420px !important;
+    max-height: min(640px, calc(100dvh - 6rem)) !important;
+    border: 1px solid var(--ff-border) !important;
+    border-radius: 24px !important;
+  }
+
+  .ff-notifications-v2__handle {
+    display: none !important;
+  }
+}
