@@ -19,7 +19,7 @@ import MobileBottomNav from './MobileBottomNav'
 import NotificationBell from '../notifications/NotificationBell'
 import { generateSmartNotifications } from '../../utils/notificationUtils'
 import { isStandalonePwaMode } from '../../utils/pwaUtils'
-import { isNativeApp } from '../../utils/platformUtils'
+import { isCapacitorLayout } from '../../utils/platformUtils'
 
 const Sidebar = lazy(() => import('./Sidebar'))
 const ActiveWorkoutMini = lazy(() => import('../workout/ActiveWorkoutMini'))
@@ -85,13 +85,13 @@ function AppLayout() {
   const [isHeaderVisible, setIsHeaderVisible] = useState(true)
   const [isHeaderCompact, setIsHeaderCompact] = useState(false)
   const [isPwaStandalone, setIsPwaStandalone] = useState(() => isStandalonePwaMode())
-  const [isRunningNativeApp, setIsRunningNativeApp] = useState(() => isNativeApp())
+  const [isRunningNativeApp, setIsRunningNativeApp] = useState(() => isCapacitorLayout())
   const lastScrollYRef = useRef(0)
   const tickingRef = useRef(false)
   const pageScrollRef = useRef(null)
 
   useEffect(() => {
-    const native = isNativeApp()
+    const native = isCapacitorLayout()
     setIsRunningNativeApp(native)
     document.body.classList.toggle('is-native-app', native)
     document.documentElement.classList.toggle('is-native-app', native)

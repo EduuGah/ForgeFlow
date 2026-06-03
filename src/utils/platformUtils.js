@@ -1,5 +1,9 @@
 import { Capacitor } from '@capacitor/core'
 
+function isForcedCapacitorLayout() {
+  return import.meta.env.VITE_FORCE_CAPACITOR_LAYOUT === 'true'
+}
+
 export function isNativeApp() {
   try {
     if (Capacitor.isNativePlatform()) return true
@@ -30,4 +34,9 @@ export function getGoogleLoginUrl(apiUrl) {
   }
 
   return `${baseUrl}/auth/google`
+}
+
+
+export function isCapacitorLayout() {
+  return isNativeApp() || isForcedCapacitorLayout()
 }
