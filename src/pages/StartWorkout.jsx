@@ -108,6 +108,48 @@ function getSessionExerciseMedia(sessionExercise) {
   return getExerciseMedia(getExerciseData(sessionExercise))
 }
 
+function getExerciseMuscleGroup(exercise = {}) {
+  return exercise.muscleGroup || exercise.primaryMuscle || 'Sem grupo'
+}
+
+function getExerciseEquipmentLabel(exercise = {}) {
+  return exercise.equipment || 'Sem equipamento'
+}
+
+function buildExercisePickerSections(options = [], focusExercise = null) {
+  const focusMuscle = focusExercise ? getExerciseMuscleGroup(getExerciseData(focusExercise)) : ''
+  const recommended = []
+  const groups = new Map()
+
+  options.forEach((exercise) => {
+    const group = getExerciseMuscleGroup(exercise)
+    const isRecommended = focusMuscle && group === focusMuscle
+
+    if (isRecommended && recommended.length < 8) {
+      recommended.push(exercise)
+      return
+    }
+
+    if (!groups.has(group)) groups.set(group, [])
+    groups.get(group).push(exercise)
+  })
+
+  const sections = []
+  if (recommended.length) sections.push({ title: 'Recomendados', items: recommended })
+
+  Array.from(groups.entries())
+    .sort(([a], [b]) => a.localeCompare(b, 'pt-BR'))
+    .forEach(([title, items]) => sections.push({ title, items }))
+
+  return sections
+}
+
+function blurKeyboardOnEnter(event) {
+  if (event.key !== 'Enter') return
+  event.preventDefault()
+  event.currentTarget.blur()
+}
+
 
 function hasValidCompletedWorkoutSet(sessionExercises) {
   return sessionExercises.some((sessionExercise) =>
@@ -314,6 +356,10 @@ function StartWorkout() {
       })
       .slice(0, 60)
   }, [deferredAddExerciseSearch, exercises, sessionExercises])
+
+  const addExerciseSections = useMemo(() => {
+    return buildExercisePickerSections(addExerciseOptions, focusExercise)
+  }, [addExerciseOptions, focusExercise])
 
   function showToast(type, title, message = '') {
     setToast({
@@ -545,6 +591,18 @@ function StartWorkout() {
     }, 120)
   }
 
+  function handleOpenExerciseDetails(sessionExercise) {
+    const exercise = getExerciseData(sessionExercise)
+    const exerciseId = getExerciseId(exercise) || String(sessionExercise?.originalExerciseId || '')
+
+    if (!exerciseId) {
+      showToast('error', 'Exercício sem detalhe', 'Não encontrei uma página de detalhes para este exercício.')
+      return
+    }
+
+    navigate(`/exercises/${exerciseId}`)
+  }
+
   function handleRemoveExerciseFromSession(sessionExerciseId) {
     if (sessionExercises.length <= 1) {
       showToast('error', 'Não é possível excluir', 'O treino ativo precisa ter pelo menos um exercício.')
@@ -687,6 +745,7 @@ function StartWorkout() {
               onReplaceExercise={handleReplaceExercise}
               onSkipExercise={skipExercise}
               onRemoveExercise={handleRemoveExerciseFromSession}
+              onOpenExerciseDetails={handleOpenExerciseDetails}
               onCloseOptions={() => setReplaceExerciseId(null)}
               onUpdateSet={updateSet}
               onToggleSetWarmup={toggleSetWarmup}
@@ -723,6 +782,7 @@ function StartWorkout() {
         onCancelWorkout={handleCancelWorkout}
         onStartRestTimer={startManualRestTimer}
         onRequestFinish={handleRequestFinishWorkout}
+        hidden={finishWorkoutModalOpen || Boolean(confirmModal)}
       />
 
       <RestTimerCard
@@ -751,8 +811,8 @@ function StartWorkout() {
                 type="search"
                 value={addExerciseSearch}
                 onChange={(event) => setAddExerciseSearch(event.target.value)}
+                onKeyDown={blurKeyboardOnEnter}
                 placeholder="Nome, músculo ou equipamento"
-                autoFocus
               />
             </label>
 
@@ -760,29 +820,36 @@ function StartWorkout() {
               {addExerciseOptions.length === 0 ? (
                 <p className="ff-active-add-exercise-sheet__empty">Nenhum exercício encontrado.</p>
               ) : (
-                addExerciseOptions.map((exercise) => {
-                  const mediaUrl = getExerciseMedia(exercise)
+                addExerciseSections.map((section) => (
+                  <section key={section.title} className="ff-exercise-picker-section ff-exercise-picker-section--add">
+                    <h4>{section.title}</h4>
+                    <div className="ff-exercise-picker-section__list">
+                      {section.items.map((exercise) => {
+                        const mediaUrl = getExerciseMedia(exercise)
 
-                  return (
-                    <button
-                      key={getExerciseId(exercise)}
-                      type="button"
-                      onClick={() => handleAddExerciseToSession(getExerciseId(exercise))}
-                    >
-                      <span className="ff-active-add-exercise-sheet__media">
-                        {mediaUrl ? (
-                          <img src={mediaUrl} alt="" loading="lazy" decoding="async" />
-                        ) : (
-                          getExerciseId(exercise).slice(-2) || '+'
-                        )}
-                      </span>
-                      <span className="ff-active-add-exercise-sheet__copy">
-                        <strong>{exercise.name || 'Exercício sem nome'}</strong>
-                        <small>{exercise.muscleGroup || 'Sem grupo'} · {exercise.equipment || 'Sem equipamento'}</small>
-                      </span>
-                    </button>
-                  )
-                })
+                        return (
+                          <button
+                            key={getExerciseId(exercise)}
+                            type="button"
+                            onClick={() => handleAddExerciseToSession(getExerciseId(exercise))}
+                          >
+                            <span className="ff-active-add-exercise-sheet__media">
+                              {mediaUrl ? (
+                                <img src={mediaUrl} alt="" loading="lazy" decoding="async" />
+                              ) : (
+                                getExerciseId(exercise).slice(-2) || '+'
+                              )}
+                            </span>
+                            <span className="ff-active-add-exercise-sheet__copy">
+                              <strong>{exercise.name || 'Exercício sem nome'}</strong>
+                              <small>{getExerciseMuscleGroup(exercise)} · {getExerciseEquipmentLabel(exercise)}</small>
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </section>
+                ))
               )}
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   MapPin,
   Trophy,
@@ -147,9 +147,43 @@ export function MobileWorkoutActionBar({
   onCancelWorkout,
   onStartRestTimer,
   onRequestFinish,
+  hidden = false,
 }) {
+  const [isVisible, setIsVisible] = useState(false)
+
+  useEffect(() => {
+    if (hidden) {
+      setIsVisible(false)
+      return undefined
+    }
+
+    function getScrollTop() {
+      const shell = document.querySelector('.ff-page-scroll-shell')
+      return Math.max(
+        shell?.scrollTop || 0,
+        window.scrollY || document.documentElement.scrollTop || 0
+      )
+    }
+
+    function updateVisibility() {
+      setIsVisible(getScrollTop() > 180)
+    }
+
+    const shell = document.querySelector('.ff-page-scroll-shell')
+    updateVisibility()
+    shell?.addEventListener('scroll', updateVisibility, { passive: true })
+    window.addEventListener('scroll', updateVisibility, { passive: true })
+
+    return () => {
+      shell?.removeEventListener('scroll', updateVisibility)
+      window.removeEventListener('scroll', updateVisibility)
+    }
+  }, [hidden])
+
+  if (hidden) return null
+
   return (
-    <div className="ff-mobile-workout-action-bar ff-mobile-workout-action-bar--finish fixed inset-x-0 bottom-0 z-40 border-t border-[var(--ff-border)] bg-[var(--ff-bg)]/95 px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-16px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl xl:hidden">
+    <div className={`ff-mobile-workout-action-bar ff-mobile-workout-action-bar--finish ${isVisible ? 'is-visible' : ''} fixed inset-x-0 bottom-0 z-40 border-t border-[var(--ff-border)] bg-[var(--ff-bg)]/95 px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-16px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl xl:hidden`}>
       <div className="mx-auto flex max-w-[1600px] items-center gap-3">
         <button
           type="button"

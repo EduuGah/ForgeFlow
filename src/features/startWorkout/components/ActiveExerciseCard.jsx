@@ -4,6 +4,7 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  ExternalLink,
   Flame,
   ImageIcon,
   Search,
@@ -17,15 +18,71 @@ import {
 import { SetPrBadges } from './ActiveExerciseSetControls'
 import { getExerciseMedia } from '../../../utils/exerciseMediaUtils'
 
-function getPreviousLabel(performance) {
-  if (!performance?.lastSet) return '-'
+function isWarmupSet(set = {}) {
+  return set.type === 'warmup' || set.isWarmup === true || set.warmup === true
+}
 
-  const weight = performance.lastSet.weight
-  const reps = performance.lastSet.reps
+function getPreviousSetForRow(performance, set, setIndex) {
+  const previousSets = Array.isArray(performance?.lastPerformance?.sets)
+    ? performance.lastPerformance.sets.filter((previousSet) => !isWarmupSet(previousSet))
+    : []
+
+  if (previousSets.length > 0) {
+    const sameNumber = previousSets.find((previousSet) =>
+      String(previousSet?.setNumber || '') === String(set?.setNumber || '')
+    )
+
+    return sameNumber || previousSets[setIndex] || previousSets[0]
+  }
+
+  return performance?.lastSet || null
+}
+
+function getPreviousLabel(previousSet) {
+  if (!previousSet) return '-'
+
+  const weight = previousSet.weight
+  const reps = previousSet.reps
 
   if (!weight && !reps) return '-'
 
   return `${weight || 0}kg x ${reps || 0}`
+}
+
+function getExerciseMuscle(exercise = {}) {
+  return exercise.muscleGroup || exercise.primaryMuscle || 'Sem grupo'
+}
+
+function getExerciseEquipment(exercise = {}) {
+  return exercise.equipment || 'Sem equipamento'
+}
+
+function buildReplacementSections(options = [], currentExercise = {}) {
+  const currentMuscle = getExerciseMuscle(currentExercise)
+  const recommended = []
+  const groups = new Map()
+
+  options.forEach((exercise) => {
+    const group = getExerciseMuscle(exercise)
+    const isRecommended = currentMuscle && group === currentMuscle
+
+    if (isRecommended && recommended.length < 8) {
+      recommended.push(exercise)
+      return
+    }
+
+    if (!groups.has(group)) groups.set(group, [])
+    groups.get(group).push(exercise)
+  })
+
+  const sections = []
+  if (recommended.length) sections.push({ title: 'Recomendados', items: recommended })
+
+  Array.from(groups.entries())
+    .sort(([a], [b]) => a.localeCompare(b, 'pt-BR'))
+    .forEach(([title, items]) => sections.push({ title, items }))
+
+  return sections
 }
 
 export default function ActiveExerciseCard({
@@ -46,6 +103,7 @@ export default function ActiveExerciseCard({
   onReplaceExercise,
   onSkipExercise,
   onRemoveExercise,
+  onOpenExerciseDetails,
   onCloseOptions,
   onUpdateSet,
   onToggleSetWarmup,
@@ -65,12 +123,10 @@ export default function ActiveExerciseCard({
     : 0
   const isCurrent = selectedExercise?.id === sessionExercise.id || focusExercise?.id === sessionExercise.id
   const media = getSessionExerciseMedia(sessionExercise)
-  const previousLabel = getPreviousLabel(performance)
-  const previousWeight = performance?.lastSet?.weight || ''
-  const previousReps = performance?.lastSet?.reps || ''
-  const hasPreviousValues = Boolean(previousWeight || previousReps)
+  const exerciseData = sessionExercise.exercise || sessionExercise
   const isOptionsOpen = replaceExerciseId === sessionExercise.id
   const [replaceMode, setReplaceMode] = useState(false)
+  const replacementSections = buildReplacementSections(replacementOptions, exerciseData)
 
   useEffect(() => {
     if (!isOptionsOpen) setReplaceMode(false)
@@ -81,8 +137,11 @@ export default function ActiveExerciseCard({
     onCloseOptions?.()
   }
 
-  function applyPreviousSet(setId) {
-    if (!hasPreviousValues) return
+  function applyPreviousSet(setId, previousSet) {
+    const previousWeight = previousSet?.weight ?? ''
+    const previousReps = previousSet?.reps ?? ''
+
+    if (previousWeight === '' && previousReps === '') return
 
     if (previousWeight !== '') {
       onUpdateSet(sessionExercise.id, setId, 'weight', String(previousWeight))
@@ -93,10 +152,32 @@ export default function ActiveExerciseCard({
     }
 
     window.setTimeout(() => {
-      const firstInput = document.querySelector(`[data-set-row-id="${setId}"] input`)
-      firstInput?.focus?.()
-      firstInput?.select?.()
+      const repsInput = document.querySelector(`[data-set-row-id="${setId}"] input[data-set-field="reps"]`)
+      repsInput?.focus?.()
+      repsInput?.select?.()
     }, 60)
+  }
+
+  function handleSetInputKeyDown(event, field) {
+    if (event.key !== 'Enter') return
+
+    event.preventDefault()
+
+    if (field === 'weight') {
+      const row = event.currentTarget.closest('[data-set-row-id]')
+      const repsInput = row?.querySelector('input[data-set-field="reps"]')
+      repsInput?.focus?.()
+      repsInput?.select?.()
+      return
+    }
+
+    event.currentTarget.blur()
+  }
+
+  function handleSearchKeyDown(event) {
+    if (event.key !== 'Enter') return
+    event.preventDefault()
+    event.currentTarget.blur()
   }
 
   const exerciseOptionsModal = isOptionsOpen && typeof document !== 'undefined'
@@ -114,6 +195,7 @@ export default function ActiveExerciseCard({
             <div>
               <span>{replaceMode ? 'Substituir exercício' : 'Ações do exercício'}</span>
               <strong>{getExerciseName(sessionExercise)}</strong>
+              <small>{getExerciseSubtitle(sessionExercise)} · {exerciseCompletedSets}/{exerciseTotalSets} séries · {exerciseProgressPercent}%</small>
             </div>
 
             <button type="button" onClick={closeExerciseOptions} aria-label="Fechar opções">
@@ -129,11 +211,11 @@ export default function ActiveExerciseCard({
               </button>
 
               <button type="button" onClick={() => {
-                onToggleCollapse(sessionExercise.id)
+                onOpenExerciseDetails?.(sessionExercise)
                 closeExerciseOptions()
               }}>
-                {isCollapsed ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
-                {isCollapsed ? 'Expandir' : 'Minimizar'}
+                <ExternalLink size={18} />
+                Ver detalhes
               </button>
 
               <button type="button" onClick={() => {
@@ -161,7 +243,7 @@ export default function ActiveExerciseCard({
                   placeholder="Buscar substituto..."
                   value={replaceSearch}
                   onChange={(event) => onReplaceSearchChange(event.target.value)}
-                  autoFocus
+                  onKeyDown={handleSearchKeyDown}
                 />
               </label>
 
@@ -169,34 +251,41 @@ export default function ActiveExerciseCard({
                 {replacementOptions.length === 0 ? (
                   <p className="ff-replace-exercise-empty">Nenhum exercício encontrado.</p>
                 ) : (
-                  replacementOptions.map((exercise) => {
-                    const exerciseId = getExerciseId(exercise)
-                    const mediaUrl = getExerciseMedia(exercise)
+                  replacementSections.map((section) => (
+                    <section key={section.title} className="ff-exercise-picker-section">
+                      <h4>{section.title}</h4>
+                      <div className="ff-exercise-picker-section__list">
+                        {section.items.map((exercise) => {
+                          const exerciseId = getExerciseId(exercise)
+                          const mediaUrl = getExerciseMedia(exercise)
 
-                    return (
-                      <button
-                        key={exerciseId}
-                        type="button"
-                        onClick={() => {
-                          onReplaceExercise(sessionExercise.id, exerciseId)
-                          closeExerciseOptions()
-                        }}
-                        className="ff-replace-exercise-option"
-                      >
-                        <span className="ff-replace-exercise-option__media">
-                          {mediaUrl ? (
-                            <img src={mediaUrl} alt="" loading="lazy" decoding="async" />
-                          ) : (
-                            <ImageIcon size={18} />
-                          )}
-                        </span>
-                        <span className="ff-replace-exercise-option__content">
-                          <strong>{exercise.name || 'Exercício sem nome'}</strong>
-                          <small>{exercise.muscleGroup || 'Sem grupo'} · {exercise.equipment || 'Sem equipamento'}</small>
-                        </span>
-                      </button>
-                    )
-                  })
+                          return (
+                            <button
+                              key={exerciseId}
+                              type="button"
+                              onClick={() => {
+                                onReplaceExercise(sessionExercise.id, exerciseId)
+                                closeExerciseOptions()
+                              }}
+                              className="ff-replace-exercise-option"
+                            >
+                              <span className="ff-replace-exercise-option__media">
+                                {mediaUrl ? (
+                                  <img src={mediaUrl} alt="" loading="lazy" decoding="async" />
+                                ) : (
+                                  <ImageIcon size={18} />
+                                )}
+                              </span>
+                              <span className="ff-replace-exercise-option__content">
+                                <strong>{exercise.name || 'Exercício sem nome'}</strong>
+                                <small>{getExerciseMuscle(exercise)} · {getExerciseEquipment(exercise)}</small>
+                              </span>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </section>
+                  ))
                 )}
               </div>
 
@@ -291,9 +380,12 @@ export default function ActiveExerciseCard({
           <span><Check size={18} /></span>
         </div>
 
-        {(sessionExercise.sets || []).map((set) => {
+        {(sessionExercise.sets || []).map((set, setIndex) => {
           const isWarmup = set?.type === 'warmup'
           const isCompleted = Boolean(set.completed)
+          const previousSet = getPreviousSetForRow(performance, set, setIndex)
+          const previousLabel = getPreviousLabel(previousSet)
+          const hasPreviousValues = Boolean(previousSet?.weight || previousSet?.reps)
 
           return (
             <div key={set.id} data-set-row-id={set.id} className={`ff-hevy-set-row ${isCompleted ? 'is-done' : ''} ${isWarmup ? 'is-warmup' : ''}`}>
@@ -309,7 +401,7 @@ export default function ActiveExerciseCard({
               <button
                 type="button"
                 className="ff-hevy-set-prev"
-                onClick={() => applyPreviousSet(set.id)}
+                onClick={() => applyPreviousSet(set.id, previousSet)}
                 disabled={!hasPreviousValues}
                 title={hasPreviousValues ? 'Usar carga e reps anteriores' : 'Sem registro anterior'}
                 aria-label={hasPreviousValues ? 'Usar carga e repetições anteriores nesta série' : 'Sem registro anterior'}
@@ -321,8 +413,10 @@ export default function ActiveExerciseCard({
                 type="number"
                 min="0"
                 inputMode="decimal"
+                data-set-field="weight"
                 value={set.weight}
                 onChange={(event) => onUpdateSet(sessionExercise.id, set.id, 'weight', event.target.value)}
+                onKeyDown={(event) => handleSetInputKeyDown(event, 'weight')}
                 onFocus={(event) => {
                   if (Number(event.target.value) === 0) onUpdateSet(sessionExercise.id, set.id, 'weight', '')
                   window.setTimeout(() => {
@@ -337,8 +431,10 @@ export default function ActiveExerciseCard({
                 type="number"
                 min="1"
                 inputMode="numeric"
+                data-set-field="reps"
                 value={set.reps}
                 onChange={(event) => onUpdateSet(sessionExercise.id, set.id, 'reps', event.target.value)}
+                onKeyDown={(event) => handleSetInputKeyDown(event, 'reps')}
                 onFocus={(event) => {
                   if (Number(event.target.value) === 0) onUpdateSet(sessionExercise.id, set.id, 'reps', '')
                   window.setTimeout(() => {
