@@ -41,6 +41,36 @@ function Notifications() {
   const [selectedNotification, setSelectedNotification] = useState(null);
   const openedNotificationTargetRef = useRef("");
 
+  const unlockNotificationScroll = useCallback(() => {
+    if (typeof document === 'undefined') return;
+
+    document.documentElement.classList.remove(
+      'ff-notification-menu-open',
+      'ff-notification-detail-open',
+      'ff-modal-open',
+      'overflow-hidden',
+    );
+
+    document.body.classList.remove(
+      'ff-notification-menu-open',
+      'ff-notification-detail-open',
+      'ff-modal-open',
+      'overflow-hidden',
+    );
+
+    document.documentElement.style.overflow = '';
+    document.documentElement.style.position = '';
+    document.documentElement.style.height = '';
+
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.height = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    document.body.style.width = '';
+  }, []);
+
   const notifyBellToRefresh = useCallback(() => {
     window.dispatchEvent(new CustomEvent("forgeflow:notifications-changed"));
   }, []);
@@ -196,6 +226,14 @@ function Notifications() {
   }, [deferredSearch, statusFilter]);
 
   useEffect(() => {
+    unlockNotificationScroll();
+
+    return () => {
+      unlockNotificationScroll();
+    };
+  }, [location.pathname, unlockNotificationScroll]);
+
+  useEffect(() => {
     if (!notifications.length) return;
 
     const params = new URLSearchParams(location.search);
@@ -227,19 +265,43 @@ function Notifications() {
     );
 
     if (!targetNotification) return;
+    if (openedNotificationTargetRef.current === String(targetId)) return;
 
+    openedNotificationTargetRef.current = String(targetId);
+    unlockNotificationScroll();
     setSelectedNotification(targetNotification);
 
     if (targetNotification.status === "unread") {
-      markNotificationAsRead(targetNotification.id);
+      markNotificationAsRead(targetNotification.id).then((updatedNotification) => {
+        if (updatedNotification) {
+          setSelectedNotification(updatedNotification);
+        }
+      });
     }
+
+    window.setTimeout(() => {
+      unlockNotificationScroll();
+
+      const scroller = document.querySelector(".ff-page-scroll-shell");
+      scroller?.scrollTo?.({
+        top: 0,
+        left: 0,
+        behavior: "smooth",
+      });
+    }, 80);
 
     try {
       window.sessionStorage.removeItem("forgeflow:selected-notification-id");
     } catch {
       // Ignora bloqueio do WebView.
     }
-  }, [notifications, location.search, location.state]);
+  }, [
+    notifications,
+    location.search,
+    location.state,
+    markNotificationAsRead,
+    unlockNotificationScroll,
+  ]);
 
   const stats = useMemo(() => {
     const unread = notifications.filter(

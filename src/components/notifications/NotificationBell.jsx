@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Bell, Camera, ChevronRight, Dumbbell, Inbox, Settings, X } from 'lucide-react'
 import { createPortal } from 'react-dom'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../../context/AuthContext'
 import { normalizeNotificationFromApi, formatDateTime, getNotificationMeta } from '../../features/notifications/notificationUtils'
@@ -54,6 +54,16 @@ function getSafeNotificationIcon(type) {
   return icons[type] || Bell
 }
 
+
+function unlockNotificationMenuScroll() {
+  if (typeof document === 'undefined') return
+
+  document.body.style.overflow = ''
+  document.documentElement.style.overflow = ''
+  document.body.classList.remove('ff-notification-menu-open')
+  document.documentElement.classList.remove('ff-notification-menu-open')
+}
+
 function NotificationBell() {
   const { user } = useAuth()
   const [unreadCount, setUnreadCount] = useState(0)
@@ -61,6 +71,7 @@ function NotificationBell() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const isLoadingRef = useRef(false)
   const navigate = useNavigate()
+  const location = useLocation()
 
   useEffect(() => {
     setUnreadCount(0)
@@ -124,13 +135,13 @@ function NotificationBell() {
   }, [user])
 
   useEffect(() => {
-    if (!isMenuOpen) return undefined
+    if (!isMenuOpen) {
+      unlockNotificationMenuScroll()
+      return undefined
+    }
 
-    const previousBodyOverflow = document.body.style.overflow
-    const previousHtmlOverflow = document.documentElement.style.overflow
-
-    document.body.style.overflow = 'hidden'
-    document.documentElement.style.overflow = 'hidden'
+    document.body.classList.add('ff-notification-menu-open')
+    document.documentElement.classList.add('ff-notification-menu-open')
 
     function handleEscape(event) {
       if (event.key === 'Escape') setIsMenuOpen(false)
@@ -139,11 +150,15 @@ function NotificationBell() {
     document.addEventListener('keydown', handleEscape)
 
     return () => {
-      document.body.style.overflow = previousBodyOverflow
-      document.documentElement.style.overflow = previousHtmlOverflow
+      unlockNotificationMenuScroll()
       document.removeEventListener('keydown', handleEscape)
     }
   }, [isMenuOpen])
+
+  useEffect(() => {
+    setIsMenuOpen(false)
+    unlockNotificationMenuScroll()
+  }, [location.pathname, location.search])
 
   function getNotificationId(notification) {
     const rawId = notification?.id ?? notification?._id ?? notification?.notificationId
@@ -155,6 +170,7 @@ function NotificationBell() {
     const selectedNotificationId = getNotificationId(notification)
 
     setIsMenuOpen(false)
+    unlockNotificationMenuScroll()
 
     if (selectedNotificationId) {
       try {
@@ -184,6 +200,7 @@ function NotificationBell() {
 
   function openNotificationSettings() {
     setIsMenuOpen(false)
+    unlockNotificationMenuScroll()
     navigate({
       pathname: '/settings',
       search: '?section=notifications',

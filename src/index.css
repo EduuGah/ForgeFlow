@@ -8401,3 +8401,97 @@ body,
     line-height: 1.05;
   }
 }
+
+/* =========================================================
+   ForgeFlow — etapa 1 notificações: scroll e detalhe
+   Corrige scroll travado ao abrir pelo sino e evita título cortado.
+   ========================================================= */
+html.ff-notification-menu-open,
+body.ff-notification-menu-open {
+  overflow: visible !important;
+  position: static !important;
+  height: auto !important;
+  width: auto !important;
+}
+
+.ff-page-notifications,
+.ff-hevy-page-notifications {
+  min-height: auto !important;
+  overflow: visible !important;
+}
+
+.ff-page-notifications .ff-page-scroll-shell,
+.ff-page-notifications main {
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
+}
+
+.ff-notification-detail-modal {
+  overflow: hidden !important;
+  touch-action: pan-y !important;
+}
+
+.ff-notification-detail-modal__panel {
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.ff-notification-detail-modal__header {
+  flex: 0 0 auto !important;
+}
+
+.ff-notification-detail-modal__body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.ff-notification-detail-modal__title {
+  display: block !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  word-break: normal !important;
+  line-height: 1.08 !important;
+  -webkit-line-clamp: unset !important;
+  line-clamp: unset !important;
+  -webkit-box-orient: unset !important;
+}
+
+.ff-page-notifications [class*='line-clamp'],
+.ff-hevy-page-notifications [class*='line-clamp'] {
+  -webkit-line-clamp: unset !important;
+  line-clamp: unset !important;
+}
+
+@media (max-width: 640px) {
+  .ff-notification-detail-modal {
+    align-items: flex-end !important;
+    padding: .75rem .75rem 0 !important;
+  }
+
+  .ff-notification-detail-modal__panel {
+    max-height: calc(92dvh - env(safe-area-inset-top)) !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    padding-bottom: env(safe-area-inset-bottom) !important;
+  }
+
+  .ff-notification-detail-modal__header {
+    gap: .75rem !important;
+    padding: 1rem !important;
+  }
+
+  .ff-notification-detail-modal__body {
+    padding: 1rem !important;
+  }
+
+  .ff-notification-detail-modal__title {
+    font-size: 1.2rem !important;
+  }
+}

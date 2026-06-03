@@ -45,9 +45,9 @@ export function NotificationDetailModal({
   const Icon = meta.icon
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/70 p-3 backdrop-blur-sm sm:items-center sm:p-4">
-      <div className="max-h-[92vh] w-full max-w-2xl overflow-hidden rounded-t-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] shadow-2xl sm:rounded-[2rem]">
-        <div className="flex items-start justify-between gap-4 border-b border-[var(--ff-border)] p-5">
+    <div className="ff-notification-detail-modal fixed inset-0 z-[90] flex items-end justify-center bg-black/70 p-3 backdrop-blur-sm sm:items-center sm:p-4" role="dialog" aria-modal="true">
+      <div className="ff-notification-detail-modal__panel flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] shadow-2xl sm:rounded-[2rem]">
+        <div className="ff-notification-detail-modal__header flex items-start justify-between gap-4 border-b border-[var(--ff-border)] p-5">
           <div className="flex min-w-0 items-start gap-4">
             <div
               className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${meta.border} ${meta.bg} ${meta.tone}`}
@@ -61,7 +61,7 @@ export function NotificationDetailModal({
                 <NotificationStatusPill status={notification.status} />
               </div>
 
-              <h2 className="mt-3 text-2xl font-black text-[var(--ff-text)]">
+              <h2 className="ff-notification-detail-modal__title mt-3 text-2xl font-black text-[var(--ff-text)]">
                 {notification.title}
               </h2>
 
@@ -81,7 +81,7 @@ export function NotificationDetailModal({
           </button>
         </div>
 
-        <div className="space-y-5 p-5">
+        <div className="ff-notification-detail-modal__body space-y-5 overflow-y-auto p-5">
           <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
             <p className="text-xs font-black uppercase tracking-wide text-[var(--ff-muted)]">
               Mensagem completa
