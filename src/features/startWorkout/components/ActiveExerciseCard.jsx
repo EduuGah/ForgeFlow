@@ -237,31 +237,48 @@ export default function ActiveExerciseCard({
     }, 60)
   }
 
-  function handleSetInputKeyDown(event, field) {
-    if (event.key !== 'Enter' && event.key !== 'NumpadEnter') return
+  function isEnterKey(event) {
+    return event.key === 'Enter' || event.key === 'NumpadEnter' || event.code === 'Enter' || event.code === 'NumpadEnter'
+  }
+
+  function finishInputEditing(input) {
+    window.setTimeout(() => {
+      input?.blur?.()
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur()
+      }
+    }, 0)
+  }
+
+  function handleSetInputEnter(event, field) {
+    if (!isEnterKey(event)) return
 
     event.preventDefault()
     event.stopPropagation()
+    event.nativeEvent?.stopImmediatePropagation?.()
 
     if (field === 'weight') {
       const row = event.currentTarget.closest('[data-set-row-id]')
       const repsInput = row?.querySelector('input[data-set-field="reps"]')
-      repsInput?.focus?.()
-      repsInput?.select?.()
+
+      window.setTimeout(() => {
+        repsInput?.focus?.({ preventScroll: true })
+        repsInput?.select?.()
+      }, 0)
       return
     }
 
-    window.requestAnimationFrame(() => {
-      event.currentTarget?.blur?.()
-      document.activeElement?.blur?.()
-    })
+    finishInputEditing(event.currentTarget)
   }
 
-  function handleRepsInputKeyUp(event) {
-    if (event.key !== 'Enter' && event.key !== 'NumpadEnter') return
-    event.preventDefault()
-    event.stopPropagation()
-    event.currentTarget?.blur?.()
+  function handleSetTableKeyDownCapture(event) {
+    const target = event.target
+    if (!(target instanceof HTMLInputElement)) return
+
+    const field = target.dataset?.setField
+    if (field !== 'weight' && field !== 'reps') return
+
+    handleSetInputEnter(event, field)
   }
 
   function handleSearchKeyDown(event) {
@@ -480,7 +497,7 @@ export default function ActiveExerciseCard({
       {!isCollapsed && <p className="ff-hevy-exercise-note">Adicionar notas aqui...</p>}
 
       {!isCollapsed && (
-      <div className="ff-hevy-set-table" aria-label={`Séries de ${getExerciseName(sessionExercise)}`}>
+      <div className="ff-hevy-set-table" aria-label={`Séries de ${getExerciseName(sessionExercise)}`} onKeyDownCapture={handleSetTableKeyDownCapture}>
         <div className="ff-hevy-set-head">
           <span>SÉRIE</span>
           <span>ANTERIOR</span>
@@ -527,7 +544,8 @@ export default function ActiveExerciseCard({
                 data-set-field="weight"
                 value={set.weight}
                 onChange={(event) => onUpdateSet(sessionExercise.id, set.id, 'weight', event.target.value)}
-                onKeyDown={(event) => handleSetInputKeyDown(event, 'weight')}
+                onKeyDown={(event) => handleSetInputEnter(event, 'weight')}
+                onKeyUp={(event) => handleSetInputEnter(event, 'weight')}
                 onFocus={(event) => {
                   if (Number(event.target.value) === 0) onUpdateSet(sessionExercise.id, set.id, 'weight', '')
                   window.setTimeout(() => {
@@ -546,8 +564,8 @@ export default function ActiveExerciseCard({
                 data-set-field="reps"
                 value={set.reps}
                 onChange={(event) => onUpdateSet(sessionExercise.id, set.id, 'reps', event.target.value)}
-                onKeyDown={(event) => handleSetInputKeyDown(event, 'reps')}
-                onKeyUp={handleRepsInputKeyUp}
+                onKeyDown={(event) => handleSetInputEnter(event, 'reps')}
+                onKeyUp={(event) => handleSetInputEnter(event, 'reps')}
                 onFocus={(event) => {
                   if (Number(event.target.value) === 0) onUpdateSet(sessionExercise.id, set.id, 'reps', '')
                   window.setTimeout(() => {

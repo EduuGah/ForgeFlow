@@ -331,6 +331,20 @@ export function FinishWorkoutModal({
   const [locationLabel, setLocationLabel] = useState('')
   const [selectedPreset, setSelectedPreset] = useState('')
 
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined
+
+    if (!open) return undefined
+
+    document.documentElement.classList.add('ff-finish-workout-open')
+    document.body.classList.add('ff-finish-workout-open')
+
+    return () => {
+      document.documentElement.classList.remove('ff-finish-workout-open')
+      document.body.classList.remove('ff-finish-workout-open')
+    }
+  }, [open])
+
   if (!open) return null
 
   const label = selectedPreset === 'Outro'
@@ -373,30 +387,30 @@ export function FinishWorkoutModal({
           </div>
         </div>
 
-        <div className="ff-finish-workout-scroll space-y-4 overflow-y-auto p-4 sm:p-5">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-2xl border border-[var(--ff-border)] bg-zinc-900 p-3 sm:p-4">
+        <div className="ff-finish-workout-scroll space-y-3 overflow-y-auto p-3 sm:p-4">
+          <div className="ff-finish-workout-stats grid grid-cols-2 gap-2">
+            <div className="ff-finish-workout-stat rounded-2xl border border-[var(--ff-border)] bg-zinc-900 p-3">
               <p className="text-xs text-[var(--ff-muted)]">Duração</p>
               <p className="mt-1 text-lg font-black text-[var(--ff-accent-text)] sm:text-xl">
                 {formatTime(elapsedSeconds)}
               </p>
             </div>
 
-            <div className="rounded-2xl border border-[var(--ff-border)] bg-zinc-900 p-3 sm:p-4">
+            <div className="ff-finish-workout-stat rounded-2xl border border-[var(--ff-border)] bg-zinc-900 p-3">
               <p className="text-xs text-[var(--ff-muted)]">Séries</p>
               <p className="mt-1 text-lg font-black sm:text-xl">
                 {completedSets}/{totalSets}
               </p>
             </div>
 
-            <div className="rounded-2xl border border-[var(--ff-border)] bg-zinc-900 p-3 sm:p-4">
+            <div className="ff-finish-workout-stat rounded-2xl border border-[var(--ff-border)] bg-zinc-900 p-3">
               <p className="text-xs text-[var(--ff-muted)]">Exercícios</p>
               <p className="mt-1 text-lg font-black sm:text-xl">
                 {workoutSummary.totalExercises}
               </p>
             </div>
 
-            <div className="rounded-2xl border border-[var(--ff-border)] bg-zinc-900 p-3 sm:p-4">
+            <div className="ff-finish-workout-stat rounded-2xl border border-[var(--ff-border)] bg-zinc-900 p-3">
               <p className="text-xs text-[var(--ff-muted)]">Pulados</p>
               <p className="mt-1 text-lg font-black sm:text-xl">
                 {workoutSummary.skippedExercises}
@@ -422,14 +436,15 @@ export function FinishWorkoutModal({
             </div>
           )}
 
-          <div className="rounded-3xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 p-4">
-            <div className="flex gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">
-                <MapPin size={18} />
-              </span>
-              <div className="min-w-0 flex-1">
-                <h3 className="font-black text-[var(--ff-text)]">Salvar localização deste treino?</h3>
-                <p className="mt-1 text-sm leading-relaxed text-[var(--ff-muted)]">
+          <div className="ff-finish-location-card rounded-3xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 p-3 sm:p-4">
+            <div className="min-w-0">
+              <h3 className="flex items-center gap-2 font-black text-[var(--ff-text)]">
+                <span className="ff-finish-location-card__icon flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">
+                  <MapPin size={16} />
+                </span>
+                Salvar localização deste treino?
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--ff-muted)]">
                   Informe um nome opcional para o local. A permissão só será pedida se você escolher salvar localização.
                 </p>
 
@@ -459,12 +474,11 @@ export function FinishWorkoutModal({
                     className="mt-2 min-h-12 w-full rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] px-3 text-base font-bold text-[var(--ff-text)] outline-none transition focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-[var(--ff-accent-soft)]"
                   />
                 </label>
-              </div>
             </div>
           </div>
         </div>
 
-        <div className="sticky bottom-0 z-10 grid grid-cols-1 gap-2 border-t border-[var(--ff-border)] bg-[var(--ff-surface-2)]/95 p-4 backdrop-blur-xl sm:grid-cols-3 sm:p-5">
+        <div className="ff-finish-workout-footer sticky bottom-0 z-10 grid grid-cols-1 gap-2 border-t border-[var(--ff-border)] bg-[var(--ff-surface-2)]/95 p-3 backdrop-blur-xl sm:grid-cols-3 sm:p-4">
           <Button
             type="button"
             variant="secondary"

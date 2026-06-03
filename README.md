@@ -78,6 +78,11 @@ O projeto já possui uma estrutura funcional com:
 - ajustes de performance e carregamento inicial;
 - melhorias mobile-first em telas principais;
 - PWA com instalação pelo navegador;
+- preparação e testes para APK com Capacitor;
+- detecção de app nativo para ajustar service worker, layout e notificações;
+- notificações internas com modal em portal, contador corrigido e abertura direta da notificação clicada;
+- fluxo de autenticação mais estável, com tratamento para sessão lenta, token inválido e login Google no mobile;
+- treino ativo com ações mobile-first, busca de exercícios, substituição, filtros rápidos e mini card persistente;
 - redesign visual inspirado em apps fitness modernos;
 - painel administrativo para suporte;
 - reset manual de senha pelo admin;
@@ -100,6 +105,7 @@ O projeto já possui uma estrutura funcional com:
 - LocalStorage
 - Context API
 - PWA
+- Capacitor
 
 ### Backend
 
@@ -125,6 +131,7 @@ O projeto já possui uma estrutura funcional com:
 - Render para a API
 - MongoDB Atlas para o banco
 - Cloudinary para armazenamento de imagens
+- Android Studio para testes e empacotamento do APK
 
 ---
 
@@ -170,6 +177,8 @@ O ForgeFlow possui autenticação com:
 - proteção de rotas no backend;
 - autenticação por token;
 - carregamento do usuário autenticado;
+- validação de sessão com fallback para token inválido;
+- tratamento de carregamento lento da API;
 - logout;
 - mensagens para orientar o usuário quando ele ainda precisa criar uma senha.
 
@@ -189,6 +198,7 @@ Atualmente conta com:
 - busca por nome;
 - filtros por músculo e equipamento;
 - chips rápidos de filtro no mobile;
+- listas de seleção reutilizadas no treino ativo para adicionar ou substituir exercícios;
 - detalhes individuais do exercício;
 - criação manual de exercícios;
 - edição de exercícios;
@@ -242,16 +252,20 @@ O sistema possui:
 - adição de novas séries;
 - remoção de exercícios;
 - substituição de exercícios;
-- comparação com treino anterior;
+- busca para adicionar e substituir exercícios com recomendados, filtros e mídia;
+- comparação com treino anterior por série;
+- atalho para copiar peso e repetições anteriores para a série atual;
 - identificação de PR de peso;
 - identificação de PR de volume;
 - resumo antes de finalizar;
 - salvamento do treino no histórico;
 - persistência do treino ativo;
-- barra fixa inferior no celular;
-- campos otimizados para toque;
+- card de treino ativo em outras páginas;
+- ações inferiores e contextuais no celular;
+- campos otimizados para toque, teclado mobile e preenchimento rápido;
 - timer de descanso opcional;
 - pausa, retomada e reinício do descanso;
+- opção de finalizar com ou sem local do treino;
 - toast de confirmação ao concluir ações.
 
 Essa é uma das partes centrais do projeto, porque concentra a lógica real de progressão.
@@ -424,6 +438,11 @@ Também existe uma central de notificações com:
 
 - notificações lidas e não lidas;
 - contador no sino;
+- preview rápido pelo botão de notificações;
+- abertura direta da notificação clicada;
+- modal de detalhe renderizado acima do app inteiro por portal;
+- rolagem interna no detalhe para evitar travamento no mobile;
+- botão de personalização indo direto para a seção de notificações nas configurações;
 - marcar como lida;
 - marcar todas como lidas;
 - arquivar;
@@ -499,6 +518,7 @@ Ela concentra:
 - exportação de histórico em CSV/Excel;
 - exportação de relatório em PDF;
 - restauração de configurações padrão;
+- abertura direta de painéis específicos por URL/state, como notificações;
 - layout mais compacto no desktop.
 
 ---
@@ -681,6 +701,10 @@ src/
 │   ├── ui/
 │   └── workout/
 │
+├── features/
+│   ├── notifications/
+│   └── startWorkout/
+│
 ├── context/
 │   ├── AuthContext.jsx
 │   └── WorkoutSessionContext.jsx
@@ -711,7 +735,8 @@ src/
 │   └── Workouts.jsx
 │
 ├── services/
-│   └── api.js
+│   ├── api.js
+│   └── nativeNotificationService.js
 │
 ├── utils/
 │   ├── analyticsUtils.js
@@ -778,6 +803,7 @@ Alguns cuidados já foram considerados no projeto:
 - variáveis sensíveis fora do GitHub;
 - uso de `.env`;
 - autenticação por token;
+- suporte a sessão/cookie e CSRF em rotas sensíveis;
 - senhas armazenadas com hash;
 - permissões por `role`;
 - rotas protegidas por usuário;
@@ -936,6 +962,42 @@ Situação atual:
 - reset de senha mantido apenas pelo admin;
 - backend sem dependência de `nodemailer` ou `RESEND_API_KEY`.
 
+### Etapa 30 — Estabilidade de login e notificações
+
+A Etapa 30 focou em corrigir o fluxo de autenticação e a central de notificações, principalmente no mobile/APK.
+
+Principais melhorias:
+
+- tratamento mais seguro para sessão carregando;
+- limpeza de token inválido;
+- proteção de rotas baseada em usuário validado;
+- timeout/fallback para chamadas lentas da API;
+- ajuste no login Google para fluxo mobile;
+- sino de notificações com contador mais confiável;
+- abertura direta da notificação clicada;
+- botão de personalização abrindo diretamente a seção de notificações;
+- modal de detalhe de notificação via portal;
+- correção de scroll travado na central de notificações;
+- título e conteúdo da notificação sem cortes no detalhe.
+
+### Etapa 31 — Refino do treino ativo mobile
+
+A Etapa 31 refinou a experiência de treino ativo, com foco em uso real no celular.
+
+Principais melhorias:
+
+- ajustes no card principal do treino ativo;
+- campos de peso e repetições mais visíveis;
+- comparação com a série correspondente do treino anterior;
+- atalho para copiar valores anteriores para a série atual;
+- ações de exercício em modal próprio;
+- substituição de exercícios com busca, filtros, recomendados e imagens;
+- adição de exercícios com a mesma experiência visual da substituição;
+- controle de scroll em modais para evitar rolagem da página de trás;
+- mini card de treino ativo fora da página principal;
+- ajustes na finalização com ou sem localização;
+- correções sucessivas de layout para uso em APK.
+
 
 ---
 
@@ -943,6 +1005,12 @@ Situação atual:
 
 Próximas melhorias planejadas:
 
+- concluir o polimento do treino ativo após testes reais no APK;
+- compactar Dashboard, Treinos, Exercícios, Perfil, Notificações e Configurações;
+- corrigir e redesenhar o Calendário para mobile;
+- criar página individual de progresso por exercício;
+- adicionar pré-visualização de fotos antes do upload;
+- melhorar a página de nutrição/água com total mais visível;
 - estabilizar a área admin;
 - melhorar o painel de suporte;
 - adicionar logs/auditoria para ações administrativas;
@@ -972,9 +1040,9 @@ Melhorias futuras:
 
 ## Possível versão mobile
 
-O projeto está sendo preparado para futuramente virar aplicativo mobile usando Capacitor.
+O projeto está sendo preparado e testado como aplicativo mobile usando Capacitor.
 
-A ideia é manter o frontend React atual e empacotar a aplicação como app Android/iOS, aproveitando a API existente.
+A ideia é manter o frontend React atual e empacotar a aplicação como app Android/iOS, aproveitando a API existente. Os testes atuais focam principalmente no APK Android, com ajustes específicos para WebView, scroll, navegação, login Google, notificações e experiência de treino ativo.
 
 Antes disso, o foco é:
 
