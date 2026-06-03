@@ -59,31 +59,44 @@ function ActiveWorkoutMini({ variant = 'floating' }) {
     <button
       type="button"
       onClick={handleOpenWorkout}
-      className={`ff-active-workout-mini ff-active-workout-mini-compact ff-active-workout-mini-v2 ${isInline ? 'ff-active-workout-mini-inline' : 'ff-active-workout-mini-floating'}`}
+      className={`ff-active-workout-mini ff-active-workout-mini-card-v3 ${isInline ? 'ff-active-workout-mini-inline' : 'ff-active-workout-mini-floating'}`}
       title="Abrir treino ativo"
     >
-      <span className="ff-active-workout-mini-compact__icon">
-        <Dumbbell size={23} />
+      <span className="ff-active-workout-mini-card-v3__icon" aria-hidden="true">
+        <Dumbbell size={26} />
       </span>
 
-      <span className="ff-active-workout-mini-compact__copy">
-        <span className="ff-active-workout-mini-compact__status">
-          <Activity size={12} /> Treino em andamento
+      <span className="ff-active-workout-mini-card-v3__content">
+        <span className="ff-active-workout-mini-card-v3__eyebrow">
+          <Activity size={12} />
+          Treino em andamento
         </span>
-        <strong>{activeSession.workoutName}</strong>
-        <small className="ff-active-workout-mini-compact__current">Atual: {currentExerciseName}</small>
-        <span className="ff-active-workout-mini-compact__meta">
-          <span><CheckCircle2 size={12} /> {completedSets}/{totalSets} séries</span>
-          <span><Dumbbell size={12} /> {exerciseCount} exercícios</span>
+
+        <strong className="ff-active-workout-mini-card-v3__title">
+          {activeSession.workoutName}
+        </strong>
+
+        <small className="ff-active-workout-mini-card-v3__current">
+          Atual: {currentExerciseName}
+        </small>
+
+        <span className="ff-active-workout-mini-card-v3__meta">
+          <span><CheckCircle2 size={13} /> {completedSets}/{totalSets} séries</span>
+          <span><Dumbbell size={13} /> {exerciseCount} exercícios</span>
         </span>
       </span>
 
-      <span className="ff-active-workout-mini-compact__time">
-        <Timer size={13} />
-        {formatTime(elapsedSeconds)}
+      <span className="ff-active-workout-mini-card-v3__side">
+        <span className="ff-active-workout-mini-card-v3__time">
+          <Timer size={14} />
+          {formatTime(elapsedSeconds)}
+        </span>
+        <span className="ff-active-workout-mini-card-v3__percent">
+          {Math.round(progress)}%
+        </span>
       </span>
 
-      <span className="ff-active-workout-mini-compact__bar" aria-hidden="true">
+      <span className="ff-active-workout-mini-card-v3__bar" aria-hidden="true">
         <span style={{ width: `${progress}%` }} />
       </span>
     </button>

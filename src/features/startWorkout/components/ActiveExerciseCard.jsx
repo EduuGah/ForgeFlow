@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
   Check,
@@ -16,7 +16,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react'
-import { SetPrBadges } from './ActiveExerciseSetControls'
+import { SetPrMedal } from './ActiveExerciseSetControls'
 import { getExerciseMedia } from '../../../utils/exerciseMediaUtils'
 
 function isWarmupSet(set = {}) {
@@ -238,47 +238,53 @@ export default function ActiveExerciseCard({
   }
 
   function isEnterKey(event) {
-    return event.key === 'Enter' || event.key === 'NumpadEnter' || event.code === 'Enter' || event.code === 'NumpadEnter'
+    return (
+      event.key === 'Enter' ||
+      event.key === 'NumpadEnter' ||
+      event.code === 'Enter' ||
+      event.code === 'NumpadEnter' ||
+      event.keyCode === 13 ||
+      event.which === 13
+    )
   }
 
-  function finishInputEditing(input) {
+  function closeMobileKeyboard(input) {
+    if (!input) return
+
+    input.setAttribute('readonly', 'readonly')
+    input.blur?.()
+
     window.setTimeout(() => {
-      input?.blur?.()
-      if (document.activeElement instanceof HTMLElement) {
-        document.activeElement.blur()
-      }
-    }, 0)
+      input.removeAttribute('readonly')
+    }, 80)
   }
 
-  function stopEnterNavigation(event) {
-    if (!isEnterKey(event)) return false
+  function handleSetInputDone(event) {
+    if (!isEnterKey(event)) return
 
     event.preventDefault()
     event.stopPropagation()
     event.nativeEvent?.preventDefault?.()
     event.nativeEvent?.stopImmediatePropagation?.()
-    return true
+    closeMobileKeyboard(event.currentTarget)
   }
 
-  function handleSetInputEnter(event, field) {
-    if (!stopEnterNavigation(event)) return
+  function sanitizeSetInputValue(value, field) {
+    const raw = String(value || '')
 
-    if (field === 'weight') {
-      const row = event.currentTarget.closest('[data-set-row-id]')
-      const repsInput = row?.querySelector('input[data-set-field="reps"]')
-
-      window.setTimeout(() => {
-        repsInput?.focus?.({ preventScroll: true })
-        repsInput?.select?.()
-      }, 0)
-      return
+    if (field === 'reps') {
+      return raw.replace(/\D/g, '').slice(0, 4)
     }
 
-    finishInputEditing(event.currentTarget)
+    return raw
+      .replace(',', '.')
+      .replace(/[^0-9.]/g, '')
+      .replace(/(\..*)\./g, '$1')
+      .slice(0, 6)
   }
 
-  function handleSetInputKeyUp(event) {
-    stopEnterNavigation(event)
+  function handleSetInputChange(setId, field, value) {
+    onUpdateSet(sessionExercise.id, setId, field, sanitizeSetInputValue(value, field))
   }
 
   function handleSearchKeyDown(event) {
@@ -515,7 +521,8 @@ export default function ActiveExerciseCard({
           const hasPreviousValues = Boolean(previousSet?.weight || previousSet?.reps)
 
           return (
-            <div key={set.id} data-set-row-id={set.id} className={`ff-hevy-set-row ${isCompleted ? 'is-done' : ''} ${isWarmup ? 'is-warmup' : ''}`}>
+            <Fragment key={set.id}>
+            <div data-set-row-id={set.id} className={`ff-hevy-set-row ${isCompleted ? 'is-done' : ''} ${isWarmup ? 'is-warmup' : ''}`}>
               <button
                 type="button"
                 onClick={() => onToggleSetWarmup(sessionExercise.id, set.id)}
@@ -537,15 +544,18 @@ export default function ActiveExerciseCard({
               </button>
 
               <input
-                type="number"
-                min="0"
+                type="text"
                 inputMode="decimal"
-                enterKeyHint="next"
+                enterKeyHint="done"
+                pattern="[0-9]*[.,]?[0-9]*"
                 data-set-field="weight"
                 value={set.weight}
-                onChange={(event) => onUpdateSet(sessionExercise.id, set.id, 'weight', event.target.value)}
-                onKeyDown={(event) => handleSetInputEnter(event, 'weight')}
-                onKeyUp={handleSetInputKeyUp}
+                onChange={(event) => handleSetInputChange(set.id, 'weight', event.target.value)}
+                onKeyDown={handleSetInputDone}
+                onKeyDownCapture={handleSetInputDone}
+                onKeyUp={handleSetInputDone}
+                onKeyUpCapture={handleSetInputDone}
+                onKeyPress={handleSetInputDone}
                 onFocus={(event) => {
                   if (Number(event.target.value) === 0) onUpdateSet(sessionExercise.id, set.id, 'weight', '')
                   window.setTimeout(() => {
@@ -557,15 +567,18 @@ export default function ActiveExerciseCard({
               />
 
               <input
-                type="number"
-                min="1"
+                type="text"
                 inputMode="numeric"
                 enterKeyHint="done"
+                pattern="[0-9]*"
                 data-set-field="reps"
                 value={set.reps}
-                onChange={(event) => onUpdateSet(sessionExercise.id, set.id, 'reps', event.target.value)}
-                onKeyDown={(event) => handleSetInputEnter(event, 'reps')}
-                onKeyUp={handleSetInputKeyUp}
+                onChange={(event) => handleSetInputChange(set.id, 'reps', event.target.value)}
+                onKeyDown={handleSetInputDone}
+                onKeyDownCapture={handleSetInputDone}
+                onKeyUp={handleSetInputDone}
+                onKeyUpCapture={handleSetInputDone}
+                onKeyPress={handleSetInputDone}
                 onFocus={(event) => {
                   if (Number(event.target.value) === 0) onUpdateSet(sessionExercise.id, set.id, 'reps', '')
                   window.setTimeout(() => {
@@ -576,8 +589,8 @@ export default function ActiveExerciseCard({
                 aria-label="Repetições"
               />
 
-              <div className="ff-hevy-set-pr">
-                <SetPrBadges set={set} performance={performance} compact />
+              <div className="ff-hevy-set-pr" aria-label="Recorde da série">
+                <SetPrMedal set={set} performance={performance} />
               </div>
 
               <button
@@ -594,6 +607,7 @@ export default function ActiveExerciseCard({
                 <Check size={20} />
               </button>
             </div>
+            </Fragment>
           )
         })}
       </div>

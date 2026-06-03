@@ -853,7 +853,7 @@ function StartWorkout() {
         onCancelWorkout={handleCancelWorkout}
         onStartRestTimer={startManualRestTimer}
         onRequestFinish={handleRequestFinishWorkout}
-        hidden={finishWorkoutModalOpen || Boolean(confirmModal)}
+        hidden={finishWorkoutModalOpen || Boolean(confirmModal) || addExerciseOpen || Boolean(replaceExerciseId)}
       />
 
       <RestTimerCard
