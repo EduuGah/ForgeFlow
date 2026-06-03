@@ -10791,3 +10791,555 @@ body.ff-sidebar-open .ff-active-workout-mini-floating {
   -webkit-user-select: text !important;
   user-select: text !important;
 }
+
+/* =========================================================
+   ForgeFlow — Etapa 2.6 correções visuais treino ativo
+   Corrige filtros, finalização, check de série e mini card.
+   ========================================================= */
+
+/* Modal de finalização abaixo do header do app, sem cortar o título. */
+.ff-finish-workout-modal {
+  align-items: flex-end !important;
+  padding-top: calc(5.7rem + env(safe-area-inset-top)) !important;
+  padding-inline: .7rem !important;
+  background: rgba(0,0,0,.72) !important;
+  z-index: 2147483200 !important;
+}
+
+.ff-finish-workout-panel {
+  max-height: calc(100dvh - 6.4rem - env(safe-area-inset-top)) !important;
+  width: min(100%, 540px) !important;
+  border-radius: 24px !important;
+  overflow: hidden !important;
+}
+
+.ff-finish-workout-panel > .sticky.top-0 {
+  position: relative !important;
+  top: auto !important;
+  padding: .75rem .95rem !important;
+}
+
+.ff-finish-workout-panel h2 {
+  font-size: 1.32rem !important;
+  line-height: 1.05 !important;
+}
+
+.ff-finish-workout-panel .text-sm {
+  font-size: .84rem !important;
+  line-height: 1.32 !important;
+}
+
+.ff-finish-workout-scroll {
+  padding: .7rem .85rem !important;
+  gap: .55rem !important;
+}
+
+.ff-finish-workout-stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: .5rem !important;
+}
+
+.ff-finish-workout-stat {
+  min-height: 58px !important;
+  padding: .58rem .7rem !important;
+  border-radius: 16px !important;
+}
+
+.ff-finish-workout-stat p:first-child {
+  font-size: .68rem !important;
+  line-height: 1.05 !important;
+}
+
+.ff-finish-workout-stat p:last-child {
+  margin-top: .12rem !important;
+  font-size: 1rem !important;
+  line-height: 1.05 !important;
+}
+
+.ff-finish-location-card {
+  padding: .72rem !important;
+  border-radius: 18px !important;
+}
+
+.ff-finish-location-card__icon {
+  display: none !important;
+}
+
+.ff-finish-location-card h3 {
+  display: block !important;
+  font-size: .98rem !important;
+  line-height: 1.15 !important;
+}
+
+.ff-finish-location-card p {
+  margin-top: .42rem !important;
+  font-size: .8rem !important;
+  line-height: 1.35 !important;
+}
+
+.ff-finish-location-card .mt-3.flex.flex-wrap {
+  margin-top: .6rem !important;
+  gap: .42rem !important;
+}
+
+.ff-finish-location-card .mt-3.flex.flex-wrap button {
+  min-height: 34px !important;
+  padding: .38rem .62rem !important;
+  border-radius: 14px !important;
+}
+
+.ff-finish-location-card label {
+  margin-top: .62rem !important;
+}
+
+.ff-finish-location-card input {
+  min-height: 42px !important;
+  font-size: .9rem !important;
+}
+
+.ff-finish-workout-footer {
+  padding: .62rem .8rem max(.62rem, env(safe-area-inset-bottom)) !important;
+  gap: .45rem !important;
+}
+
+.ff-finish-workout-footer button {
+  min-height: 42px !important;
+  border-radius: 14px !important;
+  font-size: .84rem !important;
+}
+
+/* Adicionar/substituir exercício: filtros deixam de sobrepor a lista. */
+.ff-active-add-exercise-sheet,
+.ff-active-exercise-actions-modal {
+  padding-top: calc(5.1rem + env(safe-area-inset-top)) !important;
+  padding-inline: .7rem !important;
+  align-items: flex-end !important;
+}
+
+.ff-active-add-exercise-sheet__panel,
+.ff-active-exercise-actions-modal__panel {
+  width: min(100%, 560px) !important;
+  max-height: calc(100dvh - 6.2rem - env(safe-area-inset-top)) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  border-radius: 24px !important;
+}
+
+.ff-active-add-exercise-sheet__header,
+.ff-active-exercise-actions-modal__header,
+.ff-active-add-exercise-sheet__search,
+.ff-replace-exercise-search--modal,
+.ff-exercise-picker-filters {
+  flex: 0 0 auto !important;
+}
+
+.ff-active-add-exercise-sheet__search {
+  padding: .75rem 1rem .45rem !important;
+}
+
+.ff-active-add-exercise-sheet__search input,
+.ff-replace-exercise-search--modal input {
+  min-height: 46px !important;
+  border-radius: 16px !important;
+}
+
+.ff-exercise-picker-filters {
+  min-height: 42px !important;
+  align-items: center !important;
+  padding: .38rem 1rem .34rem !important;
+  gap: .42rem !important;
+  background: color-mix(in srgb, var(--ff-surface-2) 92%, transparent) !important;
+  border-top: 1px solid rgba(255,255,255,.035) !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+.ff-exercise-picker-filters--equipment {
+  padding-top: .3rem !important;
+  padding-bottom: .45rem !important;
+  border-bottom: 1px solid var(--ff-border) !important;
+}
+
+.ff-exercise-picker-filters > span,
+.ff-exercise-picker-filters > button {
+  min-height: 30px !important;
+  padding: .34rem .62rem !important;
+  font-size: .68rem !important;
+}
+
+.ff-active-add-exercise-sheet__list,
+.ff-replace-exercise-list--modal {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+  padding-top: .55rem !important;
+  padding-bottom: calc(1.2rem + env(safe-area-inset-bottom)) !important;
+  overscroll-behavior: contain !important;
+}
+
+/* Série: check clicável e Enter não avança para a próxima linha. */
+.ff-hevy-set-table,
+.ff-hevy-set-row {
+  overflow: visible !important;
+}
+
+.ff-hevy-set-check {
+  position: relative !important;
+  z-index: 8 !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  touch-action: manipulation !important;
+}
+
+.ff-hevy-set-row input[data-set-field='weight'],
+.ff-hevy-set-row input[data-set-field='reps'] {
+  ime-mode: disabled;
+}
+
+/* Mini card do treino ativo: texto mais organizado e sem sobreposição. */
+.ff-active-workout-mini-floating.ff-active-workout-mini-compact,
+.ff-active-workout-mini-v2.ff-active-workout-mini-floating {
+  left: 16px !important;
+  right: 16px !important;
+  bottom: calc(5.65rem + env(safe-area-inset-bottom)) !important;
+  max-width: 560px !important;
+  min-height: 86px !important;
+  z-index: 36 !important;
+  margin-inline: auto !important;
+}
+
+.ff-active-workout-mini-v2.ff-active-workout-mini-compact {
+  display: grid !important;
+  grid-template-columns: 54px minmax(0, 1fr) !important;
+  grid-template-areas:
+    "icon copy"
+    "icon time"
+    "bar bar" !important;
+  column-gap: .75rem !important;
+  row-gap: .24rem !important;
+  align-items: center !important;
+  padding: .78rem .9rem .84rem !important;
+  border-radius: 24px !important;
+}
+
+.ff-active-workout-mini-v2 .ff-active-workout-mini-compact__icon {
+  grid-area: icon !important;
+  width: 48px !important;
+  height: 48px !important;
+  align-self: center !important;
+  justify-self: center !important;
+}
+
+.ff-active-workout-mini-v2 .ff-active-workout-mini-compact__copy {
+  grid-area: copy !important;
+  min-width: 0 !important;
+  display: grid !important;
+  gap: .1rem !important;
+}
+
+.ff-active-workout-mini-v2 .ff-active-workout-mini-compact__status {
+  display: block !important;
+  overflow: hidden !important;
+  max-width: 100% !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: .6rem !important;
+  letter-spacing: .08em !important;
+}
+
+.ff-active-workout-mini-v2 .ff-active-workout-mini-compact__copy strong {
+  display: block !important;
+  overflow: hidden !important;
+  max-width: 100% !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: .98rem !important;
+  line-height: 1.08 !important;
+}
+
+.ff-active-workout-mini-v2 .ff-active-workout-mini-compact__current {
+  display: block !important;
+  overflow: hidden !important;
+  max-width: 100% !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: .68rem !important;
+  line-height: 1.08 !important;
+}
+
+.ff-active-workout-mini-v2 .ff-active-workout-mini-compact__meta {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  overflow: hidden !important;
+  gap: .45rem !important;
+  font-size: .66rem !important;
+  white-space: nowrap !important;
+}
+
+.ff-active-workout-mini-v2 .ff-active-workout-mini-compact__time {
+  grid-area: time !important;
+  justify-self: start !important;
+  align-self: start !important;
+  margin-top: .15rem !important;
+  padding: .36rem .52rem !important;
+  font-size: .76rem !important;
+}
+
+.ff-active-workout-mini-v2 .ff-active-workout-mini-compact__bar {
+  grid-area: bar !important;
+  height: 4px !important;
+  margin-top: .12rem !important;
+}
+
+/* =========================================================
+   ForgeFlow — Etapa 2.6 correções visuais treino ativo
+   Corrige filtros, finalização, check de série e mini card.
+   ========================================================= */
+.ff-finish-workout-modal {
+  align-items: flex-end !important;
+  padding-top: calc(5.7rem + env(safe-area-inset-top)) !important;
+  padding-inline: .7rem !important;
+  background: rgba(0,0,0,.72) !important;
+  z-index: 2147483200 !important;
+}
+.ff-finish-workout-panel {
+  max-height: calc(100dvh - 6.4rem - env(safe-area-inset-top)) !important;
+  width: min(100%, 540px) !important;
+  border-radius: 24px !important;
+  overflow: hidden !important;
+}
+.ff-finish-workout-panel > .sticky.top-0 {
+  position: relative !important;
+  top: auto !important;
+  padding: .75rem .95rem !important;
+}
+.ff-finish-workout-panel h2 {
+  font-size: 1.32rem !important;
+  line-height: 1.05 !important;
+}
+.ff-finish-workout-panel .text-sm {
+  font-size: .84rem !important;
+  line-height: 1.32 !important;
+}
+.ff-finish-workout-scroll {
+  padding: .7rem .85rem !important;
+  gap: .55rem !important;
+}
+.ff-finish-workout-stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: .5rem !important;
+}
+.ff-finish-workout-stat {
+  min-height: 58px !important;
+  padding: .58rem .7rem !important;
+  border-radius: 16px !important;
+}
+.ff-finish-workout-stat p:first-child {
+  font-size: .68rem !important;
+  line-height: 1.05 !important;
+}
+.ff-finish-workout-stat p:last-child {
+  margin-top: .12rem !important;
+  font-size: 1rem !important;
+  line-height: 1.05 !important;
+}
+.ff-finish-location-card {
+  padding: .72rem !important;
+  border-radius: 18px !important;
+}
+.ff-finish-location-card__icon {
+  display: none !important;
+}
+.ff-finish-location-card h3 {
+  display: block !important;
+  font-size: .98rem !important;
+  line-height: 1.15 !important;
+}
+.ff-finish-location-card p {
+  margin-top: .42rem !important;
+  font-size: .8rem !important;
+  line-height: 1.35 !important;
+}
+.ff-finish-location-card .mt-3.flex.flex-wrap {
+  margin-top: .6rem !important;
+  gap: .42rem !important;
+}
+.ff-finish-location-card .mt-3.flex.flex-wrap button {
+  min-height: 34px !important;
+  padding: .38rem .62rem !important;
+  border-radius: 14px !important;
+}
+.ff-finish-location-card label {
+  margin-top: .62rem !important;
+}
+.ff-finish-location-card input {
+  min-height: 42px !important;
+  font-size: .9rem !important;
+}
+.ff-finish-workout-footer {
+  padding: .62rem .8rem max(.62rem, env(safe-area-inset-bottom)) !important;
+  gap: .45rem !important;
+}
+.ff-finish-workout-footer button {
+  min-height: 42px !important;
+  border-radius: 14px !important;
+  font-size: .84rem !important;
+}
+.ff-active-add-exercise-sheet,
+.ff-active-exercise-actions-modal {
+  padding-top: calc(5.1rem + env(safe-area-inset-top)) !important;
+  padding-inline: .7rem !important;
+  align-items: flex-end !important;
+}
+.ff-active-add-exercise-sheet__panel,
+.ff-active-exercise-actions-modal__panel {
+  width: min(100%, 560px) !important;
+  max-height: calc(100dvh - 6.2rem - env(safe-area-inset-top)) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  border-radius: 24px !important;
+}
+.ff-active-add-exercise-sheet__header,
+.ff-active-exercise-actions-modal__header,
+.ff-active-add-exercise-sheet__search,
+.ff-replace-exercise-search--modal,
+.ff-exercise-picker-filters {
+  flex: 0 0 auto !important;
+}
+.ff-active-add-exercise-sheet__search {
+  padding: .75rem 1rem .45rem !important;
+}
+.ff-active-add-exercise-sheet__search input,
+.ff-replace-exercise-search--modal input {
+  min-height: 46px !important;
+  border-radius: 16px !important;
+}
+.ff-exercise-picker-filters {
+  min-height: 42px !important;
+  align-items: center !important;
+  padding: .38rem 1rem .34rem !important;
+  gap: .42rem !important;
+  background: color-mix(in srgb, var(--ff-surface-2) 92%, transparent) !important;
+  border-top: 1px solid rgba(255,255,255,.035) !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+.ff-exercise-picker-filters--equipment {
+  padding-top: .3rem !important;
+  padding-bottom: .45rem !important;
+  border-bottom: 1px solid var(--ff-border) !important;
+}
+.ff-exercise-picker-filters > span,
+.ff-exercise-picker-filters > button {
+  min-height: 30px !important;
+  padding: .34rem .62rem !important;
+  font-size: .68rem !important;
+}
+.ff-active-add-exercise-sheet__list,
+.ff-replace-exercise-list--modal {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+  padding-top: .55rem !important;
+  padding-bottom: calc(1.2rem + env(safe-area-inset-bottom)) !important;
+  overscroll-behavior: contain !important;
+}
+.ff-hevy-set-table,
+.ff-hevy-set-row {
+  overflow: visible !important;
+}
+.ff-hevy-set-check {
+  position: relative !important;
+  z-index: 8 !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  touch-action: manipulation !important;
+}
+.ff-active-workout-mini-floating.ff-active-workout-mini-compact,
+.ff-active-workout-mini-v2.ff-active-workout-mini-floating {
+  left: 16px !important;
+  right: 16px !important;
+  bottom: calc(5.65rem + env(safe-area-inset-bottom)) !important;
+  max-width: 560px !important;
+  min-height: 86px !important;
+  z-index: 36 !important;
+  margin-inline: auto !important;
+}
+.ff-active-workout-mini-v2.ff-active-workout-mini-compact {
+  display: grid !important;
+  grid-template-columns: 54px minmax(0, 1fr) !important;
+  grid-template-areas:
+    "icon copy"
+    "icon time"
+    "bar bar" !important;
+  column-gap: .75rem !important;
+  row-gap: .24rem !important;
+  align-items: center !important;
+  padding: .78rem .9rem .84rem !important;
+  border-radius: 24px !important;
+}
+.ff-active-workout-mini-v2 .ff-active-workout-mini-compact__icon {
+  grid-area: icon !important;
+  width: 48px !important;
+  height: 48px !important;
+  align-self: center !important;
+  justify-self: center !important;
+}
+.ff-active-workout-mini-v2 .ff-active-workout-mini-compact__copy {
+  grid-area: copy !important;
+  min-width: 0 !important;
+  display: grid !important;
+  gap: .1rem !important;
+}
+.ff-active-workout-mini-v2 .ff-active-workout-mini-compact__status {
+  display: block !important;
+  overflow: hidden !important;
+  max-width: 100% !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: .6rem !important;
+  letter-spacing: .08em !important;
+}
+.ff-active-workout-mini-v2 .ff-active-workout-mini-compact__copy strong {
+  display: block !important;
+  overflow: hidden !important;
+  max-width: 100% !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: .98rem !important;
+  line-height: 1.08 !important;
+}
+.ff-active-workout-mini-v2 .ff-active-workout-mini-compact__current {
+  display: block !important;
+  overflow: hidden !important;
+  max-width: 100% !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: .68rem !important;
+  line-height: 1.08 !important;
+}
+.ff-active-workout-mini-v2 .ff-active-workout-mini-compact__meta {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  overflow: hidden !important;
+  gap: .45rem !important;
+  font-size: .66rem !important;
+  white-space: nowrap !important;
+}
+.ff-active-workout-mini-v2 .ff-active-workout-mini-compact__time {
+  grid-area: time !important;
+  justify-self: start !important;
+  align-self: start !important;
+  margin-top: .15rem !important;
+  padding: .36rem .52rem !important;
+  font-size: .76rem !important;
+}
+.ff-active-workout-mini-v2 .ff-active-workout-mini-compact__bar {
+  grid-area: bar !important;
+  height: 4px !important;
+  margin-top: .12rem !important;
+}

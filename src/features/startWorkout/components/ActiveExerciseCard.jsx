@@ -250,12 +250,18 @@ export default function ActiveExerciseCard({
     }, 0)
   }
 
-  function handleSetInputEnter(event, field) {
-    if (!isEnterKey(event)) return
+  function stopEnterNavigation(event) {
+    if (!isEnterKey(event)) return false
 
     event.preventDefault()
     event.stopPropagation()
+    event.nativeEvent?.preventDefault?.()
     event.nativeEvent?.stopImmediatePropagation?.()
+    return true
+  }
+
+  function handleSetInputEnter(event, field) {
+    if (!stopEnterNavigation(event)) return
 
     if (field === 'weight') {
       const row = event.currentTarget.closest('[data-set-row-id]')
@@ -271,14 +277,8 @@ export default function ActiveExerciseCard({
     finishInputEditing(event.currentTarget)
   }
 
-  function handleSetTableKeyDownCapture(event) {
-    const target = event.target
-    if (!(target instanceof HTMLInputElement)) return
-
-    const field = target.dataset?.setField
-    if (field !== 'weight' && field !== 'reps') return
-
-    handleSetInputEnter(event, field)
+  function handleSetInputKeyUp(event) {
+    stopEnterNavigation(event)
   }
 
   function handleSearchKeyDown(event) {
@@ -497,7 +497,7 @@ export default function ActiveExerciseCard({
       {!isCollapsed && <p className="ff-hevy-exercise-note">Adicionar notas aqui...</p>}
 
       {!isCollapsed && (
-      <div className="ff-hevy-set-table" aria-label={`Séries de ${getExerciseName(sessionExercise)}`} onKeyDownCapture={handleSetTableKeyDownCapture}>
+      <div className="ff-hevy-set-table" aria-label={`Séries de ${getExerciseName(sessionExercise)}`}>
         <div className="ff-hevy-set-head">
           <span>SÉRIE</span>
           <span>ANTERIOR</span>
@@ -545,7 +545,7 @@ export default function ActiveExerciseCard({
                 value={set.weight}
                 onChange={(event) => onUpdateSet(sessionExercise.id, set.id, 'weight', event.target.value)}
                 onKeyDown={(event) => handleSetInputEnter(event, 'weight')}
-                onKeyUp={(event) => handleSetInputEnter(event, 'weight')}
+                onKeyUp={handleSetInputKeyUp}
                 onFocus={(event) => {
                   if (Number(event.target.value) === 0) onUpdateSet(sessionExercise.id, set.id, 'weight', '')
                   window.setTimeout(() => {
@@ -565,7 +565,7 @@ export default function ActiveExerciseCard({
                 value={set.reps}
                 onChange={(event) => onUpdateSet(sessionExercise.id, set.id, 'reps', event.target.value)}
                 onKeyDown={(event) => handleSetInputEnter(event, 'reps')}
-                onKeyUp={(event) => handleSetInputEnter(event, 'reps')}
+                onKeyUp={handleSetInputKeyUp}
                 onFocus={(event) => {
                   if (Number(event.target.value) === 0) onUpdateSet(sessionExercise.id, set.id, 'reps', '')
                   window.setTimeout(() => {
@@ -582,7 +582,12 @@ export default function ActiveExerciseCard({
 
               <button
                 type="button"
-                onClick={() => onCompleteSet(sessionExercise, set.id)}
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={(event) => {
+                  event.preventDefault()
+                  event.stopPropagation()
+                  onCompleteSet(sessionExercise, set.id)
+                }}
                 className="ff-hevy-set-check"
                 aria-label={isCompleted ? 'Desmarcar série' : 'Concluir série'}
               >
