@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
   Check,
@@ -8,6 +8,7 @@ import {
   Flame,
   ImageIcon,
   Search,
+  SlidersHorizontal,
   Minus,
   MoreVertical,
   Plus,
@@ -55,6 +56,37 @@ function getExerciseMuscle(exercise = {}) {
 
 function getExerciseEquipment(exercise = {}) {
   return exercise.equipment || 'Sem equipamento'
+}
+
+
+function normalizeFilterValue(value = '') {
+  return String(value || '').trim()
+}
+
+function getUniqueFilterValues(options = [], getter, limit = 12) {
+  const values = []
+  const seen = new Set()
+
+  options.forEach((exercise) => {
+    const value = normalizeFilterValue(getter(exercise))
+    if (!value || seen.has(value)) return
+    seen.add(value)
+    values.push(value)
+  })
+
+  return values.slice(0, limit)
+}
+
+function filterExerciseOptions(options = [], { muscle = '', equipment = '' } = {}) {
+  return options.filter((exercise) => {
+    const exerciseMuscle = getExerciseMuscle(exercise)
+    const exerciseEquipment = getExerciseEquipment(exercise)
+
+    if (muscle && exerciseMuscle !== muscle) return false
+    if (equipment && exerciseEquipment !== equipment) return false
+
+    return true
+  })
 }
 
 function buildReplacementSections(options = [], currentExercise = {}) {
@@ -126,14 +158,61 @@ export default function ActiveExerciseCard({
   const exerciseData = sessionExercise.exercise || sessionExercise
   const isOptionsOpen = replaceExerciseId === sessionExercise.id
   const [replaceMode, setReplaceMode] = useState(false)
-  const replacementSections = buildReplacementSections(replacementOptions, exerciseData)
+  const [replaceMuscleFilter, setReplaceMuscleFilter] = useState('')
+  const [replaceEquipmentFilter, setReplaceEquipmentFilter] = useState('')
+
+  const replaceMuscleOptions = useMemo(
+    () => getUniqueFilterValues(replacementOptions, getExerciseMuscle),
+    [replacementOptions]
+  )
+  const replaceEquipmentOptions = useMemo(
+    () => getUniqueFilterValues(replacementOptions, getExerciseEquipment),
+    [replacementOptions]
+  )
+  const filteredReplacementOptions = useMemo(
+    () => filterExerciseOptions(replacementOptions, {
+      muscle: replaceMuscleFilter,
+      equipment: replaceEquipmentFilter,
+    }),
+    [replacementOptions, replaceEquipmentFilter, replaceMuscleFilter]
+  )
+  const replacementSections = buildReplacementSections(filteredReplacementOptions, exerciseData)
 
   useEffect(() => {
     if (!isOptionsOpen) setReplaceMode(false)
   }, [isOptionsOpen])
 
+  useEffect(() => {
+    if (!isOptionsOpen || typeof document === 'undefined') return undefined
+
+    const shell = document.querySelector('.ff-page-scroll-shell')
+    const previousShellOverflow = shell?.style.overflow
+    const previousBodyOverflow = document.body.style.overflow
+    const previousHtmlOverflow = document.documentElement.style.overflow
+
+    shell?.classList.add('ff-scroll-locked-by-workout-modal')
+    document.body.classList.add('ff-scroll-locked-by-workout-modal')
+    document.documentElement.classList.add('ff-scroll-locked-by-workout-modal')
+
+    if (shell) shell.style.overflow = 'hidden'
+    document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
+
+    return () => {
+      shell?.classList.remove('ff-scroll-locked-by-workout-modal')
+      document.body.classList.remove('ff-scroll-locked-by-workout-modal')
+      document.documentElement.classList.remove('ff-scroll-locked-by-workout-modal')
+
+      if (shell) shell.style.overflow = previousShellOverflow || ''
+      document.body.style.overflow = previousBodyOverflow || ''
+      document.documentElement.style.overflow = previousHtmlOverflow || ''
+    }
+  }, [isOptionsOpen])
+
   function closeExerciseOptions() {
     setReplaceMode(false)
+    setReplaceMuscleFilter('')
+    setReplaceEquipmentFilter('')
     onCloseOptions?.()
   }
 
@@ -159,9 +238,10 @@ export default function ActiveExerciseCard({
   }
 
   function handleSetInputKeyDown(event, field) {
-    if (event.key !== 'Enter') return
+    if (event.key !== 'Enter' && event.key !== 'NumpadEnter') return
 
     event.preventDefault()
+    event.stopPropagation()
 
     if (field === 'weight') {
       const row = event.currentTarget.closest('[data-set-row-id]')
@@ -171,7 +251,17 @@ export default function ActiveExerciseCard({
       return
     }
 
-    event.currentTarget.blur()
+    window.requestAnimationFrame(() => {
+      event.currentTarget?.blur?.()
+      document.activeElement?.blur?.()
+    })
+  }
+
+  function handleRepsInputKeyUp(event) {
+    if (event.key !== 'Enter' && event.key !== 'NumpadEnter') return
+    event.preventDefault()
+    event.stopPropagation()
+    event.currentTarget?.blur?.()
   }
 
   function handleSearchKeyDown(event) {
@@ -244,11 +334,31 @@ export default function ActiveExerciseCard({
                   value={replaceSearch}
                   onChange={(event) => onReplaceSearchChange(event.target.value)}
                   onKeyDown={handleSearchKeyDown}
+                  enterKeyHint="done"
                 />
               </label>
 
+              <div className="ff-exercise-picker-filters" aria-label="Filtros rápidos de substituição">
+                <span><SlidersHorizontal size={14} /> Filtros</span>
+                <button type="button" className={!replaceMuscleFilter ? 'is-active' : ''} onClick={() => setReplaceMuscleFilter('')}>Todos</button>
+                {replaceMuscleOptions.map((muscle) => (
+                  <button key={muscle} type="button" className={replaceMuscleFilter === muscle ? 'is-active' : ''} onClick={() => setReplaceMuscleFilter(muscle)}>
+                    {muscle}
+                  </button>
+                ))}
+              </div>
+
+              <div className="ff-exercise-picker-filters ff-exercise-picker-filters--equipment" aria-label="Filtros rápidos por equipamento">
+                <button type="button" className={!replaceEquipmentFilter ? 'is-active' : ''} onClick={() => setReplaceEquipmentFilter('')}>Todos equipamentos</button>
+                {replaceEquipmentOptions.map((equipment) => (
+                  <button key={equipment} type="button" className={replaceEquipmentFilter === equipment ? 'is-active' : ''} onClick={() => setReplaceEquipmentFilter(equipment)}>
+                    {equipment}
+                  </button>
+                ))}
+              </div>
+
               <div className="ff-replace-exercise-list ff-replace-exercise-list--modal" aria-label="Exercícios para substituir">
-                {replacementOptions.length === 0 ? (
+                {filteredReplacementOptions.length === 0 ? (
                   <p className="ff-replace-exercise-empty">Nenhum exercício encontrado.</p>
                 ) : (
                   replacementSections.map((section) => (
@@ -413,6 +523,7 @@ export default function ActiveExerciseCard({
                 type="number"
                 min="0"
                 inputMode="decimal"
+                enterKeyHint="next"
                 data-set-field="weight"
                 value={set.weight}
                 onChange={(event) => onUpdateSet(sessionExercise.id, set.id, 'weight', event.target.value)}
@@ -431,10 +542,12 @@ export default function ActiveExerciseCard({
                 type="number"
                 min="1"
                 inputMode="numeric"
+                enterKeyHint="done"
                 data-set-field="reps"
                 value={set.reps}
                 onChange={(event) => onUpdateSet(sessionExercise.id, set.id, 'reps', event.target.value)}
                 onKeyDown={(event) => handleSetInputKeyDown(event, 'reps')}
+                onKeyUp={handleRepsInputKeyUp}
                 onFocus={(event) => {
                   if (Number(event.target.value) === 0) onUpdateSet(sessionExercise.id, set.id, 'reps', '')
                   window.setTimeout(() => {

@@ -10139,3 +10139,412 @@ body.is-native-app .ff-page-start-workout .ff-mobile-workout-action-bar {
 .ff-active-workout-mini-compact__time {
   font-size: .92rem !important;
 }
+
+/* =========================================================
+   ForgeFlow — Etapa 2.4 ajustes do treino ativo
+   Corrige concluir, scroll de modal, filtros e mini card.
+   ========================================================= */
+
+.ff-scroll-locked-by-workout-modal,
+html.ff-scroll-locked-by-workout-modal,
+body.ff-scroll-locked-by-workout-modal {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
+.ff-page-start-workout .ff-mobile-workout-action-bar {
+  position: fixed !important;
+  left: 12px !important;
+  right: 12px !important;
+  bottom: max(12px, env(safe-area-inset-bottom)) !important;
+  z-index: 2147482500 !important;
+  pointer-events: none !important;
+  transform: translateY(calc(120% + env(safe-area-inset-bottom))) scale(.98) !important;
+  opacity: 0 !important;
+  visibility: visible !important;
+  transition: transform .22s ease, opacity .22s ease !important;
+  border: 1px solid color-mix(in srgb, var(--ff-border) 88%, white 6%) !important;
+  border-radius: 24px !important;
+  background: rgba(8, 8, 10, .97) !important;
+  padding: 9px !important;
+  box-shadow: 0 -18px 60px rgba(0,0,0,.68) !important;
+  backdrop-filter: blur(18px) !important;
+}
+
+.ff-page-start-workout .ff-mobile-workout-action-bar.is-visible {
+  pointer-events: auto !important;
+  transform: translateY(0) scale(1) !important;
+  opacity: 1 !important;
+}
+
+.ff-page-start-workout .ff-mobile-workout-action-bar > div {
+  display: grid !important;
+  grid-template-columns: 42px minmax(0, 1fr) minmax(122px, .75fr) !important;
+  gap: 8px !important;
+  align-items: center !important;
+  max-width: 720px !important;
+}
+
+.ff-page-start-workout .ff-mobile-workout-action-bar button {
+  pointer-events: auto !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+.ff-page-start-workout .ff-mobile-workout-action-bar [aria-label='Iniciar descanso'] {
+  display: none !important;
+}
+
+.ff-page-start-workout .ff-mobile-workout-action-bar__finish {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  height: 48px !important;
+  border-radius: 18px !important;
+  background: var(--ff-accent) !important;
+  color: #fff !important;
+  font-size: .9rem !important;
+  font-weight: 950 !important;
+  box-shadow: 0 0 22px var(--ff-accent-shadow) !important;
+}
+
+.ff-page-start-workout .ff-finish-workout-modal,
+.ff-page-start-workout [role='dialog'].ff-finish-workout-modal,
+.ff-page-start-workout .fixed.inset-0.z-\[10000\] {
+  z-index: 2147483000 !important;
+}
+
+.ff-active-add-exercise-sheet,
+.ff-active-exercise-actions-modal {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483000 !important;
+  overflow: hidden !important;
+  overscroll-behavior: contain !important;
+}
+
+.ff-active-add-exercise-sheet__panel,
+.ff-active-exercise-actions-modal__panel {
+  max-height: calc(100dvh - 2rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.ff-active-add-exercise-sheet__list,
+.ff-replace-exercise-list--modal {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom)) !important;
+}
+
+.ff-active-add-exercise-sheet__search input,
+.ff-replace-exercise-search--modal input {
+  caret-color: var(--ff-accent) !important;
+}
+
+.ff-exercise-picker-filters {
+  display: flex !important;
+  gap: .5rem !important;
+  overflow-x: auto !important;
+  overscroll-behavior-x: contain !important;
+  scrollbar-width: none !important;
+  padding: .75rem 1.45rem .15rem !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.ff-exercise-picker-filters::-webkit-scrollbar {
+  display: none !important;
+}
+
+.ff-exercise-picker-filters > span,
+.ff-exercise-picker-filters > button {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: .35rem !important;
+  min-height: 34px !important;
+  border-radius: 999px !important;
+  border: 1px solid var(--ff-border) !important;
+  background: rgba(255,255,255,.035) !important;
+  padding: .45rem .78rem !important;
+  color: var(--ff-muted) !important;
+  font-size: .72rem !important;
+  font-weight: 900 !important;
+  white-space: nowrap !important;
+}
+
+.ff-exercise-picker-filters > span {
+  color: var(--ff-text-soft) !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  padding-left: 0 !important;
+}
+
+.ff-exercise-picker-filters > button.is-active {
+  border-color: var(--ff-accent-border) !important;
+  background: var(--ff-accent-soft) !important;
+  color: var(--ff-accent-text) !important;
+}
+
+.ff-exercise-picker-filters--equipment {
+  padding-top: .35rem !important;
+  padding-bottom: .5rem !important;
+}
+
+.ff-exercise-picker-section {
+  padding-inline: 1.45rem !important;
+}
+
+.ff-exercise-picker-section h4 {
+  margin: .9rem 0 .55rem !important;
+  color: var(--ff-accent-text) !important;
+  font-size: .74rem !important;
+  font-weight: 950 !important;
+  letter-spacing: .16em !important;
+  text-transform: uppercase !important;
+}
+
+.ff-exercise-picker-section__list {
+  display: grid !important;
+  gap: .65rem !important;
+}
+
+.ff-replace-exercise-option,
+.ff-exercise-picker-section--add button {
+  display: grid !important;
+  grid-template-columns: 58px minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: .75rem !important;
+  width: 100% !important;
+  min-height: 72px !important;
+  border: 1px solid color-mix(in srgb, var(--ff-border) 92%, white 4%) !important;
+  border-radius: 18px !important;
+  background: rgba(255,255,255,.035) !important;
+  padding: .55rem .7rem !important;
+  text-align: left !important;
+}
+
+.ff-replace-exercise-option__media,
+.ff-active-add-exercise-sheet__media {
+  display: flex !important;
+  width: 58px !important;
+  height: 52px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  color: #18181b !important;
+}
+
+.ff-replace-exercise-option__media img,
+.ff-active-add-exercise-sheet__media img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+.ff-replace-exercise-option__content,
+.ff-active-add-exercise-sheet__copy {
+  min-width: 0 !important;
+}
+
+.ff-replace-exercise-option__content strong,
+.ff-active-add-exercise-sheet__copy strong {
+  display: block !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: var(--ff-text) !important;
+  font-size: .98rem !important;
+  font-weight: 950 !important;
+}
+
+.ff-replace-exercise-option__content small,
+.ff-active-add-exercise-sheet__copy small {
+  display: block !important;
+  margin-top: .2rem !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: var(--ff-muted) !important;
+  font-size: .78rem !important;
+  font-weight: 800 !important;
+}
+
+.ff-hevy-set-head,
+.ff-hevy-set-row {
+  grid-template-columns: 36px minmax(62px, .85fr) minmax(58px, .7fr) minmax(58px, .7fr) 30px 38px !important;
+  gap: 6px !important;
+}
+
+.ff-hevy-set-head {
+  align-items: center !important;
+  text-align: center !important;
+}
+
+.ff-hevy-set-head span {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 0 !important;
+  text-align: center !important;
+  font-size: .66rem !important;
+  letter-spacing: .08em !important;
+}
+
+.ff-hevy-set-row input {
+  min-height: 52px !important;
+  height: 52px !important;
+  border: 1px solid rgba(255,255,255,.08) !important;
+  border-radius: 16px !important;
+  background: color-mix(in srgb, var(--ff-surface-3) 70%, #000 30%) !important;
+  font-size: 1.06rem !important;
+}
+
+.ff-hevy-set-prev {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 44px !important;
+  border-radius: 14px !important;
+  padding-inline: .3rem !important;
+  background: rgba(255,255,255,.035) !important;
+  text-align: center !important;
+  font-size: .78rem !important;
+  line-height: 1.1 !important;
+}
+
+.ff-hevy-set-prev:not(:disabled) {
+  color: var(--ff-text) !important;
+  cursor: pointer !important;
+}
+
+.ff-hevy-set-prev:disabled {
+  opacity: .45 !important;
+}
+
+.ff-hevy-set-check {
+  width: 38px !important;
+  height: 44px !important;
+  border-radius: 14px !important;
+}
+
+.ff-active-workout-mini-floating {
+  z-index: 42 !important;
+  left: 14px !important;
+  right: 14px !important;
+  bottom: calc(5.8rem + env(safe-area-inset-bottom)) !important;
+  max-width: 620px !important;
+}
+
+html.ff-sidebar-open .ff-active-workout-mini-floating,
+body.ff-sidebar-open .ff-active-workout-mini-floating {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateY(18px) scale(.98) !important;
+}
+
+.ff-active-workout-mini-compact {
+  display: grid !important;
+  grid-template-columns: 52px minmax(0, 1fr) auto !important;
+  gap: 12px !important;
+  align-items: center !important;
+  padding: 12px 14px 14px !important;
+  border-radius: 24px !important;
+}
+
+.ff-active-workout-mini-compact__icon {
+  width: 44px !important;
+  height: 44px !important;
+  margin-inline: auto !important;
+  border-radius: 18px !important;
+  background: var(--ff-accent-soft) !important;
+  color: var(--ff-accent-text) !important;
+}
+
+.ff-active-workout-mini-compact__copy {
+  display: grid !important;
+  gap: 2px !important;
+  min-width: 0 !important;
+}
+
+.ff-active-workout-mini-compact__status,
+.ff-active-workout-mini-compact__meta,
+.ff-active-workout-mini-compact__time {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+.ff-active-workout-mini-compact__status {
+  color: var(--ff-accent-text) !important;
+  font-size: .68rem !important;
+  font-weight: 950 !important;
+  text-transform: uppercase !important;
+  letter-spacing: .1em !important;
+}
+
+.ff-active-workout-mini-compact__copy strong,
+.ff-active-workout-mini-compact__current {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.ff-active-workout-mini-compact__copy strong {
+  color: var(--ff-text) !important;
+  font-size: 1rem !important;
+  font-weight: 950 !important;
+}
+
+.ff-active-workout-mini-compact__current {
+  color: var(--ff-muted) !important;
+  font-size: .76rem !important;
+  font-weight: 800 !important;
+}
+
+.ff-active-workout-mini-compact__meta {
+  flex-wrap: wrap !important;
+  color: var(--ff-muted) !important;
+  font-size: .72rem !important;
+  font-weight: 850 !important;
+}
+
+.ff-active-workout-mini-compact__time {
+  align-self: center !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,.055) !important;
+  padding: .45rem .6rem !important;
+  color: var(--ff-text) !important;
+  font-size: .82rem !important;
+  font-weight: 950 !important;
+  white-space: nowrap !important;
+}
+
+@media (max-width: 420px) {
+  .ff-page-start-workout .ff-mobile-workout-action-bar > div {
+    grid-template-columns: 40px minmax(0, 1fr) minmax(108px, .8fr) !important;
+  }
+
+  .ff-active-workout-mini-compact {
+    grid-template-columns: 48px minmax(0, 1fr) !important;
+  }
+
+  .ff-active-workout-mini-compact__time {
+    grid-column: 2 !important;
+    justify-self: start !important;
+    margin-top: .2rem !important;
+  }
+
+  .ff-active-workout-mini-compact__bar {
+    grid-column: 1 / -1 !important;
+  }
+}

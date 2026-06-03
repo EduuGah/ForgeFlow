@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Activity, Dumbbell } from 'lucide-react'
+import { Activity, CheckCircle2, Dumbbell, Timer } from 'lucide-react'
 
 import { useWorkoutSession } from '../../context/WorkoutSessionContext'
 
@@ -62,7 +62,7 @@ function ActiveWorkoutMini({ variant = 'floating' }) {
       className={`ff-active-workout-mini ff-active-workout-mini-compact ${isInline ? 'ff-active-workout-mini-inline' : 'ff-active-workout-mini-floating'}`}
     >
       <span className="ff-active-workout-mini-compact__icon">
-        <Dumbbell size={18} />
+        <Dumbbell size={23} />
       </span>
 
       <span className="ff-active-workout-mini-compact__copy">
@@ -70,10 +70,15 @@ function ActiveWorkoutMini({ variant = 'floating' }) {
           <Activity size={12} /> Treino em andamento
         </span>
         <strong>{activeSession.workoutName}</strong>
-        <small>{completedSets}/{totalSets} séries · {exerciseCount} exercícios · atual: {currentExerciseName}</small>
+        <small className="ff-active-workout-mini-compact__current">Atual: {currentExerciseName}</small>
+        <span className="ff-active-workout-mini-compact__meta">
+          <span><CheckCircle2 size={12} /> {completedSets}/{totalSets} séries</span>
+          <span><Dumbbell size={12} /> {exerciseCount} exercícios</span>
+        </span>
       </span>
 
       <span className="ff-active-workout-mini-compact__time">
+        <Timer size={13} />
         {formatTime(elapsedSeconds)}
       </span>
 

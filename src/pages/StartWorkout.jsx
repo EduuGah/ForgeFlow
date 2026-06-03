@@ -32,6 +32,7 @@ import { getAppSettings } from '../utils/settingsUtils'
 import { generateSmartNotifications } from '../utils/notificationUtils'
 import { getExerciseMedia } from '../utils/exerciseMediaUtils'
 import { getExerciseProgressionSuggestion } from '../utils/progressionSuggestionUtils'
+import { SlidersHorizontal } from 'lucide-react'
 
 
 function formatTime(seconds) {
@@ -116,6 +117,29 @@ function getExerciseEquipmentLabel(exercise = {}) {
   return exercise.equipment || 'Sem equipamento'
 }
 
+
+function getUniqueExerciseValues(options = [], getter, limit = 14) {
+  const values = []
+  const seen = new Set()
+
+  options.forEach((exercise) => {
+    const value = String(getter(exercise) || '').trim()
+    if (!value || seen.has(value)) return
+    seen.add(value)
+    values.push(value)
+  })
+
+  return values.slice(0, limit)
+}
+
+function filterExercisesByQuickFilters(options = [], { muscle = '', equipment = '' } = {}) {
+  return options.filter((exercise) => {
+    if (muscle && getExerciseMuscleGroup(exercise) !== muscle) return false
+    if (equipment && getExerciseEquipmentLabel(exercise) !== equipment) return false
+    return true
+  })
+}
+
 function buildExercisePickerSections(options = [], focusExercise = null) {
   const focusMuscle = focusExercise ? getExerciseMuscleGroup(getExerciseData(focusExercise)) : ''
   const recommended = []
@@ -197,6 +221,8 @@ function StartWorkout() {
   const [addExerciseOpen, setAddExerciseOpen] = useState(false)
   const [finishWorkoutModalOpen, setFinishWorkoutModalOpen] = useState(false)
   const [addExerciseSearch, setAddExerciseSearch] = useState('')
+  const [addMuscleFilter, setAddMuscleFilter] = useState('')
+  const [addEquipmentFilter, setAddEquipmentFilter] = useState('')
   const deferredReplaceSearch = useDeferredValue(replaceSearch)
   const deferredAddExerciseSearch = useDeferredValue(addExerciseSearch)
 
@@ -336,7 +362,7 @@ function StartWorkout() {
       .slice(0, 80)
   }, [exercises, deferredReplaceSearch])
 
-  const addExerciseOptions = useMemo(() => {
+  const addExerciseBaseOptions = useMemo(() => {
     const selectedOriginalIds = new Set(
       sessionExercises
         .map((exercise) => String(exercise.originalExerciseId || exercise.exercise?.id || exercise.exercise?._id || ''))
@@ -354,8 +380,24 @@ function StartWorkout() {
 
         return searchable.includes(search)
       })
-      .slice(0, 60)
   }, [deferredAddExerciseSearch, exercises, sessionExercises])
+
+  const addMuscleOptions = useMemo(
+    () => getUniqueExerciseValues(addExerciseBaseOptions, getExerciseMuscleGroup),
+    [addExerciseBaseOptions]
+  )
+
+  const addEquipmentOptions = useMemo(
+    () => getUniqueExerciseValues(addExerciseBaseOptions, getExerciseEquipmentLabel),
+    [addExerciseBaseOptions]
+  )
+
+  const addExerciseOptions = useMemo(() => {
+    return filterExercisesByQuickFilters(addExerciseBaseOptions, {
+      muscle: addMuscleFilter,
+      equipment: addEquipmentFilter,
+    }).slice(0, 80)
+  }, [addEquipmentFilter, addExerciseBaseOptions, addMuscleFilter])
 
   const addExerciseSections = useMemo(() => {
     return buildExercisePickerSections(addExerciseOptions, focusExercise)
@@ -583,6 +625,8 @@ function StartWorkout() {
     const newSessionExerciseId = addExerciseToSession(newExercise)
     setAddExerciseOpen(false)
     setAddExerciseSearch('')
+    setAddMuscleFilter('')
+    setAddEquipmentFilter('')
 
     showToast('success', 'Exercício adicionado', `${newExercise.name || 'Exercício'} entrou no treino ativo.`)
 
@@ -658,6 +702,33 @@ function StartWorkout() {
 
     return () => window.clearInterval(interval)
   }, [restTimer])
+
+  useEffect(() => {
+    if (!addExerciseOpen || typeof document === 'undefined') return undefined
+
+    const shell = document.querySelector('.ff-page-scroll-shell')
+    const previousShellOverflow = shell?.style.overflow
+    const previousBodyOverflow = document.body.style.overflow
+    const previousHtmlOverflow = document.documentElement.style.overflow
+
+    shell?.classList.add('ff-scroll-locked-by-workout-modal')
+    document.body.classList.add('ff-scroll-locked-by-workout-modal')
+    document.documentElement.classList.add('ff-scroll-locked-by-workout-modal')
+
+    if (shell) shell.style.overflow = 'hidden'
+    document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
+
+    return () => {
+      shell?.classList.remove('ff-scroll-locked-by-workout-modal')
+      document.body.classList.remove('ff-scroll-locked-by-workout-modal')
+      document.documentElement.classList.remove('ff-scroll-locked-by-workout-modal')
+
+      if (shell) shell.style.overflow = previousShellOverflow || ''
+      document.body.style.overflow = previousBodyOverflow || ''
+      document.documentElement.style.overflow = previousHtmlOverflow || ''
+    }
+  }, [addExerciseOpen])
 
   useEffect(() => {
     if (!activeSession) return
@@ -802,7 +873,11 @@ function StartWorkout() {
                 <span>Treino ativo</span>
                 <strong>Adicionar exercício</strong>
               </div>
-              <button type="button" onClick={() => setAddExerciseOpen(false)} aria-label="Fechar">×</button>
+              <button type="button" onClick={() => {
+                setAddExerciseOpen(false)
+                setAddMuscleFilter('')
+                setAddEquipmentFilter('')
+              }} aria-label="Fechar">×</button>
             </div>
 
             <label className="ff-active-add-exercise-sheet__search">
@@ -812,9 +887,29 @@ function StartWorkout() {
                 value={addExerciseSearch}
                 onChange={(event) => setAddExerciseSearch(event.target.value)}
                 onKeyDown={blurKeyboardOnEnter}
+                enterKeyHint="done"
                 placeholder="Nome, músculo ou equipamento"
               />
             </label>
+
+            <div className="ff-exercise-picker-filters" aria-label="Filtros rápidos para adicionar exercício">
+              <span><SlidersHorizontal size={14} /> Filtros</span>
+              <button type="button" className={!addMuscleFilter ? 'is-active' : ''} onClick={() => setAddMuscleFilter('')}>Todos</button>
+              {addMuscleOptions.map((muscle) => (
+                <button key={muscle} type="button" className={addMuscleFilter === muscle ? 'is-active' : ''} onClick={() => setAddMuscleFilter(muscle)}>
+                  {muscle}
+                </button>
+              ))}
+            </div>
+
+            <div className="ff-exercise-picker-filters ff-exercise-picker-filters--equipment" aria-label="Filtros rápidos por equipamento">
+              <button type="button" className={!addEquipmentFilter ? 'is-active' : ''} onClick={() => setAddEquipmentFilter('')}>Todos equipamentos</button>
+              {addEquipmentOptions.map((equipment) => (
+                <button key={equipment} type="button" className={addEquipmentFilter === equipment ? 'is-active' : ''} onClick={() => setAddEquipmentFilter(equipment)}>
+                  {equipment}
+                </button>
+              ))}
+            </div>
 
             <div className="ff-active-add-exercise-sheet__list">
               {addExerciseOptions.length === 0 ? (
