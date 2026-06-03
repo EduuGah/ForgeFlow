@@ -445,7 +445,7 @@ function AppLayout() {
         </div>
       </main>
 
-      <MobileBottomNav />
+      {!isActiveWorkoutRoute && <MobileBottomNav />}
 
       {activeSession && !isActiveWorkoutRoute && (
         <Suspense fallback={null}>

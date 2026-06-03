@@ -9127,3 +9127,442 @@ body.is-native-app .ff-notification-detail-modal {
     overflow-x: visible !important;
   }
 }
+
+/* =========================================================
+   ForgeFlow — Etapa 2.1: treino ativo realmente mobile/app
+   Ajusta feedback visual após teste no APK.
+   ========================================================= */
+
+/* No treino ativo a bottom nav some via AppLayout; esta barra vira a ação fixa principal. */
+.ff-page-start-workout .ff-mobile-workout-action-bar {
+  position: fixed !important;
+  left: 10px !important;
+  right: 10px !important;
+  bottom: max(10px, env(safe-area-inset-bottom)) !important;
+  z-index: 2147482500 !important;
+  border: 1px solid var(--ff-border) !important;
+  border-radius: 24px !important;
+  background: rgba(10, 10, 12, .96) !important;
+  padding: 10px !important;
+  box-shadow: 0 -18px 60px rgba(0, 0, 0, .58) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+}
+
+.ff-page-start-workout .ff-mobile-workout-action-bar > div {
+  max-width: 760px !important;
+  display: grid !important;
+  grid-template-columns: 42px minmax(0, 1fr) 46px minmax(112px, .72fr) !important;
+  gap: 8px !important;
+}
+
+.ff-page-start-workout .ff-mobile-workout-action-bar button {
+  min-height: 46px !important;
+}
+
+.ff-page-start-workout .ff-mobile-workout-action-bar__finish {
+  min-width: 0 !important;
+  height: 46px !important;
+  border-radius: 17px !important;
+  background: var(--ff-accent) !important;
+  color: #fff !important;
+  font-size: .92rem !important;
+  font-weight: 950 !important;
+  box-shadow: 0 0 26px var(--ff-accent-shadow) !important;
+}
+
+.ff-page-start-workout .ff-workout-input-polish {
+  padding-bottom: calc(7.25rem + env(safe-area-inset-bottom)) !important;
+}
+
+.ff-page-start-workout .ff-forge-active-hero {
+  margin-inline: 0 !important;
+  padding: 14px !important;
+}
+
+@media (max-width: 430px) {
+  .ff-page-start-workout .ff-forge-active-hero__finish {
+    display: none !important;
+  }
+
+  .ff-page-start-workout .ff-forge-active-hero__top {
+    grid-template-columns: 44px minmax(0, 1fr) !important;
+  }
+
+  .ff-page-start-workout .ff-mobile-workout-action-bar > div {
+    grid-template-columns: 40px minmax(0, 1fr) minmax(112px, .7fr) !important;
+  }
+
+  .ff-page-start-workout .ff-mobile-workout-action-bar [aria-label='Iniciar descanso'] {
+    display: none !important;
+  }
+}
+
+/* Strip horizontal: texto não pode virar bloco pequeno por causa de seletores antigos. */
+.ff-page-start-workout .ff-forge-exercise-strip {
+  margin-inline: 0 !important;
+  overflow: hidden !important;
+}
+
+.ff-page-start-workout .ff-forge-exercise-strip__scroller {
+  display: flex !important;
+  gap: 10px !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  padding: 0 2px 6px !important;
+  scrollbar-width: thin !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.ff-page-start-workout .ff-forge-exercise-strip__scroller::-webkit-scrollbar {
+  display: block !important;
+  height: 5px !important;
+}
+
+.ff-page-start-workout .ff-forge-exercise-strip__item {
+  display: grid !important;
+  grid-template-columns: 50px minmax(0, 1fr) !important;
+  width: 235px !important;
+  min-width: 235px !important;
+  max-width: 235px !important;
+  min-height: 88px !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 10px !important;
+}
+
+.ff-page-start-workout .ff-forge-exercise-strip__thumb,
+.ff-page-start-workout .ff-forge-exercise-strip__item > .ff-forge-exercise-strip__thumb {
+  grid-row: auto !important;
+  display: flex !important;
+  width: 50px !important;
+  height: 50px !important;
+  flex: 0 0 50px !important;
+  overflow: hidden !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+}
+
+.ff-page-start-workout .ff-forge-exercise-strip__content,
+.ff-page-start-workout .ff-forge-exercise-strip__item > .ff-forge-exercise-strip__content {
+  grid-row: auto !important;
+  display: grid !important;
+  width: auto !important;
+  height: auto !important;
+  min-width: 0 !important;
+  align-items: start !important;
+  justify-content: stretch !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: inherit !important;
+  font-size: inherit !important;
+}
+
+.ff-page-start-workout .ff-forge-exercise-strip__item strong,
+.ff-page-start-workout .ff-forge-exercise-strip__item small {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.ff-page-start-workout .ff-forge-exercise-strip__item strong {
+  color: var(--ff-text) !important;
+  font-size: .94rem !important;
+  line-height: 1.12 !important;
+}
+
+/* Cards menos colados e com respiro real. */
+.ff-page-start-workout .ff-hevy-active-exercise {
+  margin-inline: 0 !important;
+  border-radius: 26px !important;
+  padding: 16px !important;
+}
+
+.ff-page-start-workout .ff-hevy-active-exercise__header {
+  padding-bottom: 14px !important;
+}
+
+/* Tabela de séries sem scroll lateral no mobile. */
+.ff-page-start-workout .ff-hevy-set-table {
+  width: 100% !important;
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
+  border-radius: 18px !important;
+}
+
+.ff-page-start-workout .ff-hevy-set-head,
+.ff-page-start-workout .ff-hevy-set-row {
+  width: 100% !important;
+  min-width: 0 !important;
+  display: grid !important;
+  grid-template-columns: 34px minmax(44px, .85fr) minmax(58px, 1fr) minmax(58px, 1fr) 28px 38px !important;
+  gap: 4px !important;
+  padding-inline: 6px !important;
+}
+
+.ff-page-start-workout .ff-hevy-set-head {
+  font-size: .62rem !important;
+  letter-spacing: .08em !important;
+}
+
+.ff-page-start-workout .ff-hevy-set-prev {
+  font-size: .76rem !important;
+  white-space: nowrap !important;
+}
+
+.ff-page-start-workout .ff-hevy-set-row input {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 44px !important;
+  border: 1px solid color-mix(in srgb, var(--ff-border) 76%, white 12%) !important;
+  background: #24242a !important;
+  color: #fff !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.04) !important;
+}
+
+.ff-page-start-workout .ff-hevy-set-row input::placeholder {
+  color: rgba(255,255,255,.42) !important;
+}
+
+.ff-page-start-workout .ff-hevy-set-row input:focus {
+  background: #2d2d35 !important;
+  border-color: var(--ff-accent-border) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ff-accent-soft) 72%, transparent) !important;
+}
+
+.ff-page-start-workout .ff-hevy-set-check {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 13px !important;
+}
+
+@media (max-width: 370px) {
+  .ff-page-start-workout .ff-hevy-set-head,
+  .ff-page-start-workout .ff-hevy-set-row {
+    grid-template-columns: 30px minmax(40px, .7fr) minmax(52px, 1fr) minmax(52px, 1fr) 24px 34px !important;
+    gap: 3px !important;
+    padding-inline: 4px !important;
+  }
+
+  .ff-page-start-workout .ff-hevy-set-head {
+    font-size: .56rem !important;
+  }
+
+  .ff-page-start-workout .ff-hevy-set-prev {
+    font-size: .68rem !important;
+  }
+}
+
+/* 3 pontos agora abre telinha modal, não bloco dentro do card. */
+.ff-active-exercise-actions-modal {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147482600 !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
+  padding: max(.75rem, env(safe-area-inset-top)) .75rem max(.75rem, env(safe-area-inset-bottom)) !important;
+  background: rgba(0,0,0,.68) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+.ff-active-exercise-actions-modal__backdrop {
+  position: absolute !important;
+  inset: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.ff-active-exercise-actions-modal__panel {
+  position: relative !important;
+  z-index: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: min(100%, 560px) !important;
+  max-height: calc(88dvh - env(safe-area-inset-top)) !important;
+  overflow: hidden !important;
+  border: 1px solid var(--ff-border) !important;
+  border-radius: 28px 28px 0 0 !important;
+  background: #151519 !important;
+  box-shadow: 0 -22px 70px rgba(0,0,0,.62) !important;
+}
+
+.ff-active-exercise-actions-modal__header {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  padding: 16px !important;
+  border-bottom: 1px solid var(--ff-border) !important;
+}
+
+.ff-active-exercise-actions-modal__header span {
+  display: block !important;
+  color: var(--ff-accent-text) !important;
+  font-size: .72rem !important;
+  font-weight: 950 !important;
+  letter-spacing: .14em !important;
+  text-transform: uppercase !important;
+}
+
+.ff-active-exercise-actions-modal__header strong {
+  display: block !important;
+  margin-top: 5px !important;
+  color: var(--ff-text) !important;
+  font-size: 1.22rem !important;
+  font-weight: 950 !important;
+  line-height: 1.08 !important;
+}
+
+.ff-active-exercise-actions-modal__header > button {
+  display: flex !important;
+  width: 44px !important;
+  height: 44px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1px solid var(--ff-border) !important;
+  border-radius: 16px !important;
+  background: var(--ff-surface-2) !important;
+  color: var(--ff-muted) !important;
+}
+
+.ff-active-exercise-actions-modal__grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  padding: 14px !important;
+}
+
+.ff-active-exercise-actions-modal__grid button,
+.ff-active-exercise-actions-modal__footer button {
+  display: inline-flex !important;
+  min-height: 56px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  border: 1px solid var(--ff-border) !important;
+  border-radius: 18px !important;
+  background: var(--ff-surface-2) !important;
+  color: var(--ff-text) !important;
+  font-weight: 950 !important;
+}
+
+.ff-active-exercise-actions-modal__grid button.danger {
+  border-color: rgba(248,113,113,.22) !important;
+  background: rgba(127,29,29,.28) !important;
+  color: #fca5a5 !important;
+}
+
+.ff-active-exercise-actions-modal__replace {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  padding: 14px !important;
+  overflow: hidden !important;
+}
+
+.ff-replace-exercise-search--modal {
+  flex: 0 0 auto !important;
+}
+
+.ff-replace-exercise-list--modal {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+  padding-right: 2px !important;
+}
+
+.ff-active-exercise-actions-modal__footer {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+}
+
+/* Adicionar exercício com mídia e informação útil. */
+.ff-active-add-exercise-sheet__list button {
+  display: grid !important;
+  grid-template-columns: 54px minmax(0, 1fr) !important;
+  gap: 12px !important;
+  align-items: center !important;
+  min-height: 72px !important;
+  text-align: left !important;
+}
+
+.ff-active-add-exercise-sheet__media {
+  display: flex !important;
+  width: 54px !important;
+  height: 54px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+  color: #111 !important;
+  font-weight: 950 !important;
+}
+
+.ff-active-add-exercise-sheet__media img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+.ff-active-add-exercise-sheet__copy {
+  display: block !important;
+  min-width: 0 !important;
+}
+
+.ff-active-add-exercise-sheet__copy strong,
+.ff-active-add-exercise-sheet__copy small {
+  display: block !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.ff-active-add-exercise-sheet__copy strong {
+  color: var(--ff-text) !important;
+  font-size: .98rem !important;
+  font-weight: 950 !important;
+}
+
+.ff-active-add-exercise-sheet__copy small {
+  margin-top: 4px !important;
+  color: var(--ff-muted) !important;
+  font-size: .78rem !important;
+}
+
+/* Finalização: input de local não fica escondido pelo rodapé. */
+.ff-finish-workout-panel .sticky.bottom-0 {
+  position: static !important;
+}
+
+.ff-finish-workout-scroll {
+  padding-bottom: 1rem !important;
+}
+
+/* Mini card do treino ativo nas outras páginas. */
+.ff-active-workout-mini-floating {
+  left: 12px !important;
+  right: 12px !important;
+  bottom: calc(5.8rem + env(safe-area-inset-bottom)) !important;
+  z-index: 80 !important;
+}
+
+.ff-active-workout-mini-compact {
+  display: grid !important;
+  grid-template-columns: 42px minmax(0, 1fr) auto !important;
+  gap: 10px !important;
+  align-items: center !important;
+  padding: 11px 12px 14px !important;
+}
+
+.ff-active-workout-mini-compact__bar {
+  grid-column: 1 / -1 !important;
+}

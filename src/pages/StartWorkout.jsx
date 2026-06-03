@@ -760,16 +760,29 @@ function StartWorkout() {
               {addExerciseOptions.length === 0 ? (
                 <p className="ff-active-add-exercise-sheet__empty">Nenhum exercício encontrado.</p>
               ) : (
-                addExerciseOptions.map((exercise) => (
-                  <button
-                    key={getExerciseId(exercise)}
-                    type="button"
-                    onClick={() => handleAddExerciseToSession(getExerciseId(exercise))}
-                  >
-                    <span>{exercise.name || 'Exercício sem nome'}</span>
-                    <small>{exercise.muscleGroup || 'Sem grupo'} · {exercise.equipment || 'Sem equipamento'}</small>
-                  </button>
-                ))
+                addExerciseOptions.map((exercise) => {
+                  const mediaUrl = getExerciseMedia(exercise)
+
+                  return (
+                    <button
+                      key={getExerciseId(exercise)}
+                      type="button"
+                      onClick={() => handleAddExerciseToSession(getExerciseId(exercise))}
+                    >
+                      <span className="ff-active-add-exercise-sheet__media">
+                        {mediaUrl ? (
+                          <img src={mediaUrl} alt="" loading="lazy" decoding="async" />
+                        ) : (
+                          getExerciseId(exercise).slice(-2) || '+'
+                        )}
+                      </span>
+                      <span className="ff-active-add-exercise-sheet__copy">
+                        <strong>{exercise.name || 'Exercício sem nome'}</strong>
+                        <small>{exercise.muscleGroup || 'Sem grupo'} · {exercise.equipment || 'Sem equipamento'}</small>
+                      </span>
+                    </button>
+                  )
+                })
               )}
             </div>
           </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   Check,
   ChevronDown,
@@ -38,7 +39,6 @@ export default function ActiveExerciseCard({
   replaceExerciseId,
   replaceSearch,
   replacementOptions,
-  exercises,
   onRegisterCardRef,
   onToggleCollapse,
   onToggleReplace,
@@ -77,6 +77,119 @@ export default function ActiveExerciseCard({
     setReplaceMode(false)
     onCloseOptions?.()
   }
+
+  const exerciseOptionsModal = isOptionsOpen && typeof document !== 'undefined'
+    ? createPortal(
+      <div className="ff-active-exercise-actions-modal" role="dialog" aria-modal="true" aria-label={`Opções de ${getExerciseName(sessionExercise)}`}>
+        <button
+          type="button"
+          className="ff-active-exercise-actions-modal__backdrop"
+          onClick={closeExerciseOptions}
+          aria-label="Fechar opções"
+        />
+
+        <div className="ff-active-exercise-actions-modal__panel">
+          <div className="ff-active-exercise-actions-modal__header">
+            <div>
+              <span>{replaceMode ? 'Substituir exercício' : 'Ações do exercício'}</span>
+              <strong>{getExerciseName(sessionExercise)}</strong>
+            </div>
+
+            <button type="button" onClick={closeExerciseOptions} aria-label="Fechar opções">
+              <X size={19} />
+            </button>
+          </div>
+
+          {!replaceMode ? (
+            <div className="ff-active-exercise-actions-modal__grid">
+              <button type="button" onClick={() => setReplaceMode(true)}>
+                <Search size={18} />
+                Substituir
+              </button>
+
+              <button type="button" onClick={() => {
+                onToggleCollapse(sessionExercise.id)
+                closeExerciseOptions()
+              }}>
+                {isCollapsed ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
+                {isCollapsed ? 'Expandir' : 'Minimizar'}
+              </button>
+
+              <button type="button" onClick={() => {
+                onSkipExercise(sessionExercise.id)
+                closeExerciseOptions()
+              }}>
+                <Repeat2 size={18} />
+                {sessionExercise.skipped ? 'Retomar' : 'Pular'}
+              </button>
+
+              <button type="button" onClick={() => {
+                onRemoveExercise(sessionExercise.id)
+                closeExerciseOptions()
+              }} className="danger">
+                <Trash2 size={18} />
+                Excluir
+              </button>
+            </div>
+          ) : (
+            <div className="ff-active-exercise-actions-modal__replace">
+              <label className="ff-replace-exercise-search ff-replace-exercise-search--modal">
+                <Search size={17} />
+                <input
+                  type="search"
+                  placeholder="Buscar substituto..."
+                  value={replaceSearch}
+                  onChange={(event) => onReplaceSearchChange(event.target.value)}
+                  autoFocus
+                />
+              </label>
+
+              <div className="ff-replace-exercise-list ff-replace-exercise-list--modal" aria-label="Exercícios para substituir">
+                {replacementOptions.length === 0 ? (
+                  <p className="ff-replace-exercise-empty">Nenhum exercício encontrado.</p>
+                ) : (
+                  replacementOptions.map((exercise) => {
+                    const exerciseId = getExerciseId(exercise)
+                    const mediaUrl = getExerciseMedia(exercise)
+
+                    return (
+                      <button
+                        key={exerciseId}
+                        type="button"
+                        onClick={() => {
+                          onReplaceExercise(sessionExercise.id, exerciseId)
+                          closeExerciseOptions()
+                        }}
+                        className="ff-replace-exercise-option"
+                      >
+                        <span className="ff-replace-exercise-option__media">
+                          {mediaUrl ? (
+                            <img src={mediaUrl} alt="" loading="lazy" decoding="async" />
+                          ) : (
+                            <ImageIcon size={18} />
+                          )}
+                        </span>
+                        <span className="ff-replace-exercise-option__content">
+                          <strong>{exercise.name || 'Exercício sem nome'}</strong>
+                          <small>{exercise.muscleGroup || 'Sem grupo'} · {exercise.equipment || 'Sem equipamento'}</small>
+                        </span>
+                      </button>
+                    )
+                  })
+                )}
+              </div>
+
+              <div className="ff-active-exercise-actions-modal__footer">
+                <button type="button" onClick={() => setReplaceMode(false)}>Voltar</button>
+                <button type="button" onClick={closeExerciseOptions}>Fechar</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>,
+      document.body
+    )
+    : null
 
   return (
     <article
@@ -134,106 +247,7 @@ export default function ActiveExerciseCard({
         </div>
       </header>
 
-      {isOptionsOpen && (
-        <div className="ff-hevy-exercise-options ff-hevy-exercise-options--top">
-          <div className="ff-hevy-options-title">
-            <div>
-              <strong>{replaceMode ? 'Substituir exercício' : `Opções de ${getExerciseName(sessionExercise)}`}</strong>
-              <span>{replaceMode ? 'Escolha uma opção abaixo. Os GIFs foram reduzidos para não quebrar o layout.' : 'Escolha uma ação. A substituição só abre quando você tocar em Substituir.'}</span>
-            </div>
-            <button type="button" onClick={closeExerciseOptions} aria-label="Fechar opções">
-              <X size={17} />
-            </button>
-          </div>
-
-          {!replaceMode ? (
-            <div className="ff-hevy-option-actions ff-hevy-option-actions--menu">
-              <button type="button" onClick={() => setReplaceMode(true)}>
-                <Search size={17} />
-                Substituir
-              </button>
-              <button type="button" onClick={() => {
-                onToggleCollapse(sessionExercise.id)
-                closeExerciseOptions()
-              }}>
-                {isCollapsed ? <ChevronDown size={17} /> : <ChevronUp size={17} />}
-                {isCollapsed ? 'Expandir' : 'Minimizar'}
-              </button>
-              <button type="button" onClick={() => {
-                onSkipExercise(sessionExercise.id)
-                closeExerciseOptions()
-              }}>
-                <Repeat2 size={17} />
-                {sessionExercise.skipped ? 'Retomar' : 'Pular'}
-              </button>
-              <button type="button" onClick={() => {
-                onRemoveExercise(sessionExercise.id)
-                closeExerciseOptions()
-              }} className="danger">
-                <Trash2 size={17} />
-                Excluir
-              </button>
-            </div>
-          ) : (
-            <>
-              <label className="ff-replace-exercise-search">
-                <Search size={17} />
-                <input
-                  type="search"
-                  placeholder="Buscar substituto..."
-                  value={replaceSearch}
-                  onChange={(event) => onReplaceSearchChange(event.target.value)}
-                  autoFocus
-                />
-              </label>
-
-              <div className="ff-replace-exercise-list" aria-label="Exercícios para substituir">
-                {replacementOptions.length === 0 ? (
-                  <p className="ff-replace-exercise-empty">Nenhum exercício encontrado.</p>
-                ) : (
-                  replacementOptions.map((exercise) => {
-                    const exerciseId = getExerciseId(exercise)
-                    const mediaUrl = getExerciseMedia(exercise)
-
-                    return (
-                      <button
-                        key={exerciseId}
-                        type="button"
-                        onClick={() => {
-                          onReplaceExercise(sessionExercise.id, exerciseId)
-                          closeExerciseOptions()
-                        }}
-                        className="ff-replace-exercise-option"
-                      >
-                        <span className="ff-replace-exercise-option__media">
-                          {mediaUrl ? (
-                            <img src={mediaUrl} alt="" loading="lazy" decoding="async" />
-                          ) : (
-                            <ImageIcon size={18} />
-                          )}
-                        </span>
-                        <span className="ff-replace-exercise-option__content">
-                          <strong>{exercise.name || 'Exercício sem nome'}</strong>
-                          <small>{exercise.muscleGroup || 'Sem grupo'} · {exercise.equipment || 'Sem equipamento'}</small>
-                        </span>
-                      </button>
-                    )
-                  })
-                )}
-              </div>
-
-              <div className="ff-hevy-option-actions ff-hevy-option-actions--replace">
-                <button type="button" onClick={() => setReplaceMode(false)}>Voltar</button>
-                <button type="button" onClick={closeExerciseOptions}>Fechar</button>
-              </div>
-
-              {exercises.length > replacementOptions.length && (
-                <p>Exibindo até {replacementOptions.length} opções. Use a busca para filtrar melhor.</p>
-              )}
-            </>
-          )}
-        </div>
-      )}
+      {exerciseOptionsModal}
 
       {isCurrent && (
         <div className="ff-hevy-current-exercise">
