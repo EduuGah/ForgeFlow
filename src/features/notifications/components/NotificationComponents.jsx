@@ -1,4 +1,5 @@
 import { Archive, BellRing, Eye, Trash2, X } from 'lucide-react'
+import { createPortal } from 'react-dom'
 
 import Badge from '../../../components/ui/Badge'
 import Button from '../../../components/ui/Button'
@@ -40,32 +41,40 @@ export function NotificationDetailModal({
   onOpenAction,
 }) {
   if (!notification) return null
+  if (typeof document === 'undefined') return null
 
   const meta = getNotificationMeta(notification.type)
   const Icon = meta.icon
 
-  return (
-    <div className="ff-notification-detail-modal fixed inset-0 z-[90] flex items-end justify-center bg-black/70 p-3 backdrop-blur-sm sm:items-center sm:p-4" role="dialog" aria-modal="true">
-      <div className="ff-notification-detail-modal__panel flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] shadow-2xl sm:rounded-[2rem]">
-        <div className="ff-notification-detail-modal__header flex items-start justify-between gap-4 border-b border-[var(--ff-border)] p-5">
-          <div className="flex min-w-0 items-start gap-4">
+  const modal = (
+    <div className="ff-notification-detail-modal" role="dialog" aria-modal="true">
+      <button
+        type="button"
+        className="ff-notification-detail-modal__backdrop"
+        aria-label="Fechar detalhes da notificação"
+        onClick={onClose}
+      />
+
+      <div className="ff-notification-detail-modal__panel">
+        <div className="ff-notification-detail-modal__header">
+          <div className="flex min-w-0 items-start gap-3 sm:gap-4">
             <div
               className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${meta.border} ${meta.bg} ${meta.tone}`}
             >
               <Icon size={24} />
             </div>
 
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge>{meta.label}</Badge>
                 <NotificationStatusPill status={notification.status} />
               </div>
 
-              <h2 className="ff-notification-detail-modal__title mt-3 text-2xl font-black text-[var(--ff-text)]">
+              <h2 className="ff-notification-detail-modal__title">
                 {notification.title}
               </h2>
 
-              <p className="mt-1 text-sm text-[var(--ff-muted)]">
+              <p className="ff-notification-detail-modal__date">
                 Criada em {formatLongDateTime(notification.createdAt)}
               </p>
             </div>
@@ -74,27 +83,27 @@ export function NotificationDetailModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-muted)] transition hover:text-[var(--ff-text)]"
+            className="ff-notification-detail-modal__close"
             aria-label="Fechar detalhes"
           >
             <X size={20} />
           </button>
         </div>
 
-        <div className="ff-notification-detail-modal__body space-y-5 overflow-y-auto p-5">
-          <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
-            <p className="text-xs font-black uppercase tracking-wide text-[var(--ff-muted)]">
+        <div className="ff-notification-detail-modal__body">
+          <div className="ff-notification-detail-modal__info-card">
+            <p className="ff-notification-detail-modal__label">
               Mensagem completa
             </p>
 
-            <p className="mt-3 whitespace-pre-line text-base leading-relaxed text-[var(--ff-text)]">
+            <p className="ff-notification-detail-modal__message">
               {notification.message || 'Essa notificação não possui mensagem detalhada.'}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
-              <p className="text-xs font-black uppercase tracking-wide text-[var(--ff-muted)]">
+          <div className="ff-notification-detail-modal__grid">
+            <div className="ff-notification-detail-modal__info-card">
+              <p className="ff-notification-detail-modal__label">
                 Status
               </p>
 
@@ -107,40 +116,40 @@ export function NotificationDetailModal({
               </p>
             </div>
 
-            <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
-              <p className="text-xs font-black uppercase tracking-wide text-[var(--ff-muted)]">
+            <div className="ff-notification-detail-modal__info-card">
+              <p className="ff-notification-detail-modal__label">
                 Leitura
               </p>
 
-              <p className="mt-2 font-bold text-[var(--ff-text)]">
+              <p className="ff-notification-detail-modal__value">
                 {notification.readAt
                   ? formatLongDateTime(notification.readAt)
                   : 'Ainda não tinha sido lida'}
               </p>
             </div>
 
-            <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
-              <p className="text-xs font-black uppercase tracking-wide text-[var(--ff-muted)]">
+            <div className="ff-notification-detail-modal__info-card">
+              <p className="ff-notification-detail-modal__label">
                 Origem
               </p>
 
-              <p className="mt-2 font-bold text-[var(--ff-text)]">
+              <p className="ff-notification-detail-modal__value">
                 {notification.source || 'system'}
               </p>
             </div>
 
-            <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
-              <p className="text-xs font-black uppercase tracking-wide text-[var(--ff-muted)]">
+            <div className="ff-notification-detail-modal__info-card">
+              <p className="ff-notification-detail-modal__label">
                 Destino sugerido
               </p>
 
-              <p className="mt-2 font-bold text-[var(--ff-text)]">
+              <p className="ff-notification-detail-modal__value break-all">
                 {notification.actionUrl || 'Nenhum'}
               </p>
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+          <div className="ff-notification-detail-modal__actions">
             {notification.actionUrl && (
               <Button
                 type="button"
@@ -174,5 +183,6 @@ export function NotificationDetailModal({
       </div>
     </div>
   )
-}
 
+  return createPortal(modal, document.body)
+}
