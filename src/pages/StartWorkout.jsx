@@ -347,9 +347,13 @@ function StartWorkout() {
   }
 
   async function getWorkoutLocation(options = {}) {
-    if (!options?.saveLocation) return null
-
     const label = String(options.locationLabel || '').trim()
+
+    if (options?.manualOnly) {
+      return label ? { label, source: 'manual' } : null
+    }
+
+    if (!options?.saveLocation) return null
 
     if (!navigator?.geolocation) {
       return label ? { label, source: 'manual' } : null

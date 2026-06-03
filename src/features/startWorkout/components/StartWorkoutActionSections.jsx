@@ -447,8 +447,20 @@ export function FinishWorkoutModal({
             disabled={savingWorkout}
             className="w-full"
           >
-            Finalizar sem localização
+            Finalizar sem local
           </Button>
+
+          {label && (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => onFinishWorkout({ manualOnly: true, locationLabel: label })}
+              disabled={savingWorkout}
+              className="w-full"
+            >
+              Salvar só nome
+            </Button>
+          )}
 
           <Button
             type="button"
@@ -456,7 +468,7 @@ export function FinishWorkoutModal({
             disabled={savingWorkout}
             className="w-full"
           >
-            {savingWorkout ? 'Salvando...' : 'Salvar localização e finalizar'}
+            {savingWorkout ? 'Salvando...' : 'Salvar GPS e finalizar'}
           </Button>
         </div>
       </div>

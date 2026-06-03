@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import {
   Check,
   ChevronDown,
@@ -10,6 +11,7 @@ import {
   Plus,
   Repeat2,
   Trash2,
+  X,
 } from 'lucide-react'
 import { SetPrBadges } from './ActiveExerciseSetControls'
 import { getExerciseMedia } from '../../../utils/exerciseMediaUtils'
@@ -64,6 +66,17 @@ export default function ActiveExerciseCard({
   const isCurrent = selectedExercise?.id === sessionExercise.id || focusExercise?.id === sessionExercise.id
   const media = getSessionExerciseMedia(sessionExercise)
   const previousLabel = getPreviousLabel(performance)
+  const isOptionsOpen = replaceExerciseId === sessionExercise.id
+  const [replaceMode, setReplaceMode] = useState(false)
+
+  useEffect(() => {
+    if (!isOptionsOpen) setReplaceMode(false)
+  }, [isOptionsOpen])
+
+  function closeExerciseOptions() {
+    setReplaceMode(false)
+    onCloseOptions?.()
+  }
 
   return (
     <article
@@ -104,7 +117,15 @@ export default function ActiveExerciseCard({
 
           <button
             type="button"
-            onClick={() => onToggleReplace(sessionExercise.id)}
+            onClick={() => {
+              if (replaceExerciseId === sessionExercise.id) {
+                closeExerciseOptions()
+                return
+              }
+
+              setReplaceMode(false)
+              onToggleReplace(sessionExercise.id)
+            }}
             className="ff-hevy-active-exercise__menu"
             aria-label={replaceExerciseId === sessionExercise.id ? 'Fechar opções do exercício' : 'Abrir opções do exercício'}
           >
@@ -113,84 +134,103 @@ export default function ActiveExerciseCard({
         </div>
       </header>
 
-      {replaceExerciseId === sessionExercise.id && (
+      {isOptionsOpen && (
         <div className="ff-hevy-exercise-options ff-hevy-exercise-options--top">
           <div className="ff-hevy-options-title">
-            <strong>Opções de {getExerciseName(sessionExercise)}</strong>
-            <span>Substituir, pular ou remover do treino.</span>
-          </div>
-
-          <label className="ff-replace-exercise-search">
-            <Search size={17} />
-            <input
-              type="search"
-              placeholder="Buscar substituto..."
-              value={replaceSearch}
-              onChange={(event) => onReplaceSearchChange(event.target.value)}
-            />
-          </label>
-
-          <div className="ff-replace-exercise-list" aria-label="Exercícios para substituir">
-            {replacementOptions.length === 0 ? (
-              <p className="ff-replace-exercise-empty">Nenhum exercício encontrado.</p>
-            ) : (
-              replacementOptions.map((exercise) => {
-                const exerciseId = getExerciseId(exercise)
-                const mediaUrl = getExerciseMedia(exercise)
-
-                return (
-                  <button
-                    key={exerciseId}
-                    type="button"
-                    onClick={() => {
-                      onReplaceExercise(sessionExercise.id, exerciseId)
-                      onCloseOptions?.()
-                    }}
-                    className="ff-replace-exercise-option"
-                  >
-                    <span className="ff-replace-exercise-option__media">
-                      {mediaUrl ? (
-                        <img src={mediaUrl} alt="" loading="lazy" decoding="async" />
-                      ) : (
-                        <ImageIcon size={18} />
-                      )}
-                    </span>
-                    <span className="ff-replace-exercise-option__content">
-                      <strong>{exercise.name || 'Exercício sem nome'}</strong>
-                      <small>{exercise.muscleGroup || 'Sem grupo'} · {exercise.equipment || 'Sem equipamento'}</small>
-                    </span>
-                  </button>
-                )
-              })
-            )}
-          </div>
-
-          <div className="ff-hevy-option-actions">
-            <button type="button" onClick={() => {
-              onToggleCollapse(sessionExercise.id)
-              onCloseOptions?.()
-            }}>
-              {isCollapsed ? <ChevronDown size={17} /> : <ChevronUp size={17} />}
-              {isCollapsed ? 'Expandir' : 'Minimizar'}
-            </button>
-            <button type="button" onClick={() => {
-              onSkipExercise(sessionExercise.id)
-              onCloseOptions?.()
-            }}>
-              <Repeat2 size={17} />
-              {sessionExercise.skipped ? 'Retomar' : 'Pular'}
-            </button>
-            <button type="button" onClick={() => {
-              onRemoveExercise(sessionExercise.id)
-              onCloseOptions?.()
-            }} className="danger">
-              <Trash2 size={17} />
-              Excluir
+            <div>
+              <strong>{replaceMode ? 'Substituir exercício' : `Opções de ${getExerciseName(sessionExercise)}`}</strong>
+              <span>{replaceMode ? 'Escolha uma opção abaixo. Os GIFs foram reduzidos para não quebrar o layout.' : 'Escolha uma ação. A substituição só abre quando você tocar em Substituir.'}</span>
+            </div>
+            <button type="button" onClick={closeExerciseOptions} aria-label="Fechar opções">
+              <X size={17} />
             </button>
           </div>
 
-          {exercises.length > replacementOptions.length && (
-            <p>Exibindo até {replacementOptions.length} opções. Use a busca para filtrar melhor.</p>
+          {!replaceMode ? (
+            <div className="ff-hevy-option-actions ff-hevy-option-actions--menu">
+              <button type="button" onClick={() => setReplaceMode(true)}>
+                <Search size={17} />
+                Substituir
+              </button>
+              <button type="button" onClick={() => {
+                onToggleCollapse(sessionExercise.id)
+                closeExerciseOptions()
+              }}>
+                {isCollapsed ? <ChevronDown size={17} /> : <ChevronUp size={17} />}
+                {isCollapsed ? 'Expandir' : 'Minimizar'}
+              </button>
+              <button type="button" onClick={() => {
+                onSkipExercise(sessionExercise.id)
+                closeExerciseOptions()
+              }}>
+                <Repeat2 size={17} />
+                {sessionExercise.skipped ? 'Retomar' : 'Pular'}
+              </button>
+              <button type="button" onClick={() => {
+                onRemoveExercise(sessionExercise.id)
+                closeExerciseOptions()
+              }} className="danger">
+                <Trash2 size={17} />
+                Excluir
+              </button>
+            </div>
+          ) : (
+            <>
+              <label className="ff-replace-exercise-search">
+                <Search size={17} />
+                <input
+                  type="search"
+                  placeholder="Buscar substituto..."
+                  value={replaceSearch}
+                  onChange={(event) => onReplaceSearchChange(event.target.value)}
+                  autoFocus
+                />
+              </label>
+
+              <div className="ff-replace-exercise-list" aria-label="Exercícios para substituir">
+                {replacementOptions.length === 0 ? (
+                  <p className="ff-replace-exercise-empty">Nenhum exercício encontrado.</p>
+                ) : (
+                  replacementOptions.map((exercise) => {
+                    const exerciseId = getExerciseId(exercise)
+                    const mediaUrl = getExerciseMedia(exercise)
+
+                    return (
+                      <button
+                        key={exerciseId}
+                        type="button"
+                        onClick={() => {
+                          onReplaceExercise(sessionExercise.id, exerciseId)
+                          closeExerciseOptions()
+                        }}
+                        className="ff-replace-exercise-option"
+                      >
+                        <span className="ff-replace-exercise-option__media">
+                          {mediaUrl ? (
+                            <img src={mediaUrl} alt="" loading="lazy" decoding="async" />
+                          ) : (
+                            <ImageIcon size={18} />
+                          )}
+                        </span>
+                        <span className="ff-replace-exercise-option__content">
+                          <strong>{exercise.name || 'Exercício sem nome'}</strong>
+                          <small>{exercise.muscleGroup || 'Sem grupo'} · {exercise.equipment || 'Sem equipamento'}</small>
+                        </span>
+                      </button>
+                    )
+                  })
+                )}
+              </div>
+
+              <div className="ff-hevy-option-actions ff-hevy-option-actions--replace">
+                <button type="button" onClick={() => setReplaceMode(false)}>Voltar</button>
+                <button type="button" onClick={closeExerciseOptions}>Fechar</button>
+              </div>
+
+              {exercises.length > replacementOptions.length && (
+                <p>Exibindo até {replacementOptions.length} opções. Use a busca para filtrar melhor.</p>
+              )}
+            </>
           )}
         </div>
       )}

@@ -8687,3 +8687,443 @@ body.is-native-app .ff-notification-detail-modal {
   padding-top: max(.75rem, env(safe-area-inset-top)) !important;
   padding-bottom: max(.75rem, env(safe-area-inset-bottom)) !important;
 }
+
+/* =========================================================
+   ForgeFlow — Etapa 2: treino ativo mais compacto e app-like
+   Base aplicada sobre a Etapa 1.1 de notificações.
+   ========================================================= */
+
+.ff-page-start-workout .ff-hevy-page-startworkout,
+.ff-page-start-workout .ff-start-workout-native-page {
+  overflow: visible !important;
+}
+
+.ff-page-start-workout .ff-forge-active-hero {
+  border: 1px solid var(--ff-border) !important;
+  border-radius: 24px !important;
+  background: linear-gradient(180deg, var(--ff-card), var(--ff-surface-2)) !important;
+  padding: 14px !important;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, .2) !important;
+}
+
+.ff-page-start-workout .ff-forge-active-hero__top {
+  gap: 10px !important;
+}
+
+.ff-page-start-workout .ff-forge-active-hero__title h1 {
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: clamp(1.25rem, 5.4vw, 1.85rem) !important;
+  line-height: 1.05 !important;
+}
+
+.ff-page-start-workout .ff-forge-active-hero__finish {
+  min-height: 44px !important;
+  border-radius: 16px !important;
+  background: var(--ff-accent) !important;
+  color: #fff !important;
+  font-weight: 950 !important;
+  box-shadow: 0 0 26px var(--ff-accent-shadow) !important;
+}
+
+.ff-page-start-workout .ff-forge-active-hero__metrics {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  margin-top: 12px !important;
+}
+
+.ff-page-start-workout .ff-forge-active-hero__metrics > div,
+.ff-page-start-workout .ff-forge-active-hero__current {
+  border: 1px solid var(--ff-border) !important;
+  border-radius: 18px !important;
+  background: color-mix(in srgb, var(--ff-surface-2) 84%, transparent) !important;
+  padding: 10px !important;
+}
+
+.ff-page-start-workout .ff-forge-exercise-strip {
+  border-radius: 22px !important;
+  background: linear-gradient(180deg, var(--ff-card), var(--ff-surface-2)) !important;
+  padding: 12px !important;
+  overflow: hidden !important;
+}
+
+.ff-page-start-workout .ff-forge-exercise-strip__scroller {
+  display: flex !important;
+  gap: 10px !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  overscroll-behavior-x: contain !important;
+  scroll-snap-type: x proximity !important;
+  scrollbar-width: thin !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.ff-page-start-workout .ff-forge-exercise-strip__scroller::-webkit-scrollbar {
+  display: block !important;
+  height: 6px !important;
+}
+
+.ff-page-start-workout .ff-forge-exercise-strip__item {
+  grid-template-columns: 42px minmax(0, 1fr) !important;
+  min-width: 218px !important;
+  max-width: 260px !important;
+  scroll-snap-align: start !important;
+  border-radius: 18px !important;
+  padding: 10px !important;
+}
+
+.ff-page-start-workout .ff-forge-exercise-strip__thumb,
+.ff-page-start-workout .ff-forge-exercise-strip__item > span:first-child {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 14px !important;
+}
+
+.ff-page-start-workout .ff-forge-exercise-strip__thumb img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+.ff-page-start-workout .ff-forge-exercise-strip__content {
+  min-width: 0 !important;
+}
+
+.ff-page-start-workout .ff-forge-exercise-strip__item strong {
+  display: block !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: .9rem !important;
+}
+
+.ff-page-start-workout .ff-forge-exercise-strip__subtitle,
+.ff-page-start-workout .ff-forge-exercise-strip__last {
+  display: block !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.ff-page-start-workout .ff-hevy-active-exercise {
+  border: 1px solid var(--ff-border) !important;
+  border-radius: 24px !important;
+  background: linear-gradient(180deg, var(--ff-card), color-mix(in srgb, var(--ff-surface-2) 92%, #000 8%)) !important;
+  padding: 14px !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, .18) !important;
+}
+
+.ff-page-start-workout .ff-hevy-active-exercise__header {
+  grid-template-columns: 52px minmax(0, 1fr) auto !important;
+  gap: 10px !important;
+  padding: 0 0 12px !important;
+}
+
+.ff-page-start-workout .ff-hevy-active-exercise__media {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 16px !important;
+}
+
+.ff-page-start-workout .ff-hevy-active-exercise__title span {
+  color: var(--ff-text) !important;
+  font-size: 1.06rem !important;
+  line-height: 1.16 !important;
+}
+
+.ff-page-start-workout .ff-hevy-active-exercise__title small {
+  color: var(--ff-muted) !important;
+  font-size: .78rem !important;
+}
+
+.ff-page-start-workout .ff-hevy-current-exercise {
+  margin: 4px 0 12px !important;
+  border-radius: 16px !important;
+  background: color-mix(in srgb, var(--ff-accent-soft) 42%, transparent) !important;
+  padding: 9px 10px !important;
+  color: var(--ff-accent-text) !important;
+}
+
+.ff-page-start-workout .ff-hevy-exercise-note {
+  display: none !important;
+}
+
+.ff-page-start-workout .ff-hevy-set-table {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.ff-page-start-workout .ff-hevy-set-head,
+.ff-page-start-workout .ff-hevy-set-row {
+  grid-template-columns: 44px minmax(68px, .95fr) minmax(68px, .9fr) minmax(68px, .9fr) 48px 46px !important;
+  min-width: 380px !important;
+  gap: 6px !important;
+}
+
+.ff-page-start-workout .ff-hevy-set-row {
+  min-height: 62px !important;
+  margin-top: 8px !important;
+  border: 1px solid color-mix(in srgb, var(--ff-border) 72%, transparent) !important;
+  border-radius: 18px !important;
+  background: color-mix(in srgb, var(--ff-surface-2) 82%, #000 18%) !important;
+  padding: 7px !important;
+}
+
+.ff-page-start-workout .ff-hevy-set-row + .ff-hevy-set-row {
+  border-top: 1px solid color-mix(in srgb, var(--ff-border) 72%, transparent) !important;
+}
+
+.ff-page-start-workout .ff-hevy-set-row.is-done {
+  background: linear-gradient(90deg, rgba(22, 101, 52, .58), rgba(22, 101, 52, .22)) !important;
+  border-color: rgba(52, 211, 153, .28) !important;
+}
+
+.ff-page-start-workout .ff-hevy-set-row input {
+  height: 46px !important;
+  border: 1px solid color-mix(in srgb, var(--ff-border) 80%, white 6%) !important;
+  border-radius: 15px !important;
+  background: color-mix(in srgb, var(--ff-input) 70%, white 7%) !important;
+  color: var(--ff-text) !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.025) !important;
+  font-size: 1.04rem !important;
+}
+
+.ff-page-start-workout .ff-hevy-set-row input:focus {
+  border-color: var(--ff-accent-border) !important;
+  background: color-mix(in srgb, var(--ff-accent-soft) 22%, var(--ff-input)) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ff-accent-soft) 58%, transparent) !important;
+}
+
+.ff-page-start-workout .ff-hevy-set-check {
+  width: 42px !important;
+  height: 42px !important;
+  border: 1px solid var(--ff-border) !important;
+  border-radius: 15px !important;
+  background: color-mix(in srgb, var(--ff-surface-3) 82%, transparent) !important;
+}
+
+.ff-page-start-workout .ff-hevy-set-row.is-done .ff-hevy-set-check {
+  border-color: rgba(52, 211, 153, .34) !important;
+  background: #16a34a !important;
+}
+
+.ff-page-start-workout .ff-hevy-set-actions {
+  grid-template-columns: 1fr 1fr 1fr !important;
+  gap: 8px !important;
+  padding: 12px 0 0 !important;
+}
+
+.ff-page-start-workout .ff-hevy-set-actions button {
+  min-height: 46px !important;
+  border: 1px solid var(--ff-border) !important;
+  border-radius: 16px !important;
+  background: var(--ff-surface-2) !important;
+  font-size: .82rem !important;
+}
+
+.ff-page-start-workout .ff-hevy-options-title {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+}
+
+.ff-page-start-workout .ff-hevy-options-title strong,
+.ff-page-start-workout .ff-hevy-options-title span {
+  display: block !important;
+}
+
+.ff-page-start-workout .ff-hevy-options-title span {
+  margin-top: 4px !important;
+  color: var(--ff-muted) !important;
+  font-size: .78rem !important;
+  line-height: 1.3 !important;
+}
+
+.ff-page-start-workout .ff-hevy-options-title > button {
+  display: inline-flex !important;
+  width: 36px !important;
+  height: 36px !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1px solid var(--ff-border) !important;
+  border-radius: 13px !important;
+  background: var(--ff-surface-2) !important;
+  color: var(--ff-muted) !important;
+}
+
+.ff-page-start-workout .ff-hevy-option-actions--menu {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.ff-page-start-workout .ff-hevy-option-actions--replace {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.ff-page-start-workout .ff-replace-exercise-list {
+  display: grid !important;
+  gap: 8px !important;
+  max-height: min(46vh, 420px) !important;
+  overflow-y: auto !important;
+  padding-right: 2px !important;
+}
+
+.ff-page-start-workout .ff-replace-exercise-option {
+  display: grid !important;
+  grid-template-columns: 54px minmax(0, 1fr) !important;
+  gap: 10px !important;
+  align-items: center !important;
+  min-height: 66px !important;
+  border: 1px solid var(--ff-border) !important;
+  border-radius: 16px !important;
+  background: var(--ff-surface-2) !important;
+  padding: 8px !important;
+  text-align: left !important;
+}
+
+.ff-page-start-workout .ff-replace-exercise-option__media {
+  display: flex !important;
+  width: 54px !important;
+  height: 50px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  color: #111 !important;
+}
+
+.ff-page-start-workout .ff-replace-exercise-option__media img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+.ff-page-start-workout .ff-replace-exercise-option__content {
+  min-width: 0 !important;
+}
+
+.ff-page-start-workout .ff-replace-exercise-option__content strong,
+.ff-page-start-workout .ff-replace-exercise-option__content small {
+  display: block !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.ff-active-workout-mini-compact {
+  border: 1px solid var(--ff-border) !important;
+  border-radius: 22px !important;
+  background: rgba(10, 10, 12, .94) !important;
+  box-shadow: 0 18px 44px rgba(0,0,0,.38) !important;
+  backdrop-filter: blur(18px) !important;
+}
+
+.ff-active-workout-mini-compact__copy {
+  min-width: 0 !important;
+}
+
+.ff-active-workout-mini-compact__copy strong,
+.ff-active-workout-mini-compact__copy small {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.ff-finish-workout-panel {
+  max-height: min(92dvh, 720px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.ff-finish-workout-scroll {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+}
+
+.ff-finish-workout-panel input[type='text'] {
+  background: color-mix(in srgb, var(--ff-input) 72%, white 8%) !important;
+}
+
+@media (max-width: 640px) {
+  .ff-page-start-workout .ff-forge-active-hero {
+    margin-inline: -2px !important;
+    padding: 12px !important;
+  }
+
+  .ff-page-start-workout .ff-forge-active-hero__finish {
+    min-width: 92px !important;
+    padding-inline: 12px !important;
+  }
+
+  .ff-page-start-workout .ff-forge-active-hero__metrics > div {
+    padding: 9px 8px !important;
+  }
+
+  .ff-page-start-workout .ff-forge-active-hero__metrics strong {
+    font-size: .95rem !important;
+  }
+
+  .ff-page-start-workout .ff-forge-exercise-strip__item {
+    min-width: 205px !important;
+  }
+
+  .ff-page-start-workout .ff-hevy-active-exercise {
+    padding: 12px !important;
+  }
+
+  .ff-page-start-workout .ff-hevy-set-head {
+    font-size: .68rem !important;
+  }
+
+  .ff-page-start-workout .ff-hevy-set-prev {
+    font-size: .82rem !important;
+  }
+
+  .ff-page-start-workout .ff-hevy-set-actions {
+    grid-template-columns: 1fr !important;
+  }
+
+  .ff-page-start-workout .ff-mobile-workout-action-bar {
+    z-index: 120 !important;
+  }
+
+  .ff-page-start-workout .ff-mobile-workout-action-bar > div {
+    max-width: 100% !important;
+  }
+
+  .ff-page-start-workout .ff-mobile-workout-action-bar__finish {
+    min-width: 118px !important;
+    background: var(--ff-accent) !important;
+    font-size: .82rem !important;
+  }
+
+  .ff-finish-workout-modal {
+    z-index: 160 !important;
+  }
+
+  .ff-finish-workout-panel .sticky.bottom-0 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .ff-page-start-workout .ff-forge-exercise-strip__scroller {
+    scrollbar-width: thin !important;
+  }
+
+  .ff-page-start-workout .ff-forge-exercise-strip__scroller::-webkit-scrollbar {
+    display: block !important;
+    height: 8px !important;
+  }
+
+  .ff-page-start-workout .ff-hevy-set-table {
+    overflow-x: visible !important;
+  }
+}
