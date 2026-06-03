@@ -66,6 +66,9 @@ export default function ActiveExerciseCard({
   const isCurrent = selectedExercise?.id === sessionExercise.id || focusExercise?.id === sessionExercise.id
   const media = getSessionExerciseMedia(sessionExercise)
   const previousLabel = getPreviousLabel(performance)
+  const previousWeight = performance?.lastSet?.weight || ''
+  const previousReps = performance?.lastSet?.reps || ''
+  const hasPreviousValues = Boolean(previousWeight || previousReps)
   const isOptionsOpen = replaceExerciseId === sessionExercise.id
   const [replaceMode, setReplaceMode] = useState(false)
 
@@ -76,6 +79,24 @@ export default function ActiveExerciseCard({
   function closeExerciseOptions() {
     setReplaceMode(false)
     onCloseOptions?.()
+  }
+
+  function applyPreviousSet(setId) {
+    if (!hasPreviousValues) return
+
+    if (previousWeight !== '') {
+      onUpdateSet(sessionExercise.id, setId, 'weight', String(previousWeight))
+    }
+
+    if (previousReps !== '') {
+      onUpdateSet(sessionExercise.id, setId, 'reps', String(previousReps))
+    }
+
+    window.setTimeout(() => {
+      const firstInput = document.querySelector(`[data-set-row-id="${setId}"] input`)
+      firstInput?.focus?.()
+      firstInput?.select?.()
+    }, 60)
   }
 
   const exerciseOptionsModal = isOptionsOpen && typeof document !== 'undefined'
@@ -216,6 +237,7 @@ export default function ActiveExerciseCard({
         >
           <span>{getExerciseName(sessionExercise)}</span>
           <small>{getExerciseSubtitle(sessionExercise)}</small>
+          {sessionExercise.skipped && <em className="ff-hevy-active-exercise__skipped-badge">Pulado</em>}
         </button>
 
         <div className="ff-hevy-active-exercise__tools">
@@ -274,7 +296,7 @@ export default function ActiveExerciseCard({
           const isCompleted = Boolean(set.completed)
 
           return (
-            <div key={set.id} className={`ff-hevy-set-row ${isCompleted ? 'is-done' : ''} ${isWarmup ? 'is-warmup' : ''}`}>
+            <div key={set.id} data-set-row-id={set.id} className={`ff-hevy-set-row ${isCompleted ? 'is-done' : ''} ${isWarmup ? 'is-warmup' : ''}`}>
               <button
                 type="button"
                 onClick={() => onToggleSetWarmup(sessionExercise.id, set.id)}
@@ -284,7 +306,16 @@ export default function ActiveExerciseCard({
                 {isWarmup ? 'A' : set.setNumber}
               </button>
 
-              <span className="ff-hevy-set-prev">{previousLabel}</span>
+              <button
+                type="button"
+                className="ff-hevy-set-prev"
+                onClick={() => applyPreviousSet(set.id)}
+                disabled={!hasPreviousValues}
+                title={hasPreviousValues ? 'Usar carga e reps anteriores' : 'Sem registro anterior'}
+                aria-label={hasPreviousValues ? 'Usar carga e repetições anteriores nesta série' : 'Sem registro anterior'}
+              >
+                {previousLabel}
+              </button>
 
               <input
                 type="number"
