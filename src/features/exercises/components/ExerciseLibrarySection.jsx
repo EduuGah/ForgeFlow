@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import {
+  CalendarDays,
   Dumbbell,
   Edit3,
   ExternalLink,
@@ -8,6 +9,7 @@ import {
   Search,
   Sparkles,
   Star,
+  Trophy,
   Trash2,
   X,
 } from 'lucide-react'
@@ -17,22 +19,38 @@ import Badge from '../../../components/ui/Badge'
 import EmptyState from '../../../components/ui/EmptyState'
 import { LOAD_MORE_COUNT, normalizeList } from '../exerciseLibraryUtils'
 
+function ExerciseMetricPill({ label, value, icon: Icon, accent = false }) {
+  return (
+    <span className={accent ? 'ff-exercise-metric-pill is-accent' : 'ff-exercise-metric-pill'}>
+      {Icon && <Icon size={13} />}
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </span>
+  )
+}
+
 function ExerciseListRow({
   exercise,
   isExpanded,
   media,
   secondaryMuscles,
+  stats,
   handleToggleExercise,
   handleToggleFavorite,
   handleEdit,
   handleDelete,
 }) {
+  const lastLabel = stats?.lastPerformedAt || 'Nunca feito'
+  const lastSetLabel = stats?.lastSetLabel || 'Sem carga'
+  const prCount = stats?.prCount || 0
+  const bestWeight = stats?.bestWeight ? `${stats.bestWeight}kg` : '—'
+
   return (
-    <article className="ff-exercise-list-row overflow-hidden border-b border-[var(--ff-border)] bg-transparent last:border-b-0">
-      <div className="flex items-center gap-3 px-1 py-3 sm:px-2">
+    <article className="ff-exercise-list-row ff-exercise-list-row-v2">
+      <div className="ff-exercise-row-main">
         <Link
           to={`/exercises/${exercise.id}`}
-          className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-border)] bg-white sm:h-18 sm:w-18"
+          className="ff-exercise-row-media"
           aria-label={`Abrir ${exercise.name}`}
         >
           {media ? (
@@ -44,18 +62,16 @@ function ExerciseListRow({
               decoding="async"
             />
           ) : (
-            <Dumbbell size={26} className="text-zinc-900" />
+            <Dumbbell size={28} className="text-zinc-900" />
           )}
         </Link>
 
-        <Link to={`/exercises/${exercise.id}`} className="min-w-0 flex-1 py-1">
-          <div className="flex min-w-0 items-center gap-2">
-            <h3 className="truncate text-base font-black leading-tight text-[var(--ff-text)]">
-              {exercise.name}
-            </h3>
+        <Link to={`/exercises/${exercise.id}`} className="ff-exercise-row-content">
+          <div className="ff-exercise-row-titleline">
+            <h3>{exercise.name}</h3>
 
             {exercise.source === 'ForgeFlow' && (
-              <span className="hidden shrink-0 items-center gap-1 rounded-full bg-[var(--ff-accent-soft)] px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-[var(--ff-accent-text)] sm:inline-flex">
+              <span className="ff-exercise-source-chip">
                 <Sparkles size={10} />
                 Padrão
               </span>
@@ -63,42 +79,39 @@ function ExerciseListRow({
           </div>
 
           {exercise.originalName && exercise.originalName !== exercise.name && (
-            <p className="mt-0.5 truncate text-xs text-[var(--ff-muted-2)]">
+            <p className="ff-exercise-row-original">
               {exercise.originalName}
             </p>
           )}
 
-          <p className="mt-1 truncate text-sm text-[var(--ff-muted)]">
+          <p className="ff-exercise-row-subtitle">
             {exercise.normalizedGroup} · {exercise.subgroup} · {exercise.normalizedEquipment}
           </p>
 
-          <div className="mt-2 flex min-w-0 gap-1.5 overflow-hidden">
-            <span className="shrink-0 rounded-full border border-[var(--ff-border)] px-2.5 py-1 text-[11px] font-bold text-[var(--ff-muted)]">
-              {exercise.normalizedGroup}
-            </span>
+          <div className="ff-exercise-row-tags">
+            <span>{exercise.normalizedGroup}</span>
+            <span>{exercise.normalizedEquipment}</span>
             {media && (
-              <span className="hidden shrink-0 items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-300 sm:inline-flex">
+              <span className="is-media">
                 <ImageIcon size={12} />
                 Mídia
               </span>
             )}
-            {exercise.isFavorite && (
-              <span className="shrink-0 rounded-full border border-yellow-500/20 bg-yellow-500/10 px-2.5 py-1 text-[11px] font-bold text-yellow-300">
-                Favorito
-              </span>
-            )}
+            {exercise.isFavorite && <span className="is-favorite">Favorito</span>}
+          </div>
+
+          <div className="ff-exercise-row-metrics">
+            <ExerciseMetricPill label="Último" value={lastSetLabel} icon={CalendarDays} />
+            <ExerciseMetricPill label="Maior peso" value={bestWeight} icon={Dumbbell} />
+            <ExerciseMetricPill label="PRs" value={prCount} icon={Trophy} accent={prCount > 0} />
           </div>
         </Link>
 
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="ff-exercise-row-actions">
           <button
             type="button"
             onClick={(event) => handleToggleFavorite(exercise, event)}
-            className={
-              exercise.isFavorite
-                ? 'flex h-10 w-10 items-center justify-center rounded-2xl border border-yellow-500/30 bg-yellow-500/10 text-yellow-300'
-                : 'flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface)] text-[var(--ff-muted)]'
-            }
+            className={exercise.isFavorite ? 'ff-exercise-icon-button is-favorite' : 'ff-exercise-icon-button'}
             aria-label={exercise.isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
           >
             <Star size={18} fill={exercise.isFavorite ? 'currentColor' : 'none'} />
@@ -107,7 +120,7 @@ function ExerciseListRow({
           <button
             type="button"
             onClick={() => handleToggleExercise(exercise.id)}
-            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface)] text-[var(--ff-muted)]"
+            className="ff-exercise-icon-button"
             aria-label="Mais opções"
           >
             <MoreHorizontal size={20} />
@@ -116,31 +129,31 @@ function ExerciseListRow({
       </div>
 
       {isExpanded && (
-        <div className="px-1 pb-4 sm:px-2">
-          <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface)] p-3">
+        <div className="ff-exercise-row-expanded">
+          <div className="ff-exercise-row-expanded-card">
             <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
-              <div className="rounded-2xl bg-black/30 p-3">
-                <p className="text-xs text-[var(--ff-muted)]">Grupo</p>
-                <p className="mt-1 truncate font-bold">{exercise.normalizedGroup}</p>
+              <div>
+                <p>Grupo</p>
+                <strong>{exercise.normalizedGroup}</strong>
               </div>
-              <div className="rounded-2xl bg-black/30 p-3">
-                <p className="text-xs text-[var(--ff-muted)]">Músculo</p>
-                <p className="mt-1 truncate font-bold">{exercise.subgroup}</p>
+              <div>
+                <p>Músculo</p>
+                <strong>{exercise.subgroup}</strong>
               </div>
-              <div className="rounded-2xl bg-black/30 p-3">
-                <p className="text-xs text-[var(--ff-muted)]">Equipamento</p>
-                <p className="mt-1 truncate font-bold">{exercise.normalizedEquipment}</p>
+              <div>
+                <p>Equipamento</p>
+                <strong>{exercise.normalizedEquipment}</strong>
               </div>
-              <div className="rounded-2xl bg-black/30 p-3">
-                <p className="text-xs text-[var(--ff-muted)]">Secundários</p>
-                <p className="mt-1 truncate font-bold">{secondaryMuscles.length ? secondaryMuscles.join(', ') : '-'}</p>
+              <div>
+                <p>Último treino</p>
+                <strong>{lastLabel}</strong>
               </div>
             </div>
 
-            <div className="mt-3 grid grid-cols-3 gap-2">
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
               <Link
                 to={`/exercises/${exercise.id}`}
-                className="flex h-11 items-center justify-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-black/30 text-sm font-black text-[var(--ff-text)]"
+                className="ff-exercise-expanded-action"
               >
                 <ExternalLink size={16} />
                 Detalhes
@@ -148,7 +161,7 @@ function ExerciseListRow({
               <button
                 type="button"
                 onClick={() => handleEdit(exercise)}
-                className="flex h-11 items-center justify-center gap-2 rounded-2xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)] text-sm font-black text-[var(--ff-accent-text)]"
+                className="ff-exercise-expanded-action is-edit"
               >
                 <Edit3 size={16} />
                 Editar
@@ -156,12 +169,18 @@ function ExerciseListRow({
               <button
                 type="button"
                 onClick={() => handleDelete(exercise.id)}
-                className="flex h-11 items-center justify-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 text-sm font-black text-red-300"
+                className="ff-exercise-expanded-action is-delete"
               >
                 <Trash2 size={16} />
                 Excluir
               </button>
             </div>
+
+            {secondaryMuscles.length > 0 && (
+              <p className="mt-3 text-xs leading-relaxed text-[var(--ff-muted)]">
+                Secundários: <strong className="text-[var(--ff-text-soft)]">{secondaryMuscles.join(', ')}</strong>
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -179,6 +198,7 @@ function ExerciseLibrarySection({
   handleEdit,
   handleDelete,
   getExerciseMedia,
+  exerciseStatsMap,
   stats,
   groupFilter,
   setGroupFilter,
@@ -197,22 +217,22 @@ function ExerciseLibrarySection({
   return (
     <main className="order-1 xl:order-2">
       <section className="ff-exercise-list-shell rounded-[28px] border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 sm:p-4">
-        <div className="px-1 pb-3 sm:px-2">
-          <div className="flex items-start justify-between gap-3">
+        <div className="ff-exercise-library-head">
+          <div className="ff-exercise-library-titleline">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="truncate text-2xl font-black tracking-[-0.04em]">Biblioteca</h2>
+                <h2>Biblioteca de exercícios</h2>
                 <Badge variant="purple">{filteredExercises.length}</Badge>
               </div>
-              <p className="mt-1 text-sm text-[var(--ff-muted)]">
-                {filteredExercises.length} exercícios encontrados · exibindo {displayedExercises.length} · {syncLabel}
+              <p>
+                {filteredExercises.length} encontrados · {displayedExercises.length} visíveis · {syncLabel}
               </p>
             </div>
 
             <button
               type="button"
               onClick={openCreateModal}
-              className="hidden h-11 shrink-0 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-4 text-sm font-black text-white sm:inline-flex"
+              className="ff-exercise-add-button"
             >
               <Dumbbell size={17} />
               Adicionar
@@ -223,7 +243,7 @@ function ExerciseLibrarySection({
             <Search size={18} />
             <input
               type="search"
-              placeholder="Buscar exercício..."
+              placeholder="Buscar por nome, músculo ou equipamento..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               className="min-w-0 flex-1 border-0 bg-transparent p-0 text-base text-[var(--ff-text)] outline-none placeholder:text-[var(--ff-muted-2)]"
@@ -239,14 +259,14 @@ function ExerciseLibrarySection({
             <button
               type="button"
               onClick={clearFilters}
-              className={!hasActiveFilters ? 'shrink-0 rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-4 py-2 text-sm font-black text-[var(--ff-accent-text)]' : 'shrink-0 rounded-full border border-[var(--ff-border)] bg-black/30 px-4 py-2 text-sm font-bold text-[var(--ff-muted)]'}
+              className={!hasActiveFilters ? 'is-active' : ''}
             >
               Todos
             </button>
             <button
               type="button"
               onClick={() => setShowOnlyFavorites((current) => !current)}
-              className={showOnlyFavorites ? 'shrink-0 rounded-full border border-yellow-500/30 bg-yellow-500/10 px-4 py-2 text-sm font-black text-yellow-300' : 'shrink-0 rounded-full border border-[var(--ff-border)] bg-black/30 px-4 py-2 text-sm font-bold text-[var(--ff-muted)]'}
+              className={showOnlyFavorites ? 'is-favorite-active' : ''}
             >
               Favoritos
             </button>
@@ -255,7 +275,7 @@ function ExerciseLibrarySection({
                 key={group.name}
                 type="button"
                 onClick={() => setGroupFilter(groupFilter === group.name ? '' : group.name)}
-                className={groupFilter === group.name ? 'shrink-0 rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-4 py-2 text-sm font-black text-[var(--ff-accent-text)]' : 'shrink-0 rounded-full border border-[var(--ff-border)] bg-black/30 px-4 py-2 text-sm font-bold text-[var(--ff-muted)]'}
+                className={groupFilter === group.name ? 'is-active' : ''}
               >
                 {group.name}
               </button>
@@ -270,11 +290,12 @@ function ExerciseLibrarySection({
         )}
 
         {displayedExercises.length > 0 && (
-          <div className="ff-exercise-native-list divide-y divide-[var(--ff-border)] overflow-visible rounded-3xl bg-black/20">
+          <div className="ff-exercise-native-list">
             {displayedExercises.map((exercise) => {
               const isExpanded = expandedExerciseId === exercise.id
               const media = getExerciseMedia(exercise)
               const secondaryMuscles = normalizeList(exercise.secondaryMuscles)
+              const rowStats = exerciseStatsMap?.get(exercise.id) || exerciseStatsMap?.get(exercise.name) || null
 
               return (
                 <ExerciseListRow
@@ -283,6 +304,7 @@ function ExerciseLibrarySection({
                   isExpanded={isExpanded}
                   media={media}
                   secondaryMuscles={secondaryMuscles}
+                  stats={rowStats}
                   handleToggleExercise={handleToggleExercise}
                   handleToggleFavorite={handleToggleFavorite}
                   handleEdit={handleEdit}

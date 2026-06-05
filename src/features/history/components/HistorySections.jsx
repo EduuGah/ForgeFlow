@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import {
   CalendarDays,
   ArrowLeft,
@@ -6,9 +8,11 @@ import {
   MapPin,
   Medal,
   Search,
+  ExternalLink,
   Trash2,
   Trophy,
   X,
+  ChevronDown,
 } from 'lucide-react'
 
 import Card from '../../../components/ui/Card'
@@ -26,7 +30,7 @@ import {
   isValidWorkingSet,
 } from '../historyUtils'
 import HistoryStatCard from './HistoryStatCard'
-import { formatLocationLabel, getMapsUrl } from '../../../services/geolocationService'
+import { formatLocationCoordinates, formatLocationLabel, getMapsUrl } from '../../../services/geolocationService'
 
 export function HistorySummaryCards({ historyCount, summary }) {
   return (
@@ -149,77 +153,201 @@ function HistoryFilters({
   )
 }
 
+function getSetPrLabels(set) {
+  const labels = []
+
+  if (set?.isWeightPR) labels.push('Peso')
+  if (set?.isVolumePR) labels.push('Volume')
+  if (set?.isPR && labels.length === 0) labels.push('Recorde')
+
+  return labels
+}
+
+function getExercisePrSummary(sets = []) {
+  return sets.reduce(
+    (summary, set) => {
+      const labels = getSetPrLabels(set)
+
+      if (labels.length === 0) return summary
+
+      summary.total += labels.length
+      if (labels.includes('Peso')) summary.weight += 1
+      if (labels.includes('Volume')) summary.volume += 1
+      if (labels.includes('Recorde')) summary.generic += 1
+
+      return summary
+    },
+    { total: 0, weight: 0, volume: 0, generic: 0 }
+  )
+}
+
 function HistoryExerciseDetails({ exercise, exerciseIndex }) {
+  const [isExpanded, setIsExpanded] = useState(true)
   const exerciseVolume = getExerciseVolume(exercise)
   const validSets = (exercise.sets || []).filter(isValidWorkingSet)
-  const firstSets = validSets.slice(0, 3)
+  const prSummary = getExercisePrSummary(validSets)
+  const exerciseName = exercise.exercise?.name || 'Exercício'
+  const muscleGroup = exercise.exercise?.muscleGroup || 'Grupo muscular'
+  const equipment = exercise.exercise?.equipment || 'Equipamento'
 
   return (
-    <div className="ff-history-exercise-row">
-      <div className="ff-history-exercise-row__media">
-        {exercise.exercise?.mediaUrl ? (
-          <img
-            src={exercise.exercise.mediaUrl}
-            alt={exercise.exercise.name}
-            loading="lazy"
-            decoding="async"
-          />
-        ) : (
-          <Dumbbell size={22} />
-        )}
+    <article className={`ff-history-exercise-card ${isExpanded ? 'is-expanded' : 'is-collapsed'}`}>
+      <button
+        type="button"
+        className="ff-history-exercise-card__toggle"
+        onClick={() => setIsExpanded((current) => !current)}
+        aria-expanded={isExpanded}
+        aria-label={`${isExpanded ? 'Minimizar' : 'Expandir'} ${exerciseName}`}
+      >
+        <span className="ff-history-exercise-card__header">
+          <span className="ff-history-exercise-card__media">
+            {exercise.exercise?.mediaUrl ? (
+              <img
+                src={exercise.exercise.mediaUrl}
+                alt={exerciseName}
+                loading="lazy"
+                decoding="async"
+              />
+            ) : (
+              <Dumbbell size={22} />
+            )}
+          </span>
+
+          <span className="ff-history-exercise-card__main">
+            <span className="ff-history-exercise-card__eyebrow">
+              <span>Exercício {exerciseIndex + 1}</span>
+              {prSummary.total > 0 && <em>{prSummary.total} PR</em>}
+            </span>
+            <strong>{exerciseName}</strong>
+            <small>{muscleGroup} • {equipment}</small>
+          </span>
+
+          <span className="ff-history-exercise-card__chevron" aria-hidden="true">
+            <ChevronDown size={18} />
+          </span>
+        </span>
+      </button>
+
+      <div className="ff-history-exercise-card__stats">
+        <span><small>Séries</small><strong>{validSets.length}</strong></span>
+        <span><small>Volume</small><strong>{formatVolume(exerciseVolume)}</strong></span>
+        {prSummary.weight > 0 && <span className="is-pr"><small>Peso PR</small><strong>{prSummary.weight}</strong></span>}
+        {prSummary.volume > 0 && <span className="is-pr"><small>Volume PR</small><strong>{prSummary.volume}</strong></span>}
+        {prSummary.generic > 0 && <span className="is-pr"><small>Recorde</small><strong>{prSummary.generic}</strong></span>}
       </div>
 
-      <div className="ff-history-exercise-row__body">
-        <div className="ff-history-exercise-row__title">
-          <span>{exerciseIndex + 1}</span>
-          <strong>{exercise.exercise.name}</strong>
-        </div>
-        <p>{exercise.exercise.muscleGroup} • {exercise.exercise.equipment}</p>
-        <div className="ff-history-exercise-row__chips">
-          <span>{validSets.length} séries</span>
-          <span>{formatVolume(exerciseVolume)}</span>
-        </div>
-
-        <div className="ff-history-mini-sets">
-          {firstSets.map((set) => {
+      {isExpanded ? (
+        <div className="ff-history-set-list" aria-label={`Séries de ${exerciseName}`}>
+          {validSets.map((set) => {
             const weight = Number(set.weight) || 0
             const reps = Number(set.reps) || 0
+            const prLabels = getSetPrLabels(set)
 
             return (
-              <div key={set.id}>
-                <span>{set.setNumber}</span>
-                <strong>{weight || '-'}kg</strong>
-                <strong>{reps || '-'}</strong>
-                {(set.isPR || set.isWeightPR || set.isVolumePR) && <em>PR</em>}
+              <div key={set.id} className={`ff-history-set-row ${prLabels.length > 0 ? 'has-pr' : ''}`}>
+                <span className="ff-history-set-row__index">Série {set.setNumber}</span>
+                <span><small>Peso</small><strong>{weight || '-'}kg</strong></span>
+                <span><small>Reps</small><strong>{reps || '-'}</strong></span>
+                <span className="ff-history-set-row__pr">
+                  {prLabels.length > 0 ? (
+                    prLabels.map((label) => <em key={label}>{label} PR</em>)
+                  ) : (
+                    <small>Sem PR</small>
+                  )}
+                </span>
               </div>
             )
           })}
-          {validSets.length > firstSets.length && <small>+{validSets.length - firstSets.length} séries</small>}
         </div>
-      </div>
-    </div>
+      ) : (
+        <div className="ff-history-exercise-card__collapsed-note">
+          Toque para ver as séries deste exercício.
+        </div>
+      )}
+    </article>
   )
 }
 
 function HistoryLocationDetails({ location }) {
   const mapsUrl = getMapsUrl(location)
+  const coordinates = formatLocationCoordinates(location)
+  const label = formatLocationLabel(location)
+  const latitude = Number(location?.latitude)
+  const longitude = Number(location?.longitude)
+  const hasCoordinates = Number.isFinite(latitude) && Number.isFinite(longitude)
+  const mapPreviewUrl = hasCoordinates
+    ? `https://maps.google.com/maps?q=${latitude},${longitude}&z=16&output=embed`
+    : ''
 
   if (!mapsUrl) {
     return (
-      <div className="mt-5 rounded-3xl border border-zinc-800 bg-zinc-950 p-5">
-        <h3 className="flex items-center gap-2 font-bold text-zinc-300"><MapPin size={17} /> Local do treino</h3>
-        <p className="mt-2 text-sm text-zinc-500">Localização não salva para este treino.</p>
-      </div>
+      <section className="ff-history-location-card ff-history-location-card--empty">
+        <div className="ff-history-section-heading ff-history-section-heading--compact">
+          <span><MapPin size={18} /></span>
+          <div>
+            <p>Local do treino</p>
+            <h2>Sem localização salva</h2>
+          </div>
+        </div>
+        <div className="ff-history-location-empty-state">
+          <MapPin size={22} />
+          <p>Esse treino foi finalizado sem salvar um ponto no mapa.</p>
+        </div>
+      </section>
     )
   }
 
   return (
-    <div className="mt-5 rounded-3xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 p-5">
-      <h3 className="flex items-center gap-2 font-bold text-[var(--ff-accent-text)]"><MapPin size={17} /> Local do treino</h3>
-      <p className="mt-2 text-sm text-[var(--ff-text-soft)]">Local salvo: {formatLocationLabel(location)}</p>
-      {location?.accuracy && <p className="mt-1 text-xs text-[var(--ff-muted)]">Precisão aproximada: {Math.round(location.accuracy)}m</p>}
-      <a className="mt-3 inline-flex rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] px-4 py-2 text-sm font-black text-[var(--ff-accent-text)]" href={mapsUrl} target="_blank" rel="noreferrer">Abrir no mapa</a>
-    </div>
+    <section className="ff-history-location-card">
+      <div className="ff-history-section-heading ff-history-section-heading--compact">
+        <span><MapPin size={18} /></span>
+        <div>
+          <p>Local do treino</p>
+          <h2>{label}</h2>
+        </div>
+      </div>
+
+      <div className="ff-history-location-layout">
+        <div className="ff-history-map-preview" aria-label="Prévia visual do local do treino">
+          {mapPreviewUrl && (
+            <iframe
+              title="Prévia do local do treino"
+              src={mapPreviewUrl}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          )}
+          <div className="ff-history-map-preview__overlay">
+            <span><MapPin size={18} /></span>
+            <strong>Prévia do mapa</strong>
+            <small>Toque no botão para abrir a rota completa</small>
+          </div>
+        </div>
+
+        <div className="ff-history-location-info-card">
+          <div>
+            <small>Nome salvo</small>
+            <strong>{label}</strong>
+          </div>
+          {coordinates && (
+            <div>
+              <small>Coordenadas</small>
+              <strong>{coordinates}</strong>
+            </div>
+          )}
+          {location?.accuracy && (
+            <div>
+              <small>Precisão aproximada</small>
+              <strong>{Math.round(location.accuracy)}m</strong>
+            </div>
+          )}
+          <a className="ff-history-location-link" href={mapsUrl} target="_blank" rel="noreferrer">
+            Abrir no mapa
+            <ExternalLink size={15} />
+          </a>
+        </div>
+      </div>
+    </section>
   )
 }
 
@@ -324,7 +452,29 @@ export function HistorySessionDetailView({
       </section>
 
       <section className="ff-history-detail-section">
-        <h2>Exercícios</h2>
+        <div className="ff-history-section-heading">
+          <span><Dumbbell size={19} /></span>
+          <div>
+            <p>Resumo do treino</p>
+            <h2>Exercícios realizados</h2>
+            <small>{session.exercises.length} exercícios • {meta?.completedSets?.length || 0} séries concluídas • {sessionPRs.length} PRs</small>
+          </div>
+        </div>
+
+        {sessionPRs.length > 0 && (
+          <div className="ff-history-pr-summary-card">
+            <div>
+              <Trophy size={18} />
+              <strong>{sessionPRs.length} recorde{sessionPRs.length > 1 ? 's' : ''} neste treino</strong>
+            </div>
+            <p>
+              {sessionPRs.filter((set) => set.isWeightPR).length > 0 && <span>Peso ×{sessionPRs.filter((set) => set.isWeightPR).length}</span>}
+              {sessionPRs.filter((set) => set.isVolumePR).length > 0 && <span>Volume ×{sessionPRs.filter((set) => set.isVolumePR).length}</span>}
+              {sessionPRs.filter((set) => set.isPR && !set.isWeightPR && !set.isVolumePR).length > 0 && <span>Outros ×{sessionPRs.filter((set) => set.isPR && !set.isWeightPR && !set.isVolumePR).length}</span>}
+            </p>
+          </div>
+        )}
+
         <div className="ff-history-exercise-list">
           {session.exercises.map((exercise, exerciseIndex) => (
             <HistoryExerciseDetails
@@ -382,11 +532,11 @@ export function HistoryListSection({
   setVisibleCount,
 }) {
   return (
-    <section className="rounded-[28px] border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 sm:p-5">
+    <section className="ff-history-list-panel">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h2 className="text-2xl font-black">Treinos finalizados</h2>
-          <p className="mt-1 text-sm text-zinc-500">
+          <h2 className="ff-history-list-panel__title">Treinos finalizados</h2>
+          <p className="ff-history-list-panel__subtitle">
             {filteredHistory.length} de {history.length} registros encontrados
           </p>
         </div>
