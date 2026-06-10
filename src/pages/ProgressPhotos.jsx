@@ -330,7 +330,7 @@ function ProgressPhotos() {
         description="Galeria e comparação corporal em cards próprios para celular."
         metrics={[
           { label: 'Fotos', value: photos.length },
-          { label: 'Ângulos', value: stats.anglesCount },
+          { label: 'Ângulos', value: stats.angles },
           { label: 'Fonte', value: source === 'database' ? 'API' : 'Local' },
         ]}
       />

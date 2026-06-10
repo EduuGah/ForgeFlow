@@ -3,6 +3,7 @@ import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import ConfirmModal from '../components/ui/ConfirmModal'
 import Toast from '../components/ui/Toast'
 import AppPageIntro from '../components/app/AppPageIntro'
+import WorkoutShareStudio from '../components/workout/WorkoutShareStudio'
 
 import { useAuth } from '../context/AuthContext'
 import { apiFetch } from '../services/api'
@@ -32,8 +33,10 @@ function History() {
   const [history, setHistory] = useState([])
   const [expandedSessionId, setExpandedSessionId] = useState(null)
   const [selectedSessionId, setSelectedSessionId] = useState(null)
+  const [shareSessionId, setShareSessionId] = useState(null)
   const [search, setSearch] = useState('')
   const deferredSearch = useDeferredValue(search)
+  const [workoutFilter, setWorkoutFilter] = useState('')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_SESSIONS)
@@ -108,7 +111,7 @@ function History() {
       setExpandedSessionId(null)
       setSelectedSessionId(null)
     })
-  }, [deferredSearch, startDate, endDate])
+  }, [deferredSearch, workoutFilter, startDate, endDate])
 
   const historyMetaMap = useMemo(() => {
     const map = new Map()
@@ -125,9 +128,14 @@ function History() {
 
     return history.filter((session) => {
       const meta = historyMetaMap.get(session.id)
+      const normalizedWorkoutName = normalizeText(session.workoutName || session.name || '')
 
       const matchesSearch = normalizedSearch
         ? meta?.searchableText?.includes(normalizedSearch)
+        : true
+
+      const matchesWorkout = workoutFilter
+        ? normalizedWorkoutName === workoutFilter
         : true
 
       let matchesDate = true
@@ -142,19 +150,39 @@ function History() {
         matchesDate = matchesDate && meta.finishedDate <= end
       }
 
-      return matchesSearch && matchesDate
+      return matchesSearch && matchesWorkout && matchesDate
     })
-  }, [history, historyMetaMap, deferredSearch, startDate, endDate])
+  }, [history, historyMetaMap, deferredSearch, workoutFilter, startDate, endDate])
 
   const visibleHistory = useMemo(() => {
     return filteredHistory.slice(0, visibleCount)
   }, [filteredHistory, visibleCount])
+
+  const workoutFilterOptions = useMemo(() => {
+    const map = new Map()
+
+    history.forEach((session) => {
+      const label = session.workoutName || session.name || 'Treino'
+      const key = normalizeText(label)
+      if (!key || map.has(key)) return
+      map.set(key, label)
+    })
+
+    return Array.from(map.entries())
+      .map(([value, label]) => ({ value, label }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'))
+  }, [history])
 
 
   const selectedSession = useMemo(() => {
     if (!selectedSessionId) return null
     return history.find((session) => session.id === selectedSessionId) || null
   }, [history, selectedSessionId])
+
+  const shareSession = useMemo(() => {
+    if (!shareSessionId) return null
+    return history.find((session) => session.id === shareSessionId) || null
+  }, [history, shareSessionId])
 
   const summary = useMemo(() => {
     let totalVolume = 0
@@ -181,6 +209,10 @@ function History() {
     setSelectedSessionId(id)
   }
 
+  function handleShareSession(id) {
+    setShareSessionId(id)
+  }
+
   function showToast(type, title, message = '') {
     setToast({
       type,
@@ -195,6 +227,7 @@ function History() {
 
   function clearFilters() {
     setSearch('')
+    setWorkoutFilter('')
     setStartDate('')
     setEndDate('')
   }
@@ -271,7 +304,7 @@ function History() {
     })
   }
 
-  const hasActiveFilters = Boolean(search || startDate || endDate)
+  const hasActiveFilters = Boolean(search || workoutFilter || startDate || endDate)
 
   if (selectedSession) {
     return (
@@ -280,7 +313,15 @@ function History() {
           session={selectedSession}
           meta={historyMetaMap.get(selectedSession.id)}
           onBack={() => setSelectedSessionId(null)}
+          onShareSession={handleShareSession}
           onDeleteSession={handleDeleteSession}
+        />
+
+        <WorkoutShareStudio
+          open={Boolean(shareSession)}
+          session={shareSession}
+          meta={shareSession ? historyMetaMap.get(shareSession.id) : null}
+          onClose={() => setShareSessionId(null)}
         />
 
         <ConfirmModal
@@ -335,6 +376,9 @@ function History() {
           loading={loading}
           search={search}
           setSearch={setSearch}
+          workoutFilter={workoutFilter}
+          setWorkoutFilter={setWorkoutFilter}
+          workoutFilterOptions={workoutFilterOptions}
           startDate={startDate}
           setStartDate={setStartDate}
           endDate={endDate}
@@ -345,6 +389,7 @@ function History() {
           clearFilters={clearFilters}
           handleClearHistory={handleClearHistory}
           handleToggleSession={handleToggleSession}
+          handleShareSession={handleShareSession}
           handleDeleteSession={handleDeleteSession}
           visibleCount={visibleCount}
           setVisibleCount={setVisibleCount}
@@ -369,6 +414,13 @@ function History() {
         title={toast?.title}
         message={toast?.message}
         onClose={() => setToast(null)}
+      />
+
+      <WorkoutShareStudio
+        open={Boolean(shareSession)}
+        session={shareSession}
+        meta={shareSession ? historyMetaMap.get(shareSession.id) : null}
+        onClose={() => setShareSessionId(null)}
       />
     </div>
   )

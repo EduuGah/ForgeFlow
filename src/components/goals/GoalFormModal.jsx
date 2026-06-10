@@ -237,9 +237,9 @@ function GoalFormModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] shadow-2xl">
-        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[var(--ff-border)] bg-[var(--ff-card)] p-5">
+    <div className="ff-goal-modal fixed inset-0 z-[80] flex items-end justify-center bg-black/70 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="ff-goal-modal__panel flex max-h-[100dvh] w-full max-w-4xl flex-col overflow-hidden rounded-t-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] shadow-2xl sm:max-h-[92vh] sm:rounded-[2rem]">
+        <div className="ff-goal-modal__header sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[var(--ff-border)] bg-[var(--ff-card)] p-5">
           <div>
             <p className="text-xs font-black uppercase tracking-wide text-[var(--ff-accent-text)]">
               {goal ? 'Editar meta' : 'Nova meta'}
@@ -264,7 +264,7 @@ function GoalFormModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5">
+        <form onSubmit={handleSubmit} className="ff-goal-modal__form min-h-0 flex-1 overflow-y-auto p-5">
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_300px]">
             <div className="space-y-5">
               <div>
@@ -462,7 +462,7 @@ function GoalFormModal({
             </aside>
           </div>
 
-          <div className="mt-6 grid grid-cols-1 gap-3 sm:flex sm:justify-end">
+          <div className="ff-goal-modal__footer mt-6 grid grid-cols-1 gap-3 sm:flex sm:justify-end">
             <Button
               type="button"
               variant="secondary"

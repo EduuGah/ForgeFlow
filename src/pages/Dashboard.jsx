@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Play } from 'lucide-react'
+import { Activity, Bell, CalendarCheck, Flame, Play, Trophy } from 'lucide-react'
 import DashboardTopSection from '../features/dashboard/components/DashboardTopSection'
 import DashboardOverviewSection from '../features/dashboard/components/DashboardOverviewSection'
 import DashboardGoalsSection from '../features/dashboard/components/DashboardGoalsSection'
@@ -26,6 +26,67 @@ import {
 } from '../features/dashboard/dashboardUtils'
 
 import AppPageIntro from '../components/app/AppPageIntro'
+
+function DashboardCommandCenter({
+  history,
+  lastSession,
+  favoriteWorkouts,
+  consistencyStats,
+  unreadNotificationsCount,
+  mostRecoveredMuscles,
+  musclesStillRecovering,
+  formatShortDate,
+}) {
+  const nextRoutine = favoriteWorkouts[0] || null
+  const readyMuscle = mostRecoveredMuscles[0]
+  const recoveringCount = musclesStillRecovering.length
+
+  return (
+    <section className="ff-dashboard-command-center">
+      <div className="ff-dashboard-command-card is-primary">
+        <div>
+          <span><CalendarCheck size={15} /> Agora</span>
+          <h2>{nextRoutine ? nextRoutine.name : lastSession ? 'Repita ou ajuste seu ultimo treino' : 'Monte sua primeira rotina'}</h2>
+          <p>
+            {nextRoutine
+              ? 'Seu favorito mais acessivel para iniciar rapido.'
+              : lastSession
+                ? `${lastSession.workoutName} foi seu ultimo treino registrado.`
+                : 'Crie um treino simples e deixe o ForgeFlow acompanhar sua evolucao.'}
+          </p>
+        </div>
+        <Link to="/workouts">
+          <Play size={17} />
+          Treinar
+        </Link>
+      </div>
+
+      <Link to="/history" className="ff-dashboard-command-card">
+        <span><Activity size={15} /> Historico</span>
+        <strong>{history.length}</strong>
+        <small>{lastSession ? `Ultimo em ${formatShortDate(lastSession.finishedAt)}` : 'Sem treino salvo'}</small>
+      </Link>
+
+      <Link to="/progress" className="ff-dashboard-command-card">
+        <span><Flame size={15} /> Ritmo</span>
+        <strong>{consistencyStats.workoutsLast7Days}</strong>
+        <small>treinos nos ultimos 7 dias</small>
+      </Link>
+
+      <Link to="/recovery" className="ff-dashboard-command-card">
+        <span><Trophy size={15} /> Pronto</span>
+        <strong>{readyMuscle?.muscleGroup || 'Sem dados'}</strong>
+        <small>{recoveringCount > 0 ? `${recoveringCount} grupo(s) recuperando` : 'recuperacao equilibrada'}</small>
+      </Link>
+
+      <Link to="/notifications" className="ff-dashboard-command-card">
+        <span><Bell size={15} /> Alertas</span>
+        <strong>{unreadNotificationsCount}</strong>
+        <small>nao lidas</small>
+      </Link>
+    </section>
+  )
+}
 
 function Dashboard() {
   const { user } = useAuth()
@@ -134,6 +195,17 @@ function Dashboard() {
         loadingDashboard={loadingDashboard}
         history={history}
         recentPRs={recentPRs}
+        formatShortDate={formatShortDate}
+      />
+
+      <DashboardCommandCenter
+        history={history}
+        lastSession={lastSession}
+        favoriteWorkouts={favoriteWorkouts}
+        consistencyStats={consistencyStats}
+        unreadNotificationsCount={unreadNotificationsCount}
+        mostRecoveredMuscles={mostRecoveredMuscles}
+        musclesStillRecovering={musclesStillRecovering}
         formatShortDate={formatShortDate}
       />
 

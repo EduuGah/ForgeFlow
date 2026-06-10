@@ -269,8 +269,6 @@ function Progress() {
         }
       />
 
-      <ProgressQuickLinksSection />
-
       {!progressData ? (
         <Card>
           <EmptyState
@@ -320,6 +318,8 @@ function Progress() {
               <ChartLoadingCard title="Preparando volume semanal" />
             )}
           </Suspense>
+
+          <ProgressQuickLinksSection />
 
           <section className="ff-progress-chart-grid grid grid-cols-1 gap-4 xl:grid-cols-2 xl:gap-6">
             {chartsReady ? (

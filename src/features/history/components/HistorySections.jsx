@@ -13,6 +13,7 @@ import {
   Trophy,
   X,
   ChevronDown,
+  Share2,
 } from 'lucide-react'
 
 import Card from '../../../components/ui/Card'
@@ -70,6 +71,9 @@ export function HistorySummaryCards({ historyCount, summary }) {
 function HistoryFilters({
   search,
   setSearch,
+  workoutFilter,
+  setWorkoutFilter,
+  workoutFilterOptions,
   startDate,
   setStartDate,
   endDate,
@@ -80,7 +84,7 @@ function HistoryFilters({
   clearFilters,
 }) {
   return (
-    <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_160px_160px_auto]">
+    <div className="ff-history-filters mt-4 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_220px_160px_160px_auto]">
       <div>
         <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-zinc-500">
           Buscar
@@ -108,6 +112,25 @@ function HistoryFilters({
             </button>
           )}
         </div>
+      </div>
+
+      <div>
+        <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-zinc-500">
+          Treino
+        </label>
+
+        <select
+          value={workoutFilter}
+          onChange={(event) => setWorkoutFilter(event.target.value)}
+          className="h-12 w-full cursor-pointer rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-violet-500/10"
+        >
+          <option value="">Todos os treinos</option>
+          {workoutFilterOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div>
@@ -356,6 +379,7 @@ function HistorySessionCard({
   meta,
   isExpanded,
   onToggle,
+  onShareSession,
   onDeleteSession,
 }) {
   const sessionVolume = meta?.sessionVolume || 0
@@ -365,10 +389,13 @@ function HistorySessionCard({
   return (
     <article className="ff-history-feed-card">
       <button type="button" onClick={() => onToggle(session.id)} className="ff-history-feed-card__summary">
-        <div className="ff-history-feed-card__avatar">#{indexLabel}</div>
+        <div className="ff-history-feed-card__avatar">
+          <Dumbbell size={21} />
+        </div>
 
         <div className="ff-history-feed-card__content">
           <div className="ff-history-feed-card__meta">
+            <span>Treino #{indexLabel}</span>
             <span>{formatDate(session.finishedAt)}</span>
             <span>{formatHour(session.finishedAt)}</span>
           </div>
@@ -385,6 +412,17 @@ function HistorySessionCard({
 
         <span className="ff-history-open-label">Ver</span>
       </button>
+
+      <div className="ff-history-feed-card__actions">
+        <button
+          type="button"
+          onClick={() => onShareSession(session.id)}
+          className="ff-history-share-trigger"
+        >
+          <Share2 size={16} />
+          Compartilhar
+        </button>
+      </div>
 
       {isExpanded && (
         <div className="ff-history-feed-card__details">
@@ -427,6 +465,7 @@ export function HistorySessionDetailView({
   session,
   meta,
   onBack,
+  onShareSession,
   onDeleteSession,
 }) {
   const sessionVolume = meta?.sessionVolume || 0
@@ -450,6 +489,18 @@ export function HistorySessionDetailView({
         <span><small>Exercícios</small><strong>{session.exercises.length}</strong></span>
         <span><small>Recordes</small><strong>{sessionPRs.length}</strong></span>
       </section>
+
+      <div className="ff-history-detail-actions">
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => onShareSession(session.id)}
+          className="w-full"
+        >
+          <Share2 size={17} />
+          Criar card de compartilhamento
+        </Button>
+      </div>
 
       <section className="ff-history-detail-section">
         <div className="ff-history-section-heading">
@@ -517,6 +568,9 @@ export function HistoryListSection({
   loading,
   search,
   setSearch,
+  workoutFilter,
+  setWorkoutFilter,
+  workoutFilterOptions,
   startDate,
   setStartDate,
   endDate,
@@ -527,6 +581,7 @@ export function HistoryListSection({
   clearFilters,
   handleClearHistory,
   handleToggleSession,
+  handleShareSession,
   handleDeleteSession,
   visibleCount,
   setVisibleCount,
@@ -557,6 +612,9 @@ export function HistoryListSection({
       <HistoryFilters
         search={search}
         setSearch={setSearch}
+        workoutFilter={workoutFilter}
+        setWorkoutFilter={setWorkoutFilter}
+        workoutFilterOptions={workoutFilterOptions}
         startDate={startDate}
         setStartDate={setStartDate}
         endDate={endDate}
@@ -596,6 +654,7 @@ export function HistoryListSection({
             meta={historyMetaMap.get(session.id)}
             isExpanded={expandedSessionId === session.id}
             onToggle={handleToggleSession}
+            onShareSession={handleShareSession}
             onDeleteSession={handleDeleteSession}
           />
         ))}

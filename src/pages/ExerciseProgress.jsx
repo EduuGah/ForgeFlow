@@ -58,6 +58,7 @@ function ExerciseProgress() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [selectedExerciseName, setSelectedExerciseName] = useState('')
+  const [rangeFilter, setRangeFilter] = useState('all')
 
   useEffect(() => {
     if (!user) return undefined
@@ -121,7 +122,16 @@ function ExerciseProgress() {
     return exerciseOptions.filter((exercise) => normalizeExerciseName(exercise.name).includes(term))
   }, [exerciseOptions, search])
 
-  const selectedSets = useMemo(() => completedSets.filter((set) => set.normalizedExerciseName === selectedExerciseName), [completedSets, selectedExerciseName])
+  const selectedSets = useMemo(() => {
+    const exerciseSets = completedSets.filter((set) => set.normalizedExerciseName === selectedExerciseName)
+    if (rangeFilter === 'all') return exerciseSets
+
+    const days = Number(rangeFilter)
+    const since = new Date()
+    since.setDate(since.getDate() - days)
+
+    return exerciseSets.filter((set) => new Date(set.date) >= since)
+  }, [completedSets, rangeFilter, selectedExerciseName])
 
   const stats = useMemo(() => {
     if (selectedSets.length === 0) return { maxWeight: 0, maxVolume: 0, totalVolume: 0, totalSets: 0, lastSet: null }
@@ -315,6 +325,25 @@ function ExerciseProgress() {
             <Card><EmptyState title="Selecione um exercício" description="Escolha um exercício na lista para ver a evolução." /></Card>
           ) : (
             <>
+              <div className="ff-exercise-progress-toolbar">
+                <span>Periodo</span>
+                {[
+                  ['90', '90 dias'],
+                  ['180', '6 meses'],
+                  ['365', '1 ano'],
+                  ['all', 'Tudo'],
+                ].map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setRangeFilter(value)}
+                    className={rangeFilter === value ? 'is-active' : ''}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
               <Card>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex min-w-0 items-center gap-4">

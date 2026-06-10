@@ -288,7 +288,7 @@ function ExerciseLibrarySection({
               onClick={() => setVisibleState({ key: filterKey, count: visibleCount + LOAD_MORE_COUNT })}
               className="w-full"
             >
-              Carregar mais 8 exercicios
+              Ver mais
             </Button>
           </div>
         )}

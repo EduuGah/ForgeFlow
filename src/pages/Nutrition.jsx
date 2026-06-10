@@ -3,6 +3,7 @@ import {
   Apple,
   Beef,
   Camera,
+  Clock3,
   Coffee,
   Droplets,
   Flame,
@@ -12,9 +13,11 @@ import {
   RotateCcw,
   Salad,
   Scale,
+  Target,
   Trash2,
   Utensils,
   X,
+  Zap,
 } from 'lucide-react'
 
 import PageHeader from '../components/ui/PageHeader'
@@ -40,6 +43,13 @@ const MEAL_TYPES = [
   { value: 'snack', label: 'Lanche', icon: Apple },
   { value: 'pre-workout', label: 'Pré-treino', icon: Beef },
   { value: 'post-workout', label: 'Pós-treino', icon: Salad },
+]
+
+const MEAL_PRESETS = [
+  { label: 'Shake pos-treino', type: 'post-workout', calories: 320, proteinG: 32, carbsG: 34, fatG: 4 },
+  { label: 'Pre-treino leve', type: 'pre-workout', calories: 260, proteinG: 8, carbsG: 52, fatG: 2 },
+  { label: 'Almoco completo', type: 'lunch', calories: 650, proteinG: 42, carbsG: 68, fatG: 18 },
+  { label: 'Lanche proteico', type: 'snack', calories: 280, proteinG: 24, carbsG: 24, fatG: 9 },
 ]
 
 import AppPageIntro from '../components/app/AppPageIntro'
@@ -183,6 +193,23 @@ function Nutrition() {
   }))
 
   const waterPercent = useMemo(() => clampPercent(nutrition.waterMl, nutrition.waterGoalMl), [nutrition.waterGoalMl, nutrition.waterMl])
+  const remaining = useMemo(() => ({
+    waterMl: Math.max(0, Number(nutrition.waterGoalMl || 0) - Number(nutrition.waterMl || 0)),
+    calories: Math.max(0, Number(nutrition.calorieGoal || 0) - Number(nutrition.calories || 0)),
+    proteinG: Math.max(0, Number(nutrition.proteinGoalG || 0) - Number(nutrition.proteinG || 0)),
+  }), [nutrition.calorieGoal, nutrition.calories, nutrition.proteinG, nutrition.proteinGoalG, nutrition.waterGoalMl, nutrition.waterMl])
+  const macroSplit = useMemo(() => {
+    const protein = Number(nutrition.proteinG || 0) * 4
+    const carbs = Number(nutrition.carbsG || 0) * 4
+    const fat = Number(nutrition.fatG || 0) * 9
+    const total = Math.max(1, protein + carbs + fat)
+
+    return {
+      protein: Math.round((protein / total) * 100),
+      carbs: Math.round((carbs / total) * 100),
+      fat: Math.round((fat / total) * 100),
+    }
+  }, [nutrition.carbsG, nutrition.fatG, nutrition.proteinG])
 
   function handleAddWater(amount) {
     setNutrition(addWater(amount))
@@ -204,6 +231,37 @@ function Nutrition() {
       photo: null,
     })
     setPhotoError('')
+  }
+
+  function applyMealPreset(preset) {
+    setMeal((current) => ({
+      ...current,
+      name: preset.label,
+      type: preset.type,
+      calories: String(preset.calories),
+      proteinG: String(preset.proteinG),
+      carbsG: String(preset.carbsG),
+      fatG: String(preset.fatG),
+      time: new Date().toTimeString().slice(0, 5),
+    }))
+  }
+
+  function repeatLastMeal() {
+    const lastMeal = nutrition.meals?.[0]
+    if (!lastMeal) return
+
+    setMeal((current) => ({
+      ...current,
+      name: lastMeal.name,
+      type: lastMeal.type || 'lunch',
+      calories: String(lastMeal.calories || ''),
+      proteinG: String(lastMeal.proteinG || ''),
+      carbsG: String(lastMeal.carbsG || ''),
+      fatG: String(lastMeal.fatG || ''),
+      notes: lastMeal.notes || '',
+      time: new Date().toTimeString().slice(0, 5),
+      photo: null,
+    }))
   }
 
   function handleSaveGoals(event) {
@@ -232,18 +290,25 @@ function Nutrition() {
         
       />
 
-      <Card className="ff-nutrition-hero overflow-hidden p-4 sm:p-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <Card className="ff-nutrition-hero ff-nutrition-dashboard overflow-hidden p-4 sm:p-5">
+        <div className="ff-nutrition-dashboard__main">
           <div className="min-w-0">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--ff-accent-text)]">Resumo do dia</p>
-            <h2 className="mt-1 text-2xl font-black text-[var(--ff-text)]">Energia para evoluir</h2>
-            <p className="mt-2 text-sm leading-relaxed text-[var(--ff-muted)]">Registre o essencial sem transformar nutrição em uma planilha.</p>
+            <h2>Energia para evoluir</h2>
+            <p>Registre por foto, macros ou atalhos rapidos sem virar planilha.</p>
           </div>
-          <div className="grid grid-cols-3 gap-2 text-center sm:min-w-[260px]">
-            <div className="rounded-2xl bg-[var(--ff-surface-2)] p-3"><p className="text-lg font-black">{nutrition.meals.length}</p><p className="text-[10px] font-black uppercase text-[var(--ff-muted)]">refeições</p></div>
-            <div className="rounded-2xl bg-[var(--ff-surface-2)] p-3"><p className="text-lg font-black">{nutrition.calories}</p><p className="text-[10px] font-black uppercase text-[var(--ff-muted)]">kcal</p></div>
-            <div className="rounded-2xl bg-[var(--ff-surface-2)] p-3"><p className="text-lg font-black">{nutrition.proteinG}g</p><p className="text-[10px] font-black uppercase text-[var(--ff-muted)]">proteína</p></div>
+
+          <div className="ff-nutrition-dashboard__score">
+            <span>{clampPercent(nutrition.calories, nutrition.calorieGoal)}%</span>
+            <small>calorias</small>
           </div>
+        </div>
+
+        <div className="ff-nutrition-dashboard__grid">
+          <div><Clock3 size={16} /><strong>{nutrition.meals.length}</strong><span>refeicoes</span></div>
+          <div><Flame size={16} /><strong>{remaining.calories}</strong><span>kcal restantes</span></div>
+          <div><Beef size={16} /><strong>{remaining.proteinG}g</strong><span>proteina falta</span></div>
+          <div><Droplets size={16} /><strong>{remaining.waterMl}ml</strong><span>agua falta</span></div>
         </div>
       </Card>
 
@@ -251,6 +316,36 @@ function Nutrition() {
         <MetricCard icon={Droplets} title="Hidratação" value={nutrition.waterMl} goal={nutrition.waterGoalMl} suffix="ml" description="Meta diária configurável" />
         <MetricCard icon={Flame} title="Calorias" value={nutrition.calories} goal={nutrition.calorieGoal} suffix="kcal" description="Total vindo das refeições" />
         <MetricCard icon={Scale} title="Proteína" value={nutrition.proteinG} goal={nutrition.proteinGoalG} suffix="g" description="Foco em recuperação" />
+      </section>
+
+      <section className="ff-nutrition-quick-panel">
+        <div className="ff-nutrition-quick-card">
+          <div className="ff-nutrition-quick-card__head">
+            <span><Zap size={16} /> Atalhos</span>
+            <button type="button" onClick={repeatLastMeal} disabled={!nutrition.meals?.length}>Repetir ultima</button>
+          </div>
+
+          <div className="ff-nutrition-preset-row">
+            {MEAL_PRESETS.map((preset) => (
+              <button key={preset.label} type="button" onClick={() => applyMealPreset(preset)}>
+                <strong>{preset.label}</strong>
+                <small>{preset.calories} kcal | {preset.proteinG}g prot.</small>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="ff-nutrition-macro-card">
+          <div>
+            <span><Target size={16} /> Macros</span>
+            <strong>{macroSplit.protein}% prot. / {macroSplit.carbs}% carb. / {macroSplit.fat}% gord.</strong>
+          </div>
+          <div className="ff-nutrition-macro-bar">
+            <i style={{ width: `${macroSplit.protein}%` }} />
+            <b style={{ width: `${macroSplit.carbs}%` }} />
+            <em style={{ width: `${macroSplit.fat}%` }} />
+          </div>
+        </div>
       </section>
 
       <section className="ff-page-mobile-main-grid grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,.85fr)]">

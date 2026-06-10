@@ -39,15 +39,46 @@ function Login() {
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
+    const [authWarmupReady, setAuthWarmupReady] = useState(false)
+    const [authWarmupProgress, setAuthWarmupProgress] = useState(8)
+    const [authWarmupStatus, setAuthWarmupStatus] = useState('Preparando login seguro...')
 
     useEffect(() => {
         applyAppSettingsToDocument(getAppSettings())
 
-        const timeoutId = window.setTimeout(() => {
-            apiFetch('/auth/csrf').catch(() => {})
-        }, 350)
+        let isMounted = true
+        let progressInterval = null
 
-        return () => window.clearTimeout(timeoutId)
+        progressInterval = window.setInterval(() => {
+            setAuthWarmupProgress((current) => {
+                if (current >= 92) return current
+                const nextStep = current < 55 ? 7 : current < 78 ? 4 : 2
+                return Math.min(92, current + nextStep)
+            })
+        }, 420)
+
+        async function warmupAuthServer() {
+            try {
+                await apiFetch('/auth/csrf')
+                if (!isMounted) return
+                setAuthWarmupStatus('Login pronto')
+                setAuthWarmupProgress(100)
+                window.setTimeout(() => {
+                    if (isMounted) setAuthWarmupReady(true)
+                }, 260)
+            } catch {
+                if (!isMounted) return
+                setAuthWarmupStatus('Acordando servidor...')
+                window.setTimeout(warmupAuthServer, 1600)
+            }
+        }
+
+        warmupAuthServer()
+
+        return () => {
+            isMounted = false
+            window.clearInterval(progressInterval)
+        }
     }, [])
 
     async function handleGoogleLogin() {
@@ -200,17 +231,32 @@ function Login() {
                     <div className="h-px flex-1 bg-[var(--ff-border)]" />
                 </div>
 
-                <button
-                    type="button"
-                    onClick={handleGoogleLogin}
-                    className="ff-login-google-button group"
-                >
-                    <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white shadow-sm transition group-hover:scale-105">
-                        <GoogleIcon />
-                    </span>
+                {authWarmupReady ? (
+                    <button
+                        type="button"
+                        onClick={handleGoogleLogin}
+                        className="ff-login-google-button group"
+                    >
+                        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white shadow-sm transition group-hover:scale-105">
+                            <GoogleIcon />
+                        </span>
 
-                    <span>Entrar com Google</span>
-                </button>
+                        <span>Entrar com Google</span>
+                    </button>
+                ) : (
+                    <div className="ff-login-auth-warmup" aria-live="polite">
+                        <div
+                            className="ff-login-auth-warmup__ring"
+                            style={{ '--ff-login-warmup-progress': `${authWarmupProgress}%` }}
+                        >
+                            <span>{authWarmupProgress}%</span>
+                        </div>
+                        <div>
+                            <strong>{authWarmupStatus}</strong>
+                            <p>O Google aparece assim que o servidor estiver pronto.</p>
+                        </div>
+                    </div>
+                )}
 
                 <p className="mt-5 text-center text-sm text-[var(--ff-muted)]">
                     Não tem conta?{' '}
