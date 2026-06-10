@@ -161,7 +161,7 @@ function WorkoutCalendar() {
       />
 
       <section className="ff-page-mobile-main-grid grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <Card>
+        <Card className="ff-calendar-month-card">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.22em] text-[var(--ff-accent-text)]">Mês selecionado</p>
@@ -174,7 +174,7 @@ function WorkoutCalendar() {
             </div>
           </div>
 
-          <div className="mt-6 grid grid-cols-7 gap-2 text-center" data-calendar>
+          <div className="ff-calendar-grid mt-6 grid grid-cols-7 gap-2 text-center" data-calendar>
             {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((day) => (
               <div key={day} className="text-[10px] font-black uppercase tracking-wide text-[var(--ff-muted)] sm:text-[11px]">{day}</div>
             ))}
@@ -211,21 +211,21 @@ function WorkoutCalendar() {
           </div>
         </Card>
 
-        <aside className="space-y-5">
-          <Card>
+        <aside className="ff-calendar-side-panel space-y-5">
+          <Card className="ff-calendar-summary-card">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]"><CalendarDays size={22} /></div>
               <div><h2 className="text-lg font-black text-[var(--ff-text)]">Resumo do mês</h2><p className="text-sm capitalize text-[var(--ff-muted)]">{monthLabel}</p></div>
             </div>
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3"><Dumbbell size={18} className="text-[var(--ff-accent-text)]" /><p className="mt-2 text-xl font-black text-[var(--ff-text)]">{monthStats.totalWorkouts}</p><p className="text-xs text-[var(--ff-muted)]">treinos</p></div>
-              <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3"><CalendarDays size={18} className="text-[var(--ff-accent-text)]" /><p className="mt-2 text-xl font-black text-[var(--ff-text)]">{monthStats.trainedDays}</p><p className="text-xs text-[var(--ff-muted)]">dias</p></div>
-              <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3"><Flame size={18} className="text-orange-300" /><p className="mt-2 text-sm font-black text-[var(--ff-text)]">{formatVolume(monthStats.totalVolume)}</p><p className="text-xs text-[var(--ff-muted)]">volume</p></div>
-              <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3"><Clock size={18} className="text-emerald-300" /><p className="mt-2 text-sm font-black text-[var(--ff-text)]">{formatDuration(monthStats.totalDuration)}</p><p className="text-xs text-[var(--ff-muted)]">tempo</p></div>
+            <div className="ff-calendar-summary-grid mt-5 grid grid-cols-2 gap-3">
+              <div><Dumbbell size={18} /><p>{monthStats.totalWorkouts}</p><span>treinos</span></div>
+              <div><CalendarDays size={18} /><p>{monthStats.trainedDays}</p><span>dias</span></div>
+              <div><Flame size={18} /><p>{formatVolume(monthStats.totalVolume)}</p><span>volume</span></div>
+              <div><Clock size={18} /><p>{formatDuration(monthStats.totalDuration)}</p><span>tempo</span></div>
             </div>
           </Card>
 
-          <Card>
+          <Card className="ff-calendar-day-card">
             <h2 className="text-lg font-black text-[var(--ff-text)]">{selectedDateKey ? formatDate(selectedDateKey) : 'Selecione um dia'}</h2>
             <div className="mt-4 space-y-3">
               {selectedDateKey && selectedSessions.length === 0 && <EmptyState title="Sem treino neste dia" description="Nenhum treino finalizado foi encontrado nessa data." />}
@@ -233,7 +233,7 @@ function WorkoutCalendar() {
               {selectedSessions.map((session) => {
                 const sets = getCompletedSets([session])
                 return (
-                  <div key={session.id || session._id || `${session.workoutName}-${getSessionDate(session)}`} className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+                  <div key={session.id || session._id || `${session.workoutName}-${getSessionDate(session)}`} className="ff-calendar-session-card">
                     <p className="font-black text-[var(--ff-text)]">{session.workoutName || session.name || 'Treino'}</p>
                     <p className="mt-1 text-xs text-[var(--ff-muted)]">{formatShortDate(getSessionDate(session))} • {formatDuration(session.durationSeconds || session.duration || 0)} • {sets.length} séries</p>
                     <p className="mt-2 text-xs font-bold text-[var(--ff-accent-text)]">{formatVolume(getTotalVolume(sets))}</p>

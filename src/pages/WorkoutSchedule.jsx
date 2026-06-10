@@ -245,7 +245,7 @@ function WorkoutSchedule() {
 
       <section className="ff-page-mobile-main-grid grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="ff-schedule-primary-flow space-y-5">
-          <Card className="overflow-hidden">
+          <Card className="ff-schedule-today-card overflow-hidden">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <div className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.16em] text-[var(--ff-accent-text)]">
@@ -292,12 +292,12 @@ function WorkoutSchedule() {
           </Card>
 
           {hasUnsavedChanges && (
-            <div className="rounded-3xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] p-4 text-sm font-bold text-[var(--ff-accent-text)]">
+            <div className="ff-schedule-pending-banner rounded-3xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] p-4 text-sm font-bold text-[var(--ff-accent-text)]">
               Você alterou a agenda. Toque em “Salvar alterações” para atualizar os lembretes do APK.
             </div>
           )}
 
-          <Card>
+          <Card className="ff-schedule-week-card">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-xl font-black text-[var(--ff-text)]">Rotina da semana</h2>
@@ -312,7 +312,7 @@ function WorkoutSchedule() {
               </Button>
             </div>
 
-            <div className="mt-6 grid grid-cols-1 gap-3 lg:grid-cols-2">
+            <div className="ff-schedule-week-grid mt-6 grid grid-cols-1 gap-3 lg:grid-cols-2">
               {WEEK_DAYS.map((day) => {
                 const entry = normalizeWeeklySchedule(weeklySchedule)[day.key]
                 const selectedValue = entry.type === 'workout' ? entry.workoutId : entry.type
@@ -364,8 +364,8 @@ function WorkoutSchedule() {
           </Card>
         </div>
 
-        <aside className="space-y-5">
-          <Card>
+        <aside className="ff-schedule-side-panel space-y-5">
+          <Card className="ff-schedule-reminder-card">
             <div className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.16em] text-[var(--ff-accent-text)]">
               <BellRing size={18} /> Lembretes
             </div>
@@ -375,7 +375,7 @@ function WorkoutSchedule() {
             </p>
 
             <div className="mt-5 space-y-4">
-              <label className="flex items-center justify-between gap-4 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+              <label className="ff-schedule-reminder-toggle flex items-center justify-between gap-4 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
                 <span>
                   <span className="block text-sm font-black text-[var(--ff-text)]">Lembrete de treino</span>
                   <span className="block text-xs text-[var(--ff-muted)]">Avisar nos dias com treino</span>
@@ -397,20 +397,20 @@ function WorkoutSchedule() {
             </div>
           </Card>
 
-          <Card>
+          <Card className="ff-schedule-summary-card">
             <h3 className="text-lg font-black text-[var(--ff-text)]">Resumo</h3>
-            <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-              <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
-                <p className="text-2xl font-black text-[var(--ff-text)]">{summary.workoutDays}</p>
-                <p className="text-[10px] font-bold uppercase text-[var(--ff-muted)]">Treinos</p>
+            <div className="ff-schedule-summary-grid mt-4 grid grid-cols-3 gap-2 text-center">
+              <div>
+                <p>{summary.workoutDays}</p>
+                <span>Treinos</span>
               </div>
-              <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
-                <p className="text-2xl font-black text-[var(--ff-text)]">{summary.restDays}</p>
-                <p className="text-[10px] font-bold uppercase text-[var(--ff-muted)]">Descanso</p>
+              <div>
+                <p>{summary.restDays}</p>
+                <span>Descanso</span>
               </div>
-              <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
-                <p className="text-2xl font-black text-[var(--ff-text)]">{summary.emptyDays}</p>
-                <p className="text-[10px] font-bold uppercase text-[var(--ff-muted)]">Vazios</p>
+              <div>
+                <p>{summary.emptyDays}</p>
+                <span>Vazios</span>
               </div>
             </div>
           </Card>

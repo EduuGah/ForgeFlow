@@ -2,8 +2,8 @@ import Card from '../../../components/ui/Card'
 
 export default function HistoryStatCard({ title, value, description, icon: Icon, accent = false }) {
   return (
-    <Card className="p-4">
-      <div className="flex items-start justify-between gap-3">
+    <Card className={accent ? 'ff-history-stat-card is-accent p-4' : 'ff-history-stat-card p-4'}>
+      <div className="ff-history-stat-card__inner flex items-start justify-between gap-3">
         <div>
           <p className="text-sm text-zinc-500">
             {title}
@@ -33,4 +33,3 @@ export default function HistoryStatCard({ title, value, description, icon: Icon,
     </Card>
   )
 }
-

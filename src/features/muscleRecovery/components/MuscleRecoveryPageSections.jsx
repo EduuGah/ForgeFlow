@@ -238,7 +238,7 @@ function MuscleRecoveryCard({ item }) {
   const Icon = style.icon
 
   return (
-    <div className={`rounded-3xl border ${style.border} ${style.bg} p-5`}>
+    <div className={`ff-recovery-native-card rounded-3xl border ${style.border} ${style.bg} p-5`}>
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3">
           <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${style.bg} ${style.text}`}>

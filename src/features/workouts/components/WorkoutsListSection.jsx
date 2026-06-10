@@ -10,14 +10,13 @@ import {
 
 import Badge from '../../../components/ui/Badge'
 import Button from '../../../components/ui/Button'
-import Card from '../../../components/ui/Card'
 import EmptyState from '../../../components/ui/EmptyState'
 import { getWorkoutId } from '../../../utils/workoutNormalizers'
 
 function WorkoutExercisePreview({ item, index }) {
     return (
-        <div className="flex items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-950 p-3 sm:gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-zinc-700 bg-white">
+        <div className="ff-workout-exercise-preview">
+            <div className="ff-workout-exercise-preview__media">
                 {item.exercise.mediaUrl ? (
                     <img
                         src={item.exercise.mediaUrl}
@@ -27,21 +26,16 @@ function WorkoutExercisePreview({ item, index }) {
                         decoding="async"
                     />
                 ) : (
-                    <Dumbbell size={26} className="text-zinc-900" />
+                    <Dumbbell size={22} className="text-zinc-900" />
                 )}
             </div>
 
             <div className="min-w-0 flex-1">
-                <p className="truncate font-bold">
-                    {item.sets.length} séries • {item.exercise.name}
-                </p>
-
-                <p className="text-sm text-zinc-500">
-                    {item.exercise.muscleGroup} • {item.exercise.equipment}
-                </p>
+                <p>{item.sets.length} series - {item.exercise.name}</p>
+                <small>{item.exercise.muscleGroup} - {item.exercise.equipment}</small>
             </div>
 
-            <span className="text-sm text-zinc-500">#{index + 1}</span>
+            <span>#{index + 1}</span>
         </div>
     )
 }
@@ -63,33 +57,37 @@ function WorkoutCard({
         muscleGroups: [],
         exerciseNames: '',
     }
-    const workoutMuscleGroups = workoutMeta.muscleGroups
+    const exercises = Array.isArray(workout.exercises) ? workout.exercises : []
+    const workoutMuscleGroups = workoutMeta.muscleGroups || []
+    const totalSets = exercises.reduce(
+        (total, item) => total + (Array.isArray(item.sets) ? item.sets.length : 0),
+        0,
+    )
 
     return (
-        <div className="overflow-hidden rounded-3xl border border-zinc-800 bg-[#18181b] transition hover:border-[var(--ff-accent-border)]/30 hover:bg-[#1f1f23]">
+        <article className={workout.isFavorite ? 'ff-workout-native-card is-favorite' : 'ff-workout-native-card'}>
             <button
                 type="button"
                 onClick={() => onToggleWorkout(workoutId)}
-                className="w-full p-4 text-left sm:p-5"
+                className="ff-workout-native-card__main"
             >
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="ff-workout-native-card__top">
+                    <div className="ff-workout-native-card__icon">
+                        <Dumbbell size={20} />
+                    </div>
+
                     <div className="min-w-0 flex-1">
-                        <h3 className="truncate text-lg font-bold text-white">
-                            {workout.name}
-                        </h3>
+                        <div className="ff-workout-native-card__titleline">
+                            <h3>{workout.name}</h3>
+                            {workout.isFavorite && <Badge>Favorito</Badge>}
+                        </div>
 
-                        {workout.isFavorite && (
-                            <div className="mt-2">
-                                <Badge>⭐ Favorito</Badge>
-                            </div>
-                        )}
-
-                        <p className="mt-2 line-clamp-2 text-sm text-zinc-500 sm:truncate">
-                            {workoutMeta.exerciseNames}
+                        <p className="ff-workout-native-card__subtitle">
+                            {workoutMeta.exerciseNames || 'Nenhum exercicio adicionado.'}
                         </p>
 
                         {workoutMuscleGroups.length > 0 && (
-                            <div className="mt-3 flex flex-wrap gap-2">
+                            <div className="ff-workout-native-card__chips">
                                 {workoutMuscleGroups.slice(0, 4).map((group) => (
                                     <Badge key={group} variant="purple">
                                         {group}
@@ -98,127 +96,73 @@ function WorkoutCard({
                             </div>
                         )}
 
-                        <div className="mt-4 grid grid-cols-[44px_1fr] gap-2 sm:hidden">
-                            <button
-                                type="button"
-                                onClick={(event) => {
-                                    event.stopPropagation()
-                                    onToggleFavorite(workout)
-                                }}
-                                title={workout.isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
-                                className={
-                                    workout.isFavorite
-                                        ? 'flex h-10 items-center justify-center rounded-2xl border border-yellow-500/30 bg-yellow-500/10 text-yellow-300'
-                                        : 'flex h-10 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-950 text-zinc-500'
-                                }
-                            >
-                                <Star
-                                    size={18}
-                                    fill={workout.isFavorite ? 'currentColor' : 'none'}
-                                />
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={(event) => {
-                                    event.stopPropagation()
-                                    onStartWorkout(workout)
-                                }}
-                                className="inline-flex h-10 w-full items-center justify-center rounded-2xl bg-[var(--ff-accent)] text-sm font-bold text-white transition hover:bg-[var(--ff-accent-hover)]"
-                            >
-                                Iniciar treino
-                            </button>
+                        <div className="ff-workout-native-card__meta">
+                            <span>{exercises.length} exercicios</span>
+                            <span>{totalSets} series</span>
                         </div>
                     </div>
 
-                    <div className="hidden items-center gap-2 sm:flex">
-                        <button
-                            type="button"
-                            onClick={(event) => {
-                                event.stopPropagation()
-                                onToggleFavorite(workout)
-                            }}
-                            title={workout.isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
-                            className={
-                                workout.isFavorite
-                                    ? 'flex h-10 w-10 items-center justify-center rounded-2xl border border-yellow-500/30 bg-yellow-500/10 text-yellow-300 transition hover:bg-yellow-500/20'
-                                    : 'flex h-10 w-10 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-950 text-zinc-500 transition hover:border-yellow-500/30 hover:bg-yellow-500/10 hover:text-yellow-300'
-                            }
-                        >
-                            <Star
-                                size={18}
-                                fill={workout.isFavorite ? 'currentColor' : 'none'}
-                            />
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={(event) => {
-                                event.stopPropagation()
-                                onStartWorkout(workout)
-                            }}
-                            className="h-10 rounded-2xl bg-[var(--ff-accent)] px-4 text-sm font-bold text-white transition hover:bg-[var(--ff-accent-hover)]"
-                        >
-                            Iniciar
-                        </button>
-
-                        <MoreHorizontal size={22} className="text-zinc-400" />
-                    </div>
+                    <MoreHorizontal size={20} className="ff-workout-native-card__more" />
                 </div>
             </button>
 
+            <div className="ff-workout-native-card__actions">
+                <button
+                    type="button"
+                    onClick={() => onToggleFavorite(workout)}
+                    className={workout.isFavorite ? 'is-favorite' : ''}
+                    title={workout.isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+                >
+                    <Star size={17} fill={workout.isFavorite ? 'currentColor' : 'none'} />
+                </button>
+
+                <button type="button" onClick={() => onEditWorkout(workout)}>
+                    <Edit3 size={17} />
+                    Editar
+                </button>
+
+                <button type="button" className="is-primary" onClick={() => onStartWorkout(workout)}>
+                    <Dumbbell size={17} />
+                    Iniciar
+                </button>
+            </div>
+
             {isExpanded && (
-                <div className="border-t border-zinc-800 p-4">
-                    <div className="space-y-3">
-                        {workout.exercises.map((item, index) => (
+                <div className="ff-workout-native-card__expanded">
+                    <div className="ff-workout-exercise-preview-list">
+                        {exercises.map((item, index) => (
                             <WorkoutExercisePreview
-                                key={item.id}
+                                key={item.id || `${workoutId}-${index}`}
                                 item={item}
                                 index={index}
                             />
                         ))}
                     </div>
 
-                    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                        <button
-                            type="button"
-                            onClick={() => onStartWorkout(workout)}
-                            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] text-sm font-bold text-white transition hover:bg-[var(--ff-accent-hover)]"
-                        >
+                    <div className="ff-workout-expanded-actions">
+                        <button type="button" className="is-primary" onClick={() => onStartWorkout(workout)}>
                             <Dumbbell size={17} />
                             Iniciar
                         </button>
 
-                        <button
-                            type="button"
-                            onClick={() => onEditWorkout(workout)}
-                            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 text-sm font-bold text-[var(--ff-accent-text)] transition hover:bg-[var(--ff-accent-hover)]/20"
-                        >
+                        <button type="button" className="is-edit" onClick={() => onEditWorkout(workout)}>
                             <Edit3 size={17} />
                             Editar
                         </button>
 
-                        <button
-                            type="button"
-                            onClick={() => onDuplicateWorkout(workout)}
-                            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-zinc-700 bg-zinc-900 text-sm font-bold text-white transition hover:bg-zinc-800"
-                        >
+                        <button type="button" className="is-secondary" onClick={() => onDuplicateWorkout(workout)}>
                             <Copy size={17} />
                             Duplicar
                         </button>
 
-                        <button
-                            type="button"
-                            onClick={() => onDeleteWorkout(workoutId)}
-                            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 text-sm font-bold text-red-300 transition hover:bg-red-500/20"
-                        >
+                        <button type="button" className="is-delete" onClick={() => onDeleteWorkout(workoutId)}>
                             <Trash2 size={17} />
                             Excluir
                         </button>
                     </div>
                 </div>
             )}
-        </div>
+        </article>
     )
 }
 
@@ -243,72 +187,61 @@ export default function WorkoutsListSection({
     const visibleLimit = Number(appSettings.workoutsVisibleLimit) || 5
 
     return (
-        <div className="xl:col-span-2">
-            <Card>
-                <button
-                    type="button"
-                    onClick={onToggleCollapsed}
-                    className="flex w-full items-center justify-between gap-4 rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-left transition hover:border-[var(--ff-accent-border)]/40 hover:bg-zinc-900"
-                >
-                    <div className="flex items-center gap-2 text-zinc-300">
-                        <ChevronDown
-                            size={18}
-                            className={
-                                isCollapsed
-                                    ? '-rotate-90 text-zinc-500 transition'
-                                    : 'text-[var(--ff-accent-text)] transition'
-                            }
+        <section className="ff-workouts-list-panel xl:col-span-2">
+            <button
+                type="button"
+                onClick={onToggleCollapsed}
+                className="ff-workouts-list-panel__toggle"
+            >
+                <div>
+                    <ChevronDown
+                        size={18}
+                        className={isCollapsed ? 'is-collapsed' : ''}
+                    />
+                    <p>Meus treinos</p>
+                </div>
+
+                <span>{filteredWorkouts.length}</span>
+            </button>
+
+            {!isCollapsed && (
+                <div className="ff-workouts-native-list">
+                    {filteredWorkouts.length === 0 && (
+                        <EmptyState
+                            title="Nenhum treino encontrado"
+                            description="Crie seu primeiro treino ou escolha outra pasta."
+                            action={<Button onClick={onCreateWorkout}>Novo treino</Button>}
                         />
+                    )}
 
-                        <p className="text-sm font-bold">
-                            Os meus treinos ({filteredWorkouts.length})
-                        </p>
-                    </div>
+                    {visibleWorkouts.map((workout) => (
+                        <WorkoutCard
+                            key={getWorkoutId(workout)}
+                            workout={workout}
+                            expandedWorkoutId={expandedWorkoutId}
+                            workoutListMetaMap={workoutListMetaMap}
+                            onToggleWorkout={onToggleWorkout}
+                            onToggleFavorite={onToggleFavorite}
+                            onStartWorkout={onStartWorkout}
+                            onEditWorkout={onEditWorkout}
+                            onDuplicateWorkout={onDuplicateWorkout}
+                            onDeleteWorkout={onDeleteWorkout}
+                        />
+                    ))}
 
-                    <span className="text-xs font-bold text-zinc-500">
-                        {isCollapsed ? 'Abrir' : 'Recolher'}
-                    </span>
-                </button>
-
-                {!isCollapsed && (
-                    <div className="mt-5 space-y-4">
-                        {filteredWorkouts.length === 0 && (
-                            <EmptyState
-                                title="Nenhum treino encontrado"
-                                description="Crie seu primeiro treino ou escolha outra pasta."
-                                action={<Button onClick={onCreateWorkout}>Novo treino</Button>}
-                            />
-                        )}
-
-                        {visibleWorkouts.map((workout) => (
-                            <WorkoutCard
-                                key={getWorkoutId(workout)}
-                                workout={workout}
-                                expandedWorkoutId={expandedWorkoutId}
-                                workoutListMetaMap={workoutListMetaMap}
-                                onToggleWorkout={onToggleWorkout}
-                                onToggleFavorite={onToggleFavorite}
-                                onStartWorkout={onStartWorkout}
-                                onEditWorkout={onEditWorkout}
-                                onDuplicateWorkout={onDuplicateWorkout}
-                                onDeleteWorkout={onDeleteWorkout}
-                            />
-                        ))}
-
-                        {filteredWorkouts.length > visibleLimit && (
-                            <button
-                                type="button"
-                                onClick={onToggleShowAll}
-                                className="flex h-12 w-full items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-950 text-sm font-bold text-zinc-300 transition hover:border-[var(--ff-accent-border)] hover:text-white"
-                            >
-                                {showAllWorkouts
-                                    ? 'Mostrar menos'
-                                    : `Ver mais ${filteredWorkouts.length - visibleLimit} treino(s)`}
-                            </button>
-                        )}
-                    </div>
-                )}
-            </Card>
-        </div>
+                    {filteredWorkouts.length > visibleLimit && (
+                        <button
+                            type="button"
+                            onClick={onToggleShowAll}
+                            className="ff-workouts-show-more"
+                        >
+                            {showAllWorkouts
+                                ? 'Mostrar menos'
+                                : `Ver mais ${filteredWorkouts.length - visibleLimit} treino(s)`}
+                        </button>
+                    )}
+                </div>
+            )}
+        </section>
     )
 }

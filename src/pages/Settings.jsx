@@ -154,7 +154,7 @@ const settingsGroups = [
   },
 ];
 
-function SettingsNativeDirectory({ selectedPanel, onNavigate, onBack }) {
+function SettingsNativeDirectory({ selectedPanel, currentAccent, syncBadgeText, onNavigate, onBack }) {
   if (selectedPanel) {
     const panelTitle =
       {
@@ -190,7 +190,17 @@ function SettingsNativeDirectory({ selectedPanel, onNavigate, onBack }) {
     <section className="ff-settings-native mb-6 lg:hidden">
       <div className="ff-settings-native-hero">
         <span>Configurações</span>
-        <h2>Controle do app</h2>
+        <h2>Configuracoes</h2>
+        <div className="ff-settings-native-hero-metrics">
+          <div>
+            <small>Tema</small>
+            <strong>{currentAccent?.name || "Padrao"}</strong>
+          </div>
+          <div>
+            <small>Sync</small>
+            <strong>{syncBadgeText}</strong>
+          </div>
+        </div>
         <p>
           Ajuste conta, treino, tema e dados sem sair da experiência mobile.
         </p>
@@ -816,12 +826,13 @@ function Settings() {
 
       <SettingsNativeDirectory
         selectedPanel={selectedMobilePanel}
+        currentAccent={currentAccent}
+        syncBadgeText={syncBadgeText}
         onNavigate={handleNativeSettingsNavigate}
         onBack={() => setSelectedMobilePanel("")}
       />
 
-      {(!selectedMobilePanel ||
-        selectedMobilePanel === "account" ||
+      {(selectedMobilePanel === "account" ||
         selectedMobilePanel === "security") && (
         <GooglePasswordNotice user={user} />
       )}

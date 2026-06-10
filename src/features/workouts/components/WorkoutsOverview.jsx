@@ -37,22 +37,22 @@ export function WorkoutStatsGrid({
     totalExercisesInSavedWorkouts,
 }) {
     return (
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <Card className="p-4">
-                <p className="text-sm text-zinc-500">Treinos salvos</p>
-                <h3 className="mt-2 text-3xl font-bold">{workoutsCount}</h3>
+        <section className="ff-workouts-native-stats grid grid-cols-3 gap-2 sm:gap-3">
+            <Card className="ff-workouts-stat-card">
+                <p>Treinos</p>
+                <h3>{workoutsCount}</h3>
                 <p className="mt-2 text-xs text-[var(--ff-accent-text)]">Treinos disponíveis</p>
             </Card>
 
-            <Card className="p-4">
-                <p className="text-sm text-zinc-500">Biblioteca</p>
-                <h3 className="mt-2 text-3xl font-bold">{exercisesCount}</h3>
+            <Card className="ff-workouts-stat-card">
+                <p>Biblioteca</p>
+                <h3>{exercisesCount}</h3>
                 <p className="mt-2 text-xs text-[var(--ff-accent-text)]">Exercícios cadastrados</p>
             </Card>
 
-            <Card className="p-4">
-                <p className="text-sm text-zinc-500">Itens nos treinos</p>
-                <h3 className="mt-2 text-3xl font-bold text-[var(--ff-accent-text)]">
+            <Card className="ff-workouts-stat-card is-accent">
+                <p>Volume</p>
+                <h3>
                     {totalExercisesInSavedWorkouts}
                 </h3>
                 <p className="mt-2 text-xs text-[var(--ff-accent-text)]">Exercícios usados</p>
@@ -71,20 +71,20 @@ export function WorkoutFolderFilter({
     onDeleteFolder,
 }) {
     return (
-        <div className="mt-5 rounded-3xl border border-zinc-800 bg-[#18181b] p-3">
-            <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-bold text-zinc-300">Pastas</p>
+        <div className="ff-workouts-folder-bar">
+            <div className="ff-workouts-folder-bar__head">
+                <p>Pastas</p>
 
                 <button
                     type="button"
                     onClick={onCreateFolder}
-                    className="text-xs font-bold text-[var(--ff-accent-text)] transition hover:text-[var(--ff-accent-text)]"
+                    className="ff-workouts-folder-new"
                 >
-                    + Nova pasta
+                    Nova
                 </button>
             </div>
 
-            <div className="mt-3 flex gap-2 ff-mobile-chip-scroll overflow-x-auto overscroll-x-contain pb-2">
+            <div className="ff-workouts-folder-scroll ff-mobile-chip-scroll">
                 <button
                     type="button"
                     onClick={() => onSelectFolder(null)}
