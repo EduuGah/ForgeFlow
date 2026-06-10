@@ -24,7 +24,7 @@ function DashboardMetricsSection({
 }) {
   return (
     <>
-      <section className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="ff-dashboard-metrics-primary mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
         <Card className="p-5">
           <div className="flex items-center justify-between">
             <p className="text-sm text-zinc-500">Treinos</p>
@@ -82,7 +82,7 @@ function DashboardMetricsSection({
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="ff-dashboard-metrics-secondary mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
         <Card className="p-5">
           <div className="flex items-center justify-between">
             <p className="text-sm text-zinc-500">Streak atual</p>
@@ -144,7 +144,7 @@ function DashboardMetricsSection({
         </Card>
       </section>
 
-      <section className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-3">
+      <section className="ff-dashboard-metrics-secondary mt-5 grid grid-cols-1 gap-5 md:grid-cols-3">
         <Card className="p-5">
           <div className="flex items-center justify-between">
             <p className="text-sm text-zinc-500">PRs de peso</p>
@@ -200,7 +200,7 @@ function DashboardMetricsSection({
         </Card>
       </section>
 
-      <section className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-2 2xl:grid-cols-3">
+      <section className="ff-dashboard-metrics-detail mt-6 grid grid-cols-1 gap-5 xl:grid-cols-2 2xl:grid-cols-3">
         <Card className="">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>

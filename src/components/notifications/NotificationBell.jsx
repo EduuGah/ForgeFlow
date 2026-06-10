@@ -7,8 +7,9 @@ import { useAuth } from '../../context/AuthContext'
 import { normalizeNotificationFromApi, formatDateTime, getNotificationMeta } from '../../features/notifications/notificationUtils'
 import { apiFetch } from '../../services/api'
 import { clearLegacyForgeFlowStorage, getUserStorageData } from '../../utils/userStorage'
+import forgeflowIcon from '../../assets/forgeflow-icon.png'
 
-const MAX_PREVIEW_NOTIFICATIONS = 6
+const MAX_PREVIEW_NOTIFICATIONS = 5
 
 function normalizeUnreadCount(apiUnreadCount, notifications = []) {
   const parsedApiCount = Number(apiUnreadCount)
@@ -241,10 +242,13 @@ function NotificationBell() {
         <div className="ff-notification-menu__handle" aria-hidden="true" />
 
         <header className="ff-notification-menu__header">
-          <div>
+          <div className="ff-notification-menu__brand-copy">
+            <span className="ff-notification-menu__brand-icon" aria-hidden="true">
+              <img src={forgeflowIcon} alt="" />
+            </span>
             <span id="ff-notification-menu-title">Notificações</span>
             <strong>{unreadLabel}</strong>
-            <small>Resumo das novidades recentes do ForgeFlow.</small>
+            <small>Resumo rapido do ForgeFlow.</small>
           </div>
 
           <button type="button" onClick={() => setIsMenuOpen(false)} aria-label="Fechar notificações">

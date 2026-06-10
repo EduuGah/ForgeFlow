@@ -7,6 +7,8 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.IBinder;
 
@@ -20,6 +22,10 @@ public class ActiveWorkoutForegroundService extends Service {
     public static final String EXTRA_SUMMARY = "summary";
     public static final String EXTRA_PROGRESS = "progress";
     public static final String EXTRA_STARTED_AT = "startedAt";
+    public static final String EXTRA_CURRENT_EXERCISE_NAME = "currentExerciseName";
+    public static final String EXTRA_CURRENT_SET_LABEL = "currentSetLabel";
+    public static final String EXTRA_COMPLETED_SETS = "completedSets";
+    public static final String EXTRA_TOTAL_SETS = "totalSets";
     public static final String CHANNEL_ID = "forgeflow-active-workout-foreground";
     public static final int NOTIFICATION_ID = 9301;
 
@@ -44,10 +50,23 @@ public class ActiveWorkoutForegroundService extends Service {
 
         String workoutName = intent != null ? intent.getStringExtra(EXTRA_WORKOUT_NAME) : null;
         String summary = intent != null ? intent.getStringExtra(EXTRA_SUMMARY) : null;
+        String currentExerciseName = intent != null ? intent.getStringExtra(EXTRA_CURRENT_EXERCISE_NAME) : null;
+        String currentSetLabel = intent != null ? intent.getStringExtra(EXTRA_CURRENT_SET_LABEL) : null;
+        int completedSets = intent != null ? intent.getIntExtra(EXTRA_COMPLETED_SETS, 0) : 0;
+        int totalSets = intent != null ? intent.getIntExtra(EXTRA_TOTAL_SETS, 0) : 0;
         int progress = intent != null ? intent.getIntExtra(EXTRA_PROGRESS, 0) : 0;
         long startedAt = intent != null ? intent.getLongExtra(EXTRA_STARTED_AT, System.currentTimeMillis()) : System.currentTimeMillis();
 
-        Notification notification = buildNotification(workoutName, summary, progress, startedAt);
+        Notification notification = buildNotification(
+            workoutName,
+            summary,
+            currentExerciseName,
+            currentSetLabel,
+            completedSets,
+            totalSets,
+            progress,
+            startedAt
+        );
 
         if (!isForegroundStarted || ACTION_START.equals(action)) {
             startForeground(NOTIFICATION_ID, notification);
@@ -65,7 +84,16 @@ public class ActiveWorkoutForegroundService extends Service {
         return null;
     }
 
-    private Notification buildNotification(String workoutName, String summary, int progress, long startedAt) {
+    private Notification buildNotification(
+        String workoutName,
+        String summary,
+        String currentExerciseName,
+        String currentSetLabel,
+        int completedSets,
+        int totalSets,
+        int progress,
+        long startedAt
+    ) {
         Intent openIntent = new Intent(this, MainActivity.class);
         openIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
@@ -74,15 +102,31 @@ public class ActiveWorkoutForegroundService extends Service {
 
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, openIntent, pendingFlags);
 
-        String safeWorkoutName = workoutName != null && !workoutName.trim().isEmpty() ? workoutName : "Treino em andamento";
-        String safeSummary = summary != null && !summary.trim().isEmpty() ? summary : "Toque para voltar ao ForgeFlow";
+        String safeWorkoutName = hasText(workoutName) ? workoutName.trim() : "Treino em andamento";
+        String safeExerciseName = hasText(currentExerciseName) ? currentExerciseName.trim() : "";
+        String safeSetLabel = hasText(currentSetLabel) ? currentSetLabel.trim() : "";
         int safeProgress = Math.max(0, Math.min(100, progress));
+        int safeCompletedSets = Math.max(0, completedSets);
+        int safeTotalSets = Math.max(0, totalSets);
+
+        String setLine = safeSetLabel;
+        if (!hasText(setLine) && safeTotalSets > 0) {
+            setLine = safeCompletedSets + "/" + safeTotalSets + " series";
+        }
+
+        String compactStatus = hasText(safeExerciseName)
+            ? (hasText(setLine) ? setLine + " - " + safeExerciseName : safeExerciseName)
+            : "Toque para voltar ao ForgeFlow";
+        String detailText = hasText(summary) ? summary.trim() : compactStatus;
+
+        Bitmap largeIcon = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("ForgeFlow · " + safeWorkoutName)
-            .setContentText(safeSummary)
-            .setStyle(new NotificationCompat.BigTextStyle().bigText(safeSummary))
+            .setLargeIcon(largeIcon)
+            .setContentTitle("ForgeFlow - " + safeWorkoutName)
+            .setContentText(compactStatus)
+            .setStyle(new NotificationCompat.BigTextStyle().bigText(detailText))
             .setContentIntent(pendingIntent)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
@@ -90,13 +134,20 @@ public class ActiveWorkoutForegroundService extends Service {
             .setSilent(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setCategory(NotificationCompat.CATEGORY_STATUS)
+            .setColor(0xFF0EA5E9)
+            .setColorized(false)
             .setWhen(startedAt > 0 ? startedAt : System.currentTimeMillis())
             .setUsesChronometer(true)
-            .setShowWhen(true);
+            .setShowWhen(true)
+            .setBadgeIconType(NotificationCompat.BADGE_ICON_SMALL);
 
-        if (safeProgress > 0) builder.setProgress(100, safeProgress, false);
+        builder.setProgress(100, safeProgress, false);
 
         return builder.build();
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
     }
 
     private void createChannel() {
@@ -110,7 +161,7 @@ public class ActiveWorkoutForegroundService extends Service {
             "Treino ativo ForgeFlow",
             NotificationManager.IMPORTANCE_LOW
         );
-        channel.setDescription("Notificação fixa enquanto existe treino em andamento.");
+        channel.setDescription("Notificacao fixa enquanto existe treino em andamento.");
         channel.setShowBadge(false);
         manager.createNotificationChannel(channel);
     }

@@ -48,6 +48,16 @@ function ActiveWorkoutMini({ variant = 'floating' }) {
     currentExercise?.exerciseName ||
     currentExercise?.name ||
     'Próximo exercício'
+  const currentWorkingSets = (currentExercise?.sets || []).filter(
+    (set) => set.type !== 'warmup'
+  )
+  const nextIncompleteSetIndex = currentWorkingSets.findIndex((set) => !set.completed)
+  const activeSetIndex = nextIncompleteSetIndex >= 0
+    ? nextIncompleteSetIndex
+    : Math.max(0, currentWorkingSets.length - 1)
+  const currentSetLabel = currentWorkingSets.length > 0
+    ? `Serie ${activeSetIndex + 1}/${currentWorkingSets.length}`
+    : `${completedSets}/${totalSets} series`
 
   function handleOpenWorkout() {
     if (location.pathname === '/start-workout') return
@@ -77,7 +87,7 @@ function ActiveWorkoutMini({ variant = 'floating' }) {
         </strong>
 
         <small className="ff-active-workout-mini-card-v3__current">
-          Atual: {currentExerciseName}
+          {currentSetLabel} - {currentExerciseName}
         </small>
 
         <span className="ff-active-workout-mini-card-v3__meta">

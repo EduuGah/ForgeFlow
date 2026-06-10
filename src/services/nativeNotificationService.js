@@ -284,6 +284,7 @@ export async function updateActiveWorkoutNotification({
   progressPercent = 0,
   startedAt,
   currentExerciseName = '',
+  currentSetLabel = '',
   completedExercises = 0,
   totalExercises = 0,
 }) {
@@ -300,13 +301,15 @@ export async function updateActiveWorkoutNotification({
   const safeTotalExercises = Math.max(0, Number(totalExercises) || 0)
   const safeCompletedExercises = Math.max(0, Math.min(safeTotalExercises, Number(completedExercises) || 0))
   const safeExerciseName = String(currentExerciseName || '').trim()
+  const safeCurrentSetLabel = String(currentSetLabel || '').trim()
   const exerciseSummary = safeTotalExercises > 0
     ? `${safeCompletedExercises}/${safeTotalExercises} exercícios`
     : 'Exercícios em andamento'
-  const summary = `${elapsedLabel || '00:00:00'} · ${safeCompletedSets}/${safeTotalSets} séries · ${safeProgress}% concluído`
+  const setSummary = `${safeCompletedSets}/${safeTotalSets} series`
+  const summary = `${elapsedLabel || '00:00:00'} - ${setSummary} - ${safeProgress}%`
   const detailedSummary = safeExerciseName
-    ? `${summary} · atual: ${safeExerciseName}`
-    : `${summary} · ${exerciseSummary}`
+    ? `${safeCurrentSetLabel ? `${safeCurrentSetLabel} - ` : ''}${safeExerciseName} - ${summary}`
+    : `${summary} - ${exerciseSummary}`
 
   // Preferência no Android: foreground service nativo.
   // Ele mantém uma notificação constante na barra mesmo com o app em segundo plano.
@@ -317,6 +320,9 @@ export async function updateActiveWorkoutNotification({
       progress: safeProgress,
       startedAt: Number.isFinite(safeStartedAt) ? safeStartedAt : Date.now(),
       currentExerciseName: safeExerciseName,
+      currentSetLabel: safeCurrentSetLabel,
+      completedSets: safeCompletedSets,
+      totalSets: safeTotalSets,
       completedExercises: safeCompletedExercises,
       totalExercises: safeTotalExercises,
     })
@@ -337,6 +343,7 @@ export async function updateActiveWorkoutNotification({
         channelId: ACTIVE_WORKOUT_CHANNEL_ID,
         title: 'ForgeFlow · Treino em andamento',
         body,
+        smallIcon: 'ic_launcher',
         ongoing: true,
         autoCancel: false,
         schedule: buildOneShotSchedule(1),

@@ -339,6 +339,16 @@ function AppLayout() {
       const currentExercise = sessionExercises.find((exercise) =>
         Array.isArray(exercise.sets) && exercise.sets.some((set) => !set.completed && set.type !== 'warmup')
       ) || sessionExercises[0]
+      const currentWorkingSets = Array.isArray(currentExercise?.sets)
+        ? currentExercise.sets.filter((set) => set.type !== 'warmup')
+        : []
+      const nextIncompleteSetIndex = currentWorkingSets.findIndex((set) => !set.completed)
+      const activeSetIndex = nextIncompleteSetIndex >= 0
+        ? nextIncompleteSetIndex
+        : Math.max(0, currentWorkingSets.length - 1)
+      const currentSetLabel = currentWorkingSets.length > 0
+        ? `Serie ${activeSetIndex + 1}/${currentWorkingSets.length}`
+        : `${completedSets}/${totalSets} series`
       const completedExercises = sessionExercises.filter((exercise) => {
         const workingSets = Array.isArray(exercise.sets) ? exercise.sets.filter((set) => set.type !== 'warmup') : []
         return workingSets.length > 0 && workingSets.every((set) => set.completed)
@@ -352,6 +362,7 @@ function AppLayout() {
         progressPercent,
         startedAt: activeSession.startedAt,
         currentExerciseName: currentExercise?.exercise?.name || currentExercise?.name || currentExercise?.exerciseName || '',
+        currentSetLabel,
         completedExercises,
         totalExercises: sessionExercises.length,
       }).catch(() => {})

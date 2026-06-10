@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { Play } from 'lucide-react'
 import DashboardTopSection from '../features/dashboard/components/DashboardTopSection'
 import DashboardOverviewSection from '../features/dashboard/components/DashboardOverviewSection'
 import DashboardGoalsSection from '../features/dashboard/components/DashboardGoalsSection'
@@ -111,9 +112,15 @@ function Dashboard() {
     <div className="ff-hevy-page ff-hevy-page-dashboard">
 
       <AppPageIntro
-        eyebrow="Início"
+        eyebrow="Inicio"
         title="ForgeFlow"
-        description="Resumo rápido para decidir seu próximo treino sem parecer painel de site."
+        description="O essencial para decidir o proximo treino sem transformar o app em painel lotado."
+        action={
+          <Link to="/workouts" className="ff-page-intro-primary-action">
+            <Play size={16} />
+            Treinar
+          </Link>
+        }
         metrics={[
           { label: 'Treinos', value: history.length },
           { label: 'Rotinas', value: workouts.length },
@@ -147,18 +154,23 @@ function Dashboard() {
 
       <DashboardGoalsSection dashboardGoals={dashboardGoals} goals={goals} />
 
-      <DashboardNotificationsSection
-        unreadNotificationsCount={unreadNotificationsCount}
-        dashboardNotifications={dashboardNotifications}
-      />
+      <details className="ff-mobile-detail-panel ff-dashboard-detail-panel">
+        <summary>Alertas e recuperacao</summary>
+        <div className="ff-mobile-detail-panel__content">
+          <DashboardNotificationsSection
+            unreadNotificationsCount={unreadNotificationsCount}
+            dashboardNotifications={dashboardNotifications}
+          />
 
-      <DashboardRecoverySection
-        muscleRecovery={muscleRecovery}
-        mostRecoveredMuscles={mostRecoveredMuscles}
-        musclesStillRecovering={musclesStillRecovering}
-        getRecoveryStyle={getRecoveryStyle}
-        formatRecoveryDate={formatRecoveryDate}
-      />
+          <DashboardRecoverySection
+            muscleRecovery={muscleRecovery}
+            mostRecoveredMuscles={mostRecoveredMuscles}
+            musclesStillRecovering={musclesStillRecovering}
+            getRecoveryStyle={getRecoveryStyle}
+            formatRecoveryDate={formatRecoveryDate}
+          />
+        </div>
+      </details>
 
       <DashboardMetricsSection
         history={history}
@@ -181,36 +193,41 @@ function Dashboard() {
         formatShortDate={formatShortDate}
       />
 
-      <DashboardQuickAccessSection
-        recentWorkouts={recentWorkouts}
-        favoriteWorkouts={favoriteWorkouts}
-        favoriteExercises={favoriteExercises}
-        exercises={exercises}
-        heaviestExercise={heaviestExercise}
-        mostTrainedExercise={mostTrainedExercise}
-        handleStartWorkout={handleStartWorkout}
-        formatShortDate={formatShortDate}
-      />
+      <details className="ff-mobile-detail-panel ff-dashboard-detail-panel">
+        <summary>Rotinas, graficos e recordes</summary>
+        <div className="ff-mobile-detail-panel__content">
+          <DashboardQuickAccessSection
+            recentWorkouts={recentWorkouts}
+            favoriteWorkouts={favoriteWorkouts}
+            favoriteExercises={favoriteExercises}
+            exercises={exercises}
+            heaviestExercise={heaviestExercise}
+            mostTrainedExercise={mostTrainedExercise}
+            handleStartWorkout={handleStartWorkout}
+            formatShortDate={formatShortDate}
+          />
 
-      <DashboardChartsSection
-        shouldRenderCharts={shouldRenderCharts}
-        volumeByWorkout={volumeByWorkout}
-        completedSets={completedSets}
-        radarData={radarData}
-        workoutsByWeek={workoutsByWeek}
-        setsByWorkout={setsByWorkout}
-        muscleVolumeChartData={muscleVolumeChartData}
-        chartAccentColor={chartAccentColor}
-      />
+          <DashboardChartsSection
+            shouldRenderCharts={shouldRenderCharts}
+            volumeByWorkout={volumeByWorkout}
+            completedSets={completedSets}
+            radarData={radarData}
+            workoutsByWeek={workoutsByWeek}
+            setsByWorkout={setsByWorkout}
+            muscleVolumeChartData={muscleVolumeChartData}
+            chartAccentColor={chartAccentColor}
+          />
 
-      <DashboardPrsSection
-        exercisePRs={exercisePRs}
-        recentPRs={recentPRs}
-        prSearch={prSearch}
-        setPrSearch={setPrSearch}
-        formatShortDate={formatShortDate}
-        formatVolume={formatVolume}
-      />
+          <DashboardPrsSection
+            exercisePRs={exercisePRs}
+            recentPRs={recentPRs}
+            prSearch={prSearch}
+            setPrSearch={setPrSearch}
+            formatShortDate={formatShortDate}
+            formatVolume={formatVolume}
+          />
+        </div>
+      </details>
     </>
   
     </div>
