@@ -242,7 +242,7 @@ function Progress() {
         ]}
       />
 
-    <>
+    <div className="ff-progress-body ff-page-mobile-main-grid">
       <PageHeader
         title="Evolução"
         description="Acompanhe peso, volume, frequência, PRs, fotos, séries e histórico detalhado."
@@ -284,7 +284,7 @@ function Progress() {
           />
         </Card>
       ) : (
-        <div className="ff-hevy-progress space-y-5 sm:space-y-6">
+        <div className="ff-hevy-progress ff-page-mobile-main-grid space-y-5 sm:space-y-6">
           <ProgressSummaryCards
             summary={normalizedProgress.summary}
             insights={normalizedProgress.insights}
@@ -294,7 +294,7 @@ function Progress() {
 
           <Suspense fallback={<ChartLoadingCard title="Preparando gráficos principais" />}>
             {chartsReady ? (
-              <section className="grid grid-cols-1 gap-4 xl:grid-cols-2 xl:gap-6">
+              <section className="ff-progress-chart-grid grid grid-cols-1 gap-4 xl:grid-cols-2 xl:gap-6">
                 <BodyWeightChart
                   data={normalizedProgress.bodyWeight}
                   accentColor={chartAccentColor}
@@ -321,7 +321,7 @@ function Progress() {
             )}
           </Suspense>
 
-          <section className="grid grid-cols-1 gap-4 xl:grid-cols-2 xl:gap-6">
+          <section className="ff-progress-chart-grid grid grid-cols-1 gap-4 xl:grid-cols-2 xl:gap-6">
             {chartsReady ? (
               <MonthlyProgressChart
                 data={normalizedProgress.monthlyProgress}
@@ -334,7 +334,7 @@ function Progress() {
             <SetVolumeDetails data={recentSetRows} />
           </section>
 
-          <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+          <section className="ff-page-mobile-main-grid grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
             <RecentWorkoutDetails workouts={normalizedProgress.recentWorkouts} />
 
             <BodyWeightLog data={normalizedProgress.bodyWeight} />
@@ -345,7 +345,7 @@ function Progress() {
           <ProgressPhotosAndReadingSection normalizedProgress={normalizedProgress} />
         </div>
       )}
-    </>
+    </div>
   
     </div>
   )

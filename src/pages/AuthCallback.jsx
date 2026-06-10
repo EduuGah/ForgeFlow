@@ -60,7 +60,7 @@ function AuthCallback() {
 
       <AppPageIntro eyebrow="Autenticação" title="Conectando" description="Finalizando login com segurança." />
 
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4 text-white">
+    <div className="ff-auth-flow flex min-h-screen items-center justify-center bg-zinc-950 px-4 text-white">
       <div className="rounded-3xl border border-zinc-800 bg-[#121216] p-8 text-center">
         {!error ? (
           <>

@@ -335,7 +335,7 @@ function ProgressPhotos() {
         ]}
       />
 
-    <>
+    <div className="ff-progress-photos-body ff-page-mobile-main-grid">
       <PageHeader
         title="Fotos de evolução"
         description="Registre sua evolução corporal com fotos, peso, data e observações."
@@ -348,7 +348,7 @@ function ProgressPhotos() {
 
       <ProgressPhotosStats stats={stats} />
 
-      <section className="mt-5 grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
+      <section className="ff-page-mobile-main-grid mt-5 grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
         <ProgressPhotosSidebar
           file={file}
           date={date}
@@ -428,7 +428,7 @@ function ProgressPhotos() {
         message={toast?.message}
         onClose={() => setToast(null)}
       />
-    </>
+    </div>
   
     </div>
   )

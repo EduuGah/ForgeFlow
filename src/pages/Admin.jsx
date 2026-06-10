@@ -380,7 +380,7 @@ function Admin() {
 
   if (!isAdmin) {
     return (
-      <div className="space-y-6">
+      <div className="ff-hevy-page ff-hevy-page-admin">
         <PageHeader title="Admin" description="Área restrita para administradores." />
 
         <Card className="border-red-500/20 bg-red-500/10">
@@ -514,7 +514,7 @@ function Admin() {
 
       <AppPageIntro eyebrow="Admin" title="Painel" description="Visão administrativa com cards mais compactos e leitura melhor no celular." />
 
-    <div className="ff-hevy-admin ff-admin-v48 space-y-6">
+    <div className="ff-hevy-admin ff-admin-v48 ff-page-mobile-main-grid space-y-6">
       <PageHeader
         title="Admin"
         description="Painel de produção, usuários, métricas, rankings e suporte."

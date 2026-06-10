@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
 
@@ -94,8 +95,10 @@ public class ActiveWorkoutForegroundService extends Service {
         int progress,
         long startedAt
     ) {
-        Intent openIntent = new Intent(this, MainActivity.class);
+        Intent openIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("forgeflow://workout/active?source=notification"), this, MainActivity.class);
         openIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        openIntent.putExtra("forgeflowRoute", "/start-workout");
+        openIntent.putExtra("forgeflowSource", "active-workout-notification");
 
         int pendingFlags = PendingIntent.FLAG_UPDATE_CURRENT;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) pendingFlags |= PendingIntent.FLAG_IMMUTABLE;
@@ -117,15 +120,22 @@ public class ActiveWorkoutForegroundService extends Service {
         String compactStatus = hasText(safeExerciseName)
             ? (hasText(setLine) ? setLine + " - " + safeExerciseName : safeExerciseName)
             : "Toque para voltar ao ForgeFlow";
-        String detailText = hasText(summary) ? summary.trim() : compactStatus;
+        String progressLine = safeProgress + "% concluido";
+        String setsLine = safeTotalSets > 0 ? safeCompletedSets + "/" + safeTotalSets + " series" : "Series em andamento";
+        String title = hasText(safeExerciseName) ? safeExerciseName : safeWorkoutName;
+        String detailText = hasText(summary)
+            ? summary.trim()
+            : safeWorkoutName + " - " + compactStatus + " - " + setsLine + " - " + progressLine;
 
         Bitmap largeIcon = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setLargeIcon(largeIcon)
-            .setContentTitle("ForgeFlow - " + safeWorkoutName)
-            .setContentText(compactStatus)
+            .setContentTitle("ForgeFlow - " + title)
+            .setContentText(compactStatus + " - " + progressLine)
+            .setSubText(progressLine)
+            .setContentInfo(safeProgress + "%")
             .setStyle(new NotificationCompat.BigTextStyle().bigText(detailText))
             .setContentIntent(pendingIntent)
             .setOngoing(true)
@@ -139,7 +149,8 @@ public class ActiveWorkoutForegroundService extends Service {
             .setWhen(startedAt > 0 ? startedAt : System.currentTimeMillis())
             .setUsesChronometer(true)
             .setShowWhen(true)
-            .setBadgeIconType(NotificationCompat.BADGE_ICON_SMALL);
+            .setBadgeIconType(NotificationCompat.BADGE_ICON_SMALL)
+            .addAction(R.mipmap.ic_launcher, "Abrir detalhes", pendingIntent);
 
         builder.setProgress(100, safeProgress, false);
 

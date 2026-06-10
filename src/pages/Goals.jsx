@@ -364,34 +364,36 @@ function Goals() {
         ]}
       />
 
-    <GoalsPageSections
-      source={source}
-      loading={loading}
-      stats={stats}
-      search={search}
-      statusFilter={statusFilter}
-      goals={goals}
-      filteredGoals={filteredGoals}
-      isModalOpen={isModalOpen}
-      modalGoal={modalGoal}
-      exerciseOptions={exerciseOptions}
-      confirmModal={confirmModal}
-      toast={toast}
-      onRefresh={() => setRefreshKey((key) => key + 1)}
-      onCreate={openCreateModal}
-      onSearchChange={setSearch}
-      onStatusFilterChange={setStatusFilter}
-      onEdit={openEditModal}
-      onDelete={handleDeleteGoal}
-      onComplete={handleCompleteGoal}
-      onArchive={handleArchiveGoal}
-      onUnarchive={handleUnarchiveGoal}
-      onReactivate={handleReactivateGoal}
-      onCloseModal={closeModal}
-      onSubmitGoal={handleSubmitGoal}
-      onCancelConfirm={() => setConfirmModal(null)}
-      onCloseToast={() => setToast(null)}
-    />
+    <div className="ff-goals-body ff-page-mobile-main-grid">
+      <GoalsPageSections
+        source={source}
+        loading={loading}
+        stats={stats}
+        search={search}
+        statusFilter={statusFilter}
+        goals={goals}
+        filteredGoals={filteredGoals}
+        isModalOpen={isModalOpen}
+        modalGoal={modalGoal}
+        exerciseOptions={exerciseOptions}
+        confirmModal={confirmModal}
+        toast={toast}
+        onRefresh={() => setRefreshKey((key) => key + 1)}
+        onCreate={openCreateModal}
+        onSearchChange={setSearch}
+        onStatusFilterChange={setStatusFilter}
+        onEdit={openEditModal}
+        onDelete={handleDeleteGoal}
+        onComplete={handleCompleteGoal}
+        onArchive={handleArchiveGoal}
+        onUnarchive={handleUnarchiveGoal}
+        onReactivate={handleReactivateGoal}
+        onCloseModal={closeModal}
+        onSubmitGoal={handleSubmitGoal}
+        onCancelConfirm={() => setConfirmModal(null)}
+        onCloseToast={() => setToast(null)}
+      />
+    </div>
   
     </div>
   )

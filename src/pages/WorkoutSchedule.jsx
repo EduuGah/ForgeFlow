@@ -243,8 +243,8 @@ function WorkoutSchedule() {
         action={<Badge>{hasUnsavedChanges ? 'Alterações pendentes' : `${summary.workoutDays} dia(s) com treino`}</Badge>}
       />
 
-      <section className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="space-y-5">
+      <section className="ff-page-mobile-main-grid grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="ff-schedule-primary-flow space-y-5">
           <Card className="overflow-hidden">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>

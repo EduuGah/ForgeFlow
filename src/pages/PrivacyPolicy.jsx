@@ -8,7 +8,7 @@ function PrivacyPolicy() {
 
       <AppPageIntro eyebrow="Legal" title="Privacidade" description="Como o ForgeFlow trata seus dados." />
 
-    <main className="min-h-screen bg-[var(--ff-bg)] px-4 py-8 text-[var(--ff-text)]">
+    <main className="ff-legal-main ff-page-mobile-main-grid min-h-screen bg-[var(--ff-bg)] px-4 py-8 text-[var(--ff-text)]">
       <div className="mx-auto max-w-4xl space-y-5">
         <header className="rounded-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] p-6 shadow-sm">
           <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--ff-accent-text)]">

@@ -11,6 +11,7 @@ import {
 import ExerciseFiltersSidebar from '../features/exercises/components/ExerciseFiltersSidebar'
 import ExerciseFormModal from '../features/exercises/components/ExerciseFormModal'
 import ExerciseLibrarySection from '../features/exercises/components/ExerciseLibrarySection'
+import AppPageIntro from '../components/app/AppPageIntro'
 
 import {
   INITIAL_VISIBLE_COUNT,
@@ -637,7 +638,18 @@ function Exercises() {
 
   return (
     <div className="ff-hevy-page ff-hevy-page-exercises ff-exercises-native-page">
-      <section className="grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
+      <AppPageIntro
+        eyebrow="Biblioteca"
+        title="Exercicios"
+        description="Busque rapido, filtre por musculo ou equipamento e abra detalhes sem perder espaco no celular."
+        metrics={[
+          { label: 'Total', value: indexedExercises.length },
+          { label: 'Visiveis', value: filteredExercises.length },
+          { label: 'Favoritos', value: stats.favoriteExercisesCount },
+        ]}
+      />
+
+      <section className="ff-page-mobile-main-grid grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
         <div className="hidden xl:block">
           <ExerciseFiltersSidebar
             groupSearch={groupSearch}

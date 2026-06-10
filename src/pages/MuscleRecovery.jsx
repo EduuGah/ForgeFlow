@@ -136,21 +136,23 @@ function MuscleRecovery() {
         ]}
       />
 
-        <MuscleRecoveryPageSections
-            source={source}
-            loading={loading}
-            recovery={recovery}
-            averageRecovery={averageRecovery}
-            readyMuscles={readyMuscles}
-            recoveringMuscles={recoveringMuscles}
-            nextSuggestedMuscles={nextSuggestedMuscles}
-            filteredRecovery={filteredRecovery}
-            search={search}
-            statusFilter={statusFilter}
-            onSearchChange={setSearch}
-            onStatusFilterChange={setStatusFilter}
-            onClearFilters={clearFilters}
-        />
+        <div className="ff-recovery-body ff-page-mobile-main-grid">
+            <MuscleRecoveryPageSections
+                source={source}
+                loading={loading}
+                recovery={recovery}
+                averageRecovery={averageRecovery}
+                readyMuscles={readyMuscles}
+                recoveringMuscles={recoveringMuscles}
+                nextSuggestedMuscles={nextSuggestedMuscles}
+                filteredRecovery={filteredRecovery}
+                search={search}
+                statusFilter={statusFilter}
+                onSearchChange={setSearch}
+                onStatusFilterChange={setStatusFilter}
+                onClearFilters={clearFilters}
+            />
+        </div>
     
     </div>
   )

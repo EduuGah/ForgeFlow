@@ -363,8 +363,8 @@ function ExerciseDetails() {
 
         <div className="ff-exercise-detail-tabbody">
           {activeTab === 'summary' && (
-            <section className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
-              <div className="space-y-4">
+            <section className="ff-page-mobile-main-grid grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+              <div className="ff-exercise-detail-primary-flow space-y-4">
                 <Card className="p-4 sm:p-5">
                   <div className="flex items-center gap-3">
                     <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">
@@ -449,7 +449,7 @@ function ExerciseDetails() {
           )}
 
           {activeTab === 'instructions' && (
-            <section className="space-y-4">
+            <section className="ff-exercise-detail-info-flow space-y-4">
               <InfoList icon={CheckCircle2} title="Execução correta" description="Passo a passo para executar melhor." items={instructionsList} variant="success" />
               <InfoList icon={Lightbulb} title="Dicas" description="Pontos úteis para melhorar a técnica." items={tipsList} />
               <InfoList icon={AlertTriangle} title="Erros comuns" description="Coisas para evitar durante o movimento." items={mistakesList} variant="danger" />
@@ -457,7 +457,7 @@ function ExerciseDetails() {
           )}
 
           {activeTab === 'ranking' && (
-            <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <section className="ff-exercise-detail-action-grid grid grid-cols-1 gap-3 sm:grid-cols-3">
               <ExerciseStatTile label="Recordes totais" value={exerciseHistory?.prCount || 0} icon={Trophy} accent />
               <ExerciseStatTile label="Peso" value={exerciseHistory?.prWeight || 0} hint="PRs de carga" icon={Dumbbell} />
               <ExerciseStatTile label="Volume" value={exerciseHistory?.prVolume || 0} hint="PRs de kg × reps" icon={Flame} />
@@ -466,7 +466,7 @@ function ExerciseDetails() {
         </div>
       </Card>
 
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <section className="ff-page-mobile-main-grid grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card className="p-4 sm:p-5">
           <h2 className="text-lg font-black">Músculos secundários</h2>
           <div className="mt-4 flex flex-wrap gap-2">

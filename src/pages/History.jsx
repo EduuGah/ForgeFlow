@@ -2,6 +2,7 @@ import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 
 import ConfirmModal from '../components/ui/ConfirmModal'
 import Toast from '../components/ui/Toast'
+import AppPageIntro from '../components/app/AppPageIntro'
 
 import { useAuth } from '../context/AuthContext'
 import { apiFetch } from '../services/api'
@@ -305,7 +306,18 @@ function History() {
 
   return (
     <div className="ff-hevy-page ff-hevy-page-history ff-history-native-page">
-      <section className="mb-4 rounded-[28px] border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 sm:p-5">
+      <AppPageIntro
+        eyebrow="Historico"
+        title="Treinos finalizados"
+        description={`${filteredHistory.length} de ${history.length} registros - ${syncing ? 'sincronizando' : source === 'database' ? 'sincronizado' : 'local'}`}
+        metrics={[
+          { label: 'Treinos', value: history.length },
+          { label: 'Series', value: summary.totalCompletedSets },
+          { label: 'PRs', value: summary.totalPRs },
+        ]}
+      />
+
+      <section className="ff-page-legacy-intro mb-4 rounded-[28px] border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 sm:p-5">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--ff-accent-text)]">Histórico</p>
         <h1 className="mt-1 text-3xl font-black tracking-[-0.05em] text-[var(--ff-text)]">Treinos finalizados</h1>
         <p className="mt-1 text-sm text-[var(--ff-muted)]">{filteredHistory.length} de {history.length} registros · {syncing ? 'sincronizando' : source === 'database' ? 'sincronizado' : 'local'}</p>
@@ -313,7 +325,7 @@ function History() {
 
       <HistorySummaryCards historyCount={history.length} summary={summary} />
 
-      <section className="mt-4 grid grid-cols-1 gap-5 2xl:grid-cols-[minmax(0,1fr)_320px] 2xl:gap-6">
+      <section className="ff-page-mobile-main-grid mt-4 grid grid-cols-1 gap-5 2xl:grid-cols-[minmax(0,1fr)_320px] 2xl:gap-6">
         <HistoryListSection
           history={history}
           filteredHistory={filteredHistory}

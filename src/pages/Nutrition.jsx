@@ -225,7 +225,7 @@ function Nutrition() {
         ]}
       />
 
-    <div className="ff-nutrition-page space-y-5">
+    <div className="ff-nutrition-page ff-page-mobile-main-grid space-y-5">
       <PageHeader
         title="Nutrição"
         description="Acompanhe hidratação, refeições e metas simples junto com seus treinos."
@@ -247,14 +247,14 @@ function Nutrition() {
         </div>
       </Card>
 
-      <section className="grid grid-cols-1 gap-3 md:grid-cols-3">
+      <section className="ff-nutrition-metrics grid grid-cols-1 gap-3 md:grid-cols-3">
         <MetricCard icon={Droplets} title="Hidratação" value={nutrition.waterMl} goal={nutrition.waterGoalMl} suffix="ml" description="Meta diária configurável" />
         <MetricCard icon={Flame} title="Calorias" value={nutrition.calories} goal={nutrition.calorieGoal} suffix="kcal" description="Total vindo das refeições" />
         <MetricCard icon={Scale} title="Proteína" value={nutrition.proteinG} goal={nutrition.proteinGoalG} suffix="g" description="Foco em recuperação" />
       </section>
 
-      <section className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,.85fr)]">
-        <div className="space-y-4">
+      <section className="ff-page-mobile-main-grid grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(340px,.85fr)]">
+        <div className="ff-nutrition-primary-flow space-y-4">
           <Card className="ff-hydration-card p-4 sm:p-5">
             <div className="flex items-start gap-3">
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-200">

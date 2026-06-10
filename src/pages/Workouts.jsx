@@ -23,7 +23,6 @@ import {
     normalizeWorkoutFromApi,
 } from '../utils/workoutNormalizers'
 import {
-    WorkoutsHeader,
     WorkoutStatsGrid,
     WorkoutFolderFilter,
 } from '../features/workouts/components/WorkoutsOverview'
@@ -905,14 +904,24 @@ function Workouts() {
                     { label: 'Exercícios', value: exercises.length },
                     { label: 'Itens', value: totalExercisesInSavedWorkouts },
                 ]}
+                action={
+                    <div className="ff-page-intro-action-stack">
+                        {isSyncingData && (
+                            <span className="ff-page-intro-status-pill">Sincronizando</span>
+                        )}
+                        <button
+                            type="button"
+                            onClick={openCreateBuilder}
+                            className="ff-page-intro-primary-action"
+                        >
+                            <Plus size={18} />
+                            Novo treino
+                        </button>
+                    </div>
+                }
             />
 
         <>
-            <WorkoutsHeader
-                isSyncingData={isSyncingData}
-                onCreateWorkout={openCreateBuilder}
-            />
-
             <WorkoutStatsGrid
                 workoutsCount={workouts.length}
                 exercisesCount={exercises.length}
@@ -929,7 +938,7 @@ function Workouts() {
                 onDeleteFolder={handleDeleteFolder}
             />
 
-            <section className="mt-6 grid grid-cols-1 gap-4 2xl:grid-cols-3 2xl:gap-6">
+            <section className="ff-page-mobile-main-grid mt-6 grid grid-cols-1 gap-4 2xl:grid-cols-3 2xl:gap-6">
                 <WorkoutsListSection
                     appSettings={appSettings}
                     expandedWorkoutId={expandedWorkoutId}

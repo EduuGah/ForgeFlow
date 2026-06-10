@@ -785,8 +785,8 @@ function StartWorkout() {
         onAddExercise={() => setAddExerciseOpen(true)}
       />
 
-      <section className="grid grid-cols-1 gap-4 xl:grid-cols-4 xl:gap-6">
-        <div className="ff-workout-input-polish space-y-4 pb-40 xl:col-span-3 xl:pb-6">
+      <section className="ff-start-workout-main-grid ff-page-mobile-main-grid grid grid-cols-1 gap-4 xl:grid-cols-4 xl:gap-6">
+        <div className="ff-workout-input-polish ff-active-workout-exercise-flow space-y-4 pb-40 xl:col-span-3 xl:pb-6">
           {sessionExercises.map((sessionExercise, exerciseIndex) => (
             <ActiveExerciseCard
               key={sessionExercise.id}

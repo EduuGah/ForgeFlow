@@ -188,14 +188,14 @@ function ExerciseProgress() {
         ]}
       />
 
-    <>
+    <div className="ff-exercise-progress-body ff-page-mobile-main-grid">
       <PageHeader
         title="Progresso por exercício"
         description="Escolha um exercício e veja séries registradas, evolução de carga e volume."
         action={<Badge variant={source === 'database' ? 'purple' : 'default'}>{loading ? 'Carregando' : source === 'database' ? 'Sincronizado' : 'Local'}</Badge>}
       />
 
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <section className="ff-exercise-progress-rankings grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card className="p-4">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-yellow-400/30 bg-yellow-500/10 text-yellow-200">
@@ -282,7 +282,7 @@ function ExerciseProgress() {
       </section>
 
 
-      <section className="grid grid-cols-1 gap-5 xl:grid-cols-[340px_minmax(0,1fr)]">
+      <section className="ff-page-mobile-main-grid grid grid-cols-1 gap-5 xl:grid-cols-[340px_minmax(0,1fr)]">
         <aside className="space-y-5">
           <Card>
             <div className="flex h-12 items-center gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-[var(--ff-muted)]">
@@ -487,7 +487,7 @@ function ExerciseProgress() {
           )}
         </div>
       </section>
-    </>
+    </div>
   
     </div>
   )

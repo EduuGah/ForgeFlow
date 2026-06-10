@@ -108,7 +108,7 @@ function CompleteProfile() {
 
       <AppPageIntro eyebrow="Onboarding" title="Complete seu perfil" description="Ajuste os dados iniciais para personalizar a experiência do ForgeFlow." />
 
-        <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4 py-10 text-white">
+        <div className="ff-auth-flow flex min-h-screen items-center justify-center bg-zinc-950 px-4 py-10 text-white">
             <div className="w-full max-w-3xl rounded-3xl border border-zinc-800 bg-[#121216] p-8 shadow-2xl">
                 <div className="flex items-center gap-4">
                     <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">

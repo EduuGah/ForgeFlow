@@ -596,33 +596,35 @@ function Notifications() {
         ]}
       />
 
-      <NotificationsPageSections
-        source={source}
-        loading={loading}
-        stats={stats}
-        search={search}
-        statusFilter={statusFilter}
-        filteredNotifications={filteredNotifications}
-        visibleNotifications={visibleNotifications}
-        visibleCount={visibleCount}
-        selectedNotification={selectedNotification}
-        confirmModal={confirmModal}
-        toast={toast}
-        onRefresh={() => loadNotifications()}
-        onGenerate={handleGenerateNotifications}
-        onSearchChange={setSearch}
-        onStatusFilterChange={setStatusFilter}
-        onMarkAllAsRead={handleMarkAllAsRead}
-        onLoadMore={() => setVisibleCount((current) => current + 30)}
-        onOpenNotification={handleOpenNotification}
-        onMarkAsRead={handleMarkAsRead}
-        onArchiveNotification={handleArchiveNotification}
-        onDeleteNotification={handleDeleteNotification}
-        onOpenAction={handleOpenAction}
-        onCloseDetail={() => setSelectedNotification(null)}
-        onCancelConfirm={() => setConfirmModal(null)}
-        onCloseToast={() => setToast(null)}
-      />
+      <div className="ff-notifications-body ff-page-mobile-main-grid">
+        <NotificationsPageSections
+          source={source}
+          loading={loading}
+          stats={stats}
+          search={search}
+          statusFilter={statusFilter}
+          filteredNotifications={filteredNotifications}
+          visibleNotifications={visibleNotifications}
+          visibleCount={visibleCount}
+          selectedNotification={selectedNotification}
+          confirmModal={confirmModal}
+          toast={toast}
+          onRefresh={() => loadNotifications()}
+          onGenerate={handleGenerateNotifications}
+          onSearchChange={setSearch}
+          onStatusFilterChange={setStatusFilter}
+          onMarkAllAsRead={handleMarkAllAsRead}
+          onLoadMore={() => setVisibleCount((current) => current + 30)}
+          onOpenNotification={handleOpenNotification}
+          onMarkAsRead={handleMarkAsRead}
+          onArchiveNotification={handleArchiveNotification}
+          onDeleteNotification={handleDeleteNotification}
+          onOpenAction={handleOpenAction}
+          onCloseDetail={() => setSelectedNotification(null)}
+          onCancelConfirm={() => setConfirmModal(null)}
+          onCloseToast={() => setToast(null)}
+        />
+      </div>
     </div>
   );
 }

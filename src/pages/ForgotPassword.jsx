@@ -42,7 +42,7 @@ function ForgotPassword() {
 
       <AppPageIntro eyebrow="Conta" title="Recuperar senha" description="Informe seu e-mail para receber as instruções." />
 
-    <main className="flex min-h-screen items-center justify-center bg-black px-4 py-8 text-white">
+    <main className="ff-auth-flow flex min-h-screen items-center justify-center bg-black px-4 py-8 text-white">
       <section className="w-full max-w-md rounded-[2rem] border border-zinc-800 bg-zinc-950 p-6 shadow-2xl">
         <div className="flex items-center gap-3">
           <img

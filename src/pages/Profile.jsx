@@ -3,6 +3,7 @@ import { BarChart3, CalendarDays, Dumbbell, Pencil, Ruler, Settings as SettingsI
 
 import ConfirmModal from '../components/ui/ConfirmModal'
 import Toast from '../components/ui/Toast'
+import AppPageIntro from '../components/app/AppPageIntro'
 
 import ProfileEditModal from '../features/profile/components/ProfileEditModal'
 import ProfileWeightSection from '../features/profile/components/ProfileWeightSection'
@@ -417,7 +418,31 @@ function Profile() {
   return (
     <div className="ff-hevy-page ff-hevy-page-profile">
 
-    <>
+      <AppPageIntro
+        eyebrow="Perfil"
+        title={profile.name || user?.name || 'Perfil'}
+        description={profile.goal || profile.preferredSplit || 'Resumo do atleta, peso e atalhos principais.'}
+        metrics={[
+          { label: 'Treinos', value: totalWorkouts },
+          { label: 'Series', value: totalSets },
+          { label: 'PRs', value: prs.length },
+        ]}
+        action={
+          <div className="ff-profile-intro-actions">
+            <button type="button" onClick={() => setIsEditOpen(true)} aria-label="Editar perfil">
+              <Pencil size={19} />
+            </button>
+            <button type="button" aria-label="Compartilhar perfil">
+              <Share2 size={19} />
+            </button>
+            <a href="/settings" aria-label="Configuracoes">
+              <SettingsIcon size={19} />
+            </a>
+          </div>
+        }
+      />
+
+    <div className="ff-profile-body ff-page-mobile-main-grid">
       <section className="ff-profile-hevy-hero mb-6">
         <div className="flex items-center justify-between gap-3">
           <h1 className="truncate text-3xl font-black tracking-[-0.06em] text-[var(--ff-text)]">
@@ -535,7 +560,7 @@ function Profile() {
         message={toast?.message}
         onClose={() => setToast(null)}
       />
-    </>
+    </div>
   
     </div>
   )

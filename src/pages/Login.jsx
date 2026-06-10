@@ -97,7 +97,7 @@ function Login() {
     }
 
     return (
-    <div className="ff-login-screen">
+    <div className="ff-hevy-page ff-hevy-page-login ff-login-screen">
         <div className="ff-login-shell">
             <div className="ff-login-card">
                 <div className="ff-login-logo login-logo-card">

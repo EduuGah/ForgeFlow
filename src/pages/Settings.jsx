@@ -18,6 +18,7 @@ import {
 import Badge from "../components/ui/Badge";
 import ConfirmModal from "../components/ui/ConfirmModal";
 import Toast from "../components/ui/Toast";
+import AppPageIntro from "../components/app/AppPageIntro";
 import NotificationSettingsSection from "../components/settings/NotificationSettingsSection";
 
 import { useAuth } from "../context/AuthContext";
@@ -770,6 +771,22 @@ function Settings() {
 
   return (
     <div className="ff-hevy-page ff-hevy-page-settings">
+      <AppPageIntro
+        eyebrow="Conta"
+        title="Configuracoes"
+        description="Preferencias, notificacoes, backup e seguranca em secoes mais faceis de tocar."
+        metrics={[
+          { label: "Tema", value: currentAccent?.name || "Padrao" },
+          { label: "Sync", value: syncBadgeText },
+          { label: "Painel", value: selectedMobilePanel ? "Aberto" : "Inicio" },
+        ]}
+        action={
+          <Badge variant={syncStatus === "idle" ? "purple" : "default"}>
+            {syncBadgeText}
+          </Badge>
+        }
+      />
+
       <header className="mb-5 flex items-center justify-between gap-3 lg:hidden">
         <div className="w-10" />
         <h1 className="text-center text-xl font-medium tracking-[-0.03em]">

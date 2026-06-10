@@ -344,6 +344,10 @@ export async function updateActiveWorkoutNotification({
         title: 'ForgeFlow · Treino em andamento',
         body,
         smallIcon: 'ic_launcher',
+        extra: {
+          forgeflowRoute: '/start-workout',
+          deepLink: 'forgeflow://workout/active?source=local-notification',
+        },
         ongoing: true,
         autoCancel: false,
         schedule: buildOneShotSchedule(1),

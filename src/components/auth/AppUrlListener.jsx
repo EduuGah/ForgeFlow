@@ -1,16 +1,27 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { App as CapacitorApp } from '@capacitor/app'
+import { registerPlugin } from '@capacitor/core'
 
 import { getCurrentUser, saveAuthToken } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 import { isNativeApp } from '../../utils/platformUtils'
+
+const LocalNotifications = registerPlugin('LocalNotifications')
 
 function isForgeFlowAuthCallback(url) {
   return (
     url.protocol === 'forgeflow:' &&
     url.hostname === 'auth' &&
     url.pathname === '/callback'
+  )
+}
+
+function isForgeFlowActiveWorkout(url) {
+  return (
+    url.protocol === 'forgeflow:' &&
+    url.hostname === 'workout' &&
+    url.pathname === '/active'
   )
 }
 
@@ -23,9 +34,23 @@ function AppUrlListener() {
 
     let isMounted = true
 
-    async function handleAuthCallback(urlString) {
+    async function handleForgeFlowUrl(urlString) {
       try {
         const url = new URL(urlString)
+
+        if (isForgeFlowActiveWorkout(url)) {
+          try {
+            window.sessionStorage.setItem('forgeflow:open-active-workout-details', '1')
+          } catch {
+            // A navegação direta continua funcionando mesmo se sessionStorage não estiver disponível.
+          }
+
+          navigate('/start-workout', {
+            replace: false,
+            state: { fromActiveWorkoutNotification: true },
+          })
+          return
+        }
 
         if (!isForgeFlowAuthCallback(url)) return
 
@@ -60,13 +85,26 @@ function AppUrlListener() {
     }
 
     const listenerPromise = CapacitorApp.addListener('appUrlOpen', (event) => {
-      handleAuthCallback(event.url)
+      handleForgeFlowUrl(event.url)
     })
+    const localNotificationListenerPromise = LocalNotifications.addListener?.(
+      'localNotificationActionPerformed',
+      (event) => {
+        const route = event?.notification?.extra?.forgeflowRoute
+
+        if (route === '/start-workout') {
+          navigate('/start-workout', {
+            replace: false,
+            state: { fromActiveWorkoutNotification: true },
+          })
+        }
+      }
+    )
 
     CapacitorApp.getLaunchUrl()
       .then((result) => {
         if (result?.url) {
-          handleAuthCallback(result.url)
+          handleForgeFlowUrl(result.url)
         }
       })
       .catch((error) => {
@@ -76,6 +114,7 @@ function AppUrlListener() {
     return () => {
       isMounted = false
       listenerPromise.then((listener) => listener.remove()).catch(() => {})
+      localNotificationListenerPromise?.then((listener) => listener.remove()).catch(() => {})
     }
   }, [navigate, setUser])
 

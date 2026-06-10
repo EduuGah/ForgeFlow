@@ -691,3 +691,495 @@ body {
     justify-content: space-between !important;
   }
 }
+
+/* Mobile page polish v2: compact the remaining screens without changing page logic. */
+@media (max-width: 767px) {
+  .ff-hevy-page:not(.ff-hevy-page-dashboard) {
+    gap: 10px !important;
+  }
+
+  .ff-hevy-page > .ff-native-page-intro + .ff-native-page-header {
+    display: none !important;
+  }
+
+  .ff-hevy-page :is(.ff-hevy-settings, .ff-hevy-admin, .ff-hevy-progress, .ff-hevy-exercise-progress, .ff-nutrition-page) {
+    gap: 10px !important;
+  }
+
+  .ff-hevy-page :is(.ff-native-page-header, header.mb-5, header.mb-6) {
+    margin-bottom: 8px !important;
+  }
+
+  .ff-hevy-page :is(.ff-native-page-header p, header p) {
+    font-size: 0.8rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .ff-hevy-page :is(.ff-filter-chips, .ff-mobile-chip-scroll, [class*='overflow-x-auto']) {
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+
+  .ff-hevy-page :is(.ff-filter-chips, .ff-mobile-chip-scroll, [class*='overflow-x-auto'])::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ff-hevy-page :is(.ff-filter-chips, .ff-mobile-chip-scroll) > * {
+    scroll-snap-align: start;
+  }
+
+  .ff-hevy-page :is(input[type='search'], input[type='text'], input[type='number'], select, textarea) {
+    min-height: 44px !important;
+  }
+
+  .ff-hevy-page :is(button, a) {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ff-hevy-page-workouts > section[class~="sm:grid-cols-3"] {
+    display: none !important;
+  }
+
+  .ff-hevy-page-workouts > div.mt-5,
+  .ff-hevy-page-workouts [class*='rounded-3xl'].bg-\[\#18181b\] {
+    margin-top: 0 !important;
+    padding: 10px !important;
+    border-radius: 16px !important;
+  }
+
+  .ff-hevy-page-workouts .ff-mobile-chip-scroll {
+    margin-top: 8px !important;
+    padding-bottom: 0 !important;
+  }
+
+  .ff-hevy-page-workouts .ff-mobile-chip-scroll :is(button, div) {
+    min-height: 34px !important;
+    border-radius: 999px !important;
+    padding: 7px 12px !important;
+    font-size: 0.78rem !important;
+  }
+
+  .ff-hevy-page-workouts section[class~="2xl:grid-cols-3"] {
+    margin-top: 10px !important;
+  }
+
+  .ff-hevy-page-workouts .fixed[aria-label='Criar novo treino'] {
+    width: 50px !important;
+    height: 50px !important;
+    border-radius: 18px !important;
+  }
+
+  .ff-hevy-page-exercises > section:first-child {
+    gap: 10px !important;
+  }
+
+  .ff-exercise-list-shell {
+    padding: 10px !important;
+    border-radius: 18px !important;
+  }
+
+  .ff-exercise-library-head {
+    gap: 10px !important;
+  }
+
+  .ff-exercise-search {
+    height: 44px !important;
+    margin-top: 10px !important;
+    border-radius: 14px !important;
+    padding-inline: 12px !important;
+  }
+
+  .ff-exercise-list-row-v2 {
+    border-radius: 16px !important;
+    padding: 8px !important;
+  }
+
+  .ff-exercise-row-main {
+    gap: 9px !important;
+  }
+
+  .ff-exercise-row-media {
+    width: 58px !important;
+    height: 58px !important;
+    border-radius: 14px !important;
+  }
+
+  .ff-exercise-row-titleline {
+    gap: 6px !important;
+  }
+
+  .ff-exercise-row-titleline strong,
+  .ff-exercise-row-content strong {
+    font-size: 0.92rem !important;
+    line-height: 1.14 !important;
+  }
+
+  .ff-exercise-row-subtitle,
+  .ff-exercise-row-original {
+    font-size: 0.72rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .ff-exercise-row-tags,
+  .ff-exercise-row-metrics {
+    gap: 5px !important;
+  }
+
+  .ff-exercise-row-tags > :nth-child(n + 4),
+  .ff-exercise-row-metrics > :nth-child(n + 4) {
+    display: none !important;
+  }
+
+  .ff-hevy-page-history > section:first-child {
+    margin-bottom: 0 !important;
+    padding: 12px !important;
+    border-radius: 18px !important;
+  }
+
+  .ff-hevy-page-history > section.mt-4 {
+    margin-top: 0 !important;
+    gap: 10px !important;
+  }
+
+  .ff-hevy-page-history :is(article, .ff-native-card) {
+    border-radius: 16px !important;
+  }
+
+  .ff-hevy-page-workoutcalendar [data-calendar] {
+    display: grid !important;
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    gap: 4px !important;
+    margin-top: 10px !important;
+  }
+
+  .ff-hevy-page-workoutcalendar [data-calendar] > * {
+    min-width: 0 !important;
+  }
+
+  .ff-hevy-page-workoutcalendar [data-calendar] button,
+  .ff-hevy-page-workoutcalendar [data-calendar] div {
+    border-radius: 10px !important;
+  }
+
+  .ff-hevy-page-workoutcalendar [data-calendar] button {
+    min-height: 48px !important;
+    padding: 5px !important;
+  }
+
+  .ff-hevy-page-workoutcalendar aside {
+    display: grid !important;
+    gap: 10px !important;
+  }
+
+  .ff-hevy-page-workoutcalendar aside .grid.grid-cols-2,
+  .ff-hevy-page-profile .grid.grid-cols-3,
+  .ff-hevy-page-nutrition .grid.grid-cols-3,
+  .ff-hevy-page-nutrition .grid.grid-cols-2,
+  .ff-hevy-page-exerciseprogress .grid.grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .ff-hevy-page-profile .ff-profile-hevy-hero {
+    margin-bottom: 10px !important;
+    padding: 12px !important;
+    border-radius: 20px !important;
+  }
+
+  .ff-hevy-page-profile .ff-profile-hevy-hero .h-24,
+  .ff-hevy-page-profile .ff-profile-hevy-hero .w-24 {
+    width: 76px !important;
+    height: 76px !important;
+  }
+
+  .ff-profile-summary-card {
+    padding: 12px !important;
+    border-radius: 18px !important;
+  }
+
+  .ff-hevy-page-progress :is(.ff-hevy-progress, section),
+  .ff-hevy-page-exerciseprogress :is(.ff-hevy-exercise-progress, section),
+  .ff-hevy-page-progressphotos section,
+  .ff-hevy-page-musclerecovery section,
+  .ff-hevy-page-goals section,
+  .ff-hevy-page-notifications section,
+  .ff-hevy-page-nutrition section,
+  .ff-hevy-page-admin section {
+    gap: 10px !important;
+  }
+
+  .ff-hevy-page-progressphotos img,
+  .ff-hevy-page-nutrition img {
+    border-radius: 14px !important;
+  }
+
+  .ff-hevy-page-exerciseprogress aside {
+    max-height: none !important;
+  }
+
+  .ff-hevy-page-exerciseprogress aside .max-h-\[560px\],
+  .ff-hevy-page-exerciseprogress .max-h-\[560px\] {
+    max-height: 320px !important;
+  }
+
+  .ff-hevy-page-exerciseprogress .h-20,
+  .ff-hevy-page-exerciseprogress .w-20 {
+    width: 64px !important;
+    height: 64px !important;
+  }
+
+  .ff-hevy-page-nutrition .ff-nutrition-page {
+    gap: 10px !important;
+  }
+
+  .ff-hevy-page-nutrition form {
+    gap: 10px !important;
+  }
+
+  .ff-hevy-page-nutrition label.min-h-\[112px\] {
+    min-height: 84px !important;
+    border-radius: 18px !important;
+  }
+
+  .ff-hevy-page-nutrition .h-20,
+  .ff-hevy-page-nutrition .w-20 {
+    width: 62px !important;
+    height: 62px !important;
+  }
+
+  .ff-settings-native {
+    margin-bottom: 10px !important;
+  }
+
+  .ff-settings-native-hero,
+  .ff-settings-native-group,
+  .ff-settings-native-list,
+  .ff-settings-native-row {
+    border-radius: 18px !important;
+  }
+
+  .ff-settings-native-hero {
+    padding: 12px !important;
+  }
+
+  .ff-settings-native-title {
+    margin-bottom: 7px !important;
+    font-size: 0.76rem !important;
+  }
+
+  .ff-settings-native-row {
+    min-height: 54px !important;
+    padding: 10px 12px !important;
+  }
+
+  .ff-settings-layout {
+    gap: 10px !important;
+  }
+
+  .ff-hevy-page-settings [data-settings-panel] {
+    scroll-margin-top: 12px !important;
+  }
+
+  .ff-hevy-page-settings [data-settings-panel] :is(section, article, .ff-native-card) {
+    padding: 12px !important;
+    border-radius: 18px !important;
+  }
+
+  .ff-hevy-page-admin .ff-hevy-admin {
+    gap: 10px !important;
+  }
+
+  .ff-hevy-page-admin .admin-filter-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .ff-hevy-page-admin :is(table, th, td) {
+    font-size: 0.78rem !important;
+  }
+
+  .ff-hevy-page-admin :is(th, td) {
+    padding: 8px !important;
+  }
+}
+
+.ff-page-legacy-intro {
+  display: none !important;
+}
+
+@media (max-width: 767px) {
+  .ff-page-mobile-main-grid {
+    margin-top: 0 !important;
+    gap: 10px !important;
+  }
+
+  .ff-hevy-page-login,
+  .ff-hevy-page-register,
+  .ff-hevy-page-completeprofile,
+  .ff-hevy-page-authcallback,
+  .ff-hevy-page-forgotpassword,
+  .ff-hevy-page-resetpassword {
+    background:
+      radial-gradient(circle at top, rgba(14, 165, 233, 0.16), transparent 34%),
+      var(--ff-mobile-bg) !important;
+  }
+
+  .ff-hevy-page-login :is(.w-full, form),
+  .ff-hevy-page-register :is(.w-full, form),
+  .ff-hevy-page-completeprofile :is(.w-full, form),
+  .ff-hevy-page-forgotpassword :is(main, form),
+  .ff-hevy-page-resetpassword :is(main, form),
+  .ff-hevy-page-authcallback :is(.w-full, main) {
+    max-width: 420px !important;
+  }
+
+  .ff-hevy-page-login :is(h1, h2),
+  .ff-hevy-page-register :is(h1, h2),
+  .ff-hevy-page-completeprofile :is(h1, h2),
+  .ff-hevy-page-forgotpassword :is(h1, h2),
+  .ff-hevy-page-resetpassword :is(h1, h2),
+  .ff-hevy-page-authcallback :is(h1, h2) {
+    font-size: 1.42rem !important;
+    line-height: 1.08 !important;
+  }
+
+  .ff-hevy-page-login :is(p, label, a),
+  .ff-hevy-page-register :is(p, label, a),
+  .ff-hevy-page-completeprofile :is(p, label, a),
+  .ff-hevy-page-forgotpassword :is(p, label, a),
+  .ff-hevy-page-resetpassword :is(p, label, a),
+  .ff-hevy-page-authcallback :is(p, label, a) {
+    line-height: 1.38 !important;
+  }
+
+  .ff-hevy-page-privacypolicy,
+  .ff-hevy-page-deleteaccount,
+  .ff-hevy-page-datasafety {
+    padding: 14px !important;
+  }
+
+  .ff-hevy-page-privacypolicy main,
+  .ff-hevy-page-deleteaccount main,
+  .ff-hevy-page-datasafety main {
+    max-width: 760px !important;
+    padding: 14px !important;
+    border-radius: 18px !important;
+    background: var(--ff-mobile-surface) !important;
+  }
+
+  .ff-hevy-page-privacypolicy :is(h1, h2),
+  .ff-hevy-page-deleteaccount :is(h1, h2),
+  .ff-hevy-page-datasafety :is(h1, h2) {
+    font-size: 1.25rem !important;
+    line-height: 1.14 !important;
+  }
+
+  .ff-hevy-page-privacypolicy :is(p, li),
+  .ff-hevy-page-deleteaccount :is(p, li),
+  .ff-hevy-page-datasafety :is(p, li) {
+    font-size: 0.86rem !important;
+    line-height: 1.45 !important;
+  }
+
+  .ff-hevy-page-startworkout .ff-native-page-intro,
+  .ff-hevy-page-startworkout .ff-native-page-header {
+    display: none !important;
+  }
+}
+
+/* Mobile page polish v3: direct page wrappers added in src/pages. */
+.ff-page-intro-action-stack,
+.ff-profile-intro-actions {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.ff-page-intro-status-pill {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ff-mobile-border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0 10px;
+  color: var(--ff-accent-text);
+  font-size: 0.74rem;
+  font-weight: 900;
+}
+
+.ff-profile-intro-actions :is(button, a) {
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ff-mobile-border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ff-text);
+}
+
+@media (max-width: 767px) {
+  .ff-hevy-admin > .ff-native-page-header,
+  .ff-exercise-progress-body > .ff-native-page-header,
+  .ff-progress-body > .ff-native-page-header,
+  .ff-progress-photos-body > .ff-native-page-header,
+  .ff-nutrition-page > .ff-native-page-header,
+  .ff-hevy-page-workoutcalendar > .ff-native-page-header,
+  .ff-hevy-page-workoutschedule > .ff-native-page-header {
+    display: none !important;
+  }
+
+  .ff-page-intro-action-stack {
+    align-items: stretch;
+    justify-content: stretch;
+  }
+
+  .ff-page-intro-action-stack .ff-page-intro-primary-action {
+    flex: 1;
+  }
+
+  .ff-profile-intro-actions {
+    justify-content: stretch;
+  }
+
+  .ff-profile-intro-actions :is(button, a) {
+    flex: 1 1 0;
+  }
+
+  .ff-profile-body {
+    display: grid;
+    gap: 10px;
+  }
+
+  .ff-profile-body .ff-profile-hevy-hero > .flex:first-child {
+    display: none !important;
+  }
+
+  .ff-auth-flow {
+    min-height: auto !important;
+    padding: 0 !important;
+  }
+
+  .ff-legal-main {
+    min-height: auto !important;
+    padding: 0 !important;
+  }
+
+  .ff-goals-body,
+  .ff-recovery-body,
+  .ff-notifications-body,
+  .ff-progress-body,
+  .ff-progress-photos-body,
+  .ff-exercise-progress-body,
+  .ff-start-workout-main-grid,
+  .ff-active-workout-exercise-flow,
+  .ff-schedule-primary-flow,
+  .ff-nutrition-primary-flow {
+    display: grid;
+    gap: 10px !important;
+  }
+}
