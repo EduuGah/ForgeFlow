@@ -1,0 +1,329 @@
+/* Final APK layer: keep the Android WebView as one app viewport. */
+:root {
+  --ff-apk-bg: #000000;
+  --ff-apk-header-height: 56px;
+  --ff-apk-bottom-nav-height: 76px;
+  --ff-apk-page-x: 14px;
+  --ff-apk-card-radius: 18px;
+}
+
+html.is-native-app {
+  position: static !important;
+  inset: auto !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  background: var(--ff-apk-bg) !important;
+}
+
+body.is-native-app {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  touch-action: none !important;
+  background: var(--ff-apk-bg) !important;
+  color: var(--ff-text) !important;
+}
+
+body.is-native-app #root {
+  width: 100% !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  min-height: 0 !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+  background: var(--ff-apk-bg) !important;
+}
+
+body.is-native-app .ff-app-layout.ff-shell-native {
+  position: fixed !important;
+  inset: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  min-height: 0 !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+  background: var(--ff-apk-bg) !important;
+  isolation: isolate;
+}
+
+body.is-native-app .ff-app-layout > [aria-hidden='true'] {
+  display: none !important;
+}
+
+body.is-native-app #app-header {
+  position: relative !important;
+  inset: auto !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  z-index: 40 !important;
+  flex: 0 0 auto !important;
+  width: 100% !important;
+  transform: none !important;
+  opacity: 1 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+  background: rgba(8, 9, 11, 0.98) !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(16px);
+  touch-action: manipulation !important;
+}
+
+body.is-native-app #app-header .safe-top {
+  padding-top: env(safe-area-inset-top) !important;
+}
+
+body.is-native-app #app-header .safe-top > div {
+  height: var(--ff-apk-header-height) !important;
+  min-height: var(--ff-apk-header-height) !important;
+  padding: 0 var(--ff-apk-page-x) !important;
+  background: transparent !important;
+}
+
+body.is-native-app #app-header button {
+  width: 42px !important;
+  height: 42px !important;
+  min-height: 42px !important;
+  border-radius: 14px !important;
+  background: #15161a !important;
+  box-shadow: none !important;
+}
+
+body.is-native-app #app-header .ff-header-brand-icon {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+}
+
+body.is-native-app #app-header h1 {
+  font-size: 1.02rem !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+}
+
+body.is-native-app #app-header p {
+  display: none !important;
+}
+
+body.is-native-app .ff-page-scroll-shell {
+  position: relative !important;
+  inset: auto !important;
+  z-index: 1 !important;
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain !important;
+  touch-action: pan-y !important;
+  padding: 12px var(--ff-apk-page-x) 14px !important;
+  scroll-padding-top: 12px !important;
+  scroll-padding-bottom: 24px !important;
+  background: var(--ff-apk-bg) !important;
+  will-change: scroll-position;
+}
+
+body.is-native-app .ff-shell-workout-route .ff-page-scroll-shell {
+  padding-bottom: calc(6.5rem + env(safe-area-inset-bottom)) !important;
+  scroll-padding-bottom: calc(6.5rem + env(safe-area-inset-bottom)) !important;
+}
+
+body.is-native-app .ff-shell-has-floating-workout .ff-page-scroll-shell {
+  padding-bottom: calc(7.25rem + env(safe-area-inset-bottom)) !important;
+  scroll-padding-bottom: calc(7.25rem + env(safe-area-inset-bottom)) !important;
+}
+
+body.is-native-app .ff-page-scroll-shell > div {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: 100% !important;
+  padding-bottom: 0 !important;
+}
+
+body.is-native-app .ff-page-scroll-shell :is(section, article, aside, div) {
+  min-width: 0;
+}
+
+body.is-native-app .ff-page-scroll-shell :is(img, video, canvas, svg) {
+  max-width: 100%;
+}
+
+body.is-native-app .ff-hevy-page {
+  gap: 14px !important;
+}
+
+body.is-native-app .ff-hevy-page :is(.p-10, .p-9, .p-8, .p-7, .p-6, .sm\:p-7, .sm\:p-6) {
+  padding: 14px !important;
+}
+
+body.is-native-app .ff-hevy-page :is(.rounded-3xl, .rounded-\[2rem\], .rounded-\[1\.5rem\]) {
+  border-radius: var(--ff-apk-card-radius) !important;
+}
+
+body.is-native-app .ff-native-card,
+body.is-native-app .ff-hevy-page :is(article, section, aside, .ff-card, [class*='rounded-3xl'][class*='border'], [class*='rounded-[2rem]'][class*='border']) {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  background: #18191b !important;
+  box-shadow: none !important;
+}
+
+body.is-native-app .ff-hevy-page h1 {
+  font-size: clamp(1.42rem, 5.8vw, 1.8rem) !important;
+  line-height: 1.08 !important;
+  letter-spacing: 0 !important;
+}
+
+body.is-native-app .ff-hevy-page h2 {
+  font-size: clamp(1.05rem, 4.4vw, 1.25rem) !important;
+  line-height: 1.18 !important;
+  letter-spacing: 0 !important;
+}
+
+body.is-native-app .ff-hevy-page :is(input, select, textarea) {
+  min-height: 46px !important;
+  border-radius: 15px !important;
+  background: #101114 !important;
+  font-size: 16px !important;
+}
+
+body.is-native-app .mobile-bottom-nav,
+body.is-native-app nav[aria-label='Navegacao inferior'],
+body.is-native-app nav[aria-label='Navegação inferior'] {
+  position: relative !important;
+  inset: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  z-index: 40 !important;
+  flex: 0 0 auto !important;
+  width: 100% !important;
+  min-height: calc(var(--ff-apk-bottom-nav-height) + env(safe-area-inset-bottom)) !important;
+  border-top: 0 !important;
+  background: var(--ff-apk-bg) !important;
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom)) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  touch-action: manipulation !important;
+}
+
+body.is-native-app .mobile-bottom-nav > div {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 4px !important;
+  width: 100% !important;
+  max-width: 560px !important;
+  min-height: 58px !important;
+  margin: 0 auto !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 22px !important;
+  background: #15161a !important;
+  padding: 4px !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+body.is-native-app .mobile-bottom-nav a {
+  min-width: 0 !important;
+  min-height: 50px !important;
+  border-radius: 16px !important;
+  padding: 6px 4px !important;
+  gap: 4px !important;
+}
+
+body.is-native-app .mobile-bottom-nav a[aria-current='page'] {
+  background: rgba(10, 132, 255, 0.12) !important;
+  color: var(--ff-accent-text) !important;
+}
+
+body.is-native-app .mobile-bottom-nav a svg {
+  width: 20px !important;
+  height: 20px !important;
+  filter: none !important;
+}
+
+body.is-native-app .mobile-bottom-nav a span {
+  display: block !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: 10px !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+}
+
+body.is-native-app .ff-active-workout-mini-card-v3.ff-active-workout-mini-floating {
+  position: fixed !important;
+  left: 12px !important;
+  right: 12px !important;
+  bottom: calc(5.6rem + env(safe-area-inset-bottom)) !important;
+  z-index: 45 !important;
+  width: auto !important;
+  max-width: 620px !important;
+  min-height: 78px !important;
+  margin: 0 auto !important;
+  border-radius: 22px !important;
+  background: rgba(18, 19, 22, 0.98) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.42) !important;
+  backdrop-filter: blur(16px);
+}
+
+body.is-native-app.ff-sidebar-open .ff-active-workout-mini-floating,
+body.is-native-app.ff-sidebar-open .mobile-bottom-nav,
+body.is-native-app.ff-sidebar-open #app-header {
+  pointer-events: none !important;
+}
+
+body.is-native-app .ff-page-start-workout .ff-mobile-workout-action-bar,
+body.is-native-app .ff-mobile-workout-action-bar {
+  left: 12px !important;
+  right: 12px !important;
+  bottom: max(12px, env(safe-area-inset-bottom)) !important;
+  z-index: 45 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 22px !important;
+  background: rgba(18, 19, 22, 0.98) !important;
+  padding: 8px !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.42) !important;
+  backdrop-filter: blur(16px);
+}
+
+body.is-native-app .ff-page-start-workout .ff-mobile-workout-action-bar > div,
+body.is-native-app .ff-mobile-workout-action-bar > div {
+  max-width: 720px !important;
+  gap: 8px !important;
+}
+
+@media (max-width: 430px) {
+  body.is-native-app {
+    --ff-apk-page-x: 12px;
+  }
+
+  body.is-native-app #app-header .ff-header-brand-icon {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  body.is-native-app .ff-active-workout-mini-card-v3.ff-active-workout-mini-floating {
+    left: 10px !important;
+    right: 10px !important;
+  }
+
+  body.is-native-app .ff-mobile-workout-action-bar {
+    left: 10px !important;
+    right: 10px !important;
+  }
+}
+

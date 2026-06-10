@@ -300,7 +300,7 @@ export function SetPrMedal({ set, performance }) {
   )
 }
 
-export function SetRecordBanner({ set, performance }) {
+export function SetRecordBanner() {
   return null
 }
 

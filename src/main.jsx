@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 
 import App from './App.jsx'
 import './index.css'
+import './styles/apk-mobile-polish.css'
 import { isNativeApp } from './utils/platformUtils.js'
 
 

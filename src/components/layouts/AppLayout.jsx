@@ -74,11 +74,26 @@ function getRouteShellClass(pathname = '/') {
   return 'ff-page-default'
 }
 
+const ACTIVE_WORKOUT_MINI_HIDDEN_ROUTES = [
+  '/start-workout',
+  '/settings',
+  '/profile',
+  '/notifications',
+  '/admin',
+]
+
 function AppLayout() {
   const { user } = useAuth()
   const location = useLocation()
   const { activeSession, elapsedSeconds, completedSets, totalSets } = useWorkoutSession()
   const isActiveWorkoutRoute = location.pathname.startsWith('/start-workout')
+  const hasBottomNav = !isActiveWorkoutRoute
+  const hasFloatingWorkoutMini =
+    Boolean(activeSession) &&
+    hasBottomNav &&
+    !ACTIVE_WORKOUT_MINI_HIDDEN_ROUTES.some((route) =>
+      location.pathname.startsWith(route)
+    )
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [popupNotification, setPopupNotification] = useState(null)
@@ -367,7 +382,15 @@ function AppLayout() {
   }, [])
 
   return (
-    <div className="ff-app-layout min-h-dvh bg-[var(--ff-bg)] text-[var(--ff-text)] transition-colors duration-300">
+    <div
+      className={[
+        'ff-app-layout min-h-dvh bg-[var(--ff-bg)] text-[var(--ff-text)] transition-colors duration-300',
+        isRunningNativeApp ? 'ff-shell-native' : 'ff-shell-web',
+        hasBottomNav ? 'ff-shell-has-bottom-nav' : 'ff-shell-no-bottom-nav',
+        hasFloatingWorkoutMini ? 'ff-shell-has-floating-workout' : 'ff-shell-no-floating-workout',
+        isActiveWorkoutRoute ? 'ff-shell-workout-route' : '',
+      ].join(' ')}
+    >
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,var(--ff-accent-shadow),transparent_34%),radial-gradient(circle_at_bottom_right,var(--ff-accent-soft),transparent_32%)] opacity-80" />
 
       <header
@@ -445,9 +468,9 @@ function AppLayout() {
         </div>
       </main>
 
-      {!isActiveWorkoutRoute && <MobileBottomNav />}
+      {hasBottomNav && <MobileBottomNav />}
 
-      {activeSession && !isActiveWorkoutRoute && (
+      {hasFloatingWorkoutMini && (
         <Suspense fallback={null}>
           <ActiveWorkoutMini variant="floating" />
         </Suspense>
