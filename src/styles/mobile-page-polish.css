@@ -445,6 +445,799 @@
   }
 }
 
+/* App polish v7: tighter Android/mobile app density and theme-consistent actions. */
+:root {
+  --ff-mobile-blue: var(--ff-accent);
+}
+
+.ff-page-intro-primary-action,
+.ff-exercise-catalog-add,
+.ff-workouts-import-button {
+  border-color: color-mix(in srgb, var(--ff-accent) 42%, transparent) !important;
+  background: var(--ff-accent) !important;
+  color: #fff !important;
+  box-shadow: 0 12px 24px var(--ff-accent-shadow) !important;
+}
+
+.ff-auth-loading__card small {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--ff-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.ff-auth-loading__ring {
+  display: grid;
+  width: 4.2rem;
+  height: 4.2rem;
+  margin: 0 auto;
+  place-items: center;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle closest-side, var(--ff-card) 70%, transparent 71%),
+    conic-gradient(var(--ff-accent) var(--ff-auth-loading-progress), rgba(255, 255, 255, 0.12) 0);
+  box-shadow: 0 0 26px var(--ff-accent-shadow);
+}
+
+.ff-auth-loading__ring strong {
+  color: var(--ff-text);
+  font-size: 0.95rem;
+  font-weight: 950;
+}
+
+.ff-exercise-catalog-chips button.is-active,
+.ff-exercise-catalog-chips button.is-favorite-active,
+.ff-exercise-catalog-card.is-open,
+.ff-exercise-catalog-expanded-actions .is-edit,
+.ff-history-open-label {
+  border-color: color-mix(in srgb, var(--ff-accent) 36%, transparent) !important;
+  background: color-mix(in srgb, var(--ff-accent) 14%, transparent) !important;
+  color: var(--ff-accent-text) !important;
+}
+
+.ff-goal-modal {
+  z-index: 2147483000 !important;
+}
+
+@media (max-width: 767px) {
+  .ff-hevy-page {
+    gap: 0.65rem !important;
+  }
+
+  .ff-native-page-intro {
+    border-radius: 16px !important;
+    padding: 0.65rem !important;
+  }
+
+  .ff-native-page-intro__head {
+    gap: 0.55rem !important;
+  }
+
+  .ff-native-page-intro h1 {
+    font-size: 1.16rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .ff-native-page-intro p:not(.ff-native-page-intro__eyebrow) {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    font-size: 0.74rem !important;
+    line-height: 1.25 !important;
+  }
+
+  .ff-native-page-intro__metrics {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.38rem !important;
+    margin-top: 0.55rem !important;
+  }
+
+  .ff-native-page-intro__metric,
+  .ff-compact-stat-card,
+  .ff-history-stat-card {
+    min-width: 0 !important;
+    min-height: 0 !important;
+    border-radius: 13px !important;
+    padding: 0.5rem !important;
+  }
+
+  .ff-native-page-intro__metric span,
+  .ff-compact-stat-card p,
+  .ff-history-stat-card p {
+    overflow: hidden;
+    font-size: 0.62rem !important;
+    line-height: 1.1 !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ff-native-page-intro__metric strong,
+  .ff-compact-stat-card h2,
+  .ff-history-stat-card h2 {
+    overflow: hidden;
+    margin-top: 0.22rem !important;
+    font-size: 0.98rem !important;
+    line-height: 1 !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ff-history-summary-grid,
+  .ff-goals-stats-grid,
+  .ff-notifications-stats-grid,
+  .ff-recovery-stats-grid,
+  .ff-progress-summary-grid,
+  .ff-progress-insight-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.48rem !important;
+    overflow: visible !important;
+    padding-bottom: 0 !important;
+  }
+
+  .ff-progress-photos-stats-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.42rem !important;
+  }
+
+  .ff-goals-stats-grid > .ff-native-card,
+  .ff-notifications-stats-grid > .ff-native-card,
+  .ff-recovery-stats-grid > .ff-native-card,
+  .ff-progress-summary-grid > .ff-native-card,
+  .ff-progress-insight-grid > .ff-native-card,
+  .ff-progress-photos-stats-grid > .ff-native-card {
+    min-width: 0 !important;
+    width: auto !important;
+  }
+
+  .ff-dashboard-command-center {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.48rem !important;
+    overflow: visible !important;
+    margin: 0.55rem 0 0.65rem !important;
+    padding: 0 !important;
+  }
+
+  .ff-dashboard-command-card {
+    min-width: 0 !important;
+    min-height: 4.85rem !important;
+    gap: 0.35rem !important;
+    border-radius: 15px !important;
+    padding: 0.58rem !important;
+  }
+
+  .ff-dashboard-command-card.is-primary {
+    grid-column: 1 / -1;
+    min-width: 0 !important;
+    min-height: 4.7rem !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+  }
+
+  .ff-dashboard-command-card span {
+    font-size: 0.58rem !important;
+    letter-spacing: 0 !important;
+  }
+
+  .ff-dashboard-command-card h2,
+  .ff-dashboard-command-card strong {
+    display: block;
+    overflow: hidden;
+    font-size: 0.92rem !important;
+    line-height: 1.08 !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ff-dashboard-command-card.is-primary h2 {
+    margin-top: 0.22rem !important;
+    font-size: 1rem !important;
+  }
+
+  .ff-dashboard-command-card p,
+  .ff-dashboard-command-card small {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    font-size: 0.66rem !important;
+    line-height: 1.15 !important;
+  }
+
+  .ff-dashboard-command-card.is-primary a {
+    min-height: 2.2rem !important;
+    border-radius: 12px !important;
+    padding: 0 0.72rem !important;
+    font-size: 0.74rem !important;
+  }
+
+  .ff-today-workout-card {
+    margin-bottom: 0.65rem !important;
+    border-radius: 17px !important;
+    padding: 0.78rem !important;
+  }
+
+  .ff-today-workout-card h2 {
+    font-size: 1rem !important;
+  }
+
+  .ff-today-workout-card h3 {
+    font-size: 1.38rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .ff-today-workout-card > .mt-4:not(.flex) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.38rem;
+    margin-top: 0.7rem !important;
+    border-color: color-mix(in srgb, var(--ff-accent) 25%, var(--ff-border)) !important;
+    border-radius: 14px !important;
+    background: color-mix(in srgb, var(--ff-accent) 9%, var(--ff-surface-2)) !important;
+    padding: 0.55rem !important;
+    font-size: 0.72rem !important;
+  }
+
+  .ff-today-workout-card > .mt-4:not(.flex) span {
+    display: inline-flex;
+    min-height: 1.55rem;
+    align-items: center;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--ff-accent) 15%, transparent);
+    padding: 0 0.5rem;
+    color: var(--ff-accent-text) !important;
+    font-size: 0.7rem;
+    font-weight: 950;
+  }
+
+  .ff-schedule-week-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.48rem !important;
+    overflow: visible !important;
+    padding-bottom: 0 !important;
+  }
+
+  .ff-schedule-day-card {
+    min-width: 0 !important;
+    border-radius: 15px !important;
+    padding: 0.56rem !important;
+  }
+
+  .ff-schedule-day-card > .mb-3 {
+    margin-bottom: 0.4rem !important;
+  }
+
+  .ff-schedule-day-card p:first-child {
+    max-width: 5.8rem;
+    overflow: hidden;
+    font-size: 0.78rem !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ff-schedule-day-card select {
+    min-height: 2.35rem !important;
+    border-radius: 11px !important;
+    padding-inline: 0.45rem !important;
+    font-size: 0.72rem !important;
+  }
+
+  .ff-exercise-catalog-shell {
+    width: 100% !important;
+    border: 0 !important;
+    background: transparent !important;
+    padding: 0 !important;
+  }
+
+  .ff-exercise-catalog-head,
+  .ff-exercise-catalog-search,
+  .ff-exercise-catalog-chips {
+    margin-inline: 0 !important;
+  }
+
+  .ff-exercise-catalog-head {
+    border: 1px solid var(--ff-mobile-border);
+    border-radius: 15px;
+    background: #101316;
+    padding: 0.65rem !important;
+  }
+
+  .ff-exercise-catalog-head h2 {
+    font-size: 1.02rem !important;
+  }
+
+  .ff-exercise-catalog-head p {
+    font-size: 0.66rem !important;
+  }
+
+  .ff-exercise-catalog-search {
+    min-height: 2.6rem !important;
+    border-radius: 14px !important;
+    background: #101316 !important;
+  }
+
+  .ff-exercise-catalog-card {
+    border-radius: 15px !important;
+    background: #101316 !important;
+  }
+
+  .ff-exercise-catalog-card__main {
+    grid-template-columns: 3.2rem minmax(0, 1fr) 2.35rem !important;
+    gap: 0.55rem !important;
+    padding: 0.55rem !important;
+  }
+
+  .ff-exercise-catalog-card__media {
+    width: 3.2rem !important;
+    height: 3.2rem !important;
+    border-radius: 13px !important;
+  }
+
+  .ff-exercise-catalog-card__titleline h3 {
+    font-size: 0.86rem !important;
+    line-height: 1.08 !important;
+  }
+
+  .ff-exercise-catalog-card__subtitle,
+  .ff-exercise-catalog-card__original {
+    font-size: 0.66rem !important;
+  }
+
+  .ff-exercise-catalog-card__chips {
+    display: none !important;
+  }
+
+  .ff-exercise-catalog-card__actions button {
+    width: 2.25rem !important;
+    height: 2.25rem !important;
+    min-height: 2.25rem !important;
+    border-radius: 12px !important;
+  }
+
+  .ff-exercise-catalog-card__metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 0.36rem !important;
+    padding: 0 0.55rem 0.55rem !important;
+  }
+
+  .ff-exercise-catalog-metric {
+    min-height: 1.9rem !important;
+    border-radius: 10px !important;
+    font-size: 0.58rem !important;
+  }
+
+  .ff-history-list-panel {
+    border-radius: 16px !important;
+    padding: 0.6rem !important;
+  }
+
+  .ff-history-list-panel__title {
+    font-size: 1.05rem !important;
+  }
+
+  .ff-history-filters {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.46rem !important;
+    margin-top: 0.55rem !important;
+  }
+
+  .ff-history-filters > div:first-child,
+  .ff-history-filters > div:nth-child(2),
+  .ff-history-filters > div:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .ff-history-filters label {
+    display: none !important;
+  }
+
+  .ff-history-filters input,
+  .ff-history-filters select {
+    height: auto !important;
+    min-height: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    font-size: 0.78rem !important;
+  }
+
+  .ff-history-filters > div > .flex,
+  .ff-history-filters > div > select,
+  .ff-history-filters > div > input {
+    min-height: 2.45rem !important;
+    border: 1px solid var(--ff-mobile-border) !important;
+    border-radius: 13px !important;
+    background: #101316 !important;
+    padding: 0 0.65rem !important;
+  }
+
+  .ff-history-feed-card__summary {
+    grid-template-columns: 2.45rem minmax(0, 1fr) 2.3rem !important;
+    gap: 0.55rem !important;
+    padding: 0.62rem !important;
+  }
+
+  .ff-history-feed-card__avatar {
+    width: 2.45rem !important;
+    height: 2.45rem !important;
+    border-radius: 13px !important;
+  }
+
+  .ff-history-feed-card__meta {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 0.28rem !important;
+    overflow-x: auto !important;
+    scrollbar-width: none;
+  }
+
+  .ff-history-feed-card__meta::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ff-history-feed-card__meta span {
+    flex: 0 0 auto;
+    font-size: 0.58rem !important;
+    white-space: nowrap;
+  }
+
+  .ff-history-feed-card h3 {
+    font-size: 0.92rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .ff-history-feed-card__stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 0.28rem !important;
+  }
+
+  .ff-history-feed-card__stats span {
+    padding: 0.28rem !important;
+  }
+
+  .ff-history-feed-card__stats small {
+    display: none !important;
+  }
+
+  .ff-history-feed-card__stats strong {
+    font-size: 0.62rem !important;
+  }
+
+  .ff-history-open-label {
+    min-height: 2rem !important;
+    justify-content: center;
+    padding: 0 !important;
+    font-size: 0.62rem !important;
+  }
+
+  .ff-calendar-month-card,
+  .ff-calendar-summary-card,
+  .ff-calendar-day-card {
+    border-radius: 16px !important;
+    padding: 0.65rem !important;
+  }
+
+  .ff-calendar-month-card h2 {
+    font-size: 1.1rem !important;
+  }
+
+  .ff-calendar-grid button {
+    min-height: clamp(3.75rem, 13.5vw, 4.7rem) !important;
+    border-radius: 12px !important;
+  }
+
+  .ff-calendar-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .ff-calendar-summary-grid > div {
+    min-height: 3.7rem !important;
+    border-radius: 12px !important;
+  }
+
+  .ff-progress-summary-card,
+  .ff-progress-insight-card {
+    border-radius: 14px !important;
+    padding: 0.58rem !important;
+  }
+
+  .ff-progress-summary-card h2,
+  .ff-progress-insight-card h3 {
+    font-size: 1rem !important;
+  }
+
+  .ff-progress-summary-card p,
+  .ff-progress-insight-card p {
+    font-size: 0.66rem !important;
+  }
+
+  .ff-exercise-progress-rankings .ff-native-card {
+    min-width: 0 !important;
+  }
+
+  .ff-exercise-progress-body > section.ff-exercise-progress-rankings {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    overflow: visible !important;
+  }
+
+  .ff-hevy-page-exerciseprogress .border-sky-400\/30,
+  .ff-hevy-page-exerciseprogress .bg-sky-500\/10 {
+    border-color: var(--ff-accent-border) !important;
+    background: var(--ff-accent-soft) !important;
+    color: var(--ff-accent-text) !important;
+  }
+
+  .ff-progress-photos-body > section.mt-5 {
+    margin-top: 0.55rem !important;
+  }
+
+  .ff-progress-photos-body aside > .ff-native-card:first-child {
+    border-radius: 16px !important;
+  }
+
+  .ff-progress-photos-body aside > .ff-native-card:first-child form label:first-child {
+    min-height: 5.4rem !important;
+    border-radius: 15px !important;
+    padding: 0.75rem !important;
+  }
+
+  .ff-progress-photos-body aside > .ff-native-card:first-child form textarea {
+    min-height: 4.8rem !important;
+  }
+
+  .ff-progress-photos-body button.group.relative.block {
+    aspect-ratio: 1 / 1 !important;
+  }
+
+  .ff-progress-photos-body .space-y-8 {
+    display: grid !important;
+    gap: 0.8rem !important;
+  }
+
+  .ff-progress-photos-body .grid.grid-cols-2.gap-3 {
+    gap: 0.45rem !important;
+  }
+
+  .ff-progress-photos-body .grid.grid-cols-2.gap-3 > .ff-native-card > div:last-child {
+    padding: 0.48rem !important;
+  }
+
+  .ff-progress-photos-body .grid.grid-cols-2.gap-3 > .ff-native-card p {
+    font-size: 0.64rem !important;
+  }
+
+  .ff-recovery-mobile-filters {
+    display: grid;
+    gap: 0.48rem;
+  }
+
+  .ff-recovery-mobile-search {
+    display: grid;
+    grid-template-columns: 1.1rem minmax(0, 1fr) auto;
+    min-height: 2.45rem;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid var(--ff-mobile-border);
+    border-radius: 13px;
+    background: #101316;
+    padding: 0 0.65rem;
+    color: var(--ff-muted);
+  }
+
+  .ff-recovery-mobile-search input {
+    min-height: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    padding: 0 !important;
+    color: var(--ff-text);
+    font-size: 0.78rem;
+    outline: none;
+  }
+
+  .ff-recovery-mobile-chip-row {
+    display: flex;
+    gap: 0.38rem;
+    overflow-x: auto;
+    padding-bottom: 0.05rem;
+    scrollbar-width: none;
+  }
+
+  .ff-recovery-mobile-chip-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ff-recovery-mobile-chip-row button {
+    min-height: 2rem !important;
+    flex: 0 0 auto;
+    border: 1px solid var(--ff-mobile-border);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.04);
+    padding: 0 0.7rem;
+    color: var(--ff-text-soft);
+    font-size: 0.7rem;
+    font-weight: 900;
+  }
+
+  .ff-recovery-body aside.space-y-6 {
+    display: none !important;
+  }
+
+  .ff-recovery-body main > .ff-native-card {
+    border: 0 !important;
+    background: transparent !important;
+    padding: 0 !important;
+  }
+
+  .ff-recovery-body main > .ff-native-card > .flex:first-child {
+    margin-bottom: 0.48rem;
+    border: 1px solid var(--ff-mobile-border);
+    border-radius: 15px;
+    background: #101316;
+    padding: 0.6rem;
+  }
+
+  .ff-recovery-body main .grid.grid-cols-1.gap-4 {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.48rem !important;
+  }
+
+  .ff-recovery-native-card {
+    min-height: 0 !important;
+    border-radius: 15px !important;
+    padding: 0.55rem !important;
+  }
+
+  .ff-recovery-native-card > .flex:first-child {
+    display: grid !important;
+    gap: 0.45rem !important;
+  }
+
+  .ff-recovery-native-card h3 {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    font-size: 0.85rem !important;
+  }
+
+  .ff-recovery-native-card .h-11.w-11 {
+    width: 2rem !important;
+    height: 2rem !important;
+    border-radius: 11px !important;
+  }
+
+  .ff-recovery-native-card > .mt-5.grid,
+  .ff-recovery-native-card > p {
+    display: none !important;
+  }
+
+  .ff-recovery-native-card .mt-5.h-3 {
+    height: 0.42rem !important;
+    margin-top: 0.5rem !important;
+  }
+
+  .ff-goals-body > .ff-native-card,
+  .ff-notifications-body > .ff-native-card {
+    border-radius: 16px !important;
+    padding: 0.62rem !important;
+  }
+
+  .ff-goal-modal {
+    align-items: stretch !important;
+    padding-top: env(safe-area-inset-top) !important;
+  }
+
+  .ff-goal-modal__panel {
+    height: calc(100dvh - env(safe-area-inset-top)) !important;
+    max-height: calc(100dvh - env(safe-area-inset-top)) !important;
+    border-radius: 1.15rem 1.15rem 0 0 !important;
+  }
+
+  .ff-goal-modal__header {
+    position: relative !important;
+    top: auto !important;
+    padding: 0.82rem 0.86rem !important;
+  }
+
+  .ff-goal-modal__header h2 {
+    font-size: 1.15rem !important;
+  }
+
+  .ff-goal-modal__header p:last-child {
+    display: block !important;
+    font-size: 0.72rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .ff-goal-modal__form {
+    padding-top: 0.65rem !important;
+  }
+
+  .ff-notifications-body article.group {
+    border-radius: 16px !important;
+    padding: 0.58rem !important;
+  }
+
+  .ff-notifications-body article.group > button {
+    grid-template-columns: 2.35rem minmax(0, 1fr) !important;
+    gap: 0.55rem !important;
+  }
+
+  .ff-notifications-body article.group h2 {
+    margin-top: 0.38rem !important;
+    font-size: 0.9rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .ff-notifications-body article.group p {
+    margin-top: 0.3rem !important;
+    font-size: 0.7rem !important;
+  }
+
+  .ff-notifications-body article.group [class*='Clique'] {
+    display: none !important;
+  }
+
+  .ff-notifications-body article.group .mt-4.flex {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .ff-notifications-body article.group .mt-4.flex button {
+    min-width: 0 !important;
+    padding-inline: 0.2rem !important;
+  }
+
+  .ff-profile-summary-card {
+    border-radius: 15px !important;
+    padding: 0.58rem !important;
+  }
+
+  .ff-profile-summary-pill {
+    min-height: 2.7rem !important;
+    border-radius: 12px !important;
+    padding: 0.35rem !important;
+  }
+
+  .ff-profile-panel-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 0.38rem !important;
+  }
+
+  .ff-profile-panel-grid :is(a, button) {
+    min-height: 3.55rem !important;
+    border-radius: 13px !important;
+    gap: 0.25rem !important;
+    padding: 0.35rem !important;
+    font-size: 0.6rem !important;
+  }
+
+  .ff-profile-panel-grid svg {
+    width: 1.15rem !important;
+    height: 1.15rem !important;
+  }
+
+  .ff-nutrition-dashboard__grid > div,
+  .ff-nutrition-metric-card,
+  .ff-nutrition-quick-card,
+  .ff-nutrition-macro-card {
+    border-radius: 15px !important;
+    padding: 0.58rem !important;
+  }
+}
+
 /* App polish v6: dashboard, agenda, catalog, progress and mobile modals */
 .ff-login-auth-warmup {
   display: flex;

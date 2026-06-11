@@ -1,17 +1,17 @@
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import AuthLoadingScreen from './AuthLoadingScreen'
 
 function PublicRoute({ children }) {
-  const { user, loadingUser, authChecked } = useAuth()
+  const { user, loadingUser, authChecked, authWarmupProgress, authWarmupStatus } = useAuth()
 
   if (loadingUser || !authChecked) {
     return (
-      <div className="ff-auth-loading">
-        <div>
-          <span />
-          <p>Carregando...</p>
-        </div>
-      </div>
+      <AuthLoadingScreen
+        label="Carregando sessao..."
+        progress={authWarmupProgress}
+        status={authWarmupStatus}
+      />
     )
   }
 

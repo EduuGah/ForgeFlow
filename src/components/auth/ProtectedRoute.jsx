@@ -1,20 +1,20 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { getToken } from '../../services/api'
+import AuthLoadingScreen from './AuthLoadingScreen'
 
 function ProtectedRoute({ children }) {
   const location = useLocation()
-  const { user, loadingUser, authChecked } = useAuth()
+  const { user, loadingUser, authChecked, authWarmupProgress, authWarmupStatus } = useAuth()
   const token = getToken()
 
   if (loadingUser || !authChecked) {
     return (
-      <div className="ff-auth-loading">
-        <div>
-          <span />
-          <p>Carregando sessão...</p>
-        </div>
-      </div>
+      <AuthLoadingScreen
+        label="Carregando sessao..."
+        progress={authWarmupProgress}
+        status={authWarmupStatus}
+      />
     )
   }
 

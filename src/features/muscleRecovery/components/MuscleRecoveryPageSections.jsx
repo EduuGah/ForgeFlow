@@ -79,12 +79,12 @@ function RecoveryStats({ recovery, averageRecovery, readyMuscles, recoveringMusc
   ]
 
   return (
-    <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <section className="ff-recovery-stats-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {cards.map((card) => {
         const Icon = card.icon
 
         return (
-          <Card key={card.label} className="p-4">
+          <Card key={card.label} className="ff-compact-stat-card p-4">
             <div className="flex items-center justify-between">
               <p className="text-sm text-zinc-500">{card.label}</p>
               <Icon size={20} className={card.iconClass} />
@@ -98,10 +98,31 @@ function RecoveryStats({ recovery, averageRecovery, readyMuscles, recoveringMusc
   )
 }
 
-function MobileRecoveryFilters({ statusFilter, onStatusFilterChange }) {
+function MobileRecoveryFilters({
+  search,
+  statusFilter,
+  onSearchChange,
+  onStatusFilterChange,
+  onClearFilters,
+}) {
   return (
-    <section className="mt-5 xl:hidden">
-      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+    <section className="ff-recovery-mobile-filters mt-5 xl:hidden">
+      <label className="ff-recovery-mobile-search">
+        <Search size={17} />
+        <input
+          type="search"
+          placeholder="Buscar grupo muscular"
+          value={search}
+          onChange={(event) => onSearchChange(event.target.value)}
+        />
+        {search && (
+          <button type="button" onClick={() => onSearchChange('')} aria-label="Limpar busca">
+            <X size={16} />
+          </button>
+        )}
+      </label>
+
+      <div className="ff-recovery-mobile-chip-row">
         {STATUS_OPTIONS.map((option) => (
           <button
             key={option.value || 'all'}
@@ -116,6 +137,11 @@ function MobileRecoveryFilters({ statusFilter, onStatusFilterChange }) {
             {option.label}
           </button>
         ))}
+        {(search || statusFilter) && (
+          <button type="button" onClick={onClearFilters}>
+            Limpar
+          </button>
+        )}
       </div>
     </section>
   )
@@ -226,7 +252,7 @@ function RecoveryInfoCard() {
       <div className="mt-4 space-y-2 text-sm">
         <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-3 text-red-200">Mesmo dia: recuperando</div>
         <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-3 text-yellow-200">Dia seguinte: parcial</div>
-        <div className="rounded-2xl border border-blue-500/20 bg-blue-500/10 p-3 text-blue-200">2 dias depois: quase pronto</div>
+        <div className="rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] p-3 text-[var(--ff-accent-text)]">2 dias depois: quase pronto</div>
         <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-emerald-200">3 dias ou mais: recuperado</div>
       </div>
     </Card>
@@ -337,7 +363,13 @@ export default function MuscleRecoveryPageSections({
         readyMuscles={readyMuscles}
         recoveringMuscles={recoveringMuscles}
       />
-      <MobileRecoveryFilters statusFilter={statusFilter} onStatusFilterChange={onStatusFilterChange} />
+      <MobileRecoveryFilters
+        search={search}
+        statusFilter={statusFilter}
+        onSearchChange={onSearchChange}
+        onStatusFilterChange={onStatusFilterChange}
+        onClearFilters={onClearFilters}
+      />
 
       <section className="mt-6 grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-[330px_minmax(0,1fr)]">
         <aside className="space-y-6">

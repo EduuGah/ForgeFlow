@@ -89,7 +89,7 @@ function TodayScheduledWorkout({ workouts = [], onStartWorkout }) {
   }
 
   return (
-    <section className="mb-6 rounded-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 shadow-sm sm:p-5">
+    <section className="ff-today-workout-card mb-6 rounded-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 shadow-sm sm:p-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex min-w-0 items-start gap-3">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">

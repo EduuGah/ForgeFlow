@@ -35,7 +35,7 @@ import { formatLocationCoordinates, formatLocationLabel, getMapsUrl } from '../.
 
 export function HistorySummaryCards({ historyCount, summary }) {
   return (
-    <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+    <section className="ff-history-summary-grid grid grid-cols-2 gap-3 xl:grid-cols-4">
       <HistoryStatCard
         title="Treinos"
         value={historyCount}

@@ -20,10 +20,10 @@ export function getRecoveryStyle(level) {
         },
         good: {
             label: 'Quase pronto',
-            text: 'text-blue-300',
-            border: 'border-blue-500/20',
-            bg: 'bg-blue-500/10',
-            bar: 'bg-blue-400',
+            text: 'text-[var(--ff-accent-text)]',
+            border: 'border-[var(--ff-accent-border)]',
+            bg: 'bg-[var(--ff-accent-soft)]',
+            bar: 'bg-[var(--ff-accent)]',
             icon: Activity,
         },
         ready: {
@@ -110,4 +110,3 @@ export function formatRelativeDate(dateString) {
 export function formatVolume(value) {
     return `${Number(value || 0).toLocaleString('pt-BR')}kg`
 }
-

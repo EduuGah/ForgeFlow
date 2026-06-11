@@ -9,8 +9,8 @@ import { formatDate } from '../progressPhotosUtils'
 
 export function ProgressPhotosStats({ stats }) {
   return (
-    <section className="grid grid-cols-3 gap-2 sm:gap-4">
-      <Card className="p-3 sm:p-4">
+    <section className="ff-progress-photos-stats-grid grid grid-cols-3 gap-2 sm:gap-4">
+      <Card className="ff-compact-stat-card p-3 sm:p-4">
         <div className="flex items-center justify-between">
           <p className="text-sm text-[var(--ff-muted)]">Fotos</p>
           <Camera size={20} className="text-[var(--ff-accent-text)]" />
@@ -23,7 +23,7 @@ export function ProgressPhotosStats({ stats }) {
         <p className="mt-2 text-xs text-[var(--ff-muted)]">registros salvos</p>
       </Card>
 
-      <Card className="p-3 sm:p-4">
+      <Card className="ff-compact-stat-card p-3 sm:p-4">
         <div className="flex items-center justify-between">
           <p className="text-sm text-[var(--ff-muted)]">Ângulos</p>
           <ImagePlus size={20} className="text-[var(--ff-accent-text)]" />
@@ -36,7 +36,7 @@ export function ProgressPhotosStats({ stats }) {
         <p className="mt-2 text-xs text-[var(--ff-muted)]">tipos registrados</p>
       </Card>
 
-      <Card className="p-3 sm:p-4">
+      <Card className="ff-compact-stat-card p-3 sm:p-4">
         <div className="flex items-center justify-between">
           <p className="text-sm text-[var(--ff-muted)]">Última foto</p>
           <CalendarDays size={20} className="text-[var(--ff-accent-text)]" />

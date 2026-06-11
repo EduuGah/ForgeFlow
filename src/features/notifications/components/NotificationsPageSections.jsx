@@ -89,12 +89,12 @@ function NotificationsStats({ stats }) {
   ]
 
   return (
-    <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <section className="ff-notifications-stats-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {cards.map((card) => {
         const Icon = card.icon
 
         return (
-          <Card key={card.label} className="p-4">
+          <Card key={card.label} className="ff-compact-stat-card p-4">
             <div className="flex items-center justify-between">
               <p className="text-sm text-[var(--ff-muted)]">{card.label}</p>
               <Icon size={20} className={card.iconClass} />

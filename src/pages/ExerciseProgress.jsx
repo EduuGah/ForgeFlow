@@ -250,7 +250,7 @@ function ExerciseProgress() {
 
         <Card className="p-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-sky-400/30 bg-sky-500/10 text-sky-200">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">
               <Medal size={20} />
             </div>
             <div>
@@ -280,7 +280,7 @@ function ExerciseProgress() {
                     <span className="block truncate text-xs text-[var(--ff-muted)]">{exercise.muscleGroup || 'Sem grupo'}</span>
                   </span>
                 </span>
-                <span className="shrink-0 text-sm font-black text-sky-200">
+                <span className="shrink-0 text-sm font-black text-[var(--ff-accent-text)]">
                   {formatVolume(exercise.maxVolume)}
                 </span>
               </button>

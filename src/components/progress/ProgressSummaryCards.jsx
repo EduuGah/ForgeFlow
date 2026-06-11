@@ -39,7 +39,7 @@ export function formatSignedWeight(value) {
 
 function SummaryCard({ title, value, description, icon: Icon, accent = false }) {
   return (
-    <Card className="p-4">
+    <Card className="ff-progress-summary-card p-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-semibold text-[var(--ff-muted)]">
           {title}
@@ -67,7 +67,7 @@ function SummaryCard({ title, value, description, icon: Icon, accent = false }) 
 
 function InsightCard({ title, value, description, icon: Icon }) {
   return (
-    <Card className="p-5">
+    <Card className="ff-progress-insight-card p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-semibold text-[var(--ff-muted)]">
@@ -94,7 +94,7 @@ function InsightCard({ title, value, description, icon: Icon }) {
 function ProgressSummaryCards({ summary = {}, insights = {} }) {
   return (
     <div className="space-y-6">
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="ff-progress-summary-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <SummaryCard
           title="Treinos finalizados"
           value={summary.totalFinishedWorkouts || 0}
@@ -125,7 +125,7 @@ function ProgressSummaryCards({ summary = {}, insights = {} }) {
         />
       </section>
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="ff-progress-insight-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <InsightCard
           title="Melhor semana"
           value={insights.bestWeek?.week || '—'}

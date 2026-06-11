@@ -46,13 +46,13 @@ function DashboardCommandCenter({
       <div className="ff-dashboard-command-card is-primary">
         <div>
           <span><CalendarCheck size={15} /> Agora</span>
-          <h2>{nextRoutine ? nextRoutine.name : lastSession ? 'Repita ou ajuste seu ultimo treino' : 'Monte sua primeira rotina'}</h2>
+          <h2>{nextRoutine ? nextRoutine.name : lastSession ? 'Retomar ritmo' : 'Primeira rotina'}</h2>
           <p>
             {nextRoutine
-              ? 'Seu favorito mais acessivel para iniciar rapido.'
+              ? 'Favorito pronto para iniciar.'
               : lastSession
-                ? `${lastSession.workoutName} foi seu ultimo treino registrado.`
-                : 'Crie um treino simples e deixe o ForgeFlow acompanhar sua evolucao.'}
+                ? `${lastSession.workoutName} foi o ultimo registro.`
+                : 'Crie um treino simples.'}
           </p>
         </div>
         <Link to="/workouts">
@@ -73,7 +73,7 @@ function DashboardCommandCenter({
         <small>treinos nos ultimos 7 dias</small>
       </Link>
 
-      <Link to="/recovery" className="ff-dashboard-command-card">
+      <Link to="/muscle-recovery" className="ff-dashboard-command-card">
         <span><Trophy size={15} /> Pronto</span>
         <strong>{readyMuscle?.muscleGroup || 'Sem dados'}</strong>
         <small>{recoveringCount > 0 ? `${recoveringCount} grupo(s) recuperando` : 'recuperacao equilibrada'}</small>

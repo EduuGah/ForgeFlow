@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
+  apiFetch,
   getCurrentUser,
   getToken,
   logout as logoutService,
@@ -14,11 +15,57 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loadingUser, setLoadingUser] = useState(true)
   const [authChecked, setAuthChecked] = useState(false)
+  const [authWarmupProgress, setAuthWarmupProgress] = useState(8)
+  const [authWarmupStatus, setAuthWarmupStatus] = useState('Carregando sessao...')
+
+  const warmupAuthServer = useCallback(async () => {
+    let progress = 8
+    let attempt = 0
+    let mounted = true
+
+    setAuthWarmupProgress(progress)
+    setAuthWarmupStatus('Carregando sessao...')
+
+    const intervalId = window.setInterval(() => {
+      if (!mounted) return
+
+      progress = Math.min(
+        98,
+        progress + (progress < 48 ? 3 : progress < 76 ? 2 : progress < 94 ? 1 : 0)
+      )
+      setAuthWarmupProgress(progress)
+
+      if (progress > 72) {
+        setAuthWarmupStatus('Preparando login seguro...')
+      }
+    }, 520)
+
+    try {
+      while (mounted) {
+        try {
+          await apiFetch('/auth/csrf')
+          setAuthWarmupStatus('Sessao pronta')
+          setAuthWarmupProgress(100)
+          return true
+        } catch {
+          attempt += 1
+          setAuthWarmupStatus(attempt > 1 ? 'Acordando servidor...' : 'Conectando ao servidor...')
+          await new Promise((resolve) => window.setTimeout(resolve, 900))
+        }
+      }
+
+      return false
+    } finally {
+      mounted = false
+      window.clearInterval(intervalId)
+    }
+  }, [])
 
   const loadUser = useCallback(async () => {
     const token = getToken()
 
     if (!token) {
+      await warmupAuthServer()
       setUser(null)
       setLoadingUser(false)
       setAuthChecked(true)
@@ -26,10 +73,14 @@ export function AuthProvider({ children }) {
     }
 
     setLoadingUser(true)
+    setAuthWarmupProgress((current) => Math.max(current, 18))
+    setAuthWarmupStatus('Carregando sessao...')
 
     try {
       const data = await getCurrentUser()
       setUser(data)
+      setAuthWarmupProgress(100)
+      setAuthWarmupStatus('Sessao pronta')
       return data
     } catch (error) {
       console.warn('[ForgeFlow] Sessão inválida ou indisponível:', error)
@@ -44,7 +95,7 @@ export function AuthProvider({ children }) {
       setLoadingUser(false)
       setAuthChecked(true)
     }
-  }, [])
+  }, [warmupAuthServer])
 
   const logout = useCallback(({ redirect = true } = {}) => {
     setUser(null)
@@ -71,11 +122,13 @@ export function AuthProvider({ children }) {
       setUser,
       loadingUser,
       authChecked,
+      authWarmupProgress,
+      authWarmupStatus,
       isAuthenticated: Boolean(user),
       loadUser,
       logout,
     }),
-    [user, loadingUser, authChecked, loadUser, logout]
+    [user, loadingUser, authChecked, authWarmupProgress, authWarmupStatus, loadUser, logout]
   )
 
   return (

@@ -41,9 +41,9 @@ export function getProgressionToneClasses(tone = 'neutral') {
       badge: 'border-amber-400/30 bg-amber-500/10 text-amber-200',
     },
     info: {
-      card: 'border-sky-400/30 bg-sky-500/10 text-sky-100',
-      icon: 'border-sky-400/30 bg-sky-500/15 text-sky-200',
-      badge: 'border-sky-400/30 bg-sky-500/10 text-sky-200',
+      card: 'border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]',
+      icon: 'border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]',
+      badge: 'border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]',
     },
     neutral: {
       card: 'border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-text)]',
