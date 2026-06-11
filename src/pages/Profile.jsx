@@ -245,6 +245,25 @@ function Profile() {
     }
   }
 
+  async function handleShareProfile() {
+    const title = `Perfil ForgeFlow de ${profile.name || user?.name || 'atleta'}`
+    const text = `${profile.name || user?.name || 'Atleta'} no ForgeFlow: ${totalWorkouts} treinos, ${prs.length} PRs e ${totalSets} series registradas.`
+    const url = `${window.location.origin}/profile`
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, text, url })
+      } else {
+        await navigator.clipboard?.writeText(`${text} ${url}`)
+        showToast('success', 'Link copiado', 'O resumo do perfil foi copiado.')
+      }
+    } catch (error) {
+      if (error?.name === 'AbortError') return
+
+      showToast('error', 'Compartilhamento indisponivel', 'Nao foi possivel abrir o compartilhamento agora.')
+    }
+  }
+
   function handleDateChange(value) {
     if (isFutureDate(value)) {
       setDateInput('')
@@ -432,7 +451,7 @@ function Profile() {
             <button type="button" onClick={() => setIsEditOpen(true)} aria-label="Editar perfil">
               <Pencil size={19} />
             </button>
-            <button type="button" aria-label="Compartilhar perfil">
+            <button type="button" onClick={handleShareProfile} aria-label="Compartilhar perfil">
               <Share2 size={19} />
             </button>
             <a href="/settings" aria-label="Configuracoes">
@@ -452,7 +471,7 @@ function Profile() {
             <button type="button" onClick={() => setIsEditOpen(true)} className="inline-flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-[var(--ff-surface-2)]" aria-label="Editar perfil">
               <Pencil size={22} />
             </button>
-            <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-[var(--ff-surface-2)]" aria-label="Compartilhar perfil">
+            <button type="button" onClick={handleShareProfile} className="inline-flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-[var(--ff-surface-2)]" aria-label="Compartilhar perfil">
               <Share2 size={22} />
             </button>
             <a href="/settings" className="inline-flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-[var(--ff-surface-2)]" aria-label="Configurações">

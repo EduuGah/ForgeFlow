@@ -14,6 +14,27 @@ import Card from '../../../components/ui/Card'
 import Button from '../../../components/ui/Button'
 import Textarea from '../../../components/ui/Textarea'
 
+function parseDurationInput(value, fallbackSeconds = 0) {
+  const text = String(value || '').trim()
+  if (!text) return Math.max(0, Number(fallbackSeconds) || 0)
+
+  const parts = text.split(':').map((part) => Number(part))
+
+  if (parts.some((part) => !Number.isFinite(part) || part < 0)) {
+    return Math.max(0, Number(fallbackSeconds) || 0)
+  }
+
+  if (parts.length === 3) {
+    return Math.round((parts[0] * 3600) + (parts[1] * 60) + parts[2])
+  }
+
+  if (parts.length === 2) {
+    return Math.round((parts[0] * 60) + parts[1])
+  }
+
+  return Math.round(parts[0] * 60)
+}
+
 export function WorkoutSessionSidebar({
   elapsedSeconds,
   completedSets,
@@ -326,10 +347,12 @@ export function FinishWorkoutModal({
   savingWorkout,
   formatTime,
   onClose,
+  onDurationChange,
   onFinishWorkout,
 }) {
   const [locationLabel, setLocationLabel] = useState('')
   const [selectedPreset, setSelectedPreset] = useState('')
+  const [durationInput, setDurationInput] = useState(formatTime(elapsedSeconds))
 
   useEffect(() => {
     if (typeof document === 'undefined') return undefined
@@ -345,6 +368,12 @@ export function FinishWorkoutModal({
     }
   }, [open])
 
+  useEffect(() => {
+    if (!open) return
+
+    setDurationInput(formatTime(elapsedSeconds))
+  }, [elapsedSeconds, formatTime, open])
+
   if (!open) return null
 
   const label = selectedPreset === 'Outro'
@@ -355,6 +384,25 @@ export function FinishWorkoutModal({
     setSelectedPreset(value)
     if (value !== 'Outro') setLocationLabel(value)
     if (value === 'Outro') setLocationLabel('')
+  }
+
+  function getDurationSeconds() {
+    return parseDurationInput(durationInput, elapsedSeconds)
+  }
+
+  function handleDurationInputChange(event) {
+    const nextValue = event.target.value
+    const nextSeconds = parseDurationInput(nextValue, elapsedSeconds)
+
+    setDurationInput(nextValue)
+    onDurationChange?.(nextSeconds)
+  }
+
+  function finishWithDuration(options = {}) {
+    onFinishWorkout({
+      ...options,
+      durationSeconds: getDurationSeconds(),
+    })
   }
 
   return (
@@ -391,9 +439,14 @@ export function FinishWorkoutModal({
           <div className="ff-finish-workout-stats grid grid-cols-2 gap-2">
             <div className="ff-finish-workout-stat rounded-2xl border border-[var(--ff-border)] bg-zinc-900 p-3">
               <p className="text-xs text-[var(--ff-muted)]">Duração</p>
-              <p className="mt-1 text-lg font-black text-[var(--ff-accent-text)] sm:text-xl">
-                {formatTime(elapsedSeconds)}
-              </p>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={durationInput}
+                onChange={handleDurationInputChange}
+                className="mt-1 h-9 w-full rounded-xl border border-[var(--ff-accent-border)]/25 bg-black/30 px-2 text-lg font-black text-[var(--ff-accent-text)] outline-none focus:border-[var(--ff-accent-border)] sm:text-xl"
+                aria-label="Editar duracao do treino"
+              />
             </div>
 
             <div className="ff-finish-workout-stat rounded-2xl border border-[var(--ff-border)] bg-zinc-900 p-3">
@@ -491,7 +544,7 @@ export function FinishWorkoutModal({
           <Button
             type="button"
             variant="secondary"
-            onClick={() => onFinishWorkout({ saveLocation: false })}
+            onClick={() => finishWithDuration({ saveLocation: false })}
             disabled={savingWorkout}
             className="w-full"
           >
@@ -502,7 +555,7 @@ export function FinishWorkoutModal({
             <Button
               type="button"
               variant="secondary"
-              onClick={() => onFinishWorkout({ manualOnly: true, locationLabel: label })}
+              onClick={() => finishWithDuration({ manualOnly: true, locationLabel: label })}
               disabled={savingWorkout}
               className="w-full"
             >
@@ -512,7 +565,7 @@ export function FinishWorkoutModal({
 
           <Button
             type="button"
-            onClick={() => onFinishWorkout({ saveLocation: true, locationLabel: label })}
+            onClick={() => finishWithDuration({ saveLocation: true, locationLabel: label })}
             disabled={savingWorkout}
             className="w-full"
           >

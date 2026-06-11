@@ -39,14 +39,21 @@ export function TutorialProvider({ children }) {
       return
     }
 
+    if (!user.profileCompleted) {
+      setWelcomePromptVisible(false)
+      return
+    }
+
     const timeoutId = window.setTimeout(() => {
-      if (shouldShowWelcomeTutorial(user)) {
+      const nextState = getTutorialState(user)
+
+      if (shouldShowWelcomeTutorial(user, nextState)) {
         setWelcomePromptVisible(true)
       }
     }, 900)
 
     return () => window.clearTimeout(timeoutId)
-  }, [user])
+  }, [user, state.dismissedWelcome, state.hasSeenWelcome])
 
   useEffect(() => {
     function handleOpenTutorial(event) {

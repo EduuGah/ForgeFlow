@@ -1,4 +1,4 @@
-import { Archive, BellRing, Eye, Trash2, X } from 'lucide-react'
+import { Archive, BellRing, Eye, EyeOff, Trash2, X } from 'lucide-react'
 import { createPortal } from 'react-dom'
 
 import Badge from '../../../components/ui/Badge'
@@ -37,6 +37,7 @@ export function NotificationDetailModal({
   notification,
   onClose,
   onArchive,
+  onMarkAsUnread,
   onDelete,
   onOpenAction,
 }) {
@@ -167,6 +168,17 @@ export function NotificationDetailModal({
               >
                 <Archive size={16} />
                 Arquivar
+              </Button>
+            )}
+
+            {notification.status !== 'unread' && notification.status !== 'archived' && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => onMarkAsUnread(notification.id)}
+              >
+                <EyeOff size={16} />
+                Marcar nao lida
               </Button>
             )}
 

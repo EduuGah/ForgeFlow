@@ -1,4 +1,5 @@
-import { CalendarDays, Medal, Trash2, Weight } from 'lucide-react'
+import { useState } from 'react'
+import { CalendarDays, Medal, Plus, Trash2 } from 'lucide-react'
 import {
   CartesianGrid,
   Line,
@@ -35,6 +36,79 @@ export default function ProfileWeightSection({
   onDeleteWeight,
   onShowToast,
 }) {
+  const [isWeightMenuOpen, setIsWeightMenuOpen] = useState(false)
+
+  const weightForm = (
+    <form onSubmit={onAddWeight} className="space-y-4">
+      <div>
+        <Input
+          label="Peso em kg"
+          placeholder="Ex: 72,5"
+          value={weightInput}
+          onChange={(event) => {
+            const value = event.target.value.replace(/[^\d,.]/g, '')
+            onWeightInputChange(value)
+          }}
+        />
+
+        <p className="mt-2 text-xs text-zinc-500">
+          Pode usar virgula ou ponto. Exemplo: 72,5 ou 72.5.
+        </p>
+      </div>
+
+      <div>
+        <label className="flex items-center gap-2 text-sm font-medium text-zinc-400">
+          <CalendarDays size={16} />
+          Data do registro
+        </label>
+
+        <input
+          ref={dateInputRef}
+          type="date"
+          max={getTodayDateInputValue()}
+          value={dateInput}
+          onClick={() => {
+            if (settings.autoOpenCalendar) {
+              dateInputRef.current?.showPicker?.()
+            }
+          }}
+          onFocus={() => {
+            if (settings.autoOpenCalendar) {
+              dateInputRef.current?.showPicker?.()
+            }
+          }}
+          onInput={(event) => {
+            const selectedDate = event.currentTarget.value
+
+            if (isFutureDate(selectedDate)) {
+              event.currentTarget.value = ''
+              onDateChange('')
+              onShowToast(
+                'error',
+                'Data invalida',
+                'Nao e possivel registrar peso em uma data futura.'
+              )
+            }
+          }}
+          onChange={(event) => onDateChange(event.target.value)}
+          onBlur={(event) => {
+            const selectedDate = event.target.value
+
+            if (isFutureDate(selectedDate)) {
+              event.target.value = ''
+              onDateChange('')
+            }
+          }}
+          className="mt-2 w-full cursor-pointer rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-white outline-none transition focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-[var(--ff-accent)]/10"
+        />
+      </div>
+
+      <Button type="submit" className="w-full">
+        Confirmar peso
+      </Button>
+    </form>
+  )
+
   return (
     <section className="mt-5 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.65fr)_minmax(300px,0.95fr)]">
       <div className="space-y-5">
@@ -47,7 +121,14 @@ export default function ProfileWeightSection({
               </p>
             </div>
 
-            <Weight size={24} className="text-[var(--ff-accent-text)]" />
+            <button
+              type="button"
+              onClick={() => setIsWeightMenuOpen(true)}
+              className="inline-flex h-11 shrink-0 items-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-3 text-sm font-black text-white shadow-[0_0_18px_var(--ff-accent-shadow)]"
+            >
+              <Plus size={17} />
+              Peso
+            </button>
           </div>
 
           <div className="mt-5 h-72">
@@ -315,6 +396,30 @@ export default function ProfileWeightSection({
 
         <AccountSecurityCard />
       </div>
+
+      {isWeightMenuOpen && (
+        <div className="ff-profile-weight-sheet" role="dialog" aria-modal="true" aria-label="Registrar peso">
+          <div className="ff-profile-weight-sheet__panel">
+            <div className="ff-profile-weight-sheet__header">
+              <div>
+                <p>Corpo</p>
+                <h2>Registrar peso</h2>
+              </div>
+              <button type="button" onClick={() => setIsWeightMenuOpen(false)} aria-label="Fechar">
+                x
+              </button>
+            </div>
+
+            <div className="ff-profile-weight-sheet__body">
+              {weightForm}
+
+              <p className="ff-profile-weight-sheet__hint">
+                Esse registro atualiza o grafico e usa o ultimo peso como peso atual do perfil.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   )
 }

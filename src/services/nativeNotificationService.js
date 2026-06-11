@@ -15,6 +15,7 @@ const PRE_WORKOUT_MEAL_REMINDER_ID = 9402
 const POST_WORKOUT_MEAL_REMINDER_ID = 9403
 const PROGRESS_PHOTO_REMINDER_ID = 9404
 const SLEEP_REMINDER_ID = 9405
+const CUSTOM_REMINDER_BASE_ID = 9500
 const DEFAULT_WEIGHT_TIME = '08:00'
 const DEFAULT_WORKOUT_TIME = '18:00'
 const REMINDER_CHANNEL_ID = 'forgeflow-reminders'
@@ -260,6 +261,131 @@ export async function scheduleWeeklyWorkoutReminders({ schedule, workouts, time 
   await LocalNotifications.schedule({ notifications })
 
   return { scheduled: true, count: notifications.length }
+}
+
+export const DEFAULT_LIFESTYLE_REMINDERS = [
+  {
+    id: 'water-1800',
+    title: 'Lembre-se de se hidratar',
+    body: 'Beba agua e mantenha o corpo pronto para treinar.',
+    time: '18:00',
+    days: WEEK_DAYS.map((day) => day.key),
+    enabled: true,
+  },
+  {
+    id: 'train-today-1930',
+    title: 'Ja treinou hoje?',
+    body: 'Um treino feito hoje conta muito para sua consistencia.',
+    time: '19:30',
+    days: WEEK_DAYS.map((day) => day.key),
+    enabled: false,
+  },
+  {
+    id: 'recovery-2130',
+    title: 'Recuperacao tambem e treino',
+    body: 'Veja seus grupos musculares e planeje o proximo treino com calma.',
+    time: '21:30',
+    days: WEEK_DAYS.map((day) => day.key),
+    enabled: false,
+  },
+]
+
+function getCustomReminderBaseId(reminder = {}) {
+  const source = String(reminder.id || reminder.title || 'reminder')
+  let hash = 0
+
+  for (let index = 0; index < source.length; index += 1) {
+    hash = ((hash << 5) - hash) + source.charCodeAt(index)
+    hash |= 0
+  }
+
+  return CUSTOM_REMINDER_BASE_ID + (Math.abs(hash) % 500) * 8
+}
+
+function getCustomReminderIds(reminder = {}) {
+  const days = Array.isArray(reminder.days) ? reminder.days : []
+  const baseId = getCustomReminderBaseId(reminder)
+
+  if (days.length === 0) return [baseId]
+
+  return WEEK_DAYS
+    .map((day, index) => days.includes(day.key) ? baseId + index : null)
+    .filter((id) => id !== null)
+}
+
+export async function cancelCustomReminder(reminder) {
+  await cancelNotificationsByIds(getCustomReminderIds(reminder))
+}
+
+export async function scheduleCustomReminder(reminder = {}) {
+  if (!canUseNativeNotifications()) return { scheduled: false, reason: 'not-native' }
+  if (!reminder.enabled) {
+    await cancelCustomReminder(reminder)
+    return { scheduled: false, reason: 'disabled' }
+  }
+
+  const permission = await requestNotificationPermission()
+  if (permission?.display !== 'granted') return { scheduled: false, reason: 'permission-denied' }
+
+  await ensureAndroidChannel()
+  await cancelCustomReminder(reminder)
+
+  const title = String(reminder.title || 'Lembrete ForgeFlow').trim()
+  const body = String(reminder.body || 'Seu lembrete esta na hora.').trim()
+  const days = Array.isArray(reminder.days) ? reminder.days : []
+  const baseId = getCustomReminderBaseId(reminder)
+  const time = reminder.time || DEFAULT_WORKOUT_TIME
+
+  const notifications = days.length > 0
+    ? WEEK_DAYS.flatMap((day, index) => {
+        if (!days.includes(day.key)) return []
+
+        return [
+          buildNotification({
+            id: baseId + index,
+            title,
+            body,
+            schedule: buildScheduleOn(time, day.weekday),
+            extra: {
+              forgeflowRoute: reminder.actionUrl || '/notifications',
+              reminderId: reminder.id,
+            },
+          }),
+        ]
+      })
+    : [
+        buildNotification({
+          id: baseId,
+          title,
+          body,
+          schedule: buildScheduleOn(time),
+          extra: {
+            forgeflowRoute: reminder.actionUrl || '/notifications',
+            reminderId: reminder.id,
+          },
+        }),
+      ]
+
+  if (notifications.length === 0) return { scheduled: false, reason: 'empty-days' }
+
+  await LocalNotifications.schedule({ notifications })
+
+  return { scheduled: true, count: notifications.length }
+}
+
+export async function rescheduleCustomReminders(reminders = []) {
+  const results = []
+
+  for (const reminder of reminders) {
+    if (reminder?.enabled) {
+      results.push(await scheduleCustomReminder(reminder))
+    } else {
+      await cancelCustomReminder(reminder)
+      results.push({ scheduled: false, reason: 'disabled' })
+    }
+  }
+
+  return results
 }
 
 

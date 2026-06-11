@@ -691,12 +691,16 @@ export function WorkoutSessionProvider({ children }) {
     window.clearTimeout(syncTimeoutRef.current)
 
     const history = getUserStorageData(user, 'history', [])
+    const finishedDurationSeconds = Math.max(
+      0,
+      Math.round(Number(options.durationSeconds ?? elapsedSeconds) || 0)
+    )
 
     const finishedSession = {
       ...activeSession,
       finishedAt: nowIso(),
-      duration: elapsedSeconds,
-      durationSeconds: elapsedSeconds,
+      duration: finishedDurationSeconds,
+      durationSeconds: finishedDurationSeconds,
       exercises: activeSession.exercises.map((sessionExercise) => {
         const exercise = normalizeSessionExerciseForHistory(sessionExercise)
         const sets = Array.isArray(exercise.sets) ? exercise.sets : []
@@ -852,4 +856,3 @@ export function WorkoutSessionProvider({ children }) {
     </WorkoutSessionContext.Provider>
   )
 }
-

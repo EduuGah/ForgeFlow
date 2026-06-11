@@ -28,6 +28,10 @@ function ProtectedRoute({ children }) {
     )
   }
 
+  if (!user.profileCompleted && location.pathname !== '/complete-profile') {
+    return <Navigate to="/complete-profile" replace />
+  }
+
   return children
 }
 

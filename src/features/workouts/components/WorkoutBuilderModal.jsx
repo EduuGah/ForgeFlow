@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 import {
     ArrowLeft,
     Dumbbell,
@@ -70,6 +72,8 @@ function WorkoutBuilderModal({
     handleRemoveSet,
     onGoToExercises,
 }) {
+    const [isExercisePickerOpen, setIsExercisePickerOpen] = useState(false)
+
     if (!isOpen) return null
 
     return (
@@ -454,7 +458,23 @@ function WorkoutBuilderModal({
                             </button>
                         </div>
 
-                        <div className="space-y-3">
+                        <button
+                            type="button"
+                            onClick={() => setIsExercisePickerOpen(true)}
+                            className="ff-workout-builder-add-exercise-button mb-4 flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)]/12 px-4 text-left text-[var(--ff-text)] shadow-[0_0_24px_var(--ff-accent-shadow)] transition active:scale-[0.98]"
+                        >
+                            <span className="min-w-0">
+                                <strong className="block text-base font-black">Adicionar exercÃ­cio</strong>
+                                <small className="block truncate text-xs font-bold text-[var(--ff-muted)]">
+                                    Buscar, filtrar e tocar para incluir na rotina
+                                </small>
+                            </span>
+                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--ff-accent)] text-white">
+                                <Plus size={20} />
+                            </span>
+                        </button>
+
+                        <div className="hidden space-y-3 xl:block">
                             <button
                                 type="button"
                                 onClick={() => setQuickFavoritesOnly((current) => !current)}
@@ -519,7 +539,7 @@ function WorkoutBuilderModal({
                             </div>
                         </div>
 
-                        <div className="mt-5 max-h-[520px] space-y-2 overflow-y-auto overscroll-contain pr-2">
+                        <div className="mt-5 hidden max-h-[520px] space-y-2 overflow-y-auto overscroll-contain pr-2 xl:block">
                             {filteredQuickExercises.length === 0 && (
                                 <EmptyState
                                     title="Nenhum exercício"
@@ -684,6 +704,154 @@ function WorkoutBuilderModal({
                     </Card>
                 </div>
             </section>
+
+            {isExercisePickerOpen && (
+                <div className="ff-workout-exercise-picker-sheet" role="dialog" aria-modal="true" aria-label="Adicionar exercÃ­cios">
+                    <div className="ff-workout-exercise-picker-sheet__panel">
+                        <div className="ff-workout-exercise-picker-sheet__header">
+                            <button
+                                type="button"
+                                onClick={() => setIsExercisePickerOpen(false)}
+                                aria-label="Voltar"
+                            >
+                                <ArrowLeft size={20} />
+                            </button>
+
+                            <div className="min-w-0">
+                                <p>Biblioteca</p>
+                                <h2>Adicionar exercÃ­cios</h2>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => onGoToExercises()}
+                                aria-label="Cadastrar exercÃ­cio"
+                            >
+                                <Plus size={20} />
+                            </button>
+                        </div>
+
+                        <div className="ff-workout-exercise-picker-sheet__tools">
+                            <label className="ff-workout-exercise-picker-sheet__search">
+                                <Search size={18} />
+                                <input
+                                    type="search"
+                                    placeholder="Buscar exercÃ­cio, mÃºsculo ou equipamento"
+                                    value={quickSearch}
+                                    onChange={(event) => setQuickSearch(event.target.value)}
+                                />
+                                {quickSearch && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setQuickSearch('')}
+                                        aria-label="Limpar busca"
+                                    >
+                                        <X size={16} />
+                                    </button>
+                                )}
+                            </label>
+
+                            <div className="ff-workout-exercise-picker-sheet__chips" aria-label="Filtros rÃ¡pidos">
+                                <button
+                                    type="button"
+                                    className={quickFavoritesOnly ? 'is-active is-favorite' : ''}
+                                    onClick={() => setQuickFavoritesOnly((current) => !current)}
+                                >
+                                    <Star size={14} fill={quickFavoritesOnly ? 'currentColor' : 'none'} />
+                                    Favoritos
+                                </button>
+                                <button
+                                    type="button"
+                                    className={!quickGroupFilter ? 'is-active' : ''}
+                                    onClick={() => setQuickGroupFilter('')}
+                                >
+                                    Todos
+                                </button>
+                                {muscleGroups.map((group) => (
+                                    <button
+                                        key={group}
+                                        type="button"
+                                        className={quickGroupFilter === group ? 'is-active' : ''}
+                                        onClick={() => setQuickGroupFilter(group)}
+                                    >
+                                        {group}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <select
+                                value={quickEquipmentFilter}
+                                onChange={(event) => setQuickEquipmentFilter(event.target.value)}
+                                className="ff-workout-exercise-picker-sheet__select"
+                            >
+                                <option value="">Todos os equipamentos</option>
+                                {equipmentList.map((item) => (
+                                    <option key={item} value={item}>
+                                        {item}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="ff-workout-exercise-picker-sheet__list">
+                            {filteredQuickExercises.length === 0 && (
+                                <EmptyState
+                                    title="Nenhum exercÃ­cio"
+                                    description="Tente outro filtro ou cadastre um exercÃ­cio."
+                                />
+                            )}
+
+                            {visibleQuickExercises.map((exercise) => {
+                                const alreadyAdded = isExerciseAlreadyAdded(exercise.id)
+                                const recentInfo = exercise.__recentInfo
+
+                                return (
+                                    <button
+                                        key={exercise.id}
+                                        type="button"
+                                        onClick={() => handleQuickAddExercise(exercise.id)}
+                                        className={alreadyAdded ? 'is-added' : ''}
+                                    >
+                                        <span className="ff-workout-exercise-picker-sheet__media">
+                                            {exercise.mediaUrl ? (
+                                                <img
+                                                    src={exercise.mediaUrl}
+                                                    alt={exercise.name}
+                                                    loading="lazy"
+                                                    decoding="async"
+                                                />
+                                            ) : (
+                                                <Dumbbell size={24} />
+                                            )}
+                                        </span>
+
+                                        <span className="ff-workout-exercise-picker-sheet__copy">
+                                            <strong>{exercise.name}</strong>
+                                            <small>{exercise.muscleGroup} Â· {exercise.equipment}</small>
+                                            <span>
+                                                {exercise.isFavorite && <em>Favorito</em>}
+                                                {recentInfo?.lastUsedAt && (
+                                                    <em>Recente {formatRecentExerciseDate(recentInfo.lastUsedAt)}</em>
+                                                )}
+                                            </span>
+                                        </span>
+
+                                        <span className="ff-workout-exercise-picker-sheet__add">
+                                            {alreadyAdded ? 'OK' : '+'}
+                                        </span>
+                                    </button>
+                                )
+                            })}
+                        </div>
+
+                        <div className="ff-workout-exercise-picker-sheet__footer">
+                            <button type="button" onClick={() => setIsExercisePickerOpen(false)}>
+                                Concluir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="fixed inset-x-0 bottom-0 z-30 border-t border-zinc-800 bg-black/90 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-xl sm:hidden">
                 <div className="grid grid-cols-[48px_1fr] gap-2">

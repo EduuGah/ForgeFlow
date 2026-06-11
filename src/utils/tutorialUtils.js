@@ -273,7 +273,8 @@ export function getTutorialState(user) {
   try {
     const rawValue = window.localStorage.getItem(getTutorialStorageKey(user))
     const parsed = JSON.parse(rawValue || '{}')
-    const globalDismissed = window.localStorage.getItem(GLOBAL_DISMISSED_KEY) === 'true'
+    const globalDismissed =
+      !user && window.localStorage.getItem(GLOBAL_DISMISSED_KEY) === 'true'
 
     return {
       hasSeenWelcome: Boolean(parsed.hasSeenWelcome || globalDismissed),
@@ -301,7 +302,7 @@ export function saveTutorialState(user, nextState) {
 
   window.localStorage.setItem(getTutorialStorageKey(user), JSON.stringify(safeState))
 
-  if (safeState.dismissedWelcome || safeState.hasSeenWelcome) {
+  if (!user && (safeState.dismissedWelcome || safeState.hasSeenWelcome)) {
     window.localStorage.setItem(GLOBAL_DISMISSED_KEY, 'true')
   }
 
@@ -313,8 +314,12 @@ export function resetTutorialState(user) {
   window.localStorage.removeItem(GLOBAL_DISMISSED_KEY)
 }
 
-export function shouldShowWelcomeTutorial() {
+export function shouldShowWelcomeTutorial(user, state = null) {
   // Não abre mais o card automaticamente a cada sessão.
   // O tutorial continua disponível manualmente em Configurações ou pelo botão de ajuda.
-  return false
+  if (!user || !user.profileCompleted) return false
+
+  const tutorialState = state || getTutorialState(user)
+
+  return !tutorialState.hasSeenWelcome && !tutorialState.dismissedWelcome
 }

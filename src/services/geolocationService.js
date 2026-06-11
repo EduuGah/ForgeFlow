@@ -27,6 +27,26 @@ function normalizePosition(position) {
   }
 }
 
+export async function requestLocationPermission() {
+  if (isNativeApp() && Geolocation) {
+    try {
+      const permissions = await Geolocation.checkPermissions?.()
+      const coarse = permissions?.coarseLocation
+      const location = permissions?.location
+
+      if (location === 'granted' || coarse === 'granted') {
+        return { location: location || coarse, coarseLocation: coarse }
+      }
+
+      return await Geolocation.requestPermissions?.({ permissions: ['location'] })
+    } catch (error) {
+      return { location: 'unknown', error: error?.message || 'location-permission-error' }
+    }
+  }
+
+  return { location: 'web-fallback' }
+}
+
 export async function requestWorkoutLocation() {
   if (isNativeApp() && Geolocation) {
     try {

@@ -550,6 +550,7 @@ export default function ActiveExerciseCard({
                 pattern="[0-9]*[.,]?[0-9]*"
                 data-set-field="weight"
                 value={set.weight}
+                placeholder={previousSet?.weight ? String(previousSet.weight) : (appSettings.weightUnit || 'kg')}
                 onChange={(event) => handleSetInputChange(set.id, 'weight', event.target.value)}
                 onKeyDown={handleSetInputDone}
                 onKeyDownCapture={handleSetInputDone}
@@ -573,6 +574,7 @@ export default function ActiveExerciseCard({
                 pattern="[0-9]*"
                 data-set-field="reps"
                 value={set.reps}
+                placeholder={previousSet?.reps ? String(previousSet.reps) : 'reps'}
                 onChange={(event) => handleSetInputChange(set.id, 'reps', event.target.value)}
                 onKeyDown={handleSetInputDone}
                 onKeyDownCapture={handleSetInputDone}

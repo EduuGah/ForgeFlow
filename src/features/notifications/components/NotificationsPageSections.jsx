@@ -7,6 +7,7 @@ import {
   Eye,
   EyeOff,
   Info,
+  Plus,
   RefreshCcw,
   Search,
   Trash2,
@@ -25,6 +26,7 @@ import {
   NotificationDetailModal,
   NotificationStatusPill,
 } from './NotificationComponents'
+import { WEEK_DAYS } from '../../../utils/workoutScheduleUtils'
 
 function NotificationsHeader({ source, loading, onRefresh, onGenerate }) {
   return (
@@ -148,7 +150,95 @@ function NotificationsFilters({ search, statusFilter, onSearchChange, onStatusFi
   )
 }
 
-function NotificationCard({ notification, onOpen, onMarkAsRead, onArchive, onDelete }) {
+function NotificationsReminders({
+  reminders,
+  draft,
+  onDraftChange,
+  onDayToggle,
+  onCreateReminder,
+  onToggleReminder,
+  onDeleteReminder,
+}) {
+  return (
+    <Card className="ff-notification-reminders mt-6">
+      <div className="ff-notification-reminders__header">
+        <div>
+          <p>Lembretes</p>
+          <h2>Manter o app vivo</h2>
+        </div>
+        <span>{reminders.length} lembrete(s)</span>
+      </div>
+
+      <form className="ff-notification-reminders__form" onSubmit={onCreateReminder}>
+        <input
+          type="text"
+          value={draft.title}
+          onChange={(event) => onDraftChange('title', event.target.value)}
+          placeholder="Titulo do lembrete"
+        />
+        <input
+          type="time"
+          value={draft.time}
+          onChange={(event) => onDraftChange('time', event.target.value)}
+          aria-label="Horario do lembrete"
+        />
+        <input
+          type="text"
+          value={draft.body}
+          onChange={(event) => onDraftChange('body', event.target.value)}
+          placeholder="Mensagem opcional"
+        />
+
+        <div className="ff-notification-reminders__days">
+          {WEEK_DAYS.map((day) => (
+            <button
+              key={day.key}
+              type="button"
+              className={draft.days?.includes(day.key) ? 'is-active' : ''}
+              onClick={() => onDayToggle(day.key)}
+            >
+              {day.short}
+            </button>
+          ))}
+        </div>
+
+        <Button type="submit">
+          <Plus size={16} />
+          Criar lembrete
+        </Button>
+      </form>
+
+      <div className="ff-notification-reminders__list">
+        {reminders.map((reminder) => (
+          <article key={reminder.id} className={reminder.enabled ? 'is-enabled' : ''}>
+            <button
+              type="button"
+              onClick={() => onToggleReminder(reminder.id)}
+              aria-label={reminder.enabled ? 'Desativar lembrete' : 'Ativar lembrete'}
+            >
+              <Bell size={17} />
+            </button>
+            <div>
+              <strong>{reminder.title}</strong>
+              <span>
+                {reminder.time} - {(reminder.days || []).length === WEEK_DAYS.length ? 'Todos os dias' : `${(reminder.days || []).length} dia(s)`}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => onDeleteReminder(reminder.id)}
+              aria-label="Excluir lembrete"
+            >
+              <Trash2 size={16} />
+            </button>
+          </article>
+        ))}
+      </div>
+    </Card>
+  )
+}
+
+function NotificationCard({ notification, onOpen, onMarkAsRead, onMarkAsUnread, onArchive, onDelete }) {
   const meta = getNotificationMeta(notification.type)
   const Icon = meta.icon
   const isUnread = notification.status === 'unread'
@@ -217,6 +307,13 @@ function NotificationCard({ notification, onOpen, onMarkAsRead, onArchive, onDel
           </Button>
         )}
 
+        {notification.status !== 'unread' && notification.status !== 'archived' && (
+          <Button type="button" variant="secondary" onClick={() => onMarkAsUnread(notification.id)}>
+            <EyeOff size={16} />
+            Nao lida
+          </Button>
+        )}
+
         <Button type="button" variant="secondary" onClick={() => onOpen(notification)}>
           <Info size={16} />
           Detalhes
@@ -246,6 +343,7 @@ function NotificationsList({
   onGenerate,
   onOpen,
   onMarkAsRead,
+  onMarkAsUnread,
   onArchive,
   onDelete,
 }) {
@@ -271,6 +369,7 @@ function NotificationsList({
             notification={notification}
             onOpen={onOpen}
             onMarkAsRead={onMarkAsRead}
+            onMarkAsUnread={onMarkAsUnread}
             onArchive={onArchive}
             onDelete={onDelete}
           />
@@ -296,6 +395,8 @@ export default function NotificationsPageSections({
   visibleNotifications,
   visibleCount,
   selectedNotification,
+  customReminders,
+  reminderDraft,
   confirmModal,
   toast,
   onRefresh,
@@ -306,9 +407,15 @@ export default function NotificationsPageSections({
   onLoadMore,
   onOpenNotification,
   onMarkAsRead,
+  onMarkAsUnread,
   onArchiveNotification,
   onDeleteNotification,
   onOpenAction,
+  onReminderDraftChange,
+  onReminderDayToggle,
+  onCreateReminder,
+  onToggleReminder,
+  onDeleteReminder,
   onCloseDetail,
   onCancelConfirm,
   onCloseToast,
@@ -324,6 +431,15 @@ export default function NotificationsPageSections({
         onStatusFilterChange={onStatusFilterChange}
         onMarkAllAsRead={onMarkAllAsRead}
       />
+      <NotificationsReminders
+        reminders={customReminders || []}
+        draft={reminderDraft || {}}
+        onDraftChange={onReminderDraftChange}
+        onDayToggle={onReminderDayToggle}
+        onCreateReminder={onCreateReminder}
+        onToggleReminder={onToggleReminder}
+        onDeleteReminder={onDeleteReminder}
+      />
       <NotificationsList
         filteredNotifications={filteredNotifications}
         visibleNotifications={visibleNotifications}
@@ -332,6 +448,7 @@ export default function NotificationsPageSections({
         onGenerate={onGenerate}
         onOpen={onOpenNotification}
         onMarkAsRead={onMarkAsRead}
+        onMarkAsUnread={onMarkAsUnread}
         onArchive={onArchiveNotification}
         onDelete={onDeleteNotification}
       />
@@ -340,6 +457,7 @@ export default function NotificationsPageSections({
         notification={selectedNotification}
         onClose={onCloseDetail}
         onArchive={onArchiveNotification}
+        onMarkAsUnread={onMarkAsUnread}
         onDelete={onDeleteNotification}
         onOpenAction={onOpenAction}
       />

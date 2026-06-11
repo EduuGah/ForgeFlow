@@ -6,6 +6,7 @@ import forgeflowIcon from '../../assets/forgeflow-icon.png'
 import { useAuth } from '../../context/AuthContext'
 import { useWorkoutSession } from '../../context/WorkoutSessionContext'
 import { apiFetch } from '../../services/api'
+import { requestStartupPermissions } from '../../services/appPermissionService'
 import { cancelActiveWorkoutNotification, updateActiveWorkoutNotification } from '../../services/nativeNotificationService'
 
 import {
@@ -307,6 +308,14 @@ function AppLayout() {
       window.removeEventListener('forgeflow:settings-changed', handleSettingsChanged)
       stopWatchingSystemTheme()
     }
+  }, [user])
+
+  useEffect(() => {
+    if (!user) return undefined
+
+    return runWhenBrowserIsIdle(() => {
+      requestStartupPermissions(user).catch(() => {})
+    })
   }, [user])
 
   useEffect(() => {

@@ -16,7 +16,7 @@ function PublicRoute({ children }) {
   }
 
   if (user) {
-    return <Navigate to="/" replace />
+    return <Navigate to={user.profileCompleted ? '/' : '/complete-profile'} replace />
   }
 
   return children

@@ -662,6 +662,21 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     }
   }
 
+  async function handleOpenInstagram() {
+    if (busy) return
+
+    await handleDownload()
+    setStatus('Imagem salva. Abrindo Instagram para publicar.')
+
+    window.setTimeout(() => {
+      window.location.href = 'instagram://story-camera'
+
+      window.setTimeout(() => {
+        window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer')
+      }, 900)
+    }, 250)
+  }
+
   return (
     <div className="ff-share-studio" role="dialog" aria-modal="true" aria-label="Compartilhar treino">
       <div className="ff-share-studio__panel">
@@ -785,6 +800,11 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
           <Button type="button" variant="secondary" onClick={handleDownload} disabled={busy || !ready}>
             <Download size={18} />
             Salvar imagem
+          </Button>
+
+          <Button type="button" variant="secondary" onClick={handleOpenInstagram} disabled={busy || !ready}>
+            <ImagePlus size={18} />
+            Instagram
           </Button>
 
           <Button type="button" variant="secondary" onClick={handleCopy} disabled={!shareText}>

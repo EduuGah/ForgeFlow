@@ -10,6 +10,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../services/api";
+import {
+  DEFAULT_LIFESTYLE_REMINDERS,
+  cancelCustomReminder,
+  rescheduleCustomReminders,
+} from "../services/nativeNotificationService";
 import { generateSmartNotifications } from "../utils/notificationUtils";
 import {
   clearLegacyForgeFlowStorage,
@@ -21,6 +26,40 @@ import { normalizeNotificationFromApi } from "../features/notifications/notifica
 import NotificationsPageSections from "../features/notifications/components/NotificationsPageSections";
 
 import AppPageIntro from "../components/app/AppPageIntro";
+
+const REMINDER_STORAGE_KEY = "notification-reminders-v1";
+
+function createReminderId() {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+
+  return `reminder-${Date.now()}-${Math.round(Math.random() * 10000)}`;
+}
+
+function normalizeReminder(reminder = {}) {
+  return {
+    id: reminder.id || createReminderId(),
+    title: reminder.title || "Lembrete ForgeFlow",
+    body: reminder.body || "Seu lembrete esta na hora.",
+    time: reminder.time || "18:00",
+    days: Array.isArray(reminder.days) ? reminder.days : [],
+    enabled: reminder.enabled !== false,
+    actionUrl: reminder.actionUrl || "/notifications",
+    preset: Boolean(reminder.preset),
+  };
+}
+
+function getInitialReminderDraft() {
+  return {
+    title: "",
+    body: "",
+    time: "18:00",
+    days: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+    enabled: true,
+    actionUrl: "/notifications",
+  };
+}
 
 function Notifications() {
   const { user } = useAuth();
@@ -39,6 +78,8 @@ function Notifications() {
   const [toast, setToast] = useState(null);
   const [confirmModal, setConfirmModal] = useState(null);
   const [selectedNotification, setSelectedNotification] = useState(null);
+  const [customReminders, setCustomReminders] = useState([]);
+  const [reminderDraft, setReminderDraft] = useState(getInitialReminderDraft);
   const openedNotificationTargetRef = useRef("");
 
   const unlockNotificationScroll = useCallback(() => {
@@ -222,6 +263,25 @@ function Notifications() {
   }, [loadNotifications, statusFilter, user]);
 
   useEffect(() => {
+    if (!user) {
+      setCustomReminders([]);
+      return;
+    }
+
+    const stored = getUserStorageData(user, REMINDER_STORAGE_KEY, null);
+    const reminders = Array.isArray(stored)
+      ? stored.map(normalizeReminder)
+      : DEFAULT_LIFESTYLE_REMINDERS.map((reminder) =>
+          normalizeReminder({ ...reminder, preset: true }),
+        );
+
+    setCustomReminders(reminders);
+    saveUserStorageData(user, REMINDER_STORAGE_KEY, reminders);
+
+    rescheduleCustomReminders(reminders).catch((error) => console.error(error));
+  }, [user]);
+
+  useEffect(() => {
     setVisibleCount(30);
   }, [deferredSearch, statusFilter]);
 
@@ -381,6 +441,127 @@ function Notifications() {
         "A notificação foi marcada como lida.",
       );
     }
+  }
+
+  async function handleMarkAsUnread(notificationId) {
+    const notification = notifications.find(
+      (item) => String(item.id) === String(notificationId),
+    );
+
+    if (!notification || notification.status === "unread") return;
+
+    const updatedNotification = {
+      ...notification,
+      status: "unread",
+      readAt: null,
+      updatedAt: new Date().toISOString(),
+    };
+
+    try {
+      const updatedFromApi = await apiFetch(
+        `/notifications/${notificationId}/unread`,
+        { method: "PATCH" },
+      );
+
+      Object.assign(updatedNotification, normalizeNotificationFromApi(updatedFromApi));
+    } catch {
+      // Mantem o fallback local quando o backend ainda nao tiver esse endpoint.
+    }
+
+    setNotifications((current) => {
+      const updated = current.map((item) =>
+        String(item.id) === String(notificationId) ? updatedNotification : item,
+      );
+
+      saveUserStorageData(user, "notifications", updated);
+
+      return updated;
+    });
+
+    setSelectedNotification((current) =>
+      String(current?.id) === String(notificationId) ? updatedNotification : current,
+    );
+    setUnreadCount((current) => current + 1);
+    notifyBellToRefresh();
+
+    showToast(
+      "success",
+      "Notificacao marcada",
+      "A notificacao voltou para nao lida.",
+    );
+  }
+
+  function persistReminders(nextReminders) {
+    setCustomReminders(nextReminders);
+    saveUserStorageData(user, REMINDER_STORAGE_KEY, nextReminders);
+    rescheduleCustomReminders(nextReminders).catch((error) => console.error(error));
+  }
+
+  function handleReminderDraftChange(field, value) {
+    setReminderDraft((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  }
+
+  function handleReminderDayToggle(dayKey) {
+    setReminderDraft((current) => {
+      const currentDays = Array.isArray(current.days) ? current.days : [];
+      const days = currentDays.includes(dayKey)
+        ? currentDays.filter((item) => item !== dayKey)
+        : [...currentDays, dayKey];
+
+      return {
+        ...current,
+        days,
+      };
+    });
+  }
+
+  function handleCreateReminder(event) {
+    event.preventDefault();
+
+    const title = reminderDraft.title.trim();
+    const body = reminderDraft.body.trim();
+
+    if (!title || !reminderDraft.time) {
+      showToast("error", "Lembrete incompleto", "Informe titulo e horario.");
+      return;
+    }
+
+    const nextReminder = normalizeReminder({
+      ...reminderDraft,
+      id: createReminderId(),
+      title,
+      body: body || title,
+      enabled: true,
+      preset: false,
+    });
+
+    const nextReminders = [nextReminder, ...customReminders];
+    persistReminders(nextReminders);
+    setReminderDraft(getInitialReminderDraft());
+    showToast("success", "Lembrete criado", "O lembrete foi salvo no app.");
+  }
+
+  function handleToggleReminder(reminderId) {
+    const nextReminders = customReminders.map((reminder) =>
+      String(reminder.id) === String(reminderId)
+        ? { ...reminder, enabled: !reminder.enabled }
+        : reminder,
+    );
+
+    persistReminders(nextReminders);
+  }
+
+  function handleDeleteReminder(reminderId) {
+    const reminder = customReminders.find((item) => String(item.id) === String(reminderId));
+    const nextReminders = customReminders.filter((item) => String(item.id) !== String(reminderId));
+
+    setCustomReminders(nextReminders);
+    saveUserStorageData(user, REMINDER_STORAGE_KEY, nextReminders);
+    cancelCustomReminder(reminder).catch((error) => console.error(error));
+    showToast("success", "Lembrete removido", "O lembrete foi apagado.");
   }
 
   async function handleMarkAllAsRead() {
@@ -607,6 +788,8 @@ function Notifications() {
           visibleNotifications={visibleNotifications}
           visibleCount={visibleCount}
           selectedNotification={selectedNotification}
+          customReminders={customReminders}
+          reminderDraft={reminderDraft}
           confirmModal={confirmModal}
           toast={toast}
           onRefresh={() => loadNotifications()}
@@ -617,9 +800,15 @@ function Notifications() {
           onLoadMore={() => setVisibleCount((current) => current + 30)}
           onOpenNotification={handleOpenNotification}
           onMarkAsRead={handleMarkAsRead}
+          onMarkAsUnread={handleMarkAsUnread}
           onArchiveNotification={handleArchiveNotification}
           onDeleteNotification={handleDeleteNotification}
           onOpenAction={handleOpenAction}
+          onReminderDraftChange={handleReminderDraftChange}
+          onReminderDayToggle={handleReminderDayToggle}
+          onCreateReminder={handleCreateReminder}
+          onToggleReminder={handleToggleReminder}
+          onDeleteReminder={handleDeleteReminder}
           onCloseDetail={() => setSelectedNotification(null)}
           onCancelConfirm={() => setConfirmModal(null)}
           onCloseToast={() => setToast(null)}

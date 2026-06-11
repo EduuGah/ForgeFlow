@@ -220,6 +220,7 @@ function StartWorkout() {
   const [replaceSearch, setReplaceSearch] = useState('')
   const [addExerciseOpen, setAddExerciseOpen] = useState(false)
   const [finishWorkoutModalOpen, setFinishWorkoutModalOpen] = useState(false)
+  const [finishElapsedSeconds, setFinishElapsedSeconds] = useState(null)
   const [addExerciseSearch, setAddExerciseSearch] = useState('')
   const [addMuscleFilter, setAddMuscleFilter] = useState('')
   const [addEquipmentFilter, setAddEquipmentFilter] = useState('')
@@ -271,6 +272,10 @@ function StartWorkout() {
   const hasValidCompletedSet = useMemo(() => {
     return hasValidCompletedWorkoutSet(sessionExercises)
   }, [sessionExercises])
+
+  const displayElapsedSeconds = finishWorkoutModalOpen && finishElapsedSeconds !== null
+    ? finishElapsedSeconds
+    : elapsedSeconds
 
   const focusExercise = useMemo(() => {
     return (
@@ -431,6 +436,7 @@ function StartWorkout() {
       return
     }
 
+    setFinishElapsedSeconds(elapsedSeconds)
     setFinishWorkoutModalOpen(true)
   }
 
@@ -487,8 +493,12 @@ function StartWorkout() {
     try {
       const location = await getWorkoutLocation(options)
 
-      const savedSession = await finishSession({ location })
+      const savedSession = await finishSession({
+        location,
+        durationSeconds: options.durationSeconds ?? finishElapsedSeconds ?? elapsedSeconds,
+      })
       setFinishWorkoutModalOpen(false)
+      setFinishElapsedSeconds(null)
 
       if (savedSession?.skippedHistorySave) {
         showToast('success', 'Tutorial encerrado', 'O treino de teste foi descartado e não entrou no histórico.')
@@ -760,7 +770,7 @@ function StartWorkout() {
         completedSets={completedSets}
         totalSets={totalSets}
         progressPercent={progressPercent}
-        elapsedSeconds={elapsedSeconds}
+        elapsedSeconds={displayElapsedSeconds}
         focusExercise={focusExercise}
         focusExerciseProgress={focusExerciseProgress}
         savingWorkout={savingWorkout}
@@ -829,7 +839,7 @@ function StartWorkout() {
         </div>
 
         <WorkoutSessionSidebar
-          elapsedSeconds={elapsedSeconds}
+          elapsedSeconds={displayElapsedSeconds}
           completedSets={completedSets}
           totalSets={totalSets}
           progressPercent={progressPercent}
@@ -847,7 +857,7 @@ function StartWorkout() {
         completedSets={completedSets}
         totalSets={totalSets}
         progressPercent={progressPercent}
-        elapsedSeconds={elapsedSeconds}
+        elapsedSeconds={displayElapsedSeconds}
         savingWorkout={savingWorkout}
         formatTime={formatTime}
         onCancelWorkout={handleCancelWorkout}
@@ -954,13 +964,17 @@ function StartWorkout() {
       <FinishWorkoutModal
         open={finishWorkoutModalOpen}
         activeSession={activeSession}
-        elapsedSeconds={elapsedSeconds}
+        elapsedSeconds={finishElapsedSeconds ?? elapsedSeconds}
         completedSets={completedSets}
         totalSets={totalSets}
         workoutSummary={workoutSummary}
         savingWorkout={savingWorkout}
         formatTime={formatTime}
-        onClose={() => setFinishWorkoutModalOpen(false)}
+        onDurationChange={setFinishElapsedSeconds}
+        onClose={() => {
+          setFinishWorkoutModalOpen(false)
+          setFinishElapsedSeconds(null)
+        }}
         onFinishWorkout={handleFinishWorkout}
       />
 
