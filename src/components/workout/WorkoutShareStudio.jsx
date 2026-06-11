@@ -161,6 +161,26 @@ function loadImage(src) {
   })
 }
 
+function getShareAccentColor() {
+  if (typeof window === 'undefined') return '#ef4444'
+
+  const color = getComputedStyle(document.documentElement)
+    .getPropertyValue('--ff-accent')
+    .trim()
+
+  return color || '#ef4444'
+}
+
+function getShareAccentSoftColor() {
+  if (typeof window === 'undefined') return 'rgba(239,68,68,0.16)'
+
+  const color = getComputedStyle(document.documentElement)
+    .getPropertyValue('--ff-accent-soft')
+    .trim()
+
+  return color || 'rgba(239,68,68,0.16)'
+}
+
 function drawRoundRect(ctx, x, y, width, height, radius) {
   const safeRadius = Math.min(radius, width / 2, height / 2)
 
@@ -242,7 +262,7 @@ function drawBrand(ctx, iconImage, x, y, scale = 1, transparent = false) {
   if (iconImage) {
     ctx.drawImage(iconImage, x, y, iconSize, iconSize)
   } else {
-    ctx.fillStyle = '#0ea5ff'
+    ctx.fillStyle = getShareAccentColor()
     ctx.font = `${48 * scale}px Inter, Arial, sans-serif`
     ctx.fillText('F', x + 24 * scale, y + 55 * scale)
   }
@@ -264,6 +284,8 @@ async function drawWorkoutShareCanvas(canvas, options) {
   const currentTemplate = SHARE_TEMPLATES.find((item) => item.id === template) || SHARE_TEMPLATES[0]
   const { width, height } = currentTemplate
   const transparent = template === 'transparent'
+  const accentColor = getShareAccentColor()
+  const accentSoftColor = getShareAccentSoftColor()
 
   canvas.width = width
   canvas.height = height
@@ -298,8 +320,8 @@ async function drawWorkoutShareCanvas(canvas, options) {
     } else {
       const bg = ctx.createLinearGradient(0, 0, width, height)
       bg.addColorStop(0, '#05070b')
-      bg.addColorStop(0.48, '#101827')
-      bg.addColorStop(1, '#03111d')
+      bg.addColorStop(0.48, '#141417')
+      bg.addColorStop(1, '#070707')
       ctx.fillStyle = bg
       ctx.fillRect(0, 0, width, height)
 
@@ -307,7 +329,7 @@ async function drawWorkoutShareCanvas(canvas, options) {
       ctx.translate(width * 0.58, -height * 0.08)
       ctx.rotate(0.2)
       drawRoundRect(ctx, 0, 0, width * 0.42, height * 1.08, 70)
-      ctx.fillStyle = 'rgba(14, 165, 255, 0.14)'
+      ctx.fillStyle = accentSoftColor
       ctx.fill()
       ctx.restore()
 
@@ -333,7 +355,7 @@ async function drawWorkoutShareCanvas(canvas, options) {
 
     drawBrand(ctx, iconImage, pad, pad, 0.92, transparent)
 
-    ctx.fillStyle = '#0ea5ff'
+    ctx.fillStyle = accentColor
     ctx.font = '900 34px Inter, Arial, sans-serif'
     ctx.fillText('DESAFIO FORGEFLOW', pad, 228)
 
@@ -358,7 +380,7 @@ async function drawWorkoutShareCanvas(canvas, options) {
 
     drawBrand(ctx, iconImage, pad, 76, 0.86, true)
 
-    ctx.fillStyle = '#0ea5ff'
+    ctx.fillStyle = accentColor
     ctx.font = '900 34px Inter, Arial, sans-serif'
     ctx.fillText('TREINO CONCLUIDO', pad, 245)
 
@@ -378,7 +400,7 @@ async function drawWorkoutShareCanvas(canvas, options) {
     ctx.font = '800 31px Inter, Arial, sans-serif'
     ctx.fillText(`${stats.completedSetCount} series | ${stats.exerciseCount} exercicios | ${stats.prCount} PRs`, pad, 780)
 
-    ctx.fillStyle = '#0ea5ff'
+    ctx.fillStyle = accentColor
     drawRoundRect(ctx, pad, 840, 170, 12, 8)
     ctx.fill()
   } else {
@@ -396,7 +418,7 @@ async function drawWorkoutShareCanvas(canvas, options) {
       ctx.stroke()
     }
 
-    ctx.fillStyle = '#0ea5ff'
+    ctx.fillStyle = accentColor
     ctx.font = '900 38px Inter, Arial, sans-serif'
     ctx.fillText('DESAFIO DO DIA', pad, bottomPanelY + 82)
 
@@ -598,7 +620,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     } catch (error) {
       if (error?.name !== 'AbortError') {
         console.error(error)
-        setStatus('Nao deu para compartilhar agora. Tente baixar a imagem.')
+        setStatus('Nao deu para compartilhar agora. Tente salvar a imagem.')
       }
     } finally {
       setBusy(false)
@@ -634,7 +656,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       setStatus('Imagem salva para compartilhar.')
     } catch (error) {
       console.error(error)
-      setStatus('Nao foi possivel baixar a imagem.')
+      setStatus('Nao foi possivel salvar a imagem.')
     } finally {
       setBusy(false)
     }
@@ -762,7 +784,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
 
           <Button type="button" variant="secondary" onClick={handleDownload} disabled={busy || !ready}>
             <Download size={18} />
-            Baixar
+            Salvar imagem
           </Button>
 
           <Button type="button" variant="secondary" onClick={handleCopy} disabled={!shareText}>

@@ -85,7 +85,7 @@ function HistoryFilters({
 }) {
   return (
     <div className="ff-history-filters mt-4 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_220px_160px_160px_auto]">
-      <div>
+      <div className="ff-history-filter-field ff-history-filter-field--search">
         <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-zinc-500">
           Buscar
         </label>
@@ -114,7 +114,7 @@ function HistoryFilters({
         </div>
       </div>
 
-      <div>
+      <div className="ff-history-filter-field">
         <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-zinc-500">
           Treino
         </label>
@@ -133,7 +133,7 @@ function HistoryFilters({
         </select>
       </div>
 
-      <div>
+      <div className="ff-history-filter-field ff-history-filter-field--date">
         <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-zinc-500">
           Data inicial
         </label>
@@ -147,7 +147,7 @@ function HistoryFilters({
         />
       </div>
 
-      <div>
+      <div className="ff-history-filter-field ff-history-filter-field--date">
         <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-zinc-500">
           Data final
         </label>
@@ -161,7 +161,7 @@ function HistoryFilters({
         />
       </div>
 
-      <div className="flex items-end">
+      <div className="ff-history-filter-field ff-history-filter-field--clear flex items-end">
         {hasActiveFilters && (
           <button
             type="button"
