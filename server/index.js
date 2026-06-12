@@ -1721,28 +1721,32 @@ function getSmtpErrorReason(error) {
         return 'smtp_connection_failed'
     }
 
+    if (code === 'SMTP_REJECTED') {
+        return 'smtp_recipient_rejected'
+    }
+
     return 'email_send_failed'
 }
 
-async function resolveSmtpConnectionHost(host, forceIpv4) {
+async function resolveSmtpConnectionTargets(host, forceIpv4) {
     if (!forceIpv4) {
-        return {
+        return [{
             connectionHost: host,
             tlsServername: '',
             resolvedAddress: '',
-        }
+        }]
     }
 
     try {
         const addresses = await dns.promises.resolve4(host)
-        const resolvedAddress = addresses?.[0] || ''
+        const uniqueAddresses = Array.from(new Set(addresses || [])).filter(Boolean)
 
-        if (resolvedAddress) {
-            return {
+        if (uniqueAddresses.length) {
+            return uniqueAddresses.map((resolvedAddress) => ({
                 connectionHost: resolvedAddress,
                 tlsServername: host,
                 resolvedAddress,
-            }
+            }))
         }
     } catch (error) {
         console.error('[ForgeFlow] Falha ao resolver SMTP em IPv4:', {
@@ -1752,11 +1756,44 @@ async function resolveSmtpConnectionHost(host, forceIpv4) {
         })
     }
 
-    return {
+    return [{
         connectionHost: host,
         tlsServername: '',
         resolvedAddress: '',
+    }]
+}
+
+function getNumberEnv(name, fallback) {
+    const value = Number(process.env[name])
+    return Number.isFinite(value) && value > 0 ? value : fallback
+}
+
+function buildSmtpTransportOptions({ target, port, secure, forceIpv4, user, pass }) {
+    const requireTls = String(process.env.SMTP_REQUIRE_TLS || (!secure ? 'true' : 'false')).toLowerCase() !== 'false'
+
+    return {
+        host: target.connectionHost,
+        port,
+        secure,
+        ...(forceIpv4 ? { family: 4 } : {}),
+        ...(requireTls ? { requireTLS: true } : {}),
+        ...(target.tlsServername ? { tls: { servername: target.tlsServername } } : {}),
+        connectionTimeout: getNumberEnv('SMTP_CONNECTION_TIMEOUT_MS', 12000),
+        greetingTimeout: getNumberEnv('SMTP_GREETING_TIMEOUT_MS', 12000),
+        socketTimeout: getNumberEnv('SMTP_SOCKET_TIMEOUT_MS', 20000),
+        auth: {
+            user,
+            pass,
+        },
     }
+}
+
+function isSmtpDeliveryAccepted(info, to) {
+    const accepted = Array.isArray(info?.accepted) ? info.accepted.map(String) : []
+    const rejected = Array.isArray(info?.rejected) ? info.rejected.map(String) : []
+    const targetEmail = String(to || '').toLowerCase()
+
+    return accepted.some((email) => email.toLowerCase() === targetEmail) && !rejected.some((email) => email.toLowerCase() === targetEmail)
 }
 
 async function sendEmailWithSmtp({ to, subject, text, html, debugLabel, debugValue }) {
@@ -1792,68 +1829,94 @@ async function sendEmailWithSmtp({ to, subject, text, html, debugLabel, debugVal
     }
 
     const nodemailer = nodemailerModule.default || nodemailerModule
-    const smtpTarget = await resolveSmtpConnectionHost(host, forceIpv4)
+    const smtpTargets = await resolveSmtpConnectionTargets(host, forceIpv4)
+    const maxAttempts = Math.max(1, getNumberEnv('SMTP_MAX_ATTEMPTS', 4))
+    const targetsToTry = smtpTargets.slice(0, maxAttempts)
+    let lastError = null
 
     if (forceIpv4) {
         console.log('[ForgeFlow] SMTP IPv4 resolvido:', {
             host,
-            connectionHost: smtpTarget.connectionHost,
+            targets: targetsToTry.map((target) => target.connectionHost),
             port,
             secure,
         })
     }
 
-    const transporter = nodemailer.createTransport({
-        host: smtpTarget.connectionHost,
-        port,
-        secure,
-        ...(forceIpv4 ? { family: 4 } : {}),
-        ...(smtpTarget.tlsServername ? { tls: { servername: smtpTarget.tlsServername } } : {}),
-        connectionTimeout: 10000,
-        greetingTimeout: 10000,
-        socketTimeout: 15000,
-        auth: {
-            user,
-            pass,
-        },
-    })
+    for (const target of targetsToTry) {
+        const transporter = nodemailer.createTransport(
+            buildSmtpTransportOptions({
+                target,
+                port,
+                secure,
+                forceIpv4,
+                user,
+                pass,
+            })
+        )
 
-    try {
-        await transporter.sendMail({
-            from,
-            to,
-            subject,
-            text,
-            html,
-        })
+        try {
+            const info = await transporter.sendMail({
+                from,
+                to,
+                subject,
+                text,
+                html,
+            })
 
-        return {
-            sent: true,
-            reason: 'sent',
-        }
-    } catch (error) {
-        const reason = getSmtpErrorReason(error)
+            console.log('[ForgeFlow] SMTP respondeu:', {
+                to,
+                subject,
+                connectionHost: target.connectionHost,
+                messageId: info?.messageId,
+                accepted: info?.accepted,
+                rejected: info?.rejected,
+                response: info?.response,
+            })
 
-        console.error('[ForgeFlow] Falha ao enviar e-mail por SMTP:', {
-            to,
-            subject,
-            reason,
-            code: error.code,
-            command: error.command,
-            response: error.response,
-            message: error.message,
-        })
+            if (!isSmtpDeliveryAccepted(info, to)) {
+                lastError = new Error('SMTP respondeu sem aceitar o destinatario.')
+                lastError.code = 'SMTP_REJECTED'
+                lastError.command = 'DATA'
+                lastError.response = info?.response
+                continue
+            }
 
-        return {
-            sent: false,
-            reason,
-            error: {
-                message: error.message,
+            return {
+                sent: true,
+                reason: 'sent',
+            }
+        } catch (error) {
+            lastError = error
+
+            const reason = getSmtpErrorReason(error)
+
+            console.error('[ForgeFlow] Falha ao enviar e-mail por SMTP:', {
+                to,
+                subject,
+                connectionHost: target.connectionHost,
+                reason,
                 code: error.code,
                 command: error.command,
                 response: error.response,
-            },
+                message: error.message,
+            })
+
+            if (reason === 'smtp_auth_failed') break
         }
+    }
+
+    const reason = getSmtpErrorReason(lastError)
+
+    return {
+        sent: false,
+        reason,
+        error: {
+            message: lastError?.message,
+            code: lastError?.code,
+            command: lastError?.command,
+            response: lastError?.response,
+        },
     }
 }
 
