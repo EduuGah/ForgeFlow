@@ -75,11 +75,6 @@ function CompleteProfile() {
 
                 setUser(user)
 
-                if (user.emailVerified === false) {
-                    navigate('/verify-email', { replace: true })
-                    return
-                }
-
                 setName(user.name || '')
                 setAvatarUrl(user.avatarUrl || '')
                 setHeight(user.profile?.height || '')

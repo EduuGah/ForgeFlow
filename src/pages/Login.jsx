@@ -154,15 +154,6 @@ function Login() {
                         />
                     </div>
 
-                    <div className="text-right">
-                        <Link
-                            to="/forgot-password"
-                            className="text-sm font-bold text-[var(--ff-accent-text)] transition hover:text-[var(--ff-accent-hover)]"
-                        >
-                            Esqueci minha senha
-                        </Link>
-                    </div>
-
                     {error && (
                         <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-3 text-sm font-semibold text-red-300">
                             {error}

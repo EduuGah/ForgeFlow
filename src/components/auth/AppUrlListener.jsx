@@ -69,11 +69,6 @@ function AppUrlListener() {
 
         setUser(user)
 
-        if (user?.emailVerified === false) {
-          navigate('/verify-email', { replace: true })
-          return
-        }
-
         if (!user?.profileCompleted) {
           navigate('/complete-profile', { replace: true })
           return

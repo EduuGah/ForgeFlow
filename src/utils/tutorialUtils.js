@@ -348,7 +348,7 @@ export function hasWelcomeTutorialPending(user) {
 }
 
 export function shouldShowWelcomeTutorial(user, state = null) {
-  if (!user || !user.profileCompleted || user.emailVerified === false) return false
+  if (!user || !user.profileCompleted) return false
   if (!hasWelcomeTutorialPending(user)) return false
 
   // Não abre mais o card automaticamente a cada sessão.

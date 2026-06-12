@@ -33,22 +33,6 @@ function GoogleIcon() {
     )
 }
 
-function getEmailDeliveryMessage(emailVerification) {
-    if (emailVerification?.sent) {
-        return 'Enviamos um codigo para o seu e-mail.'
-    }
-
-    if (emailVerification?.reason === 'smtp_auth_failed') {
-        return 'Conta criada, mas o Gmail recusou o envio. Confira a senha de app do SMTP e toque em reenviar.'
-    }
-
-    if (emailVerification?.reason === 'smtp_timeout' || emailVerification?.reason === 'smtp_connection_failed') {
-        return 'Conta criada, mas o servidor de e-mail demorou para responder. Toque em reenviar em alguns segundos.'
-    }
-
-    return 'Conta criada, mas nao consegui enviar o codigo agora. Confira o SMTP e toque em reenviar.'
-}
-
 function Register() {
     const navigate = useNavigate()
     const { setUser } = useAuth()
@@ -65,13 +49,6 @@ function Register() {
 
         return () => unlockGlobalScroll()
     }, [])
-
-    function saveDevVerificationCode(user, devCode) {
-        if (!devCode) return
-
-        const id = user?.id || user?._id || user?.email || 'anonymous'
-        window.sessionStorage.setItem(`forgeflow:email-verification-dev-code:${id}`, devCode)
-    }
 
     function handleGoogleLogin() {
         window.location.href = getGoogleLoginUrl(API_URL)
@@ -91,18 +68,6 @@ function Register() {
 
             saveAuthToken(data.token)
             setUser(data.user)
-
-            if (data.user?.emailVerified === false) {
-                saveDevVerificationCode(data.user, data.emailVerification?.devCode)
-                navigate('/verify-email', {
-                    replace: true,
-                    state: {
-                        devCode: data.emailVerification?.devCode || '',
-                        message: getEmailDeliveryMessage(data.emailVerification),
-                    },
-                })
-                return
-            }
 
             if (!data.user?.profileCompleted) {
                 navigate('/complete-profile')

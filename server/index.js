@@ -1948,7 +1948,7 @@ function buildUserResponse(user) {
         id: user._id,
         name: user.name,
         email: user.email,
-        emailVerified: user.emailVerified !== false,
+        emailVerified: true,
         avatarUrl: user.avatarUrl,
         provider: user.provider,
         role: user.role || 'user',
@@ -2547,7 +2547,10 @@ app.post('/admin/users/:userId/reset-password', authMiddleware, requireAdmin, se
         await user.save()
 
         const resetUrl = buildResetPasswordUrl(resetToken.rawToken)
-        const emailResult = await sendPasswordResetEmail(user.email, resetUrl)
+        const emailResult = {
+            sent: false,
+            reason: 'email_flow_disabled',
+        }
 
         await writeAdminLog(req, {
             targetUserId: userId,
@@ -3662,6 +3665,12 @@ app.get(
 
 app.post('/auth/forgot-password', sensitiveRateLimit, async (req, res) => {
     try {
+        return res.status(200).json({
+            message: 'Recuperacao por e-mail temporariamente desativada.',
+            emailSent: false,
+            emailReason: 'email_flow_disabled',
+        })
+
         const { email } = req.body
         const normalizedEmail = String(email || '').toLowerCase().trim()
 
@@ -3870,7 +3879,7 @@ app.post('/auth/register', authRateLimit, async (req, res) => {
         email: normalizedEmail,
     })
 
-    if (existingUser?.passwordHash && existingUser.emailVerified !== false) {
+    if (existingUser?.passwordHash) {
         return res.status(409).json({
             message: 'Já existe uma conta com esse e-mail.',
         })
@@ -3900,7 +3909,7 @@ app.post('/auth/register', authRateLimit, async (req, res) => {
         existingUser.name = name.trim()
         existingUser.passwordHash = passwordHash
         existingUser.provider = existingUser.googleId ? 'both' : 'credentials'
-        existingUser.emailVerified = existingUser.googleId ? true : false
+        existingUser.emailVerified = true
         existingUser.profile = {
             ...existingUser.profile,
             ...profile,
@@ -3914,30 +3923,13 @@ app.post('/auth/register', authRateLimit, async (req, res) => {
             email: normalizedEmail,
             passwordHash,
             provider: 'credentials',
-            emailVerified: false,
+            emailVerified: true,
             profile,
             profileCompleted,
         })
     }
 
     user.lastLoginAt = new Date()
-
-    if (user.emailVerified === false) {
-        const verificationCode = createOneTimeCode(user, 15)
-        user.emailVerificationCodeHash = verificationCode.codeHash
-        user.emailVerificationExpiresAt = verificationCode.expiresAt
-        user.emailVerificationLastSentAt = new Date()
-
-        const emailResult = await sendEmailVerificationEmail(user.email, verificationCode.rawCode)
-
-        emailVerification = {
-            sent: emailResult.sent,
-            reason: emailResult.reason,
-            ...(process.env.NODE_ENV !== 'production' && !emailResult.sent
-                ? { devCode: verificationCode.rawCode }
-                : {}),
-        }
-    }
 
     await user.save()
     await writeLoginEvent(req, user, 'credentials')
@@ -4069,6 +4061,19 @@ app.post('/auth/send-verification-code', authMiddleware, sensitiveRateLimit, asy
             })
         }
 
+        user.emailVerified = true
+        user.emailVerificationCodeHash = ''
+        user.emailVerificationExpiresAt = null
+        user.emailVerificationLastSentAt = null
+        await user.save()
+
+        return res.json({
+            message: 'Verificacao de e-mail desativada nesta versao.',
+            emailSent: false,
+            emailReason: 'email_flow_disabled',
+            user: buildUserResponse(user),
+        })
+
         if (user.emailVerified !== false) {
             return res.json({
                 message: 'E-mail ja verificado.',
@@ -4106,14 +4111,6 @@ app.post('/auth/send-verification-code', authMiddleware, sensitiveRateLimit, asy
 
 app.post('/auth/verify-email-code', authMiddleware, sensitiveRateLimit, async (req, res) => {
     try {
-        const normalizedCode = String(req.body?.code || '').replace(/\D/g, '')
-
-        if (normalizedCode.length !== 6) {
-            return res.status(400).json({
-                message: 'Informe o codigo de 6 numeros.',
-            })
-        }
-
         const user = await User.findById(req.user.userId)
 
         if (!user) {
@@ -4121,6 +4118,17 @@ app.post('/auth/verify-email-code', authMiddleware, sensitiveRateLimit, async (r
                 message: 'Usuario nao encontrado.',
             })
         }
+
+        user.emailVerified = true
+        user.emailVerificationCodeHash = ''
+        user.emailVerificationExpiresAt = null
+        user.emailVerificationLastSentAt = null
+        await user.save()
+
+        return res.json({
+            message: 'Verificacao de e-mail desativada nesta versao.',
+            user: buildUserResponse(user),
+        })
 
         if (user.emailVerified !== false) {
             return res.json({

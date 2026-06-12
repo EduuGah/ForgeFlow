@@ -48,7 +48,6 @@ export function TutorialProvider({ children }) {
   const isRunning = Boolean(activeFlow && activeStep)
   const canShowTutorial =
     Boolean(user?.profileCompleted) &&
-    user?.emailVerified !== false &&
     canShowTutorialOnPath(location.pathname)
 
   useEffect(() => {
@@ -56,7 +55,7 @@ export function TutorialProvider({ children }) {
   }, [user])
 
   useEffect(() => {
-    if (!user || !user.profileCompleted || user.emailVerified === false) {
+    if (!user || !user.profileCompleted) {
       setActiveFlowId('')
       setActiveStepIndex(0)
       setWelcomePromptVisible(false)
@@ -103,7 +102,7 @@ export function TutorialProvider({ children }) {
   useEffect(() => {
     if (!isRunning || !activeStep?.route) return
 
-    if (!user || !user.profileCompleted || user.emailVerified === false || !canShowTutorialOnPath(location.pathname)) {
+    if (!user || !user.profileCompleted || !canShowTutorialOnPath(location.pathname)) {
       setActiveFlowId('')
       setActiveStepIndex(0)
       setWelcomePromptVisible(false)
@@ -200,7 +199,7 @@ export function TutorialProvider({ children }) {
   }
 
   function startTutorial(flowId = 'welcome') {
-    if (!user || !user.profileCompleted || user.emailVerified === false || !canShowTutorialOnPath(location.pathname)) {
+    if (!user || !user.profileCompleted || !canShowTutorialOnPath(location.pathname)) {
       setActiveFlowId('')
       setActiveStepIndex(0)
       setWelcomePromptVisible(false)

@@ -28,14 +28,9 @@ function ProtectedRoute({ children }) {
     )
   }
 
-  if (user.emailVerified === false && location.pathname !== '/verify-email') {
-    return <Navigate to="/verify-email" replace />
-  }
-
   if (
     !user.profileCompleted &&
-    location.pathname !== '/complete-profile' &&
-    location.pathname !== '/verify-email'
+    location.pathname !== '/complete-profile'
   ) {
     return <Navigate to="/complete-profile" replace />
   }
