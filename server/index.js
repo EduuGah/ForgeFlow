@@ -1694,10 +1694,39 @@ function getEmailProvider() {
     return 'resend'
 }
 
+function getSmtpPassword(host) {
+    const rawPassword = String(process.env.SMTP_PASS || '')
+    const keepSpaces = String(process.env.SMTP_PASS_KEEP_SPACES || 'false').toLowerCase() === 'true'
+
+    if (keepSpaces) return rawPassword
+    if (String(host || '').includes('gmail.com')) return rawPassword.replace(/\s+/g, '')
+    return rawPassword.trim()
+}
+
+function getSmtpErrorReason(error) {
+    const code = String(error?.code || '').toUpperCase()
+    const command = String(error?.command || '').toUpperCase()
+    const message = String(error?.message || '').toLowerCase()
+
+    if (code === 'EAUTH' || command === 'AUTH' || message.includes('username and password not accepted')) {
+        return 'smtp_auth_failed'
+    }
+
+    if (code.includes('TIMEOUT') || code === 'ETIMEDOUT' || message.includes('timeout')) {
+        return 'smtp_timeout'
+    }
+
+    if (code === 'ECONNECTION' || code === 'ESOCKET' || code === 'ECONNREFUSED') {
+        return 'smtp_connection_failed'
+    }
+
+    return 'email_send_failed'
+}
+
 async function sendEmailWithSmtp({ to, subject, text, html, debugLabel, debugValue }) {
     const host = process.env.SMTP_HOST
     const user = process.env.SMTP_USER
-    const pass = process.env.SMTP_PASS
+    const pass = getSmtpPassword(host)
     const port = Number(process.env.SMTP_PORT || 465)
     const secure = String(process.env.SMTP_SECURE || 'true').toLowerCase() !== 'false'
     const from = process.env.MAIL_FROM || `ForgeFlow <${user || 'noreply@forgeflow.app'}>`
@@ -1730,6 +1759,9 @@ async function sendEmailWithSmtp({ to, subject, text, html, debugLabel, debugVal
         host,
         port,
         secure,
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000,
         auth: {
             user,
             pass,
@@ -1750,9 +1782,21 @@ async function sendEmailWithSmtp({ to, subject, text, html, debugLabel, debugVal
             reason: 'sent',
         }
     } catch (error) {
+        const reason = getSmtpErrorReason(error)
+
+        console.error('[ForgeFlow] Falha ao enviar e-mail por SMTP:', {
+            to,
+            subject,
+            reason,
+            code: error.code,
+            command: error.command,
+            response: error.response,
+            message: error.message,
+        })
+
         return {
             sent: false,
-            reason: 'email_send_failed',
+            reason,
             error: {
                 message: error.message,
                 code: error.code,
@@ -3706,7 +3750,7 @@ app.post('/auth/register', authRateLimit, async (req, res) => {
         email: normalizedEmail,
     })
 
-    if (existingUser?.passwordHash) {
+    if (existingUser?.passwordHash && existingUser.emailVerified !== false) {
         return res.status(409).json({
             message: 'Já existe uma conta com esse e-mail.',
         })
@@ -3733,7 +3777,7 @@ app.post('/auth/register', authRateLimit, async (req, res) => {
     let emailVerification = null
 
     if (existingUser) {
-        existingUser.name = existingUser.name || name.trim()
+        existingUser.name = name.trim()
         existingUser.passwordHash = passwordHash
         existingUser.provider = existingUser.googleId ? 'both' : 'credentials'
         existingUser.emailVerified = existingUser.googleId ? true : false

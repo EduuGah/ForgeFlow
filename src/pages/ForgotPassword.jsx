@@ -6,6 +6,20 @@ import { apiFetch } from '../services/api'
 import forgeflowIcon from '../assets/forgeflow-icon.png'
 import { unlockGlobalScroll } from '../utils/scrollLockUtils'
 
+function getEmailDeliveryError(result) {
+  if (result?.emailSent !== false) return ''
+
+  if (result?.emailReason === 'smtp_auth_failed') {
+    return 'O Gmail recusou o envio. Confira a senha de app do SMTP no Render e tente novamente.'
+  }
+
+  if (result?.emailReason === 'smtp_timeout' || result?.emailReason === 'smtp_connection_failed') {
+    return 'O servidor de e-mail demorou para responder. Aguarde alguns segundos e tente novamente.'
+  }
+
+  return 'Nao consegui enviar o codigo agora. Confira a configuracao SMTP do backend.'
+}
+
 function ForgotPassword() {
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
@@ -38,15 +52,23 @@ function ForgotPassword() {
         body: JSON.stringify({ email }),
       })
 
-      setCodeStepVisible(true)
-      setMessage(result?.message || 'Se existir uma conta com este e-mail, enviaremos um codigo de recuperacao.')
-
       if (result?.resetUrl) setDebugResetUrl(result.resetUrl)
       if (result?.resetCode) setDebugResetCode(result.resetCode)
+
+      const deliveryError = getEmailDeliveryError(result)
+
+      if (deliveryError && !result?.resetCode) {
+        setCodeStepVisible(false)
+        setError(deliveryError)
+        return
+      }
+
+      setCodeStepVisible(true)
+      setMessage(result?.message || 'Se existir uma conta com este e-mail, enviaremos um codigo de recuperacao.')
     } catch (requestError) {
       console.error(requestError)
-      setCodeStepVisible(true)
-      setMessage('Se existir uma conta com este e-mail, enviaremos um codigo de recuperacao.')
+      setCodeStepVisible(false)
+      setError(requestError.message || 'Nao foi possivel solicitar o codigo agora.')
     } finally {
       setLoading(false)
     }

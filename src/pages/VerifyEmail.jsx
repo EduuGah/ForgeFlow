@@ -12,6 +12,31 @@ function getVerificationStorageKey(user) {
   return `forgeflow:email-verification-dev-code:${id}`
 }
 
+function getEmailDeliveryMessage(result, fallback = 'Codigo reenviado para o seu e-mail.') {
+  if (result?.emailSent === true || result?.sent === true) {
+    return result?.message || fallback
+  }
+
+  if (result?.emailReason === 'smtp_auth_failed' || result?.reason === 'smtp_auth_failed') {
+    return 'O Gmail recusou o envio. Confira a senha de app do SMTP no Render e tente reenviar.'
+  }
+
+  if (
+    result?.emailReason === 'smtp_timeout' ||
+    result?.reason === 'smtp_timeout' ||
+    result?.emailReason === 'smtp_connection_failed' ||
+    result?.reason === 'smtp_connection_failed'
+  ) {
+    return 'O servidor de e-mail demorou para responder. Aguarde alguns segundos e tente reenviar.'
+  }
+
+  if (result?.emailSent === false || result?.sent === false) {
+    return 'Nao consegui enviar o codigo agora. Confira o SMTP no backend e tente novamente.'
+  }
+
+  return result?.message || fallback
+}
+
 function VerifyEmail() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -64,7 +89,13 @@ function VerifyEmail() {
         setDevCode(result.devCode)
       }
 
-      setMessage(result?.message || 'Codigo reenviado para o seu e-mail.')
+      const deliveryMessage = getEmailDeliveryMessage(result)
+
+      if (result?.emailSent === false) {
+        setError(deliveryMessage)
+      } else {
+        setMessage(deliveryMessage)
+      }
     } catch (requestError) {
       setError(requestError.message || 'Nao foi possivel reenviar o codigo.')
     } finally {
