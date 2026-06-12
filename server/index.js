@@ -42,6 +42,7 @@ dotenv.config()
 
 // Ajuda quando o Windows/rede dá erro com mongodb+srv
 dns.setServers(['1.1.1.1', '8.8.8.8'])
+dns.setDefaultResultOrder?.('ipv4first')
 
 const app = express()
 
@@ -1729,6 +1730,7 @@ async function sendEmailWithSmtp({ to, subject, text, html, debugLabel, debugVal
     const pass = getSmtpPassword(host)
     const port = Number(process.env.SMTP_PORT || 465)
     const secure = String(process.env.SMTP_SECURE || 'true').toLowerCase() !== 'false'
+    const forceIpv4 = String(process.env.SMTP_FORCE_IPV4 || 'true').toLowerCase() !== 'false'
     const from = process.env.MAIL_FROM || `ForgeFlow <${user || 'noreply@forgeflow.app'}>`
 
     if (!host || !user || !pass) {
@@ -1759,6 +1761,7 @@ async function sendEmailWithSmtp({ to, subject, text, html, debugLabel, debugVal
         host,
         port,
         secure,
+        ...(forceIpv4 ? { family: 4 } : {}),
         connectionTimeout: 10000,
         greetingTimeout: 10000,
         socketTimeout: 15000,
