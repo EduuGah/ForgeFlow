@@ -1724,6 +1724,41 @@ function getSmtpErrorReason(error) {
     return 'email_send_failed'
 }
 
+async function resolveSmtpConnectionHost(host, forceIpv4) {
+    if (!forceIpv4) {
+        return {
+            connectionHost: host,
+            tlsServername: '',
+            resolvedAddress: '',
+        }
+    }
+
+    try {
+        const addresses = await dns.promises.resolve4(host)
+        const resolvedAddress = addresses?.[0] || ''
+
+        if (resolvedAddress) {
+            return {
+                connectionHost: resolvedAddress,
+                tlsServername: host,
+                resolvedAddress,
+            }
+        }
+    } catch (error) {
+        console.error('[ForgeFlow] Falha ao resolver SMTP em IPv4:', {
+            host,
+            message: error.message,
+            code: error.code,
+        })
+    }
+
+    return {
+        connectionHost: host,
+        tlsServername: '',
+        resolvedAddress: '',
+    }
+}
+
 async function sendEmailWithSmtp({ to, subject, text, html, debugLabel, debugValue }) {
     const host = process.env.SMTP_HOST
     const user = process.env.SMTP_USER
@@ -1757,11 +1792,23 @@ async function sendEmailWithSmtp({ to, subject, text, html, debugLabel, debugVal
     }
 
     const nodemailer = nodemailerModule.default || nodemailerModule
+    const smtpTarget = await resolveSmtpConnectionHost(host, forceIpv4)
+
+    if (forceIpv4) {
+        console.log('[ForgeFlow] SMTP IPv4 resolvido:', {
+            host,
+            connectionHost: smtpTarget.connectionHost,
+            port,
+            secure,
+        })
+    }
+
     const transporter = nodemailer.createTransport({
-        host,
+        host: smtpTarget.connectionHost,
         port,
         secure,
         ...(forceIpv4 ? { family: 4 } : {}),
+        ...(smtpTarget.tlsServername ? { tls: { servername: smtpTarget.tlsServername } } : {}),
         connectionTimeout: 10000,
         greetingTimeout: 10000,
         socketTimeout: 15000,
