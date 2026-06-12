@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import forgeflowIcon from '../assets/forgeflow-icon.png'
 import { applyAppSettingsToDocument, getAppSettings } from '../utils/settingsUtils'
 import { getGoogleLoginUrl, isNativeApp } from '../utils/platformUtils'
+import { unlockGlobalScroll } from '../utils/scrollLockUtils'
 
 const API_URL = (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3001' : 'https://forgeflow-citr.onrender.com')).replace(/\/$/, '')
 
@@ -41,7 +42,10 @@ function Login() {
     const [loading, setLoading] = useState(false)
 
     useEffect(() => {
+        unlockGlobalScroll()
         applyAppSettingsToDocument(getAppSettings())
+
+        return () => unlockGlobalScroll()
     }, [])
 
     async function handleGoogleLogin() {

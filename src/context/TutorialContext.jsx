@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from './AuthContext'
 import { useWorkoutSession } from './WorkoutSessionContext'
 import {
+  clearWelcomeTutorialPending,
   getFlowForPath,
   getTutorialState,
   resetTutorialState,
@@ -11,8 +12,25 @@ import {
   shouldShowWelcomeTutorial,
   tutorialFlows,
 } from '../utils/tutorialUtils'
+import { unlockGlobalScroll } from '../utils/scrollLockUtils'
 
 const TutorialContext = createContext(null)
+const NON_TUTORIAL_PATHS = [
+  '/login',
+  '/register',
+  '/verify-email',
+  '/complete-profile',
+  '/forgot-password',
+  '/reset-password',
+  '/auth',
+  '/privacy',
+  '/delete-account',
+  '/data-safety',
+]
+
+function canShowTutorialOnPath(pathname = '/') {
+  return !NON_TUTORIAL_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`))
+}
 
 export function TutorialProvider({ children }) {
   const { user } = useAuth()
@@ -34,12 +52,15 @@ export function TutorialProvider({ children }) {
   }, [user])
 
   useEffect(() => {
-    if (!user) {
+    if (!user || !user.profileCompleted || user.emailVerified === false) {
+      setActiveFlowId('')
+      setActiveStepIndex(0)
       setWelcomePromptVisible(false)
+      unlockGlobalScroll()
       return
     }
 
-    if (!user.profileCompleted) {
+    if (!canShowTutorialOnPath(location.pathname)) {
       setWelcomePromptVisible(false)
       return
     }
@@ -53,7 +74,7 @@ export function TutorialProvider({ children }) {
     }, 900)
 
     return () => window.clearTimeout(timeoutId)
-  }, [user, state.dismissedWelcome, state.hasSeenWelcome])
+  }, [location.pathname, user, state.dismissedWelcome, state.hasSeenWelcome])
 
   useEffect(() => {
     function handleOpenTutorial(event) {
@@ -76,12 +97,20 @@ export function TutorialProvider({ children }) {
   }, [user])
 
   useEffect(() => {
-    if (!activeStep?.route) return
+    if (!isRunning || !activeStep?.route) return
+
+    if (!user || !user.profileCompleted || user.emailVerified === false || !canShowTutorialOnPath(location.pathname)) {
+      setActiveFlowId('')
+      setActiveStepIndex(0)
+      setWelcomePromptVisible(false)
+      unlockGlobalScroll()
+      return
+    }
 
     if (location.pathname !== activeStep.route) {
       navigate(activeStep.route)
     }
-  }, [activeStep?.route, location.pathname, navigate])
+  }, [activeStep?.route, isRunning, location.pathname, navigate, user])
 
   const updateState = useCallback(
     (updater) => {
@@ -167,10 +196,22 @@ export function TutorialProvider({ children }) {
   }
 
   function startTutorial(flowId = 'welcome') {
+    if (!user || !user.profileCompleted || user.emailVerified === false || !canShowTutorialOnPath(location.pathname)) {
+      setActiveFlowId('')
+      setActiveStepIndex(0)
+      setWelcomePromptVisible(false)
+      unlockGlobalScroll()
+      return
+    }
+
     const flow = tutorialFlows[flowId] || tutorialFlows.welcome
 
     if (flow.id === 'workout') {
       startTutorialWorkoutSession()
+    }
+
+    if (flow.id === 'welcome') {
+      clearWelcomeTutorialPending(user)
     }
 
     setWelcomePromptVisible(false)
@@ -182,6 +223,7 @@ export function TutorialProvider({ children }) {
     setWelcomePromptVisible(false)
 
     if (dontShowAgain) {
+      clearWelcomeTutorialPending(user)
       updateState((current) => ({
         ...current,
         dismissedWelcome: true,
@@ -206,6 +248,7 @@ export function TutorialProvider({ children }) {
     setActiveFlowId('')
     setActiveStepIndex(0)
     setWelcomePromptVisible(false)
+    unlockGlobalScroll()
   }
 
   function skipTutorial() {
@@ -238,6 +281,7 @@ export function TutorialProvider({ children }) {
     setActiveFlowId('')
     setActiveStepIndex(0)
     setWelcomePromptVisible(false)
+    unlockGlobalScroll()
   }
 
   function toggleContextualTips() {

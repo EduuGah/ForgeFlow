@@ -1,5 +1,6 @@
 const BASE_STORAGE_KEY = 'forgeflow:tutorial-state'
 const GLOBAL_DISMISSED_KEY = 'forgeflow:tutorial-welcome-dismissed'
+const WELCOME_PENDING_KEY = 'forgeflow:tutorial-welcome-pending'
 
 export const tutorialRouteFlows = {
   '/': 'dashboard',
@@ -269,6 +270,15 @@ export function getTutorialStorageKey(user) {
   return `${BASE_STORAGE_KEY}:${id}`
 }
 
+export function getTutorialUserId(user) {
+  return String(user?.id || user?._id || user?.email || '').trim()
+}
+
+export function getWelcomePendingKey(user) {
+  const id = getTutorialUserId(user)
+  return id ? `${WELCOME_PENDING_KEY}:${id}` : ''
+}
+
 export function getTutorialState(user) {
   try {
     const rawValue = window.localStorage.getItem(getTutorialStorageKey(user))
@@ -312,9 +322,35 @@ export function saveTutorialState(user, nextState) {
 export function resetTutorialState(user) {
   window.localStorage.removeItem(getTutorialStorageKey(user))
   window.localStorage.removeItem(GLOBAL_DISMISSED_KEY)
+  const pendingKey = getWelcomePendingKey(user)
+  if (pendingKey) window.localStorage.removeItem(pendingKey)
+}
+
+export function markWelcomeTutorialPending(user) {
+  const pendingKey = getWelcomePendingKey(user)
+  if (!pendingKey) return
+
+  window.localStorage.setItem(pendingKey, 'true')
+}
+
+export function clearWelcomeTutorialPending(user) {
+  const pendingKey = getWelcomePendingKey(user)
+  if (!pendingKey) return
+
+  window.localStorage.removeItem(pendingKey)
+}
+
+export function hasWelcomeTutorialPending(user) {
+  const pendingKey = getWelcomePendingKey(user)
+  if (!pendingKey) return false
+
+  return window.localStorage.getItem(pendingKey) === 'true'
 }
 
 export function shouldShowWelcomeTutorial(user, state = null) {
+  if (!user || !user.profileCompleted || user.emailVerified === false) return false
+  if (!hasWelcomeTutorialPending(user)) return false
+
   // Não abre mais o card automaticamente a cada sessão.
   // O tutorial continua disponível manualmente em Configurações ou pelo botão de ajuda.
   if (!user || !user.profileCompleted) return false

@@ -9,6 +9,7 @@ export function csrfProtection(req, res, next) {
         '/auth/login',
         '/auth/register',
         '/auth/forgot-password',
+        '/auth/reset-password-code',
     ]
 
     if (

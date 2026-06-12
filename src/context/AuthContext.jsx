@@ -29,16 +29,15 @@ export function AuthProvider({ children }) {
     const intervalId = window.setInterval(() => {
       if (!mounted) return
 
-      progress = Math.min(
-        98,
-        progress + (progress < 48 ? 3 : progress < 76 ? 2 : progress < 94 ? 1 : 0)
-      )
+      progress = Math.min(96, progress + (progress < 64 ? 2 : 1))
       setAuthWarmupProgress(progress)
 
-      if (progress > 72) {
+      if (progress > 82) {
         setAuthWarmupStatus('Preparando login seguro...')
+      } else if (progress > 52) {
+        setAuthWarmupStatus('Conectando ao servidor...')
       }
-    }, 520)
+    }, 320)
 
     try {
       while (mounted) {

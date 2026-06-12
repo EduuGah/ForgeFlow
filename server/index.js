@@ -342,6 +342,26 @@ const userSchema = new mongoose.Schema(
             trim: true,
         },
 
+        emailVerified: {
+            type: Boolean,
+            default: true,
+        },
+
+        emailVerificationCodeHash: {
+            type: String,
+            default: '',
+        },
+
+        emailVerificationExpiresAt: {
+            type: Date,
+            default: null,
+        },
+
+        emailVerificationLastSentAt: {
+            type: Date,
+            default: null,
+        },
+
         passwordHash: {
             type: String,
             default: '',
@@ -390,6 +410,16 @@ const userSchema = new mongoose.Schema(
         },
 
         resetPasswordExpiresAt: {
+            type: Date,
+            default: null,
+        },
+
+        resetPasswordCodeHash: {
+            type: String,
+            default: '',
+        },
+
+        resetPasswordCodeExpiresAt: {
             type: Date,
             default: null,
         },
@@ -1399,6 +1429,27 @@ function createPasswordResetToken() {
     }
 }
 
+function createNumericCode() {
+    return String(crypto.randomInt(0, 1000000)).padStart(6, '0')
+}
+
+function hashOneTimeCode(user, code) {
+    return crypto
+        .createHash('sha256')
+        .update(`${user._id}:${String(code || '').trim()}:${JWT_SECRET}`)
+        .digest('hex')
+}
+
+function createOneTimeCode(user, expiresInMinutes = 15) {
+    const rawCode = createNumericCode()
+
+    return {
+        rawCode,
+        codeHash: hashOneTimeCode(user, rawCode),
+        expiresAt: new Date(Date.now() + 1000 * 60 * expiresInMinutes),
+    }
+}
+
 function buildResetPasswordUrl(rawToken) {
     return `${normalizedFrontendUrl}/reset-password/${rawToken}`
 }
@@ -1455,6 +1506,111 @@ async function sendPasswordResetEmail(to, resetUrl) {
     }
 }
 
+async function sendPasswordResetCodeEmail(to, resetUrl, resetCode) {
+    const apiKey = process.env.RESEND_API_KEY
+    const from = process.env.MAIL_FROM || 'ForgeFlow <onboarding@resend.dev>'
+
+    if (!apiKey) {
+        if (process.env.NODE_ENV !== 'production') {
+            console.log('[ForgeFlow] Codigo de reset gerado sem provedor de e-mail:', resetCode, resetUrl)
+        }
+
+        return {
+            sent: false,
+            reason: 'email_provider_not_configured',
+        }
+    }
+
+    const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            from,
+            to,
+            subject: 'Redefinir senha do ForgeFlow',
+            html: `
+                <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111">
+                    <h2>Redefinir senha do ForgeFlow</h2>
+                    <p>Use este codigo no app para criar uma nova senha:</p>
+                    <p style="font-size:28px;font-weight:800;letter-spacing:6px">${resetCode}</p>
+                    <p>O codigo e o link expiram em 30 minutos.</p>
+                    <p><a href="${resetUrl}">${resetUrl}</a></p>
+                    <p>Se voce nao pediu isso, ignore este e-mail.</p>
+                </div>
+            `,
+        }),
+    })
+
+    if (!response.ok) {
+        const body = await response.json().catch(() => ({}))
+        return {
+            sent: false,
+            reason: 'email_send_failed',
+            error: body,
+        }
+    }
+
+    return {
+        sent: true,
+        reason: 'sent',
+    }
+}
+
+async function sendEmailVerificationEmail(to, code) {
+    const apiKey = process.env.RESEND_API_KEY
+    const from = process.env.MAIL_FROM || 'ForgeFlow <onboarding@resend.dev>'
+
+    if (!apiKey) {
+        if (process.env.NODE_ENV !== 'production') {
+            console.log('[ForgeFlow] Codigo de verificacao gerado sem provedor de e-mail:', code)
+        }
+
+        return {
+            sent: false,
+            reason: 'email_provider_not_configured',
+        }
+    }
+
+    const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            from,
+            to,
+            subject: 'Codigo de verificacao do ForgeFlow',
+            html: `
+                <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111">
+                    <h2>Confirme seu e-mail no ForgeFlow</h2>
+                    <p>Use este codigo no app para verificar sua conta:</p>
+                    <p style="font-size:28px;font-weight:800;letter-spacing:6px">${code}</p>
+                    <p>Este codigo expira em 15 minutos.</p>
+                    <p>Se voce nao criou uma conta no ForgeFlow, ignore este e-mail.</p>
+                </div>
+            `,
+        }),
+    })
+
+    if (!response.ok) {
+        const body = await response.json().catch(() => ({}))
+        return {
+            sent: false,
+            reason: 'email_send_failed',
+            error: body,
+        }
+    }
+
+    return {
+        sent: true,
+        reason: 'sent',
+    }
+}
+
 
 function createToken(user) {
     return jwt.sign(
@@ -1476,6 +1632,7 @@ function buildUserResponse(user) {
         id: user._id,
         name: user.name,
         email: user.email,
+        emailVerified: user.emailVerified !== false,
         avatarUrl: user.avatarUrl,
         provider: user.provider,
         role: user.role || 'user',
@@ -2956,6 +3113,7 @@ passport.use(
                     user.name = user.name || profile.displayName
                     user.avatarUrl = profile.photos?.[0]?.value || user.avatarUrl
                     user.provider = user.passwordHash ? 'both' : 'google'
+                    user.emailVerified = true
                     user.lastLoginAt = new Date()
 
                     user = await user.save()
@@ -2966,6 +3124,7 @@ passport.use(
                         email,
                         avatarUrl: profile.photos?.[0]?.value || '',
                         provider: 'google',
+                        emailVerified: true,
                         profileCompleted: false,
                         lastLoginAt: new Date(),
                     })
@@ -3140,20 +3299,23 @@ app.post('/auth/forgot-password', sensitiveRateLimit, async (req, res) => {
         }
 
         const resetToken = createPasswordResetToken()
+        const resetCode = createOneTimeCode(user, 30)
 
         user.resetPasswordTokenHash = resetToken.tokenHash
         user.resetPasswordExpiresAt = resetToken.expiresAt
+        user.resetPasswordCodeHash = resetCode.codeHash
+        user.resetPasswordCodeExpiresAt = resetCode.expiresAt
 
         await user.save()
 
         const resetUrl = buildResetPasswordUrl(resetToken.rawToken)
-        const emailResult = await sendPasswordResetEmail(user.email, resetUrl)
+        const emailResult = await sendPasswordResetCodeEmail(user.email, resetUrl, resetCode.rawCode)
 
         return res.status(200).json({
             message: 'Se existir uma conta com este e-mail, enviaremos um link de recuperação.',
             emailSent: emailResult.sent,
             emailReason: emailResult.reason,
-            ...(process.env.NODE_ENV !== 'production' && !emailResult.sent ? { resetUrl } : {}),
+            ...(process.env.NODE_ENV !== 'production' && !emailResult.sent ? { resetUrl, resetCode: resetCode.rawCode } : {}),
         })
     } catch (error) {
         console.error(error)
@@ -3204,6 +3366,78 @@ app.post('/auth/reset-password/:token', sensitiveRateLimit, async (req, res) => 
         user.provider = user.googleId ? 'both' : 'credentials'
         user.resetPasswordTokenHash = ''
         user.resetPasswordExpiresAt = null
+        user.resetPasswordCodeHash = ''
+        user.resetPasswordCodeExpiresAt = null
+
+        await user.save()
+
+        return res.json({
+            message: 'Senha redefinida com sucesso.',
+        })
+    } catch (error) {
+        console.error(error)
+
+        return res.status(500).json({
+            message: 'Erro ao redefinir senha.',
+        })
+    }
+})
+
+app.post('/auth/reset-password-code', sensitiveRateLimit, async (req, res) => {
+    try {
+        const { email, code, password, confirmPassword } = req.body
+        const normalizedEmail = String(email || '').toLowerCase().trim()
+        const normalizedCode = String(code || '').replace(/\D/g, '')
+
+        if (!normalizedEmail || normalizedCode.length !== 6) {
+            return res.status(400).json({
+                message: 'Informe o e-mail e o codigo recebido.',
+            })
+        }
+
+        if (!password?.trim() || !confirmPassword?.trim()) {
+            return res.status(400).json({
+                message: 'Preencha e confirme a nova senha.',
+            })
+        }
+
+        if (password !== confirmPassword) {
+            return res.status(400).json({
+                message: 'As senhas nao conferem.',
+            })
+        }
+
+        if (password.length < 6) {
+            return res.status(400).json({
+                message: 'A senha precisa ter pelo menos 6 caracteres.',
+            })
+        }
+
+        const user = await User.findOne({
+            email: normalizedEmail,
+            resetPasswordCodeExpiresAt: { $gt: new Date() },
+        })
+
+        if (!user || !user.resetPasswordCodeHash) {
+            return res.status(400).json({
+                message: 'Codigo invalido ou expirado.',
+            })
+        }
+
+        const codeHash = hashOneTimeCode(user, normalizedCode)
+
+        if (codeHash !== user.resetPasswordCodeHash) {
+            return res.status(400).json({
+                message: 'Codigo invalido ou expirado.',
+            })
+        }
+
+        user.passwordHash = await bcrypt.hash(password, 10)
+        user.provider = user.googleId ? 'both' : 'credentials'
+        user.resetPasswordTokenHash = ''
+        user.resetPasswordExpiresAt = null
+        user.resetPasswordCodeHash = ''
+        user.resetPasswordCodeExpiresAt = null
 
         await user.save()
 
@@ -3279,11 +3513,13 @@ app.post('/auth/register', authRateLimit, async (req, res) => {
     const profileCompleted = buildProfileCompletion(profile)
 
     let user
+    let emailVerification = null
 
     if (existingUser) {
         existingUser.name = existingUser.name || name.trim()
         existingUser.passwordHash = passwordHash
         existingUser.provider = existingUser.googleId ? 'both' : 'credentials'
+        existingUser.emailVerified = existingUser.googleId ? true : false
         existingUser.profile = {
             ...existingUser.profile,
             ...profile,
@@ -3297,12 +3533,31 @@ app.post('/auth/register', authRateLimit, async (req, res) => {
             email: normalizedEmail,
             passwordHash,
             provider: 'credentials',
+            emailVerified: false,
             profile,
             profileCompleted,
         })
     }
 
     user.lastLoginAt = new Date()
+
+    if (user.emailVerified === false) {
+        const verificationCode = createOneTimeCode(user, 15)
+        user.emailVerificationCodeHash = verificationCode.codeHash
+        user.emailVerificationExpiresAt = verificationCode.expiresAt
+        user.emailVerificationLastSentAt = new Date()
+
+        const emailResult = await sendEmailVerificationEmail(user.email, verificationCode.rawCode)
+
+        emailVerification = {
+            sent: emailResult.sent,
+            reason: emailResult.reason,
+            ...(process.env.NODE_ENV !== 'production' && !emailResult.sent
+                ? { devCode: verificationCode.rawCode }
+                : {}),
+        }
+    }
+
     await user.save()
     await writeLoginEvent(req, user, 'credentials')
 
@@ -3315,6 +3570,7 @@ app.post('/auth/register', authRateLimit, async (req, res) => {
         authMode: 'hybrid',
         csrfToken,
         user: buildUserResponse(user),
+        emailVerification,
     })
 })
 
@@ -3420,6 +3676,110 @@ app.post('/auth/logout', async (req, res) => {
     return res.json({
         message: 'Logout realizado.',
     })
+})
+
+app.post('/auth/send-verification-code', authMiddleware, sensitiveRateLimit, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId)
+
+        if (!user) {
+            return res.status(404).json({
+                message: 'Usuario nao encontrado.',
+            })
+        }
+
+        if (user.emailVerified !== false) {
+            return res.json({
+                message: 'E-mail ja verificado.',
+                user: buildUserResponse(user),
+            })
+        }
+
+        const verificationCode = createOneTimeCode(user, 15)
+
+        user.emailVerificationCodeHash = verificationCode.codeHash
+        user.emailVerificationExpiresAt = verificationCode.expiresAt
+        user.emailVerificationLastSentAt = new Date()
+
+        await user.save()
+
+        const emailResult = await sendEmailVerificationEmail(user.email, verificationCode.rawCode)
+
+        return res.json({
+            message: 'Codigo enviado para o seu e-mail.',
+            emailSent: emailResult.sent,
+            emailReason: emailResult.reason,
+            user: buildUserResponse(user),
+            ...(process.env.NODE_ENV !== 'production' && !emailResult.sent
+                ? { devCode: verificationCode.rawCode }
+                : {}),
+        })
+    } catch (error) {
+        console.error(error)
+
+        return res.status(500).json({
+            message: 'Erro ao enviar codigo de verificacao.',
+        })
+    }
+})
+
+app.post('/auth/verify-email-code', authMiddleware, sensitiveRateLimit, async (req, res) => {
+    try {
+        const normalizedCode = String(req.body?.code || '').replace(/\D/g, '')
+
+        if (normalizedCode.length !== 6) {
+            return res.status(400).json({
+                message: 'Informe o codigo de 6 numeros.',
+            })
+        }
+
+        const user = await User.findById(req.user.userId)
+
+        if (!user) {
+            return res.status(404).json({
+                message: 'Usuario nao encontrado.',
+            })
+        }
+
+        if (user.emailVerified !== false) {
+            return res.json({
+                message: 'E-mail ja verificado.',
+                user: buildUserResponse(user),
+            })
+        }
+
+        if (!user.emailVerificationCodeHash || !user.emailVerificationExpiresAt || user.emailVerificationExpiresAt <= new Date()) {
+            return res.status(400).json({
+                message: 'Codigo expirado. Envie um novo codigo.',
+            })
+        }
+
+        const codeHash = hashOneTimeCode(user, normalizedCode)
+
+        if (codeHash !== user.emailVerificationCodeHash) {
+            return res.status(400).json({
+                message: 'Codigo invalido.',
+            })
+        }
+
+        user.emailVerified = true
+        user.emailVerificationCodeHash = ''
+        user.emailVerificationExpiresAt = null
+        user.emailVerificationLastSentAt = null
+
+        await user.save()
+
+        return res.json({
+            message: 'E-mail verificado com sucesso.',
+            user: buildUserResponse(user),
+        })
+    } catch (error) {
+        console.error(error)
+
+        return res.status(500).json({
+            message: 'Erro ao verificar e-mail.',
+        })
+    }
 })
 
 

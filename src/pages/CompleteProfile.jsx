@@ -4,8 +4,8 @@ import { Save, Target, UserRound } from 'lucide-react'
 
 import { apiFetch, getCurrentUser } from '../services/api'
 import { useAuth } from '../context/AuthContext'
-
-import AppPageIntro from '../components/app/AppPageIntro'
+import { markWelcomeTutorialPending } from '../utils/tutorialUtils'
+import { unlockGlobalScroll } from '../utils/scrollLockUtils'
 
 function CompleteProfile() {
     const navigate = useNavigate()
@@ -25,11 +25,18 @@ function CompleteProfile() {
     const [notes, setNotes] = useState('')
 
     useEffect(() => {
+        unlockGlobalScroll()
+
         async function loadUser() {
             try {
                 const user = await getCurrentUser()
 
                 setUser(user)
+
+                if (user.emailVerified === false) {
+                    navigate('/verify-email', { replace: true })
+                    return
+                }
 
                 setName(user.name || '')
                 setHeight(user.profile?.height || '')
@@ -51,6 +58,8 @@ function CompleteProfile() {
         }
 
         loadUser()
+
+        return () => unlockGlobalScroll()
     }, [navigate, setUser])
 
     async function handleSubmit(event) {
@@ -81,6 +90,7 @@ function CompleteProfile() {
             })
 
             setUser(updatedUser)
+            markWelcomeTutorialPending(updatedUser)
             navigate('/', { replace: true })
         } catch (err) {
             setError(err.message)
@@ -104,12 +114,10 @@ function CompleteProfile() {
     }
 
     return (
-    <div className="ff-hevy-page ff-hevy-page-completeprofile">
+    <main className="ff-hevy-page ff-hevy-page-completeprofile ff-auth-route text-white">
 
-      <AppPageIntro eyebrow="Onboarding" title="Complete seu perfil" description="Ajuste os dados iniciais para personalizar a experiência do ForgeFlow." />
-
-        <div className="ff-auth-flow flex min-h-screen items-center justify-center bg-zinc-950 px-4 py-10 text-white">
-            <div className="w-full max-w-3xl rounded-3xl border border-zinc-800 bg-[#121216] p-8 shadow-2xl">
+        <section className="ff-auth-route__shell">
+            <div className="ff-auth-card ff-auth-card--wide">
                 <div className="flex items-center gap-4">
                     <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
                         <UserRound size={28} />
@@ -304,9 +312,9 @@ function CompleteProfile() {
                     </div>
                 </form>
             </div>
-        </div>
+        </section>
     
-    </div>
+    </main>
   )
 }
 

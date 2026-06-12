@@ -16,6 +16,10 @@ function PublicRoute({ children }) {
   }
 
   if (user) {
+    if (user.emailVerified === false) {
+      return <Navigate to="/verify-email" replace />
+    }
+
     return <Navigate to={user.profileCompleted ? '/' : '/complete-profile'} replace />
   }
 

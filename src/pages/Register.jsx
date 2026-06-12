@@ -5,10 +5,10 @@ import { useAuth } from '../context/AuthContext'
 import forgeflowIcon from '../assets/forgeflow-icon.png'
 import { applyAppSettingsToDocument, getAppSettings } from '../utils/settingsUtils'
 import { getGoogleLoginUrl } from '../utils/platformUtils'
+import { markWelcomeTutorialPending } from '../utils/tutorialUtils'
+import { unlockGlobalScroll } from '../utils/scrollLockUtils'
 
 const API_URL = (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3001' : 'https://forgeflow-citr.onrender.com')).replace(/\/$/, '')
-
-import AppPageIntro from '../components/app/AppPageIntro'
 
 function GoogleIcon() {
     return (
@@ -44,8 +44,18 @@ function Register() {
     const [loading, setLoading] = useState(false)
 
     useEffect(() => {
+        unlockGlobalScroll()
         applyAppSettingsToDocument(getAppSettings())
+
+        return () => unlockGlobalScroll()
     }, [])
+
+    function saveDevVerificationCode(user, devCode) {
+        if (!devCode) return
+
+        const id = user?.id || user?._id || user?.email || 'anonymous'
+        window.sessionStorage.setItem(`forgeflow:email-verification-dev-code:${id}`, devCode)
+    }
 
     function handleGoogleLogin() {
         window.location.href = getGoogleLoginUrl(API_URL)
@@ -66,11 +76,26 @@ function Register() {
             saveAuthToken(data.token)
             setUser(data.user)
 
+            if (data.user?.emailVerified === false) {
+                saveDevVerificationCode(data.user, data.emailVerification?.devCode)
+                navigate('/verify-email', {
+                    replace: true,
+                    state: {
+                        devCode: data.emailVerification?.devCode || '',
+                        message: data.emailVerification?.sent
+                            ? 'Enviamos um codigo para o seu e-mail.'
+                            : 'Conta criada. Envie ou digite o codigo para verificar seu e-mail.',
+                    },
+                })
+                return
+            }
+
             if (!data.user?.profileCompleted) {
                 navigate('/complete-profile')
                 return
             }
 
+            markWelcomeTutorialPending(data.user)
             navigate('/')
         } catch (err) {
             setError(err.message)
@@ -80,12 +105,9 @@ function Register() {
     }
 
     return (
-    <div className="ff-hevy-page ff-hevy-page-register">
-
-      <AppPageIntro eyebrow="Cadastro" title="Criar conta" description="Comece a acompanhar seus treinos em poucos passos." />
-
-        <div className="ff-auth-flow flex min-h-screen items-center justify-center bg-[var(--ff-bg)] px-4 py-10 text-[var(--ff-text)]">
-            <div className="w-full max-w-md rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-8 shadow-2xl">
+    <main className="ff-hevy-page ff-hevy-page-register ff-auth-route text-[var(--ff-text)]">
+        <section className="ff-auth-route__shell">
+            <div className="ff-auth-card">
                 <div className="login-logo-card mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-3xl bg-white">
                     <img
                         src={forgeflowIcon}
@@ -213,9 +235,8 @@ function Register() {
             </Link>
           </div>
             </div>
-        </div>
-    
-    </div>
+        </section>
+    </main>
   )
 }
 
