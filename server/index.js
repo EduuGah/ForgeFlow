@@ -1768,6 +1768,13 @@ function getNumberEnv(name, fallback) {
     return Number.isFinite(value) && value > 0 ? value : fallback
 }
 
+function getSmtpSecure(port) {
+    if (port === 465) return true
+    if (port === 587) return false
+
+    return String(process.env.SMTP_SECURE || 'true').toLowerCase() !== 'false'
+}
+
 function buildSmtpTransportOptions({ target, port, secure, forceIpv4, user, pass }) {
     const requireTls = String(process.env.SMTP_REQUIRE_TLS || (!secure ? 'true' : 'false')).toLowerCase() !== 'false'
 
@@ -1801,7 +1808,7 @@ async function sendEmailWithSmtp({ to, subject, text, html, debugLabel, debugVal
     const user = process.env.SMTP_USER
     const pass = getSmtpPassword(host)
     const port = Number(process.env.SMTP_PORT || 465)
-    const secure = String(process.env.SMTP_SECURE || 'true').toLowerCase() !== 'false'
+    const secure = getSmtpSecure(port)
     const forceIpv4 = String(process.env.SMTP_FORCE_IPV4 || 'true').toLowerCase() !== 'false'
     const from = process.env.MAIL_FROM || `ForgeFlow <${user || 'noreply@forgeflow.app'}>`
 
