@@ -28,7 +28,6 @@ const SmartNotificationPopup = lazy(() =>
   import('../notifications/SmartNotificationPopup')
 )
 const PwaInstallButton = lazy(() => import('../pwa/PwaInstallButton'))
-const GuidedTutorial = lazy(() => import('../tutorial/GuidedTutorial'))
 
 function runWhenBrowserIsIdle(callback) {
   if (typeof window === 'undefined') return undefined
@@ -505,9 +504,6 @@ function AppLayout() {
         {!isRunningNativeApp && <PwaInstallButton />}
       </Suspense>
 
-      <Suspense fallback={null}>
-        <GuidedTutorial />
-      </Suspense>
     </div>
   )
 }

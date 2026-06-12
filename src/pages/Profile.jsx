@@ -285,7 +285,7 @@ function Profile() {
 
     if (!weightInput || !dateInput) {
       showToast('error', 'Registro incompleto', 'Informe o peso e a data.')
-      return
+      return false
     }
 
     if (isFutureDate(dateInput)) {
@@ -297,7 +297,7 @@ function Profile() {
         'Não é possível registrar peso em uma data futura.'
       )
 
-      return
+      return false
     }
 
     const parsedWeight = parseWeightValue(weightInput)
@@ -308,7 +308,7 @@ function Profile() {
         'Peso inválido',
         'Digite um peso válido, como 72,5 ou 72.5.'
       )
-      return
+      return false
     }
 
     const alreadyHasDate = bodyWeight.find((item) => item.date === dateInput)
@@ -321,7 +321,7 @@ function Profile() {
           'Já existe um peso registrado nessa data. Deseja substituir pelo novo valor?'
         )
 
-        if (!confirmReplace) return
+        if (!confirmReplace) return false
 
         const updatedRecordFromApi = await apiFetch(
           `/body-weight/${alreadyHasDate.id}`,
@@ -384,6 +384,7 @@ function Profile() {
       }))
 
       showToast('success', 'Peso registrado', 'O registro foi salvo na sua conta.')
+      return true
     } catch (error) {
       console.error(error)
 
@@ -392,6 +393,7 @@ function Profile() {
         'Erro ao salvar peso',
         error.message || 'Não foi possível salvar o peso no servidor.'
       )
+      return false
     }
   }
 

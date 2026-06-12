@@ -38,8 +38,24 @@ export default function ProfileWeightSection({
 }) {
   const [isWeightMenuOpen, setIsWeightMenuOpen] = useState(false)
 
+  function openWeightMenu() {
+    if (!dateInput) {
+      onDateChange(getTodayDateInputValue())
+    }
+
+    setIsWeightMenuOpen(true)
+  }
+
+  async function handleWeightMenuSubmit(event) {
+    const saved = await onAddWeight(event)
+
+    if (saved) {
+      setIsWeightMenuOpen(false)
+    }
+  }
+
   const weightForm = (
-    <form onSubmit={onAddWeight} className="space-y-4">
+    <form onSubmit={handleWeightMenuSubmit} className="space-y-4">
       <div>
         <Input
           label="Peso em kg"
@@ -123,7 +139,7 @@ export default function ProfileWeightSection({
 
             <button
               type="button"
-              onClick={() => setIsWeightMenuOpen(true)}
+              onClick={openWeightMenu}
               className="inline-flex h-11 shrink-0 items-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-3 text-sm font-black text-white shadow-[0_0_18px_var(--ff-accent-shadow)]"
             >
               <Plus size={17} />

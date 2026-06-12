@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { CheckCircle2, MailCheck, RefreshCw, ShieldCheck } from 'lucide-react'
 
 import forgeflowIcon from '../assets/forgeflow-icon.png'
@@ -15,7 +15,7 @@ function getVerificationStorageKey(user) {
 function VerifyEmail() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, setUser } = useAuth()
+  const { user, setUser, logout } = useAuth()
 
   const [code, setCode] = useState('')
   const [message, setMessage] = useState(location.state?.message || 'Enviamos um codigo para o seu e-mail.')
@@ -101,6 +101,11 @@ function VerifyEmail() {
     } finally {
       setLoading(false)
     }
+  }
+
+  function handleBackToLogin() {
+    logout({ redirect: false })
+    navigate('/login', { replace: true })
   }
 
   return (
@@ -199,12 +204,13 @@ function VerifyEmail() {
             </div>
           </div>
 
-          <Link
-            to="/login"
-            className="mt-5 block text-center text-sm font-bold text-[var(--ff-muted)] transition hover:text-[var(--ff-text)]"
+          <button
+            type="button"
+            onClick={handleBackToLogin}
+            className="mt-5 block w-full text-center text-sm font-bold text-[var(--ff-muted)] transition hover:text-[var(--ff-text)]"
           >
             Voltar para login
-          </Link>
+          </button>
         </div>
       </section>
     </main>

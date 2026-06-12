@@ -1455,6 +1455,30 @@ function buildResetPasswordUrl(rawToken) {
 }
 
 async function sendPasswordResetEmail(to, resetUrl) {
+    if (getEmailProvider() === 'smtp') {
+        return sendEmailWithSmtp({
+            to,
+            subject: 'Redefinir senha do ForgeFlow',
+            text: [
+                'Recebemos uma solicitacao para redefinir sua senha.',
+                'Este link expira em 30 minutos:',
+                resetUrl,
+                'Se voce nao pediu isso, ignore este e-mail.',
+            ].join('\n\n'),
+            html: `
+                <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111">
+                    <h2>Redefinir senha do ForgeFlow</h2>
+                    <p>Recebemos uma solicitacao para redefinir sua senha.</p>
+                    <p>Este link expira em 30 minutos:</p>
+                    <p><a href="${resetUrl}">${resetUrl}</a></p>
+                    <p>Se voce nao pediu isso, ignore este e-mail.</p>
+                </div>
+            `,
+            debugLabel: 'Link de reset gerado sem provedor de e-mail:',
+            debugValue: resetUrl,
+        })
+    }
+
     const apiKey = process.env.RESEND_API_KEY
     const from = process.env.MAIL_FROM || 'ForgeFlow <onboarding@resend.dev>'
 
@@ -1507,6 +1531,32 @@ async function sendPasswordResetEmail(to, resetUrl) {
 }
 
 async function sendPasswordResetCodeEmail(to, resetUrl, resetCode) {
+    if (getEmailProvider() === 'smtp') {
+        return sendEmailWithSmtp({
+            to,
+            subject: 'Redefinir senha do ForgeFlow',
+            text: [
+                'Use este codigo no app para criar uma nova senha:',
+                resetCode,
+                'O codigo e o link expiram em 30 minutos.',
+                resetUrl,
+                'Se voce nao pediu isso, ignore este e-mail.',
+            ].join('\n\n'),
+            html: `
+                <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111">
+                    <h2>Redefinir senha do ForgeFlow</h2>
+                    <p>Use este codigo no app para criar uma nova senha:</p>
+                    <p style="font-size:28px;font-weight:800;letter-spacing:6px">${resetCode}</p>
+                    <p>O codigo e o link expiram em 30 minutos.</p>
+                    <p><a href="${resetUrl}">${resetUrl}</a></p>
+                    <p>Se voce nao pediu isso, ignore este e-mail.</p>
+                </div>
+            `,
+            debugLabel: 'Codigo de reset gerado sem provedor de e-mail:',
+            debugValue: `${resetCode} ${resetUrl}`,
+        })
+    }
+
     const apiKey = process.env.RESEND_API_KEY
     const from = process.env.MAIL_FROM || 'ForgeFlow <onboarding@resend.dev>'
 
@@ -1560,6 +1610,31 @@ async function sendPasswordResetCodeEmail(to, resetUrl, resetCode) {
 }
 
 async function sendEmailVerificationEmail(to, code) {
+    if (getEmailProvider() === 'smtp') {
+        return sendEmailWithSmtp({
+            to,
+            subject: 'Codigo de verificacao do ForgeFlow',
+            text: [
+                'Confirme seu e-mail no ForgeFlow.',
+                'Use este codigo no app para verificar sua conta:',
+                code,
+                'Este codigo expira em 15 minutos.',
+                'Se voce nao criou uma conta no ForgeFlow, ignore este e-mail.',
+            ].join('\n\n'),
+            html: `
+                <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111">
+                    <h2>Confirme seu e-mail no ForgeFlow</h2>
+                    <p>Use este codigo no app para verificar sua conta:</p>
+                    <p style="font-size:28px;font-weight:800;letter-spacing:6px">${code}</p>
+                    <p>Este codigo expira em 15 minutos.</p>
+                    <p>Se voce nao criou uma conta no ForgeFlow, ignore este e-mail.</p>
+                </div>
+            `,
+            debugLabel: 'Codigo de verificacao gerado sem provedor de e-mail:',
+            debugValue: code,
+        })
+    }
+
     const apiKey = process.env.RESEND_API_KEY
     const from = process.env.MAIL_FROM || 'ForgeFlow <onboarding@resend.dev>'
 
@@ -1608,6 +1683,83 @@ async function sendEmailVerificationEmail(to, code) {
     return {
         sent: true,
         reason: 'sent',
+    }
+}
+
+function getEmailProvider() {
+    const configuredProvider = String(process.env.MAIL_PROVIDER || '').trim().toLowerCase()
+
+    if (configuredProvider) return configuredProvider
+    if (process.env.SMTP_HOST || process.env.SMTP_USER || process.env.SMTP_PASS) return 'smtp'
+    return 'resend'
+}
+
+async function sendEmailWithSmtp({ to, subject, text, html, debugLabel, debugValue }) {
+    const host = process.env.SMTP_HOST
+    const user = process.env.SMTP_USER
+    const pass = process.env.SMTP_PASS
+    const port = Number(process.env.SMTP_PORT || 465)
+    const secure = String(process.env.SMTP_SECURE || 'true').toLowerCase() !== 'false'
+    const from = process.env.MAIL_FROM || `ForgeFlow <${user || 'noreply@forgeflow.app'}>`
+
+    if (!host || !user || !pass) {
+        if (process.env.NODE_ENV !== 'production') {
+            console.log('[ForgeFlow]', debugLabel, debugValue)
+        }
+
+        return {
+            sent: false,
+            reason: 'email_provider_not_configured',
+        }
+    }
+
+    let nodemailerModule
+
+    try {
+        nodemailerModule = await import('nodemailer')
+    } catch (error) {
+        return {
+            sent: false,
+            reason: 'smtp_dependency_missing',
+            error: error.message,
+        }
+    }
+
+    const nodemailer = nodemailerModule.default || nodemailerModule
+    const transporter = nodemailer.createTransport({
+        host,
+        port,
+        secure,
+        auth: {
+            user,
+            pass,
+        },
+    })
+
+    try {
+        await transporter.sendMail({
+            from,
+            to,
+            subject,
+            text,
+            html,
+        })
+
+        return {
+            sent: true,
+            reason: 'sent',
+        }
+    } catch (error) {
+        return {
+            sent: false,
+            reason: 'email_send_failed',
+            error: {
+                message: error.message,
+                code: error.code,
+                command: error.command,
+                response: error.response,
+            },
+        }
     }
 }
 
@@ -1684,6 +1836,71 @@ function uploadBufferToCloudinary(buffer, options = {}) {
 
         stream.end(buffer)
     })
+}
+
+function getCloudinaryPublicIdFromUrl(imageUrl = '') {
+    try {
+        const url = new URL(imageUrl)
+        const uploadMarker = '/upload/'
+        const uploadIndex = url.pathname.indexOf(uploadMarker)
+
+        if (uploadIndex === -1) return ''
+
+        const afterUpload = url.pathname.slice(uploadIndex + uploadMarker.length)
+        const withoutVersion = afterUpload.replace(/^v\d+\//, '')
+        const withoutExtension = withoutVersion.replace(/\.[a-z0-9]+$/i, '')
+
+        return decodeURIComponent(withoutExtension)
+    } catch {
+        return ''
+    }
+}
+
+function getProgressPhotoPublicId(photo = {}) {
+    return photo.publicId || getCloudinaryPublicIdFromUrl(photo.imageUrl)
+}
+
+async function safeDestroyCloudinaryAsset(publicId) {
+    if (!publicId) return { ok: false, reason: 'missing_public_id' }
+
+    try {
+        const result = await cloudinary.uploader.destroy(publicId, {
+            invalidate: true,
+            resource_type: 'image',
+        })
+
+        return {
+            ok: ['ok', 'not found'].includes(result?.result),
+            reason: result?.result || 'unknown',
+        }
+    } catch (error) {
+        console.warn('[Cloudinary] Falha ao remover asset:', publicId, error?.message || error)
+
+        return {
+            ok: false,
+            reason: 'cloudinary_error',
+        }
+    }
+}
+
+async function destroyProgressPhotosFromCloudinary(userId) {
+    const photos = await ProgressPhoto.find({ userId }).select('publicId imageUrl').lean()
+    const publicIds = Array.from(new Set(photos.map(getProgressPhotoPublicId).filter(Boolean)))
+
+    const deleted = await Promise.allSettled(
+        publicIds.map((publicId) => safeDestroyCloudinaryAsset(publicId))
+    )
+
+    try {
+        await cloudinary.api.delete_resources_by_prefix(`forgeflow/progress-photos/${userId}`, {
+            resource_type: 'image',
+        })
+        await cloudinary.api.delete_folder(`forgeflow/progress-photos/${userId}`).catch(() => null)
+    } catch (error) {
+        console.warn('[Cloudinary] Falha ao limpar pasta do usuario:', error?.message || error)
+    }
+
+    return deleted
 }
 
 function cleanMongoFields(item = {}) {
@@ -3829,6 +4046,7 @@ app.delete('/me', authMiddleware, sensitiveRateLimit, async (req, res) => {
         }
 
         const userId = user._id
+        const cloudinaryDeletionResults = await destroyProgressPhotosFromCloudinary(userId)
 
         const deletionResults = await Promise.allSettled([
             Workout.deleteMany({ userId }),
@@ -3850,6 +4068,7 @@ app.delete('/me', authMiddleware, sensitiveRateLimit, async (req, res) => {
 
         return res.json({
             message: 'Conta e dados associados removidos.',
+            cloudinaryDeleted: cloudinaryDeletionResults.filter((result) => result.status === 'fulfilled' && result.value?.ok).length,
             deleted: deletionResults.map((result) =>
                 result.status === 'fulfilled' ? result.value?.deletedCount || 0 : 0
             ),
@@ -7654,11 +7873,12 @@ app.delete('/progress-photos/:id', authMiddleware, async (req, res) => {
             })
         }
 
-        await cloudinary.uploader.destroy(photo.publicId)
+        const cloudinaryResult = await safeDestroyCloudinaryAsset(getProgressPhotoPublicId(photo))
         await ProgressPhoto.deleteOne({ _id: photo._id })
 
         res.json({
             ok: true,
+            cloudinary: cloudinaryResult,
             message: 'Foto removida com sucesso.',
         })
     } catch (error) {

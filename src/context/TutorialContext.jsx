@@ -46,6 +46,10 @@ export function TutorialProvider({ children }) {
   const activeFlow = activeFlowId ? tutorialFlows[activeFlowId] : null
   const activeStep = activeFlow?.steps?.[activeStepIndex] || null
   const isRunning = Boolean(activeFlow && activeStep)
+  const canShowTutorial =
+    Boolean(user?.profileCompleted) &&
+    user?.emailVerified !== false &&
+    canShowTutorialOnPath(location.pathname)
 
   useEffect(() => {
     setState(getTutorialState(user))
@@ -305,6 +309,7 @@ export function TutorialProvider({ children }) {
       activeStepIndex,
       isRunning,
       welcomePromptVisible,
+      canShowTutorial,
       startTutorial,
       closeWelcomePrompt,
       nextStep,
@@ -315,7 +320,7 @@ export function TutorialProvider({ children }) {
       resetAllTutorials,
       toggleContextualTips,
     }),
-    [activeFlow, activeStep, activeStepIndex, currentPageFlow, currentPageFlowId, isRunning, state, welcomePromptVisible]
+    [activeFlow, activeStep, activeStepIndex, canShowTutorial, currentPageFlow, currentPageFlowId, isRunning, state, welcomePromptVisible]
   )
 
   return (

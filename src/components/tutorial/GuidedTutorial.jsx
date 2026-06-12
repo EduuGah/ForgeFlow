@@ -106,12 +106,13 @@ function TutorialProgress({ current, total }) {
 
 function WelcomePrompt() {
   const {
+    canShowTutorial,
     closeWelcomePrompt,
     startTutorial,
     welcomePromptVisible,
   } = useTutorial()
 
-  if (!welcomePromptVisible) return null
+  if (!canShowTutorial || !welcomePromptVisible) return null
 
   return (
     <div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/55 px-4 pb-4 backdrop-blur-sm sm:items-center sm:pb-0">
@@ -219,6 +220,7 @@ function TutorialOverlay() {
     activeFlow,
     activeStep,
     activeStepIndex,
+    canShowTutorial,
     completeTutorial,
     isRunning,
     nextStep,
@@ -229,7 +231,7 @@ function TutorialOverlay() {
 
   const targetRect = useTargetRect(activeStep)
 
-  if (!isRunning || !activeFlow || !activeStep) return null
+  if (!canShowTutorial || !isRunning || !activeFlow || !activeStep) return null
 
   const isLast = activeStepIndex >= activeFlow.steps.length - 1
 
@@ -337,6 +339,7 @@ function FloatingTutorialHelp() {
   const {
     currentPageFlow,
     currentPageFlowId,
+    canShowTutorial,
     isRunning,
     startTutorial,
     state,
@@ -345,7 +348,7 @@ function FloatingTutorialHelp() {
 
   const [isOpen, setIsOpen] = useState(false)
 
-  if (isRunning || state.contextualTipsEnabled === false) {
+  if (!canShowTutorial || isRunning || state.contextualTipsEnabled === false) {
     return null
   }
 

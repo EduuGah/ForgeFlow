@@ -1,11 +1,52 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Save, Target, UserRound } from 'lucide-react'
+import { ImageUp, Save, Target, UserRound, X } from 'lucide-react'
 
 import { apiFetch, getCurrentUser } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import { markWelcomeTutorialPending } from '../utils/tutorialUtils'
 import { unlockGlobalScroll } from '../utils/scrollLockUtils'
+
+function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result)
+        reader.onerror = () => reject(new Error('Nao foi possivel ler a imagem.'))
+        reader.readAsDataURL(file)
+    })
+}
+
+async function compressAvatarImage(file) {
+    if (!file?.type?.startsWith('image/')) {
+        throw new Error('Selecione um arquivo de imagem valido.')
+    }
+
+    if (file.size > 6 * 1024 * 1024) {
+        throw new Error('A imagem precisa ter no maximo 6 MB.')
+    }
+
+    const dataUrl = await readFileAsDataUrl(file)
+    const image = new Image()
+
+    await new Promise((resolve, reject) => {
+        image.onload = resolve
+        image.onerror = () => reject(new Error('Nao foi possivel processar a imagem.'))
+        image.src = dataUrl
+    })
+
+    const maxSize = 512
+    const scale = Math.min(1, maxSize / Math.max(image.width, image.height))
+    const width = Math.max(1, Math.round(image.width * scale))
+    const height = Math.max(1, Math.round(image.height * scale))
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+
+    const context = canvas.getContext('2d')
+    context.drawImage(image, 0, 0, width, height)
+
+    return canvas.toDataURL('image/jpeg', 0.82)
+}
 
 function CompleteProfile() {
     const navigate = useNavigate()
@@ -16,6 +57,7 @@ function CompleteProfile() {
     const [error, setError] = useState('')
 
     const [name, setName] = useState('')
+    const [avatarUrl, setAvatarUrl] = useState('')
     const [height, setHeight] = useState('')
     const [currentWeight, setCurrentWeight] = useState('')
     const [mainGoal, setMainGoal] = useState('')
@@ -39,6 +81,7 @@ function CompleteProfile() {
                 }
 
                 setName(user.name || '')
+                setAvatarUrl(user.avatarUrl || '')
                 setHeight(user.profile?.height || '')
                 setCurrentWeight(user.profile?.currentWeight || '')
                 setMainGoal(user.profile?.mainGoal || '')
@@ -79,6 +122,7 @@ function CompleteProfile() {
                 method: 'PUT',
                 body: JSON.stringify({
                     name,
+                    avatarUrl,
                     height,
                     currentWeight,
                     mainGoal,
@@ -96,6 +140,21 @@ function CompleteProfile() {
             setError(err.message)
         } finally {
             setSaving(false)
+        }
+    }
+
+    async function handleAvatarFileChange(event) {
+        const file = event.target.files?.[0]
+
+        if (!file) return
+
+        try {
+            const compressedAvatar = await compressAvatarImage(file)
+            setAvatarUrl(compressedAvatar)
+        } catch (err) {
+            setError(err.message || 'Nao foi possivel carregar a foto.')
+        } finally {
+            event.target.value = ''
         }
     }
 
@@ -139,6 +198,53 @@ function CompleteProfile() {
                 </p>
 
                 <form onSubmit={handleSubmit} className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="md:col-span-2 rounded-3xl border border-zinc-800 bg-zinc-950 p-4">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-3xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
+                                {avatarUrl ? (
+                                    <img
+                                        src={avatarUrl}
+                                        alt={name || 'Foto de perfil'}
+                                        className="h-full w-full object-cover"
+                                    />
+                                ) : (
+                                    <UserRound size={34} />
+                                )}
+                            </div>
+
+                            <div className="min-w-0 flex-1">
+                                <p className="text-sm font-bold text-zinc-200">Foto de perfil</p>
+                                <p className="mt-1 text-xs leading-relaxed text-zinc-500">
+                                    Opcional, mas ajuda o app a ficar com cara de conta real desde o primeiro acesso.
+                                </p>
+
+                                <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                                    <label className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-4 text-sm font-black text-[var(--ff-accent-text)] transition hover:bg-[var(--ff-card-hover)]">
+                                        <ImageUp size={17} />
+                                        Selecionar foto
+                                        <input
+                                            type="file"
+                                            accept="image/png,image/jpeg,image/webp"
+                                            className="sr-only"
+                                            onChange={handleAvatarFileChange}
+                                        />
+                                    </label>
+
+                                    {avatarUrl && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setAvatarUrl('')}
+                                            className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 text-sm font-bold text-red-300 transition hover:bg-red-500/20"
+                                        >
+                                            <X size={16} />
+                                            Remover
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="md:col-span-2">
                         <label className="mb-2 block text-sm font-bold text-zinc-300">
                             Nome
