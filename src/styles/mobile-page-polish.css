@@ -11931,3 +11931,348 @@ body {
     border-radius: 16px;
   }
 }
+
+/* ForgeFlow 16/06 - picker de exercícios V2, sem herdar cards antigos */
+body.ff-workout-builder-open .mobile-bottom-nav {
+  display: none !important;
+}
+
+.ff-picker-tools-v2,
+.ff-picker-tools-v2 * {
+  box-sizing: border-box;
+}
+
+.ff-picker-tools-v2 {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.ff-picker-search-v2 {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) 30px;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  border: 1px solid var(--ff-border-soft);
+  border-radius: 18px;
+  background: #090b0f;
+  color: var(--ff-muted);
+  padding: 0 12px;
+  overflow: hidden;
+}
+
+.ff-picker-search-v2:focus-within {
+  border-color: var(--ff-accent-border);
+  box-shadow: 0 0 0 3px var(--ff-accent-soft);
+}
+
+.ff-picker-search-v2 input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 46px;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--ff-text) !important;
+  outline: 0 !important;
+  padding: 0 !important;
+  font-size: 0.92rem !important;
+  font-weight: 850 !important;
+  line-height: 46px;
+}
+
+.ff-picker-search-v2 input::placeholder {
+  color: rgba(226, 232, 240, 0.56);
+}
+
+.ff-picker-search-v2 button,
+.ff-picker-search-v2 > span:last-child {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ff-muted);
+  padding: 0;
+}
+
+.ff-picker-search-v2 > span:last-child {
+  visibility: hidden;
+}
+
+.ff-picker-chips-v2 {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  gap: 8px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  margin-inline: -12px;
+  padding: 0 12px 4px;
+  scrollbar-width: none;
+}
+
+.ff-picker-chips-v2::-webkit-scrollbar {
+  display: none;
+}
+
+.ff-picker-chips-v2 button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--ff-border-soft);
+  border-radius: 999px;
+  background: var(--ff-surface);
+  color: var(--ff-text-soft);
+  padding: 0 12px;
+  font-size: 0.76rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.ff-picker-chips-v2 button.is-active {
+  border-color: var(--ff-accent-border);
+  background: var(--ff-accent-soft);
+  color: var(--ff-accent-text);
+}
+
+.ff-picker-chips-v2 button.is-favorite {
+  border-color: rgba(250, 204, 21, 0.34);
+  background: rgba(250, 204, 21, 0.1);
+  color: #fde047;
+}
+
+.ff-picker-select-v2 {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  gap: 6px;
+}
+
+.ff-picker-select-v2 span {
+  margin: 0;
+  color: var(--ff-accent-text);
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.ff-picker-select-v2 select {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  border: 1px solid var(--ff-border-soft);
+  border-radius: 17px;
+  background: #090b0f;
+  color: var(--ff-text);
+  outline: none;
+  padding: 0 13px;
+  font-size: 0.9rem;
+  font-weight: 850;
+}
+
+.ff-picker-exercise-card-v2,
+.ff-picker-exercise-card-v2 * {
+  box-sizing: border-box;
+}
+
+.ff-workout-builder-clean-library-list,
+.ff-workout-builder-clean-picker__list {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+  min-width: 0;
+}
+
+.ff-picker-exercise-card-v2 {
+  display: grid !important;
+  grid-template-columns: 48px minmax(0, 1fr) 42px !important;
+  align-items: center !important;
+  gap: 10px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 64px !important;
+  border: 1px solid var(--ff-border-soft) !important;
+  border-radius: 18px !important;
+  background: rgba(255, 255, 255, 0.052) !important;
+  color: inherit !important;
+  padding: 8px !important;
+  text-align: left !important;
+  overflow: hidden !important;
+}
+
+.ff-picker-exercise-card-v2:not(:disabled):active {
+  transform: scale(0.99);
+}
+
+.ff-picker-exercise-card-v2:not(:disabled):hover {
+  border-color: var(--ff-accent-border) !important;
+  background: var(--ff-accent-soft) !important;
+}
+
+.ff-picker-exercise-card-v2.is-added {
+  border-color: rgba(16, 185, 129, 0.25) !important;
+  background: rgba(16, 185, 129, 0.1) !important;
+  opacity: 0.82;
+}
+
+.ff-picker-exercise-card-v2 .ff-workout-builder-clean-media {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 16px !important;
+  align-self: center !important;
+}
+
+.ff-picker-exercise-card-v2__text {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+  align-self: center;
+  line-height: 1.12;
+}
+
+.ff-picker-exercise-card-v2__text strong,
+.ff-picker-exercise-card-v2__text small,
+.ff-picker-exercise-card-v2__text em {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-picker-exercise-card-v2__text strong {
+  color: var(--ff-text);
+  font-size: 0.92rem;
+  font-weight: 950;
+}
+
+.ff-picker-exercise-card-v2__text small {
+  color: var(--ff-muted);
+  font-size: 0.73rem;
+  font-weight: 790;
+}
+
+.ff-picker-exercise-card-v2__text em {
+  color: var(--ff-accent-text);
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.ff-picker-exercise-card-v2__action {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--ff-accent);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 950;
+  justify-self: end;
+}
+
+.ff-picker-exercise-card-v2.is-added .ff-picker-exercise-card-v2__action {
+  background: rgba(16, 185, 129, 0.22);
+  color: var(--ff-success-text);
+}
+
+.ff-workout-builder-clean-card--plan {
+  margin-top: 0 !important;
+  padding-top: 10px !important;
+}
+
+@media (max-width: 840px) {
+  .ff-workout-builder-clean-picker {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 2147483000 !important;
+    display: block !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    padding: 0 !important;
+    background: #050507 !important;
+  }
+
+  .ff-workout-builder-clean-picker__panel {
+    display: grid !important;
+    grid-template-rows: auto auto minmax(0, 1fr) auto !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    max-width: none !important;
+    max-height: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #101114 !important;
+    overflow: hidden !important;
+  }
+
+  .ff-workout-builder-clean-picker__header {
+    padding: calc(12px + env(safe-area-inset-top)) 14px 12px !important;
+  }
+
+  .ff-workout-builder-clean-picker__tools {
+    padding: 10px 14px 8px !important;
+  }
+
+  .ff-workout-builder-clean-picker__list {
+    overflow-y: auto !important;
+    min-height: 0 !important;
+    padding: 0 14px 14px !important;
+  }
+
+  .ff-workout-builder-clean-picker__footer {
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom)) !important;
+    background: rgba(5, 5, 7, 0.96) !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .ff-picker-exercise-card-v2 {
+    grid-template-columns: 44px minmax(0, 1fr) 38px !important;
+    gap: 8px !important;
+    min-height: 60px !important;
+    padding: 7px !important;
+    border-radius: 16px !important;
+  }
+
+  .ff-picker-exercise-card-v2 .ff-workout-builder-clean-media {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 15px !important;
+  }
+
+  .ff-picker-exercise-card-v2__text strong {
+    font-size: 0.86rem;
+  }
+
+  .ff-picker-exercise-card-v2__text small {
+    font-size: 0.68rem;
+  }
+
+  .ff-picker-exercise-card-v2__text em {
+    display: none;
+  }
+
+  .ff-picker-exercise-card-v2__action {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    border-radius: 13px;
+  }
+}

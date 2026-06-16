@@ -92,22 +92,22 @@ function ExerciseLibraryCard({ exercise, alreadyAdded, recentInfo, formatRecentE
         <button
             type="button"
             onClick={() => onPick(exercise.id)}
-            className={alreadyAdded ? 'ff-workout-builder-clean-library-card is-added' : 'ff-workout-builder-clean-library-card'}
+            className={alreadyAdded ? 'ff-picker-exercise-card-v2 is-added' : 'ff-picker-exercise-card-v2'}
             disabled={alreadyAdded}
         >
             <ExerciseMedia exercise={exercise} size="sm" />
 
-            <span className="ff-workout-builder-clean-library-card__text">
+            <span className="ff-picker-exercise-card-v2__text">
                 <strong>{exercise.name}</strong>
                 <small>{exercise.muscleGroup || 'Sem músculo'} · {exercise.equipment || 'Sem equipamento'}</small>
                 <em>
-                    {exercise.isFavorite ? 'Favorito' : recentText ? 'Usado antes' : 'Exercício'}
-                    {exercise.isFavorite && recentText ? ` · ${recentText}` : ''}
-                    {!exercise.isFavorite && recentText ? ` · ${recentText}` : ''}
+                    {exercise.isFavorite ? 'Favorito' : recentText ? recentText : 'Exercício'}
                 </em>
             </span>
 
-            <b>{alreadyAdded ? 'Adicionado' : 'Adicionar'}</b>
+            <span className="ff-picker-exercise-card-v2__action" aria-hidden="true">
+                {alreadyAdded ? '✓' : <Plus size={18} />}
+            </span>
         </button>
     )
 }
@@ -128,23 +128,26 @@ function ExerciseLibraryTools({
     const groups = compact ? muscleGroups.slice(0, 8) : muscleGroups
 
     return (
-        <div className="ff-workout-builder-clean-library-tools">
-            <label className="ff-workout-builder-clean-search">
+        <div className="ff-picker-tools-v2">
+            <div className="ff-picker-search-v2">
                 <Search size={18} />
                 <input
                     type="search"
                     placeholder="Buscar exercício"
                     value={quickSearch}
                     onChange={(event) => setQuickSearch(event.target.value)}
+                    aria-label="Buscar exercício"
                 />
-                {quickSearch && (
+                {quickSearch ? (
                     <button type="button" onClick={() => setQuickSearch('')} aria-label="Limpar busca">
                         <X size={14} />
                     </button>
+                ) : (
+                    <span aria-hidden="true" />
                 )}
-            </label>
+            </div>
 
-            <div className="ff-workout-builder-clean-chips" aria-label="Filtros de exercícios">
+            <div className="ff-picker-chips-v2" aria-label="Filtros de exercícios">
                 <button
                     type="button"
                     className={quickFavoritesOnly ? 'is-active is-favorite' : ''}
@@ -174,7 +177,7 @@ function ExerciseLibraryTools({
                 ))}
             </div>
 
-            <label className="ff-workout-builder-clean-select">
+            <label className="ff-picker-select-v2">
                 <span>Equipamento</span>
                 <select
                     value={quickEquipmentFilter}

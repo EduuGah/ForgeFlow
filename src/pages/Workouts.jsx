@@ -344,14 +344,17 @@ function Workouts() {
         if (isBuilderOpen) {
             header.style.display = 'none'
             document.body.style.overflow = 'hidden'
+            document.body.classList.add('ff-workout-builder-open')
         } else {
             header.style.display = ''
             document.body.style.overflow = ''
+            document.body.classList.remove('ff-workout-builder-open')
         }
 
         return () => {
             header.style.display = ''
             document.body.style.overflow = ''
+            document.body.classList.remove('ff-workout-builder-open')
         }
     }, [isBuilderOpen])
 
