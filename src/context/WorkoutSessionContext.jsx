@@ -532,11 +532,13 @@ export function WorkoutSessionProvider({ children }) {
               ...exercise.sets,
               {
                 id: safeCryptoId(),
-                plannedDescription: type === 'warmup' ? 'Aquecimento' : 'Extra',
+                plannedDescription: options.plannedDescription || (type === 'warmup' ? 'Aquecimento' : 'Extra'),
                 type,
                 setNumber: type === 'warmup' ? null : nextWorkingSetNumber,
-                weight: '',
-                reps: '',
+                weight: options.weight === undefined || options.weight === null ? '' : String(options.weight),
+                reps: options.reps === undefined || options.reps === null ? '' : String(options.reps),
+                rpe: options.rpe === undefined || options.rpe === null ? '' : String(options.rpe),
+                rir: options.rir === undefined || options.rir === null ? '' : String(options.rir),
                 completed: false,
                 isPR: false,
                 isWeightPR: false,
@@ -640,8 +642,6 @@ export function WorkoutSessionProvider({ children }) {
         ? newExercise.sets
         : [
           { type: 'working', description: 'Série 1' },
-          { type: 'working', description: 'Série 2' },
-          { type: 'working', description: 'Série 3' },
         ]
 
       let workingSetNumber = 0

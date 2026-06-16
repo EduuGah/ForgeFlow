@@ -237,6 +237,46 @@ export default function ActiveExerciseCard({
     }, 60)
   }
 
+  function getFilledWorkingSets() {
+    return (sessionExercise.sets || []).filter((set) =>
+      !isWarmupSet(set) && (String(set?.weight || '').trim() || String(set?.reps || '').trim())
+    )
+  }
+
+  function getNextTargetSet() {
+    const workingSets = (sessionExercise.sets || []).filter((set) => !isWarmupSet(set))
+
+    return (
+      workingSets.find((set) => !set.completed && !String(set?.weight || '').trim() && !String(set?.reps || '').trim()) ||
+      workingSets.find((set) => !set.completed) ||
+      workingSets[0] ||
+      null
+    )
+  }
+
+  function handleApplySuggestedSet() {
+    const targetSet = getNextTargetSet()
+    const referenceSet = performance?.lastSet
+
+    if (!targetSet || !referenceSet) return
+
+    applyPreviousSet(targetSet.id, referenceSet)
+  }
+
+  function handleRepeatLastSet() {
+    const referenceSet = [...getFilledWorkingSets()].reverse()[0] || performance?.lastSet
+    const referenceWeight = referenceSet?.weight ?? ''
+    const referenceReps = referenceSet?.reps ?? ''
+
+    if (referenceWeight === '' && referenceReps === '') return
+
+    onAddSet(sessionExercise.id, {
+      plannedDescription: 'Repetição da última série',
+      weight: referenceWeight,
+      reps: referenceReps,
+    })
+  }
+
   function isEnterKey(event) {
     return (
       event.key === 'Enter' ||
@@ -292,6 +332,10 @@ export default function ActiveExerciseCard({
     event.preventDefault()
     event.currentTarget.blur()
   }
+
+  const progressionSuggestion = performance?.progressionSuggestion
+  const canApplySuggestion = Boolean(performance?.lastSet?.weight || performance?.lastSet?.reps)
+  const canRepeatLastSet = getFilledWorkingSets().length > 0 || canApplySuggestion
 
   const exerciseOptionsModal = isOptionsOpen && typeof document !== 'undefined'
     ? createPortal(
@@ -500,7 +544,26 @@ export default function ActiveExerciseCard({
         </div>
       )}
 
-      {!isCollapsed && <p className="ff-hevy-exercise-note">Adicionar notas aqui...</p>}
+      {!isCollapsed && progressionSuggestion && (
+        <div className={`ff-active-progression-card ff-active-progression-card--${progressionSuggestion.tone || 'neutral'}`}>
+          <div className="ff-active-progression-card__copy">
+            <span>{progressionSuggestion.badge || 'Sugestão'}</span>
+            <strong>{progressionSuggestion.title || 'Sugestão de progressão'}</strong>
+            <small>{progressionSuggestion.nextTarget || progressionSuggestion.description}</small>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleApplySuggestedSet}
+            disabled={!canApplySuggestion}
+            title={canApplySuggestion ? 'Aplicar a última carga/reps na próxima série' : 'Sem última série registrada'}
+          >
+            Usar última
+          </button>
+        </div>
+      )}
+
+      {!isCollapsed && <p className="ff-hevy-exercise-note">Dica: toque em “Anterior” ou em “Usar última” para preencher a série mais rápido.</p>}
 
       {!isCollapsed && (
       <div className="ff-hevy-set-table" aria-label={`Séries de ${getExerciseName(sessionExercise)}`}>
@@ -616,10 +679,14 @@ export default function ActiveExerciseCard({
       )}
 
       {!isCollapsed && (
-      <div className="ff-hevy-set-actions">
+      <div className="ff-hevy-set-actions ff-hevy-set-actions--smart">
+        <button type="button" onClick={handleRepeatLastSet} disabled={!canRepeatLastSet} className="ff-hevy-repeat-set-button">
+          <Repeat2 size={18} />
+          Repetir última
+        </button>
         <button type="button" onClick={() => onAddSet(sessionExercise.id)}>
           <Plus size={20} />
-          Adicionar Série
+          Série vazia
         </button>
         <button type="button" onClick={() => onAddSet(sessionExercise.id, { type: 'warmup' })}>
           <Flame size={18} />

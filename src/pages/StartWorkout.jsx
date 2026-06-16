@@ -551,6 +551,19 @@ function StartWorkout() {
     })
   }
 
+  function handleBackFromActiveWorkout() {
+    setConfirmModal({
+      title: 'Sair da tela do treino?',
+      description: 'Seu treino continuará salvo como sessão ativa. Você poderá voltar e continuar de onde parou.',
+      confirmText: 'Voltar para rotinas',
+      variant: 'default',
+      onConfirm: () => {
+        setConfirmModal(null)
+        navigate('/workouts')
+      },
+    })
+  }
+
   function handleCompleteSet(sessionExercise, setId) {
     const currentSet = (sessionExercise.sets || []).find((set) => set.id === setId)
     const wasCompleted = Boolean(currentSet?.completed)
@@ -672,6 +685,22 @@ function StartWorkout() {
   }
 
   useEffect(() => {
+    if (!activeSession) return undefined
+
+    function handleBeforeUnload(event) {
+      event.preventDefault()
+      event.returnValue = ''
+      return ''
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
+  }, [activeSession])
+
+  useEffect(() => {
     function handleSettingsChanged(event) {
       setAppSettings(event.detail || getAppSettings())
     }
@@ -785,7 +814,7 @@ function StartWorkout() {
         onRequestFinish={handleRequestFinishWorkout}
         onFinishWorkout={handleFinishWorkout}
         onFocusExercise={focusExerciseCard}
-        onBack={() => navigate('/workouts')}
+        onBack={handleBackFromActiveWorkout}
       />
 
       <ExerciseJumpNav
