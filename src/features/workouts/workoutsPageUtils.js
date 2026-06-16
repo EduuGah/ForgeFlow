@@ -64,7 +64,7 @@ export function createDefaultWorkoutSets(model = 'hypertrophy', customSetModels 
 
       return {
         id: crypto.randomUUID(),
-        description,
+        description: '',
         type: isWarmup ? 'warmup' : 'working',
       }
     })
