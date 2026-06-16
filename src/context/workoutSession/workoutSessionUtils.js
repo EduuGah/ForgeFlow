@@ -252,6 +252,89 @@ export function createWorkoutSession(workout) {
   })
 }
 
+
+
+function getHistoryExerciseData(historyExercise = {}) {
+  if (historyExercise.exercise && typeof historyExercise.exercise === 'object') {
+    return historyExercise.exercise
+  }
+
+  return historyExercise
+}
+
+export function createWorkoutSessionFromHistory(historySession = {}) {
+  const sessionExercises = Array.isArray(historySession.exercises)
+    ? historySession.exercises
+    : []
+
+  return markSessionUpdated({
+    id: safeCryptoId(),
+    workoutId: historySession.workoutId || historySession.id || '',
+    workoutName: `${historySession.workoutName || historySession.name || 'Treino'} novamente`,
+    repeatedFromSessionId: historySession.id || historySession._id || '',
+    startedAt: nowIso(),
+    notes: '',
+    exercises: sessionExercises.map((historyExercise) => {
+      const exerciseData = getHistoryExerciseData(historyExercise)
+      let workingSetNumber = 0
+      const sets = Array.isArray(historyExercise.sets) ? historyExercise.sets : []
+
+      return {
+        id: safeCryptoId(),
+        originalExerciseId:
+          exerciseData.id ||
+          exerciseData._id ||
+          historyExercise.originalExerciseId ||
+          historyExercise.exerciseId ||
+          '',
+        exercise: {
+          ...exerciseData,
+          id:
+            exerciseData.id ||
+            exerciseData._id ||
+            historyExercise.originalExerciseId ||
+            historyExercise.exerciseId ||
+            '',
+          name:
+            exerciseData.name ||
+            exerciseData.exerciseName ||
+            historyExercise.exerciseName ||
+            historyExercise.name ||
+            'Exercício sem nome',
+          muscleGroup:
+            exerciseData.muscleGroup ||
+            exerciseData.group ||
+            historyExercise.muscleGroup ||
+            historyExercise.group ||
+            '',
+        },
+        skipped: false,
+        restTimer: historyExercise.restTimer || 'Desligado',
+        sets: sets.map((previousSet) => {
+          const type = previousSet.type || 'working'
+
+          if (type !== 'warmup') {
+            workingSetNumber += 1
+          }
+
+          return {
+            id: safeCryptoId(),
+            plannedDescription: previousSet.plannedDescription || previousSet.description || '',
+            type,
+            setNumber: type === 'warmup' ? null : workingSetNumber,
+            weight: previousSet.weight || '',
+            reps: previousSet.reps || '',
+            completed: false,
+            isPR: false,
+            isWeightPR: false,
+            isVolumePR: false,
+          }
+        }),
+      }
+    }),
+  })
+}
+
 export function countCompletedWorkingSets(session) {
   if (!session) return 0
 

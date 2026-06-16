@@ -14,6 +14,7 @@ import {
   countCompletedWorkingSets,
   countTotalWorkingSets,
   createWorkoutSession,
+  createWorkoutSessionFromHistory,
   getExerciseNameFromSessionExercise,
   getSessionPrs,
   getSessionSyncHash,
@@ -434,6 +435,13 @@ export function WorkoutSessionProvider({ children }) {
 
   function startSession(workout) {
     const session = createWorkoutSession(workout)
+
+    setActiveSession(session)
+    saveActiveSessionToApi(session)
+  }
+
+  function startSessionFromHistory(historySession) {
+    const session = createWorkoutSessionFromHistory(historySession)
 
     setActiveSession(session)
     saveActiveSessionToApi(session)
@@ -923,6 +931,7 @@ export function WorkoutSessionProvider({ children }) {
         completedSets,
         totalSets,
         startSession,
+        startSessionFromHistory,
         updateSet,
         toggleSetCompleted,
         addSet,

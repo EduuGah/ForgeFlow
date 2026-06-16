@@ -1,11 +1,12 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import ConfirmModal from '../components/ui/ConfirmModal'
 import Toast from '../components/ui/Toast'
-import AppPageIntro from '../components/app/AppPageIntro'
 import WorkoutShareStudio from '../components/workout/WorkoutShareStudio'
 
 import { useAuth } from '../context/AuthContext'
+import { useWorkoutSession } from '../context/WorkoutSessionContext'
 import { apiFetch } from '../services/api'
 import {
   getUserStorageData,
@@ -18,8 +19,13 @@ import {
   buildSessionMeta,
   normalizeHistoryFromApi,
   normalizeText,
+  getSessionMuscles,
+  getSessionMuscleLabels,
+  groupHistoryByTimeline,
+  getHistoryPeriodSummary,
 } from '../features/history/historyUtils'
 import {
+  HistoryHero,
   HistoryListSection,
   HistorySessionDetailView,
   HistorySidebar,
@@ -29,6 +35,8 @@ import {
 
 function History() {
   const { user } = useAuth()
+  const navigate = useNavigate()
+  const { activeSession, startSessionFromHistory } = useWorkoutSession()
 
   const [history, setHistory] = useState([])
   const [expandedSessionId, setExpandedSessionId] = useState(null)
@@ -37,6 +45,9 @@ function History() {
   const [search, setSearch] = useState('')
   const deferredSearch = useDeferredValue(search)
   const [workoutFilter, setWorkoutFilter] = useState('')
+  const [muscleFilter, setMuscleFilter] = useState('')
+  const [prOnly, setPrOnly] = useState(false)
+  const [timelineMode, setTimelineMode] = useState('week')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_SESSIONS)
@@ -111,7 +122,7 @@ function History() {
       setExpandedSessionId(null)
       setSelectedSessionId(null)
     })
-  }, [deferredSearch, workoutFilter, startDate, endDate])
+  }, [deferredSearch, workoutFilter, muscleFilter, prOnly, timelineMode, startDate, endDate])
 
   const historyMetaMap = useMemo(() => {
     const map = new Map()
@@ -138,6 +149,14 @@ function History() {
         ? normalizedWorkoutName === workoutFilter
         : true
 
+      const matchesMuscle = muscleFilter
+        ? getSessionMuscles(session).includes(muscleFilter)
+        : true
+
+      const matchesPr = prOnly
+        ? (meta?.sessionPRs?.length || 0) > 0
+        : true
+
       let matchesDate = true
 
       if (meta?.finishedDate && startDate) {
@@ -150,13 +169,17 @@ function History() {
         matchesDate = matchesDate && meta.finishedDate <= end
       }
 
-      return matchesSearch && matchesWorkout && matchesDate
+      return matchesSearch && matchesWorkout && matchesMuscle && matchesPr && matchesDate
     })
-  }, [history, historyMetaMap, deferredSearch, workoutFilter, startDate, endDate])
+  }, [history, historyMetaMap, deferredSearch, workoutFilter, muscleFilter, prOnly, startDate, endDate])
 
   const visibleHistory = useMemo(() => {
     return filteredHistory.slice(0, visibleCount)
   }, [filteredHistory, visibleCount])
+
+  const groupedVisibleHistory = useMemo(() => {
+    return groupHistoryByTimeline(visibleHistory, historyMetaMap, timelineMode)
+  }, [visibleHistory, historyMetaMap, timelineMode])
 
   const workoutFilterOptions = useMemo(() => {
     const map = new Map()
@@ -166,6 +189,22 @@ function History() {
       const key = normalizeText(label)
       if (!key || map.has(key)) return
       map.set(key, label)
+    })
+
+    return Array.from(map.entries())
+      .map(([value, label]) => ({ value, label }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'))
+  }, [history])
+
+  const muscleFilterOptions = useMemo(() => {
+    const map = new Map()
+
+    history.forEach((session) => {
+      getSessionMuscleLabels(session).forEach((label) => {
+        const key = normalizeText(label)
+        if (!key || map.has(key)) return
+        map.set(key, label)
+      })
     })
 
     return Array.from(map.entries())
@@ -205,12 +244,47 @@ function History() {
     }
   }, [history, historyMetaMap])
 
+  const periodSummary = useMemo(() => {
+    return getHistoryPeriodSummary(history, historyMetaMap)
+  }, [history, historyMetaMap])
+
   function handleToggleSession(id) {
     setSelectedSessionId(id)
   }
 
   function handleShareSession(id) {
     setShareSessionId(id)
+  }
+
+  function startHistorySession(session) {
+    startSessionFromHistory(session)
+    setConfirmModal(null)
+    setSelectedSessionId(null)
+
+    showToast(
+      'success',
+      'Treino recriado',
+      'As cargas anteriores foram preenchidas para você ajustar e concluir novamente.'
+    )
+
+    navigate('/start-workout')
+  }
+
+  function handleRepeatSession(session) {
+    if (!session) return
+
+    if (activeSession) {
+      setConfirmModal({
+        title: 'Substituir treino ativo?',
+        description: 'Você já tem um treino em andamento. Refazer este registro vai substituir o treino ativo pelas cargas deste histórico.',
+        confirmText: 'Refazer treino',
+        variant: 'danger',
+        onConfirm: () => startHistorySession(session),
+      })
+      return
+    }
+
+    startHistorySession(session)
   }
 
   function showToast(type, title, message = '') {
@@ -228,6 +302,8 @@ function History() {
   function clearFilters() {
     setSearch('')
     setWorkoutFilter('')
+    setMuscleFilter('')
+    setPrOnly(false)
     setStartDate('')
     setEndDate('')
   }
@@ -304,7 +380,7 @@ function History() {
     })
   }
 
-  const hasActiveFilters = Boolean(search || workoutFilter || startDate || endDate)
+  const hasActiveFilters = Boolean(search || workoutFilter || muscleFilter || prOnly || startDate || endDate)
 
   if (selectedSession) {
     return (
@@ -314,6 +390,7 @@ function History() {
           meta={historyMetaMap.get(selectedSession.id)}
           onBack={() => setSelectedSessionId(null)}
           onShareSession={handleShareSession}
+          onRepeatSession={handleRepeatSession}
           onDeleteSession={handleDeleteSession}
         />
 
@@ -347,22 +424,14 @@ function History() {
 
   return (
     <div className="ff-hevy-page ff-hevy-page-history ff-history-native-page">
-      <AppPageIntro
-        eyebrow="Historico"
-        title="Treinos finalizados"
-        description={`${filteredHistory.length} de ${history.length} registros - ${syncing ? 'sincronizando' : source === 'database' ? 'sincronizado' : 'local'}`}
-        metrics={[
-          { label: 'Treinos', value: history.length },
-          { label: 'Series', value: summary.totalCompletedSets },
-          { label: 'PRs', value: summary.totalPRs },
-        ]}
+      <HistoryHero
+        historyCount={history.length}
+        filteredCount={filteredHistory.length}
+        summary={summary}
+        periodSummary={periodSummary}
+        source={source}
+        syncing={syncing}
       />
-
-      <section className="ff-page-legacy-intro mb-4 rounded-[28px] border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 sm:p-5">
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--ff-accent-text)]">Histórico</p>
-        <h1 className="mt-1 text-3xl font-black tracking-[-0.05em] text-[var(--ff-text)]">Treinos finalizados</h1>
-        <p className="mt-1 text-sm text-[var(--ff-muted)]">{filteredHistory.length} de {history.length} registros · {syncing ? 'sincronizando' : source === 'database' ? 'sincronizado' : 'local'}</p>
-      </section>
 
       <HistorySummaryCards historyCount={history.length} summary={summary} />
 
@@ -370,7 +439,7 @@ function History() {
         <HistoryListSection
           history={history}
           filteredHistory={filteredHistory}
-          visibleHistory={visibleHistory}
+          groupedVisibleHistory={groupedVisibleHistory}
           historyMetaMap={historyMetaMap}
           expandedSessionId={expandedSessionId}
           loading={loading}
@@ -379,6 +448,13 @@ function History() {
           workoutFilter={workoutFilter}
           setWorkoutFilter={setWorkoutFilter}
           workoutFilterOptions={workoutFilterOptions}
+          muscleFilter={muscleFilter}
+          setMuscleFilter={setMuscleFilter}
+          muscleFilterOptions={muscleFilterOptions}
+          prOnly={prOnly}
+          setPrOnly={setPrOnly}
+          timelineMode={timelineMode}
+          setTimelineMode={setTimelineMode}
           startDate={startDate}
           setStartDate={setStartDate}
           endDate={endDate}
@@ -390,6 +466,7 @@ function History() {
           handleClearHistory={handleClearHistory}
           handleToggleSession={handleToggleSession}
           handleShareSession={handleShareSession}
+          handleRepeatSession={handleRepeatSession}
           handleDeleteSession={handleDeleteSession}
           visibleCount={visibleCount}
           setVisibleCount={setVisibleCount}

@@ -14,6 +14,10 @@ import {
   X,
   ChevronDown,
   Share2,
+  RefreshCcw,
+  Filter,
+  CalendarRange,
+  ListChecks,
 } from 'lucide-react'
 
 import Card from '../../../components/ui/Card'
@@ -22,6 +26,7 @@ import EmptyState from '../../../components/ui/EmptyState'
 
 import {
   LOAD_MORE_SESSIONS,
+  HISTORY_TIMELINE_MODES,
   formatDate,
   formatHour,
   formatShortDate,
@@ -32,6 +37,70 @@ import {
 } from '../historyUtils'
 import HistoryStatCard from './HistoryStatCard'
 import { formatLocationCoordinates, formatLocationLabel, getMapsUrl } from '../../../services/geolocationService'
+
+
+export function HistoryHero({
+  historyCount,
+  filteredCount,
+  summary,
+  periodSummary,
+  source,
+  syncing,
+}) {
+  const currentMonthSessions = periodSummary?.currentMonth?.sessions || 0
+  const previousMonthSessions = periodSummary?.previousMonth?.sessions || 0
+  const monthDelta = currentMonthSessions - previousMonthSessions
+  const monthLabel = monthDelta === 0
+    ? 'Mesmo ritmo do mês anterior'
+    : monthDelta > 0
+      ? `+${monthDelta} vs mês anterior`
+      : `${monthDelta} vs mês anterior`
+
+  return (
+    <section className="ff-history-hero-v2">
+      <div className="ff-history-hero-v2__main">
+        <p className="ff-history-hero-v2__eyebrow">Histórico</p>
+        <h1>Treinos finalizados</h1>
+        <p>
+          Timeline dos seus treinos, recordes, volume e evolução real. {syncing ? 'Sincronizando com o banco...' : source === 'database' ? 'Dados sincronizados.' : 'Dados locais.'}
+        </p>
+      </div>
+
+      <div className="ff-history-hero-v2__score">
+        <span>Registros</span>
+        <strong>{filteredCount}</strong>
+        <small>{historyCount} no total</small>
+      </div>
+
+      <div className="ff-history-hero-v2__chips" aria-label="Resumo rápido do histórico">
+        <span>
+          <small>Últimos 30 dias</small>
+          <strong>{periodSummary?.last30?.sessions || 0} treinos</strong>
+        </span>
+        <span>
+          <small>Volume 30d</small>
+          <strong>{formatVolume(periodSummary?.last30?.volume || 0)}</strong>
+        </span>
+        <span>
+          <small>PRs 30d</small>
+          <strong>{periodSummary?.last30?.prs || 0}</strong>
+        </span>
+        <span>
+          <small>Mês atual</small>
+          <strong>{monthLabel}</strong>
+        </span>
+      </div>
+
+      {summary.lastWorkout && (
+        <div className="ff-history-hero-v2__last">
+          <small>Último treino</small>
+          <strong>{summary.lastWorkout.workoutName || 'Treino'}</strong>
+          <span>{formatShortDate(summary.lastWorkout.finishedAt)} • {formatTime(summary.lastWorkout.duration || 0)}</span>
+        </div>
+      )}
+    </section>
+  )
+}
 
 export function HistorySummaryCards({ historyCount, summary }) {
   return (
@@ -74,6 +143,13 @@ function HistoryFilters({
   workoutFilter,
   setWorkoutFilter,
   workoutFilterOptions,
+  muscleFilter,
+  setMuscleFilter,
+  muscleFilterOptions,
+  prOnly,
+  setPrOnly,
+  timelineMode,
+  setTimelineMode,
   startDate,
   setStartDate,
   endDate,
@@ -84,7 +160,24 @@ function HistoryFilters({
   clearFilters,
 }) {
   return (
-    <div className="ff-history-filters mt-4 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_220px_160px_160px_auto]">
+    <div className="ff-history-filters ff-history-filters-v2 mt-4">
+      <div className="ff-history-timeline-switch" aria-label="Agrupamento do histórico">
+        {HISTORY_TIMELINE_MODES.map((mode) => (
+          <button
+            key={mode.value}
+            type="button"
+            onClick={() => setTimelineMode(mode.value)}
+            className={timelineMode === mode.value ? 'is-active' : ''}
+          >
+            {mode.value === 'week' && <CalendarRange size={15} />}
+            {mode.value === 'month' && <CalendarDays size={15} />}
+            {mode.value === 'list' && <ListChecks size={15} />}
+            {mode.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="ff-history-filter-grid">
       <div className="ff-history-filter-field ff-history-filter-field--search">
         <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-zinc-500">
           Buscar
@@ -161,8 +254,42 @@ function HistoryFilters({
         />
       </div>
 
+      <div className="ff-history-filter-field">
+        <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-zinc-500">
+          Músculo
+        </label>
+
+        <select
+          value={muscleFilter}
+          onChange={(event) => setMuscleFilter(event.target.value)}
+          className="h-12 w-full cursor-pointer rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-violet-500/10"
+        >
+          <option value="">Todos os músculos</option>
+          {muscleFilterOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="ff-history-filter-field ff-history-filter-field--pr">
+        <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-zinc-500">
+          Recordes
+        </label>
+
+        <button
+          type="button"
+          onClick={() => setPrOnly((current) => !current)}
+          className={prOnly ? 'is-active' : ''}
+        >
+          <Trophy size={16} />
+          Só PRs
+        </button>
+      </div>
+
       <div className="ff-history-filter-field ff-history-filter-field--clear flex items-end">
-        {hasActiveFilters && (
+        {hasActiveFilters ? (
           <button
             type="button"
             onClick={clearFilters}
@@ -170,7 +297,10 @@ function HistoryFilters({
           >
             Limpar
           </button>
+        ) : (
+          <span className="ff-history-filter-clean-state"><Filter size={15} /> Sem filtros</span>
         )}
+      </div>
       </div>
     </div>
   )
@@ -380,6 +510,7 @@ function HistorySessionCard({
   isExpanded,
   onToggle,
   onShareSession,
+  onRepeatSession,
   onDeleteSession,
 }) {
   const sessionVolume = meta?.sessionVolume || 0
@@ -414,6 +545,15 @@ function HistorySessionCard({
       </button>
 
       <div className="ff-history-feed-card__actions">
+        <button
+          type="button"
+          onClick={() => onRepeatSession(session)}
+          className="ff-history-share-trigger ff-history-repeat-trigger"
+        >
+          <RefreshCcw size={16} />
+          Refazer
+        </button>
+
         <button
           type="button"
           onClick={() => onShareSession(session.id)}
@@ -466,6 +606,7 @@ export function HistorySessionDetailView({
   meta,
   onBack,
   onShareSession,
+  onRepeatSession,
   onDeleteSession,
 }) {
   const sessionVolume = meta?.sessionVolume || 0
@@ -491,6 +632,15 @@ export function HistorySessionDetailView({
       </section>
 
       <div className="ff-history-detail-actions">
+        <Button
+          type="button"
+          onClick={() => onRepeatSession(session)}
+          className="w-full"
+        >
+          <RefreshCcw size={17} />
+          Refazer treino com estas cargas
+        </Button>
+
         <Button
           type="button"
           variant="secondary"
@@ -562,7 +712,7 @@ export function HistorySessionDetailView({
 export function HistoryListSection({
   history,
   filteredHistory,
-  visibleHistory,
+  groupedVisibleHistory,
   historyMetaMap,
   expandedSessionId,
   loading,
@@ -571,6 +721,13 @@ export function HistoryListSection({
   workoutFilter,
   setWorkoutFilter,
   workoutFilterOptions,
+  muscleFilter,
+  setMuscleFilter,
+  muscleFilterOptions,
+  prOnly,
+  setPrOnly,
+  timelineMode,
+  setTimelineMode,
   startDate,
   setStartDate,
   endDate,
@@ -582,6 +739,7 @@ export function HistoryListSection({
   handleClearHistory,
   handleToggleSession,
   handleShareSession,
+  handleRepeatSession,
   handleDeleteSession,
   visibleCount,
   setVisibleCount,
@@ -615,6 +773,13 @@ export function HistoryListSection({
         workoutFilter={workoutFilter}
         setWorkoutFilter={setWorkoutFilter}
         workoutFilterOptions={workoutFilterOptions}
+        muscleFilter={muscleFilter}
+        setMuscleFilter={setMuscleFilter}
+        muscleFilterOptions={muscleFilterOptions}
+        prOnly={prOnly}
+        setPrOnly={setPrOnly}
+        timelineMode={timelineMode}
+        setTimelineMode={setTimelineMode}
         startDate={startDate}
         setStartDate={setStartDate}
         endDate={endDate}
@@ -647,16 +812,36 @@ export function HistoryListSection({
           />
         )}
 
-        {visibleHistory.map((session) => (
-          <HistorySessionCard
-            key={session.id}
-            session={session}
-            meta={historyMetaMap.get(session.id)}
-            isExpanded={expandedSessionId === session.id}
-            onToggle={handleToggleSession}
-            onShareSession={handleShareSession}
-            onDeleteSession={handleDeleteSession}
-          />
+        {groupedVisibleHistory.map((group) => (
+          <div key={group.key} className="ff-history-timeline-group">
+            <div className="ff-history-timeline-group__header">
+              <div>
+                <p>{group.subtitle}</p>
+                <h3>{group.label}</h3>
+              </div>
+
+              <div className="ff-history-timeline-group__stats">
+                <span>{group.sessions.length} treino{group.sessions.length === 1 ? '' : 's'}</span>
+                <span>{formatVolume(group.totalVolume)}</span>
+                {group.totalPRs > 0 && <span>{group.totalPRs} PR</span>}
+              </div>
+            </div>
+
+            <div className="ff-history-timeline-group__list">
+              {group.sessions.map((session) => (
+                <HistorySessionCard
+                  key={session.id}
+                  session={session}
+                  meta={historyMetaMap.get(session.id)}
+                  isExpanded={expandedSessionId === session.id}
+                  onToggle={handleToggleSession}
+                  onShareSession={handleShareSession}
+                  onRepeatSession={handleRepeatSession}
+                  onDeleteSession={handleDeleteSession}
+                />
+              ))}
+            </div>
+          </div>
         ))}
 
         {visibleCount < filteredHistory.length && (
