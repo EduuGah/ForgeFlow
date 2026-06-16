@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { AlertTriangle, X } from 'lucide-react'
 import Button from './Button'
 
@@ -11,13 +13,23 @@ function ConfirmModal({
   onConfirm,
   onCancel,
 }) {
+  useEffect(() => {
+    if (!open || typeof document === 'undefined') return undefined
+
+    document.body.classList.add('ff-modal-open')
+
+    return () => {
+      document.body.classList.remove('ff-modal-open')
+    }
+  }, [open])
+
   if (!open) return null
 
   const isDanger = variant === 'danger'
 
-  return (
-    <div className="fixed inset-0 z-[10000] flex items-end justify-center bg-[var(--ff-overlay)] p-3 backdrop-blur-sm sm:items-center sm:p-4">
-      <div className="max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] p-5 text-center text-[var(--ff-text)] shadow-2xl shadow-black/20 sm:rounded-3xl sm:p-6">
+  const modal = (
+    <div className="ff-confirm-modal-overlay fixed inset-0 z-[2147483645] flex items-end justify-center bg-[var(--ff-overlay)] p-3 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="ff-confirm-modal-panel max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] p-5 text-center text-[var(--ff-text)] shadow-2xl shadow-black/20 sm:rounded-3xl sm:p-6">
         <div className="relative flex flex-col items-center text-center">
           <button
             type="button"
@@ -71,6 +83,10 @@ function ConfirmModal({
       </div>
     </div>
   )
+
+  if (typeof document === 'undefined') return modal
+
+  return createPortal(modal, document.body)
 }
 
 export default ConfirmModal

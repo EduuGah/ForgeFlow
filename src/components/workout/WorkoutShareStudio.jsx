@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   CheckCircle2,
   Copy,
@@ -545,9 +546,11 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
 
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
+    document.body.classList.add('ff-share-studio-open')
 
     return () => {
       document.body.style.overflow = previousOverflow
+      document.body.classList.remove('ff-share-studio-open')
     }
   }, [open])
 
@@ -677,7 +680,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     }, 250)
   }
 
-  return (
+  const dialog = (
     <div className="ff-share-studio" role="dialog" aria-modal="true" aria-label="Compartilhar treino">
       <div className="ff-share-studio__panel">
         <header className="ff-share-studio__header">
@@ -815,6 +818,10 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       </div>
     </div>
   )
+
+  if (typeof document === 'undefined') return dialog
+
+  return createPortal(dialog, document.body)
 }
 
 export default WorkoutShareStudio
