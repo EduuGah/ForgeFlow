@@ -1,9 +1,15 @@
 import { getWorkoutId } from '../../utils/workoutNormalizers'
 
-export function buildWorkoutPayload({ workoutName, selectedFolderId, workoutExercises }) {
+export function buildWorkoutPayload({
+  workoutName,
+  selectedFolderId,
+  selectedFolderName = '',
+  workoutExercises,
+}) {
   return {
     name: String(workoutName || '').trim(),
     folderId: selectedFolderId,
+    folderName: selectedFolderName,
     exercises: workoutExercises,
   }
 }
@@ -39,35 +45,44 @@ export function mergeWorkoutsFromCacheAndApi(cachedList = [], apiList = []) {
 
 export function createDefaultWorkoutSets(model = 'hypertrophy', customSetModels = []) {
   const fixedModels = {
-    hypertrophy: ['12 Rep', '10-12 Rep', '5-8 Rep', '5-8 Rep'],
-    beginner: ['12 Rep', '12 Rep', '12 Rep'],
-    strength: ['5 Rep', '5 Rep', '5 Rep', '5 Rep', '5 Rep'],
-    pyramid: ['15 Rep', '12 Rep', '10 Rep', '8 Rep'],
-    custom: ['8-12 Rep'],
+    hypertrophy: 4,
+    beginner: 3,
+    strength: 5,
+    pyramid: 4,
+    custom: 1,
   }
 
   const customModel = customSetModels.find((item) => item.id === model)
-  const selectedModel = customModel ? customModel.sets : fixedModels[model] || fixedModels.hypertrophy
 
-  return selectedModel.map((description) => {
-    const normalized = String(description || '').toLowerCase()
-    const isWarmup =
-      normalized.includes('aquecimento') ||
-      normalized.includes('warmup') ||
-      normalized.includes('warm-up')
+  if (customModel) {
+    return customModel.sets.map((description) => {
+      const normalized = String(description || '').toLowerCase()
+      const isWarmup =
+        normalized.includes('aquecimento') ||
+        normalized.includes('warmup') ||
+        normalized.includes('warm-up')
 
-    return {
-      id: crypto.randomUUID(),
-      description,
-      type: isWarmup ? 'warmup' : 'working',
-    }
-  })
+      return {
+        id: crypto.randomUUID(),
+        description,
+        type: isWarmup ? 'warmup' : 'working',
+      }
+    })
+  }
+
+  const totalSets = fixedModels[model] || fixedModels.hypertrophy
+
+  return Array.from({ length: totalSets }, () => ({
+    id: crypto.randomUUID(),
+    description: '',
+    type: 'working',
+  }))
 }
 
 export function createInitialManualSet(type = 'working') {
   return {
     id: crypto.randomUUID(),
-    description: type === 'warmup' ? 'Aquecimento' : '8-12 Rep',
+    description: '',
     type,
   }
 }

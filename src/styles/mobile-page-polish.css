@@ -10451,3 +10451,128 @@ body {
     font-size: 0.68rem;
   }
 }
+
+/* ForgeFlow rodada 16/06 - ajustes do construtor de treino */
+.ff-workout-builder-v2-save-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 13px;
+  border: 1px solid var(--ff-border-soft);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.ff-workout-builder-v2-save-card strong,
+.ff-workout-builder-v2-save-card small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-workout-builder-v2-save-card strong {
+  margin-top: 4px;
+  color: var(--ff-text);
+  font-size: 0.98rem;
+  font-weight: 950;
+}
+
+.ff-workout-builder-v2-save-card small {
+  margin-top: 2px;
+  color: var(--ff-muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.ff-workout-builder-v2-save-card button {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 0;
+  border-radius: 15px;
+  background: var(--ff-accent);
+  color: #fff;
+  padding: 0 13px;
+  font-size: 0.8rem;
+  font-weight: 950;
+}
+
+.ff-workout-builder-v2-save-card button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.ff-workout-builder-v2-empty,
+.ff-workout-builder-v2-library-empty {
+  min-height: 210px;
+  margin-top: 10px;
+}
+
+.ff-workout-builder-v2-exercise-list {
+  margin-top: 10px;
+}
+
+.ff-workout-builder-v2-library-list > button,
+.ff-workout-builder-v2-picker__list > button,
+.ff-workout-builder-v2-library-list > button > span,
+.ff-workout-builder-v2-picker__list > button > span {
+  min-width: 0;
+}
+
+.ff-workout-builder-v2-library-list > button,
+.ff-workout-builder-v2-picker__list > button {
+  overflow: hidden;
+  border-color: var(--ff-border-soft);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.ff-workout-builder-v2-library-list b,
+.ff-workout-builder-v2-picker__list b {
+  white-space: nowrap;
+}
+
+.ff-workout-builder-v2-picker__list > button {
+  min-height: 72px;
+}
+
+@media (max-width: 540px) {
+  .ff-workout-builder-v2-save-card {
+    grid-template-columns: 1fr;
+  }
+
+  .ff-workout-builder-v2-save-card button {
+    width: 100%;
+  }
+
+  .ff-workout-builder-v2-empty,
+  .ff-workout-builder-v2-library-empty {
+    min-height: 180px;
+    padding: 18px;
+  }
+
+  .ff-workout-builder-v2-picker__list > button {
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+    padding: 10px;
+  }
+
+  .ff-workout-builder-v2-picker__list > button .ff-workout-builder-v2-media {
+    grid-row: 1 / span 2;
+  }
+
+  .ff-workout-builder-v2-picker__list b {
+    grid-column: 2;
+    justify-self: flex-start;
+    min-width: 0;
+    min-height: 30px;
+    margin-top: 6px;
+    padding: 0 10px;
+    font-size: 0.72rem;
+  }
+}

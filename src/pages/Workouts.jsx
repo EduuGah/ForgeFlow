@@ -728,10 +728,6 @@ function Workouts() {
                                 ? {
                                     ...set,
                                     type: set.type === 'warmup' ? 'working' : 'warmup',
-                                    description:
-                                        set.type === 'warmup'
-                                            ? (set.description === 'Aquecimento' ? '8-12 Rep' : set.description)
-                                            : 'Aquecimento',
                                 }
                                 : set
                         ),
@@ -788,7 +784,13 @@ function Workouts() {
         }
 
         try {
-            const payload = buildWorkoutPayload({ workoutName, selectedFolderId, workoutExercises })
+            const selectedFolder = folders.find((folder) => folder.id === selectedFolderId)
+            const payload = buildWorkoutPayload({
+                workoutName,
+                selectedFolderId,
+                selectedFolderName: selectedFolder?.name || '',
+                workoutExercises,
+            })
 
             if (editingWorkoutId) {
                 const updatedWorkoutFromApi = await apiFetch(`/workouts/${editingWorkoutId}`, {
@@ -920,6 +922,7 @@ function Workouts() {
             const payload = {
                 name: `${workout.name} - cópia`,
                 folderId: workout.folderId || null,
+                folderName: workout.folderName || folders.find((folder) => folder.id === workout.folderId)?.name || '',
                 exercises: workout.exercises || [],
             }
 

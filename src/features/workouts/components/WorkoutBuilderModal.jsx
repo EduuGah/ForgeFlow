@@ -21,27 +21,27 @@ const SET_MODEL_OPTIONS = [
     {
         id: 'hypertrophy',
         label: 'Hipertrofia',
-        detail: '4 séries progressivas',
+        detail: '4 séries em branco',
     },
     {
         id: 'beginner',
         label: 'Iniciante',
-        detail: '3 séries simples',
+        detail: '3 séries em branco',
     },
     {
         id: 'strength',
         label: 'Força',
-        detail: '5 séries pesadas',
+        detail: '5 séries em branco',
     },
     {
         id: 'pyramid',
         label: 'Pirâmide',
-        detail: '15 até 8 reps',
+        detail: '4 séries em branco',
     },
     {
         id: 'custom',
         label: 'Simples',
-        detail: '1 série editável',
+        detail: '1 série em branco',
     },
 ]
 
@@ -112,7 +112,7 @@ function WorkoutSetRow({
                             event.target.value
                         )
                     }
-                    placeholder={isWarmup ? 'Ex: 15 reps leve' : 'Ex: 8-12 Rep'}
+                    placeholder={isWarmup ? 'Ex: 15 reps leve' : 'Ex: 8-12 reps, carga alvo...'}
                 />
             </label>
 
@@ -179,6 +179,7 @@ function WorkoutBuilderModal({
     const [showAdvancedSetup, setShowAdvancedSetup] = useState(false)
 
     const selectedFolder = folders.find((folder) => folder.id === selectedFolderId)
+    const selectedFolderLabel = selectedFolder?.name || 'Sem pasta'
     const currentModelName = getSetModelLabel(defaultSetModel, customSetModels)
     const canSubmit = workoutName.trim() && workoutExercises.length > 0
 
@@ -346,12 +347,25 @@ function WorkoutBuilderModal({
                             </button>
                         </div>
 
+                        <div className="ff-workout-builder-v2-save-card">
+                            <div>
+                                <span>Salvar configuração</span>
+                                <strong>{workoutName.trim() || 'Nome ainda não informado'}</strong>
+                                <small>{selectedFolderLabel} · {workoutExercises.length} exercícios no plano</small>
+                            </div>
+
+                            <button type="submit" disabled={!canSubmit}>
+                                <Save size={17} />
+                                Salvar treino
+                            </button>
+                        </div>
+
                         <div className="ff-workout-builder-v2-template-card">
                             <div>
                                 <span>Modelo aplicado ao adicionar</span>
                                 <strong>{currentModelName}</strong>
                                 <small>
-                                    Novos exercícios entram com esse padrão de séries.
+                                    Novos exercícios entram só com a quantidade de séries; as reps ficam em branco.
                                 </small>
                             </div>
 
@@ -453,7 +467,7 @@ function WorkoutBuilderModal({
                             <div className="ff-workout-builder-v2-empty">
                                 <Dumbbell size={34} />
                                 <strong>Seu treino ainda está vazio</strong>
-                                <p>Abra a biblioteca, toque nos exercícios e eles entrarão com o modelo de séries escolhido.</p>
+                                <p>Abra a biblioteca, toque nos exercícios e eles entram com séries em branco para preencher reps depois.</p>
                                 <button type="button" onClick={() => setIsExercisePickerOpen(true)}>
                                     <Plus size={18} />
                                     Abrir biblioteca
@@ -482,7 +496,7 @@ function WorkoutBuilderModal({
                                                     <small>
                                                         {item.exercise?.muscleGroup || 'Sem músculo'} · {item.exercise?.equipment || 'Sem equipamento'}
                                                     </small>
-                                                    <em>{setsCount} séries · {item.note ? 'com nota' : 'sem nota'}</em>
+                                                    <em>{setsCount} séries · reps em branco · {item.note ? 'com nota' : 'sem nota'}</em>
                                                 </span>
                                                 <ChevronDown size={18} />
                                             </button>
@@ -667,7 +681,7 @@ function WorkoutBuilderModal({
                         <div className="ff-workout-builder-v2-library-stats">
                             <span>{filteredQuickExercises.length} encontrados</span>
                             <span>{favoriteExercisesCount} favoritos</span>
-                            <span>{selectedFolder?.name || 'Sem pasta'}</span>
+                            <span>{selectedFolderLabel}</span>
                         </div>
 
                         <div className="ff-workout-builder-v2-library-list">
@@ -841,7 +855,7 @@ function WorkoutBuilderModal({
                     </button>
                     <button type="submit" disabled={!canSubmit}>
                         <Save size={18} />
-                        Salvar
+                        Salvar treino
                     </button>
                 </div>
             </form>
