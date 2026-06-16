@@ -575,7 +575,7 @@ function Workouts() {
         const newWorkoutExercise = {
             id: crypto.randomUUID(),
             exercise: exerciseFound,
-            sets: createDefaultWorkoutSets(defaultSetModel, customSetModels),
+            sets: [getInitialManualSet()],
             note: '',
             restTimer: appSettings.defaultRestTimer || 'Desligado',
         }

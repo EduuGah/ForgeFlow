@@ -83,7 +83,7 @@ function ExerciseListRow({
           <div className="ff-exercise-catalog-card__chips">
             <span>{exercise.normalizedGroup}</span>
             <span>{exercise.normalizedEquipment}</span>
-            {media && <span><ImageIcon size={12} /> Midia</span>}
+            {media && <span><ImageIcon size={12} /> Mídia</span>}
           </div>
         </div>
 
@@ -100,7 +100,7 @@ function ExerciseListRow({
           <button
             type="button"
             onClick={() => handleToggleExercise(exercise.id)}
-            aria-label="Mais opcoes"
+            aria-label="Mais opções"
           >
             <MoreHorizontal size={20} />
           </button>
@@ -108,7 +108,7 @@ function ExerciseListRow({
       </div>
 
       <div className="ff-exercise-catalog-card__metrics">
-        <ExerciseMetricPill label="Ultimo" value={lastSetLabel} icon={CalendarDays} />
+        <ExerciseMetricPill label="Último" value={lastSetLabel} icon={CalendarDays} />
         <ExerciseMetricPill label="Peso" value={bestWeight} icon={Dumbbell} />
         <ExerciseMetricPill label="PRs" value={prCount} icon={Trophy} accent={prCount > 0} />
       </div>
@@ -121,7 +121,7 @@ function ExerciseListRow({
               <strong>{exercise.normalizedGroup}</strong>
             </div>
             <div>
-              <p>Musculo</p>
+              <p>Músculo</p>
               <strong>{exercise.subgroup}</strong>
             </div>
             <div>
@@ -129,14 +129,14 @@ function ExerciseListRow({
               <strong>{exercise.normalizedEquipment}</strong>
             </div>
             <div>
-              <p>Ultimo treino</p>
+              <p>Último treino</p>
               <strong>{lastLabel}</strong>
             </div>
           </div>
 
           {secondaryMuscles.length > 0 && (
             <p className="ff-exercise-catalog-secondary">
-              Secundarios: <strong>{secondaryMuscles.join(', ')}</strong>
+              Secundários: <strong>{secondaryMuscles.join(', ')}</strong>
             </p>
           )}
 
@@ -192,8 +192,8 @@ function ExerciseLibrarySection({
         <div className="ff-exercise-catalog-head">
           <div>
             <span>{syncLabel}</span>
-            <h2>Catalogo</h2>
-            <p>{filteredExercises.length} encontrados - {displayedExercises.length} visiveis</p>
+            <h2>Catálogo</h2>
+            <p>{filteredExercises.length} encontrados - {displayedExercises.length} visíveis</p>
           </div>
 
           <button
@@ -210,7 +210,7 @@ function ExerciseLibrarySection({
           <Search size={18} />
           <input
             type="search"
-            placeholder="Buscar exercicio, musculo ou equipamento"
+            placeholder="Buscar exercício, músculo ou equipamento"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
@@ -248,10 +248,10 @@ function ExerciseLibrarySection({
           ))}
         </div>
 
-        {!isLoaded && <EmptyState title="Carregando biblioteca" description="Preparando seus exercicios." />}
+        {!isLoaded && <EmptyState title="Carregando biblioteca" description="Preparando seus exercícios." />}
 
         {isLoaded && filteredExercises.length === 0 && (
-          <EmptyState title="Nenhum exercicio encontrado" description="Tente limpar os filtros ou buscar por outro termo." />
+          <EmptyState title="Nenhum exercício encontrado" description="Tente limpar os filtros ou buscar por outro termo." />
         )}
 
         {displayedExercises.length > 0 && (

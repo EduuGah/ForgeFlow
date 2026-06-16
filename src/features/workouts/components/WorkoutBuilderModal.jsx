@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 
 import {
     ArrowLeft,
@@ -21,15 +21,6 @@ import Select from '../../../components/ui/Select'
 import Textarea from '../../../components/ui/Textarea'
 import Badge from '../../../components/ui/Badge'
 import EmptyState from '../../../components/ui/EmptyState'
-
-const WORKOUT_OBJECTIVE_TEMPLATES = [
-    { id: 'hypertrophy', label: 'Hipertrofia', name: 'Hipertrofia A', model: 'hypertrophy' },
-    { id: 'strength', label: 'Forca', name: 'Forca A', model: 'strength' },
-    { id: 'cutting', label: 'Cutting', name: 'Cutting Full Body', model: 'beginner' },
-    { id: 'beginner', label: 'Iniciante', name: 'Treino iniciante', model: 'beginner' },
-    { id: 'arms', label: 'Foco braco', name: 'Superiores - bracos', model: 'hypertrophy' },
-    { id: 'upper', label: 'Superiores', name: 'Upper A', model: 'pyramid' },
-]
 
 function WorkoutBuilderModal({
     isOpen,
@@ -82,7 +73,6 @@ function WorkoutBuilderModal({
     handleDefaultSets,
     handleAddExercise,
     handleRemoveSet,
-    onGoToExercises,
 }) {
     const [isExercisePickerOpen, setIsExercisePickerOpen] = useState(false)
 
@@ -173,33 +163,21 @@ function WorkoutBuilderModal({
                         </div>
                     </Card>
 
-                    <Card className="ff-workout-objective-templates">
-                        <div className="min-w-0">
-                            <p className="text-xs font-black uppercase tracking-[0.14em] text-[var(--ff-accent-text)]">
-                                Modelos por objetivo
-                            </p>
-                            <h2 className="mt-1 text-xl font-black">Comece com uma base</h2>
-                            <p className="mt-1 text-sm text-[var(--ff-muted)]">
-                                Escolha o objetivo e depois adicione exercicios pela biblioteca.
-                            </p>
-                        </div>
-
-                        <div className="ff-workout-objective-templates__grid">
-                            {WORKOUT_OBJECTIVE_TEMPLATES.map((template) => (
-                                <button
-                                    key={template.id}
-                                    type="button"
-                                    className={defaultSetModel === template.model ? 'is-active' : ''}
-                                    onClick={() => {
-                                        if (!workoutName.trim()) setWorkoutName(template.name)
-                                        setDefaultSetModel(template.model)
-                                    }}
-                                >
-                                    {template.label}
-                                </button>
-                            ))}
-                        </div>
-                    </Card>
+                    <button
+                        type="button"
+                        onClick={() => setIsExercisePickerOpen(true)}
+                        className="ff-workout-builder-add-exercise-button flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)]/12 px-4 text-left text-[var(--ff-text)] shadow-[0_0_24px_var(--ff-accent-shadow)] transition active:scale-[0.98]"
+                    >
+                        <span className="min-w-0">
+                            <strong className="block text-base font-black">Adicionar exercício</strong>
+                            <small className="block truncate text-xs font-bold text-[var(--ff-muted)]">
+                                Buscar na biblioteca e incluir na rotina
+                            </small>
+                        </span>
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--ff-accent)] text-white">
+                            <Plus size={20} />
+                        </span>
+                    </button>
 
                     {workoutExercises.length === 0 && (
                         <EmptyState
@@ -212,7 +190,7 @@ function WorkoutBuilderModal({
                     {workoutExercises.map((item, index) => (
                         <Card key={item.id}>
                             <div className="flex items-start gap-3 sm:items-center sm:gap-4">
-                                <span className="hidden text-xl text-zinc-500 sm:block">⋮⋮</span>
+                                <span className="hidden text-xl text-zinc-500 sm:block">::</span>
 
                                 <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-zinc-700 bg-white">
                                     {item.exercise.mediaUrl ? (
@@ -442,7 +420,7 @@ function WorkoutBuilderModal({
                                 <option value="custom">Simples - 1 série</option>
 
                                 {customSetModels.length > 0 && (
-                                    <option disabled>─ Modelos personalizados ─</option>
+                                    <option disabled>- Modelos personalizados -</option>
                                 )}
 
                                 {customSetModels.map((model) => (
@@ -476,7 +454,7 @@ function WorkoutBuilderModal({
                                                 onClick={() => handleDeleteSetModel(model.id)}
                                                 className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-500/10 text-red-400 transition hover:bg-red-500/20"
                                             >
-                                                ×
+                                                x
                                             </button>
                                         </div>
                                     ))}
@@ -507,24 +485,11 @@ function WorkoutBuilderModal({
 
                                     {favoriteExercisesCount > 0 && (
                                         <Badge>
-                                            ⭐ {favoriteExercisesCount} favoritos
+                                             {favoriteExercisesCount} favoritos
                                         </Badge>
                                     )}
                                 </div>
                             </div>
-
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    onGoToExercises()
-                                }}
-                                className="inline-flex items-center gap-2 text-sm font-bold text-[var(--ff-accent-text)]
- transition hover:text-[var(--ff-accent-text)]
-"
-                            >
-                                <Plus size={18} />
-                                Cadastrar
-                            </button>
                         </div>
 
                         <button
@@ -533,7 +498,7 @@ function WorkoutBuilderModal({
                             className="ff-workout-builder-add-exercise-button mb-4 flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)]/12 px-4 text-left text-[var(--ff-text)] shadow-[0_0_24px_var(--ff-accent-shadow)] transition active:scale-[0.98]"
                         >
                             <span className="min-w-0">
-                                <strong className="block text-base font-black">Adicionar exercÃ­cio</strong>
+                                <strong className="block text-base font-black">Adicionar exercício</strong>
                                 <small className="block truncate text-xs font-bold text-[var(--ff-muted)]">
                                     Buscar, filtrar e tocar para incluir na rotina
                                 </small>
@@ -624,7 +589,10 @@ function WorkoutBuilderModal({
                                     <button
                                         key={exercise.id}
                                         type="button"
-                                        onClick={() => handleQuickAddExercise(exercise.id)}
+                                        onClick={() => {
+                                            if (alreadyAdded) return
+                                            handleQuickAddExercise(exercise.id)
+                                        }}
                                         className={
                                             exercise.isFavorite
                                                 ? 'flex w-full items-center gap-3 rounded-2xl border border-yellow-500/20 bg-yellow-500/5 p-3 text-left transition hover:bg-yellow-500/10'
@@ -638,7 +606,7 @@ function WorkoutBuilderModal({
                                                     : 'flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--ff-accent)] text-white'
                                             }
                                         >
-                                            {alreadyAdded ? '✓' : '+'}
+                                            {alreadyAdded ? 'OK' : '+'}
                                         </span>
 
                                         <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-zinc-700 bg-white">
@@ -663,7 +631,7 @@ function WorkoutBuilderModal({
 
                                                 {exercise.isFavorite && (
                                                     <span className="shrink-0 text-yellow-300">
-                                                        ⭐
+                                                        
                                                     </span>
                                                 )}
                                             </div>
@@ -675,7 +643,7 @@ function WorkoutBuilderModal({
                                             <div className="mt-1 flex flex-wrap gap-1.5">
                                                 {exercise.isFavorite && (
                                                     <span className="rounded-full bg-yellow-500/10 px-2 py-0.5 text-[10px] font-bold text-yellow-300">
-                                                        ⭐ Favorito
+                                                         Favorito
                                                     </span>
                                                 )}
 
@@ -707,7 +675,7 @@ function WorkoutBuilderModal({
 
                                     {sortedExercisesForSelect.map((exercise) => (
                                             <option key={exercise.id} value={exercise.id}>
-                                                {exercise.isFavorite ? '⭐ ' : ''}{exercise.name}
+                                                {exercise.isFavorite ? ' ' : ''}{exercise.name}
                                             </option>
                                         ))}
                                 </Select>
@@ -775,7 +743,7 @@ function WorkoutBuilderModal({
             </section>
 
             {isExercisePickerOpen && (
-                <div className="ff-workout-exercise-picker-sheet" role="dialog" aria-modal="true" aria-label="Adicionar exercÃ­cios">
+                <div className="ff-workout-exercise-picker-sheet" role="dialog" aria-modal="true" aria-label="Adicionar exercícios">
                     <div className="ff-workout-exercise-picker-sheet__panel">
                         <div className="ff-workout-exercise-picker-sheet__header">
                             <button
@@ -788,16 +756,8 @@ function WorkoutBuilderModal({
 
                             <div className="min-w-0">
                                 <p>Biblioteca</p>
-                                <h2>Adicionar exercÃ­cios</h2>
+                                <h2>Adicionar exercícios</h2>
                             </div>
-
-                            <button
-                                type="button"
-                                onClick={() => onGoToExercises()}
-                                aria-label="Cadastrar exercÃ­cio"
-                            >
-                                <Plus size={20} />
-                            </button>
                         </div>
 
                         <div className="ff-workout-exercise-picker-sheet__tools">
@@ -805,7 +765,7 @@ function WorkoutBuilderModal({
                                 <Search size={18} />
                                 <input
                                     type="search"
-                                    placeholder="Buscar exercÃ­cio, mÃºsculo ou equipamento"
+                                    placeholder="Buscar exercício, músculo ou equipamento"
                                     value={quickSearch}
                                     onChange={(event) => setQuickSearch(event.target.value)}
                                 />
@@ -820,7 +780,7 @@ function WorkoutBuilderModal({
                                 )}
                             </label>
 
-                            <div className="ff-workout-exercise-picker-sheet__chips" aria-label="Filtros rÃ¡pidos">
+                            <div className="ff-workout-exercise-picker-sheet__chips" aria-label="Filtros rápidos">
                                 <button
                                     type="button"
                                     className={quickFavoritesOnly ? 'is-active is-favorite' : ''}
@@ -865,8 +825,8 @@ function WorkoutBuilderModal({
                         <div className="ff-workout-exercise-picker-sheet__list">
                             {filteredQuickExercises.length === 0 && (
                                 <EmptyState
-                                    title="Nenhum exercÃ­cio"
-                                    description="Tente outro filtro ou cadastre um exercÃ­cio."
+                                    title="Nenhum exercício"
+                                    description="Tente outro filtro ou cadastre um exercício."
                                 />
                             )}
 
@@ -878,7 +838,11 @@ function WorkoutBuilderModal({
                                     <button
                                         key={exercise.id}
                                         type="button"
-                                        onClick={() => handleQuickAddExercise(exercise.id)}
+                                        onClick={() => {
+                                            if (alreadyAdded) return
+                                            handleQuickAddExercise(exercise.id)
+                                            setIsExercisePickerOpen(false)
+                                        }}
                                         className={alreadyAdded ? 'is-added' : ''}
                                     >
                                         <span className="ff-workout-exercise-picker-sheet__media">
@@ -896,7 +860,7 @@ function WorkoutBuilderModal({
 
                                         <span className="ff-workout-exercise-picker-sheet__copy">
                                             <strong>{exercise.name}</strong>
-                                            <small>{exercise.muscleGroup} Â· {exercise.equipment}</small>
+                                            <small>{exercise.muscleGroup} · {exercise.equipment}</small>
                                             <span>
                                                 {exercise.isFavorite && <em>Favorito</em>}
                                                 {recentInfo?.lastUsedAt && (
@@ -949,3 +913,4 @@ function WorkoutBuilderModal({
 }
 
 export default WorkoutBuilderModal
+

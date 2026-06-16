@@ -8469,3 +8469,244 @@ body {
     line-height: 1.05 !important;
   }
 }
+
+/* Final mobile pass: Exercises catalog. */
+@media (max-width: 720px) {
+  .ff-exercises-native-page {
+    padding-inline: 12px !important;
+  }
+
+  .ff-exercises-native-page > .ff-page-mobile-main-grid,
+  .ff-exercise-catalog-main,
+  .ff-exercise-catalog-shell {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+  }
+
+  .ff-exercise-catalog-shell {
+    display: grid !important;
+    gap: 12px !important;
+    border: 1px solid color-mix(in srgb, var(--ff-border) 82%, transparent) !important;
+    border-radius: 22px !important;
+    background:
+      radial-gradient(circle at 90% 0%, color-mix(in srgb, var(--ff-accent) 14%, transparent), transparent 34%),
+      color-mix(in srgb, var(--ff-surface) 92%, #050507) !important;
+    padding: 12px !important;
+    box-shadow: none !important;
+  }
+
+  .ff-exercise-catalog-head {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .ff-exercise-catalog-head h2 {
+    margin: 1px 0 0 !important;
+    font-size: 24px !important;
+    line-height: 1 !important;
+  }
+
+  .ff-exercise-catalog-head p,
+  .ff-exercise-catalog-head span {
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .ff-exercise-catalog-add {
+    min-width: 92px !important;
+    min-height: 46px !important;
+    border-radius: 16px !important;
+    background: var(--ff-accent) !important;
+    color: #fff !important;
+  }
+
+  .ff-exercise-catalog-search {
+    min-height: 48px !important;
+    border-radius: 16px !important;
+    padding-inline: 12px !important;
+  }
+
+  .ff-exercise-catalog-search input {
+    min-width: 0 !important;
+    font-size: 14px !important;
+  }
+
+  .ff-exercise-catalog-chips {
+    display: flex !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    padding: 0 0 2px !important;
+    scrollbar-width: none !important;
+  }
+
+  .ff-exercise-catalog-chips::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .ff-exercise-catalog-chips button {
+    flex: 0 0 auto !important;
+    min-height: 38px !important;
+    border-radius: 999px !important;
+    padding-inline: 13px !important;
+    font-size: 12px !important;
+  }
+
+  .ff-exercise-catalog-list {
+    display: grid !important;
+    gap: 10px !important;
+  }
+
+  .ff-exercise-catalog-card {
+    overflow: hidden !important;
+    border-radius: 20px !important;
+    background: color-mix(in srgb, var(--ff-surface-2) 88%, #07080b) !important;
+    padding: 10px !important;
+  }
+
+  .ff-exercise-catalog-card__main {
+    display: grid !important;
+    grid-template-columns: 68px minmax(0, 1fr) 38px !important;
+    align-items: center !important;
+    gap: 10px !important;
+    min-width: 0 !important;
+  }
+
+  .ff-exercise-catalog-card__media {
+    width: 68px !important;
+    height: 68px !important;
+    min-width: 68px !important;
+    border-radius: 18px !important;
+    background: #fff !important;
+  }
+
+  .ff-exercise-catalog-card__media img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    padding: 4px !important;
+  }
+
+  .ff-exercise-catalog-card__content,
+  .ff-exercise-catalog-card__titleline,
+  .ff-exercise-catalog-card__titleline a {
+    min-width: 0 !important;
+  }
+
+  .ff-exercise-catalog-card__titleline {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 4px !important;
+  }
+
+  .ff-exercise-catalog-card__titleline h3 {
+    display: -webkit-box !important;
+    overflow: hidden !important;
+    -webkit-box-orient: vertical !important;
+    -webkit-line-clamp: 2 !important;
+    line-clamp: 2 !important;
+    font-size: 17px !important;
+    line-height: 1.05 !important;
+    white-space: normal !important;
+  }
+
+  .ff-exercise-catalog-card__titleline .is-favorite {
+    width: max-content !important;
+    max-width: 100% !important;
+    font-size: 10px !important;
+    padding: 4px 8px !important;
+  }
+
+  .ff-exercise-catalog-card__subtitle,
+  .ff-exercise-catalog-card__original {
+    display: -webkit-box !important;
+    overflow: hidden !important;
+    -webkit-box-orient: vertical !important;
+    -webkit-line-clamp: 1 !important;
+    line-clamp: 1 !important;
+    font-size: 12px !important;
+    line-height: 1.25 !important;
+    white-space: normal !important;
+  }
+
+  .ff-exercise-catalog-card__chips {
+    display: flex !important;
+    gap: 5px !important;
+    overflow: hidden !important;
+    margin-top: 7px !important;
+  }
+
+  .ff-exercise-catalog-card__chips span {
+    min-width: 0 !important;
+    max-width: 48% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    border-radius: 999px !important;
+    padding: 5px 8px !important;
+    font-size: 10px !important;
+  }
+
+  .ff-exercise-catalog-card__chips span:nth-child(n + 3) {
+    display: none !important;
+  }
+
+  .ff-exercise-catalog-card__actions {
+    display: grid !important;
+    gap: 7px !important;
+    justify-items: end !important;
+  }
+
+  .ff-exercise-catalog-card__actions button {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 14px !important;
+  }
+
+  .ff-exercise-catalog-card__metrics {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+    margin-top: 10px !important;
+  }
+
+  .ff-exercise-catalog-metric {
+    min-width: 0 !important;
+    min-height: 40px !important;
+    border-radius: 14px !important;
+    padding: 7px 6px !important;
+    font-size: 10px !important;
+  }
+
+  .ff-exercise-catalog-metric span,
+  .ff-exercise-catalog-metric strong {
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .ff-exercise-catalog-card__main {
+    grid-template-columns: 60px minmax(0, 1fr) 36px !important;
+    gap: 8px !important;
+  }
+
+  .ff-exercise-catalog-card__media {
+    width: 60px !important;
+    height: 60px !important;
+    min-width: 60px !important;
+  }
+
+  .ff-exercise-catalog-card__titleline h3 {
+    font-size: 16px !important;
+  }
+}

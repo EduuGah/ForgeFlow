@@ -640,11 +640,11 @@ function Exercises() {
     <div className="ff-hevy-page ff-hevy-page-exercises ff-exercises-native-page">
       <AppPageIntro
         eyebrow="Biblioteca"
-        title="Exercicios"
-        description="Busque rapido, filtre por musculo ou equipamento e abra detalhes sem perder espaco no celular."
+        title="Exercícios"
+        description="Busque rápido, filtre por músculo ou equipamento e abra detalhes sem perder espaço no celular."
         metrics={[
           { label: 'Total', value: indexedExercises.length },
-          { label: 'Visiveis', value: filteredExercises.length },
+          { label: 'Visíveis', value: filteredExercises.length },
           { label: 'Favoritos', value: stats.favoriteExercisesCount },
         ]}
       />
