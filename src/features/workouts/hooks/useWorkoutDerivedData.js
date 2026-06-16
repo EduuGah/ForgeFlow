@@ -27,6 +27,113 @@ function formatRecentExerciseDate(dateString) {
     })
 }
 
+
+function parseWorkoutNumber(value) {
+    if (typeof value === 'number' && Number.isFinite(value)) return value
+
+    const normalized = String(value || '')
+        .replace(',', '.')
+        .replace(/[^0-9.-]/g, '')
+
+    const parsed = Number(normalized)
+
+    return Number.isFinite(parsed) ? parsed : 0
+}
+
+function getSessionSets(session) {
+    const directSets = parseWorkoutNumber(session?.totalSets)
+    if (directSets > 0) return directSets
+
+    return (session?.exercises || []).reduce((exerciseTotal, item) => {
+        const sets = Array.isArray(item?.sets) ? item.sets : []
+        return exerciseTotal + sets.length
+    }, 0)
+}
+
+function calculateSessionVolume(session) {
+    const directVolume = parseWorkoutNumber(session?.totalVolume)
+    if (directVolume > 0) return directVolume
+
+    return (session?.exercises || []).reduce((exerciseTotal, item) => {
+        const sets = Array.isArray(item?.sets) ? item.sets : []
+
+        return exerciseTotal + sets.reduce((setTotal, set) => {
+            const weight = parseWorkoutNumber(set?.weight ?? set?.kg ?? set?.load)
+            const reps = parseWorkoutNumber(set?.reps ?? set?.repetitions)
+
+            return setTotal + weight * reps
+        }, 0)
+    }, 0)
+}
+
+function buildWorkoutPerformanceEntry(sessions) {
+    if (!sessions.length) return null
+
+    const orderedSessions = sessions
+        .slice()
+        .sort((a, b) => getComparableDateValue(b) - getComparableDateValue(a))
+
+    const totals = sessions.reduce(
+        (acc, session) => {
+            const duration = parseWorkoutNumber(session?.durationSeconds ?? session?.duration)
+            const volume = calculateSessionVolume(session)
+            const sets = getSessionSets(session)
+
+            acc.duration += duration
+            acc.volume += volume
+            acc.sets += sets
+            acc.bestVolume = Math.max(acc.bestVolume, volume)
+
+            return acc
+        },
+        { duration: 0, volume: 0, sets: 0, bestVolume: 0 }
+    )
+
+    const totalSessions = sessions.length
+    const lastSession = orderedSessions[0]
+
+    return {
+        totalSessions,
+        lastFinishedAt: lastSession?.finishedAt || lastSession?.createdAt || null,
+        avgDurationSeconds: Math.round(totals.duration / totalSessions),
+        avgVolume: Math.round(totals.volume / totalSessions),
+        avgSets: Math.round(totals.sets / totalSessions),
+        bestVolume: Math.round(totals.bestVolume),
+    }
+}
+
+function getWorkoutVolumeSignal({ totalSets, groupsCount, dominantGroupSets }) {
+    if (totalSets >= 28) {
+        return {
+            tone: 'danger',
+            label: 'Muito volumoso',
+            detail: 'Considere dividir ou reduzir séries se a recuperação estiver ruim.',
+        }
+    }
+
+    if (totalSets >= 22 || dominantGroupSets >= 14) {
+        return {
+            tone: 'warning',
+            label: 'Volume alto',
+            detail: 'Bom treino, mas fique atento à fadiga do músculo principal.',
+        }
+    }
+
+    if (groupsCount >= 4 && totalSets >= 16) {
+        return {
+            tone: 'balanced',
+            label: 'Bem distribuído',
+            detail: 'Rotina com grupos variados e volume moderado.',
+        }
+    }
+
+    return {
+        tone: 'good',
+        label: 'Volume ok',
+        detail: 'Rotina enxuta para executar sem muito atrito.',
+    }
+}
+
 export function useWorkoutDerivedData({
     exercises,
     history,
@@ -102,6 +209,32 @@ export function useWorkoutDerivedData({
                             : currentByName.lastUsedAt,
                 })
             })
+        })
+
+        return map
+    }, [history])
+
+    const workoutPerformanceMap = useMemo(() => {
+        const groupedSessions = new Map()
+
+        function addSessionToKey(key, session) {
+            if (!key) return
+
+            const normalizedKey = String(key)
+            const current = groupedSessions.get(normalizedKey) || []
+            current.push(session)
+            groupedSessions.set(normalizedKey, current)
+        }
+
+        history.forEach((session) => {
+            addSessionToKey(session?.workoutId, session)
+            addSessionToKey(normalizeSearchText(session?.workoutName || session?.name), session)
+        })
+
+        const map = new Map()
+
+        groupedSessions.forEach((sessions, key) => {
+            map.set(key, buildWorkoutPerformanceEntry(sessions))
         })
 
         return map
@@ -199,24 +332,53 @@ export function useWorkoutDerivedData({
             const workoutId = getWorkoutId(workout)
             const groups = new Set()
             const exerciseNames = []
+            const groupSetCounts = new Map()
+            let totalSets = 0
 
             ;(workout.exercises || []).forEach((item) => {
                 const exercise = item.exercise || {}
+                const setsCount = Array.isArray(item.sets) ? item.sets.length : 0
+                const muscleGroup = exercise.muscleGroup || 'Sem grupo'
+
+                totalSets += setsCount
 
                 if (exercise.muscleGroup) groups.add(exercise.muscleGroup)
                 if (exercise.name) {
                     exerciseNames.push(`${exercise.name} (${exercise.equipment || 'sem equipamento'})`)
                 }
+
+                groupSetCounts.set(
+                    muscleGroup,
+                    (groupSetCounts.get(muscleGroup) || 0) + setsCount
+                )
+            })
+
+            const dominantGroup = Array.from(groupSetCounts.entries())
+                .sort((a, b) => b[1] - a[1])[0]
+            const performance =
+                workoutPerformanceMap.get(String(workoutId || '')) ||
+                workoutPerformanceMap.get(normalizeSearchText(workout.name)) ||
+                null
+            const volumeSignal = getWorkoutVolumeSignal({
+                totalSets,
+                groupsCount: groups.size,
+                dominantGroupSets: dominantGroup?.[1] || 0,
             })
 
             map.set(workoutId, {
                 muscleGroups: Array.from(groups),
                 exerciseNames: exerciseNames.join(', '),
+                totalSets,
+                estimatedMinutes: Math.max(15, Math.round(totalSets * 2.4)),
+                dominantGroup: dominantGroup?.[0] || '',
+                dominantGroupSets: dominantGroup?.[1] || 0,
+                performance,
+                volumeSignal,
             })
         })
 
         return map
-    }, [workouts])
+    }, [workouts, workoutPerformanceMap])
 
     const folderWorkoutCounts = useMemo(() => {
         const counts = new Map()
@@ -259,12 +421,54 @@ export function useWorkoutDerivedData({
         return filteredWorkouts.slice(0, limit)
     }, [filteredWorkouts, showAllWorkouts, workoutsVisibleLimit])
 
+    const workoutSpotlight = useMemo(() => {
+        if (workouts.length === 0) return null
+
+        return workouts
+            .slice()
+            .sort((a, b) => {
+                const aId = getWorkoutId(a)
+                const bId = getWorkoutId(b)
+                const aPerformance =
+                    workoutPerformanceMap.get(String(aId || '')) ||
+                    workoutPerformanceMap.get(normalizeSearchText(a.name))
+                const bPerformance =
+                    workoutPerformanceMap.get(String(bId || '')) ||
+                    workoutPerformanceMap.get(normalizeSearchText(b.name))
+
+                if (a.isFavorite && !b.isFavorite) return -1
+                if (!a.isFavorite && b.isFavorite) return 1
+                if (!aPerformance && bPerformance) return -1
+                if (aPerformance && !bPerformance) return 1
+
+                const aLast = aPerformance?.lastFinishedAt ? new Date(aPerformance.lastFinishedAt).getTime() : 0
+                const bLast = bPerformance?.lastFinishedAt ? new Date(bPerformance.lastFinishedAt).getTime() : 0
+
+                return (Number.isNaN(aLast) ? 0 : aLast) - (Number.isNaN(bLast) ? 0 : bLast)
+            })[0]
+    }, [workouts, workoutPerformanceMap])
+
+    const workoutHighlights = useMemo(() => {
+        return workouts
+            .slice()
+            .sort((a, b) => {
+                if (a.isFavorite && !b.isFavorite) return -1
+                if (!a.isFavorite && b.isFavorite) return 1
+
+                return getComparableDateValue(b) - getComparableDateValue(a)
+            })
+            .slice(0, 5)
+    }, [workouts])
+
     return {
         ...exerciseLibraryStats,
         sortedExercisesForSelect,
         filteredQuickExercises,
         visibleQuickExercises,
         workoutListMetaMap,
+        workoutPerformanceMap,
+        workoutSpotlight,
+        workoutHighlights,
         folderWorkoutCounts,
         totalExercisesInSavedWorkouts,
         totalSetsInCurrentWorkout,

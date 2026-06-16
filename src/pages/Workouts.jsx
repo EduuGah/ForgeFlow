@@ -25,6 +25,8 @@ import {
 import {
     WorkoutStatsGrid,
     WorkoutFolderFilter,
+    WorkoutHighlightsRail,
+    WorkoutNextActionCard,
 } from '../features/workouts/components/WorkoutsOverview'
 import WorkoutsListSection from '../features/workouts/components/WorkoutsListSection'
 import WorkoutQuickActionsPanel from '../features/workouts/components/WorkoutQuickActionsPanel'
@@ -363,6 +365,8 @@ function Workouts() {
         filteredQuickExercises,
         visibleQuickExercises,
         workoutListMetaMap,
+        workoutSpotlight,
+        workoutHighlights,
         folderWorkoutCounts,
         totalExercisesInSavedWorkouts,
         totalSetsInCurrentWorkout,
@@ -939,6 +943,19 @@ function Workouts() {
                 workoutsCount={workouts.length}
                 exercisesCount={exercises.length}
                 totalExercisesInSavedWorkouts={totalExercisesInSavedWorkouts}
+            />
+
+            <WorkoutNextActionCard
+                workout={workoutSpotlight}
+                workoutListMetaMap={workoutListMetaMap}
+                onCreateWorkout={openCreateBuilder}
+                onStartWorkout={handleStartWorkout}
+            />
+
+            <WorkoutHighlightsRail
+                workouts={workoutHighlights}
+                workoutListMetaMap={workoutListMetaMap}
+                onStartWorkout={handleStartWorkout}
             />
 
             <WorkoutFolderFilter

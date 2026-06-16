@@ -1,8 +1,51 @@
-import { Plus } from 'lucide-react'
+import { Activity, CalendarCheck, Clock3, Dumbbell, Play, Plus, Sparkles, TrendingUp } from 'lucide-react'
 
 import PageHeader from '../../../components/ui/PageHeader'
 import Card from '../../../components/ui/Card'
 import Badge from '../../../components/ui/Badge'
+
+
+function formatWorkoutLastDate(dateString) {
+    if (!dateString) return 'Nunca feito'
+
+    const date = new Date(dateString)
+    if (Number.isNaN(date.getTime())) return 'Sem data'
+
+    return date.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+    })
+}
+
+function formatWorkoutDuration(seconds) {
+    const totalSeconds = Number(seconds) || 0
+    if (totalSeconds <= 0) return 'Sem média'
+
+    const minutes = Math.max(1, Math.round(totalSeconds / 60))
+    return `${minutes} min`
+}
+
+function formatWorkoutVolume(volume) {
+    const numericVolume = Number(volume) || 0
+    if (numericVolume <= 0) return 'Sem volume'
+
+    if (numericVolume >= 1000) {
+        return `${(numericVolume / 1000).toLocaleString('pt-BR', {
+            maximumFractionDigits: 1,
+        })}t`
+    }
+
+    return `${numericVolume.toLocaleString('pt-BR')}kg`
+}
+
+export function getWorkoutPerformanceSummary(performance) {
+    return {
+        lastDate: formatWorkoutLastDate(performance?.lastFinishedAt),
+        avgDuration: formatWorkoutDuration(performance?.avgDurationSeconds),
+        avgVolume: formatWorkoutVolume(performance?.avgVolume),
+        totalSessions: performance?.totalSessions || 0,
+    }
+}
 
 export function WorkoutsHeader({ isSyncingData, onCreateWorkout }) {
     return (
@@ -132,5 +175,103 @@ export function WorkoutFolderFilter({
                 })}
             </div>
         </div>
+    )
+}
+
+
+export function WorkoutNextActionCard({ workout, workoutListMetaMap, onCreateWorkout, onStartWorkout }) {
+    const workoutId = workout?._id || workout?.id
+    const meta = workoutListMetaMap.get(workoutId) || {}
+    const performance = getWorkoutPerformanceSummary(meta.performance)
+
+    if (!workout) {
+        return (
+            <section className="ff-workouts-next-action-card is-empty">
+                <div className="ff-workouts-next-action-card__icon">
+                    <Sparkles size={22} />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                    <span>Próxima ação</span>
+                    <h2>Crie sua primeira rotina</h2>
+                    <p>Comece com um treino simples e depois ajuste séries, descanso e exercícios.</p>
+                </div>
+
+                <button type="button" onClick={onCreateWorkout}>
+                    <Plus size={18} />
+                    Criar
+                </button>
+            </section>
+        )
+    }
+
+    return (
+        <section className="ff-workouts-next-action-card">
+            <div className="ff-workouts-next-action-card__icon">
+                <Sparkles size={22} />
+            </div>
+
+            <div className="min-w-0 flex-1">
+                <span>Próxima ação</span>
+                <h2>{workout.name}</h2>
+                <p>
+                    {meta.volumeSignal?.detail || 'Rotina pronta para iniciar pelo celular.'}
+                </p>
+
+                <div className="ff-workouts-next-action-card__metrics">
+                    <small><CalendarCheck size={13} /> {performance.lastDate}</small>
+                    <small><Clock3 size={13} /> {performance.avgDuration}</small>
+                    <small><TrendingUp size={13} /> {performance.avgVolume}</small>
+                </div>
+            </div>
+
+            <button type="button" onClick={() => onStartWorkout(workout)}>
+                <Play size={18} />
+                Iniciar
+            </button>
+        </section>
+    )
+}
+
+export function WorkoutHighlightsRail({ workouts, workoutListMetaMap, onStartWorkout }) {
+    if (!workouts.length) return null
+
+    return (
+        <section className="ff-workouts-highlight-rail" aria-label="Rotinas em destaque">
+            <div className="ff-workouts-section-headline">
+                <div>
+                    <span>Atalhos</span>
+                    <h2>Rotinas em destaque</h2>
+                </div>
+                <small>{workouts.length} rápidas</small>
+            </div>
+
+            <div className="ff-workouts-highlight-scroll ff-mobile-chip-scroll">
+                {workouts.map((workout) => {
+                    const workoutId = workout?._id || workout?.id
+                    const meta = workoutListMetaMap.get(workoutId) || {}
+                    const performance = getWorkoutPerformanceSummary(meta.performance)
+
+                    return (
+                        <article className="ff-workouts-highlight-card" key={workoutId || workout.name}>
+                            <div className="ff-workouts-highlight-card__top">
+                                <span><Dumbbell size={16} /></span>
+                                <button type="button" onClick={() => onStartWorkout(workout)}>
+                                    <Play size={14} />
+                                </button>
+                            </div>
+
+                            <h3>{workout.name}</h3>
+                            <p>{meta.muscleGroups?.slice(0, 2).join(' + ') || 'Sem grupos'}</p>
+
+                            <div className="ff-workouts-highlight-card__stats">
+                                <small><Activity size={12} /> {meta.totalSets || 0} séries</small>
+                                <small><Clock3 size={12} /> {performance.avgDuration}</small>
+                            </div>
+                        </article>
+                    )
+                })}
+            </div>
+        </section>
     )
 }

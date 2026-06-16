@@ -12,6 +12,7 @@ import Badge from '../../../components/ui/Badge'
 import Button from '../../../components/ui/Button'
 import EmptyState from '../../../components/ui/EmptyState'
 import { getWorkoutId } from '../../../utils/workoutNormalizers'
+import { getWorkoutPerformanceSummary } from './WorkoutsOverview'
 
 function WorkoutExercisePreview({ item, index }) {
     return (
@@ -57,6 +58,8 @@ function WorkoutCard({
         muscleGroups: [],
         exerciseNames: '',
     }
+    const performanceSummary = getWorkoutPerformanceSummary(workoutMeta.performance)
+    const volumeSignal = workoutMeta.volumeSignal
     const exercises = Array.isArray(workout.exercises) ? workout.exercises : []
     const workoutMuscleGroups = workoutMeta.muscleGroups || []
     const totalSets = exercises.reduce(
@@ -80,6 +83,11 @@ function WorkoutCard({
                         <div className="ff-workout-native-card__titleline">
                             <h3>{workout.name}</h3>
                             {workout.isFavorite && <Badge>Favorito</Badge>}
+                            {volumeSignal && (
+                                <span className={`ff-workout-volume-badge is-${volumeSignal.tone}`}>
+                                    {volumeSignal.label}
+                                </span>
+                            )}
                         </div>
 
                         <p className="ff-workout-native-card__subtitle">
@@ -99,6 +107,13 @@ function WorkoutCard({
                         <div className="ff-workout-native-card__meta">
                             <span>{exercises.length} exercicios</span>
                             <span>{totalSets} series</span>
+                            <span>{workoutMeta.estimatedMinutes || 15} min estimados</span>
+                        </div>
+
+                        <div className="ff-workout-native-card__history-meta">
+                            <span><small>Último</small>{performanceSummary.lastDate}</span>
+                            <span><small>Média</small>{performanceSummary.avgDuration}</span>
+                            <span><small>Volume</small>{performanceSummary.avgVolume}</span>
                         </div>
                     </div>
 
@@ -129,6 +144,11 @@ function WorkoutCard({
 
             {isExpanded && (
                 <div className="ff-workout-native-card__expanded">
+                    <div className="ff-workout-expanded-summary">
+                        <span>{performanceSummary.totalSessions} execuções registradas</span>
+                        <span>{volumeSignal?.detail || 'Sem alerta de volume para esta rotina.'}</span>
+                    </div>
+
                     <div className="ff-workout-exercise-preview-list">
                         {exercises.map((item, index) => (
                             <WorkoutExercisePreview
