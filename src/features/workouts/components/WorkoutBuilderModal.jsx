@@ -1,11 +1,14 @@
-﻿import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import {
-    ArrowLeft,
     ArrowDown,
+    ArrowLeft,
     ArrowUp,
+    ChevronDown,
+    Copy,
     Dumbbell,
     Flame,
+    FolderPlus,
     Plus,
     Save,
     Search,
@@ -14,13 +17,116 @@ import {
     X,
 } from 'lucide-react'
 
-import Card from '../../../components/ui/Card'
-import Button from '../../../components/ui/Button'
-import Input from '../../../components/ui/Input'
-import Select from '../../../components/ui/Select'
-import Textarea from '../../../components/ui/Textarea'
-import Badge from '../../../components/ui/Badge'
-import EmptyState from '../../../components/ui/EmptyState'
+const SET_MODEL_OPTIONS = [
+    {
+        id: 'hypertrophy',
+        label: 'Hipertrofia',
+        detail: '4 séries progressivas',
+    },
+    {
+        id: 'beginner',
+        label: 'Iniciante',
+        detail: '3 séries simples',
+    },
+    {
+        id: 'strength',
+        label: 'Força',
+        detail: '5 séries pesadas',
+    },
+    {
+        id: 'pyramid',
+        label: 'Pirâmide',
+        detail: '15 até 8 reps',
+    },
+    {
+        id: 'custom',
+        label: 'Simples',
+        detail: '1 série editável',
+    },
+]
+
+function getSetModelLabel(modelId, customSetModels = []) {
+    const fixed = SET_MODEL_OPTIONS.find((model) => model.id === modelId)
+    if (fixed) return fixed.label
+
+    return customSetModels.find((model) => model.id === modelId)?.name || 'Modelo atual'
+}
+
+function ExerciseMedia({ exercise, size = 'md' }) {
+    return (
+        <span className={`ff-workout-builder-v2-media ff-workout-builder-v2-media--${size}`}>
+            {exercise?.mediaUrl ? (
+                <img
+                    src={exercise.mediaUrl}
+                    alt={exercise.name}
+                    loading="lazy"
+                    decoding="async"
+                />
+            ) : (
+                <Dumbbell size={size === 'sm' ? 20 : 26} />
+            )}
+        </span>
+    )
+}
+
+function WorkoutBuilderMetric({ label, value, detail }) {
+    return (
+        <div className="ff-workout-builder-v2-metric">
+            <span>{label}</span>
+            <strong>{value}</strong>
+            {detail && <small>{detail}</small>}
+        </div>
+    )
+}
+
+function WorkoutSetRow({
+    exerciseItem,
+    set,
+    setIndex,
+    handleToggleWorkoutSetWarmup,
+    handleUpdateWorkoutSetDescription,
+    handleRemoveSetFromWorkoutExercise,
+}) {
+    const isWarmup = set.type === 'warmup'
+
+    return (
+        <div className={isWarmup ? 'ff-workout-builder-v2-set is-warmup' : 'ff-workout-builder-v2-set'}>
+            <button
+                type="button"
+                onClick={() => handleToggleWorkoutSetWarmup(exerciseItem.id, set.id)}
+                className="ff-workout-builder-v2-set__index"
+                aria-label={isWarmup ? 'Marcar como série normal' : 'Marcar como aquecimento'}
+            >
+                {isWarmup ? 'A' : setIndex + 1}
+            </button>
+
+            <label className="ff-workout-builder-v2-set__field">
+                <span>{isWarmup ? 'Aquecimento' : 'Meta da série'}</span>
+                <input
+                    type="text"
+                    value={set.description || ''}
+                    onChange={(event) =>
+                        handleUpdateWorkoutSetDescription(
+                            exerciseItem.id,
+                            set.id,
+                            event.target.value
+                        )
+                    }
+                    placeholder={isWarmup ? 'Ex: 15 reps leve' : 'Ex: 8-12 Rep'}
+                />
+            </label>
+
+            <button
+                type="button"
+                onClick={() => handleRemoveSetFromWorkoutExercise(exerciseItem.id, set.id)}
+                className="ff-workout-builder-v2-set__remove"
+                aria-label="Remover série"
+            >
+                <Trash2 size={16} />
+            </button>
+        </div>
+    )
+}
 
 function WorkoutBuilderModal({
     isOpen,
@@ -48,12 +154,6 @@ function WorkoutBuilderModal({
     filteredQuickExercises,
     visibleQuickExercises,
     favoriteExercisesCount,
-    selectedExercise,
-    setSelectedExercise,
-    sortedExercisesForSelect,
-    setDescription,
-    setSetDescription,
-    exerciseSets,
     handleSubmit,
     closeBuilder,
     setIsFolderModalOpen,
@@ -69,848 +169,684 @@ function WorkoutBuilderModal({
     isExerciseAlreadyAdded,
     formatRecentExerciseDate,
     handleQuickAddExercise,
-    handleAddSet,
-    handleDefaultSets,
-    handleAddExercise,
-    handleRemoveSet,
+    handleDuplicateWorkoutExercise,
+    handleApplySetModelToWorkoutExercise,
+    handleClearWorkoutExercises,
+    onGoToExercises,
 }) {
     const [isExercisePickerOpen, setIsExercisePickerOpen] = useState(false)
+    const [expandedExerciseId, setExpandedExerciseId] = useState(null)
+    const [showAdvancedSetup, setShowAdvancedSetup] = useState(false)
+
+    const selectedFolder = folders.find((folder) => folder.id === selectedFolderId)
+    const currentModelName = getSetModelLabel(defaultSetModel, customSetModels)
+    const canSubmit = workoutName.trim() && workoutExercises.length > 0
+
+    const builderStatus = useMemo(() => {
+        if (!workoutName.trim() && workoutExercises.length === 0) {
+            return {
+                label: 'Comece pelo nome e pela biblioteca',
+                tone: 'empty',
+            }
+        }
+
+        if (!workoutName.trim()) {
+            return {
+                label: 'Falta nomear a rotina',
+                tone: 'warning',
+            }
+        }
+
+        if (workoutExercises.length === 0) {
+            return {
+                label: 'Adicione pelo menos um exercício',
+                tone: 'warning',
+            }
+        }
+
+        if (totalSetsInCurrentWorkout >= 28) {
+            return {
+                label: 'Treino muito volumoso',
+                tone: 'danger',
+            }
+        }
+
+        if (totalSetsInCurrentWorkout >= 20) {
+            return {
+                label: 'Volume alto, revise recuperação',
+                tone: 'warning',
+            }
+        }
+
+        return {
+            label: editingWorkoutId ? 'Pronto para atualizar' : 'Pronto para salvar',
+            tone: 'success',
+        }
+    }, [editingWorkoutId, totalSetsInCurrentWorkout, workoutExercises.length, workoutName])
+
+    const builderProgress = useMemo(() => {
+        const steps = [Boolean(workoutName.trim()), workoutExercises.length > 0]
+        const completed = steps.filter(Boolean).length
+
+        return Math.round((completed / steps.length) * 100)
+    }, [workoutExercises.length, workoutName])
+
+    function handlePickExercise(exerciseId) {
+        if (isExerciseAlreadyAdded(exerciseId)) return
+
+        handleQuickAddExercise(exerciseId)
+    }
 
     if (!isOpen) return null
 
     return (
-<div className="fixed inset-0 z-[9999] overflow-y-auto overscroll-contain bg-[#050507] pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:pb-0">
-    <div className="mx-auto max-w-[1180px] px-3 py-3 sm:px-4 sm:py-6">
-        <form onSubmit={handleSubmit}>
-            <div className="sticky top-0 z-20 -mx-3 mb-4 border-b border-zinc-900 bg-black/90 px-3 py-3 backdrop-blur-xl sm:static sm:mx-0 sm:mb-6 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex min-w-0 items-center gap-3">
-                        <button
-                            type="button"
-                            onClick={closeBuilder}
-                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-900 text-zinc-400 transition hover:bg-zinc-800 hover:text-white"
-                        >
-                            <ArrowLeft size={22} />
-                        </button>
+        <div className="ff-workout-builder-v2" role="dialog" aria-modal="true" aria-label="Construtor de treino">
+            <form onSubmit={handleSubmit} className="ff-workout-builder-v2__shell">
+                <header className="ff-workout-builder-v2__topbar">
+                    <button
+                        type="button"
+                        onClick={closeBuilder}
+                        className="ff-workout-builder-v2__back"
+                        aria-label="Voltar para rotinas"
+                    >
+                        <ArrowLeft size={21} />
+                    </button>
 
-                        <div className="min-w-0">
-                            <p className="text-xs font-bold uppercase tracking-wide text-[var(--ff-accent-text)]
-">
-                                {editingWorkoutId ? 'Editar rotina' : 'Nova rotina'}
-                            </p>
+                    <div className="ff-workout-builder-v2__title">
+                        <p>{editingWorkoutId ? 'Editando rotina' : 'Nova rotina'}</p>
+                        <h1>{editingWorkoutId ? 'Ajustar treino' : 'Criar treino'}</h1>
+                    </div>
 
-                            <h1 className="truncate text-2xl font-black sm:text-3xl">
-                                {editingWorkoutId ? 'Editar treino' : 'Criar treino'}
-                            </h1>
+                    <button
+                        type="submit"
+                        className="ff-workout-builder-v2__save ff-workout-builder-v2__save--desktop"
+                        disabled={!canSubmit}
+                    >
+                        <Save size={18} />
+                        {editingWorkoutId ? 'Atualizar' : 'Salvar'}
+                    </button>
+                </header>
+
+                <section className="ff-workout-builder-v2-hero">
+                    <div className="ff-workout-builder-v2-hero__copy">
+                        <span className={`ff-workout-builder-v2-status is-${builderStatus.tone}`}>
+                            {builderStatus.label}
+                        </span>
+
+                        <h2>{workoutName.trim() || 'Monte uma rotina limpa e rápida'}</h2>
+
+                        <p>
+                            Escolha um modelo de séries, busque os exercícios na biblioteca e organize a ordem antes de salvar.
+                        </p>
+                    </div>
+
+                    <div className="ff-workout-builder-v2-hero__metrics">
+                        <WorkoutBuilderMetric
+                            label="Progresso"
+                            value={`${builderProgress}%`}
+                            detail="nome + exercícios"
+                        />
+                        <WorkoutBuilderMetric
+                            label="Exercícios"
+                            value={workoutExercises.length}
+                            detail="na rotina"
+                        />
+                        <WorkoutBuilderMetric
+                            label="Séries"
+                            value={totalSetsInCurrentWorkout}
+                            detail={currentModelName}
+                        />
+                    </div>
+                </section>
+
+                <section className="ff-workout-builder-v2-grid">
+                    <aside className="ff-workout-builder-v2-panel ff-workout-builder-v2-panel--setup">
+                        <div className="ff-workout-builder-v2-section-head">
+                            <span>1</span>
+                            <div>
+                                <p>Configuração</p>
+                                <h2>Base do treino</h2>
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center">
-
-                        <button
-                            type="submit"
-                            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-bold text-white transition hover:bg-[var(--ff-accent-hover)] sm:w-auto"
-                        >
-                            <Save size={18} />
-                            Salvar treino
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <section className="grid grid-cols-1 gap-6 xl:grid-cols-5">
-                <div className="space-y-6 xl:col-span-3">
-                    <Card>
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <Input
-                                label="Título do treino"
-                                placeholder="Ex: Push A, Costas pesado..."
+                        <label className="ff-workout-builder-v2-field">
+                            <span>Nome da rotina</span>
+                            <input
+                                type="text"
                                 value={workoutName}
                                 onChange={(event) => setWorkoutName(event.target.value)}
+                                placeholder="Ex: Push A, Costas pesado..."
+                                autoFocus
                             />
+                        </label>
 
+                        <div className="ff-workout-builder-v2-field-row">
+                            <label className="ff-workout-builder-v2-field">
+                                <span>Pasta</span>
+                                <select
+                                    value={selectedFolderId || ''}
+                                    onChange={(event) => setSelectedFolderId(event.target.value || null)}
+                                >
+                                    <option value="">Sem pasta</option>
+                                    {folders.map((folder) => (
+                                        <option key={folder.id} value={folder.id}>
+                                            {folder.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+
+                            <button
+                                type="button"
+                                onClick={() => setIsFolderModalOpen(true)}
+                                className="ff-workout-builder-v2-mini-action"
+                            >
+                                <FolderPlus size={18} />
+                                Nova pasta
+                            </button>
+                        </div>
+
+                        <div className="ff-workout-builder-v2-template-card">
                             <div>
-                                    <div className="mb-2 flex items-center justify-between gap-3">
-                                        <label className="block text-sm font-bold text-zinc-300">
-                                            Pasta
-                                        </label>
+                                <span>Modelo aplicado ao adicionar</span>
+                                <strong>{currentModelName}</strong>
+                                <small>
+                                    Novos exercícios entram com esse padrão de séries.
+                                </small>
+                            </div>
 
+                            <button
+                                type="button"
+                                onClick={() => setShowAdvancedSetup((current) => !current)}
+                            >
+                                <ChevronDown size={17} />
+                            </button>
+                        </div>
+
+                        {showAdvancedSetup && (
+                            <div className="ff-workout-builder-v2-advanced">
+                                <div className="ff-workout-builder-v2-template-grid">
+                                    {SET_MODEL_OPTIONS.map((model) => (
+                                        <button
+                                            key={model.id}
+                                            type="button"
+                                            className={defaultSetModel === model.id ? 'is-active' : ''}
+                                            onClick={() => setDefaultSetModel(model.id)}
+                                        >
+                                            <strong>{model.label}</strong>
+                                            <small>{model.detail}</small>
+                                        </button>
+                                    ))}
+                                </div>
+
+                                <div className="ff-workout-builder-v2-custom-models">
+                                    <div className="ff-workout-builder-v2-custom-models__head">
+                                        <span>Modelos personalizados</span>
                                         <button
                                             type="button"
-                                            onClick={() => setIsFolderModalOpen(true)}
-                                            className="text-xs font-bold text-[var(--ff-accent-text)]
- transition hover:text-[var(--ff-accent-text)]
-"
+                                            onClick={() => setIsSetModelModalOpen(true)}
                                         >
-                                            + Criar pasta
+                                            + Criar
                                         </button>
                                     </div>
 
-                                    <select
-                                        value={selectedFolderId || ''}
-                                        onChange={(event) => setSelectedFolderId(event.target.value || null)}
-                                        className="h-12 w-full rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-violet-500/10"
-                                    >
-                                        <option value="">Sem pasta</option>
-
-                                        {folders.map((folder) => (
-                                            <option key={folder.id} value={folder.id}>
-                                                {folder.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                            </div>
-                        </div>
-                    </Card>
-
-                    <button
-                        type="button"
-                        onClick={() => setIsExercisePickerOpen(true)}
-                        className="ff-workout-builder-add-exercise-button flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)]/12 px-4 text-left text-[var(--ff-text)] shadow-[0_0_24px_var(--ff-accent-shadow)] transition active:scale-[0.98]"
-                    >
-                        <span className="min-w-0">
-                            <strong className="block text-base font-black">Adicionar exercício</strong>
-                            <small className="block truncate text-xs font-bold text-[var(--ff-muted)]">
-                                Buscar na biblioteca e incluir na rotina
-                            </small>
-                        </span>
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--ff-accent)] text-white">
-                            <Plus size={20} />
-                        </span>
-                    </button>
-
-                    {workoutExercises.length === 0 && (
-                        <EmptyState
-                            icon={Dumbbell}
-                            title="Nenhum exercício"
-                            description="Use a biblioteca para adicionar exercícios ao treino."
-                        />
-                    )}
-
-                    {workoutExercises.map((item, index) => (
-                        <Card key={item.id}>
-                            <div className="flex items-start gap-3 sm:items-center sm:gap-4">
-                                <span className="hidden text-xl text-zinc-500 sm:block">::</span>
-
-                                <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-zinc-700 bg-white">
-                                    {item.exercise.mediaUrl ? (
-                                        <img
-                                            src={item.exercise.mediaUrl}
-                                            alt={item.exercise.name}
-                                            className="h-full w-full object-cover"
-                                            loading="lazy"
-                                            decoding="async"
-                                        />
+                                    {customSetModels.length === 0 ? (
+                                        <p>Nenhum modelo personalizado ainda.</p>
                                     ) : (
-                                        <Dumbbell size={26} className="text-zinc-900" />
-                                    )}
-                                </div>
-
-                                <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-2">
-                                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--ff-accent-soft)]/10 text-xs font-bold text-[var(--ff-accent-text)]
-">
-                                            {index + 1}
-                                        </span>
-
-                                        <h3 className="truncate text-lg font-bold">
-                                            {item.exercise.name}
-                                        </h3>
-                                    </div>
-
-                                    <p className="mt-1 text-xs text-zinc-500">
-                                        {item.exercise.muscleGroup} • {item.exercise.equipment}
-                                    </p>
-                                </div>
-
-                                <div className="ff-workout-builder-order-controls">
-                                    <button
-                                        type="button"
-                                        onClick={() => handleMoveWorkoutExercise(item.id, 'up')}
-                                        disabled={index === 0}
-                                        aria-label="Mover exercicio para cima"
-                                    >
-                                        <ArrowUp size={15} />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleMoveWorkoutExercise(item.id, 'down')}
-                                        disabled={index === workoutExercises.length - 1}
-                                        aria-label="Mover exercicio para baixo"
-                                    >
-                                        <ArrowDown size={15} />
-                                    </button>
-                                </div>
-
-                                <button
-                                    type="button"
-                                    onClick={() => handleRemoveExercise(item.id)}
-                                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-zinc-400 transition hover:bg-red-500/10 hover:text-red-400"
-                                >
-                                    <X size={22} />
-                                </button>
-                            </div>
-
-                            <div className="mt-5">
-                                <Textarea
-                                    label="Nota"
-                                    placeholder="Adicionar nota"
-                                    value={item.note || ''}
-                                    onChange={(event) =>
-                                        handleUpdateExerciseNote(item.id, event.target.value)
-                                    }
-                                    rows={3}
-                                />
-                            </div>
-
-                            <div className="mt-5">
-                                <div className="mb-2 hidden grid-cols-[70px_1fr_80px] gap-3 px-3 text-xs font-bold uppercase tracking-wide text-zinc-500 sm:grid">
-                                    <span>Série</span>
-                                    <span>Meta</span>
-                                    <span></span>
-                                </div>
-
-                                <div className="space-y-2">
-                                    {item.sets.map((set, setIndex) => {
-                                        const isWarmup = set.type === 'warmup'
-
-                                        return (
-                                            <div
-                                                key={set.id}
-                                                className="grid grid-cols-[44px_1fr_40px] items-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-950 p-3 sm:grid-cols-[70px_1fr_80px]"
-                                            >
-                                                <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-800 bg-[#18181b] text-sm font-bold">
-                                                    {isWarmup ? 'A' : setIndex + 1}
-                                                </span>
-
-                                                <div className="min-w-0 space-y-2">
-                                                    <input
-                                                        type="text"
-                                                        value={set.description}
-                                                        onChange={(event) =>
-                                                            handleUpdateWorkoutSetDescription(
-                                                                item.id,
-                                                                set.id,
-                                                                event.target.value
-                                                            )
-                                                        }
-                                                        className="h-10 w-full rounded-xl border border-zinc-800 bg-[#18181b] px-3 text-sm font-bold text-white outline-none transition hover:border-[var(--ff-accent-border)]/40 focus:border-[var(--ff-accent-border)]"
-                                                        placeholder="Ex: 8-12 Rep"
-                                                    />
-
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleToggleWorkoutSetWarmup(item.id, set.id)}
-                                                        className={isWarmup
-                                                            ? 'rounded-full border border-amber-400/30 bg-amber-500/10 px-3 py-1 text-[10px] font-black text-amber-200'
-                                                            : 'rounded-full border border-zinc-800 bg-zinc-950 px-3 py-1 text-[10px] font-black text-zinc-500'}
-                                                    >
-                                                        {isWarmup ? 'AQUECIMENTO' : 'NORMAL'}
-                                                    </button>
-                                                </div>
-
+                                        customSetModels.map((model) => (
+                                            <div key={model.id}>
                                                 <button
                                                     type="button"
-                                                    onClick={() =>
-                                                        handleRemoveSetFromWorkoutExercise(item.id, set.id)
-                                                    }
-                                                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-500/10 text-red-400 transition hover:bg-red-500/20 sm:ml-auto"
+                                                    className={defaultSetModel === model.id ? 'is-active' : ''}
+                                                    onClick={() => setDefaultSetModel(model.id)}
+                                                >
+                                                    <strong>{model.name}</strong>
+                                                    <small>{model.sets.length} séries</small>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDeleteSetModel(model.id)}
+                                                    aria-label="Excluir modelo"
+                                                >
+                                                    <X size={15} />
+                                                </button>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </aside>
+
+                    <main className="ff-workout-builder-v2-panel ff-workout-builder-v2-panel--plan">
+                        <div className="ff-workout-builder-v2-section-head ff-workout-builder-v2-section-head--split">
+                            <div className="ff-workout-builder-v2-section-head__left">
+                                <span>2</span>
+                                <div>
+                                    <p>Plano do treino</p>
+                                    <h2>Exercícios da rotina</h2>
+                                </div>
+                            </div>
+
+                            <div className="ff-workout-builder-v2-plan-actions">
+                                {workoutExercises.length > 0 && (
+                                    <button
+                                        type="button"
+                                        onClick={handleClearWorkoutExercises}
+                                        className="ff-workout-builder-v2-ghost-danger"
+                                    >
+                                        Limpar
+                                    </button>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={() => setIsExercisePickerOpen(true)}
+                                    className="ff-workout-builder-v2-primary-small"
+                                >
+                                    <Plus size={17} />
+                                    Exercício
+                                </button>
+                            </div>
+                        </div>
+
+                        {workoutExercises.length === 0 ? (
+                            <div className="ff-workout-builder-v2-empty">
+                                <Dumbbell size={34} />
+                                <strong>Seu treino ainda está vazio</strong>
+                                <p>Abra a biblioteca, toque nos exercícios e eles entrarão com o modelo de séries escolhido.</p>
+                                <button type="button" onClick={() => setIsExercisePickerOpen(true)}>
+                                    <Plus size={18} />
+                                    Abrir biblioteca
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="ff-workout-builder-v2-exercise-list">
+                                {workoutExercises.map((item, index) => {
+                                    const isExpanded = expandedExerciseId === item.id
+                                    const setsCount = item.sets?.length || 0
+
+                                    return (
+                                        <article
+                                            key={item.id}
+                                            className={isExpanded ? 'ff-workout-builder-v2-exercise is-expanded' : 'ff-workout-builder-v2-exercise'}
+                                        >
+                                            <button
+                                                type="button"
+                                                onClick={() => setExpandedExerciseId(isExpanded ? null : item.id)}
+                                                className="ff-workout-builder-v2-exercise__main"
+                                            >
+                                                <span className="ff-workout-builder-v2-exercise__order">{index + 1}</span>
+                                                <ExerciseMedia exercise={item.exercise} />
+                                                <span className="ff-workout-builder-v2-exercise__copy">
+                                                    <strong>{item.exercise?.name || 'Exercício'}</strong>
+                                                    <small>
+                                                        {item.exercise?.muscleGroup || 'Sem músculo'} · {item.exercise?.equipment || 'Sem equipamento'}
+                                                    </small>
+                                                    <em>{setsCount} séries · {item.note ? 'com nota' : 'sem nota'}</em>
+                                                </span>
+                                                <ChevronDown size={18} />
+                                            </button>
+
+                                            <div className="ff-workout-builder-v2-exercise__quick-actions">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleMoveWorkoutExercise(item.id, 'up')}
+                                                    disabled={index === 0}
+                                                    aria-label="Mover para cima"
+                                                >
+                                                    <ArrowUp size={16} />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleMoveWorkoutExercise(item.id, 'down')}
+                                                    disabled={index === workoutExercises.length - 1}
+                                                    aria-label="Mover para baixo"
+                                                >
+                                                    <ArrowDown size={16} />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDuplicateWorkoutExercise(item.id)}
+                                                    aria-label="Duplicar exercício"
+                                                >
+                                                    <Copy size={16} />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveExercise(item.id)}
+                                                    className="is-danger"
+                                                    aria-label="Remover exercício"
                                                 >
                                                     <Trash2 size={16} />
                                                 </button>
                                             </div>
-                                        )
-                                    })}
+
+                                            {isExpanded && (
+                                                <div className="ff-workout-builder-v2-exercise__details">
+                                                    <div className="ff-workout-builder-v2-set-actions">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleAddSetToWorkoutExercise(item.id)}
+                                                        >
+                                                            <Plus size={16} />
+                                                            Série normal
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleAddSetToWorkoutExercise(item.id, 'warmup')}
+                                                        >
+                                                            <Flame size={16} />
+                                                            Aquecimento
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleApplySetModelToWorkoutExercise(item.id, defaultSetModel)}
+                                                        >
+                                                            Aplicar modelo
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="ff-workout-builder-v2-sets">
+                                                        {(item.sets || []).map((set, setIndex) => (
+                                                            <WorkoutSetRow
+                                                                key={set.id}
+                                                                exerciseItem={item}
+                                                                set={set}
+                                                                setIndex={setIndex}
+                                                                handleToggleWorkoutSetWarmup={handleToggleWorkoutSetWarmup}
+                                                                handleUpdateWorkoutSetDescription={handleUpdateWorkoutSetDescription}
+                                                                handleRemoveSetFromWorkoutExercise={handleRemoveSetFromWorkoutExercise}
+                                                            />
+                                                        ))}
+                                                    </div>
+
+                                                    <label className="ff-workout-builder-v2-note">
+                                                        <span>Nota do exercício</span>
+                                                        <textarea
+                                                            value={item.note || ''}
+                                                            onChange={(event) => handleUpdateExerciseNote(item.id, event.target.value)}
+                                                            placeholder="Ex: foco em controle, cadeira 4, ajustar pegada..."
+                                                            rows={3}
+                                                        />
+                                                    </label>
+                                                </div>
+                                            )}
+                                        </article>
+                                    )
+                                })}
+                            </div>
+                        )}
+
+                        {totalSetsInCurrentWorkout >= 24 && (
+                            <div className="ff-workout-builder-v2-volume-warning">
+                                <Flame size={18} />
+                                <div>
+                                    <strong>{totalSetsInCurrentWorkout >= 28 ? 'Treino muito volumoso' : 'Volume alto'}</strong>
+                                    <span>{totalSetsInCurrentWorkout} séries no total. Revise descanso, tempo e recuperação.</span>
                                 </div>
                             </div>
+                        )}
+                    </main>
 
-                            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                                <button
-                                    type="button"
-                                    onClick={() => handleAddSetToWorkoutExercise(item.id)}
-                                    className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-zinc-800 text-sm font-bold transition hover:bg-zinc-700"
-                                >
-                                    <Plus size={18} />
-                                    Série
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={() => handleAddSetToWorkoutExercise(item.id, 'warmup')}
-                                    className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-amber-400/25 bg-amber-500/10 text-sm font-bold text-amber-200 transition hover:bg-amber-500/15"
-                                >
-                                    <Flame size={18} />
-                                    Aquecimento
-                                </button>
-                            </div>
-                        </Card>
-                    ))}
-
-                    {totalSetsInCurrentWorkout >= 28 && (
-                        <div className="ff-workout-volume-warning">
-                            <Flame size={18} />
-                            <div>
-                                <strong>Treino muito volumoso</strong>
-                                <span>Esse treino tem {totalSetsInCurrentWorkout} series. Pode ficar longo demais.</span>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                <div className="space-y-6 xl:col-span-2">
-                    <Card>
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h2 className="text-xl font-bold">Resumo</h2>
-
-                                <div className="mt-4 grid grid-cols-3 gap-4">
-                                    <div>
-                                        <p className="text-xs text-zinc-500">Exercícios</p>
-                                        <p className="mt-1 text-xl font-bold text-[var(--ff-accent-text)]
-">
-                                            {workoutExercises.length}
-                                        </p>
-                                    </div>
-
-                                    <div>
-                                        <p className="text-xs text-zinc-500">Total de séries</p>
-                                        <p className="mt-1 text-xl font-bold">
-                                            {totalSetsInCurrentWorkout}
-                                        </p>
-                                    </div>
-
-                                    <div>
-                                        <p className="text-xs text-zinc-500">Favoritos</p>
-                                        <p className="mt-1 text-xl font-bold text-yellow-300">
-                                            {favoriteExercisesCount}
-                                        </p>
-                                    </div>
+                    <aside className="ff-workout-builder-v2-panel ff-workout-builder-v2-panel--library">
+                        <div className="ff-workout-builder-v2-section-head ff-workout-builder-v2-section-head--split">
+                            <div className="ff-workout-builder-v2-section-head__left">
+                                <span>3</span>
+                                <div>
+                                    <p>Biblioteca</p>
+                                    <h2>Adicionar rápido</h2>
                                 </div>
                             </div>
-
-                            <Dumbbell size={48} className="text-zinc-600" />
-                        </div>
-
-                        <div className="mt-5 hidden">
-                            <div className="mb-2 flex items-center justify-between gap-3">
-                                <label className="block text-sm font-bold text-zinc-300">
-                                    Modelo padrão de séries
-                                </label>
-
-                                <button
-                                    type="button"
-                                    onClick={() => setIsSetModelModalOpen(true)}
-                                    className="text-xs font-bold text-[var(--ff-accent-text)]
- transition hover:text-[var(--ff-accent-text)]
-"
-                                >
-                                    + Criar modelo
-                                </button>
-                            </div>
-
-                            <select
-                                value={defaultSetModel}
-                                onChange={(event) => setDefaultSetModel(event.target.value)}
-                                className="h-12 w-full rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-violet-500/10"
+                            <button
+                                type="button"
+                                onClick={onGoToExercises}
+                                className="ff-workout-builder-v2-link-button"
                             >
-                                <option value="hypertrophy">Hipertrofia padrão - 4 séries</option>
-                                <option value="beginner">Iniciante - 3 séries</option>
-                                <option value="strength">Força - 5 séries</option>
-                                <option value="pyramid">Pirâmide - 4 séries</option>
-                                <option value="custom">Simples - 1 série</option>
+                                Gerenciar
+                            </button>
+                        </div>
 
-                                {customSetModels.length > 0 && (
-                                    <option disabled>- Modelos personalizados -</option>
-                                )}
+                        <label className="ff-workout-builder-v2-search">
+                            <Search size={18} />
+                            <input
+                                type="search"
+                                placeholder="Buscar exercício, músculo..."
+                                value={quickSearch}
+                                onChange={(event) => setQuickSearch(event.target.value)}
+                            />
+                            {quickSearch && (
+                                <button type="button" onClick={() => setQuickSearch('')} aria-label="Limpar busca">
+                                    <X size={15} />
+                                </button>
+                            )}
+                        </label>
 
-                                {customSetModels.map((model) => (
-                                    <option key={model.id} value={model.id}>
-                                        {model.name} - {model.sets.length} séries
+                        <div className="ff-workout-builder-v2-chips" aria-label="Filtros de exercícios">
+                            <button
+                                type="button"
+                                className={quickFavoritesOnly ? 'is-active is-favorite' : ''}
+                                onClick={() => setQuickFavoritesOnly((current) => !current)}
+                            >
+                                <Star size={14} fill={quickFavoritesOnly ? 'currentColor' : 'none'} />
+                                Favoritos
+                            </button>
+                            <button
+                                type="button"
+                                className={!quickGroupFilter ? 'is-active' : ''}
+                                onClick={() => setQuickGroupFilter('')}
+                            >
+                                Todos
+                            </button>
+                            {muscleGroups.slice(0, 9).map((group) => (
+                                <button
+                                    key={group}
+                                    type="button"
+                                    className={quickGroupFilter === group ? 'is-active' : ''}
+                                    onClick={() => setQuickGroupFilter(group)}
+                                >
+                                    {group}
+                                </button>
+                            ))}
+                        </div>
+
+                        <label className="ff-workout-builder-v2-field ff-workout-builder-v2-field--compact">
+                            <span>Equipamento</span>
+                            <select
+                                value={quickEquipmentFilter}
+                                onChange={(event) => setQuickEquipmentFilter(event.target.value)}
+                            >
+                                <option value="">Todos</option>
+                                {equipmentList.map((item) => (
+                                    <option key={item} value={item}>
+                                        {item}
                                     </option>
                                 ))}
                             </select>
+                        </label>
 
-                            {customSetModels.length > 0 && (
-                                <div className="mt-4 space-y-2">
-                                    <p className="text-xs font-bold uppercase tracking-wide text-zinc-500">
-                                        Modelos personalizados
-                                    </p>
-
-                                    {customSetModels.map((model) => (
-                                        <div
-                                            key={model.id}
-                                            className="flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-950 p-3"
-                                        >
-                                            <div>
-                                                <p className="text-sm font-bold">{model.name}</p>
-
-                                                <p className="text-xs text-zinc-500">
-                                                    {model.sets.length} itens
-                                                </p>
-                                            </div>
-
-                                            <button
-                                                type="button"
-                                                onClick={() => handleDeleteSetModel(model.id)}
-                                                className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-500/10 text-red-400 transition hover:bg-red-500/20"
-                                            >
-                                                x
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+                        <div className="ff-workout-builder-v2-library-stats">
+                            <span>{filteredQuickExercises.length} encontrados</span>
+                            <span>{favoriteExercisesCount} favoritos</span>
+                            <span>{selectedFolder?.name || 'Sem pasta'}</span>
                         </div>
-                    </Card>
 
-                    <Card>
-                        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                                <h2 className="text-xl font-bold">Biblioteca</h2>
-
-                                <p className="mt-1 text-sm text-zinc-500">
-                                    Favoritos e exercícios recentes aparecem primeiro para montar treinos mais rápido.
-                                </p>
-
-                                <div className="mt-2 flex flex-wrap gap-2">
-                                    <Badge>
-                                        {filteredQuickExercises.length} encontrados
-                                    </Badge>
-
-                                    {filteredQuickExercises.length > visibleQuickExercises.length && (
-                                        <Badge>
-                                            exibindo {visibleQuickExercises.length}
-                                        </Badge>
-                                    )}
-
-                                    {favoriteExercisesCount > 0 && (
-                                        <Badge>
-                                             {favoriteExercisesCount} favoritos
-                                        </Badge>
-                                    )}
+                        <div className="ff-workout-builder-v2-library-list">
+                            {visibleQuickExercises.length === 0 ? (
+                                <div className="ff-workout-builder-v2-library-empty">
+                                    Nenhum exercício encontrado.
                                 </div>
-                            </div>
+                            ) : (
+                                visibleQuickExercises.slice(0, 18).map((exercise) => {
+                                    const alreadyAdded = isExerciseAlreadyAdded(exercise.id)
+                                    const recentInfo = exercise.__recentInfo
+
+                                    return (
+                                        <button
+                                            key={exercise.id}
+                                            type="button"
+                                            onClick={() => handlePickExercise(exercise.id)}
+                                            className={alreadyAdded ? 'is-added' : ''}
+                                            disabled={alreadyAdded}
+                                        >
+                                            <ExerciseMedia exercise={exercise} size="sm" />
+                                            <span>
+                                                <strong>{exercise.name}</strong>
+                                                <small>{exercise.muscleGroup} · {exercise.equipment}</small>
+                                                <em>
+                                                    {exercise.isFavorite && 'Favorito'}
+                                                    {exercise.isFavorite && recentInfo?.lastUsedAt && ' · '}
+                                                    {recentInfo?.lastUsedAt && `Recente ${formatRecentExerciseDate(recentInfo.lastUsedAt)}`}
+                                                </em>
+                                            </span>
+                                            <b>{alreadyAdded ? 'OK' : '+'}</b>
+                                        </button>
+                                    )
+                                })
+                            )}
                         </div>
 
                         <button
                             type="button"
                             onClick={() => setIsExercisePickerOpen(true)}
-                            className="ff-workout-builder-add-exercise-button mb-4 flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)]/12 px-4 text-left text-[var(--ff-text)] shadow-[0_0_24px_var(--ff-accent-shadow)] transition active:scale-[0.98]"
+                            className="ff-workout-builder-v2-full-library-button"
                         >
-                            <span className="min-w-0">
-                                <strong className="block text-base font-black">Adicionar exercício</strong>
-                                <small className="block truncate text-xs font-bold text-[var(--ff-muted)]">
-                                    Buscar, filtrar e tocar para incluir na rotina
-                                </small>
-                            </span>
-                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--ff-accent)] text-white">
-                                <Plus size={20} />
-                            </span>
+                            Ver biblioteca completa
                         </button>
+                    </aside>
+                </section>
 
-                        <div className="hidden space-y-3 xl:block">
-                            <button
-                                type="button"
-                                onClick={() => setQuickFavoritesOnly((current) => !current)}
-                                className={
-                                    quickFavoritesOnly
-                                        ? 'flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-yellow-500/30 bg-yellow-500/10 text-sm font-bold text-yellow-300 transition hover:bg-yellow-500/20'
-                                        : 'flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-950 text-sm font-bold text-zinc-300 transition hover:border-yellow-500/30 hover:text-yellow-300'
-                                }
-                            >
-                                <Star
-                                    size={17}
-                                    fill={quickFavoritesOnly ? 'currentColor' : 'none'}
-                                />
-                                Somente favoritos
-                            </button>
-                            <Select
-                                value={quickEquipmentFilter}
-                                onChange={(event) => setQuickEquipmentFilter(event.target.value)}
-                            >
-                                <option value="">Todos os equipamentos</option>
-
-                                {equipmentList.map((item) => (
-                                    <option key={item} value={item}>
-                                        {item}
-                                    </option>
-                                ))}
-                            </Select>
-
-                            <Select
-                                value={quickGroupFilter}
-                                onChange={(event) => setQuickGroupFilter(event.target.value)}
-                            >
-                                <option value="">Todos os músculos</option>
-
-                                {muscleGroups.map((group) => (
-                                    <option key={group} value={group}>
-                                        {group}
-                                    </option>
-                                ))}
-                            </Select>
-
-                            <div className="flex h-12 items-center gap-3 rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-zinc-400">
-                                <Search size={20} />
-
-                                <input
-                                    type="text"
-                                    placeholder="Procurar exercícios"
-                                    value={quickSearch}
-                                    onChange={(event) => setQuickSearch(event.target.value)}
-                                    className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-500"
-                                />
-
-                                {quickSearch && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setQuickSearch('')}
-                                        className="text-zinc-500 transition hover:text-white"
-                                    >
-                                        <X size={17} />
-                                    </button>
-                                )}
+                {isExercisePickerOpen && (
+                    <div className="ff-workout-builder-v2-picker" role="dialog" aria-modal="true" aria-label="Biblioteca de exercícios">
+                        <div className="ff-workout-builder-v2-picker__panel">
+                            <div className="ff-workout-builder-v2-picker__header">
+                                <button type="button" onClick={() => setIsExercisePickerOpen(false)} aria-label="Voltar">
+                                    <ArrowLeft size={20} />
+                                </button>
+                                <div>
+                                    <p>Biblioteca completa</p>
+                                    <h2>Adicionar exercícios</h2>
+                                </div>
+                                <span>{workoutExercises.length} no treino</span>
                             </div>
-                        </div>
 
-                        <div className="mt-5 hidden max-h-[520px] space-y-2 overflow-y-auto overscroll-contain pr-2 xl:block">
-                            {filteredQuickExercises.length === 0 && (
-                                <EmptyState
-                                    title="Nenhum exercício"
-                                    description="Tente outro filtro ou cadastre um exercício."
-                                />
-                            )}
+                            <div className="ff-workout-builder-v2-picker__tools">
+                                <label className="ff-workout-builder-v2-search">
+                                    <Search size={18} />
+                                    <input
+                                        type="search"
+                                        placeholder="Buscar por nome, músculo ou equipamento"
+                                        value={quickSearch}
+                                        onChange={(event) => setQuickSearch(event.target.value)}
+                                    />
+                                    {quickSearch && (
+                                        <button type="button" onClick={() => setQuickSearch('')} aria-label="Limpar busca">
+                                            <X size={15} />
+                                        </button>
+                                    )}
+                                </label>
 
-                            {visibleQuickExercises.map((exercise) => {
-                                const alreadyAdded = isExerciseAlreadyAdded(exercise.id)
-                                const recentInfo = exercise.__recentInfo
-
-                                return (
+                                <div className="ff-workout-builder-v2-chips">
                                     <button
-                                        key={exercise.id}
                                         type="button"
-                                        onClick={() => {
-                                            if (alreadyAdded) return
-                                            handleQuickAddExercise(exercise.id)
-                                        }}
-                                        className={
-                                            exercise.isFavorite
-                                                ? 'flex w-full items-center gap-3 rounded-2xl border border-yellow-500/20 bg-yellow-500/5 p-3 text-left transition hover:bg-yellow-500/10'
-                                                : 'flex w-full items-center gap-3 rounded-2xl p-3 text-left transition hover:bg-zinc-900'
-                                        }
+                                        className={quickFavoritesOnly ? 'is-active is-favorite' : ''}
+                                        onClick={() => setQuickFavoritesOnly((current) => !current)}
                                     >
-                                        <span
-                                            className={
-                                                alreadyAdded
-                                                    ? 'flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white'
-                                                    : 'flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--ff-accent)] text-white'
-                                            }
-                                        >
-                                            {alreadyAdded ? 'OK' : '+'}
-                                        </span>
-
-                                        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-zinc-700 bg-white">
-                                            {exercise.mediaUrl ? (
-                                                <img
-                                                    src={exercise.mediaUrl}
-                                                    alt={exercise.name}
-                                                    className="h-full w-full object-cover"
-                                                    loading="lazy"
-                                                    decoding="async"
-                                                />
-                                            ) : (
-                                                <Dumbbell size={24} className="text-zinc-900" />
-                                            )}
-                                        </div>
-
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex items-center gap-2">
-                                                <p className="truncate font-bold">
-                                                    {exercise.name}
-                                                </p>
-
-                                                {exercise.isFavorite && (
-                                                    <span className="shrink-0 text-yellow-300">
-                                                        
-                                                    </span>
-                                                )}
-                                            </div>
-
-                                            <p className="text-sm text-zinc-500">
-                                                {exercise.muscleGroup}
-                                            </p>
-
-                                            <div className="mt-1 flex flex-wrap gap-1.5">
-                                                {exercise.isFavorite && (
-                                                    <span className="rounded-full bg-yellow-500/10 px-2 py-0.5 text-[10px] font-bold text-yellow-300">
-                                                         Favorito
-                                                    </span>
-                                                )}
-
-                                                {recentInfo?.lastUsedAt && (
-                                                    <span className="rounded-full bg-[var(--ff-accent-soft)]/10 px-2 py-0.5 text-[10px] font-bold text-[var(--ff-accent-text)]">
-                                                        Recente • {formatRecentExerciseDate(recentInfo.lastUsedAt)}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
+                                        <Star size={14} fill={quickFavoritesOnly ? 'currentColor' : 'none'} />
+                                        Favoritos
                                     </button>
-                                )
-                            })}
-                        </div>
-
-                        <div className="mt-5 hidden rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-                            <h3 className="font-bold">Modo personalizado</h3>
-
-                            <p className="mt-1 text-sm text-zinc-500">
-                                Monte séries manualmente antes de adicionar.
-                            </p>
-
-                            <div className="mt-4 space-y-3">
-                                <Select
-                                    value={selectedExercise}
-                                    onChange={(event) => setSelectedExercise(event.target.value)}
-                                >
-                                    <option value="">Selecione um exercício</option>
-
-                                    {sortedExercisesForSelect.map((exercise) => (
-                                            <option key={exercise.id} value={exercise.id}>
-                                                {exercise.isFavorite ? ' ' : ''}{exercise.name}
-                                            </option>
-                                        ))}
-                                </Select>
-
-                                <Input
-                                    placeholder="Ex: Aquecimento ou 8-12 Rep"
-                                    value={setDescription}
-                                    onChange={(event) => setSetDescription(event.target.value)}
-                                />
-
-                                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                                    <Button
+                                    <button
                                         type="button"
-                                        variant="secondary"
-                                        onClick={handleAddSet}
-                                        className="w-full"
+                                        className={!quickGroupFilter ? 'is-active' : ''}
+                                        onClick={() => setQuickGroupFilter('')}
                                     >
-                                        Série
-                                    </Button>
-
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        onClick={handleDefaultSets}
-                                        className="w-full"
-                                    >
-                                        Padrão
-                                    </Button>
-
-                                    <Button
-                                        type="button"
-                                        onClick={handleAddExercise}
-                                        className="w-full"
-                                    >
-                                        Adicionar
-                                    </Button>
+                                        Todos
+                                    </button>
+                                    {muscleGroups.map((group) => (
+                                        <button
+                                            key={group}
+                                            type="button"
+                                            className={quickGroupFilter === group ? 'is-active' : ''}
+                                            onClick={() => setQuickGroupFilter(group)}
+                                        >
+                                            {group}
+                                        </button>
+                                    ))}
                                 </div>
 
-                                {exerciseSets.length > 0 && (
-                                    <div className="space-y-2">
-                                        {exerciseSets.map((set, index) => (
-                                            <div
-                                                key={set.id}
-                                                className="flex items-center justify-between rounded-xl bg-zinc-900 p-3"
-                                            >
-                                                <p className="text-sm">
-                                                    {set.type === 'warmup' ? 'Aquecimento' : `Série ${index + 1}`}: {set.description}
-                                                </p>
+                                <select
+                                    value={quickEquipmentFilter}
+                                    onChange={(event) => setQuickEquipmentFilter(event.target.value)}
+                                    className="ff-workout-builder-v2-picker__select"
+                                >
+                                    <option value="">Todos os equipamentos</option>
+                                    {equipmentList.map((item) => (
+                                        <option key={item} value={item}>
+                                            {item}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
 
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleRemoveSet(set.id)}
-                                                    className="text-red-400"
-                                                >
-                                                    <X size={16} />
-                                                </button>
-                                            </div>
-                                        ))}
+                            <div className="ff-workout-builder-v2-picker__list">
+                                {visibleQuickExercises.length === 0 ? (
+                                    <div className="ff-workout-builder-v2-library-empty">
+                                        Nenhum exercício encontrado. Tente limpar os filtros.
                                     </div>
+                                ) : (
+                                    visibleQuickExercises.map((exercise) => {
+                                        const alreadyAdded = isExerciseAlreadyAdded(exercise.id)
+                                        const recentInfo = exercise.__recentInfo
+
+                                        return (
+                                            <button
+                                                key={exercise.id}
+                                                type="button"
+                                                onClick={() => handlePickExercise(exercise.id)}
+                                                className={alreadyAdded ? 'is-added' : ''}
+                                                disabled={alreadyAdded}
+                                            >
+                                                <ExerciseMedia exercise={exercise} />
+                                                <span>
+                                                    <strong>{exercise.name}</strong>
+                                                    <small>{exercise.muscleGroup} · {exercise.equipment}</small>
+                                                    <em>
+                                                        {exercise.isFavorite && 'Favorito'}
+                                                        {exercise.isFavorite && recentInfo?.lastUsedAt && ' · '}
+                                                        {recentInfo?.lastUsedAt && `Recente ${formatRecentExerciseDate(recentInfo.lastUsedAt)}`}
+                                                    </em>
+                                                </span>
+                                                <b>{alreadyAdded ? 'Adicionado' : 'Adicionar'}</b>
+                                            </button>
+                                        )
+                                    })
                                 )}
                             </div>
-                        </div>
-                    </Card>
-                </div>
-            </section>
 
-            {isExercisePickerOpen && (
-                <div className="ff-workout-exercise-picker-sheet" role="dialog" aria-modal="true" aria-label="Adicionar exercícios">
-                    <div className="ff-workout-exercise-picker-sheet__panel">
-                        <div className="ff-workout-exercise-picker-sheet__header">
-                            <button
-                                type="button"
-                                onClick={() => setIsExercisePickerOpen(false)}
-                                aria-label="Voltar"
-                            >
-                                <ArrowLeft size={20} />
-                            </button>
-
-                            <div className="min-w-0">
-                                <p>Biblioteca</p>
-                                <h2>Adicionar exercícios</h2>
-                            </div>
-                        </div>
-
-                        <div className="ff-workout-exercise-picker-sheet__tools">
-                            <label className="ff-workout-exercise-picker-sheet__search">
-                                <Search size={18} />
-                                <input
-                                    type="search"
-                                    placeholder="Buscar exercício, músculo ou equipamento"
-                                    value={quickSearch}
-                                    onChange={(event) => setQuickSearch(event.target.value)}
-                                />
-                                {quickSearch && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setQuickSearch('')}
-                                        aria-label="Limpar busca"
-                                    >
-                                        <X size={16} />
-                                    </button>
-                                )}
-                            </label>
-
-                            <div className="ff-workout-exercise-picker-sheet__chips" aria-label="Filtros rápidos">
-                                <button
-                                    type="button"
-                                    className={quickFavoritesOnly ? 'is-active is-favorite' : ''}
-                                    onClick={() => setQuickFavoritesOnly((current) => !current)}
-                                >
-                                    <Star size={14} fill={quickFavoritesOnly ? 'currentColor' : 'none'} />
-                                    Favoritos
+                            <div className="ff-workout-builder-v2-picker__footer">
+                                <button type="button" onClick={() => setIsExercisePickerOpen(false)}>
+                                    Concluir
                                 </button>
-                                <button
-                                    type="button"
-                                    className={!quickGroupFilter ? 'is-active' : ''}
-                                    onClick={() => setQuickGroupFilter('')}
-                                >
-                                    Todos
-                                </button>
-                                {muscleGroups.map((group) => (
-                                    <button
-                                        key={group}
-                                        type="button"
-                                        className={quickGroupFilter === group ? 'is-active' : ''}
-                                        onClick={() => setQuickGroupFilter(group)}
-                                    >
-                                        {group}
-                                    </button>
-                                ))}
                             </div>
-
-                            <select
-                                value={quickEquipmentFilter}
-                                onChange={(event) => setQuickEquipmentFilter(event.target.value)}
-                                className="ff-workout-exercise-picker-sheet__select"
-                            >
-                                <option value="">Todos os equipamentos</option>
-                                {equipmentList.map((item) => (
-                                    <option key={item} value={item}>
-                                        {item}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="ff-workout-exercise-picker-sheet__list">
-                            {filteredQuickExercises.length === 0 && (
-                                <EmptyState
-                                    title="Nenhum exercício"
-                                    description="Tente outro filtro ou cadastre um exercício."
-                                />
-                            )}
-
-                            {visibleQuickExercises.map((exercise) => {
-                                const alreadyAdded = isExerciseAlreadyAdded(exercise.id)
-                                const recentInfo = exercise.__recentInfo
-
-                                return (
-                                    <button
-                                        key={exercise.id}
-                                        type="button"
-                                        onClick={() => {
-                                            if (alreadyAdded) return
-                                            handleQuickAddExercise(exercise.id)
-                                            setIsExercisePickerOpen(false)
-                                        }}
-                                        className={alreadyAdded ? 'is-added' : ''}
-                                    >
-                                        <span className="ff-workout-exercise-picker-sheet__media">
-                                            {exercise.mediaUrl ? (
-                                                <img
-                                                    src={exercise.mediaUrl}
-                                                    alt={exercise.name}
-                                                    loading="lazy"
-                                                    decoding="async"
-                                                />
-                                            ) : (
-                                                <Dumbbell size={24} />
-                                            )}
-                                        </span>
-
-                                        <span className="ff-workout-exercise-picker-sheet__copy">
-                                            <strong>{exercise.name}</strong>
-                                            <small>{exercise.muscleGroup} · {exercise.equipment}</small>
-                                            <span>
-                                                {exercise.isFavorite && <em>Favorito</em>}
-                                                {recentInfo?.lastUsedAt && (
-                                                    <em>Recente {formatRecentExerciseDate(recentInfo.lastUsedAt)}</em>
-                                                )}
-                                            </span>
-                                        </span>
-
-                                        <span className="ff-workout-exercise-picker-sheet__add">
-                                            {alreadyAdded ? 'OK' : '+'}
-                                        </span>
-                                    </button>
-                                )
-                            })}
-                        </div>
-
-                        <div className="ff-workout-exercise-picker-sheet__footer">
-                            <button type="button" onClick={() => setIsExercisePickerOpen(false)}>
-                                Concluir
-                            </button>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            <div className="fixed inset-x-0 bottom-0 z-30 border-t border-zinc-800 bg-black/90 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-xl sm:hidden">
-                <div className="grid grid-cols-[48px_1fr] gap-2">
-                    <button
-                        type="button"
-                        onClick={closeBuilder}
-                        className="flex h-12 items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-950 text-zinc-300 transition active:scale-95"
-                        aria-label="Fechar criação de treino"
-                    >
-                        <X size={20} />
+                <div className="ff-workout-builder-v2-mobile-footer">
+                    <button type="button" onClick={closeBuilder} aria-label="Fechar">
+                        <X size={19} />
                     </button>
-
-                    <button
-                        type="submit"
-                        className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-black text-white shadow-[0_0_20px_var(--ff-accent-shadow)] transition active:scale-[0.98]"
-                    >
+                    <button type="button" onClick={() => setIsExercisePickerOpen(true)}>
+                        <Plus size={18} />
+                        Exercício
+                    </button>
+                    <button type="submit" disabled={!canSubmit}>
                         <Save size={18} />
-                        Salvar treino
+                        Salvar
                     </button>
                 </div>
-            </div>
-        </form>
-    </div>
-</div>
+            </form>
+        </div>
     )
 }
 
 export default WorkoutBuilderModal
-

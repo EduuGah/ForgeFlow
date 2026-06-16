@@ -579,7 +579,7 @@ function Workouts() {
         const newWorkoutExercise = {
             id: crypto.randomUUID(),
             exercise: exerciseFound,
-            sets: [getInitialManualSet()],
+            sets: getDefaultSets(defaultSetModel),
             note: '',
             restTimer: appSettings.defaultRestTimer || 'Desligado',
         }
@@ -617,6 +617,61 @@ function Workouts() {
 
     function handleRemoveExercise(id) {
         setWorkoutExercises(workoutExercises.filter((item) => item.id !== id))
+    }
+
+    function cloneWorkoutSet(set) {
+        return {
+            ...set,
+            id: crypto.randomUUID(),
+        }
+    }
+
+    function handleDuplicateWorkoutExercise(id) {
+        const currentIndex = workoutExercises.findIndex((item) => item.id === id)
+        if (currentIndex === -1) return
+
+        const original = workoutExercises[currentIndex]
+        const duplicatedExercise = {
+            ...original,
+            id: crypto.randomUUID(),
+            sets: Array.isArray(original.sets)
+                ? original.sets.map(cloneWorkoutSet)
+                : [getInitialManualSet()],
+            note: original.note || '',
+        }
+
+        const nextExercises = [...workoutExercises]
+        nextExercises.splice(currentIndex + 1, 0, duplicatedExercise)
+        setWorkoutExercises(nextExercises)
+    }
+
+    function handleApplySetModelToWorkoutExercise(id, model = defaultSetModel) {
+        setWorkoutExercises(
+            workoutExercises.map((item) =>
+                item.id === id
+                    ? {
+                        ...item,
+                        sets: getDefaultSets(model),
+                    }
+                    : item
+            )
+        )
+    }
+
+    function handleClearWorkoutExercises() {
+        if (workoutExercises.length === 0) return
+
+        setConfirmModal({
+            title: 'Limpar exercícios?',
+            description: 'Todos os exercícios adicionados nesta criação serão removidos, mas o treino salvo anteriormente não será apagado até você salvar novamente.',
+            confirmText: 'Limpar',
+            variant: 'danger',
+            onConfirm: () => {
+                setWorkoutExercises([])
+                setConfirmModal(null)
+                showToast('success', 'Plano limpo', 'Você pode montar a rotina novamente.')
+            },
+        })
     }
 
     function handleMoveWorkoutExercise(id, direction) {
@@ -1057,6 +1112,9 @@ function Workouts() {
                 isExerciseAlreadyAdded={isExerciseAlreadyAdded}
                 formatRecentExerciseDate={formatRecentExerciseDate}
                 handleQuickAddExercise={handleQuickAddExercise}
+                handleDuplicateWorkoutExercise={handleDuplicateWorkoutExercise}
+                handleApplySetModelToWorkoutExercise={handleApplySetModelToWorkoutExercise}
+                handleClearWorkoutExercises={handleClearWorkoutExercises}
                 handleAddSet={handleAddSet}
                 handleDefaultSets={handleDefaultSets}
                 handleAddExercise={handleAddExercise}
