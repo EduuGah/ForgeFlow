@@ -3459,7 +3459,7 @@
     overflow: hidden;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
-    line-clamp: 2;
+    line-clamp: 2 !important;
   }
 
   .ff-recovery-native-card > .mt-5.grid {
@@ -7978,5 +7978,494 @@ body {
   .ff-dashboard-v2-actions,
   .ff-dashboard-v2-bottom-note {
     grid-column: 1 / -1;
+  }
+}
+
+.ff-dashboard-v2-active {
+  position: sticky;
+  top: 8px;
+  z-index: 12;
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+  width: 100%;
+  border: 1px solid color-mix(in srgb, var(--ff-accent) 42%, transparent);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 92% 0, color-mix(in srgb, var(--ff-accent) 25%, transparent), transparent 44%),
+    linear-gradient(180deg, color-mix(in srgb, var(--ff-card) 96%, white 4%), #090a0d);
+  color: var(--ff-text);
+  padding: 11px;
+  text-align: left;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+}
+
+.ff-dashboard-v2-active__icon {
+  display: flex;
+  width: 46px;
+  height: 46px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: var(--ff-accent);
+  color: #fff;
+}
+
+.ff-dashboard-v2-active__content,
+.ff-dashboard-v2-active__content strong,
+.ff-dashboard-v2-active__content small,
+.ff-dashboard-v2-active__content em {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-dashboard-v2-active__content strong {
+  display: block;
+  margin-top: 5px;
+  color: var(--ff-text);
+  font-size: 16px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.ff-dashboard-v2-active__content small,
+.ff-dashboard-v2-active__content em {
+  display: block;
+  margin-top: 5px;
+  color: var(--ff-muted);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.ff-dashboard-v2-active__side {
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ff-dashboard-v2-active__side strong {
+  color: var(--ff-text);
+  font-size: 14px;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.ff-dashboard-v2-active__side small {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ff-accent) 16%, transparent);
+  color: var(--ff-accent-text);
+  font-size: 10px;
+  font-weight: 950;
+  padding: 4px 7px;
+}
+
+.ff-dashboard-v2-active__bar {
+  position: absolute;
+  inset: auto 10px 7px 10px;
+  overflow: hidden;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.ff-dashboard-v2-active__bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ff-accent);
+}
+
+.ff-dashboard-v2-summary__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.ff-dashboard-v2-summary__grid a {
+  display: grid;
+  min-width: 0;
+  min-height: 92px;
+  align-content: space-between;
+  gap: 6px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--ff-surface-2) 78%, transparent);
+  color: var(--ff-text);
+  padding: 10px;
+  text-decoration: none;
+}
+
+.ff-dashboard-v2-summary__grid a.is-wide {
+  grid-column: 1 / -1;
+  min-height: 72px;
+}
+
+.ff-dashboard-v2-summary__grid svg {
+  color: var(--ff-accent-text);
+}
+
+.ff-dashboard-v2-summary__grid span {
+  overflow: hidden;
+  color: var(--ff-muted);
+  font-size: 10px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ff-dashboard-v2-summary__grid strong {
+  overflow: hidden;
+  color: var(--ff-text);
+  font-size: 14px;
+  font-weight: 950;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-dashboard-v2-next-action {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 22px;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid color-mix(in srgb, var(--ff-accent) 28%, transparent);
+  border-radius: 19px;
+  background: color-mix(in srgb, var(--ff-accent) 10%, var(--ff-card));
+  color: var(--ff-text);
+  padding: 11px;
+  text-decoration: none;
+}
+
+.ff-dashboard-v2-next-action > span {
+  display: flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 15px;
+  background: var(--ff-accent);
+  color: #fff;
+}
+
+.ff-dashboard-v2-next-action div {
+  min-width: 0;
+}
+
+.ff-dashboard-v2-next-action small,
+.ff-dashboard-v2-next-action strong,
+.ff-dashboard-v2-next-action em {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ff-dashboard-v2-next-action small {
+  color: var(--ff-accent-text);
+  font-size: 10px;
+  font-weight: 950;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ff-dashboard-v2-next-action strong {
+  margin-top: 4px;
+  color: var(--ff-text);
+  font-size: 15px;
+  font-weight: 950;
+  line-height: 1.05;
+  white-space: nowrap;
+}
+
+.ff-dashboard-v2-next-action em {
+  display: -webkit-box;
+  margin-top: 5px;
+  -webkit-box-orient: vertical;
+  color: var(--ff-muted);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.ff-dashboard-v2-week__grid small {
+  min-height: 10px;
+  color: var(--ff-muted);
+  font-size: 8.5px;
+  font-weight: 950;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.ff-dashboard-v2-week__grid .is-planned i {
+  outline: 1px solid color-mix(in srgb, var(--ff-accent) 34%, transparent);
+  outline-offset: 2px;
+}
+
+.ff-dashboard-v2-week__grid .is-rest i {
+  background: repeating-linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.12) 0 5px,
+    rgba(255, 255, 255, 0.04) 5px 10px
+  );
+}
+
+.ff-dashboard-v2-advanced {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--ff-border) 78%, transparent);
+  border-radius: 20px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ff-card) 94%, white 6%), var(--ff-card));
+}
+
+.ff-dashboard-v2-advanced summary {
+  display: flex;
+  min-height: 56px;
+  cursor: pointer;
+  list-style: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 13px;
+}
+
+.ff-dashboard-v2-advanced summary::-webkit-details-marker {
+  display: none;
+}
+
+.ff-dashboard-v2-advanced summary span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ff-text);
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.ff-dashboard-v2-advanced[open] summary > svg {
+  transform: rotate(90deg);
+}
+
+.ff-dashboard-v2-advanced__content {
+  display: grid;
+  gap: 10px;
+  padding: 0 10px 10px;
+}
+
+.ff-workout-objective-templates__grid {
+  display: flex;
+  gap: 8px;
+  margin-top: 13px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.ff-workout-objective-templates__grid::-webkit-scrollbar {
+  display: none;
+}
+
+.ff-workout-objective-templates__grid button,
+.ff-workout-builder-order-controls button {
+  border: 1px solid color-mix(in srgb, var(--ff-border) 78%, transparent);
+  background: color-mix(in srgb, var(--ff-surface-2) 86%, transparent);
+  color: var(--ff-text);
+}
+
+.ff-workout-objective-templates__grid button {
+  min-width: max-content;
+  min-height: 38px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 950;
+  padding: 0 12px;
+}
+
+.ff-workout-objective-templates__grid button.is-active {
+  border-color: color-mix(in srgb, var(--ff-accent) 45%, transparent);
+  background: color-mix(in srgb, var(--ff-accent) 16%, transparent);
+  color: var(--ff-accent-text);
+}
+
+.ff-workout-volume-warning {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  border-radius: 18px;
+  background: rgba(245, 158, 11, 0.1);
+  color: #fde68a;
+  padding: 11px;
+}
+
+.ff-workout-volume-warning svg {
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
+  background: rgba(245, 158, 11, 0.12);
+  padding: 9px;
+}
+
+.ff-workout-volume-warning strong,
+.ff-workout-volume-warning span {
+  display: block;
+  min-width: 0;
+}
+
+.ff-workout-volume-warning strong {
+  color: #fff7cc;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.ff-workout-volume-warning span {
+  margin-top: 3px;
+  color: #facc15;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.ff-workout-builder-order-controls {
+  display: grid;
+  grid-template-columns: repeat(2, 34px);
+  gap: 5px;
+}
+
+.ff-workout-builder-order-controls button {
+  display: flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+}
+
+.ff-workout-builder-order-controls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.ff-water-manual-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.ff-water-manual-form input,
+.ff-water-manual-form button {
+  min-height: 42px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.ff-water-manual-form input {
+  min-width: 0;
+  border: 1px solid var(--ff-border);
+  background: var(--ff-surface-2);
+  color: var(--ff-text);
+  outline: none;
+  padding: 0 12px;
+}
+
+.ff-water-manual-form button {
+  border: 0;
+  background: var(--ff-accent);
+  color: white;
+  padding: 0 12px;
+}
+
+.ff-quick-water-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.ff-quick-water-button-muted:not(:disabled):hover,
+.ff-quick-water-button-muted:not(:disabled):focus-visible {
+  border-color: rgba(248, 113, 113, 0.35) !important;
+  background: rgba(248, 113, 113, 0.12) !important;
+  color: #fecaca !important;
+}
+
+.ff-nutrition-history-strip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  align-items: end;
+  gap: 6px;
+}
+
+.ff-nutrition-history-strip > div {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  flex-direction: column;
+  gap: 6px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--ff-surface-2) 78%, transparent);
+  padding: 7px 4px;
+}
+
+.ff-nutrition-history-strip span,
+.ff-nutrition-history-strip strong,
+.ff-nutrition-history-strip small {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-nutrition-history-strip span,
+.ff-nutrition-history-strip small {
+  color: var(--ff-muted);
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.ff-nutrition-history-strip strong {
+  color: var(--ff-text);
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.ff-nutrition-history-strip i {
+  display: block;
+  width: 12px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ff-accent) 62%, #38bdf8);
+}
+
+/* Mobile app visual pass shared by pages still using older structures. */
+@media (max-width: 720px) {
+  .ff-hevy-page:not(.ff-dashboard-v2) {
+    gap: 12px !important;
+    max-width: 680px !important;
+    margin: 0 auto !important;
+  }
+
+  .ff-hevy-page:not(.ff-dashboard-v2) :is(.ff-native-card, .ff-workout-native-card, .ff-history-feed-card, .ff-calendar-session-card, .ff-goal-card, .ff-notification-card, .ff-profile-panel, .ff-page-mobile-main-grid > section, .ff-page-mobile-main-grid > article) {
+    border-radius: 18px !important;
+    box-shadow: none !important;
+  }
+
+  .ff-hevy-page:not(.ff-dashboard-v2) :is(.ff-native-page-intro, .ff-page-legacy-intro, .ff-nutrition-dashboard, .ff-workouts-list-panel, .ff-calendar-main-card) {
+    border-radius: 20px !important;
+  }
+
+  .ff-hevy-page:not(.ff-dashboard-v2) :is(h1) {
+    letter-spacing: 0 !important;
+  }
+
+  .ff-hevy-page:not(.ff-dashboard-v2) :is(h2, h3) {
+    letter-spacing: 0 !important;
+    line-height: 1.05 !important;
   }
 }

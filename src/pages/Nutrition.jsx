@@ -30,6 +30,7 @@ import Textarea from '../components/ui/Textarea'
 import {
   addMeal,
   addWater,
+  getNutritionHistory,
   getTodayNutrition,
   removeMeal,
   setWater,
@@ -186,6 +187,7 @@ function Nutrition() {
     photo: null,
   })
   const [photoError, setPhotoError] = useState('')
+  const [manualWaterMl, setManualWaterMl] = useState('')
   const [goals, setGoals] = useState(() => ({
     waterGoalMl: getTodayNutrition().waterGoalMl,
     calorieGoal: getTodayNutrition().calorieGoal,
@@ -210,9 +212,19 @@ function Nutrition() {
       fat: Math.round((fat / total) * 100),
     }
   }, [nutrition.carbsG, nutrition.fatG, nutrition.proteinG])
+  const nutritionHistory = useMemo(() => getNutritionHistory(7), [nutrition])
 
   function handleAddWater(amount) {
     setNutrition(addWater(amount))
+  }
+
+  function handleAddManualWater(event) {
+    event.preventDefault()
+    const amount = Math.max(0, Number(manualWaterMl) || 0)
+    if (!amount) return
+
+    setNutrition(addWater(amount))
+    setManualWaterMl('')
   }
 
   function handleAddMeal(event) {
@@ -366,17 +378,70 @@ function Nutrition() {
                   </Button>
                 </div>
                 <div className="mt-4 grid grid-cols-3 gap-2">
-                  {[250, 500, 750].map((amount) => (
+                  {[250, 500, 700].map((amount) => (
                     <button key={amount} type="button" onClick={() => handleAddWater(amount)} className="ff-quick-water-button">
                       +{amount}ml
                     </button>
                   ))}
                 </div>
+                <form onSubmit={handleAddManualWater} className="ff-water-manual-form">
+                  <input
+                    type="number"
+                    min="1"
+                    inputMode="numeric"
+                    placeholder="Ex: 350ml"
+                    value={manualWaterMl}
+                    onChange={(event) => setManualWaterMl(event.target.value)}
+                  />
+                  <button type="submit">Adicionar</button>
+                </form>
                 <div className="mt-2 grid grid-cols-2 gap-2">
-                  <button type="button" onClick={() => handleAddWater(-250)} className="ff-quick-water-button ff-quick-water-button-muted">-250ml</button>
-                  <button type="button" onClick={() => handleAddWater(-500)} className="ff-quick-water-button ff-quick-water-button-muted">-500ml</button>
+                  <button
+                    type="button"
+                    onClick={() => handleAddWater(-250)}
+                    disabled={Number(nutrition.waterMl || 0) <= 0}
+                    title="Remover 250ml"
+                    className="ff-quick-water-button ff-quick-water-button-muted"
+                  >
+                    -250ml
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleAddWater(-500)}
+                    disabled={Number(nutrition.waterMl || 0) <= 0}
+                    title="Remover 500ml"
+                    className="ff-quick-water-button ff-quick-water-button-muted"
+                  >
+                    -500ml
+                  </button>
                 </div>
               </div>
+            </div>
+          </Card>
+
+          <Card className="ff-nutrition-history-card p-4 sm:p-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--ff-accent-text)]">Historico</p>
+                <h2 className="mt-1 text-xl font-black">Ultimos 7 dias</h2>
+              </div>
+              <Badge>{Math.round(nutritionHistory.reduce((total, day) => total + Number(day.calories || 0), 0) / Math.max(1, nutritionHistory.length))} kcal/dia</Badge>
+            </div>
+
+            <div className="ff-nutrition-history-strip">
+              {nutritionHistory.slice().reverse().map((day) => {
+                const waterDone = clampPercent(day.waterMl, day.waterGoalMl)
+                const dayDate = new Date(`${day.date}T12:00:00`)
+
+                return (
+                  <div key={day.date} className={day.meals?.length ? 'is-complete' : ''}>
+                    <span>{dayDate.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '')}</span>
+                    <strong>{dayDate.getDate()}</strong>
+                    <i style={{ height: `${Math.max(12, waterDone * 0.56)}px` }} />
+                    <small>{day.meals?.length || 0} ref.</small>
+                  </div>
+                )
+              })}
             </div>
           </Card>
 

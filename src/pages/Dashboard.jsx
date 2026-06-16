@@ -2,9 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   Activity,
+  Beef,
   Bell,
   CalendarCheck,
   ChevronRight,
+  Droplets,
   Dumbbell,
   Flame,
   Gauge,
@@ -36,9 +38,9 @@ import {
   getTodayScheduledWorkout,
   getWorkoutName,
   normalizeWeeklySchedule,
+  WEEK_DAYS,
 } from '../utils/workoutScheduleUtils'
-
-const DAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab']
+import { getTodayNutrition } from '../services/nutritionService'
 
 function toNumber(value) {
   return Number(value) || 0
@@ -74,6 +76,23 @@ function getSessionExerciseCount(session) {
   return Array.isArray(session?.exercises) ? session.exercises.length : 0
 }
 
+function getWorkoutExerciseCount(workout) {
+  return Array.isArray(workout?.exercises) ? workout.exercises.length : 0
+}
+
+function formatClock(seconds) {
+  const total = Math.max(0, Number(seconds) || 0)
+  const hours = Math.floor(total / 3600)
+  const minutes = Math.floor((total % 3600) / 60)
+  const secs = total % 60
+
+  if (hours > 0) {
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+  }
+
+  return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+}
+
 function formatCompactNumber(value, suffix = '') {
   const number = toNumber(value)
 
@@ -93,9 +112,12 @@ function getWeeklyTarget(profile, user) {
   return Math.max(1, Number(fromProfile || fromUser || 4))
 }
 
-function buildLastSevenDays(history) {
+function buildCurrentWeekDays(history, weeklySchedule) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
+  const monday = new Date(today)
+  const todayDay = today.getDay() || 7
+  monday.setDate(today.getDate() - todayDay + 1)
 
   const sessionsByDay = new Map()
 
@@ -108,20 +130,60 @@ function buildLastSevenDays(history) {
     sessionsByDay.set(key, (sessionsByDay.get(key) || 0) + 1)
   })
 
-  return Array.from({ length: 7 }, (_, index) => {
-    const date = new Date(today)
-    date.setDate(today.getDate() - (6 - index))
+  const normalizedSchedule = normalizeWeeklySchedule(weeklySchedule)
+
+  return WEEK_DAYS.map((day, index) => {
+    const date = new Date(monday)
+    date.setDate(monday.getDate() + index)
     const key = getDateKey(date)
     const total = sessionsByDay.get(key) || 0
+    const entry = normalizedSchedule[day.key] || { type: 'empty' }
 
     return {
       key,
       total,
-      label: DAY_LABELS[date.getDay()],
+      label: day.short,
       day: date.getDate(),
       isToday: key === getDateKey(today),
+      planned: entry.type === 'workout',
+      rest: entry.type === 'rest',
     }
   })
+}
+
+function getActiveWorkoutInfo(activeSession, completedSets, totalSets) {
+  if (!activeSession) return null
+
+  const currentExercise =
+    activeSession.exercises?.find((exercise) =>
+      (exercise.sets || []).some((set) => !set.completed && set.type !== 'warmup')
+    ) || activeSession.exercises?.[0]
+
+  const currentExerciseName =
+    currentExercise?.exercise?.name ||
+    currentExercise?.exerciseName ||
+    currentExercise?.name ||
+    'Proximo exercicio'
+
+  const currentWorkingSets = (currentExercise?.sets || []).filter(
+    (set) => set.type !== 'warmup'
+  )
+  const nextIncompleteSetIndex = currentWorkingSets.findIndex((set) => !set.completed)
+  const activeSetIndex = nextIncompleteSetIndex >= 0
+    ? nextIncompleteSetIndex
+    : Math.max(0, currentWorkingSets.length - 1)
+  const currentSetLabel = currentWorkingSets.length > 0
+    ? `Serie ${activeSetIndex + 1}/${currentWorkingSets.length}`
+    : `${completedSets}/${totalSets} series`
+  const nextSet = currentWorkingSets[activeSetIndex]
+
+  return {
+    currentExerciseName,
+    currentSetLabel,
+    nextSet,
+    exerciseCount: activeSession.exercises?.length || 0,
+    progress: totalSets ? Math.min(100, Math.round((completedSets / totalSets) * 100)) : 0,
+  }
 }
 
 function DashboardMetricCard({ icon: Icon, label, value, detail, tone = 'default' }) {
@@ -201,6 +263,163 @@ function DashboardHero({
         </Link>
       </div>
     </section>
+  )
+}
+
+function DashboardActiveWorkoutCard({ activeSession, elapsedSeconds, completedSets, totalSets }) {
+  const navigate = useNavigate()
+  const activeInfo = getActiveWorkoutInfo(activeSession, completedSets, totalSets)
+
+  if (!activeSession || !activeInfo) return null
+
+  return (
+    <button
+      type="button"
+      onClick={() => navigate('/start-workout')}
+      className="ff-dashboard-v2-active"
+    >
+      <span className="ff-dashboard-v2-active__icon">
+        <Dumbbell size={22} />
+      </span>
+
+      <span className="ff-dashboard-v2-active__content">
+        <span className="ff-dashboard-v2-eyebrow">
+          <Activity size={13} />
+          Treino em andamento
+        </span>
+        <strong>Continuar {activeSession.workoutName || 'treino'}</strong>
+        <small>{activeInfo.currentSetLabel} - {activeInfo.currentExerciseName}</small>
+        <em>
+          Proxima serie: {activeInfo.nextSet?.plannedDescription || activeInfo.nextSet?.description || 'registrar kg e reps'}
+        </em>
+      </span>
+
+      <span className="ff-dashboard-v2-active__side">
+        <strong>{formatClock(elapsedSeconds)}</strong>
+        <small>{activeInfo.progress}%</small>
+      </span>
+
+      <span className="ff-dashboard-v2-active__bar">
+        <i style={{ width: `${activeInfo.progress}%` }} />
+      </span>
+    </button>
+  )
+}
+
+function DashboardTodaySummary({
+  todayPlan,
+  nutrition,
+  dashboardGoals,
+  criticalRecovery,
+}) {
+  const mainGoal = dashboardGoals[0]
+  const plannedWorkoutName = todayPlan?.workout
+    ? getWorkoutName(todayPlan.workout)
+    : todayPlan?.entry?.type === 'rest'
+      ? 'Descanso'
+      : 'Livre'
+
+  return (
+    <section className="ff-dashboard-v2-panel ff-dashboard-v2-summary">
+      <div className="ff-dashboard-v2-section-title">
+        <div>
+          <span>Resumo de hoje</span>
+          <h2>O que importa agora</h2>
+        </div>
+      </div>
+
+      <div className="ff-dashboard-v2-summary__grid">
+        <Link to="/schedule">
+          <CalendarCheck size={17} />
+          <span>Planejado</span>
+          <strong>{plannedWorkoutName}</strong>
+        </Link>
+
+        <Link to="/nutrition">
+          <Droplets size={17} />
+          <span>Agua</span>
+          <strong>{formatCompactNumber(nutrition.waterMl, 'ml')}</strong>
+        </Link>
+
+        <Link to="/nutrition">
+          <Beef size={17} />
+          <span>Kcal / Prot.</span>
+          <strong>{nutrition.calories} / {nutrition.proteinG}g</strong>
+        </Link>
+
+        <Link to="/goals">
+          <Target size={17} />
+          <span>Meta</span>
+          <strong>{mainGoal ? `${Math.round(toNumber(mainGoal.progressPercent))}%` : 'Criar'}</strong>
+        </Link>
+
+        <Link to="/muscle-recovery" className="is-wide">
+          <Gauge size={17} />
+          <span>Recuperacao critica</span>
+          <strong>
+            {criticalRecovery
+              ? `${criticalRecovery.muscleGroup} - ${Math.round(toNumber(criticalRecovery.recoveryPercent))}%`
+              : 'Sem alerta muscular'}
+          </strong>
+        </Link>
+      </div>
+    </section>
+  )
+}
+
+function DashboardNextAction({
+  activeSession,
+  todayPlan,
+  nutrition,
+  criticalRecovery,
+  recentPRs,
+}) {
+  const waterLeft = Math.max(0, toNumber(nutrition.waterGoalMl) - toNumber(nutrition.waterMl))
+  let label = 'Proxima melhor acao'
+  let title = 'Escolha uma acao para manter ritmo'
+  let description = 'Treino, agua, meta ou recuperacao: mantenha o dia simples.'
+  let to = '/workouts'
+  let Icon = Zap
+
+  if (activeSession) {
+    title = 'Continue o treino ativo'
+    description = 'Seu treino ainda esta aberto. Finalize as series antes de sair do ritmo.'
+    to = '/start-workout'
+    Icon = Dumbbell
+  } else if (todayPlan?.workout) {
+    title = `Hoje e dia de ${getWorkoutName(todayPlan.workout)}`
+    description = `${getWorkoutExerciseCount(todayPlan.workout)} exercicio(s) planejado(s) na agenda.`
+    to = '/workouts'
+    Icon = CalendarCheck
+  } else if (waterLeft > 0 && waterLeft <= 750) {
+    title = `Faltam ${waterLeft}ml para sua meta de agua`
+    description = 'Um copo agora ja fecha boa parte da meta do dia.'
+    to = '/nutrition'
+    Icon = Droplets
+  } else if (criticalRecovery) {
+    title = `Evite forcar ${criticalRecovery.muscleGroup} hoje`
+    description = `Recuperacao estimada em ${Math.round(toNumber(criticalRecovery.recoveryPercent))}%.`
+    to = '/muscle-recovery'
+    Icon = Gauge
+  } else if (recentPRs.length > 0) {
+    title = `Voce esta perto de novos PRs`
+    description = `${recentPRs[0]?.exerciseName || 'Um exercicio'} apareceu nos recordes recentes.`
+    to = '/exercise-progress'
+    Icon = Trophy
+  }
+
+  return (
+    <Link to={to} className="ff-dashboard-v2-next-action">
+      <span>
+        <Icon size={20} />
+      </span>
+      <div>
+        <small>{label}</small>
+        <strong>{title}</strong>
+        <em>{description}</em>
+      </div>
+      <ChevronRight size={18} />
+    </Link>
   )
 }
 
@@ -330,8 +549,8 @@ function DashboardWeekStrip({ days }) {
     <section className="ff-dashboard-v2-panel ff-dashboard-v2-week">
       <div className="ff-dashboard-v2-section-title">
         <div>
-          <span>Consistencia</span>
-          <h2>Ultimos 7 dias</h2>
+          <span>Semana</span>
+          <h2>Agenda e treinos</h2>
         </div>
         <Link to="/calendar">Calendario</Link>
       </div>
@@ -340,12 +559,18 @@ function DashboardWeekStrip({ days }) {
         {days.map((day) => (
           <div
             key={day.key}
-            className={day.total > 0 ? 'is-trained' : day.isToday ? 'is-today' : ''}
+            className={[
+              day.total > 0 ? 'is-trained' : '',
+              day.planned ? 'is-planned' : '',
+              day.rest ? 'is-rest' : '',
+              day.isToday ? 'is-today' : '',
+            ].filter(Boolean).join(' ')}
             style={{ '--ff-day-height': `${Math.max(18, (day.total / max) * 58)}px` }}
           >
             <span>{day.label}</span>
             <div><i /></div>
             <strong>{day.day}</strong>
+            <small>{day.total > 0 ? 'feito' : day.rest ? 'off' : day.planned ? 'plan' : ''}</small>
           </div>
         ))}
       </div>
@@ -523,7 +748,14 @@ function DashboardQuickActions() {
 function Dashboard() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const { startSession } = useWorkoutSession()
+  const {
+    activeSession,
+    elapsedSeconds,
+    completedSets,
+    totalSets,
+    startSession,
+  } = useWorkoutSession()
+  const [dashboardSettings, setDashboardSettings] = useState(() => getUserAppSettings(user))
 
   const {
     exercises,
@@ -574,11 +806,63 @@ function Dashboard() {
     workouts,
   })
 
+  useEffect(() => {
+    if (!user) return undefined
+
+    let isMounted = true
+    setDashboardSettings(getUserAppSettings(user))
+
+    async function loadDashboardSettings() {
+      try {
+        const remoteSettings = await apiFetch('/settings')
+        if (!isMounted) return
+
+        setDashboardSettings(saveUserAppSettings(user, {
+          ...getUserAppSettings(user),
+          ...remoteSettings,
+        }))
+      } catch {
+        if (isMounted) setDashboardSettings(getUserAppSettings(user))
+      }
+    }
+
+    loadDashboardSettings()
+
+    function handleSettingsChanged(event) {
+      setDashboardSettings(event.detail || getUserAppSettings(user))
+    }
+
+    window.addEventListener('forgeflow:settings-changed', handleSettingsChanged)
+
+    return () => {
+      isMounted = false
+      window.removeEventListener('forgeflow:settings-changed', handleSettingsChanged)
+    }
+  }, [user])
+
+  const weeklySchedule = useMemo(
+    () => normalizeWeeklySchedule(dashboardSettings.weeklySchedule),
+    [dashboardSettings.weeklySchedule]
+  )
+  const todayPlan = useMemo(
+    () => getTodayScheduledWorkout({ schedule: weeklySchedule, workouts }),
+    [weeklySchedule, workouts]
+  )
+  const nutritionToday = useMemo(() => getTodayNutrition(), [])
+  const criticalRecovery = useMemo(() => {
+    return muscleRecovery
+      .filter((item) => Number.isFinite(Number(item.recoveryPercent)))
+      .slice()
+      .sort((a, b) => toNumber(a.recoveryPercent) - toNumber(b.recoveryPercent))[0] || null
+  }, [muscleRecovery])
   const weeklyTarget = useMemo(() => getWeeklyTarget(profile, user), [profile, user])
   const weeklyProgress = useMemo(() => {
     return Math.min(100, Math.round((toNumber(consistencyStats.workoutsLast7Days) / weeklyTarget) * 100))
   }, [consistencyStats.workoutsLast7Days, weeklyTarget])
-  const lastSevenDays = useMemo(() => buildLastSevenDays(history), [history])
+  const currentWeekDays = useMemo(
+    () => buildCurrentWeekDays(history, weeklySchedule),
+    [history, weeklySchedule]
+  )
   const recentSessions = useMemo(() => history.slice(0, 3), [history])
 
   async function handleStartWorkout(workout) {
@@ -608,6 +892,30 @@ function Dashboard() {
         lastWorkoutVolume={lastWorkoutVolume}
         loadingDashboard={loadingDashboard}
         dashboardSource={dashboardSource}
+      />
+
+      <DashboardActiveWorkoutCard
+        activeSession={activeSession}
+        elapsedSeconds={elapsedSeconds}
+        completedSets={completedSets}
+        totalSets={totalSets}
+      />
+
+      <DashboardWeekStrip days={currentWeekDays} />
+
+      <DashboardTodaySummary
+        todayPlan={todayPlan}
+        nutrition={nutritionToday}
+        dashboardGoals={dashboardGoals}
+        criticalRecovery={criticalRecovery}
+      />
+
+      <DashboardNextAction
+        activeSession={activeSession}
+        todayPlan={todayPlan}
+        nutrition={nutritionToday}
+        criticalRecovery={criticalRecovery}
+        recentPRs={recentPRs}
       />
 
       <DashboardTodayWorkout
@@ -644,17 +952,27 @@ function Dashboard() {
         />
       </section>
 
-      <DashboardWeekStrip days={lastSevenDays} />
+      <details className="ff-dashboard-v2-advanced">
+        <summary>
+          <span>
+            <TrendingUp size={17} />
+            Estatisticas avancadas
+          </span>
+          <ChevronRight size={17} />
+        </summary>
 
-      <DashboardMiniChart volumeByWorkout={volumeByWorkout} />
+        <div className="ff-dashboard-v2-advanced__content">
+          <DashboardMiniChart volumeByWorkout={volumeByWorkout} />
 
-      <DashboardFocusCards
-        strongestMuscleGroup={strongestMuscleGroup}
-        heaviestExercise={heaviestExercise}
-        bestVolumeSet={bestVolumeSet}
-        mostRecoveredMuscles={mostRecoveredMuscles}
-        recentPRs={recentPRs}
-      />
+          <DashboardFocusCards
+            strongestMuscleGroup={strongestMuscleGroup}
+            heaviestExercise={heaviestExercise}
+            bestVolumeSet={bestVolumeSet}
+            mostRecoveredMuscles={mostRecoveredMuscles}
+            recentPRs={recentPRs}
+          />
+        </div>
+      </details>
 
       <DashboardGoalsAlerts
         dashboardGoals={dashboardGoals}

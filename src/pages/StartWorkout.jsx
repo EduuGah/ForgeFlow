@@ -552,8 +552,12 @@ function StartWorkout() {
   }
 
   function handleCompleteSet(sessionExercise, setId) {
+    const currentSet = (sessionExercise.sets || []).find((set) => set.id === setId)
+    const wasCompleted = Boolean(currentSet?.completed)
+
     toggleSetCompleted(sessionExercise.id, setId)
 
+    if (wasCompleted) return
     if (!appSettings.autoStartRestTimer) return
 
     const seconds = getRestSeconds(sessionExercise.restTimer)

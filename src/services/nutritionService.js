@@ -1,8 +1,22 @@
 const STORAGE_KEY = 'forgeflow:nutrition:v2'
 const LEGACY_STORAGE_KEY = 'forgeflow:nutrition:v1'
 
+function getBrazilDateKey(date = new Date()) {
+  try {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Sao_Paulo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(date)
+  } catch {
+    const offsetDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000))
+    return offsetDate.toISOString().slice(0, 10)
+  }
+}
+
 function todayKey() {
-  return new Date().toISOString().slice(0, 10)
+  return getBrazilDateKey()
 }
 
 function clampNumber(value, fallback = 0, min = 0, max = Number.MAX_SAFE_INTEGER) {
@@ -113,9 +127,11 @@ export function saveTodayNutrition(day) {
 
 export function addWater(amountMl = 250) {
   const current = getTodayNutrition()
+  const nextWater = clampNumber(current.waterMl, 0) + clampNumber(amountMl, 0, -5000, 5000)
+
   return saveTodayNutrition({
     ...current,
-    waterMl: clampNumber(current.waterMl, 0) + clampNumber(amountMl, 0, -5000, 5000),
+    waterMl: clampNumber(nextWater, 0),
   })
 }
 
@@ -154,5 +170,22 @@ export function updateNutritionGoals({ waterGoalMl, calorieGoal, proteinGoalG })
     waterGoalMl: Math.max(500, Number(waterGoalMl) || current.waterGoalMl),
     calorieGoal: Math.max(500, Number(calorieGoal) || current.calorieGoal),
     proteinGoalG: Math.max(20, Number(proteinGoalG) || current.proteinGoalG),
+  })
+}
+
+export function getNutritionHistory(days = 14) {
+  const all = readAll()
+  const today = new Date()
+
+  return Array.from({ length: days }, (_, index) => {
+    const date = new Date(today)
+    date.setDate(today.getDate() - index)
+    const key = getBrazilDateKey(date)
+
+    return recalculateTotals({
+      ...getDefaultDay(),
+      ...(all[key] || {}),
+      date: key,
+    })
   })
 }

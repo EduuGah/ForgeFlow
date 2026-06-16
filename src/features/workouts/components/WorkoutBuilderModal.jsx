@@ -2,6 +2,8 @@ import { useState } from 'react'
 
 import {
     ArrowLeft,
+    ArrowDown,
+    ArrowUp,
     Dumbbell,
     Flame,
     Plus,
@@ -19,6 +21,15 @@ import Select from '../../../components/ui/Select'
 import Textarea from '../../../components/ui/Textarea'
 import Badge from '../../../components/ui/Badge'
 import EmptyState from '../../../components/ui/EmptyState'
+
+const WORKOUT_OBJECTIVE_TEMPLATES = [
+    { id: 'hypertrophy', label: 'Hipertrofia', name: 'Hipertrofia A', model: 'hypertrophy' },
+    { id: 'strength', label: 'Forca', name: 'Forca A', model: 'strength' },
+    { id: 'cutting', label: 'Cutting', name: 'Cutting Full Body', model: 'beginner' },
+    { id: 'beginner', label: 'Iniciante', name: 'Treino iniciante', model: 'beginner' },
+    { id: 'arms', label: 'Foco braco', name: 'Superiores - bracos', model: 'hypertrophy' },
+    { id: 'upper', label: 'Superiores', name: 'Upper A', model: 'pyramid' },
+]
 
 function WorkoutBuilderModal({
     isOpen,
@@ -60,6 +71,7 @@ function WorkoutBuilderModal({
     handleUpdateExerciseNote,
     handleUpdateWorkoutSetDescription,
     handleRemoveExercise,
+    handleMoveWorkoutExercise,
     handleAddSetToWorkoutExercise,
     handleToggleWorkoutSetWarmup,
     handleRemoveSetFromWorkoutExercise,
@@ -161,6 +173,34 @@ function WorkoutBuilderModal({
                         </div>
                     </Card>
 
+                    <Card className="ff-workout-objective-templates">
+                        <div className="min-w-0">
+                            <p className="text-xs font-black uppercase tracking-[0.14em] text-[var(--ff-accent-text)]">
+                                Modelos por objetivo
+                            </p>
+                            <h2 className="mt-1 text-xl font-black">Comece com uma base</h2>
+                            <p className="mt-1 text-sm text-[var(--ff-muted)]">
+                                Escolha o objetivo e depois adicione exercicios pela biblioteca.
+                            </p>
+                        </div>
+
+                        <div className="ff-workout-objective-templates__grid">
+                            {WORKOUT_OBJECTIVE_TEMPLATES.map((template) => (
+                                <button
+                                    key={template.id}
+                                    type="button"
+                                    className={defaultSetModel === template.model ? 'is-active' : ''}
+                                    onClick={() => {
+                                        if (!workoutName.trim()) setWorkoutName(template.name)
+                                        setDefaultSetModel(template.model)
+                                    }}
+                                >
+                                    {template.label}
+                                </button>
+                            ))}
+                        </div>
+                    </Card>
+
                     {workoutExercises.length === 0 && (
                         <EmptyState
                             icon={Dumbbell}
@@ -203,6 +243,25 @@ function WorkoutBuilderModal({
                                     <p className="mt-1 text-xs text-zinc-500">
                                         {item.exercise.muscleGroup} • {item.exercise.equipment}
                                     </p>
+                                </div>
+
+                                <div className="ff-workout-builder-order-controls">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleMoveWorkoutExercise(item.id, 'up')}
+                                        disabled={index === 0}
+                                        aria-label="Mover exercicio para cima"
+                                    >
+                                        <ArrowUp size={15} />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleMoveWorkoutExercise(item.id, 'down')}
+                                        disabled={index === workoutExercises.length - 1}
+                                        aria-label="Mover exercicio para baixo"
+                                    >
+                                        <ArrowDown size={15} />
+                                    </button>
                                 </div>
 
                                 <button
@@ -308,6 +367,16 @@ function WorkoutBuilderModal({
                             </div>
                         </Card>
                     ))}
+
+                    {totalSetsInCurrentWorkout >= 28 && (
+                        <div className="ff-workout-volume-warning">
+                            <Flame size={18} />
+                            <div>
+                                <strong>Treino muito volumoso</strong>
+                                <span>Esse treino tem {totalSetsInCurrentWorkout} series. Pode ficar longo demais.</span>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <div className="space-y-6 xl:col-span-2">
@@ -344,7 +413,7 @@ function WorkoutBuilderModal({
                             <Dumbbell size={48} className="text-zinc-600" />
                         </div>
 
-                        <div className="mt-5">
+                        <div className="mt-5 hidden">
                             <div className="mb-2 flex items-center justify-between gap-3">
                                 <label className="block text-sm font-bold text-zinc-300">
                                     Modelo padrão de séries
@@ -622,7 +691,7 @@ function WorkoutBuilderModal({
                             })}
                         </div>
 
-                        <div className="mt-5 rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+                        <div className="mt-5 hidden rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
                             <h3 className="font-bold">Modo personalizado</h3>
 
                             <p className="mt-1 text-sm text-zinc-500">

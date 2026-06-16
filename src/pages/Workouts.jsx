@@ -575,7 +575,7 @@ function Workouts() {
         const newWorkoutExercise = {
             id: crypto.randomUUID(),
             exercise: exerciseFound,
-            sets: [getInitialManualSet()],
+            sets: createDefaultWorkoutSets(defaultSetModel, customSetModels),
             note: '',
             restTimer: appSettings.defaultRestTimer || 'Desligado',
         }
@@ -613,6 +613,19 @@ function Workouts() {
 
     function handleRemoveExercise(id) {
         setWorkoutExercises(workoutExercises.filter((item) => item.id !== id))
+    }
+
+    function handleMoveWorkoutExercise(id, direction) {
+        const currentIndex = workoutExercises.findIndex((item) => item.id === id)
+        if (currentIndex === -1) return
+
+        const nextIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
+        if (nextIndex < 0 || nextIndex >= workoutExercises.length) return
+
+        const nextExercises = [...workoutExercises]
+        const [movedExercise] = nextExercises.splice(currentIndex, 1)
+        nextExercises.splice(nextIndex, 0, movedExercise)
+        setWorkoutExercises(nextExercises)
     }
 
     function handleUpdateExerciseNote(id, value) {
@@ -1020,6 +1033,7 @@ function Workouts() {
                 handleUpdateExerciseNote={handleUpdateExerciseNote}
                 handleUpdateWorkoutSetDescription={handleUpdateWorkoutSetDescription}
                 handleRemoveExercise={handleRemoveExercise}
+                handleMoveWorkoutExercise={handleMoveWorkoutExercise}
                 handleAddSetToWorkoutExercise={handleAddSetToWorkoutExercise}
                 handleToggleWorkoutSetWarmup={handleToggleWorkoutSetWarmup}
                 handleRemoveSetFromWorkoutExercise={handleRemoveSetFromWorkoutExercise}

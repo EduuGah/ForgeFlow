@@ -35,6 +35,8 @@ import {
 import { WorkoutSessionContext } from './workoutSession/WorkoutSessionContextValue'
 export { useWorkoutSession } from './useWorkoutSession'
 
+const PENDING_WORKOUT_SYNC_KEY = 'forgeflow:pending-workout-sync:v1'
+
 export function WorkoutSessionProvider({ children }) {
   const { user } = useAuth()
 
@@ -47,6 +49,69 @@ export function WorkoutSessionProvider({ children }) {
   const hasCompletedInitialLoadRef = useRef(false)
   const lastRemotePollRef = useRef(0)
   const lastRemoteSaveHashRef = useRef('')
+
+  function getUserSyncId() {
+    return String(user?.id || user?._id || user?.email || 'anonymous')
+  }
+
+  function readPendingWorkoutSyncQueue() {
+    if (typeof window === 'undefined') return []
+
+    try {
+      const parsed = JSON.parse(window.localStorage.getItem(PENDING_WORKOUT_SYNC_KEY) || '[]')
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  }
+
+  function savePendingWorkoutSyncQueue(queue) {
+    if (typeof window === 'undefined') return
+    window.localStorage.setItem(PENDING_WORKOUT_SYNC_KEY, JSON.stringify(queue.slice(0, 30)))
+  }
+
+  function queuePendingWorkoutSync(payload, sessionId) {
+    const queue = readPendingWorkoutSyncQueue()
+    const syncItem = {
+      id: sessionId || payload?.session?.id || safeCryptoId(),
+      userId: getUserSyncId(),
+      payload,
+      queuedAt: nowIso(),
+    }
+
+    savePendingWorkoutSyncQueue([
+      syncItem,
+      ...queue.filter((item) => item.id !== syncItem.id),
+    ])
+  }
+
+  async function flushPendingWorkoutSyncQueue() {
+    if (!user) return
+
+    const userId = getUserSyncId()
+    const queue = readPendingWorkoutSyncQueue()
+    const userQueue = queue.filter((item) => item.userId === userId)
+
+    if (userQueue.length === 0) return
+
+    const failedIds = new Set()
+
+    for (const item of userQueue) {
+      try {
+        await apiFetch('/workout-history', {
+          method: 'POST',
+          body: JSON.stringify(item.payload),
+        })
+      } catch (error) {
+        console.error('Erro ao sincronizar treino pendente:', error)
+        failedIds.add(item.id)
+      }
+    }
+
+    savePendingWorkoutSyncQueue(
+      queue.filter((item) => item.userId !== userId || failedIds.has(item.id))
+    )
+  }
 
   function persistActiveSessionLocally(session) {
     if (!session) {
@@ -806,12 +871,17 @@ export function WorkoutSessionProvider({ children }) {
       console.error(error)
 
       saveUserStorageData(user, 'history', [{ ...finishedSession, location: options.location || null }, ...history])
+      queuePendingWorkoutSync(payload, finishedSession.id)
 
       rememberFinishedActiveSession(finishedSession.id)
       persistActiveSessionLocally(null)
       setActiveSession(null)
 
-      await clearActiveSessionFromApi()
+      try {
+        await clearActiveSessionFromApi()
+      } catch (clearError) {
+        console.error('Erro ao limpar treino ativo remoto depois do salvamento local:', clearError)
+      }
 
       return { ...finishedSession, location: options.location || null }
     } finally {
@@ -828,6 +898,22 @@ export function WorkoutSessionProvider({ children }) {
   const totalSets = useMemo(() => {
     return countTotalWorkingSets(activeSession)
   }, [activeSession])
+
+  useEffect(() => {
+    if (!user) return undefined
+
+    flushPendingWorkoutSyncQueue()
+
+    function handleOnline() {
+      flushPendingWorkoutSyncQueue()
+    }
+
+    window.addEventListener('online', handleOnline)
+
+    return () => {
+      window.removeEventListener('online', handleOnline)
+    }
+  }, [user])
 
   return (
     <WorkoutSessionContext.Provider
