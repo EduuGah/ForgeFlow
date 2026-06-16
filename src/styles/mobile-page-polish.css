@@ -8710,3 +8710,234 @@ body {
     font-size: 16px !important;
   }
 }
+
+.ff-water-safe-hint {
+  margin-top: 0.55rem;
+  color: var(--ff-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.ff-nutrition-day-history-list {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 1rem;
+  max-height: 19rem;
+  overflow-y: auto;
+  padding-right: 0.15rem;
+}
+
+.ff-nutrition-day-history-list article {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr) minmax(0, 0.8fr);
+  gap: 0.55rem;
+  align-items: center;
+  border: 1px solid var(--ff-mobile-border);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--ff-surface-2) 80%, transparent);
+  padding: 0.72rem;
+}
+
+.ff-nutrition-day-history-list article.is-today {
+  border-color: color-mix(in srgb, var(--ff-accent) 42%, var(--ff-border));
+  background: color-mix(in srgb, var(--ff-accent) 11%, var(--ff-surface-2));
+}
+
+.ff-nutrition-day-history-list strong,
+.ff-nutrition-day-history-list span {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-nutrition-day-history-list strong {
+  color: var(--ff-text);
+  font-size: 0.82rem;
+  font-weight: 950;
+}
+
+.ff-nutrition-day-history-list span {
+  margin-top: 0.15rem;
+  color: var(--ff-muted);
+  font-size: 0.68rem;
+  font-weight: 850;
+}
+
+.ff-nutrition-routine-step {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 3.9rem minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 0.6rem;
+  align-items: center;
+  border: 1px solid var(--ff-mobile-border);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--ff-surface-2) 82%, transparent);
+  padding: 0.78rem;
+  text-align: left;
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+.ff-nutrition-routine-step:hover,
+.ff-nutrition-routine-step:focus-visible {
+  border-color: color-mix(in srgb, var(--ff-accent) 42%, var(--ff-border));
+  background: color-mix(in srgb, var(--ff-accent) 10%, var(--ff-surface-2));
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.ff-nutrition-routine-step span {
+  color: var(--ff-accent-text);
+  font-size: 0.76rem;
+  font-weight: 950;
+}
+
+.ff-nutrition-routine-step strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ff-text);
+  font-size: 0.88rem;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-nutrition-routine-step small {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ff-muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .ff-nutrition-day-history-list article {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ff-nutrition-routine-step {
+    grid-template-columns: 3.6rem minmax(0, 1fr);
+  }
+
+  .ff-nutrition-routine-step small {
+    grid-column: 2;
+  }
+}
+
+.ff-goal-exercise-picker-field > div:first-child button {
+  min-height: 2.35rem;
+  border: 1px solid color-mix(in srgb, var(--ff-accent) 36%, var(--ff-border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ff-accent) 12%, transparent);
+  color: var(--ff-accent-text);
+  padding: 0 0.85rem;
+  font-size: 0.76rem;
+  font-weight: 950;
+}
+
+.ff-goal-selected-exercise-card,
+.ff-goal-empty-exercise-picker,
+.ff-goal-exercise-option {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.8rem;
+  border: 1px solid var(--ff-mobile-border);
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--ff-card) 75%, var(--ff-surface-2));
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.ff-goal-selected-exercise-card {
+  margin-top: 0.65rem;
+}
+
+.ff-goal-selected-exercise-card > span,
+.ff-goal-exercise-option__media {
+  display: flex;
+  width: 3.35rem;
+  height: 3.35rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 18px;
+  background: var(--ff-surface-3);
+  color: var(--ff-muted);
+}
+
+.ff-goal-selected-exercise-card img,
+.ff-goal-exercise-option__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ff-goal-selected-exercise-card strong,
+.ff-goal-selected-exercise-card small,
+.ff-goal-exercise-option strong,
+.ff-goal-exercise-option small {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-goal-selected-exercise-card strong,
+.ff-goal-exercise-option strong {
+  color: var(--ff-text);
+  font-size: 0.9rem;
+  font-weight: 950;
+}
+
+.ff-goal-selected-exercise-card small,
+.ff-goal-exercise-option small {
+  margin-top: 0.18rem;
+  color: var(--ff-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.ff-goal-empty-exercise-picker {
+  margin-top: 0.65rem;
+  justify-content: center;
+  color: var(--ff-accent-text);
+  font-size: 0.86rem;
+  font-weight: 950;
+}
+
+.ff-goal-exercise-library__list {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.ff-goal-exercise-option {
+  position: relative;
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+.ff-goal-exercise-option:hover,
+.ff-goal-exercise-option:focus-visible,
+.ff-goal-exercise-option.is-selected {
+  border-color: color-mix(in srgb, var(--ff-accent) 44%, var(--ff-border));
+  background: color-mix(in srgb, var(--ff-accent) 10%, var(--ff-card));
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.ff-goal-exercise-option em {
+  margin-left: auto;
+  border-radius: 999px;
+  background: var(--ff-accent);
+  color: white;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.62rem;
+  font-style: normal;
+  font-weight: 950;
+  text-transform: uppercase;
+}

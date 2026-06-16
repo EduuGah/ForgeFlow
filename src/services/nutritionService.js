@@ -1,7 +1,9 @@
+import { apiFetch } from './api'
+
 const STORAGE_KEY = 'forgeflow:nutrition:v2'
 const LEGACY_STORAGE_KEY = 'forgeflow:nutrition:v1'
 
-function getBrazilDateKey(date = new Date()) {
+export function getBrazilDateKey(date = new Date()) {
   try {
     return new Intl.DateTimeFormat('en-CA', {
       timeZone: 'America/Sao_Paulo',
@@ -25,9 +27,13 @@ function clampNumber(value, fallback = 0, min = 0, max = Number.MAX_SAFE_INTEGER
   return Math.min(max, Math.max(min, number))
 }
 
-function getDefaultDay() {
+function createId() {
+  return globalThis.crypto?.randomUUID?.() || String(Date.now())
+}
+
+function getDefaultDay(date = todayKey()) {
   return {
-    date: todayKey(),
+    date,
     waterMl: 0,
     waterGoalMl: 2500,
     calories: 0,
@@ -65,7 +71,7 @@ function saveAll(data) {
 
 function normalizeMeal(input = {}) {
   return {
-    id: input.id || globalThis.crypto?.randomUUID?.() || String(Date.now()),
+    id: input.id || createId(),
     name: String(input.name || 'Refeição').trim() || 'Refeição',
     type: String(input.type || 'meal'),
     calories: clampNumber(input.calories, 0),
@@ -95,17 +101,39 @@ function recalculateTotals(day) {
   }, { calories: 0, proteinG: 0, carbsG: 0, fatG: 0 })
 
   return {
+    ...getDefaultDay(day.date || todayKey()),
     ...day,
     meals,
     ...totals,
+    waterMl: clampNumber(day.waterMl, 0),
+    waterGoalMl: clampNumber(day.waterGoalMl, 2500, 500),
+    calorieGoal: clampNumber(day.calorieGoal, 2600, 500),
+    proteinGoalG: clampNumber(day.proteinGoalG, 160, 20),
   }
+}
+
+function saveDayToLocal(day) {
+  const all = readAll()
+  const normalized = recalculateTotals(day)
+  all[normalized.date || todayKey()] = normalized
+  saveAll(all)
+  return normalized
+}
+
+function saveManyDaysToLocal(days = []) {
+  const all = readAll()
+  days.forEach((day) => {
+    if (!day?.date) return
+    all[day.date] = recalculateTotals(day)
+  })
+  saveAll(all)
 }
 
 export function getTodayNutrition() {
   const key = todayKey()
   const all = readAll()
   return recalculateTotals({
-    ...getDefaultDay(),
+    ...getDefaultDay(key),
     ...(all[key] || {}),
     date: key,
   })
@@ -113,16 +141,13 @@ export function getTodayNutrition() {
 
 export function saveTodayNutrition(day) {
   const key = todayKey()
-  const all = readAll()
   const next = recalculateTotals({
-    ...getDefaultDay(),
+    ...getDefaultDay(key),
     ...day,
     date: key,
     updatedAt: new Date().toISOString(),
   })
-  all[key] = next
-  saveAll(all)
-  return next
+  return saveDayToLocal(next)
 }
 
 export function addWater(amountMl = 250) {
@@ -183,9 +208,33 @@ export function getNutritionHistory(days = 14) {
     const key = getBrazilDateKey(date)
 
     return recalculateTotals({
-      ...getDefaultDay(),
+      ...getDefaultDay(key),
       ...(all[key] || {}),
       date: key,
     })
   })
+}
+
+export async function loadNutritionFromDatabase(days = 30) {
+  const data = await apiFetch(`/nutrition?days=${encodeURIComponent(days)}`)
+  const history = Array.isArray(data?.history) ? data.history.map(recalculateTotals) : []
+  const today = data?.today ? recalculateTotals(data.today) : history[0] || getTodayNutrition()
+
+  saveManyDaysToLocal([today, ...history])
+
+  return {
+    source: data?.source || 'database',
+    today,
+    history,
+  }
+}
+
+export async function saveNutritionDayToDatabase(day) {
+  const normalized = recalculateTotals(day || getTodayNutrition())
+  const saved = await apiFetch(`/nutrition/day/${normalized.date || todayKey()}`, {
+    method: 'PUT',
+    body: JSON.stringify(normalized),
+  })
+
+  return saveDayToLocal(saved)
 }

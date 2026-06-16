@@ -13,6 +13,7 @@ export function normalizeGoal(goal) {
     direction: goal.direction || 'increase',
     period: goal.period || 'none',
     exerciseName: goal.exerciseName || '',
+    exerciseId: goal.exerciseId || '',
     deadline: goal.deadline ? String(goal.deadline).slice(0, 10) : '',
     completedAt: goal.completedAt || null,
     baselineValue: Number(goal.baselineValue) || 0,

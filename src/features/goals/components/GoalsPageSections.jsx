@@ -192,6 +192,7 @@ export default function GoalsPageSections({
   isModalOpen,
   modalGoal,
   exerciseOptions,
+  exercises,
   confirmModal,
   toast,
   onRefresh,
@@ -236,6 +237,7 @@ export default function GoalsPageSections({
         open={isModalOpen}
         goal={modalGoal}
         exerciseOptions={exerciseOptions}
+        exercises={exercises}
         onClose={onCloseModal}
         onSubmit={onSubmitGoal}
       />

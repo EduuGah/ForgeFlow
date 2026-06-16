@@ -4,6 +4,7 @@ import {
   Dumbbell,
   Flag,
   Info,
+  Search,
   Target,
   Trophy,
   X,
@@ -12,6 +13,7 @@ import {
 import Button from '../ui/Button'
 import Input from '../ui/Input'
 import Textarea from '../ui/Textarea'
+import { getExerciseMedia } from '../../utils/exerciseMediaUtils'
 
 const GOAL_TYPES = [
   {
@@ -137,10 +139,112 @@ function GoalTypeCard({ item, selected, onClick }) {
   )
 }
 
+
+function getExerciseId(exercise = {}) {
+  return String(exercise.id || exercise._id || '')
+}
+
+function getExerciseGroup(exercise = {}) {
+  return exercise.muscleGroup || exercise.targetMuscle || exercise.normalizedGroup || 'Grupo não informado'
+}
+
+function getExerciseEquipment(exercise = {}) {
+  return exercise.equipment || exercise.normalizedEquipment || 'Equipamento livre'
+}
+
+function ExercisePickerModal({ open, exercises = [], selectedExerciseId, search, onSearchChange, onSelect, onClose }) {
+  const filteredExercises = useMemo(() => {
+    const term = search.trim().toLowerCase()
+
+    return exercises
+      .filter((exercise) => {
+        if (!term) return true
+
+        return `${exercise.name || ''} ${getExerciseGroup(exercise)} ${getExerciseEquipment(exercise)}`
+          .toLowerCase()
+          .includes(term)
+      })
+      .sort((a, b) => {
+        if (a.isFavorite && !b.isFavorite) return -1
+        if (!a.isFavorite && b.isFavorite) return 1
+        return String(a.name || '').localeCompare(String(b.name || ''))
+      })
+      .slice(0, 80)
+  }, [exercises, search])
+
+  if (!open) return null
+
+  return (
+    <div className="ff-goal-exercise-library fixed inset-0 z-[95] flex items-end justify-center bg-black/75 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="ff-goal-exercise-library__panel flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-t-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] shadow-2xl sm:rounded-[2rem]">
+        <div className="border-b border-[var(--ff-border)] p-4 sm:p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--ff-accent-text)]">Biblioteca</p>
+              <h3 className="mt-1 text-xl font-black text-[var(--ff-text)]">Escolha o exercício da meta</h3>
+              <p className="mt-1 text-sm text-[var(--ff-muted)]">A meta salva o ID do exercício e mantém o nome apenas para exibição.</p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-muted)]"
+              aria-label="Fechar biblioteca"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <label className="mt-4 flex h-12 items-center gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-[var(--ff-muted)]">
+            <Search size={18} />
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => onSearchChange(event.target.value)}
+              placeholder="Buscar por nome, músculo ou equipamento..."
+              className="w-full bg-transparent text-sm text-[var(--ff-text)] outline-none placeholder:text-[var(--ff-muted)]"
+            />
+          </label>
+        </div>
+
+        <div className="ff-goal-exercise-library__list min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
+          {filteredExercises.length ? filteredExercises.map((exercise) => {
+            const id = getExerciseId(exercise)
+            const selected = id && id === selectedExerciseId
+            const media = getExerciseMedia(exercise)
+
+            return (
+              <button
+                key={id || exercise.name}
+                type="button"
+                onClick={() => onSelect(exercise)}
+                className={selected ? 'ff-goal-exercise-option is-selected' : 'ff-goal-exercise-option'}
+              >
+                <span className="ff-goal-exercise-option__media">
+                  {media ? <img src={media} alt={exercise.name} loading="lazy" /> : <Dumbbell size={22} />}
+                </span>
+                <span className="min-w-0">
+                  <strong>{exercise.name || 'Exercício sem nome'}</strong>
+                  <small>{getExerciseGroup(exercise)} · {getExerciseEquipment(exercise)}</small>
+                </span>
+                {selected && <em>Selecionado</em>}
+              </button>
+            )
+          }) : (
+            <div className="rounded-3xl border border-dashed border-[var(--ff-border)] p-6 text-center text-sm font-bold text-[var(--ff-muted)]">
+              Nenhum exercício encontrado nessa busca.
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function GoalFormModal({
   open,
   goal,
   exerciseOptions = [],
+  exercises = [],
   onClose,
   onSubmit,
 }) {
@@ -151,11 +255,21 @@ function GoalFormModal({
   const [currentValue, setCurrentValue] = useState('')
   const [unit, setUnit] = useState('treinos')
   const [exerciseName, setExerciseName] = useState('')
+  const [exerciseId, setExerciseId] = useState('')
+  const [exerciseSearch, setExerciseSearch] = useState('')
+  const [showExerciseLibrary, setShowExerciseLibrary] = useState(false)
   const [deadline, setDeadline] = useState('')
 
   const selectedConfig = useMemo(() => {
     return getGoalTypeConfig(type)
   }, [type])
+
+  const selectedExercise = useMemo(() => {
+    return exercises.find((exercise) => {
+      const id = getExerciseId(exercise)
+      return (exerciseId && id === exerciseId) || (!exerciseId && exerciseName && exercise.name === exerciseName)
+    }) || null
+  }, [exerciseId, exerciseName, exercises])
 
   useEffect(() => {
     if (!open) return
@@ -168,6 +282,9 @@ function GoalFormModal({
       setCurrentValue(goal.currentValue ? String(goal.currentValue) : '')
       setUnit(goal.unit || getGoalTypeConfig(goal.type).unit || '')
       setExerciseName(goal.exerciseName || '')
+      setExerciseId(goal.exerciseId || '')
+      setExerciseSearch('')
+      setShowExerciseLibrary(false)
       setDeadline(goal.deadline ? String(goal.deadline).slice(0, 10) : '')
       return
     }
@@ -182,6 +299,9 @@ function GoalFormModal({
     setCurrentValue('')
     setUnit(config.unit)
     setExerciseName('')
+    setExerciseId('')
+    setExerciseSearch('')
+    setShowExerciseLibrary(false)
     setDeadline('')
   }, [open, goal])
 
@@ -194,9 +314,23 @@ function GoalFormModal({
     setUnit(config.unit)
     setCurrentValue('')
     setExerciseName('')
+    setExerciseId('')
 
     if (!goal) {
       setTitle(config.titleExample)
+    }
+  }
+
+  function handleSelectExercise(exercise) {
+    const id = getExerciseId(exercise)
+    const name = exercise.name || ''
+
+    setExerciseId(id)
+    setExerciseName(name)
+    setShowExerciseLibrary(false)
+
+    if (!goal && name && (!title || title === selectedConfig.titleExample)) {
+      setTitle(`Bater ${targetValue || selectedConfig.placeholder} ${selectedConfig.unit || ''} em ${name}`.trim())
     }
   }
 
@@ -216,7 +350,7 @@ function GoalFormModal({
     }
 
     if (type === 'exercise_pr_weight' && !exerciseName.trim()) {
-      alert('Informe o exercício da meta.')
+      alert('Escolha um exercício na biblioteca.')
       return
     }
 
@@ -228,6 +362,7 @@ function GoalFormModal({
       currentValue: type === 'custom' ? Number(currentValue || 0) : 0,
       unit,
       exerciseName: type === 'exercise_pr_weight' ? exerciseName.trim() : '',
+      exerciseId: type === 'exercise_pr_weight' ? exerciseId : '',
       direction: selectedConfig.direction,
       period: selectedConfig.period,
       deadline: deadline || null,
@@ -312,17 +447,44 @@ function GoalFormModal({
                   />
 
                   {type === 'exercise_pr_weight' && (
-                    <div>
-                      <label className="text-sm font-bold text-[var(--ff-text)]">
-                        Exercício
-                      </label>
+                    <div className="ff-goal-exercise-picker-field">
+                      <div className="flex items-center justify-between gap-3">
+                        <label className="text-sm font-bold text-[var(--ff-text)]">
+                          Exercício
+                        </label>
+                        <button type="button" onClick={() => setShowExerciseLibrary(true)}>
+                          Abrir biblioteca
+                        </button>
+                      </div>
+
+                      {selectedExercise || exerciseName ? (
+                        <div className="ff-goal-selected-exercise-card">
+                          <span>
+                            {selectedExercise ? <img src={getExerciseMedia(selectedExercise)} alt={selectedExercise.name} loading="lazy" /> : <Dumbbell size={22} />}
+                          </span>
+                          <div>
+                            <strong>{exerciseName}</strong>
+                            <small>{selectedExercise ? `${getExerciseGroup(selectedExercise)} · ${getExerciseEquipment(selectedExercise)}` : 'Selecionado pelo nome. Abra a biblioteca para vincular o ID.'}</small>
+                          </div>
+                        </div>
+                      ) : (
+                        <button type="button" className="ff-goal-empty-exercise-picker" onClick={() => setShowExerciseLibrary(true)}>
+                          <Dumbbell size={20} />
+                          Selecionar exercício na biblioteca
+                        </button>
+                      )}
 
                       <input
                         list="goal-exercises"
                         value={exerciseName}
-                        onChange={(event) => setExerciseName(event.target.value)}
-                        placeholder="Ex: Supino reto com barra"
-                        className="mt-2 h-12 w-full rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-sm text-[var(--ff-text)] outline-none transition placeholder:text-[var(--ff-muted)] focus:border-[var(--ff-accent-border)]"
+                        onChange={(event) => {
+                          const nextName = event.target.value
+                          const matchedExercise = exercises.find((exercise) => exercise.name === nextName)
+                          setExerciseName(nextName)
+                          setExerciseId(matchedExercise ? getExerciseId(matchedExercise) : '')
+                        }}
+                        placeholder="Ou digite para compatibilidade"
+                        className="mt-3 h-12 w-full rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-sm text-[var(--ff-text)] outline-none transition placeholder:text-[var(--ff-muted)] focus:border-[var(--ff-accent-border)]"
                       />
 
                       <datalist id="goal-exercises">
@@ -332,7 +494,7 @@ function GoalFormModal({
                       </datalist>
 
                       <p className="mt-2 text-xs text-[var(--ff-muted)]">
-                        Dica: escreva igual ao nome do exercício salvo na biblioteca para o cálculo ficar certinho.
+                        Melhor opção: escolher pela biblioteca. Assim a meta salva o exerciseId e não depende só do nome.
                       </p>
                     </div>
                   )}
@@ -478,6 +640,16 @@ function GoalFormModal({
           </div>
         </form>
       </div>
+
+      <ExercisePickerModal
+        open={showExerciseLibrary}
+        exercises={exercises}
+        selectedExerciseId={exerciseId}
+        search={exerciseSearch}
+        onSearchChange={setExerciseSearch}
+        onSelect={handleSelectExercise}
+        onClose={() => setShowExerciseLibrary(false)}
+      />
     </div>
   )
 }

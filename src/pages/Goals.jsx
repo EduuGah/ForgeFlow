@@ -376,6 +376,7 @@ function Goals() {
         isModalOpen={isModalOpen}
         modalGoal={modalGoal}
         exerciseOptions={exerciseOptions}
+        exercises={exercises}
         confirmModal={confirmModal}
         toast={toast}
         onRefresh={() => setRefreshKey((key) => key + 1)}

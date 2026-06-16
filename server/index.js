@@ -1019,6 +1019,139 @@ const progressPhotoSchema = new mongoose.Schema(
 )
 
 
+const nutritionMealSchema = new mongoose.Schema(
+    {
+        id: {
+            type: String,
+            required: true,
+        },
+        name: {
+            type: String,
+            default: 'Refeição',
+            trim: true,
+        },
+        type: {
+            type: String,
+            default: 'meal',
+        },
+        calories: {
+            type: Number,
+            default: 0,
+        },
+        proteinG: {
+            type: Number,
+            default: 0,
+        },
+        carbsG: {
+            type: Number,
+            default: 0,
+        },
+        fatG: {
+            type: Number,
+            default: 0,
+        },
+        notes: {
+            type: String,
+            default: '',
+        },
+        time: {
+            type: String,
+            default: '',
+        },
+        photo: {
+            dataUrl: {
+                type: String,
+                default: '',
+            },
+            mimeType: {
+                type: String,
+                default: '',
+            },
+            size: {
+                type: Number,
+                default: 0,
+            },
+            capturedAt: {
+                type: Date,
+                default: null,
+            },
+        },
+        createdAt: {
+            type: Date,
+            default: Date.now,
+        },
+    },
+    {
+        _id: false,
+    }
+)
+
+const nutritionDaySchema = new mongoose.Schema(
+    {
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+            index: true,
+        },
+        date: {
+            type: String,
+            required: true,
+            index: true,
+        },
+        waterMl: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+        waterGoalMl: {
+            type: Number,
+            default: 2500,
+            min: 500,
+        },
+        calories: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+        calorieGoal: {
+            type: Number,
+            default: 2600,
+            min: 500,
+        },
+        proteinG: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+        proteinGoalG: {
+            type: Number,
+            default: 160,
+            min: 20,
+        },
+        carbsG: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+        fatG: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+        meals: {
+            type: [nutritionMealSchema],
+            default: [],
+        },
+    },
+    {
+        timestamps: true,
+    }
+)
+
+nutritionDaySchema.index({ userId: 1, date: 1 }, { unique: true })
+
+
 const goalSchema = new mongoose.Schema(
     {
         userId: {
@@ -1087,6 +1220,12 @@ const goalSchema = new mongoose.Schema(
         exerciseName: {
             type: String,
             default: '',
+        },
+
+        exerciseId: {
+            type: String,
+            default: '',
+            index: true,
         },
 
         direction: {
@@ -1389,6 +1528,7 @@ const WorkoutTemplate = mongoose.model('WorkoutTemplate', workoutTemplateSchema)
 const WorkoutHistory = mongoose.model('WorkoutHistory', workoutHistorySchema)
 const BodyWeight = mongoose.model('BodyWeight', bodyWeightSchema)
 const ProgressPhoto = mongoose.model('ProgressPhoto', progressPhotoSchema)
+const NutritionDay = mongoose.model('NutritionDay', nutritionDaySchema)
 const Goal = mongoose.model('Goal', goalSchema)
 const Notification = mongoose.model('Notification', notificationSchema)
 const ActiveWorkoutSession = mongoose.model('ActiveWorkoutSession', activeWorkoutSessionSchema)
@@ -4830,8 +4970,8 @@ function getMonthlyProgressPhotoCount(progressPhotos = []) {
     }).length
 }
 
-function getExerciseBestWeight(history = [], exerciseName = '') {
-    if (!exerciseName) return 0
+function getExerciseBestWeight(history = [], exerciseName = '', exerciseId = '') {
+    if (!exerciseName && !exerciseId) return 0
 
     let bestWeight = 0
 
@@ -4844,8 +4984,18 @@ function getExerciseBestWeight(history = [], exerciseName = '') {
                 item.name ||
                 item.exerciseName ||
                 ''
+            const currentId = String(
+                item.exerciseId ||
+                item.exercise?.id ||
+                item.exercise?._id ||
+                item.id ||
+                ''
+            )
+            const matchesExercise = exerciseId
+                ? currentId === String(exerciseId)
+                : currentName === exerciseName
 
-            if (currentName !== exerciseName) return
+            if (!matchesExercise) return
 
             const sets = Array.isArray(item.sets) ? item.sets : []
 
@@ -4928,7 +5078,7 @@ async function calculateGoalRawValue(goal, userId) {
     if (type === 'exercise_pr_weight') {
         const history = await WorkoutHistory.find({ userId })
 
-        return getExerciseBestWeight(history, goal.exerciseName)
+        return getExerciseBestWeight(history, goal.exerciseName, goal.exerciseId)
     }
 
     if (type === 'monthly_volume') {
@@ -5440,6 +5590,209 @@ app.delete('/notifications/:id', authMiddleware, async (req, res) => {
     }
 })
 
+
+function getBrazilDateKey(date = new Date()) {
+    try {
+        return new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'America/Sao_Paulo',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+        }).format(date)
+    } catch {
+        const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+        return offsetDate.toISOString().slice(0, 10)
+    }
+}
+
+function isValidNutritionDateKey(value = '') {
+    return /^\d{4}-\d{2}-\d{2}$/.test(String(value || ''))
+}
+
+function clampNutritionNumber(value, fallback = 0, min = 0, max = Number.MAX_SAFE_INTEGER) {
+    const number = Number(value)
+
+    if (!Number.isFinite(number)) return fallback
+
+    return Math.min(max, Math.max(min, number))
+}
+
+function getDefaultNutritionDay(date = getBrazilDateKey()) {
+    return {
+        date,
+        waterMl: 0,
+        waterGoalMl: 2500,
+        calories: 0,
+        calorieGoal: 2600,
+        proteinG: 0,
+        proteinGoalG: 160,
+        carbsG: 0,
+        fatG: 0,
+        meals: [],
+    }
+}
+
+function normalizeNutritionMeal(input = {}) {
+    return {
+        id: String(input.id || crypto.randomUUID()),
+        name: String(input.name || 'Refeição').trim().slice(0, 120) || 'Refeição',
+        type: String(input.type || 'meal').slice(0, 40),
+        calories: clampNutritionNumber(input.calories, 0, 0, 10000),
+        proteinG: clampNutritionNumber(input.proteinG, 0, 0, 1000),
+        carbsG: clampNutritionNumber(input.carbsG, 0, 0, 1000),
+        fatG: clampNutritionNumber(input.fatG, 0, 0, 1000),
+        notes: String(input.notes || '').slice(0, 500),
+        time: String(input.time || '').slice(0, 5),
+        photo: input.photo && typeof input.photo === 'object'
+            ? {
+                dataUrl: String(input.photo.dataUrl || '').slice(0, 6_500_000),
+                mimeType: String(input.photo.mimeType || '').slice(0, 60),
+                size: clampNutritionNumber(input.photo.size, 0, 0, 8 * 1024 * 1024),
+                capturedAt: input.photo.capturedAt || null,
+            }
+            : null,
+        createdAt: input.createdAt || new Date(),
+    }
+}
+
+function normalizeNutritionDayPayload(input = {}, date = getBrazilDateKey()) {
+    const meals = Array.isArray(input.meals)
+        ? input.meals.map(normalizeNutritionMeal).slice(0, 80)
+        : []
+
+    const totals = meals.reduce((acc, meal) => {
+        acc.calories += meal.calories
+        acc.proteinG += meal.proteinG
+        acc.carbsG += meal.carbsG
+        acc.fatG += meal.fatG
+        return acc
+    }, {
+        calories: 0,
+        proteinG: 0,
+        carbsG: 0,
+        fatG: 0,
+    })
+
+    return {
+        ...getDefaultNutritionDay(date),
+        date,
+        waterMl: clampNutritionNumber(input.waterMl, 0, 0, 30000),
+        waterGoalMl: clampNutritionNumber(input.waterGoalMl, 2500, 500, 30000),
+        calorieGoal: clampNutritionNumber(input.calorieGoal, 2600, 500, 30000),
+        proteinGoalG: clampNutritionNumber(input.proteinGoalG, 160, 20, 1000),
+        meals,
+        ...totals,
+    }
+}
+
+function serializeNutritionDay(day, fallbackDate = getBrazilDateKey()) {
+    const plain = day?.toObject ? day.toObject() : day
+    return normalizeNutritionDayPayload(plain || {}, plain?.date || fallbackDate)
+}
+
+function getDateKeysForLastDays(days = 30) {
+    const safeDays = clampNutritionNumber(days, 30, 1, 120)
+    const today = new Date()
+
+    return Array.from({ length: safeDays }, (_, index) => {
+        const date = new Date(today)
+        date.setDate(today.getDate() - index)
+        return getBrazilDateKey(date)
+    })
+}
+
+app.get('/nutrition', authMiddleware, async (req, res) => {
+    try {
+        const days = clampNutritionNumber(req.query.days, 30, 1, 120)
+        const dateKeys = getDateKeysForLastDays(days)
+        const records = await NutritionDay.find({
+            userId: req.user.userId,
+            date: { $in: dateKeys },
+        }).lean()
+
+        const recordsByDate = new Map(records.map((record) => [record.date, record]))
+        const history = dateKeys.map((date) => serializeNutritionDay(recordsByDate.get(date), date))
+        const today = history[0] || getDefaultNutritionDay(getBrazilDateKey())
+
+        res.json({
+            source: 'database',
+            today,
+            history,
+        })
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao buscar nutrição.',
+        })
+    }
+})
+
+app.get('/nutrition/day/:date', authMiddleware, async (req, res) => {
+    try {
+        const date = String(req.params.date || '')
+
+        if (!isValidNutritionDateKey(date)) {
+            return res.status(400).json({
+                message: 'Data inválida para nutrição.',
+            })
+        }
+
+        const day = await NutritionDay.findOne({
+            userId: req.user.userId,
+            date,
+        }).lean()
+
+        res.json(serializeNutritionDay(day, date))
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao buscar dia de nutrição.',
+        })
+    }
+})
+
+app.put('/nutrition/day/:date', authMiddleware, async (req, res) => {
+    try {
+        const date = String(req.params.date || '')
+
+        if (!isValidNutritionDateKey(date)) {
+            return res.status(400).json({
+                message: 'Data inválida para nutrição.',
+            })
+        }
+
+        const payload = normalizeNutritionDayPayload(req.body, date)
+        const day = await NutritionDay.findOneAndUpdate(
+            {
+                userId: req.user.userId,
+                date,
+            },
+            {
+                $set: {
+                    ...payload,
+                    userId: req.user.userId,
+                    date,
+                },
+            },
+            {
+                new: true,
+                upsert: true,
+                setDefaultsOnInsert: true,
+            }
+        )
+
+        res.json(serializeNutritionDay(day, date))
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao salvar nutrição.',
+        })
+    }
+})
+
 app.get('/goals', authMiddleware, async (req, res) => {
     try {
         const goals = await Goal.find({
@@ -5474,6 +5827,7 @@ app.post('/goals', authMiddleware, async (req, res) => {
             currentValue = 0,
             unit = '',
             exerciseName = '',
+            exerciseId = '',
             direction = 'increase',
             period = 'none',
             deadline = null,
@@ -5498,6 +5852,7 @@ app.post('/goals', authMiddleware, async (req, res) => {
             type,
             period,
             exerciseName,
+            exerciseId,
             currentValue: Number(currentValue) || 0,
         }
 
@@ -5519,6 +5874,7 @@ app.post('/goals', authMiddleware, async (req, res) => {
                 : '',
             unit,
             exerciseName,
+            exerciseId,
             direction,
             period,
             deadline: deadline || null,
@@ -5547,6 +5903,7 @@ app.put('/goals/:id', authMiddleware, async (req, res) => {
             currentValue,
             unit,
             exerciseName,
+            exerciseId,
             direction,
             period,
             deadline,
@@ -5571,6 +5928,7 @@ app.put('/goals/:id', authMiddleware, async (req, res) => {
         if (type !== undefined) updateData.type = type
         if (unit !== undefined) updateData.unit = unit
         if (exerciseName !== undefined) updateData.exerciseName = exerciseName
+        if (exerciseId !== undefined) updateData.exerciseId = exerciseId
         if (direction !== undefined) updateData.direction = direction
         if (period !== undefined) updateData.period = period
         if (deadline !== undefined) updateData.deadline = deadline || null
@@ -5593,7 +5951,7 @@ app.put('/goals/:id', authMiddleware, async (req, res) => {
             updateData.currentValue = Number(currentValue) || 0
         }
 
-        if (resetProgressBaseline || type !== undefined || period !== undefined || exerciseName !== undefined) {
+        if (resetProgressBaseline || type !== undefined || period !== undefined || exerciseName !== undefined || exerciseId !== undefined) {
             const previousGoal = await Goal.findOne({
                 _id: req.params.id,
                 userId: req.user.userId,
