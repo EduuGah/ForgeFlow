@@ -27,7 +27,7 @@ const SHARE_TEMPLATES = [
   {
     id: 'story',
     label: 'Story',
-    description: 'Vertical, forte e pronto para Instagram.',
+    description: 'Vertical 9:16 para story e status.',
     width: 1080,
     height: 1920,
   },
@@ -48,7 +48,7 @@ const SHARE_TEMPLATES = [
   {
     id: 'photo',
     label: 'Foto',
-    description: 'Sua foto com overlay ForgeFlow.',
+    description: 'Escolha uma foto própria como fundo.',
     width: 1080,
     height: 1920,
   },
@@ -235,9 +235,9 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 3) {
 
 function drawPill(ctx, label, value, x, y, width) {
   drawRoundRect(ctx, x, y, width, 118, 30)
-  ctx.fillStyle = 'rgba(255,255,255,0.08)'
+  ctx.fillStyle = 'rgba(255,255,255,0.09)'
   ctx.fill()
-  ctx.strokeStyle = 'rgba(255,255,255,0.12)'
+  ctx.strokeStyle = 'rgba(255,255,255,0.14)'
   ctx.lineWidth = 2
   ctx.stroke()
 
@@ -248,6 +248,23 @@ function drawPill(ctx, label, value, x, y, width) {
   ctx.fillStyle = '#ffffff'
   ctx.font = '900 42px Inter, Arial, sans-serif'
   ctx.fillText(value, x + 28, y + 88)
+}
+
+function drawMicroMetric(ctx, label, value, x, y, width) {
+  drawRoundRect(ctx, x, y, width, 96, 26)
+  ctx.fillStyle = 'rgba(255,255,255,0.075)'
+  ctx.fill()
+  ctx.strokeStyle = 'rgba(255,255,255,0.11)'
+  ctx.lineWidth = 2
+  ctx.stroke()
+
+  ctx.fillStyle = '#ffffff'
+  ctx.font = '900 34px Inter, Arial, sans-serif'
+  ctx.fillText(value, x + 24, y + 43)
+
+  ctx.fillStyle = 'rgba(255,255,255,0.58)'
+  ctx.font = '800 21px Inter, Arial, sans-serif'
+  ctx.fillText(label.toUpperCase(), x + 24, y + 74)
 }
 
 function drawBrand(ctx, iconImage, x, y, scale = 1, transparent = false) {
@@ -352,30 +369,44 @@ async function drawWorkoutShareCanvas(canvas, options) {
   }
 
   if (template === 'card') {
-    const pad = 76
+    const pad = 70
 
-    drawBrand(ctx, iconImage, pad, pad, 0.92, transparent)
+    drawBrand(ctx, iconImage, pad, pad, 0.9, transparent)
+
+    drawRoundRect(ctx, pad, 195, width - pad * 2, 730, 58)
+    ctx.fillStyle = 'rgba(255,255,255,0.065)'
+    ctx.fill()
+    ctx.strokeStyle = 'rgba(255,255,255,0.14)'
+    ctx.lineWidth = 2
+    ctx.stroke()
+
+    drawRoundRect(ctx, pad + 34, 234, 330, 58, 29)
+    ctx.fillStyle = accentSoftColor
+    ctx.fill()
+    ctx.strokeStyle = 'rgba(239,68,68,0.38)'
+    ctx.stroke()
 
     ctx.fillStyle = accentColor
-    ctx.font = '900 34px Inter, Arial, sans-serif'
-    ctx.fillText('DESAFIO FORGEFLOW', pad, 228)
+    ctx.font = '900 25px Inter, Arial, sans-serif'
+    ctx.fillText('TREINO CONCLUÍDO', pad + 60, 272)
 
     ctx.fillStyle = '#ffffff'
-    ctx.font = '900 74px Inter, Arial, sans-serif'
-    wrapText(ctx, stats.workoutName, pad, 320, width - pad * 2, 82, 2)
+    ctx.font = '900 76px Inter, Arial, sans-serif'
+    wrapText(ctx, stats.workoutName, pad + 34, 378, width - pad * 2 - 68, 84, 2)
 
-    ctx.fillStyle = 'rgba(255,255,255,0.72)'
-    ctx.font = '700 32px Inter, Arial, sans-serif'
-    wrapText(ctx, caption, pad, 500, width - pad * 2, 42, 2)
+    ctx.fillStyle = 'rgba(255,255,255,0.78)'
+    ctx.font = '800 34px Inter, Arial, sans-serif'
+    wrapText(ctx, caption, pad + 34, 560, width - pad * 2 - 68, 44, 3)
 
-    drawPill(ctx, 'Tempo', stats.durationLabel, pad, 650, 430)
-    drawPill(ctx, 'Volume', stats.volumeLabel, pad + 470, 650, 430)
-    drawPill(ctx, 'Series', String(stats.completedSetCount), pad, 800, 430)
-    drawPill(ctx, 'PRs', String(stats.prCount), pad + 470, 800, 430)
+    const metricWidth = (width - pad * 2 - 94) / 2
+    drawMicroMetric(ctx, 'Volume', stats.volumeLabel, pad + 34, 702, metricWidth)
+    drawMicroMetric(ctx, 'Tempo', stats.durationLabel, pad + 60 + metricWidth, 702, metricWidth)
+    drawMicroMetric(ctx, 'Series', String(stats.completedSetCount), pad + 34, 822, metricWidth)
+    drawMicroMetric(ctx, 'PRs', String(stats.prCount), pad + 60 + metricWidth, 822, metricWidth)
 
-    ctx.fillStyle = 'rgba(255,255,255,0.72)'
-    ctx.font = '800 30px Inter, Arial, sans-serif'
-    wrapText(ctx, `Maior carga: ${getSetLabel(stats.topWeightSet)}`, pad, 990, width - pad * 2, 38, 1)
+    ctx.fillStyle = 'rgba(255,255,255,0.68)'
+    ctx.font = '800 27px Inter, Arial, sans-serif'
+    wrapText(ctx, `Maior carga: ${getSetLabel(stats.topWeightSet)}`, pad, 1010, width - pad * 2, 34, 1)
   } else if (transparent) {
     const pad = 78
 
@@ -406,39 +437,43 @@ async function drawWorkoutShareCanvas(canvas, options) {
     ctx.fill()
   } else {
     const pad = 82
-    const bottomPanelY = template === 'photo' ? height - 690 : height - 760
+    const bottomPanelY = template === 'photo' ? height - 735 : height - 805
 
     drawBrand(ctx, iconImage, pad, 92, 1, false)
 
-    if (template === 'photo') {
-      drawRoundRect(ctx, pad, bottomPanelY, width - pad * 2, 570, 52)
-      ctx.fillStyle = 'rgba(6,10,15,0.76)'
-      ctx.fill()
-      ctx.strokeStyle = 'rgba(255,255,255,0.16)'
-      ctx.lineWidth = 2
-      ctx.stroke()
-    }
+    drawRoundRect(ctx, pad, bottomPanelY, width - pad * 2, 650, 58)
+    ctx.fillStyle = template === 'photo' ? 'rgba(6,10,15,0.78)' : 'rgba(255,255,255,0.06)'
+    ctx.fill()
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)'
+    ctx.lineWidth = 2
+    ctx.stroke()
+
+    drawRoundRect(ctx, pad + 34, bottomPanelY + 42, 300, 58, 29)
+    ctx.fillStyle = accentSoftColor
+    ctx.fill()
+    ctx.strokeStyle = 'rgba(239,68,68,0.38)'
+    ctx.stroke()
 
     ctx.fillStyle = accentColor
-    ctx.font = '900 38px Inter, Arial, sans-serif'
-    ctx.fillText('DESAFIO DO DIA', pad, bottomPanelY + 82)
+    ctx.font = '900 26px Inter, Arial, sans-serif'
+    ctx.fillText('DESAFIO DO DIA', pad + 62, bottomPanelY + 80)
 
     ctx.fillStyle = '#ffffff'
-    ctx.font = '900 86px Inter, Arial, sans-serif'
-    wrapText(ctx, stats.workoutName, pad, bottomPanelY + 184, width - pad * 2, 96, 2)
+    ctx.font = '900 84px Inter, Arial, sans-serif'
+    wrapText(ctx, stats.workoutName, pad + 34, bottomPanelY + 178, width - pad * 2 - 68, 94, 2)
 
-    ctx.fillStyle = 'rgba(255,255,255,0.76)'
+    ctx.fillStyle = 'rgba(255,255,255,0.80)'
     ctx.font = '800 36px Inter, Arial, sans-serif'
-    wrapText(ctx, caption, pad, bottomPanelY + 392, width - pad * 2, 48, 2)
+    wrapText(ctx, caption, pad + 34, bottomPanelY + 382, width - pad * 2 - 68, 48, 2)
 
-    const metricsY = bottomPanelY + 508
-    const metricWidth = (width - pad * 2 - 30) / 2
-    drawPill(ctx, 'Volume', stats.volumeLabel, pad, metricsY, metricWidth)
-    drawPill(ctx, 'Tempo', stats.durationLabel, pad + metricWidth + 30, metricsY, metricWidth)
+    const metricsY = bottomPanelY + 500
+    const metricWidth = (width - pad * 2 - 98) / 2
+    drawPill(ctx, 'Volume', stats.volumeLabel, pad + 34, metricsY, metricWidth)
+    drawPill(ctx, 'Tempo', stats.durationLabel, pad + 64 + metricWidth, metricsY, metricWidth)
 
     ctx.fillStyle = 'rgba(255,255,255,0.74)'
     ctx.font = '800 29px Inter, Arial, sans-serif'
-    wrapText(ctx, `${stats.completedSetCount} series | ${stats.exerciseCount} exercicios | ${stats.prCount} PRs`, pad, height - 118, width - pad * 2, 38, 1)
+    wrapText(ctx, `${stats.completedSetCount} series | ${stats.exerciseCount} exercicios | ${stats.prCount} PRs`, pad + 34, height - 118, width - pad * 2 - 68, 38, 1)
   }
 
   ctx.restore()
@@ -485,6 +520,36 @@ function getFileName(session = {}, template = 'story') {
     .toLowerCase()
 
   return `forgeflow-${rawName || 'treino'}-${template}.png`
+}
+
+
+function canShareImageFile(file) {
+  return typeof navigator !== 'undefined' && Boolean(navigator.canShare?.({ files: [file] }))
+}
+
+function isMobileShareContext() {
+  if (typeof navigator === 'undefined') return false
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '')
+}
+
+function triggerImageDownload(blob, filename) {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+
+  window.setTimeout(() => URL.revokeObjectURL(url), 4500)
+}
+
+function openImageFallback(blob) {
+  const url = URL.createObjectURL(blob)
+  const newWindow = window.open(url, '_blank', 'noopener,noreferrer')
+
+  window.setTimeout(() => URL.revokeObjectURL(url), 30000)
+  return Boolean(newWindow)
 }
 
 function WorkoutShareStudio({ open, session, meta, onClose }) {
@@ -571,12 +636,19 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     reader.onload = () => {
       setPhotoDataUrl(String(reader.result || ''))
       setTemplate('photo')
-      setStatus('Foto aplicada ao modelo.')
+      setStatus('Foto aplicada. O modelo mudou para Foto.')
     }
     reader.onerror = () => {
       setStatus('Nao foi possivel carregar essa foto.')
     }
     reader.readAsDataURL(file)
+    event.target.value = ''
+  }
+
+  function handleClearPhoto() {
+    setPhotoDataUrl('')
+    setTemplate((currentTemplate) => currentTemplate === 'photo' ? 'story' : currentTemplate)
+    setStatus('Foto removida do card.')
   }
 
   async function getImageBlob() {
@@ -648,18 +720,36 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
 
     try {
       const blob = await getImageBlob()
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = getFileName(session, template)
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      URL.revokeObjectURL(url)
-      setStatus('Imagem salva para compartilhar.')
+      const filename = getFileName(session, template)
+      const file = new File([blob], filename, { type: 'image/png' })
+
+      if (isMobileShareContext() && canShareImageFile(file)) {
+        await navigator.share({
+          title: 'Salvar imagem ForgeFlow',
+          text: 'Escolha Galeria, Fotos, Arquivos ou o app onde quer enviar a imagem.',
+          files: [file],
+        })
+        setStatus('Imagem gerada. Escolha Salvar imagem, Fotos ou Arquivos no menu do celular.')
+        return
+      }
+
+      triggerImageDownload(blob, filename)
+      setStatus('Download da imagem iniciado.')
     } catch (error) {
-      console.error(error)
-      setStatus('Nao foi possivel salvar a imagem.')
+      if (error?.name !== 'AbortError') {
+        console.error(error)
+
+        try {
+          const fallbackBlob = await getImageBlob()
+          const opened = openImageFallback(fallbackBlob)
+          setStatus(opened
+            ? 'Imagem aberta em nova aba. Segure/toque nela para salvar.'
+            : 'Nao foi possivel salvar a imagem. Tente Compartilhar.'
+          )
+        } catch {
+          setStatus('Nao foi possivel salvar a imagem. Tente Compartilhar.')
+        }
+      }
     } finally {
       setBusy(false)
     }
@@ -668,16 +758,41 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   async function handleOpenInstagram() {
     if (busy) return
 
-    await handleDownload()
-    setStatus('Imagem salva. Abrindo Instagram para publicar.')
+    setBusy(true)
+    setStatus('')
 
-    window.setTimeout(() => {
-      window.location.href = 'instagram://story-camera'
+    try {
+      const blob = await getImageBlob()
+      const filename = getFileName(session, template)
+      const file = new File([blob], filename, { type: 'image/png' })
 
+      if (canShareImageFile(file)) {
+        await navigator.share({
+          title: 'Publicar treino no Instagram',
+          text: shareText,
+          files: [file],
+        })
+        setStatus('Imagem pronta. No menu que abriu, escolha Instagram ou Stories.')
+        return
+      }
+
+      triggerImageDownload(blob, filename)
+      setStatus('Imagem salva. O Instagram vai abrir; selecione a imagem na galeria para postar.')
       window.setTimeout(() => {
-        window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer')
-      }, 900)
-    }, 250)
+        window.location.href = 'instagram://story-camera'
+
+        window.setTimeout(() => {
+          window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer')
+        }, 900)
+      }, 300)
+    } catch (error) {
+      if (error?.name !== 'AbortError') {
+        console.error(error)
+        setStatus('Nao deu para abrir o Instagram com a imagem. Use Salvar/Compartilhar imagem.')
+      }
+    } finally {
+      setBusy(false)
+    }
   }
 
   const dialog = (
@@ -711,6 +826,75 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
           </section>
 
           <section className="ff-share-studio__controls">
+            <div className="ff-share-studio__tip-card">
+              <strong>Monte o story antes de compartilhar</strong>
+              <small>Escolha uma foto própria, edite a mensagem do card e depois use Compartilhar ou Instagram.</small>
+            </div>
+
+            <div className="ff-share-studio__section-title">
+              <ImagePlus size={16} />
+              <span>Foto própria</span>
+            </div>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/*"
+              className="sr-only"
+              onChange={handlePhotoChange}
+            />
+
+            <button
+              type="button"
+              className={`ff-share-studio__photo-card${photoDataUrl ? ' has-photo' : ''}`}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <span className="ff-share-studio__photo-icon"><ImagePlus size={20} /></span>
+              <span>
+                <strong>{photoDataUrl ? 'Foto aplicada' : 'Selecionar foto do celular'}</strong>
+                <small>{photoDataUrl ? 'Toque para trocar a foto de fundo.' : 'Use uma foto da galeria como fundo do story.'}</small>
+              </span>
+            </button>
+
+            {photoDataUrl && (
+              <button type="button" className="ff-share-studio__clear-photo" onClick={handleClearPhoto}>
+                Remover foto e voltar ao modelo padrão
+              </button>
+            )}
+
+            <div className="ff-share-studio__section-title">
+              <MessageCircle size={16} />
+              <span>Mensagem do card</span>
+            </div>
+
+            <label className="ff-share-studio__caption">
+              <span>Texto que aparece dentro da imagem</span>
+              <textarea
+                value={customCaption}
+                onChange={(event) => setCustomCaption(event.target.value)}
+                maxLength={120}
+                rows={3}
+                placeholder={selectedPhrase.text}
+              />
+              <small>Deixe vazio para usar a frase pronta selecionada abaixo.</small>
+            </label>
+
+            <div className="ff-share-studio__phrase-row">
+              {SHARE_PHRASES.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={phraseId === item.id && !customCaption ? 'is-active' : ''}
+                  onClick={() => {
+                    setPhraseId(item.id)
+                    setCustomCaption('')
+                  }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
             <div className="ff-share-studio__section-title">
               <Layers3 size={16} />
               <span>Formato</span>
@@ -730,55 +914,6 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
               ))}
             </div>
 
-            <div className="ff-share-studio__section-title">
-              <MessageCircle size={16} />
-              <span>Mensagem</span>
-            </div>
-
-            <div className="ff-share-studio__phrase-row">
-              {SHARE_PHRASES.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={phraseId === item.id && !customCaption ? 'is-active' : ''}
-                  onClick={() => {
-                    setPhraseId(item.id)
-                    setCustomCaption('')
-                  }}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-
-            <label className="ff-share-studio__caption">
-              <span>Frase opcional</span>
-              <input
-                type="text"
-                value={customCaption}
-                onChange={(event) => setCustomCaption(event.target.value)}
-                maxLength={90}
-                placeholder={selectedPhrase.text}
-              />
-            </label>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="sr-only"
-              onChange={handlePhotoChange}
-            />
-
-            <button
-              type="button"
-              className="ff-share-studio__photo-button"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <ImagePlus size={18} />
-              <span>{photoDataUrl ? 'Trocar foto de fundo' : 'Usar foto de fundo'}</span>
-            </button>
-
             <div className="ff-share-studio__stats">
               <span><strong>{stats.completedSetCount}</strong><small>series</small></span>
               <span><strong>{stats.exerciseCount}</strong><small>exercicios</small></span>
@@ -797,17 +932,17 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
         <footer className="ff-share-studio__footer">
           <Button type="button" onClick={handleShare} disabled={busy || !ready} className="ff-share-studio__primary">
             <Share2 size={18} />
-            {busy ? 'Preparando...' : 'Compartilhar'}
+            {busy ? 'Preparando...' : 'Compartilhar imagem'}
           </Button>
 
           <Button type="button" variant="secondary" onClick={handleDownload} disabled={busy || !ready}>
             <Download size={18} />
-            Salvar imagem
+            Salvar/baixar
           </Button>
 
           <Button type="button" variant="secondary" onClick={handleOpenInstagram} disabled={busy || !ready}>
             <ImagePlus size={18} />
-            Instagram
+            Instagram/Story
           </Button>
 
           <Button type="button" variant="secondary" onClick={handleCopy} disabled={!shareText}>

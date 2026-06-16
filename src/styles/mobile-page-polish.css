@@ -12824,3 +12824,171 @@ body.ff-share-studio-open .mobile-bottom-nav {
     grid-column: 1 / -1 !important;
   }
 }
+
+/* ForgeFlow 16/06 - Share Studio V2: foto propria, mensagem clara e salvamento mobile */
+.ff-share-studio__tip-card {
+  display: grid;
+  gap: 0.28rem;
+  padding: 0.9rem;
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  border-radius: 1.15rem;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(239, 68, 68, 0.22), transparent 38%),
+    rgba(255, 255, 255, 0.055);
+}
+
+.ff-share-studio__tip-card strong {
+  color: #fff;
+  font-size: 0.9rem;
+  line-height: 1.15;
+}
+
+.ff-share-studio__tip-card small {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
+.ff-share-studio__photo-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 4.75rem;
+  padding: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1.15rem;
+  background: rgba(255, 255, 255, 0.055);
+  color: #fff;
+  text-align: left;
+}
+
+.ff-share-studio__photo-card.has-photo {
+  border-color: rgba(239, 68, 68, 0.48);
+  background:
+    linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(255, 255, 255, 0.06)),
+    rgba(255, 255, 255, 0.06);
+}
+
+.ff-share-studio__photo-icon {
+  display: grid;
+  width: 2.8rem;
+  height: 2.8rem;
+  place-items: center;
+  border-radius: 1rem;
+  background: rgba(239, 68, 68, 0.18);
+  color: var(--ff-accent, #ef4444);
+}
+
+.ff-share-studio__photo-card span:last-child {
+  display: grid;
+  min-width: 0;
+  gap: 0.16rem;
+}
+
+.ff-share-studio__photo-card strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #fff;
+  font-size: 0.91rem;
+  line-height: 1.12;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-share-studio__photo-card small {
+  display: -webkit-box;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.74rem;
+  line-height: 1.25;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.ff-share-studio__clear-photo {
+  width: 100%;
+  min-height: 2.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.95rem;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.78);
+  font-weight: 800;
+}
+
+.ff-share-studio__caption textarea {
+  width: 100%;
+  min-height: 5.2rem;
+  resize: vertical;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1rem;
+  outline: none;
+  background: rgba(3, 7, 10, 0.74);
+  color: #fff;
+  font: inherit;
+  font-size: 0.92rem;
+  line-height: 1.35;
+  padding: 0.85rem 0.9rem;
+}
+
+.ff-share-studio__caption textarea:focus {
+  border-color: rgba(239, 68, 68, 0.55);
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12);
+}
+
+.ff-share-studio__caption > small {
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 0.72rem;
+  line-height: 1.28;
+}
+
+@media (max-width: 767px) {
+  .ff-share-studio__panel {
+    grid-template-rows: auto minmax(0, 1fr) auto auto !important;
+  }
+
+  .ff-share-studio__body {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    padding: 12px 12px calc(20px + env(safe-area-inset-bottom)) !important;
+    scroll-padding-bottom: 9rem !important;
+  }
+
+  .ff-share-studio__preview {
+    flex: 0 0 auto !important;
+    max-height: none !important;
+  }
+
+  .ff-share-studio__canvas {
+    max-height: 34dvh !important;
+  }
+
+  .ff-share-studio__controls {
+    padding-bottom: 0.5rem !important;
+  }
+
+  .ff-share-studio__tip-card,
+  .ff-share-studio__photo-card {
+    border-radius: 18px !important;
+  }
+
+  .ff-share-studio__caption textarea {
+    min-height: 84px !important;
+  }
+
+  .ff-share-studio__status {
+    margin: 0 12px 10px !important;
+  }
+
+  .ff-share-studio__footer {
+    position: static !important;
+    flex: 0 0 auto !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.09) !important;
+    box-shadow: 0 -18px 42px rgba(0, 0, 0, 0.35) !important;
+  }
+}
