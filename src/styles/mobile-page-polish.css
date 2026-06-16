@@ -11750,3 +11750,184 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* ForgeFlow rodada 16/06 - correção definitiva da biblioteca do construtor */
+.ff-workout-builder-clean-card--plan {
+  margin-top: 0 !important;
+}
+
+.ff-workout-builder-clean-library-card {
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  min-height: 64px;
+  overflow: hidden;
+}
+
+.ff-workout-builder-clean-library-card__text {
+  align-self: center;
+  line-height: 1.15;
+}
+
+.ff-workout-builder-clean-library-card b {
+  max-width: 84px;
+  align-self: center;
+}
+
+.ff-workout-builder-clean-picker {
+  z-index: 10060;
+}
+
+.ff-workout-builder-clean-picker__panel {
+  isolation: isolate;
+}
+
+.ff-workout-builder-clean-picker__tools {
+  padding-top: 10px;
+}
+
+.ff-workout-builder-clean-picker .ff-workout-builder-clean-search {
+  min-height: 48px;
+  grid-template-columns: 22px minmax(0, 1fr) 30px;
+  overflow: hidden;
+}
+
+.ff-workout-builder-clean-picker .ff-workout-builder-clean-search input {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 44px;
+  line-height: 1.2;
+}
+
+.ff-workout-builder-clean-picker__list {
+  min-height: 0;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom));
+}
+
+@media (max-width: 840px) {
+  .ff-workout-builder-clean__shell {
+    padding-top: 8px;
+  }
+
+  .ff-workout-builder-clean__body {
+    gap: 8px;
+  }
+
+  .ff-workout-builder-clean-card--setup {
+    padding-bottom: 10px;
+  }
+
+  .ff-workout-builder-clean-save-strip {
+    margin-top: 10px;
+    padding: 10px;
+  }
+
+  .ff-workout-builder-clean-card--plan {
+    padding-top: 10px !important;
+  }
+
+  .ff-workout-builder-clean-card--models {
+    display: none !important;
+  }
+
+  .ff-workout-builder-clean-picker {
+    inset: 0;
+    display: block;
+    padding: 0;
+    background: #050507;
+  }
+
+  .ff-workout-builder-clean-picker__panel {
+    width: 100%;
+    height: 100dvh;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .ff-workout-builder-clean-picker__header {
+    padding-top: calc(12px + env(safe-area-inset-top));
+  }
+
+  .ff-workout-builder-clean-picker__tools {
+    padding: 10px 12px 8px;
+  }
+
+  .ff-workout-builder-clean-picker__list {
+    padding: 0 12px calc(86px + env(safe-area-inset-bottom));
+  }
+
+  .ff-workout-builder-clean-picker__footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 4;
+    background: rgba(5, 5, 7, 0.94);
+    backdrop-filter: blur(18px);
+  }
+}
+
+@media (max-width: 540px) {
+  .ff-workout-builder-clean-picker__list .ff-workout-builder-clean-library-card {
+    grid-template-columns: 46px minmax(0, 1fr);
+    grid-template-areas:
+      "media text"
+      "media action";
+    min-height: 76px;
+    align-items: start;
+    gap: 7px 10px;
+    padding: 10px;
+  }
+
+  .ff-workout-builder-clean-picker__list .ff-workout-builder-clean-library-card .ff-workout-builder-clean-media {
+    grid-area: media;
+    align-self: start;
+  }
+
+  .ff-workout-builder-clean-picker__list .ff-workout-builder-clean-library-card__text {
+    grid-area: text;
+    align-self: start;
+    min-width: 0;
+  }
+
+  .ff-workout-builder-clean-picker__list .ff-workout-builder-clean-library-card__text strong {
+    max-width: 100%;
+    font-size: 0.92rem;
+    line-height: 1.08;
+  }
+
+  .ff-workout-builder-clean-picker__list .ff-workout-builder-clean-library-card__text small,
+  .ff-workout-builder-clean-picker__list .ff-workout-builder-clean-library-card__text em {
+    max-width: 100%;
+    line-height: 1.16;
+  }
+
+  .ff-workout-builder-clean-picker__list .ff-workout-builder-clean-library-card b {
+    grid-area: action;
+    justify-self: start;
+    width: auto;
+    min-width: 88px;
+    min-height: 30px;
+    margin: 0;
+    padding-inline: 10px;
+    font-size: 0.69rem;
+  }
+
+  .ff-workout-builder-clean-picker .ff-workout-builder-clean-search {
+    min-height: 50px;
+    border-radius: 18px;
+    padding-inline: 12px;
+  }
+
+  .ff-workout-builder-clean-picker .ff-workout-builder-clean-chips {
+    margin-inline: -12px;
+    padding-inline: 12px;
+  }
+
+  .ff-workout-builder-clean-picker .ff-workout-builder-clean-select {
+    gap: 6px;
+  }
+
+  .ff-workout-builder-clean-picker .ff-workout-builder-clean-select select {
+    min-height: 44px;
+    border-radius: 16px;
+  }
+}

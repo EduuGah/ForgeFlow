@@ -12,46 +12,10 @@ import {
     Plus,
     Save,
     Search,
-    SlidersHorizontal,
     Star,
     Trash2,
     X,
 } from 'lucide-react'
-
-const SET_MODEL_OPTIONS = [
-    {
-        id: 'hypertrophy',
-        label: 'Hipertrofia',
-        detail: '4 séries vazias',
-    },
-    {
-        id: 'beginner',
-        label: 'Iniciante',
-        detail: '3 séries vazias',
-    },
-    {
-        id: 'strength',
-        label: 'Força',
-        detail: '5 séries vazias',
-    },
-    {
-        id: 'pyramid',
-        label: 'Pirâmide',
-        detail: '4 séries vazias',
-    },
-    {
-        id: 'custom',
-        label: 'Simples',
-        detail: '1 série vazia',
-    },
-]
-
-function getSetModelLabel(modelId, customSetModels = []) {
-    const fixed = SET_MODEL_OPTIONS.find((model) => model.id === modelId)
-    if (fixed) return fixed.label
-
-    return customSetModels.find((model) => model.id === modelId)?.name || 'Modelo atual'
-}
 
 function ExerciseMedia({ exercise, size = 'md' }) {
     return (
@@ -169,7 +133,7 @@ function ExerciseLibraryTools({
                 <Search size={18} />
                 <input
                     type="search"
-                    placeholder="Buscar exercício, músculo ou equipamento"
+                    placeholder="Buscar exercício"
                     value={quickSearch}
                     onChange={(event) => setQuickSearch(event.target.value)}
                 />
@@ -236,9 +200,6 @@ function WorkoutBuilderModal({
     selectedFolderId,
     setSelectedFolderId,
     folders,
-    defaultSetModel,
-    setDefaultSetModel,
-    customSetModels,
     workoutExercises,
     totalSetsInCurrentWorkout,
     quickFavoritesOnly,
@@ -257,8 +218,6 @@ function WorkoutBuilderModal({
     handleSubmit,
     closeBuilder,
     setIsFolderModalOpen,
-    setIsSetModelModalOpen,
-    handleDeleteSetModel,
     handleUpdateExerciseNote,
     handleUpdateWorkoutSetDescription,
     handleRemoveExercise,
@@ -270,17 +229,14 @@ function WorkoutBuilderModal({
     formatRecentExerciseDate,
     handleQuickAddExercise,
     handleDuplicateWorkoutExercise,
-    handleApplySetModelToWorkoutExercise,
     handleClearWorkoutExercises,
     onGoToExercises,
 }) {
     const [isExercisePickerOpen, setIsExercisePickerOpen] = useState(false)
     const [expandedExerciseId, setExpandedExerciseId] = useState(null)
-    const [showModels, setShowModels] = useState(false)
 
     const selectedFolder = folders.find((folder) => folder.id === selectedFolderId)
     const selectedFolderLabel = selectedFolder?.name || 'Sem pasta'
-    const currentModelName = getSetModelLabel(defaultSetModel, customSetModels)
     const canSubmit = workoutName.trim() && workoutExercises.length > 0
 
     const builderStatus = useMemo(() => {
@@ -522,12 +478,6 @@ function WorkoutBuilderModal({
                                                             <Flame size={16} />
                                                             Aquecimento
                                                         </button>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleApplySetModelToWorkoutExercise(item.id, defaultSetModel)}
-                                                        >
-                                                            Aplicar {currentModelName}
-                                                        </button>
                                                     </div>
 
                                                     <div className="ff-workout-builder-clean-sets">
@@ -598,7 +548,6 @@ function WorkoutBuilderModal({
                         <div className="ff-workout-builder-clean-library-summary">
                             <span>{librarySummary}</span>
                             <span>{favoriteExercisesCount} favoritos</span>
-                            <span>Modelo: {currentModelName}</span>
                         </div>
 
                         <div className="ff-workout-builder-clean-library-list">
@@ -629,64 +578,6 @@ function WorkoutBuilderModal({
                         </button>
                     </section>
 
-                    <section className="ff-workout-builder-clean-card ff-workout-builder-clean-card--models">
-                        <button
-                            type="button"
-                            onClick={() => setShowModels((current) => !current)}
-                            className="ff-workout-builder-clean-model-summary"
-                        >
-                            <span>
-                                <small>Modelo de séries</small>
-                                <strong>{currentModelName}</strong>
-                                <em>Novos exercícios entram com séries vazias, sem reps preenchidas.</em>
-                            </span>
-                            <SlidersHorizontal size={18} />
-                        </button>
-
-                        {showModels && (
-                            <div className="ff-workout-builder-clean-models">
-                                {SET_MODEL_OPTIONS.map((model) => (
-                                    <button
-                                        key={model.id}
-                                        type="button"
-                                        className={defaultSetModel === model.id ? 'is-active' : ''}
-                                        onClick={() => setDefaultSetModel(model.id)}
-                                    >
-                                        <strong>{model.label}</strong>
-                                        <small>{model.detail}</small>
-                                    </button>
-                                ))}
-
-                                <button
-                                    type="button"
-                                    onClick={() => setIsSetModelModalOpen(true)}
-                                    className="ff-workout-builder-clean-model-create"
-                                >
-                                    + Criar modelo
-                                </button>
-
-                                {customSetModels.map((model) => (
-                                    <div key={model.id} className="ff-workout-builder-clean-custom-model">
-                                        <button
-                                            type="button"
-                                            className={defaultSetModel === model.id ? 'is-active' : ''}
-                                            onClick={() => setDefaultSetModel(model.id)}
-                                        >
-                                            <strong>{model.name}</strong>
-                                            <small>{model.sets.length} séries</small>
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleDeleteSetModel(model.id)}
-                                            aria-label="Excluir modelo"
-                                        >
-                                            <X size={15} />
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </section>
                 </main>
 
                 {isExercisePickerOpen && (

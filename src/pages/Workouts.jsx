@@ -57,7 +57,7 @@ function Workouts() {
     const [quickFavoritesOnly, setQuickFavoritesOnly] = useState(false)
     const [quickEquipmentFilter, setQuickEquipmentFilter] = useState('')
     const [appSettings, setAppSettings] = useState(getAppSettings())
-    const [defaultSetModel, setDefaultSetModel] = useState(getAppSettings().defaultSetModel)
+    const [defaultSetModel, setDefaultSetModel] = useState('custom')
 
     const [workoutName, setWorkoutName] = useState('')
     const [selectedExercise, setSelectedExercise] = useState('')
@@ -133,7 +133,7 @@ function Workouts() {
             const updatedSettings = event.detail || getAppSettings()
 
             setAppSettings(updatedSettings)
-            setDefaultSetModel(updatedSettings.defaultSetModel)
+            setDefaultSetModel('custom')
             setIsWorkoutsListCollapsed(updatedSettings.collapseWorkoutsByDefault)
         }
 
@@ -179,7 +179,7 @@ function Workouts() {
                 setEditingWorkoutId(draft.editingWorkoutId || null)
                 setSelectedFolderId(draft.selectedFolderId || null)
                 setDefaultSetModel(
-                    draft.defaultSetModel || getAppSettings().defaultSetModel
+                    'custom'
                 )
             }
 
@@ -579,7 +579,7 @@ function Workouts() {
         const newWorkoutExercise = {
             id: crypto.randomUUID(),
             exercise: exerciseFound,
-            sets: getDefaultSets(defaultSetModel),
+            sets: [getInitialManualSet()],
             note: '',
             restTimer: appSettings.defaultRestTimer || 'Desligado',
         }
