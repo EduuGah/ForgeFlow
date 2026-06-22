@@ -163,7 +163,7 @@ const SHARE_STICKER_TYPES = [
   {
     id: 'metrics',
     label: 'Métricas',
-    description: 'Duração, volume, exercícios, séries e PRs.',
+    description: 'Duração, volume, reps, séries, exercícios e PRs.',
     defaultVisible: true,
   },
   {
@@ -185,6 +185,18 @@ const SHARE_STICKER_TYPES = [
     defaultVisible: false,
   },
   {
+    id: 'topSet',
+    label: 'Melhor série',
+    description: 'Destaque da melhor série ou maior carga.',
+    defaultVisible: false,
+  },
+  {
+    id: 'repTotal',
+    label: 'Reps totais',
+    description: 'Total de repetições concluídas no treino.',
+    defaultVisible: false,
+  },
+  {
     id: 'volume',
     label: 'Volume total',
     description: 'Destaque grande para volume total.',
@@ -194,6 +206,12 @@ const SHARE_STICKER_TYPES = [
     id: 'prs',
     label: 'PRs',
     description: 'Recordes do treino, quando existirem.',
+    defaultVisible: false,
+  },
+  {
+    id: 'location',
+    label: 'Local/data',
+    description: 'Local do treino e data curta.',
     defaultVisible: false,
   },
   {
@@ -207,23 +225,29 @@ const SHARE_STICKER_TYPES = [
 const STICKER_DEFAULTS = {
   story: {
     summary: { x: 70, y: 126, scale: 1 },
-    volume: { x: 70, y: 1210, scale: 1 },
-    metrics: { x: 70, y: 1454, scale: 1 },
+    caption: { x: 70, y: 540, scale: 1 },
+    location: { x: 620, y: 548, scale: 0.94 },
     exerciseList: { x: 70, y: 770, scale: 1 },
-    setsReps: { x: 70, y: 900, scale: 1 },
-    weights: { x: 565, y: 900, scale: 1 },
-    prs: { x: 70, y: 1060, scale: 1 },
-    caption: { x: 70, y: 610, scale: 1 },
+    prs: { x: 620, y: 770, scale: 0.92 },
+    setsReps: { x: 70, y: 1160, scale: 1 },
+    weights: { x: 565, y: 1160, scale: 1 },
+    topSet: { x: 70, y: 1492, scale: 0.95 },
+    repTotal: { x: 560, y: 1492, scale: 0.95 },
+    volume: { x: 70, y: 1692, scale: 0.9 },
+    metrics: { x: 70, y: 1804, scale: 0.9 },
   },
   feed: {
     summary: { x: 58, y: 58, scale: 0.82 },
-    volume: { x: 58, y: 560, scale: 0.76 },
-    metrics: { x: 58, y: 790, scale: 0.78 },
+    caption: { x: 58, y: 164, scale: 0.72 },
+    location: { x: 642, y: 164, scale: 0.68 },
     exerciseList: { x: 58, y: 250, scale: 0.78 },
-    setsReps: { x: 58, y: 350, scale: 0.72 },
-    weights: { x: 562, y: 350, scale: 0.72 },
-    prs: { x: 58, y: 448, scale: 0.72 },
-    caption: { x: 58, y: 172, scale: 0.76 },
+    prs: { x: 642, y: 250, scale: 0.68 },
+    setsReps: { x: 58, y: 580, scale: 0.72 },
+    weights: { x: 562, y: 580, scale: 0.72 },
+    topSet: { x: 58, y: 804, scale: 0.72 },
+    repTotal: { x: 466, y: 804, scale: 0.72 },
+    volume: { x: 58, y: 914, scale: 0.62 },
+    metrics: { x: 58, y: 964, scale: 0.62 },
   },
 }
 
@@ -234,9 +258,12 @@ const STICKER_CANVAS_SIZE = {
     exerciseList: { width: 610, height: 365 },
     setsReps: { width: 455, height: 315 },
     weights: { width: 445, height: 315 },
+    topSet: { width: 430, height: 182 },
+    repTotal: { width: 380, height: 182 },
     volume: { width: 560, height: 210 },
-    prs: { width: 760, height: 260 },
-    caption: { width: 780, height: 160 },
+    prs: { width: 360, height: 332 },
+    location: { width: 390, height: 130 },
+    caption: { width: 500, height: 132 },
   },
   feed: {
     summary: { width: 650, height: 140 },
@@ -244,9 +271,12 @@ const STICKER_CANVAS_SIZE = {
     exerciseList: { width: 610, height: 320 },
     setsReps: { width: 455, height: 260 },
     weights: { width: 445, height: 260 },
+    topSet: { width: 400, height: 168 },
+    repTotal: { width: 350, height: 168 },
     volume: { width: 560, height: 190 },
-    prs: { width: 760, height: 230 },
-    caption: { width: 780, height: 135 },
+    prs: { width: 320, height: 292 },
+    location: { width: 320, height: 118 },
+    caption: { width: 560, height: 118 },
   },
 }
 
@@ -377,6 +407,9 @@ function getWorkoutStats(session = {}, meta = {}) {
   const repRows = exerciseSummaries
     .filter((item) => item.setCount > 0)
     .slice(0, 6)
+  const totalReps = completedSets.reduce((total, set) => total + safeNumber(set.reps), 0)
+  const averageRepsPerSet = completedSets.length ? Math.round((totalReps / completedSets.length) * 10) / 10 : 0
+  const averageVolumePerSet = completedSets.length ? Math.round(sessionVolume / completedSets.length) : 0
 
   return {
     workoutName: session.workoutName || session.name || 'Treino ForgeFlow',
@@ -387,6 +420,9 @@ function getWorkoutStats(session = {}, meta = {}) {
     volumeLabel: formatVolume(sessionVolume),
     exerciseCount: exercises.length,
     completedSetCount: completedSets.length,
+    totalReps,
+    averageRepsPerSet,
+    averageVolumePerSet,
     prCount: sessionPRs.length,
     prs: sessionPRs,
     topExercises: topExercises.slice(0, 6),
@@ -1247,6 +1283,7 @@ function getMetricsForLevel(stats, infoLevel) {
   const medium = [
     { label: 'Duração', value: stats.durationLabel },
     { label: 'Volume', value: stats.volumeLabel },
+    { label: 'Reps', value: String(stats.totalReps) },
     { label: 'Exercícios', value: String(stats.exerciseCount) },
     { label: 'PRs', value: String(stats.prCount) },
   ]
@@ -1256,6 +1293,7 @@ function getMetricsForLevel(stats, infoLevel) {
   return [
     ...medium,
     { label: 'Séries', value: String(stats.completedSetCount) },
+    { label: 'Média reps', value: String(stats.averageRepsPerSet).replace('.', ',') },
     { label: 'Local', value: stats.locationLabel || 'Sem local' },
   ]
 }
@@ -1522,10 +1560,14 @@ function getStickerRows(stickerId, stats) {
   }
 
   if (stickerId === 'weights') {
-    return stats.weightRows.slice(0, 7).map((set) => ({
-      title: set.exerciseName || 'Exercício',
-      meta: formatSetShort(set),
-    }))
+    return stats.exerciseSummaries
+      .filter((item) => item.bestWeight > 0)
+      .sort((a, b) => safeNumber(b.bestWeight) - safeNumber(a.bestWeight))
+      .slice(0, 7)
+      .map((item) => ({
+        title: item.name,
+        meta: item.weightsText || `${item.bestWeight}kg`,
+      }))
   }
 
   if (stickerId === 'prs') {
@@ -1588,6 +1630,34 @@ function drawSingleWorkoutSticker(ctx, stickerId, stats, options = {}) {
     ctx.fillStyle = 'rgba(255,255,255,0.58)'
     ctx.font = '850 22px Inter, Arial, sans-serif'
     ctx.fillText(`${stats.completedSetCount} séries • ${stats.exerciseCount} exercícios`, 34, 168)
+  } else if (stickerId === 'topSet') {
+    drawStickerPanelBase(ctx, width, height, { fill: 'rgba(10,12,18,0.82)', stroke: 'rgba(255,255,255,0.16)', radius: 34 })
+    drawStickerHeader(ctx, 'MELHOR SÉRIE', '', width, accentColor)
+    ctx.fillStyle = '#ffffff'
+    ctx.font = '930 30px Inter, Arial, sans-serif'
+    ctx.fillText(truncateText(ctx, stats.topWeightSet?.exerciseName || stats.bestSet?.exerciseName || 'Sem série', width - 48), 24, 104)
+    ctx.font = '950 42px Inter, Arial, sans-serif'
+    ctx.fillText(truncateText(ctx, formatSetShort(stats.topWeightSet || stats.bestSet), width - 48), 24, 148)
+  } else if (stickerId === 'repTotal') {
+    drawStickerPanelBase(ctx, width, height, { fill: 'rgba(8,10,14,0.78)', stroke: 'rgba(255,255,255,0.14)', radius: 34 })
+    ctx.fillStyle = accentColor
+    ctx.font = '950 24px Inter, Arial, sans-serif'
+    ctx.fillText('REPS TOTAIS', 28, 52)
+    ctx.fillStyle = '#ffffff'
+    ctx.font = '950 72px Inter, Arial, sans-serif'
+    ctx.fillText(String(stats.totalReps), 28, 122)
+    ctx.fillStyle = 'rgba(255,255,255,0.58)'
+    ctx.font = '850 20px Inter, Arial, sans-serif'
+    ctx.fillText(`${String(stats.averageRepsPerSet).replace('.', ',')} reps por série`, 28, 154)
+  } else if (stickerId === 'location') {
+    drawStickerPanelBase(ctx, width, height, { fill: 'rgba(5,7,10,0.74)', stroke: 'rgba(255,255,255,0.12)', radius: 28 })
+    drawStickerHeader(ctx, 'SESSÃO', '', width, accentColor)
+    ctx.fillStyle = '#ffffff'
+    ctx.font = '900 24px Inter, Arial, sans-serif'
+    ctx.fillText(truncateText(ctx, stats.locationLabel || 'Sem local registrado', width - 46), 22, 84)
+    ctx.fillStyle = 'rgba(255,255,255,0.56)'
+    ctx.font = '850 19px Inter, Arial, sans-serif'
+    ctx.fillText(truncateText(ctx, stats.dateLabel, width - 46), 22, 108)
   } else if (stickerId === 'caption') {
     drawStickerPanelBase(ctx, width, height, { fill: 'rgba(255,255,255,0.91)', stroke: 'rgba(255,255,255,0.72)', radius: 38 })
     ctx.fillStyle = '#111827'
@@ -2824,6 +2894,88 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     }
   }
 
+  function handleStickerLayerPointerDown(event) {
+    if (overlayMode !== 'stickers' || activeStickerPointers.current.size === 0 || !selectedStickerIdRef.current) return
+
+    event.preventDefault()
+    event.stopPropagation()
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+    activeStickerPointers.current.set(event.pointerId, getPointerSnapshot(event))
+    startStickerGesture(selectedStickerIdRef.current)
+  }
+
+  function handleStickerLayerPointerMove(event) {
+    if (!activeStickerPointers.current.has(event.pointerId)) return
+
+    event.preventDefault()
+    event.stopPropagation()
+    activeStickerPointers.current.set(event.pointerId, getPointerSnapshot(event))
+
+    const gesture = stickerGestureRef.current
+    if (!gesture || !gesture.stickerId) return
+
+    const stickerId = gesture.stickerId
+    const pointers = Array.from(activeStickerPointers.current.values())
+    const currentFormat = selectedFormatRef.current
+
+    if (gesture.type === 'drag' && pointers.length === 1) {
+      const current = activeStickerPointers.current.get(gesture.pointerId)
+      if (!current) return
+
+      applyStickerTransform(stickerId, {
+        ...gesture.startTransform,
+        x: safeNumber(gesture.startTransform.x) + current.canvas.x - gesture.startPoint.x,
+        y: safeNumber(gesture.startTransform.y) + current.canvas.y - gesture.startPoint.y,
+      }, { snap: true })
+      return
+    }
+
+    if (gesture.type === 'pinch' && pointers.length >= 2) {
+      const first = pointers[0].canvas
+      const second = pointers[1].canvas
+      const currentCenter = getCenter(first, second)
+      const distance = Math.max(1, getDistance(first, second))
+      const nextScale = clamp(safeNumber(gesture.startTransform.scale) * (distance / gesture.startDistance), STICKER_MIN_SCALE, STICKER_MAX_SCALE)
+      const startScale = Math.max(STICKER_MIN_SCALE, safeNumber(gesture.startTransform.scale) || 1)
+      const ratio = nextScale / startScale
+      const size = getStickerCanvasSize(stickerId, currentFormat.id)
+      const nextCenter = {
+        x: currentCenter.x - gesture.centerOffset.x * ratio,
+        y: currentCenter.y - gesture.centerOffset.y * ratio,
+      }
+
+      applyStickerTransform(stickerId, {
+        ...gesture.startTransform,
+        scale: nextScale,
+        x: nextCenter.x - (size.width * nextScale) / 2,
+        y: nextCenter.y - (size.height * nextScale) / 2,
+      }, { snap: true })
+    }
+  }
+
+  function handleStickerLayerPointerUp(event) {
+    if (!activeStickerPointers.current.has(event.pointerId)) return
+
+    event.preventDefault()
+    event.stopPropagation()
+    try {
+      event.currentTarget.releasePointerCapture?.(event.pointerId)
+    } catch {
+      // Pode já ter sido liberado pelo browser.
+    }
+
+    activeStickerPointers.current.delete(event.pointerId)
+
+    if (activeStickerPointers.current.size > 0) {
+      startStickerGesture(selectedStickerIdRef.current)
+      return
+    }
+
+    stickerGestureRef.current = null
+    updateSnapGuide({ x: false, y: false, bottom: false })
+    setStickers({ ...stickersRef.current })
+  }
+
   function handleStickerPointerDown(event, stickerId) {
     if (overlayMode !== 'stickers') return
 
@@ -2982,14 +3134,17 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
 
     if (stickerId === 'metrics') {
       return (
-        <div className="ff-share-sticker__metric-grid">
-          {getVisibleMetrics(stats, infoLevel, 5).map((metric) => (
-            <span key={`${metric.label}-${metric.value}`}>
-              <strong>{metric.value}</strong>
-              <small>{metric.label}</small>
-            </span>
-          ))}
-        </div>
+        <>
+          <span className="ff-share-sticker__label">Métricas</span>
+          <div className="ff-share-sticker__metric-grid">
+            {getVisibleMetrics(stats, infoLevel, 5).map((metric) => (
+              <span key={`${metric.label}-${metric.value}`}>
+                <strong>{metric.value}</strong>
+                <small>{metric.label}</small>
+              </span>
+            ))}
+          </div>
+        </>
       )
     }
 
@@ -2999,6 +3154,36 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
           <span className="ff-share-sticker__label">Volume total</span>
           <strong className="ff-share-sticker__hero-value">{stats.volumeLabel}</strong>
           <small>{stats.completedSetCount} séries • {stats.exerciseCount} exercícios</small>
+        </>
+      )
+    }
+
+    if (stickerId === 'topSet') {
+      return (
+        <>
+          <span className="ff-share-sticker__label">Melhor série</span>
+          <strong>{stats.topWeightSet?.exerciseName || stats.bestSet?.exerciseName || 'Sem melhor série'}</strong>
+          <small>{formatSetShort(stats.topWeightSet || stats.bestSet)} • melhor carga do treino</small>
+        </>
+      )
+    }
+
+    if (stickerId === 'repTotal') {
+      return (
+        <>
+          <span className="ff-share-sticker__label">Reps totais</span>
+          <strong className="ff-share-sticker__hero-value">{stats.totalReps}</strong>
+          <small>{stats.averageRepsPerSet} reps por série em média</small>
+        </>
+      )
+    }
+
+    if (stickerId === 'location') {
+      return (
+        <>
+          <span className="ff-share-sticker__label">Sessão</span>
+          <strong>{stats.locationLabel || 'Sem local registrado'}</strong>
+          <small>{stats.dateLabel}</small>
         </>
       )
     }
@@ -3018,20 +3203,21 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       weights: 'Pesos',
       prs: stats.prCount > 0 ? 'PRs' : 'Treino feito',
     }
+    const maxRows = stickerId === 'exerciseList' ? 5 : stickerId === 'prs' ? 4 : 4
     const fallbackRows = rows.length ? rows : [{ title: stickerId === 'prs' ? 'Sem PR neste treino' : 'Sem dados suficientes', meta: stats.workoutName }]
 
     return (
       <>
         <span className="ff-share-sticker__label">{titleMap[stickerId]}</span>
         <div className="ff-share-sticker__rows">
-          {fallbackRows.slice(0, stickerId === 'exerciseList' ? 5 : 4).map((row, index) => (
+          {fallbackRows.slice(0, maxRows).map((row, index) => (
             <span key={`${row.title}-${index}`}>
               <strong>{row.title}</strong>
               <small>{row.meta}</small>
             </span>
           ))}
-          {fallbackRows.length > (stickerId === 'exerciseList' ? 5 : 4) && (
-            <em>+{fallbackRows.length - (stickerId === 'exerciseList' ? 5 : 4)} itens</em>
+          {fallbackRows.length > maxRows && (
+            <em>+{fallbackRows.length - maxRows} itens</em>
           )}
         </div>
       </>
@@ -3302,6 +3488,11 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
                 className={`ff-share-studio__sticker-layer is-${format}`}
                 style={{ aspectRatio: `${selectedFormat.width} / ${selectedFormat.height}` }}
                 aria-label="Figurinhas editáveis"
+                onPointerDown={handleStickerLayerPointerDown}
+                onPointerMove={handleStickerLayerPointerMove}
+                onPointerUp={handleStickerLayerPointerUp}
+                onPointerCancel={handleStickerLayerPointerUp}
+                onPointerLeave={handleStickerLayerPointerUp}
               >
                 {visibleStickers.map((sticker) => (
                   <div

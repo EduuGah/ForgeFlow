@@ -13959,7 +13959,39 @@ body.ff-share-studio-open .mobile-bottom-nav {
   color: #fde68a;
 }
 
+.ff-share-sticker.is-topSet {
+  border-color: rgba(96, 165, 250, 0.28);
+  background: linear-gradient(180deg, rgba(9, 17, 32, 0.88), rgba(7, 10, 16, 0.82));
+}
+
+.ff-share-sticker.is-topSet .ff-share-sticker__label {
+  color: #93c5fd;
+}
+
+.ff-share-sticker.is-repTotal {
+  border-color: rgba(52, 211, 153, 0.26);
+  background: linear-gradient(180deg, rgba(6, 20, 14, 0.82), rgba(6, 10, 12, 0.8));
+}
+
+.ff-share-sticker.is-repTotal .ff-share-sticker__label {
+  color: #6ee7b7;
+}
+
+.ff-share-sticker.is-location {
+  background: rgba(5, 7, 10, 0.68);
+}
+
+.ff-share-sticker.is-location strong {
+  white-space: normal;
+  line-height: 1.08;
+}
+
+.ff-share-sticker.is-metrics {
+  gap: 0.42rem;
+}
+
 .ff-share-sticker__metric-grid {
+  margin-top: 0.12rem;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: clamp(0.2rem, 1.6vw, 0.42rem);
@@ -14033,10 +14065,15 @@ body.ff-share-studio-open .mobile-bottom-nav {
   min-height: 4.05rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.045);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.03));
   color: rgba(255, 255, 255, 0.72);
-  padding: 0.65rem;
+  padding: 0.72rem;
   text-align: left;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.ff-share-studio__sticker-picker button:active {
+  transform: scale(0.985);
 }
 
 .ff-share-studio__sticker-picker button.is-active {
