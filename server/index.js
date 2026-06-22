@@ -4713,6 +4713,8 @@ function buildPreviousExerciseRecords(historyItems = []) {
                 exerciseName,
                 bestWeight: 0,
                 bestVolume: 0,
+                bestWeightRecord: null,
+                bestVolumeRecord: null,
             }
 
             const sets = Array.isArray(exerciseItem.sets)
@@ -4728,10 +4730,24 @@ function buildPreviousExerciseRecords(historyItems = []) {
 
                 if (weight > current.bestWeight) {
                     current.bestWeight = weight
+                    current.bestWeightRecord = {
+                        weight,
+                        reps,
+                        volume,
+                        date: historyItem.finishedAt || historyItem.createdAt || null,
+                        workoutName: historyItem.workoutName || '',
+                    }
                 }
 
                 if (volume > current.bestVolume) {
                     current.bestVolume = volume
+                    current.bestVolumeRecord = {
+                        weight,
+                        reps,
+                        volume,
+                        date: historyItem.finishedAt || historyItem.createdAt || null,
+                        workoutName: historyItem.workoutName || '',
+                    }
                 }
             }
 
@@ -4745,7 +4761,7 @@ function buildPreviousExerciseRecords(historyItems = []) {
 async function buildWorkoutBackendPrResult(userId, exercises = []) {
     const previousHistory = await WorkoutHistory.find({ userId })
         .sort({ finishedAt: -1, createdAt: -1 })
-        .select('exercises finishedAt createdAt')
+        .select('workoutName exercises finishedAt createdAt')
         .lean()
 
     const previousRecords = buildPreviousExerciseRecords(previousHistory)
@@ -4806,12 +4822,46 @@ async function buildWorkoutBackendPrResult(userId, exercises = []) {
         const nextSets = sets.map((set) => {
             const isWeightPR = Boolean(bestWeightSetId && set.id === bestWeightSetId)
             const isVolumePR = Boolean(bestVolumeSetId && set.id === bestVolumeSetId)
+            const prDetails = []
+
+            if (isWeightPR) {
+                prDetails.push({
+                    type: 'weight',
+                    label: 'Peso',
+                    previousValue: previousRecord?.bestWeightRecord?.weight || previousRecord?.bestWeight || 0,
+                    previousReps: previousRecord?.bestWeightRecord?.reps || 0,
+                    previousVolume: previousRecord?.bestWeightRecord?.volume || 0,
+                    previousDate: previousRecord?.bestWeightRecord?.date || '',
+                    previousWorkoutName: previousRecord?.bestWeightRecord?.workoutName || '',
+                    value: getSetWeight(set),
+                    reps: getSetReps(set),
+                    volume: getSetWeight(set) * getSetReps(set),
+                    unit: 'kg',
+                })
+            }
+
+            if (isVolumePR) {
+                prDetails.push({
+                    type: 'volume',
+                    label: 'Volume',
+                    previousValue: previousRecord?.bestVolumeRecord?.volume || previousRecord?.bestVolume || 0,
+                    previousWeight: previousRecord?.bestVolumeRecord?.weight || 0,
+                    previousReps: previousRecord?.bestVolumeRecord?.reps || 0,
+                    previousDate: previousRecord?.bestVolumeRecord?.date || '',
+                    previousWorkoutName: previousRecord?.bestVolumeRecord?.workoutName || '',
+                    value: getSetWeight(set) * getSetReps(set),
+                    weight: getSetWeight(set),
+                    reps: getSetReps(set),
+                    unit: 'kg',
+                })
+            }
 
             return {
                 ...set,
                 isWeightPR,
                 isVolumePR,
                 isPR: isWeightPR || isVolumePR,
+                prDetails,
             }
         })
 
@@ -4821,6 +4871,8 @@ async function buildWorkoutBackendPrResult(userId, exercises = []) {
                 exerciseName,
                 setId: bestWeightSetId,
                 previousValue: previousRecord.bestWeight,
+                previousDate: previousRecord.bestWeightRecord?.date || '',
+                previousWorkoutName: previousRecord.bestWeightRecord?.workoutName || '',
                 value: bestWeight,
                 unit: 'kg',
             })
@@ -4832,6 +4884,8 @@ async function buildWorkoutBackendPrResult(userId, exercises = []) {
                 exerciseName,
                 setId: bestVolumeSetId,
                 previousValue: previousRecord.bestVolume,
+                previousDate: previousRecord.bestVolumeRecord?.date || '',
+                previousWorkoutName: previousRecord.bestVolumeRecord?.workoutName || '',
                 value: bestVolume,
                 unit: 'kg',
             })

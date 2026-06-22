@@ -107,6 +107,157 @@ export function getSessionPRsFromSets(sets = []) {
   return sets.filter((set) => set.isPR || set.isWeightPR || set.isVolumePR)
 }
 
+function getExerciseNameFromHistoryItem(exercise = {}) {
+  return (
+    exercise.exercise?.name ||
+    exercise.exerciseName ||
+    exercise.name ||
+    'Exercício'
+  )
+}
+
+function buildPrKey(exerciseName, setId, type = '') {
+  return `${normalizeText(exerciseName)}::${String(setId || '')}::${String(type || '')}`
+}
+
+function getSetPrTypes(set = {}) {
+  const types = []
+
+  if (set.isWeightPR) types.push('weight')
+  if (set.isVolumePR) types.push('volume')
+  if (set.isPR && types.length === 0) types.push('generic')
+
+  return types
+}
+
+function normalizePrType(type = '') {
+  const normalized = normalizeText(type)
+
+  if (normalized.includes('peso') || normalized.includes('weight')) return 'weight'
+  if (normalized.includes('volume')) return 'volume'
+
+  return normalized || 'generic'
+}
+
+function getPrLabel(type = '') {
+  const normalized = normalizePrType(type)
+
+  if (normalized === 'weight') return 'Peso'
+  if (normalized === 'volume') return 'Volume'
+
+  return 'Recorde'
+}
+
+function getSetVolumeValue(set = {}) {
+  return (Number(set.weight) || 0) * (Number(set.reps) || 0)
+}
+
+function normalizePrDetailFromSet(set = {}, exerciseName = '', type = 'generic', serverPr = null) {
+  const normalizedType = normalizePrType(type)
+  const directDetail = Array.isArray(set.prDetails)
+    ? set.prDetails.find((detail) => normalizePrType(detail?.type || detail?.label) === normalizedType)
+    : null
+
+  const valueFromSet = normalizedType === 'volume'
+    ? getSetVolumeValue(set)
+    : Number(set.weight) || 0
+
+  const newValue = Number(
+    directDetail?.newValue ??
+    directDetail?.value ??
+    serverPr?.value ??
+    valueFromSet
+  ) || 0
+
+  const previousValue = Number(
+    directDetail?.previousValue ??
+    directDetail?.previous ??
+    serverPr?.previousValue ??
+    serverPr?.previous ??
+    0
+  ) || 0
+
+  return {
+    ...set,
+    id: set.id,
+    setId: set.id,
+    type: normalizedType,
+    label: getPrLabel(normalizedType),
+    exerciseName,
+    setNumber: set.setNumber,
+    weight: Number(set.weight) || 0,
+    reps: Number(set.reps) || 0,
+    volume: getSetVolumeValue(set),
+    value: newValue,
+    previousValue,
+    previousReps: Number(directDetail?.previousReps ?? serverPr?.previousReps ?? 0) || 0,
+    previousVolume: Number(directDetail?.previousVolume ?? serverPr?.previousVolume ?? 0) || 0,
+    previousDate: directDetail?.previousDate || serverPr?.previousDate || serverPr?.date || '',
+    previousWorkoutName: directDetail?.previousWorkoutName || serverPr?.previousWorkoutName || serverPr?.workoutName || '',
+    unit: directDetail?.unit || serverPr?.unit || (normalizedType === 'volume' ? 'kg' : 'kg'),
+    isWeightPR: normalizedType === 'weight' || Boolean(set.isWeightPR),
+    isVolumePR: normalizedType === 'volume' || Boolean(set.isVolumePR),
+    isPR: true,
+  }
+}
+
+export function getSessionPRDetails(session = {}) {
+  const serverPrs = Array.isArray(session.prs) ? session.prs : []
+  const serverPrMap = new Map()
+
+  serverPrs.forEach((pr) => {
+    const exerciseName = pr.exerciseName || pr.exercise || ''
+    const setId = pr.setId || pr.id || pr.set?._id || ''
+    const type = normalizePrType(pr.type || pr.label)
+    serverPrMap.set(buildPrKey(exerciseName, setId, type), pr)
+  })
+
+  const details = []
+  const usedKeys = new Set()
+
+  ;(session.exercises || []).forEach((exercise) => {
+    const exerciseName = getExerciseNameFromHistoryItem(exercise)
+
+    ;(exercise.sets || []).forEach((set) => {
+      const types = getSetPrTypes(set)
+
+      types.forEach((type) => {
+        const key = buildPrKey(exerciseName, set.id, type)
+        const detail = normalizePrDetailFromSet(set, exerciseName, type, serverPrMap.get(key))
+
+        details.push(detail)
+        usedKeys.add(key)
+      })
+    })
+  })
+
+  serverPrs.forEach((pr) => {
+    const type = normalizePrType(pr.type || pr.label)
+    const key = buildPrKey(pr.exerciseName || pr.exercise || '', pr.setId || pr.id || '', type)
+
+    if (usedKeys.has(key)) return
+
+    details.push({
+      id: pr.setId || pr.id || key,
+      setId: pr.setId || pr.id || '',
+      type,
+      label: getPrLabel(type),
+      exerciseName: pr.exerciseName || pr.exercise || 'Exercício',
+      setNumber: pr.setNumber || '',
+      value: Number(pr.value || 0) || 0,
+      previousValue: Number(pr.previousValue || pr.previous || 0) || 0,
+      previousDate: pr.previousDate || pr.date || '',
+      previousWorkoutName: pr.previousWorkoutName || pr.workoutName || '',
+      unit: pr.unit || 'kg',
+      isWeightPR: type === 'weight',
+      isVolumePR: type === 'volume',
+      isPR: true,
+    })
+  })
+
+  return details
+}
+
 export function getExerciseVolume(exercise) {
   return (exercise.sets || []).reduce((total, set) => {
     if (!set.completed) return total
@@ -121,7 +272,7 @@ export function getExerciseVolume(exercise) {
 export function buildSessionMeta(session, index, totalSessions) {
   const completedSets = getSessionCompletedSets(session)
   const sessionVolume = getSessionVolumeFromSets(completedSets)
-  const sessionPRs = getSessionPRsFromSets(completedSets)
+  const sessionPRs = getSessionPRDetails(session)
   const exerciseNames = session.exercises
     .map((item) => item.exercise?.name)
     .filter(Boolean)

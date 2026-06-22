@@ -780,7 +780,12 @@ export function WorkoutSessionProvider({ children }) {
         const workingSets = sets.filter((set) => isWorkingSet(set))
         const exerciseName = getExerciseNameFromSessionExercise(exercise)
 
-        const { weightPRSetId, volumePRSetId } = getSessionPRTypes(
+        const {
+          weightPRSetId,
+          volumePRSetId,
+          previousBestWeight,
+          previousBestVolume,
+        } = getSessionPRTypes(
           exerciseName,
           workingSets,
           user
@@ -790,17 +795,54 @@ export function WorkoutSessionProvider({ children }) {
           ...exercise,
           sets: sets.map((set) => {
             const isWarmup = isWarmupSet(set)
+            const isWeightPR = !isWarmup && set.id === weightPRSetId
+            const isVolumePR = !isWarmup && set.id === volumePRSetId
+            const weight = Number(set.weight) || 0
+            const reps = Number(set.reps) || 0
+            const volume = weight * reps
+            const prDetails = []
+
+            if (isWeightPR) {
+              prDetails.push({
+                type: 'weight',
+                label: 'Peso',
+                previousValue: Number(previousBestWeight?.weight || 0) || 0,
+                previousReps: Number(previousBestWeight?.reps || 0) || 0,
+                previousVolume: Number(previousBestWeight?.volume || 0) || 0,
+                previousDate: previousBestWeight?.date || '',
+                previousWorkoutName: previousBestWeight?.workoutName || '',
+                value: weight,
+                reps,
+                volume,
+                unit: 'kg',
+              })
+            }
+
+            if (isVolumePR) {
+              prDetails.push({
+                type: 'volume',
+                label: 'Volume',
+                previousValue: Number(previousBestVolume?.volume || 0) || 0,
+                previousWeight: Number(previousBestVolume?.weight || 0) || 0,
+                previousReps: Number(previousBestVolume?.reps || 0) || 0,
+                previousDate: previousBestVolume?.date || '',
+                previousWorkoutName: previousBestVolume?.workoutName || '',
+                value: volume,
+                weight,
+                reps,
+                unit: 'kg',
+              })
+            }
 
             return {
               ...set,
               completed: Boolean(set.completed),
               weight: set.weight === undefined || set.weight === null ? '' : set.weight,
               reps: set.reps === undefined || set.reps === null ? '' : set.reps,
-              isWeightPR: !isWarmup && set.id === weightPRSetId,
-              isVolumePR: !isWarmup && set.id === volumePRSetId,
-              isPR:
-                !isWarmup &&
-                (set.id === weightPRSetId || set.id === volumePRSetId),
+              isWeightPR,
+              isVolumePR,
+              isPR: isWeightPR || isVolumePR,
+              prDetails,
             }
           }),
         }

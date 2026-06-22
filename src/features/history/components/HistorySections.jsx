@@ -177,6 +177,13 @@ function HistoryFilters({
         ))}
       </div>
 
+      <div className="ff-history-quick-periods" aria-label="Filtros rápidos de período">
+        <button type="button" onClick={() => { const date = new Date(); date.setDate(date.getDate() - 7); setStartDate(date.toISOString().slice(0, 10)); setEndDate('') }}>Últimos 7 dias</button>
+        <button type="button" onClick={() => { const date = new Date(); date.setDate(date.getDate() - 30); setStartDate(date.toISOString().slice(0, 10)); setEndDate('') }}>Últimos 30 dias</button>
+        <button type="button" onClick={() => { const date = new Date(); const start = new Date(date.getFullYear(), date.getMonth(), 1); setStartDate(start.toISOString().slice(0, 10)); setEndDate('') }}>Este mês</button>
+        <button type="button" className={prOnly ? 'is-active' : ''} onClick={() => setPrOnly((current) => !current)}><Trophy size={14} /> Com PR</button>
+      </div>
+
       <div className="ff-history-filter-grid">
       <div className="ff-history-filter-field ff-history-filter-field--search">
         <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-zinc-500">
@@ -334,14 +341,104 @@ function getExercisePrSummary(sets = []) {
   )
 }
 
-function HistoryExerciseDetails({ exercise, exerciseIndex }) {
+
+function getExerciseDisplayName(exercise = {}) {
+  return exercise.exercise?.name || exercise.exerciseName || exercise.name || 'Exercício'
+}
+
+function normalizePrText(value = '') {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+}
+
+function getExercisePrDetails(exercise, sessionPRs = []) {
+  const exerciseName = getExerciseDisplayName(exercise)
+  const exerciseKey = normalizePrText(exerciseName)
+  const setIds = new Set((exercise.sets || []).map((set) => String(set.id || '')))
+
+  return sessionPRs.filter((pr) => {
+    const prExerciseKey = normalizePrText(pr.exerciseName || pr.exercise || '')
+    const prSetId = String(pr.setId || pr.id || '')
+
+    return (prExerciseKey && prExerciseKey === exerciseKey) || (prSetId && setIds.has(prSetId))
+  })
+}
+
+function formatPrDetailNumber(value, unit = 'kg') {
+  const number = Number(value)
+
+  if (!Number.isFinite(number) || number <= 0) return 'sem registro'
+
+  return `${number.toLocaleString('pt-BR')}${unit ? ` ${unit}` : ''}`
+}
+
+function formatPrDetailValue(detail = {}) {
+  const unit = detail.type === 'volume' ? 'kg' : (detail.unit || 'kg')
+  const value = detail.value || (detail.type === 'volume' ? detail.volume : detail.weight)
+
+  if (detail.type === 'volume') return formatPrDetailNumber(value, unit)
+
+  const weight = Number(detail.weight || detail.value || 0)
+  const reps = Number(detail.reps || 0)
+
+  if (weight > 0 && reps > 0) return `${weight.toLocaleString('pt-BR')} kg × ${reps}`
+
+  return formatPrDetailNumber(value, unit)
+}
+
+function formatPrPreviousValue(detail = {}) {
+  if (!detail.previousValue) return 'sem marca anterior salva'
+
+  return formatPrDetailNumber(detail.previousValue, detail.type === 'volume' ? 'kg' : (detail.unit || 'kg'))
+}
+
+function formatPrDetailDate(dateString) {
+  if (!dateString) return ''
+
+  const date = new Date(dateString)
+  if (Number.isNaN(date.getTime())) return ''
+
+  return formatShortDate(date.toISOString())
+}
+
+function HistoryPrDetailsList({ prs = [] }) {
+  if (!prs.length) return null
+
+  return (
+    <div className="ff-history-pr-detail-list">
+      {prs.slice(0, 6).map((pr, index) => {
+        const previousDate = formatPrDetailDate(pr.previousDate)
+        const title = `${pr.label || 'PR'}${pr.setNumber ? ` • série ${pr.setNumber}` : ''}`
+
+        return (
+          <div key={`${pr.exerciseName}-${pr.setId || pr.id}-${pr.type}-${index}`} className="ff-history-pr-detail-item">
+            <span><Trophy size={15} /></span>
+            <div>
+              <strong>{pr.exerciseName || 'Exercício'} · {title}</strong>
+              <p>
+                {formatPrPreviousValue(pr)} → <b>{formatPrDetailValue(pr)}</b>
+                {previousDate ? <small> marca anterior em {previousDate}</small> : null}
+              </p>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function HistoryExerciseDetails({ exercise, exerciseIndex, sessionPRs = [] }) {
   const [isExpanded, setIsExpanded] = useState(true)
   const exerciseVolume = getExerciseVolume(exercise)
   const validSets = (exercise.sets || []).filter(isValidWorkingSet)
   const prSummary = getExercisePrSummary(validSets)
-  const exerciseName = exercise.exercise?.name || 'Exercício'
+  const exerciseName = getExerciseDisplayName(exercise)
   const muscleGroup = exercise.exercise?.muscleGroup || 'Grupo muscular'
   const equipment = exercise.exercise?.equipment || 'Equipamento'
+  const exercisePrDetails = getExercisePrDetails(exercise, sessionPRs)
 
   return (
     <article className={`ff-history-exercise-card ${isExpanded ? 'is-expanded' : 'is-collapsed'}`}>
@@ -389,6 +486,8 @@ function HistoryExerciseDetails({ exercise, exerciseIndex }) {
         {prSummary.generic > 0 && <span className="is-pr"><small>Recorde</small><strong>{prSummary.generic}</strong></span>}
       </div>
 
+      {isExpanded && <HistoryPrDetailsList prs={exercisePrDetails} />}
+
       {isExpanded ? (
         <div className="ff-history-set-list" aria-label={`Séries de ${exerciseName}`}>
           {validSets.map((set) => {
@@ -408,6 +507,9 @@ function HistoryExerciseDetails({ exercise, exerciseIndex }) {
                     <small>Sem PR</small>
                   )}
                 </span>
+                {(set.notes || set.note || set.description) && (
+                  <p className="ff-history-set-row__note">{set.notes || set.note || set.description}</p>
+                )}
               </div>
             )
           })}
@@ -516,9 +618,10 @@ function HistorySessionCard({
   const sessionVolume = meta?.sessionVolume || 0
   const sessionPRs = meta?.sessionPRs || []
   const indexLabel = meta?.indexLabel || ''
+  const locationLabel = getMapsUrl(session.location) ? formatLocationLabel(session.location) : ''
 
   return (
-    <article className="ff-history-feed-card">
+    <article className={`ff-history-feed-card ${sessionPRs.length > 0 ? 'has-pr' : ''}`}>
       <button type="button" onClick={() => onToggle(session.id)} className="ff-history-feed-card__summary">
         <div className="ff-history-feed-card__avatar">
           <Dumbbell size={21} />
@@ -529,6 +632,7 @@ function HistorySessionCard({
             <span>Treino #{indexLabel}</span>
             <span>{formatDate(session.finishedAt)}</span>
             <span>{formatHour(session.finishedAt)}</span>
+            {locationLabel && <span><MapPin size={12} /> {locationLabel}</span>}
           </div>
 
           <h3>{session.workoutName}</h3>
@@ -539,6 +643,13 @@ function HistorySessionCard({
             <span><small>Exercícios</small><strong>{session.exercises.length}</strong></span>
             <span><small>Recordes</small><strong>{sessionPRs.length}</strong></span>
           </div>
+
+          {sessionPRs.length > 0 && (
+            <div className="ff-history-feed-card__pr-strip">
+              <Trophy size={14} />
+              <span>{sessionPRs.length} PR{sessionPRs.length > 1 ? 's' : ''}: {sessionPRs.slice(0, 2).map((pr) => pr.exerciseName).filter(Boolean).join(', ')}</span>
+            </div>
+          )}
         </div>
 
         <span className="ff-history-open-label">Ver</span>
@@ -572,6 +683,7 @@ function HistorySessionCard({
                 key={exercise.id}
                 exercise={exercise}
                 exerciseIndex={exerciseIndex}
+                sessionPRs={meta?.sessionPRs || []}
               />
             ))}
           </div>
@@ -673,6 +785,7 @@ export function HistorySessionDetailView({
               {sessionPRs.filter((set) => set.isVolumePR).length > 0 && <span>Volume ×{sessionPRs.filter((set) => set.isVolumePR).length}</span>}
               {sessionPRs.filter((set) => set.isPR && !set.isWeightPR && !set.isVolumePR).length > 0 && <span>Outros ×{sessionPRs.filter((set) => set.isPR && !set.isWeightPR && !set.isVolumePR).length}</span>}
             </p>
+            <HistoryPrDetailsList prs={sessionPRs} />
           </div>
         )}
 
@@ -682,6 +795,7 @@ export function HistorySessionDetailView({
               key={exercise.id}
               exercise={exercise}
               exerciseIndex={exerciseIndex}
+              sessionPRs={sessionPRs}
             />
           ))}
         </div>

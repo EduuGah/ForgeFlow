@@ -12992,3 +12992,255 @@ body.ff-share-studio-open .mobile-bottom-nav {
     box-shadow: 0 -18px 42px rgba(0, 0, 0, 0.35) !important;
   }
 }
+
+/* ForgeFlow 22/06 - Histórico premium + Share Studio V3 */
+.ff-history-quick-periods {
+  display: flex;
+  gap: 0.55rem;
+  overflow-x: auto;
+  padding: 0.15rem 0 0.35rem;
+  scrollbar-width: none;
+}
+
+.ff-history-quick-periods::-webkit-scrollbar {
+  display: none;
+}
+
+.ff-history-quick-periods button {
+  display: inline-flex;
+  min-height: 2.35rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.055);
+  padding: 0 0.85rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.76rem;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.ff-history-quick-periods button.is-active,
+.ff-history-quick-periods button:hover {
+  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(239, 68, 68, 0.14);
+  color: #fff;
+}
+
+.ff-history-feed-card.has-pr {
+  border-color: rgba(250, 204, 21, 0.22) !important;
+  box-shadow: inset 0 0 0 1px rgba(250, 204, 21, 0.04), 0 18px 50px rgba(0, 0, 0, 0.22);
+}
+
+.ff-history-feed-card__meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+  max-width: 100%;
+}
+
+.ff-history-feed-card__pr-strip {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.65rem;
+  border: 1px solid rgba(250, 204, 21, 0.18);
+  border-radius: 999px;
+  background: rgba(250, 204, 21, 0.08);
+  padding: 0.42rem 0.65rem;
+  color: #fde68a;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.ff-history-feed-card__pr-strip span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-history-pr-detail-list {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0.75rem 0;
+}
+
+.ff-history-pr-detail-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: start;
+  border: 1px solid rgba(250, 204, 21, 0.18);
+  border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.1), rgba(255, 255, 255, 0.035));
+  padding: 0.7rem;
+}
+
+.ff-history-pr-detail-item > span {
+  display: grid;
+  width: 1.95rem;
+  height: 1.95rem;
+  place-items: center;
+  border-radius: 0.8rem;
+  background: rgba(250, 204, 21, 0.13);
+  color: #facc15;
+}
+
+.ff-history-pr-detail-item strong {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 950;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-history-pr-detail-item p {
+  margin-top: 0.2rem;
+  color: rgba(255, 255, 255, 0.64);
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1.28;
+}
+
+.ff-history-pr-detail-item b {
+  color: #fff;
+  font-weight: 950;
+}
+
+.ff-history-pr-detail-item small {
+  display: block;
+  margin-top: 0.15rem;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.68rem;
+}
+
+.ff-history-set-row__note {
+  grid-column: 1 / -1;
+  margin-top: 0.35rem;
+  border-left: 2px solid rgba(239, 68, 68, 0.45);
+  padding-left: 0.55rem;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.ff-share-studio__info-levels {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.ff-share-studio__info-levels button {
+  min-width: 0;
+  min-height: 4.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.045);
+  padding: 0.68rem;
+  text-align: left;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.ff-share-studio__info-levels button.is-active {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.14);
+  color: #fff;
+}
+
+.ff-share-studio__info-levels strong {
+  display: block;
+  font-size: 0.84rem;
+  font-weight: 950;
+  line-height: 1.1;
+}
+
+.ff-share-studio__info-levels small {
+  display: -webkit-box;
+  margin-top: 0.24rem;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.54);
+  font-size: 0.68rem;
+  font-weight: 750;
+  line-height: 1.2;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.ff-share-studio__phrase-row button {
+  max-width: 15rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ff-share-studio__caption textarea {
+  min-height: 5.4rem !important;
+  max-height: 11rem;
+  overflow-y: auto;
+}
+
+.ff-share-studio__canvas.is-feed,
+.ff-share-studio__canvas.is-minimal,
+.ff-share-studio__canvas.is-pr,
+.ff-share-studio__canvas.is-volume,
+.ff-share-studio__canvas.is-quote {
+  background: #05070b;
+}
+
+@media (max-width: 767px) {
+  .ff-history-quick-periods {
+    margin-inline: -0.25rem;
+    padding-inline: 0.25rem;
+  }
+
+  .ff-history-feed-card__meta {
+    overflow-x: auto;
+    padding-bottom: 0.1rem;
+    scrollbar-width: none;
+  }
+
+  .ff-history-feed-card__meta::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ff-history-feed-card__meta span {
+    flex: 0 0 auto;
+  }
+
+  .ff-history-pr-detail-item {
+    border-radius: 0.9rem;
+    padding: 0.6rem;
+  }
+
+  .ff-history-pr-detail-item strong {
+    white-space: normal;
+  }
+
+  .ff-share-studio__info-levels {
+    grid-template-columns: repeat(3, minmax(7.4rem, 1fr));
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
+  }
+
+  .ff-share-studio__info-levels button {
+    min-height: 4rem;
+  }
+
+  .ff-share-studio__phrase-row button {
+    max-width: 13rem;
+  }
+
+  .ff-share-studio__canvas.is-feed {
+    max-width: min(78vw, 310px) !important;
+  }
+}

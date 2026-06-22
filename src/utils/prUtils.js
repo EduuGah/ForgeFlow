@@ -172,6 +172,8 @@ export function getSessionPRTypes(exerciseName, sets, user) {
   return {
     weightPRSetId: bestWeightSet?.id || null,
     volumePRSetId: bestVolumeSet?.id || null,
+    previousBestWeight,
+    previousBestVolume,
   }
 }
 
