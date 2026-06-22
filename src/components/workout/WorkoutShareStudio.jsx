@@ -1262,57 +1262,86 @@ function drawHeroPrStickerOverlay(ctx, stats, options) {
   const isStory = format === 'story'
   const pad = isStory ? 72 : 58
   const hasPr = stats.prCount > 0
-  const heroW = isStory ? 455 : 330
-  const heroH = isStory ? 330 : 242
-  const heroX = pad
-  const heroY = isStory ? height - 780 : height - 555
+  const cardW = width - pad * 2
+  const cardH = isStory ? 310 : 222
+  const cardX = pad
+  const cardY = isStory ? height - 650 : height - 452
+  const badgeSize = isStory ? 188 : 132
+  const contentX = cardX + badgeSize + (isStory ? 34 : 24)
+  const contentW = cardW - badgeSize - (isStory ? 68 : 50)
+  const visiblePrs = hasPr ? stats.prs.slice(0, isStory ? 2 : 1) : []
 
-  drawTinyBrandSticker(ctx, iconImage, pad, heroY - (isStory ? 92 : 74), { scale: isStory ? 0.95 : 0.76, label: hasPr ? 'Novo PR' : 'ForgeFlow' })
+  drawTinyBrandSticker(ctx, iconImage, pad, cardY - (isStory ? 96 : 74), {
+    scale: isStory ? 0.92 : 0.72,
+    label: hasPr ? 'Hero PR' : 'Treino feito',
+  })
 
-  drawGlassPanel(ctx, heroX, heroY, heroW, heroH, isStory ? 58 : 44, {
-    fill: hasPr ? 'rgba(30,20,4,0.76)' : 'rgba(8,10,14,0.72)',
-    stroke: hasPr ? 'rgba(250,204,21,0.38)' : 'rgba(255,255,255,0.18)',
+  drawGlassPanel(ctx, cardX, cardY, cardW, cardH, isStory ? 58 : 42, {
+    fill: hasPr ? 'rgba(22,14,4,0.76)' : 'rgba(7,9,13,0.72)',
+    stroke: hasPr ? 'rgba(250,204,21,0.42)' : 'rgba(255,255,255,0.18)',
     shadow: true,
   })
 
+  ctx.save()
+  const badgeX = cardX + (isStory ? 30 : 22)
+  const badgeY = cardY + (cardH - badgeSize) / 2
+  const gradient = ctx.createRadialGradient(
+    badgeX + badgeSize * 0.35,
+    badgeY + badgeSize * 0.3,
+    badgeSize * 0.12,
+    badgeX + badgeSize * 0.5,
+    badgeY + badgeSize * 0.5,
+    badgeSize * 0.62,
+  )
+  gradient.addColorStop(0, hasPr ? 'rgba(254,240,138,0.96)' : 'rgba(239,68,68,0.96)')
+  gradient.addColorStop(1, hasPr ? 'rgba(180,83,9,0.94)' : 'rgba(127,29,29,0.94)')
+  drawRoundRect(ctx, badgeX, badgeY, badgeSize, badgeSize, badgeSize * 0.28)
+  ctx.fillStyle = gradient
+  ctx.fill()
+  ctx.strokeStyle = 'rgba(255,255,255,0.24)'
+  ctx.lineWidth = 3
+  ctx.stroke()
+
+  ctx.fillStyle = hasPr ? '#1f1304' : '#fff'
+  ctx.font = `950 ${isStory ? 66 : 46}px Inter, Arial, sans-serif`
+  ctx.textAlign = 'center'
+  ctx.fillText(hasPr ? String(stats.prCount) : '✓', badgeX + badgeSize / 2, badgeY + badgeSize * 0.53)
+  ctx.font = `950 ${isStory ? 25 : 18}px Inter, Arial, sans-serif`
+  ctx.fillText(hasPr ? `PR${stats.prCount > 1 ? 's' : ''}` : 'OK', badgeX + badgeSize / 2, badgeY + badgeSize * 0.73)
+  ctx.textAlign = 'left'
+  ctx.restore()
+
   ctx.fillStyle = hasPr ? '#fde68a' : accentColor
-  ctx.font = `950 ${isStory ? 26 : 20}px Inter, Arial, sans-serif`
-  ctx.fillText(hasPr ? 'NOVO RECORDE' : 'TREINO CONCLUÍDO', heroX + 34, heroY + (isStory ? 60 : 46))
+  ctx.font = `950 ${isStory ? 23 : 17}px Inter, Arial, sans-serif`
+  ctx.fillText(hasPr ? 'NOVO RECORDE' : 'TREINO CONCLUÍDO', contentX, cardY + (isStory ? 66 : 50))
 
   ctx.fillStyle = '#fff'
-  ctx.font = `950 ${isStory ? 100 : 72}px Inter, Arial, sans-serif`
-  ctx.fillText(hasPr ? `${stats.prCount} PR${stats.prCount > 1 ? 's' : ''}` : 'OK', heroX + 34, heroY + (isStory ? 162 : 118))
+  ctx.font = `950 ${isStory ? 42 : 30}px Inter, Arial, sans-serif`
+  drawWrappedText(ctx, hasPr ? 'Evolução registrada.' : 'Mais uma sessão paga.', contentX, cardY + (isStory ? 122 : 88), contentW, isStory ? 48 : 36, 2)
 
   ctx.fillStyle = 'rgba(255,255,255,0.72)'
-  ctx.font = `850 ${isStory ? 24 : 18}px Inter, Arial, sans-serif`
-  const heroLine = hasPr ? getPrText(stats.prs[0]) : caption
-  drawWrappedText(ctx, heroLine, heroX + 34, heroY + (isStory ? 220 : 160), heroW - 68, isStory ? 32 : 25, 2)
+  ctx.font = `850 ${isStory ? 23 : 17}px Inter, Arial, sans-serif`
+  drawWrappedText(ctx, hasPr ? getPrText(stats.prs[0]) : caption, contentX, cardY + cardH - (isStory ? 76 : 55), contentW, isStory ? 30 : 22, 2)
 
-  const listX = isStory ? pad + 36 : pad + 20
-  const listY = heroY + heroH + (isStory ? 22 : 16)
-  const listW = isStory ? width - pad * 2 - 42 : width - pad * 2 - 22
-  const items = hasPr
-    ? stats.prs.slice(1, isStory ? 3 : 2).map(getPrText)
-    : [`${stats.volumeLabel} de volume`, `${stats.completedSetCount} séries registradas`]
-
-  items.forEach((item, index) => {
-    drawStickerPill(ctx, item, listX, listY + index * (isStory ? 72 : 56), {
-      maxWidth: listW,
-      fontSize: isStory ? 23 : 17,
-      height: isStory ? 58 : 46,
+  const listY = cardY + cardH + (isStory ? 18 : 14)
+  visiblePrs.slice(1).forEach((item, index) => {
+    drawStickerPill(ctx, getPrText(item), cardX, listY + index * (isStory ? 68 : 52), {
+      maxWidth: cardW,
+      fontSize: isStory ? 22 : 17,
+      height: isStory ? 54 : 42,
       fill: 'rgba(7,9,13,0.70)',
-      stroke: 'rgba(255,255,255,0.16)',
-      color: index === 0 && hasPr ? '#fde68a' : '#fff',
+      stroke: 'rgba(250,204,21,0.22)',
+      color: '#fde68a',
     })
   })
 
-  if (hasPr && stats.prs.length > (isStory ? 3 : 2)) {
-    drawStickerPill(ctx, `+${stats.prs.length - (isStory ? 3 : 2)} PRs`, listX, listY + items.length * (isStory ? 72 : 56), {
-      maxWidth: isStory ? 210 : 160,
-      fontSize: isStory ? 22 : 17,
-      height: isStory ? 54 : 44,
-      fill: 'rgba(250,204,21,0.16)',
-      stroke: 'rgba(250,204,21,0.28)',
+  if (hasPr && stats.prs.length > visiblePrs.length) {
+    drawStickerPill(ctx, `+${stats.prs.length - visiblePrs.length} PRs escondidos`, cardX, listY + Math.max(0, visiblePrs.length - 1) * (isStory ? 68 : 52), {
+      maxWidth: isStory ? 330 : 245,
+      fontSize: isStory ? 21 : 16,
+      height: isStory ? 52 : 40,
+      fill: 'rgba(250,204,21,0.17)',
+      stroke: 'rgba(250,204,21,0.30)',
       color: '#fde68a',
     })
   }
@@ -1490,6 +1519,105 @@ function drawTransformedOverlay(ctx, stats, options) {
   ctx.translate(-width / 2, -height / 2)
   drawStickerOverlayContent(ctx, stats, options)
   ctx.restore()
+}
+
+
+function getStickerBottomTarget(format, canvasWidth, canvasHeight) {
+  if (format === 'story') return canvasHeight - 270
+  return canvasHeight - 140
+}
+
+function getStickerOverlayBounds(template, format, stats = {}) {
+  const selectedFormat = SHARE_FORMATS.find((item) => item.id === format) || SHARE_FORMATS[0]
+  const { width, height } = selectedFormat
+  const isStory = format === 'story'
+  const pad = isStory ? 70 : 54
+
+  if (template === 'heroPr') {
+    const cardW = isStory ? width - pad * 2 : width - pad * 2
+    const cardH = isStory ? 310 : 222
+    const cardY = isStory ? height - 650 : height - 452
+    const itemCount = Math.min(stats?.prCount > 0 ? 2 : 1, isStory ? 2 : 1)
+    const extraRow = stats?.prCount > itemCount ? 1 : 0
+    return {
+      left: pad,
+      top: cardY - (isStory ? 96 : 74),
+      right: pad + cardW,
+      bottom: cardY + cardH + (itemCount + extraRow) * (isStory ? 70 : 54) + (isStory ? 22 : 18),
+    }
+  }
+
+  if (template === 'performance') {
+    const cardW = width - pad * 2
+    const cardH = isStory ? 430 : 305
+    const cardY = height - (isStory ? 610 : 430)
+    return {
+      left: pad,
+      top: cardY,
+      right: pad + cardW,
+      bottom: cardY + cardH + (isStory ? 84 : 62),
+    }
+  }
+
+  if (template === 'editorial') {
+    const cardW = width - pad * 2
+    const cardH = isStory ? 390 : 282
+    const cardY = height - (isStory ? 560 : 392)
+    return {
+      left: pad,
+      top: cardY - (isStory ? 90 : 70),
+      right: pad + cardW,
+      bottom: cardY + cardH + (isStory ? 80 : 58),
+    }
+  }
+
+  if (template === 'darkGlass') {
+    const startY = height - (isStory ? 640 : 455)
+    const metricRows = 2
+    return {
+      left: pad,
+      top: startY - (isStory ? 98 : 76),
+      right: width - pad,
+      bottom: startY + (isStory ? 240 : 170) + metricRows * (isStory ? 108 : 82),
+    }
+  }
+
+  const quoteH = isStory ? 178 : 132
+  const chipH = isStory ? 92 : 76
+  const startY = height - (isStory ? 455 : 315)
+  return {
+    left: pad,
+    top: startY - (isStory ? 92 : 76),
+    right: width - pad,
+    bottom: startY + quoteH + (isStory ? 18 : 14) + chipH,
+  }
+}
+
+function getTransformedOverlayBounds(bounds, transform, canvasWidth, canvasHeight) {
+  const scale = clamp(safeNumber(transform?.scale) || 1, OVERLAY_MIN_SCALE, OVERLAY_MAX_SCALE)
+  const centerX = canvasWidth / 2
+  const centerY = canvasHeight / 2
+  const offsetX = safeNumber(transform?.x)
+  const offsetY = safeNumber(transform?.y)
+
+  return {
+    left: centerX + offsetX + scale * (bounds.left - centerX),
+    right: centerX + offsetX + scale * (bounds.right - centerX),
+    top: centerY + offsetY + scale * (bounds.top - centerY),
+    bottom: centerY + offsetY + scale * (bounds.bottom - centerY),
+  }
+}
+
+function getOverlayTranslationForCenter(bounds, transform, canvasWidth, canvasHeight, axis) {
+  const scale = clamp(safeNumber(transform?.scale) || 1, OVERLAY_MIN_SCALE, OVERLAY_MAX_SCALE)
+
+  if (axis === 'x') {
+    const boundsCenterX = (bounds.left + bounds.right) / 2
+    return -scale * (boundsCenterX - canvasWidth / 2)
+  }
+
+  const boundsCenterY = (bounds.top + bounds.bottom) / 2
+  return -scale * (boundsCenterY - canvasHeight / 2)
 }
 
 function drawPhotoStoryTemplate(ctx, stats, options) {
@@ -1894,6 +2022,10 @@ async function drawWorkoutShareCanvas(canvas, options) {
     overlayTransform,
   }
 
+  if (overlayMode === 'none') {
+    return stats
+  }
+
   if (overlayMode === 'stickers') {
     drawTransformedOverlay(ctx, stats, templateOptions)
   } else if (selectedTemplate.id === 'heroPr') {
@@ -2005,7 +2137,12 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   const selectedFormatRef = useRef(SHARE_FORMATS[0])
   const activeEditLayerRef = useRef('overlay')
   const previewFrameRef = useRef(0)
-  const snapGuideRef = useRef({ x: false, y: false })
+  const previewRedrawModeRef = useRef('full')
+  const fastDrawInProgressRef = useRef(false)
+  const fastDrawPendingRef = useRef(false)
+  const baseCanvasRef = useRef(null)
+  const baseCacheKeyRef = useRef('')
+  const snapGuideRef = useRef({ x: false, y: false, bottom: false })
 
   const [template, setTemplate] = useState('photoStory')
   const [format, setFormat] = useState('story')
@@ -2019,7 +2156,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   const [userPhoto, setUserPhoto] = useState(null)
   const [photoTransform, setPhotoTransform] = useState(DEFAULT_PHOTO_TRANSFORM)
   const [overlayTransform, setOverlayTransform] = useState(DEFAULT_OVERLAY_TRANSFORM)
-  const [snapGuide, setSnapGuide] = useState({ x: false, y: false })
+  const [snapGuide, setSnapGuide] = useState({ x: false, y: false, bottom: false })
   const [status, setStatus] = useState('')
   const [busy, setBusy] = useState(false)
   const [ready, setReady] = useState(false)
@@ -2029,6 +2166,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   const caption = customCaption.trim() || selectedPhrase
   const hasEditablePhoto = backgroundMode === 'photo' && Boolean(userPhoto?.src)
   const canEditPreview = hasEditablePhoto || overlayMode === 'stickers'
+  const snapBottomPercent = `${(getStickerBottomTarget(selectedFormat.id, selectedFormat.width, selectedFormat.height) / selectedFormat.height) * 100}%`
 
   const stats = useMemo(() => {
     if (!session) return null
@@ -2072,6 +2210,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
 
     let active = true
     setReady(false)
+    baseCacheKeyRef.current = ''
 
     drawWorkoutShareCanvas(canvasRef.current, {
       session,
@@ -2134,8 +2273,114 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
 
   if (!open || !session || !stats) return null
 
-  function drawPreviewWithRefs() {
+  function getBaseCacheKey() {
+    const photo = userPhotoRef.current
+    const photoKey = photo?.src
+      ? `${photo.name || 'photo'}:${photo.width || 0}x${photo.height || 0}:${String(photo.src).length}`
+      : 'no-photo'
+    const transform = photoTransformRef.current
+
+    return [
+      format,
+      backgroundMode,
+      selectedBackground,
+      photoKey,
+      Math.round(safeNumber(transform.x)),
+      Math.round(safeNumber(transform.y)),
+      Math.round((safeNumber(transform.scale) || 1) * 1000),
+      transform.fit || 'cover',
+    ].join('|')
+  }
+
+  async function ensurePreviewBaseCanvas() {
+    const cacheKey = getBaseCacheKey()
+
+    if (baseCanvasRef.current && baseCacheKeyRef.current === cacheKey) {
+      return baseCanvasRef.current
+    }
+
+    const baseCanvas = baseCanvasRef.current || document.createElement('canvas')
+    baseCanvasRef.current = baseCanvas
+
+    await drawWorkoutShareCanvas(baseCanvas, {
+      session,
+      meta,
+      template,
+      format,
+      infoLevel,
+      phrase: caption,
+      backgroundMode,
+      selectedBackground,
+      userPhoto: userPhotoRef.current,
+      photoTransform: photoTransformRef.current,
+      overlayMode: 'none',
+      overlayTransform: overlayTransformRef.current,
+    })
+
+    baseCacheKeyRef.current = cacheKey
+    return baseCanvas
+  }
+
+  async function drawStickerPreviewFast() {
+    if (fastDrawInProgressRef.current) {
+      fastDrawPendingRef.current = true
+      return
+    }
+
+    fastDrawInProgressRef.current = true
+
+    try {
+      const canvas = canvasRef.current
+      if (!canvas) return
+
+      const currentFormat = selectedFormatRef.current
+      const baseCanvas = await ensurePreviewBaseCanvas()
+      const ctx = canvas.getContext('2d')
+      const accentColor = getShareAccentColor()
+      const accentSoftColor = getShareAccentSoftColor()
+      let iconImage = null
+
+      try {
+        iconImage = await loadShareImage(forgeflowIcon, { anonymous: true })
+      } catch {
+        // Sem ícone, mantém os textos.
+      }
+
+      canvas.width = currentFormat.width
+      canvas.height = currentFormat.height
+      ctx.clearRect(0, 0, currentFormat.width, currentFormat.height)
+      ctx.drawImage(baseCanvas, 0, 0)
+
+      drawTransformedOverlay(ctx, stats, {
+        width: currentFormat.width,
+        height: currentFormat.height,
+        caption,
+        infoLevel,
+        iconImage,
+        accentColor,
+        accentSoftColor,
+        template,
+        format,
+        overlayTransform: overlayTransformRef.current,
+      })
+    } finally {
+      fastDrawInProgressRef.current = false
+      if (fastDrawPendingRef.current) {
+        fastDrawPendingRef.current = false
+        schedulePreviewRedraw('overlay')
+      }
+    }
+  }
+
+  function drawPreviewWithRefs(options = {}) {
     if (!canvasRef.current) return
+
+    if (options.fastOverlay && overlayMode === 'stickers') {
+      drawStickerPreviewFast().catch((error) => {
+        console.error(error)
+      })
+      return
+    }
 
     drawWorkoutShareCanvas(canvasRef.current, {
       session,
@@ -2155,12 +2400,20 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     })
   }
 
-  function schedulePreviewRedraw() {
+  function schedulePreviewRedraw(mode = 'full') {
+    if (mode === 'full') {
+      previewRedrawModeRef.current = 'full'
+    } else if (previewRedrawModeRef.current !== 'full') {
+      previewRedrawModeRef.current = mode
+    }
+
     if (previewFrameRef.current || typeof window === 'undefined') return
 
     previewFrameRef.current = window.requestAnimationFrame(() => {
+      const redrawMode = previewRedrawModeRef.current
       previewFrameRef.current = 0
-      drawPreviewWithRefs()
+      previewRedrawModeRef.current = 'full'
+      drawPreviewWithRefs({ fastOverlay: redrawMode === 'overlay' })
     })
   }
 
@@ -2168,29 +2421,42 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     const normalized = {
       x: Boolean(nextGuide?.x),
       y: Boolean(nextGuide?.y),
+      bottom: Boolean(nextGuide?.bottom),
     }
     const current = snapGuideRef.current
 
-    if (current.x === normalized.x && current.y === normalized.y) return
+    if (current.x === normalized.x && current.y === normalized.y && current.bottom === normalized.bottom) return
 
     snapGuideRef.current = normalized
     setSnapGuide(normalized)
   }
 
-  function applyCenterSnap(transform) {
+  function applyStickerSnap(transform) {
     const currentFormat = selectedFormatRef.current
-    const threshold = Math.max(28, Math.min(currentFormat.width, currentFormat.height) * 0.04)
-    const next = { ...transform }
-    const guide = { x: false, y: false }
+    const threshold = Math.max(22, Math.min(currentFormat.width, currentFormat.height) * 0.032)
+    const next = {
+      ...transform,
+      scale: clamp(safeNumber(transform?.scale) || 1, OVERLAY_MIN_SCALE, OVERLAY_MAX_SCALE),
+    }
+    const guide = { x: false, y: false, bottom: false }
+    const bounds = getStickerOverlayBounds(template, currentFormat.id, stats)
+    let transformed = getTransformedOverlayBounds(bounds, next, currentFormat.width, currentFormat.height)
+    const centerX = (transformed.left + transformed.right) / 2
+    const centerY = (transformed.top + transformed.bottom) / 2
+    const targetBottom = getStickerBottomTarget(currentFormat.id, currentFormat.width, currentFormat.height)
 
-    if (Math.abs(safeNumber(next.x)) <= threshold) {
-      next.x = 0
+    if (Math.abs(centerX - currentFormat.width / 2) <= threshold) {
+      next.x = getOverlayTranslationForCenter(bounds, next, currentFormat.width, currentFormat.height, 'x')
       guide.x = true
+      transformed = getTransformedOverlayBounds(bounds, next, currentFormat.width, currentFormat.height)
     }
 
-    if (Math.abs(safeNumber(next.y)) <= threshold) {
-      next.y = 0
+    if (Math.abs(centerY - currentFormat.height / 2) <= threshold) {
+      next.y = getOverlayTranslationForCenter(bounds, next, currentFormat.width, currentFormat.height, 'y')
       guide.y = true
+    } else if (Math.abs(transformed.bottom - targetBottom) <= threshold) {
+      next.y += targetBottom - transformed.bottom
+      guide.bottom = true
     }
 
     return { transform: next, guide }
@@ -2282,23 +2548,23 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     let transformToApply = nextTransform
 
     if (options.snap) {
-      const snapped = applyCenterSnap(nextTransform)
+      const snapped = applyStickerSnap(nextTransform)
       transformToApply = snapped.transform
       updateSnapGuide(snapped.guide)
     } else if (!options.keepGuide) {
-      updateSnapGuide({ x: false, y: false })
+      updateSnapGuide({ x: false, y: false, bottom: false })
     }
 
     const clamped = clampOverlayTransform(transformToApply, currentFormat.width, currentFormat.height)
     overlayTransformRef.current = clamped
 
     if (options.live) {
-      schedulePreviewRedraw()
+      schedulePreviewRedraw('overlay')
       return clamped
     }
 
     setOverlayTransform(clamped)
-    schedulePreviewRedraw()
+    schedulePreviewRedraw('overlay')
     return clamped
   }
 
@@ -2392,7 +2658,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       gestureRef.current = null
       setPhotoTransform(photoTransformRef.current)
       setOverlayTransform(overlayTransformRef.current)
-      updateSnapGuide({ x: false, y: false })
+      updateSnapGuide({ x: false, y: false, bottom: false })
     }
   }
 
@@ -2698,7 +2964,11 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
         </header>
 
         <div className="ff-share-studio__body">
-          <section className="ff-share-studio__preview" aria-label="Prévia da imagem">
+          <section
+            className="ff-share-studio__preview"
+            aria-label="Prévia da imagem"
+            style={{ '--ff-share-snap-bottom': snapBottomPercent }}
+          >
             <canvas
               ref={canvasRef}
               className={`ff-share-studio__canvas is-${format} template-${template} bg-${selectedBackground}${canEditPreview ? ' is-editing-photo' : ''} editing-${activeEditLayer}`}
@@ -2712,6 +2982,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
 
             {snapGuide.x && <span className="ff-share-studio__snap-line is-vertical" aria-hidden="true" />}
             {snapGuide.y && <span className="ff-share-studio__snap-line is-horizontal" aria-hidden="true" />}
+            {snapGuide.bottom && <span className="ff-share-studio__snap-line is-bottom" aria-hidden="true" />}
 
             {!ready && (
               <div className="ff-share-studio__loading">

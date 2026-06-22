@@ -13785,3 +13785,31 @@ body.ff-share-studio-open .mobile-bottom-nav {
     max-height: 54dvh !important;
   }
 }
+
+/* ForgeFlow 22/06 - Share Studio V9: snap pela caixa real da figurinha + base */
+.ff-share-studio__snap-line.is-bottom {
+  right: 0.9rem;
+  left: 0.9rem;
+  top: var(--ff-share-snap-bottom, 86%);
+  height: 2px;
+  transform: translateY(-50%);
+  background: rgba(250, 204, 21, 0.92);
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.35),
+    0 0 24px rgba(250, 204, 21, 0.48);
+}
+
+.ff-share-studio__snap-line.is-bottom::after {
+  content: 'base';
+  position: absolute;
+  right: 0.35rem;
+  bottom: 0.45rem;
+  padding: 0.18rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
