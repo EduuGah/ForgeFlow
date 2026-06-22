@@ -14617,3 +14617,24 @@ body.ff-share-studio-open .mobile-bottom-nav {
     padding: 0 0.9rem 0.9rem;
   }
 }
+
+
+/* ForgeFlow 22/06 - Share Studio V17: corrigir preview sticky sobrepondo tudo no mobile */
+@media (max-width: 767px) {
+  .ff-share-studio__preview {
+    position: relative !important;
+    top: auto !important;
+    z-index: 1 !important;
+  }
+
+  .ff-share-studio__controls {
+    position: relative;
+    z-index: 2;
+  }
+
+  .ff-share-studio__footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 4;
+  }
+}
