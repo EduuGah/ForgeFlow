@@ -13838,10 +13838,18 @@ body.ff-share-studio-open .mobile-bottom-nav {
   z-index: 3;
   overflow: visible;
   border-radius: 20px;
-  pointer-events: none;
+  pointer-events: auto;
   touch-action: none;
   user-select: none;
   overscroll-behavior: contain;
+}
+
+.ff-share-studio__sticker-layer.is-passive {
+  pointer-events: none;
+}
+
+.ff-share-studio__sticker-layer.is-editing-stickers {
+  pointer-events: auto;
 }
 
 .ff-share-studio__sticker-layer.is-story {

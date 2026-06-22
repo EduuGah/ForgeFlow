@@ -320,8 +320,9 @@ function getWorkingSets(exercise = {}) {
 
 
 function formatSetShort(set = {}) {
-  const weight = safeNumber(set.weight)
-  const reps = safeNumber(set.reps)
+  const safeSet = set || {}
+  const weight = safeNumber(safeSet.weight)
+  const reps = safeNumber(safeSet.reps)
   if (weight && reps) return `${weight}kg × ${reps}`
   if (reps) return `${reps} reps`
   if (weight) return `${weight}kg`
@@ -2982,18 +2983,21 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     event.preventDefault()
     event.stopPropagation()
 
-    if (activeStickerPointers.current.size === 0 || selectedStickerIdRef.current !== stickerId) {
+    const isAddingSecondFinger = activeStickerPointers.current.size > 0
+    const targetStickerId = isAddingSecondFinger ? selectedStickerIdRef.current : stickerId
+
+    if (!isAddingSecondFinger && selectedStickerIdRef.current !== stickerId) {
       activeStickerPointers.current.clear()
       stickerGestureRef.current = null
     }
 
-    setSelectedStickerId(stickerId)
-    selectedStickerIdRef.current = stickerId
+    setSelectedStickerId(targetStickerId)
+    selectedStickerIdRef.current = targetStickerId
     activeEditLayerRef.current = 'overlay'
     setActiveEditLayer('overlay')
     event.currentTarget.setPointerCapture?.(event.pointerId)
     activeStickerPointers.current.set(event.pointerId, getPointerSnapshot(event))
-    startStickerGesture(stickerId)
+    startStickerGesture(targetStickerId)
   }
 
   function handleStickerPointerMove(event, stickerId) {
@@ -3485,8 +3489,11 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
 
             {overlayMode === 'stickers' && (
               <div
-                className={`ff-share-studio__sticker-layer is-${format}`}
-                style={{ aspectRatio: `${selectedFormat.width} / ${selectedFormat.height}` }}
+                className={`ff-share-studio__sticker-layer is-${format}${activeEditLayer === 'overlay' ? ' is-editing-stickers' : ' is-passive'}`}
+                style={{
+                  aspectRatio: `${selectedFormat.width} / ${selectedFormat.height}`,
+                  pointerEvents: activeEditLayer === 'overlay' ? 'auto' : 'none',
+                }}
                 aria-label="Figurinhas editáveis"
                 onPointerDown={handleStickerLayerPointerDown}
                 onPointerMove={handleStickerLayerPointerMove}
