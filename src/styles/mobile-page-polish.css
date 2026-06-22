@@ -13868,7 +13868,7 @@ body.ff-share-studio-open .mobile-bottom-nav {
   display: grid;
   gap: 0.22rem;
   min-width: 5rem;
-  border: 1px solid var(--ff-sticker-border, rgba(255, 255, 255, 0.16));
+  border: var(--ff-sticker-border-width, 1px) solid var(--ff-sticker-border, rgba(255, 255, 255, 0.16));
   border-radius: clamp(0.8rem, 4vw, 1.2rem);
   background: var(--ff-sticker-bg, rgba(5, 7, 10, 0.72));
   box-shadow: 0 1rem 2.6rem rgba(0, 0, 0, 0.42);
@@ -13893,6 +13893,31 @@ body.ff-share-studio-open .mobile-bottom-nav {
   box-shadow:
     0 0 0 2px rgba(239, 68, 68, 0.22),
     0 1rem 2.8rem rgba(0, 0, 0, 0.45);
+}
+
+.ff-share-sticker.is-rendered {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  gap: 0;
+  min-width: 0;
+}
+
+.ff-share-sticker.is-rendered.is-selected {
+  border-radius: 1.1rem;
+  box-shadow:
+    0 0 0 2px rgba(239, 68, 68, 0.28),
+    0 0.8rem 2rem rgba(0, 0, 0, 0.34);
+}
+
+.ff-share-sticker__image {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .ff-share-sticker strong,
@@ -14276,6 +14301,143 @@ body.ff-share-studio-open .mobile-bottom-nav {
   font-weight: 700;
 }
 
+.ff-share-studio__sticker-dropdown {
+  margin-top: 0.8rem;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 1rem;
+  background: rgba(255,255,255,0.035);
+  overflow: hidden;
+}
+
+.ff-share-studio__sticker-dropdown summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.95rem 1rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.ff-share-studio__sticker-dropdown summary::-webkit-details-marker {
+  display: none;
+}
+
+.ff-share-studio__sticker-dropdown summary span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: rgba(255,255,255,0.92);
+  font-weight: 900;
+}
+
+.ff-share-studio__sticker-dropdown summary small {
+  color: rgba(255,255,255,0.54);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.ff-share-studio__sticker-customize-grid.is-tight {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ff-share-studio__align-panel {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.65rem;
+  padding: 0.85rem;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 1rem;
+  background: rgba(255,255,255,0.035);
+}
+
+.ff-share-studio__align-panel > strong {
+  color: rgba(255,255,255,0.84);
+  font-size: 0.76rem;
+  font-weight: 950;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.ff-share-studio__align-tools,
+.ff-share-studio__theme-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.ff-share-studio__align-tools button,
+.ff-share-studio__theme-presets button,
+.ff-share-studio__overlay-tools button {
+  min-height: 2.35rem;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.055);
+  color: rgba(255,255,255,0.82);
+  padding: 0.48rem 0.72rem;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.ff-share-studio__align-tools button:active,
+.ff-share-studio__theme-presets button:active,
+.ff-share-studio__overlay-tools button:active {
+  transform: scale(0.985);
+}
+
+.ff-share-studio__theme-presets {
+  padding-bottom: 0.15rem;
+}
+
+.ff-share-studio__sticker-customize-grid select {
+  width: 100%;
+  min-height: 2.6rem;
+  padding: 0.72rem 0.9rem;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 0.8rem;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.92);
+}
+
+.ff-share-studio__color-editor {
+  display: grid;
+  grid-template-columns: 4.2rem minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: stretch;
+}
+
+.ff-share-studio__color-preview {
+  border-radius: 0.95rem;
+  border: 1px solid rgba(255,255,255,0.1);
+  min-height: 100%;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.14);
+}
+
+.ff-share-studio__hsl-grid {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.ff-share-studio__hsl-grid label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.ff-share-studio__hsl-grid span {
+  color: rgba(255,255,255,0.78);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.ff-share-studio__ghost-button {
+  min-height: 2.6rem;
+  border: 1px dashed rgba(255,255,255,0.16);
+  border-radius: 0.9rem;
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.85);
+  font-weight: 800;
+}
+
 @media (max-width: 767px) {
   .ff-share-studio__sticker-layer.is-story {
     width: min(88vw, 390px, calc(54dvh * 9 / 16)) !important;
@@ -14300,6 +14462,27 @@ body.ff-share-studio-open .mobile-bottom-nav {
 
   .ff-share-studio__sticker-customize-grid {
     grid-template-columns: 1fr;
+  }
+
+  .ff-share-studio__sticker-customize-grid.is-tight,
+  .ff-share-studio__color-editor {
+    grid-template-columns: 1fr;
+  }
+
+  .ff-share-studio__color-preview {
+    min-height: 3rem;
+  }
+
+  .ff-share-studio__align-tools,
+  .ff-share-studio__theme-presets {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 0.15rem;
+  }
+
+  .ff-share-studio__align-tools button,
+  .ff-share-studio__theme-presets button {
+    flex: 0 0 auto;
   }
 
   .ff-share-studio__sticker-picker button {

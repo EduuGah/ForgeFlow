@@ -292,13 +292,6 @@ const DEFAULT_STICKER_APPEARANCE = {
   backgroundOpacity: 0.72,
 }
 
-const DEFAULT_STICKER_STYLE = {
-  bgColor: '#05070a',
-  bgOpacity: 72,
-  titleColor: '#ffffff',
-  textColor: '#cbd5e1',
-  accentColor: '#ef4444',
-}
 
 const STICKER_LAYOUT_PRESETS = {
   story: {
@@ -359,199 +352,77 @@ const STICKER_LAYOUT_PRESETS = {
   },
 }
 
-const IMAGE_CACHE = new Map()
 
-
-function clampPercent(value, min = 0, max = 100) {
-  return clamp(safeNumber(value), min, max)
-}
-
-function hexToRgba(hex, alpha = 1) {
-  const safe = String(hex || '').replace('#', '')
-  const normalized = safe.length === 3 ? safe.split('').map((char) => char + char).join('') : safe
-  if (normalized.length !== 6) return `rgba(11,13,17,${alpha})`
-  const value = Number.parseInt(normalized, 16)
-  const r = (value >> 16) & 255
-  const g = (value >> 8) & 255
-  const b = value & 255
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`
-}
-
-function getDefaultStickerStyle(stickerId) {
-  if (stickerId === 'caption') {
-    return {
-      bgColor: '#ffffff',
-      bgOpacity: 92,
+const STICKER_THEME_PRESETS = {
+  glass: {
+    label: 'Glass',
+    values: {
+      titleColor: '#ffffff',
+      textColor: '#cbd5e1',
+      accentColor: '#ef4444',
+      backgroundColor: '#05070a',
+      backgroundOpacity: 0.64,
+      borderColor: '#ffffff',
+      borderOpacity: 0.16,
+      borderWidth: 2,
+    },
+  },
+  clean: {
+    label: 'Clean',
+    values: {
       titleColor: '#111827',
       textColor: '#475569',
       accentColor: '#ef4444',
-    }
-  }
-
-  if (stickerId === 'prs') {
-    return {
-      bgColor: '#171004',
-      bgOpacity: 82,
-      titleColor: '#ffffff',
-      textColor: '#fde68a',
-      accentColor: '#f59e0b',
-    }
-  }
-
-  if (stickerId === 'topSet') {
-    return {
-      bgColor: '#091120',
-      bgOpacity: 88,
-      titleColor: '#ffffff',
-      textColor: '#bfdbfe',
-      accentColor: '#60a5fa',
-    }
-  }
-
-  if (stickerId === 'repTotal') {
-    return {
-      bgColor: '#07140f',
-      bgOpacity: 82,
-      titleColor: '#ffffff',
-      textColor: '#bbf7d0',
-      accentColor: '#34d399',
-    }
-  }
-
-  return { ...DEFAULT_STICKER_STYLE }
-}
-
-function normalizeStickerStyle(stickerId, style = {}) {
-  const base = getDefaultStickerStyle(stickerId)
-  return {
-    bgColor: style?.bgColor || base.bgColor,
-    bgOpacity: clampPercent(style?.bgOpacity ?? base.bgOpacity, 24, 100),
-    titleColor: style?.titleColor || base.titleColor,
-    textColor: style?.textColor || base.textColor,
-    accentColor: style?.accentColor || base.accentColor,
-  }
-}
-
-// eslint-disable-next-line no-unused-vars
-function getStickerSurfaceStyle(stickerId, style = {}) {
-  const normalized = normalizeStickerStyle(stickerId, style)
-  return {
-    normalized,
-    background: hexToRgba(normalized.bgColor, normalized.bgOpacity / 100),
-    border: hexToRgba(normalized.accentColor, 0.32),
-    subtle: hexToRgba(normalized.textColor, 0.68),
-    chip: hexToRgba('#ffffff', normalized.bgOpacity >= 70 ? 0.08 : 0.18),
-  }
-}
-
-// eslint-disable-next-line no-unused-vars
-function getDefaultStickerLayout(layoutId = 'balanced', format = 'story') {
-  const defaults = STICKER_DEFAULTS[format] || STICKER_DEFAULTS.story
-  const base = SHARE_STICKER_TYPES.reduce((acc, sticker) => {
-    acc[sticker.id] = {
-      visible: sticker.defaultVisible,
-      ...(defaults[sticker.id] || { x: 70, y: 70, scale: 1 }),
-      style: normalizeStickerStyle(sticker.id, defaults[sticker.id]?.style),
-    }
-    return acc
-  }, {})
-  const map = {
-    balanced: {
-      story: {
-        summary: { x: 64, y: 78, scale: 1 },
-        caption: { x: 64, y: 250, scale: 0.96 },
-        location: { x: 642, y: 252, scale: 0.9 },
-        exerciseList: { x: 64, y: 430, scale: 0.96 },
-        prs: { x: 648, y: 430, scale: 0.84 },
-        setsReps: { x: 64, y: 824, scale: 0.92 },
-        weights: { x: 548, y: 824, scale: 0.92 },
-        topSet: { x: 64, y: 1178, scale: 0.9 },
-        repTotal: { x: 540, y: 1178, scale: 0.9 },
-        volume: { x: 64, y: 1380, scale: 0.86 },
-        metrics: { x: 64, y: 1588, scale: 0.82 },
-      },
-      feed: {
-        summary: { x: 48, y: 44, scale: 0.78 },
-        caption: { x: 48, y: 150, scale: 0.68 },
-        location: { x: 670, y: 154, scale: 0.64 },
-        exerciseList: { x: 48, y: 248, scale: 0.72 },
-        prs: { x: 700, y: 250, scale: 0.6 },
-        setsReps: { x: 48, y: 580, scale: 0.68 },
-        weights: { x: 558, y: 580, scale: 0.68 },
-        topSet: { x: 48, y: 800, scale: 0.66 },
-        repTotal: { x: 474, y: 800, scale: 0.64 },
-        volume: { x: 48, y: 920, scale: 0.58 },
-        metrics: { x: 48, y: 968, scale: 0.58 },
-      },
+      backgroundColor: '#ffffff',
+      backgroundOpacity: 0.92,
+      borderColor: '#ffffff',
+      borderOpacity: 0.62,
+      borderWidth: 1.5,
     },
-    leftRail: {
-      story: {
-        summary: { x: 58, y: 84, scale: 0.96 },
-        caption: { x: 58, y: 246, scale: 0.92 },
-        exerciseList: { x: 58, y: 412, scale: 0.9 },
-        setsReps: { x: 58, y: 798, scale: 0.88 },
-        weights: { x: 58, y: 1132, scale: 0.88 },
-        topSet: { x: 58, y: 1450, scale: 0.86 },
-        repTotal: { x: 516, y: 1450, scale: 0.86 },
-        volume: { x: 58, y: 1646, scale: 0.82 },
-        metrics: { x: 58, y: 1804, scale: 0.8 },
-        prs: { x: 662, y: 412, scale: 0.8 },
-        location: { x: 662, y: 770, scale: 0.84 },
-      },
-      feed: {
-        summary: { x: 48, y: 42, scale: 0.76 },
-        caption: { x: 48, y: 142, scale: 0.68 },
-        exerciseList: { x: 48, y: 240, scale: 0.7 },
-        setsReps: { x: 48, y: 570, scale: 0.66 },
-        weights: { x: 48, y: 790, scale: 0.66 },
-        topSet: { x: 48, y: 974, scale: 0.62 },
-        repTotal: { x: 462, y: 974, scale: 0.62 },
-        volume: { x: 48, y: 1042, scale: 0.52 },
-        metrics: { x: 402, y: 1042, scale: 0.52 },
-        prs: { x: 686, y: 240, scale: 0.58 },
-        location: { x: 686, y: 540, scale: 0.58 },
-      },
+  },
+  redBold: {
+    label: 'Bold Red',
+    values: {
+      titleColor: '#ffffff',
+      textColor: '#fecaca',
+      accentColor: '#ef4444',
+      backgroundColor: '#1a0505',
+      backgroundOpacity: 0.84,
+      borderColor: '#ef4444',
+      borderOpacity: 0.34,
+      borderWidth: 2.5,
     },
-    performance: {
-      story: {
-        summary: { x: 64, y: 92, scale: 0.94 },
-        metrics: { x: 64, y: 286, scale: 0.86 },
-        volume: { x: 64, y: 492, scale: 0.9 },
-        repTotal: { x: 652, y: 492, scale: 0.84 },
-        topSet: { x: 64, y: 706, scale: 0.88 },
-        exerciseList: { x: 64, y: 914, scale: 0.9 },
-        weights: { x: 64, y: 1304, scale: 0.88 },
-        setsReps: { x: 548, y: 1304, scale: 0.88 },
-        prs: { x: 654, y: 914, scale: 0.82 },
-        caption: { x: 64, y: 1702, scale: 0.88 },
-        location: { x: 614, y: 1710, scale: 0.82 },
-      },
-      feed: {
-        summary: { x: 48, y: 44, scale: 0.74 },
-        metrics: { x: 48, y: 150, scale: 0.62 },
-        volume: { x: 48, y: 294, scale: 0.62 },
-        repTotal: { x: 664, y: 298, scale: 0.58 },
-        topSet: { x: 48, y: 430, scale: 0.64 },
-        exerciseList: { x: 48, y: 616, scale: 0.68 },
-        weights: { x: 48, y: 940, scale: 0.56 },
-        setsReps: { x: 546, y: 940, scale: 0.56 },
-        prs: { x: 700, y: 618, scale: 0.56 },
-        caption: { x: 48, y: 1006, scale: 0.56 },
-        location: { x: 658, y: 1008, scale: 0.56 },
-      },
+  },
+  minimal: {
+    label: 'Minimal',
+    values: {
+      titleColor: '#ffffff',
+      textColor: '#e5e7eb',
+      accentColor: '#ffffff',
+      backgroundColor: '#111827',
+      backgroundOpacity: 0.22,
+      borderColor: '#ffffff',
+      borderOpacity: 0.08,
+      borderWidth: 1,
     },
-  }
-
-  const selected = map[layoutId]?.[format] || map.balanced[format]
-
-  return Object.keys(base).reduce((acc, key) => {
-    acc[key] = {
-      ...base[key],
-      ...(selected[key] || {}),
-    }
-    return acc
-  }, {})
+  },
+  transparent: {
+    label: 'Transparente',
+    values: {
+      titleColor: '#ffffff',
+      textColor: '#f8fafc',
+      accentColor: '#ef4444',
+      backgroundColor: '#05070a',
+      backgroundOpacity: 0,
+      borderColor: '#ffffff',
+      borderOpacity: 0,
+      borderWidth: 0,
+    },
+  },
 }
+
+const IMAGE_CACHE = new Map()
+
 
 function getExerciseName(exercise = {}) {
   return (
@@ -579,6 +450,13 @@ function normalizeHexColor(value, fallback) {
   return fallback
 }
 
+function hexToRgba(hex, alpha = 1) {
+  const safeHex = normalizeHexColor(hex, '#05070a').slice(1)
+  const r = parseInt(safeHex.slice(0, 2), 16)
+  const g = parseInt(safeHex.slice(2, 4), 16)
+  const b = parseInt(safeHex.slice(4, 6), 16)
+  return `rgba(${r}, ${g}, ${b}, ${clamp(safeNumber(alpha), 0.08, 1)})`
+}
 
 function getStickerAppearance(sticker = {}) {
   return {
@@ -586,8 +464,66 @@ function getStickerAppearance(sticker = {}) {
     titleColor: normalizeHexColor(sticker?.titleColor, DEFAULT_STICKER_APPEARANCE.titleColor),
     textColor: normalizeHexColor(sticker?.textColor, DEFAULT_STICKER_APPEARANCE.textColor),
     backgroundColor: normalizeHexColor(sticker?.backgroundColor, DEFAULT_STICKER_APPEARANCE.backgroundColor),
-    backgroundOpacity: clamp(safeNumber(sticker?.backgroundOpacity) || DEFAULT_STICKER_APPEARANCE.backgroundOpacity, 0.16, 0.96),
+    backgroundOpacity: clamp(Number(sticker?.backgroundOpacity ?? DEFAULT_STICKER_APPEARANCE.backgroundOpacity), 0, 1),
+    borderColor: normalizeHexColor(sticker?.borderColor, DEFAULT_STICKER_APPEARANCE.borderColor),
+    borderOpacity: clamp(Number(sticker?.borderOpacity ?? DEFAULT_STICKER_APPEARANCE.borderOpacity), 0, 1),
+    borderWidth: clamp(Number(sticker?.borderWidth ?? DEFAULT_STICKER_APPEARANCE.borderWidth), 0, 8),
   }
+}
+
+function hexToHsl(hex) {
+  const safeHex = normalizeHexColor(hex, '#ffffff').slice(1)
+  const r = parseInt(safeHex.slice(0, 2), 16) / 255
+  const g = parseInt(safeHex.slice(2, 4), 16) / 255
+  const b = parseInt(safeHex.slice(4, 6), 16) / 255
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  let h = 0
+  let s = 0
+  const l = (max + min) / 2
+  const d = max - min
+
+  if (d !== 0) {
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+    switch (max) {
+      case r:
+        h = ((g - b) / d + (g < b ? 6 : 0)) * 60
+        break
+      case g:
+        h = ((b - r) / d + 2) * 60
+        break
+      default:
+        h = ((r - g) / d + 4) * 60
+        break
+    }
+  }
+
+  return {
+    h: Math.round(h),
+    s: Math.round(s * 100),
+    l: Math.round(l * 100),
+  }
+}
+
+function hslToHex(h, s, l) {
+  const hue = ((Number(h) % 360) + 360) % 360
+  const sat = clamp(Number(s), 0, 100) / 100
+  const lig = clamp(Number(l), 0, 100) / 100
+  const c = (1 - Math.abs(2 * lig - 1)) * sat
+  const x = c * (1 - Math.abs((hue / 60) % 2 - 1))
+  const m = lig - c / 2
+  let channels
+
+  if (hue < 60) channels = [c, x, 0]
+  else if (hue < 120) channels = [x, c, 0]
+  else if (hue < 180) channels = [0, c, x]
+  else if (hue < 240) channels = [0, x, c]
+  else if (hue < 300) channels = [x, 0, c]
+  else channels = [c, 0, x]
+
+  const [r1, g1, b1] = channels
+  const toHex = (value) => Math.round((value + m) * 255).toString(16).padStart(2, '0')
+  return `#${toHex(r1)}${toHex(g1)}${toHex(b1)}`
 }
 
 function getWorkingSets(exercise = {}) {
@@ -1154,6 +1090,7 @@ function drawGlassPanel(ctx, x, y, width, height, radius = 42, options = {}) {
     fill = 'rgba(255,255,255,0.075)',
     stroke = 'rgba(255,255,255,0.13)',
     shadow = true,
+    lineWidth = 2,
   } = options
 
   ctx.save()
@@ -1167,7 +1104,7 @@ function drawGlassPanel(ctx, x, y, width, height, radius = 42, options = {}) {
   ctx.fill()
   ctx.shadowColor = 'transparent'
   ctx.strokeStyle = stroke
-  ctx.lineWidth = 2
+  ctx.lineWidth = lineWidth
   ctx.stroke()
   ctx.restore()
 }
@@ -1826,6 +1763,8 @@ function getStickerDomStyleForFormat(stickerId, transform, selectedFormat) {
     '--ff-sticker-title': safe.titleColor,
     '--ff-sticker-text': safe.textColor,
     '--ff-sticker-bg': hexToRgba(safe.backgroundColor, safe.backgroundOpacity),
+    '--ff-sticker-border': hexToRgba(safe.borderColor, safe.borderOpacity),
+    '--ff-sticker-border-width': `${safe.borderWidth}px`,
   }
 }
 
@@ -1848,9 +1787,10 @@ function drawStickerPanelBase(ctx, width, height, options = {}) {
     fill = 'rgba(7,9,13,0.72)',
     stroke = 'rgba(255,255,255,0.16)',
     shadow = true,
+    lineWidth = 2,
   } = options
 
-  drawGlassPanel(ctx, 0, 0, width, height, radius, { fill, stroke, shadow })
+  drawGlassPanel(ctx, 0, 0, width, height, radius, { fill, stroke, shadow, lineWidth })
 }
 
 function drawListRows(ctx, rows, x, y, width, options = {}) {
@@ -1952,7 +1892,7 @@ function drawSingleWorkoutSticker(ctx, stickerId, stats, options = {}) {
   ctx.save()
 
   if (stickerId === 'summary') {
-    drawStickerPanelBase(ctx, width, height, { fill: stickerFill, radius: 36 })
+    drawStickerPanelBase(ctx, width, height, { fill: stickerFill, stroke: surface.border, lineWidth: surface.borderWidth, radius: 36 })
     if (iconImage) {
       drawRoundRect(ctx, 24, 28, 66, 66, 18)
       ctx.save()
@@ -1971,7 +1911,7 @@ function drawSingleWorkoutSticker(ctx, stickerId, stats, options = {}) {
     ctx.fillText('FORGEFLOW', 108, 121)
   } else if (stickerId === 'metrics') {
     const metrics = getVisibleMetrics(stats, infoLevel, 5)
-    drawStickerPanelBase(ctx, width, height, { fill: surface.background, stroke: surface.border, radius: 34 })
+    drawStickerPanelBase(ctx, width, height, { fill: surface.background, stroke: surface.border, lineWidth: surface.borderWidth, radius: 34 })
     const gap = 12
     const chipW = (width - 44 - gap * (metrics.length - 1)) / Math.max(1, metrics.length)
     metrics.forEach((metric, index) => {
@@ -1984,7 +1924,7 @@ function drawSingleWorkoutSticker(ctx, stickerId, stats, options = {}) {
       })
     })
   } else if (stickerId === 'volume') {
-    drawStickerPanelBase(ctx, width, height, { fill: surface.background, stroke: surface.border, radius: 42 })
+    drawStickerPanelBase(ctx, width, height, { fill: surface.background, stroke: surface.border, lineWidth: surface.borderWidth, radius: 42 })
     ctx.fillStyle = resolvedAccent
     ctx.font = '950 25px Inter, Arial, sans-serif'
     ctx.fillText('VOLUME TOTAL', 34, 55)
@@ -1995,7 +1935,7 @@ function drawSingleWorkoutSticker(ctx, stickerId, stats, options = {}) {
     ctx.font = '850 22px Inter, Arial, sans-serif'
     ctx.fillText(`${stats.completedSetCount} séries • ${stats.exerciseCount} exercícios`, 34, 168)
   } else if (stickerId === 'topSet') {
-    drawStickerPanelBase(ctx, width, height, { fill: surface.background, stroke: surface.border, radius: 34 })
+    drawStickerPanelBase(ctx, width, height, { fill: surface.background, stroke: surface.border, lineWidth: surface.borderWidth, radius: 34 })
     drawStickerHeader(ctx, 'MELHOR SÉRIE', '', width, resolvedAccent)
     ctx.fillStyle = titleColor
     ctx.font = '930 30px Inter, Arial, sans-serif'
@@ -2003,7 +1943,7 @@ function drawSingleWorkoutSticker(ctx, stickerId, stats, options = {}) {
     ctx.font = '950 42px Inter, Arial, sans-serif'
     ctx.fillText(truncateText(ctx, formatSetShort(stats.topWeightSet || stats.bestSet), width - 48), 24, 148)
   } else if (stickerId === 'repTotal') {
-    drawStickerPanelBase(ctx, width, height, { fill: surface.background, stroke: surface.border, radius: 34 })
+    drawStickerPanelBase(ctx, width, height, { fill: surface.background, stroke: surface.border, lineWidth: surface.borderWidth, radius: 34 })
     ctx.fillStyle = resolvedAccent
     ctx.font = '950 24px Inter, Arial, sans-serif'
     ctx.fillText('REPS TOTAIS', 28, 52)
@@ -2014,7 +1954,7 @@ function drawSingleWorkoutSticker(ctx, stickerId, stats, options = {}) {
     ctx.font = '850 20px Inter, Arial, sans-serif'
     ctx.fillText(`${String(stats.averageRepsPerSet).replace('.', ',')} reps por série`, 28, 154)
   } else if (stickerId === 'location') {
-    drawStickerPanelBase(ctx, width, height, { fill: surface.background, stroke: surface.border, radius: 28 })
+    drawStickerPanelBase(ctx, width, height, { fill: surface.background, stroke: surface.border, lineWidth: surface.borderWidth, radius: 28 })
     drawStickerHeader(ctx, 'SESSÃO', '', width, resolvedAccent)
     ctx.fillStyle = titleColor
     ctx.font = '900 24px Inter, Arial, sans-serif'
@@ -2023,7 +1963,7 @@ function drawSingleWorkoutSticker(ctx, stickerId, stats, options = {}) {
     ctx.font = '850 19px Inter, Arial, sans-serif'
     ctx.fillText(truncateText(ctx, stats.dateLabel, width - 46), 22, 108)
   } else if (stickerId === 'caption') {
-    drawStickerPanelBase(ctx, width, height, { fill: surface.background, stroke: surface.border, radius: 38 })
+    drawStickerPanelBase(ctx, width, height, { fill: surface.background, stroke: surface.border, lineWidth: surface.borderWidth, radius: 38 })
     ctx.fillStyle = titleColor
     ctx.font = '950 34px Inter, Arial, sans-serif'
     drawWrappedText(ctx, caption || 'Mais um treino concluído.', 30, 52, width - 60, 42, 2)
@@ -2041,6 +1981,7 @@ function drawSingleWorkoutSticker(ctx, stickerId, stats, options = {}) {
     drawStickerPanelBase(ctx, width, height, {
       fill: surface.background,
       stroke: surface.border,
+      lineWidth: surface.borderWidth,
       radius: 34,
     })
     drawStickerHeader(ctx, titleMap[stickerId], stickerId === 'exerciseList' ? 'Lista compacta do treino' : '', width, resolvedAccent)
@@ -2067,6 +2008,34 @@ function drawStickerSet(ctx, stats, options = {}) {
     drawSingleWorkoutSticker(ctx, entry.id, stats, { ...options, stickerStyle: transform })
     ctx.restore()
   })
+}
+
+function renderStickerPreviewDataUrl(stickerId, stats, options = {}) {
+  if (typeof document === 'undefined') return ''
+  const { format = 'story' } = options
+  const size = getStickerCanvasSize(stickerId, format)
+  const canvas = document.createElement('canvas')
+  canvas.width = size.width
+  canvas.height = size.height
+  const ctx = canvas.getContext('2d')
+  drawSingleWorkoutSticker(ctx, stickerId, stats, options)
+  return canvas.toDataURL('image/png')
+}
+
+function getNearestStickerBounds(stickerId, stickers = {}, format = 'story') {
+  const currentBounds = getStickerBounds(stickerId, stickers?.[stickerId], format)
+  let nearest = null
+
+  getVisibleStickerEntries(stickers, format).forEach((entry) => {
+    if (entry.id === stickerId) return
+    const bounds = getStickerBounds(entry.id, entry.transform, format)
+    const distance = Math.hypot(bounds.centerX - currentBounds.centerX, bounds.centerY - currentBounds.centerY)
+    if (!nearest || distance < nearest.distance) {
+      nearest = { ...bounds, distance }
+    }
+  })
+
+  return nearest
 }
 
 function getStickerBottomTarget(format, canvasWidth, canvasHeight) {
@@ -2716,6 +2685,9 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   const [status, setStatus] = useState('')
   const [busy, setBusy] = useState(false)
   const [ready, setReady] = useState(false)
+  const [stickerPreviewImages, setStickerPreviewImages] = useState({})
+  const [previewIconImage, setPreviewIconImage] = useState(null)
+  const [stickerColorTarget, setStickerColorTarget] = useState('titleColor')
 
   const selectedFormat = SHARE_FORMATS.find((item) => item.id === format) || SHARE_FORMATS[0]
   const selectedPhrase = SHARE_PHRASES[phraseId] || SHARE_PHRASES[0]
@@ -2725,6 +2697,9 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   const snapBottomPercent = `${(getStickerBottomTarget(selectedFormat.id, selectedFormat.width, selectedFormat.height) / selectedFormat.height) * 100}%`
   const visibleStickers = useMemo(() => getVisibleStickerEntries(stickers, format), [format, stickers])
   const selectedSticker = stickers[selectedStickerId] || getDefaultStickerState(format)[selectedStickerId] || null
+  const selectedStickerAppearance = useMemo(() => getStickerAppearance(selectedSticker), [selectedSticker])
+  const selectedStickerColorHex = selectedStickerAppearance?.[stickerColorTarget] || '#ffffff'
+  const selectedStickerColorHsl = useMemo(() => hexToHsl(selectedStickerColorHex), [selectedStickerColorHex])
 
   const stats = useMemo(() => {
     if (!session) return null
@@ -2759,6 +2734,38 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   useEffect(() => {
     userPhotoRef.current = userPhoto
   }, [userPhoto])
+
+  useEffect(() => {
+    let active = true
+    loadShareImage(forgeflowIcon, { anonymous: true })
+      .then((image) => {
+        if (active) setPreviewIconImage(image)
+      })
+      .catch(() => {
+        if (active) setPreviewIconImage(null)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!open || overlayMode !== 'stickers' || !stats || typeof document === 'undefined') return
+
+    const next = {}
+    visibleStickers.forEach((entry) => {
+      next[entry.id] = renderStickerPreviewDataUrl(entry.id, stats, {
+        format,
+        caption,
+        infoLevel,
+        accentColor: getShareAccentColor(),
+        iconImage: previewIconImage,
+        stickerStyle: entry.transform,
+      })
+    })
+    setStickerPreviewImages(next)
+  }, [caption, format, infoLevel, open, overlayMode, previewIconImage, stats, visibleStickers])
 
   useEffect(() => {
     selectedFormatRef.current = selectedFormat
@@ -3493,6 +3500,68 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     setStickers({ ...stickersRef.current })
   }
 
+  function applyStickerThemePreset(presetId, scope = 'selected') {
+    const preset = STICKER_THEME_PRESETS[presetId]
+    if (!preset) return
+
+    if (scope === 'all') {
+      const next = Object.entries(stickersRef.current).reduce((acc, [id, transform]) => {
+        acc[id] = clampStickerTransform(id, { ...transform, ...preset.values }, selectedFormatRef.current.id)
+        return acc
+      }, {})
+      stickersRef.current = next
+      setStickers(next)
+      setStatus(`Tema ${preset.label} aplicado em todas as figurinhas.`)
+      return
+    }
+
+    updateSelectedStickerAppearance(preset.values)
+    setStatus(`Tema ${preset.label} aplicado na figurinha selecionada.`)
+  }
+
+  function alignSelectedSticker(mode) {
+    const stickerId = selectedStickerIdRef.current
+    const current = stickersRef.current[stickerId]
+    if (!current) return
+
+    const currentFormat = selectedFormatRef.current
+    const size = getStickerCanvasSize(stickerId, currentFormat.id)
+    const scale = clamp(safeNumber(current.scale) || 1, STICKER_MIN_SCALE, STICKER_MAX_SCALE)
+    const width = size.width * scale
+    const height = size.height * scale
+    const margin = 40
+    const peer = getNearestStickerBounds(stickerId, stickersRef.current, currentFormat.id)
+    const next = { ...current, scale }
+
+    if (mode === 'left') next.x = margin
+    if (mode === 'centerX') next.x = currentFormat.width / 2 - width / 2
+    if (mode === 'right') next.x = currentFormat.width - margin - width
+    if (mode === 'top') next.y = margin
+    if (mode === 'centerY') next.y = currentFormat.height / 2 - height / 2
+    if (mode === 'bottom') next.y = getStickerBottomTarget(currentFormat.id, currentFormat.width, currentFormat.height) - height
+
+    if (peer) {
+      if (mode === 'peerLeft') next.x = peer.left
+      if (mode === 'peerCenterX') next.x = peer.centerX - width / 2
+      if (mode === 'peerRight') next.x = peer.right - width
+      if (mode === 'peerTop') next.y = peer.top
+      if (mode === 'peerCenterY') next.y = peer.centerY - height / 2
+      if (mode === 'peerBottom') next.y = peer.bottom - height
+    }
+
+    const aligned = applyStickerTransform(stickerId, next, { snap: false })
+    stickersRef.current = { ...stickersRef.current, [stickerId]: aligned }
+    updateStickerElementStyle(stickerId, aligned)
+    setStickers({ ...stickersRef.current })
+  }
+
+  function updateSelectedStickerHsl(channel, nextValue) {
+    const currentColor = selectedStickerAppearance?.[stickerColorTarget] || '#ffffff'
+    const currentHsl = hexToHsl(currentColor)
+    const nextHsl = { ...currentHsl, [channel]: Number(nextValue) }
+    updateSelectedStickerAppearance({ [stickerColorTarget]: hslToHex(nextHsl.h, nextHsl.s, nextHsl.l) })
+  }
+
   function handleSelectedStickerSmaller() {
     const stickerId = selectedStickerIdRef.current
     const current = stickersRef.current[stickerId]
@@ -3622,12 +3691,8 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     )
   }
 
-  async function getImageBlob(options = {}) {
-    if (!canvasRef.current) throw new Error('Imagem indisponível.')
-
-    const { mimeType = 'image/png', quality = 0.95 } = options
-
-    await drawWorkoutShareCanvas(canvasRef.current, {
+  function getCurrentShareDrawOptions() {
+    return {
       session,
       meta,
       template,
@@ -3641,34 +3706,29 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       overlayMode,
       overlayTransform: overlayTransformRef.current,
       stickers: stickersRef.current,
-    })
+    }
+  }
 
-    return canvasToBlob(canvasRef.current, mimeType, quality)
+  async function renderExportCanvas() {
+    if (typeof document === 'undefined') throw new Error('Canvas indisponível.')
+
+    const canvas = document.createElement('canvas')
+    await drawWorkoutShareCanvas(canvas, getCurrentShareDrawOptions())
+    return canvas
+  }
+
+  async function getImageBlob(options = {}) {
+    const { mimeType = 'image/png', quality = 0.95 } = options
+    const exportCanvas = await renderExportCanvas()
+
+    return canvasToBlob(exportCanvas, mimeType, quality)
   }
 
   async function getImageAsset(options = {}) {
-    if (!canvasRef.current) throw new Error('Imagem indisponível.')
-
     const { mimeType = 'image/png', extension = 'png', quality = 0.95 } = options
-
-    await drawWorkoutShareCanvas(canvasRef.current, {
-      session,
-      meta,
-      template,
-      format,
-      infoLevel,
-      phrase: caption,
-      backgroundMode,
-      selectedBackground,
-      userPhoto: userPhotoRef.current || userPhoto,
-      photoTransform: photoTransformRef.current,
-      overlayMode,
-      overlayTransform: overlayTransformRef.current,
-      stickers: stickersRef.current,
-    })
-
-    const dataUrl = canvasRef.current.toDataURL(mimeType, quality)
-    const blob = await canvasToBlob(canvasRef.current, mimeType, quality)
+    const exportCanvas = await renderExportCanvas()
+    const dataUrl = exportCanvas.toDataURL(mimeType, quality)
+    const blob = await canvasToBlob(exportCanvas, mimeType, quality)
     const filename = getFileName(session, template, format, extension)
     const file = new File([blob], filename, { type: mimeType })
 
@@ -3725,7 +3785,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     if (busy) return
 
     setBusy(true)
-    setStatus('')
+    setStatus('Gerando imagem exatamente como o preview...')
 
     try {
       const nativeAssetOptions = { mimeType: 'image/jpeg', extension: 'jpg', quality: 0.88 }
@@ -3840,27 +3900,32 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
                 onPointerCancel={handleStickerLayerPointerUp}
                 onPointerLeave={handleStickerLayerPointerUp}
               >
-                {visibleStickers.map((sticker) => (
-                  <div
-                    key={sticker.id}
-                    ref={(node) => {
-                      if (node) stickerElementRefs.current.set(sticker.id, node)
-                      else stickerElementRefs.current.delete(sticker.id)
-                    }}
-                    className={`ff-share-sticker is-${sticker.id}${selectedStickerId === sticker.id ? ' is-selected' : ''}`}
-                    style={getStickerDomStyleForFormat(sticker.id, sticker.transform, selectedFormat)}
-                    onPointerDown={(event) => handleStickerPointerDown(event, sticker.id)}
-                    onPointerMove={(event) => handleStickerPointerMove(event, sticker.id)}
-                    onPointerUp={handleStickerPointerUp}
-                    onPointerCancel={handleStickerPointerUp}
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      setSelectedStickerId(sticker.id)
-                    }}
-                  >
-                    {renderWorkoutSticker(sticker.id)}
-                  </div>
-                ))}
+                {visibleStickers.map((sticker) => {
+                  const previewSrc = stickerPreviewImages[sticker.id]
+                  return (
+                    <div
+                      key={sticker.id}
+                      ref={(node) => {
+                        if (node) stickerElementRefs.current.set(sticker.id, node)
+                        else stickerElementRefs.current.delete(sticker.id)
+                      }}
+                      className={`ff-share-sticker is-${sticker.id}${selectedStickerId === sticker.id ? ' is-selected' : ''}${previewSrc ? ' is-rendered' : ''}`}
+                      style={getStickerDomStyleForFormat(sticker.id, sticker.transform, selectedFormat)}
+                      onPointerDown={(event) => handleStickerPointerDown(event, sticker.id)}
+                      onPointerMove={(event) => handleStickerPointerMove(event, sticker.id)}
+                      onPointerUp={handleStickerPointerUp}
+                      onPointerCancel={handleStickerPointerUp}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        setSelectedStickerId(sticker.id)
+                      }}
+                    >
+                      {previewSrc ? (
+                        <img src={previewSrc} alt="" draggable="false" className="ff-share-sticker__image" />
+                      ) : renderWorkoutSticker(sticker.id)}
+                    </div>
+                  )
+                })}
               </div>
             )}
 
@@ -3974,36 +4039,102 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
                   <button type="button" onClick={handleSelectedStickerBigger}>Maior</button>
                 </div>
 
-                {selectedSticker && (
-                  <div className="ff-share-studio__sticker-customize">
-                    <div className="ff-share-studio__section-title">
-                      <Sparkles size={16} />
-                      <span>Personalizar figurinha</span>
-                    </div>
-                    <div className="ff-share-studio__sticker-customize-grid">
-                      <label>
-                        <span>Cor do título</span>
-                        <input type="color" value={getStickerAppearance(selectedSticker).titleColor} onChange={(event) => updateSelectedStickerAppearance({ titleColor: event.target.value })} />
-                      </label>
-                      <label>
-                        <span>Cor de destaque</span>
-                        <input type="color" value={getStickerAppearance(selectedSticker).accentColor} onChange={(event) => updateSelectedStickerAppearance({ accentColor: event.target.value })} />
-                      </label>
-                      <label>
-                        <span>Cor do fundo</span>
-                        <input type="color" value={getStickerAppearance(selectedSticker).backgroundColor} onChange={(event) => updateSelectedStickerAppearance({ backgroundColor: event.target.value })} />
-                      </label>
-                      <label>
-                        <span>Cor auxiliar</span>
-                        <input type="color" value={getStickerAppearance(selectedSticker).textColor || getStickerAppearance(selectedSticker).titleColor} onChange={(event) => updateSelectedStickerAppearance({ textColor: event.target.value })} />
-                      </label>
-                      <label>
-                        <span>Transparência</span>
-                        <input type="range" min="0.16" max="0.96" step="0.02" value={getStickerAppearance(selectedSticker).backgroundOpacity} onChange={(event) => updateSelectedStickerAppearance({ backgroundOpacity: Number(event.target.value) })} />
-                        <small>{Math.round(getStickerAppearance(selectedSticker).backgroundOpacity * 100)}%</small>
-                      </label>
-                    </div>
+                <div className="ff-share-studio__align-panel" aria-label="Alinhamento da figurinha selecionada">
+                  <strong>Alinhar selecionada</strong>
+                  <div className="ff-share-studio__align-tools">
+                    <button type="button" onClick={() => alignSelectedSticker('left')}>Esq.</button>
+                    <button type="button" onClick={() => alignSelectedSticker('centerX')}>Centro X</button>
+                    <button type="button" onClick={() => alignSelectedSticker('right')}>Dir.</button>
+                    <button type="button" onClick={() => alignSelectedSticker('top')}>Topo</button>
+                    <button type="button" onClick={() => alignSelectedSticker('centerY')}>Meio Y</button>
+                    <button type="button" onClick={() => alignSelectedSticker('bottom')}>Base</button>
+                    <button type="button" onClick={() => alignSelectedSticker('peerLeft')}>Com esq.</button>
+                    <button type="button" onClick={() => alignSelectedSticker('peerCenterX')}>Com centro</button>
+                    <button type="button" onClick={() => alignSelectedSticker('peerBottom')}>Com base</button>
                   </div>
+                </div>
+
+                {selectedSticker && (
+                  <details className="ff-share-studio__sticker-dropdown" open>
+                    <summary>
+                      <span>
+                        <Sparkles size={16} />
+                        Editar figurinha selecionada
+                      </span>
+                      <small>{SHARE_STICKER_TYPES.find((item) => item.id === selectedStickerId)?.label || 'Figurinha'}</small>
+                    </summary>
+
+                    <div className="ff-share-studio__sticker-customize">
+                      <div className="ff-share-studio__theme-presets" aria-label="Presets visuais de figurinha">
+                        {Object.entries(STICKER_THEME_PRESETS).map(([id, preset]) => (
+                          <button key={id} type="button" onClick={() => applyStickerThemePreset(id)}>
+                            {preset.label}
+                          </button>
+                        ))}
+                        <button type="button" onClick={() => applyStickerThemePreset('glass', 'all')}>Glass em todas</button>
+                      </div>
+
+                      <div className="ff-share-studio__sticker-customize-grid is-tight">
+                        <label>
+                          <span>Editar cor</span>
+                          <select value={stickerColorTarget} onChange={(event) => setStickerColorTarget(event.target.value)}>
+                            <option value="titleColor">Título</option>
+                            <option value="textColor">Texto auxiliar</option>
+                            <option value="accentColor">Destaque</option>
+                            <option value="backgroundColor">Fundo</option>
+                            <option value="borderColor">Borda</option>
+                          </select>
+                        </label>
+                        <label>
+                          <span>Cor atual</span>
+                          <input type="color" value={selectedStickerColorHex} onChange={(event) => updateSelectedStickerAppearance({ [stickerColorTarget]: event.target.value })} />
+                        </label>
+                      </div>
+
+                      <div className="ff-share-studio__color-editor">
+                        <div className="ff-share-studio__color-preview" style={{ background: `linear-gradient(135deg, ${selectedStickerColorHex}, ${selectedStickerAppearance.accentColor})` }} />
+                        <div className="ff-share-studio__hsl-grid">
+                          <label>
+                            <span>Hue</span>
+                            <input type="range" min="0" max="360" step="1" value={selectedStickerColorHsl.h} onChange={(event) => updateSelectedStickerHsl('h', event.target.value)} />
+                            <small>{selectedStickerColorHsl.h}°</small>
+                          </label>
+                          <label>
+                            <span>Saturation</span>
+                            <input type="range" min="0" max="100" step="1" value={selectedStickerColorHsl.s} onChange={(event) => updateSelectedStickerHsl('s', event.target.value)} />
+                            <small>{selectedStickerColorHsl.s}%</small>
+                          </label>
+                          <label>
+                            <span>Lightness</span>
+                            <input type="range" min="0" max="100" step="1" value={selectedStickerColorHsl.l} onChange={(event) => updateSelectedStickerHsl('l', event.target.value)} />
+                            <small>{selectedStickerColorHsl.l}%</small>
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="ff-share-studio__sticker-customize-grid">
+                        <label>
+                          <span>Transparência do fundo</span>
+                          <input type="range" min="0" max="1" step="0.01" value={selectedStickerAppearance.backgroundOpacity} onChange={(event) => updateSelectedStickerAppearance({ backgroundOpacity: Number(event.target.value) })} />
+                          <small>{Math.round(selectedStickerAppearance.backgroundOpacity * 100)}%</small>
+                        </label>
+                        <label>
+                          <span>Opacidade da borda</span>
+                          <input type="range" min="0" max="1" step="0.01" value={selectedStickerAppearance.borderOpacity} onChange={(event) => updateSelectedStickerAppearance({ borderOpacity: Number(event.target.value) })} />
+                          <small>{Math.round(selectedStickerAppearance.borderOpacity * 100)}%</small>
+                        </label>
+                        <label>
+                          <span>Espessura da borda</span>
+                          <input type="range" min="0" max="8" step="0.5" value={selectedStickerAppearance.borderWidth} onChange={(event) => updateSelectedStickerAppearance({ borderWidth: Number(event.target.value) })} />
+                          <small>{selectedStickerAppearance.borderWidth}px</small>
+                        </label>
+                        <label>
+                          <span>Transparência total rápida</span>
+                          <button type="button" className="ff-share-studio__ghost-button" onClick={() => updateSelectedStickerAppearance({ backgroundOpacity: 0, borderOpacity: 0 })}>Deixar vidro 100% transparente</button>
+                        </label>
+                      </div>
+                    </div>
+                  </details>
                 )}
               </>
             )}
