@@ -15,6 +15,10 @@ import {
 import forgeflowIcon from '../../assets/forgeflow-icon.png'
 import Button from '../ui/Button'
 import { isNativeApp } from '../../utils/platformUtils'
+import {
+  saveImageToGalleryNative,
+  shareImageToInstagramStoryNative,
+} from '../../utils/shareNativeBridge'
 import { formatLocationLabel, getMapsUrl } from '../../services/geolocationService'
 import {
   formatDate,
@@ -113,6 +117,51 @@ const SHARE_PHRASES = [
   'ForgeFlow registrou mais uma batalha.',
   'Mais volume, mais força, mais evolução.',
 ]
+
+
+const SHARE_BACKGROUNDS = [
+  {
+    id: 'forge',
+    label: 'Forge red',
+    description: 'Preto premium com brilho vermelho.',
+  },
+  {
+    id: 'obsidian',
+    label: 'Obsidian',
+    description: 'Escuro limpo e elegante.',
+  },
+  {
+    id: 'carbon',
+    label: 'Carbon grid',
+    description: 'Textura técnica com grade sutil.',
+  },
+  {
+    id: 'ember',
+    label: 'Ember',
+    description: 'Energia quente de treino pesado.',
+  },
+  {
+    id: 'neon',
+    label: 'Neon flow',
+    description: 'Linhas modernas em alto contraste.',
+  },
+  {
+    id: 'purple',
+    label: 'Night PR',
+    description: 'Roxo escuro para cards de recorde.',
+  },
+  {
+    id: 'topo',
+    label: 'Topo lines',
+    description: 'Linhas orgânicas de mapa/progresso.',
+  },
+  {
+    id: 'photo',
+    label: 'Foto própria',
+    description: 'Usa a imagem escolhida da galeria.',
+  },
+]
+
 
 function getExerciseName(exercise = {}) {
   return (
@@ -417,32 +466,146 @@ function drawMetricGrid(ctx, metrics, x, y, width, columns = 2, compact = false)
   return y + Math.ceil(metrics.length / columns) * itemHeight + Math.max(0, Math.ceil(metrics.length / columns) - 1) * gap
 }
 
-function drawBackground(ctx, width, height, template, photoImage, accentSoftColor) {
-  if (template === 'overlay') return
+function drawCircuitLines(ctx, width, height, accentColor, alpha = 0.16) {
+  ctx.save()
+  ctx.strokeStyle = accentColor.replace('rgb', 'rgba').replace(')', `, ${alpha})`).replace('rgbaa', 'rgba')
+  ctx.lineWidth = 3
+  ctx.globalAlpha = 0.55
 
-  if (photoImage) {
+  for (let i = 0; i < 11; i += 1) {
+    const y = 130 + i * 150
+    ctx.beginPath()
+    ctx.moveTo(70, y)
+    ctx.lineTo(width * 0.32, y)
+    ctx.lineTo(width * 0.42, y + 52)
+    ctx.lineTo(width - 72, y + 52)
+    ctx.stroke()
+
+    ctx.beginPath()
+    ctx.arc(width * 0.42, y + 52, 9, 0, Math.PI * 2)
+    ctx.stroke()
+  }
+
+  ctx.restore()
+}
+
+function drawTopographicLines(ctx, width, height) {
+  ctx.save()
+  ctx.strokeStyle = 'rgba(255,255,255,0.075)'
+  ctx.lineWidth = 3
+
+  const centers = [
+    [width * 0.08, height * 0.25],
+    [width * 0.92, height * 0.64],
+    [width * 0.55, height * 0.06],
+  ]
+
+  centers.forEach(([cx, cy]) => {
+    for (let i = 0; i < 9; i += 1) {
+      ctx.beginPath()
+      ctx.ellipse(cx, cy, 120 + i * 54, 60 + i * 36, i * 0.08, 0, Math.PI * 2)
+      ctx.stroke()
+    }
+  })
+
+  ctx.restore()
+}
+
+function drawBackground(ctx, width, height, backgroundStyle, photoImage, accentSoftColor, accentColor) {
+  const style = backgroundStyle || 'forge'
+  const shouldUsePhoto = style === 'photo' && photoImage
+
+  if (shouldUsePhoto) {
     drawCoverImage(ctx, photoImage, 0, 0, width, height)
     const photoOverlay = ctx.createLinearGradient(0, 0, 0, height)
-    photoOverlay.addColorStop(0, 'rgba(0,0,0,0.18)')
-    photoOverlay.addColorStop(0.45, 'rgba(0,0,0,0.24)')
-    photoOverlay.addColorStop(1, 'rgba(0,0,0,0.82)')
+    photoOverlay.addColorStop(0, 'rgba(0,0,0,0.16)')
+    photoOverlay.addColorStop(0.45, 'rgba(0,0,0,0.28)')
+    photoOverlay.addColorStop(1, 'rgba(0,0,0,0.84)')
     ctx.fillStyle = photoOverlay
     ctx.fillRect(0, 0, width, height)
     return
   }
 
   const bg = ctx.createLinearGradient(0, 0, width, height)
-  bg.addColorStop(0, '#05070b')
-  bg.addColorStop(0.48, '#151518')
-  bg.addColorStop(1, '#070707')
+
+  if (style === 'obsidian') {
+    bg.addColorStop(0, '#05070b')
+    bg.addColorStop(0.52, '#101217')
+    bg.addColorStop(1, '#030305')
+  } else if (style === 'carbon') {
+    bg.addColorStop(0, '#07090d')
+    bg.addColorStop(0.48, '#15171c')
+    bg.addColorStop(1, '#070707')
+  } else if (style === 'ember') {
+    bg.addColorStop(0, '#160805')
+    bg.addColorStop(0.42, '#1b1110')
+    bg.addColorStop(1, '#050404')
+  } else if (style === 'neon') {
+    bg.addColorStop(0, '#020914')
+    bg.addColorStop(0.46, '#101827')
+    bg.addColorStop(1, '#050608')
+  } else if (style === 'purple') {
+    bg.addColorStop(0, '#10081f')
+    bg.addColorStop(0.5, '#17111f')
+    bg.addColorStop(1, '#050408')
+  } else if (style === 'topo') {
+    bg.addColorStop(0, '#061012')
+    bg.addColorStop(0.48, '#121719')
+    bg.addColorStop(1, '#030505')
+  } else {
+    bg.addColorStop(0, '#05070b')
+    bg.addColorStop(0.48, '#151518')
+    bg.addColorStop(1, '#070707')
+  }
+
   ctx.fillStyle = bg
+  ctx.fillRect(0, 0, width, height)
+
+  if (style === 'carbon') {
+    ctx.save()
+    ctx.strokeStyle = 'rgba(255,255,255,0.045)'
+    ctx.lineWidth = 2
+    const step = 72
+    for (let x = -step; x < width + step; x += step) {
+      ctx.beginPath()
+      ctx.moveTo(x, 0)
+      ctx.lineTo(x + height * 0.22, height)
+      ctx.stroke()
+    }
+    for (let y = 0; y < height; y += step) {
+      ctx.beginPath()
+      ctx.moveTo(0, y)
+      ctx.lineTo(width, y)
+      ctx.stroke()
+    }
+    ctx.restore()
+  }
+
+  if (style === 'neon') {
+    drawCircuitLines(ctx, width, height, accentColor, 0.18)
+  }
+
+  if (style === 'topo') {
+    drawTopographicLines(ctx, width, height)
+  }
+
+  const glow = ctx.createRadialGradient(width * 0.82, height * 0.18, 20, width * 0.82, height * 0.18, width * 0.74)
+  glow.addColorStop(0, style === 'purple' ? 'rgba(168,85,247,0.32)' : accentSoftColor)
+  glow.addColorStop(1, 'rgba(0,0,0,0)')
+  ctx.fillStyle = glow
+  ctx.fillRect(0, 0, width, height)
+
+  const lowGlow = ctx.createRadialGradient(width * 0.14, height * 0.9, 30, width * 0.14, height * 0.9, width * 0.62)
+  lowGlow.addColorStop(0, style === 'ember' ? 'rgba(249,115,22,0.22)' : 'rgba(255,255,255,0.06)')
+  lowGlow.addColorStop(1, 'rgba(0,0,0,0)')
+  ctx.fillStyle = lowGlow
   ctx.fillRect(0, 0, width, height)
 
   ctx.save()
   ctx.translate(width * 0.58, -height * 0.08)
   ctx.rotate(0.2)
   drawRoundRect(ctx, 0, 0, width * 0.42, height * 1.08, 70)
-  ctx.fillStyle = accentSoftColor
+  ctx.fillStyle = style === 'purple' ? 'rgba(168,85,247,0.14)' : accentSoftColor
   ctx.fill()
   ctx.restore()
 
@@ -482,7 +645,7 @@ function drawFocusBlock(ctx, stats, template, x, y, width, accentColor) {
 }
 
 async function drawWorkoutShareCanvas(canvas, options) {
-  const { session, meta, template, photoDataUrl, caption, infoLevel } = options
+  const { session, meta, template, photoDataUrl, caption, infoLevel, backgroundStyle } = options
   await waitForFonts()
 
   const ctx = canvas.getContext('2d')
@@ -509,7 +672,7 @@ async function drawWorkoutShareCanvas(canvas, options) {
     // O texto da marca continua sendo desenhado sem o ícone.
   }
 
-  if (photoDataUrl && template === 'photo') {
+  if (photoDataUrl && (template === 'photo' || backgroundStyle === 'photo')) {
     try {
       photoImage = await loadImage(photoDataUrl)
     } catch {
@@ -517,7 +680,7 @@ async function drawWorkoutShareCanvas(canvas, options) {
     }
   }
 
-  drawBackground(ctx, width, height, template, photoImage, accentSoftColor)
+  drawBackground(ctx, width, height, backgroundStyle, photoImage, accentSoftColor, accentColor)
 
   ctx.save()
   if (overlay) {
@@ -687,6 +850,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   const [phraseId, setPhraseId] = useState(0)
   const [customCaption, setCustomCaption] = useState('')
   const [photoDataUrl, setPhotoDataUrl] = useState('')
+  const [backgroundStyle, setBackgroundStyle] = useState('forge')
   const [status, setStatus] = useState('')
   const [busy, setBusy] = useState(false)
   const [ready, setReady] = useState(false)
@@ -718,6 +882,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       photoDataUrl,
       caption,
       infoLevel,
+      backgroundStyle,
     })
       .then(() => {
         if (active) setReady(true)
@@ -733,7 +898,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     return () => {
       active = false
     }
-  }, [caption, infoLevel, meta, open, photoDataUrl, session, template])
+  }, [backgroundStyle, caption, infoLevel, meta, open, photoDataUrl, session, template])
 
   useEffect(() => {
     if (!open || typeof document === 'undefined') return undefined
@@ -765,6 +930,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     reader.onload = () => {
       setPhotoDataUrl(String(reader.result || ''))
       setTemplate('photo')
+      setBackgroundStyle('photo')
       setStatus('Foto aplicada. O modelo mudou para Foto.')
     }
     reader.onerror = () => {
@@ -777,6 +943,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   function handleClearPhoto() {
     setPhotoDataUrl('')
     setTemplate((currentTemplate) => currentTemplate === 'photo' ? 'story' : currentTemplate)
+    setBackgroundStyle((currentStyle) => currentStyle === 'photo' ? 'forge' : currentStyle)
     setStatus('Foto removida do card.')
   }
 
@@ -790,17 +957,31 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       photoDataUrl,
       caption,
       infoLevel,
+      backgroundStyle,
     })
 
     return canvasToBlob(canvasRef.current)
   }
 
-  async function getImageFile() {
-    const blob = await getImageBlob()
+  async function getImageAsset() {
+    if (!canvasRef.current) throw new Error('Imagem indisponível.')
+
+    await drawWorkoutShareCanvas(canvasRef.current, {
+      session,
+      meta,
+      template,
+      photoDataUrl,
+      caption,
+      infoLevel,
+      backgroundStyle,
+    })
+
+    const dataUrl = canvasRef.current.toDataURL('image/png', 0.95)
+    const blob = await canvasToBlob(canvasRef.current)
     const filename = getFileName(session, template)
     const file = new File([blob], filename, { type: 'image/png' })
 
-    return { blob, file, filename }
+    return { blob, dataUrl, file, filename }
   }
 
   async function handleShare() {
@@ -810,7 +991,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     setStatus('')
 
     try {
-      const { file } = await getImageFile()
+      const { file } = await getImageAsset()
 
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({
@@ -856,21 +1037,43 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     setStatus('')
 
     try {
-      const { blob, file, filename } = await getImageFile()
+      const { blob, dataUrl, file, filename } = await getImageAsset()
 
-      if (isNativeApp() && canShareImageFile(file)) {
+      if (isNativeApp()) {
+        try {
+          const result = await saveImageToGalleryNative({ dataUrl, filename })
+          if (result?.saved !== false) {
+            setStatus('Imagem salva na galeria do celular, no álbum ForgeFlow.')
+            return
+          }
+        } catch (nativeError) {
+          console.warn('ForgeFlowMedia.saveImageToGallery indisponível:', nativeError)
+        }
+
+        if (canShareImageFile(file)) {
+          await navigator.share({
+            title: 'Salvar imagem ForgeFlow',
+            text: 'Escolha Galeria, Fotos, Arquivos ou Instagram para salvar/usar a imagem.',
+            files: [file],
+          })
+          setStatus('Imagem pronta. Para salvar direto na galeria do APK, aplique o plugin nativo ForgeFlowMedia incluído no zip.')
+          return
+        }
+      }
+
+      if (isMobileShareContext() && canShareImageFile(file)) {
         await navigator.share({
           title: 'Salvar imagem ForgeFlow',
-          text: 'Escolha Galeria, Fotos, Arquivos ou o app onde quer salvar a imagem.',
+          text: 'Escolha Fotos, Galeria, Arquivos ou Instagram para salvar/usar a imagem.',
           files: [file],
         })
-        setStatus('Imagem gerada. No Android, escolha Fotos, Galeria ou Arquivos para salvar.')
+        setStatus('Imagem gerada. Escolha o app onde quer salvar ou postar.')
         return
       }
 
       triggerImageDownload(blob, filename)
       setStatus(isMobileShareContext()
-        ? 'Imagem gerada. Se o navegador não baixar automaticamente, use Compartilhar imagem.'
+        ? 'Download iniciado. No navegador mobile, a imagem normalmente vai para Downloads.'
         : 'Download da imagem iniciado.'
       )
     } catch (error) {
@@ -900,7 +1103,24 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     setStatus('')
 
     try {
-      const { blob, file, filename } = await getImageFile()
+      const { blob, dataUrl, file, filename } = await getImageAsset()
+
+      if (isNativeApp()) {
+        try {
+          const result = await shareImageToInstagramStoryNative({
+            dataUrl,
+            filename,
+            shareText,
+          })
+
+          if (result?.opened !== false) {
+            setStatus('Instagram Stories aberto com o card anexado. Finalize a publicação no Instagram.')
+            return
+          }
+        } catch (nativeError) {
+          console.warn('ForgeFlowMedia.shareImageToInstagramStory indisponível:', nativeError)
+        }
+      }
 
       if (canShareImageFile(file)) {
         await navigator.share({
@@ -908,12 +1128,12 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
           text: shareText,
           files: [file],
         })
-        setStatus('Imagem pronta. No menu que abriu, escolha Instagram ou Stories.')
+        setStatus('Imagem pronta. Se aparecer a opção, escolha Instagram Stories no compartilhamento.')
         return
       }
 
       triggerImageDownload(blob, filename)
-      setStatus('Imagem baixada. O navegador não consegue anexar direto no Story; selecione o card pela galeria do Instagram.')
+      setStatus('Imagem baixada. No navegador não dá para anexar direto no Story; abra o Instagram e selecione o card na galeria.')
       window.setTimeout(() => {
         window.location.href = 'instagram://story-camera'
 
@@ -924,12 +1144,13 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     } catch (error) {
       if (error?.name !== 'AbortError') {
         console.error(error)
-        setStatus('Não deu para abrir o Instagram com a imagem. Use Salvar ou Compartilhar imagem.')
+        setStatus('Não deu para abrir o Instagram com a imagem. Use Salvar imagem ou Compartilhar imagem.')
       }
     } finally {
       setBusy(false)
     }
   }
+
 
   const dialog = (
     <div className="ff-share-studio" role="dialog" aria-modal="true" aria-label="Compartilhar treino">
@@ -950,7 +1171,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
           <section className="ff-share-studio__preview" aria-label="Prévia da imagem">
             <canvas
               ref={canvasRef}
-              className={`ff-share-studio__canvas is-${template}`}
+              className={`ff-share-studio__canvas is-${template} bg-${backgroundStyle}`}
               style={{ aspectRatio: `${selectedTemplate.width} / ${selectedTemplate.height}` }}
             />
 
@@ -984,6 +1205,39 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
                   <small>{item.description}</small>
                 </button>
               ))}
+            </div>
+
+            <div className="ff-share-studio__section-title">
+              <Sparkles size={16} />
+              <span>Fundo do card</span>
+            </div>
+
+            <div className="ff-share-studio__background-grid">
+              {SHARE_BACKGROUNDS.map((item) => {
+                const disabled = item.id === 'photo' && !photoDataUrl
+
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={backgroundStyle === item.id ? 'is-active' : ''}
+                    disabled={disabled}
+                    onClick={() => {
+                      if (item.id === 'photo' && !photoDataUrl) {
+                        fileInputRef.current?.click()
+                        return
+                      }
+                      setBackgroundStyle(item.id)
+                    }}
+                  >
+                    <i className={`ff-share-studio__bg-swatch is-${item.id}`} aria-hidden="true" />
+                    <span>
+                      <strong>{item.label}</strong>
+                      <small>{disabled ? 'Selecione uma foto primeiro.' : item.description}</small>
+                    </span>
+                  </button>
+                )
+              })}
             </div>
 
             <div className="ff-share-studio__section-title">
@@ -1092,7 +1346,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
 
           <Button type="button" variant="secondary" onClick={handleDownload} disabled={busy || !ready}>
             <Download size={18} />
-            Salvar imagem
+            Salvar na galeria
           </Button>
 
           <Button type="button" variant="secondary" onClick={handleOpenInstagram} disabled={busy || !ready}>
