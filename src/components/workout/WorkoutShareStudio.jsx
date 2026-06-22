@@ -290,6 +290,10 @@ const DEFAULT_STICKER_APPEARANCE = {
   textColor: '#cbd5e1',
   backgroundColor: '#05070a',
   backgroundOpacity: 0.72,
+  borderColor: '#ffffff',
+  borderOpacity: 0.16,
+  borderWidth: 2,
+  zIndex: 1,
 }
 
 
@@ -321,6 +325,32 @@ const STICKER_LAYOUT_PRESETS = {
       volume: { x: 70, y: 1424, scale: 0.78 },
       metrics: { x: 70, y: 1606, scale: 0.76 },
     },
+    hero: {
+      summary: { x: 70, y: 118, scale: 1.02 },
+      caption: { x: 70, y: 300, scale: 0.92 },
+      prs: { x: 690, y: 302, scale: 0.98 },
+      topSet: { x: 70, y: 546, scale: 1.02 },
+      repTotal: { x: 540, y: 546, scale: 1.02 },
+      volume: { x: 70, y: 770, scale: 0.95 },
+      metrics: { x: 70, y: 978, scale: 0.9 },
+      exerciseList: { x: 70, y: 1206, scale: 0.84 },
+      weights: { x: 70, y: 1608, scale: 0.78 },
+      setsReps: { x: 540, y: 1608, scale: 0.78 },
+      location: { x: 678, y: 1206, scale: 0.76 },
+    },
+    analytics: {
+      summary: { x: 70, y: 120, scale: 0.94 },
+      metrics: { x: 70, y: 296, scale: 0.9 },
+      volume: { x: 70, y: 500, scale: 0.9 },
+      topSet: { x: 70, y: 724, scale: 0.9 },
+      repTotal: { x: 536, y: 724, scale: 0.9 },
+      setsReps: { x: 70, y: 960, scale: 0.88 },
+      weights: { x: 560, y: 960, scale: 0.88 },
+      prs: { x: 694, y: 1308, scale: 0.84 },
+      exerciseList: { x: 70, y: 1308, scale: 0.86 },
+      caption: { x: 70, y: 1712, scale: 0.82 },
+      location: { x: 626, y: 1716, scale: 0.74 },
+    },
   },
   feed: {
     balanced: {
@@ -348,6 +378,32 @@ const STICKER_LAYOUT_PRESETS = {
       repTotal: { x: 470, y: 756, scale: 0.6 },
       volume: { x: 56, y: 872, scale: 0.52 },
       metrics: { x: 56, y: 930, scale: 0.52 },
+    },
+    hero: {
+      summary: { x: 56, y: 52, scale: 0.78 },
+      caption: { x: 56, y: 166, scale: 0.62 },
+      prs: { x: 714, y: 168, scale: 0.64 },
+      topSet: { x: 56, y: 286, scale: 0.74 },
+      repTotal: { x: 470, y: 286, scale: 0.74 },
+      volume: { x: 56, y: 474, scale: 0.66 },
+      metrics: { x: 56, y: 598, scale: 0.66 },
+      exerciseList: { x: 56, y: 720, scale: 0.66 },
+      setsReps: { x: 56, y: 980, scale: 0.6 },
+      weights: { x: 562, y: 980, scale: 0.6 },
+      location: { x: 700, y: 720, scale: 0.56 },
+    },
+    analytics: {
+      summary: { x: 56, y: 54, scale: 0.72 },
+      metrics: { x: 56, y: 164, scale: 0.64 },
+      volume: { x: 56, y: 246, scale: 0.62 },
+      topSet: { x: 56, y: 382, scale: 0.62 },
+      repTotal: { x: 470, y: 382, scale: 0.62 },
+      setsReps: { x: 56, y: 560, scale: 0.6 },
+      weights: { x: 562, y: 560, scale: 0.6 },
+      prs: { x: 690, y: 776, scale: 0.56 },
+      exerciseList: { x: 56, y: 776, scale: 0.62 },
+      caption: { x: 56, y: 1010, scale: 0.56 },
+      location: { x: 694, y: 1012, scale: 0.5 },
     },
   },
 }
@@ -1577,10 +1633,11 @@ function drawStickerMetric(ctx, metric, x, y, options = {}) {
 function getDefaultStickerState(format = 'story') {
   const defaults = STICKER_DEFAULTS[format] || STICKER_DEFAULTS.story
 
-  return SHARE_STICKER_TYPES.reduce((acc, sticker) => {
+  return SHARE_STICKER_TYPES.reduce((acc, sticker, index) => {
     acc[sticker.id] = {
       ...DEFAULT_STICKER_APPEARANCE,
       visible: sticker.defaultVisible,
+      zIndex: index + 1,
       ...(defaults[sticker.id] || { x: 70, y: 70, scale: 1 }),
     }
     return acc
@@ -1605,6 +1662,7 @@ function migrateStickerStateForFormat(currentState, fromFormat = 'story', toForm
       y: current ? safeNumber(current.y) * ratioY : nextFallback.y,
       scale: clamp(safeNumber(current?.scale) || nextFallback.scale || 1, STICKER_MIN_SCALE, STICKER_MAX_SCALE),
       visible: current ? Boolean(current.visible) : Boolean(nextFallback.visible),
+      zIndex: clamp(Math.round(Number(current?.zIndex ?? nextFallback.zIndex ?? 1)), 1, 999),
     }
     return acc
   }, {})
@@ -1629,6 +1687,7 @@ function clampStickerTransform(stickerId, transform, format = 'story') {
     y: clamp(safeNumber(transform?.y), -height + margin, selectedFormat.height - margin),
     scale,
     visible: transform?.visible !== false,
+    zIndex: clamp(Math.round(Number(transform?.zIndex ?? 1)), 1, 999),
   }
 }
 
@@ -1747,6 +1806,7 @@ function getVisibleStickerEntries(stickers = {}, format = 'story') {
       }
     })
     .filter(Boolean)
+    .sort((a, b) => (a.transform.zIndex || 1) - (b.transform.zIndex || 1))
 }
 
 function getStickerDomStyleForFormat(stickerId, transform, selectedFormat) {
@@ -1765,6 +1825,7 @@ function getStickerDomStyleForFormat(stickerId, transform, selectedFormat) {
     '--ff-sticker-bg': hexToRgba(safe.backgroundColor, safe.backgroundOpacity),
     '--ff-sticker-border': hexToRgba(safe.borderColor, safe.borderOpacity),
     '--ff-sticker-border-width': `${safe.borderWidth}px`,
+    zIndex: safe.zIndex,
   }
 }
 
@@ -2648,6 +2709,7 @@ function getCenter(pointA, pointB) {
 
 function WorkoutShareStudio({ open, session, meta, onClose }) {
   const canvasRef = useRef(null)
+  const previewShellRef = useRef(null)
   const fileInputRef = useRef(null)
   const activePointers = useRef(new Map())
   const activeStickerPointers = useRef(new Map())
@@ -2681,6 +2743,8 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   const [overlayTransform, setOverlayTransform] = useState(DEFAULT_OVERLAY_TRANSFORM)
   const [stickers, setStickers] = useState(() => getDefaultStickerState('story'))
   const [selectedStickerId, setSelectedStickerId] = useState('summary')
+  const [stickerPopoverPosition, setStickerPopoverPosition] = useState(null)
+  const [stickerPopoverTab, setStickerPopoverTab] = useState('style')
   const [snapGuide, setSnapGuide] = useState({ x: null, y: null, bottom: false })
   const [status, setStatus] = useState('')
   const [busy, setBusy] = useState(false)
@@ -2698,6 +2762,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   const visibleStickers = useMemo(() => getVisibleStickerEntries(stickers, format), [format, stickers])
   const selectedSticker = stickers[selectedStickerId] || getDefaultStickerState(format)[selectedStickerId] || null
   const selectedStickerAppearance = useMemo(() => getStickerAppearance(selectedSticker), [selectedSticker])
+  const selectedStickerMeta = SHARE_STICKER_TYPES.find((item) => item.id === selectedStickerId) || null
   const selectedStickerColorHex = selectedStickerAppearance?.[stickerColorTarget] || '#ffffff'
   const selectedStickerColorHsl = useMemo(() => hexToHsl(selectedStickerColorHex), [selectedStickerColorHex])
 
@@ -2766,6 +2831,49 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     })
     setStickerPreviewImages(next)
   }, [caption, format, infoLevel, open, overlayMode, previewIconImage, stats, visibleStickers])
+
+  useEffect(() => {
+    if (overlayMode !== 'stickers' || activeEditLayer !== 'overlay' || !selectedSticker || !previewShellRef.current) {
+      setStickerPopoverPosition(null)
+      return undefined
+    }
+
+    const updatePopoverPosition = () => {
+      const previewEl = previewShellRef.current
+      const stickerEl = stickerElementRefs.current.get(selectedStickerId)
+      if (!previewEl || !stickerEl) {
+        setStickerPopoverPosition(null)
+        return
+      }
+
+      const previewRect = previewEl.getBoundingClientRect()
+      const stickerRect = stickerEl.getBoundingClientRect()
+      const width = Math.min(Math.max(previewRect.width - 16, 220), 300)
+      const halfWidth = width / 2
+      const anchorCenterX = stickerRect.left - previewRect.left + (stickerRect.width / 2)
+      const left = clamp(anchorCenterX, halfWidth + 8, previewRect.width - halfWidth - 8)
+      const preferredHeight = 248
+      const canPlaceAbove = stickerRect.top - previewRect.top > preferredHeight + 22
+      const top = canPlaceAbove
+        ? Math.max(10, stickerRect.top - previewRect.top - 12)
+        : Math.min(previewRect.height - 10, stickerRect.bottom - previewRect.top + 12)
+
+      setStickerPopoverPosition({
+        left,
+        top,
+        placement: canPlaceAbove ? 'top' : 'bottom',
+        width,
+      })
+    }
+
+    updatePopoverPosition()
+    window.addEventListener('resize', updatePopoverPosition)
+    window.addEventListener('scroll', updatePopoverPosition, true)
+    return () => {
+      window.removeEventListener('resize', updatePopoverPosition)
+      window.removeEventListener('scroll', updatePopoverPosition, true)
+    }
+  }, [activeEditLayer, overlayMode, selectedSticker, selectedStickerId, stickers, format])
 
   useEffect(() => {
     selectedFormatRef.current = selectedFormat
@@ -3448,12 +3556,15 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     setStickers((current) => {
       const currentFormat = selectedFormatRef.current
       const fallback = getDefaultStickerState(currentFormat.id)[stickerId]
+      const nextVisible = !current[stickerId]?.visible
+      const nextZ = nextVisible ? Math.max(1, ...Object.values(current).map((item) => Number(item?.zIndex || 1))) + 1 : (current[stickerId]?.zIndex || fallback.zIndex)
       const next = {
         ...current,
         [stickerId]: {
           ...fallback,
           ...current[stickerId],
-          visible: !current[stickerId]?.visible,
+          visible: nextVisible,
+          zIndex: nextZ,
         },
       }
       stickersRef.current = next
@@ -3487,7 +3598,8 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     }, {})
     stickersRef.current = next
     setStickers(next)
-    setStatus(`Layout ${presetId === 'compact' ? 'compacto' : 'equilibrado'} aplicado.`)
+    const labels = { balanced: 'base', compact: 'compacto', hero: 'hero', analytics: 'analytics' }
+    setStatus(`Layout ${labels[presetId] || 'personalizado'} aplicado.`)
   }
 
   function updateSelectedStickerAppearance(patch = {}) {
@@ -3498,6 +3610,39 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     stickersRef.current = { ...stickersRef.current, [stickerId]: next }
     updateStickerElementStyle(stickerId, next)
     setStickers({ ...stickersRef.current })
+  }
+
+  function shiftSelectedStickerLayer(action = 'front') {
+    const stickerId = selectedStickerIdRef.current
+    const current = stickersRef.current[stickerId]
+    if (!current) return
+
+    const entries = Object.entries(stickersRef.current)
+      .filter(([, value]) => value?.visible !== false)
+      .sort((a, b) => (a[1]?.zIndex || 1) - (b[1]?.zIndex || 1))
+
+    const ids = entries.map(([id]) => id)
+    const currentIndex = ids.indexOf(stickerId)
+    if (currentIndex === -1) return
+
+    let targetIndex = currentIndex
+    if (action === 'front') targetIndex = ids.length - 1
+    if (action === 'back') targetIndex = 0
+    if (action === 'forward') targetIndex = Math.min(ids.length - 1, currentIndex + 1)
+    if (action === 'backward') targetIndex = Math.max(0, currentIndex - 1)
+    if (targetIndex === currentIndex) return
+
+    ids.splice(currentIndex, 1)
+    ids.splice(targetIndex, 0, stickerId)
+
+    const next = { ...stickersRef.current }
+    ids.forEach((id, index) => {
+      next[id] = { ...next[id], zIndex: index + 1 }
+    })
+
+    stickersRef.current = next
+    setStickers(next)
+    setStatus(action === 'front' ? 'Figurinha trazida para frente.' : action === 'back' ? 'Figurinha enviada para trás.' : 'Ordem da figurinha ajustada.')
   }
 
   function applyStickerThemePreset(presetId, scope = 'selected') {
@@ -3871,10 +4016,18 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
 
         <div className="ff-share-studio__body">
           <section
+            ref={previewShellRef}
             className="ff-share-studio__preview"
             aria-label="Prévia da imagem"
             style={{ '--ff-share-snap-bottom': snapBottomPercent }}
           >
+            {overlayMode === 'stickers' && selectedStickerMeta && (
+              <div className="ff-share-studio__editing-badge">
+                <strong>Editando agora</strong>
+                <span>{selectedStickerMeta.label}</span>
+              </div>
+            )}
+
             <canvas
               ref={canvasRef}
               className={`ff-share-studio__canvas is-${format} template-${template} bg-${selectedBackground}${activeEditLayer === 'photo' ? ' is-editing-photo' : ''} editing-${activeEditLayer}${overlayMode === 'stickers' ? ' has-dom-stickers' : ''}`}
@@ -3933,6 +4086,108 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
             {snapGuide.y !== null && <span className="ff-share-studio__snap-line is-horizontal" aria-hidden="true" style={{ top: `${snapGuide.y}%` }} />}
             {snapGuide.bottom && <span className="ff-share-studio__snap-line is-bottom" aria-hidden="true" />}
 
+            {overlayMode === 'stickers' && selectedSticker && selectedStickerMeta && stickerPopoverPosition && (
+              <div
+                className={`ff-share-studio__sticker-popover is-${stickerPopoverPosition.placement}`}
+                style={{
+                  left: stickerPopoverPosition.left,
+                  top: stickerPopoverPosition.top,
+                  width: Math.min(stickerPopoverPosition.width, selectedFormat.width * 0.78),
+                }}
+              >
+                <div className="ff-share-studio__sticker-popover-head">
+                  <div>
+                    <strong>{selectedStickerMeta.label}</strong>
+                    <small>{selectedStickerMeta.description}</small>
+                  </div>
+                  <div className="ff-share-studio__sticker-popover-tabs">
+                    <button type="button" className={stickerPopoverTab === 'style' ? 'is-active' : ''} onClick={() => setStickerPopoverTab('style')}>Visual</button>
+                    <button type="button" className={stickerPopoverTab === 'align' ? 'is-active' : ''} onClick={() => setStickerPopoverTab('align')}>Alinhar</button>
+                  </div>
+                </div>
+
+                {stickerPopoverTab === 'style' ? (
+                  <div className="ff-share-studio__sticker-popover-body">
+                    <div className="ff-share-studio__popover-row is-actions">
+                      <button type="button" onClick={handleSelectedStickerSmaller}>Menor</button>
+                      <button type="button" onClick={handleSelectedStickerBigger}>Maior</button>
+                      <button type="button" onClick={() => applyStickerThemePreset('glass')}>Glass</button>
+                      <button type="button" onClick={() => applyStickerThemePreset('minimal')}>Minimal</button>
+                    </div>
+                    <div className="ff-share-studio__popover-row is-actions">
+                      <button type="button" onClick={() => applyStickerThemePreset('clean')}>Clean</button>
+                      <button type="button" onClick={() => applyStickerThemePreset('redBold')}>Bold Red</button>
+                      <button type="button" onClick={() => applyStickerThemePreset('transparent')}>Transp.</button>
+                      <button type="button" onClick={() => toggleSticker(selectedStickerId)}>Ocultar</button>
+                    </div>
+
+                    <div className="ff-share-studio__popover-row">
+                      <label>
+                        <span>Editar cor</span>
+                        <select value={stickerColorTarget} onChange={(event) => setStickerColorTarget(event.target.value)}>
+                          <option value="titleColor">Título</option>
+                          <option value="textColor">Texto</option>
+                          <option value="accentColor">Destaque</option>
+                          <option value="backgroundColor">Fundo</option>
+                          <option value="borderColor">Borda</option>
+                        </select>
+                      </label>
+                      <label>
+                        <span>Cor</span>
+                        <input type="color" value={selectedStickerColorHex} onChange={(event) => updateSelectedStickerAppearance({ [stickerColorTarget]: event.target.value })} />
+                      </label>
+                    </div>
+
+                    <div className="ff-share-studio__popover-hsl">
+                      <label>
+                        <span>Hue</span>
+                        <input type="range" min="0" max="360" step="1" value={selectedStickerColorHsl.h} onChange={(event) => updateSelectedStickerHsl('h', event.target.value)} />
+                      </label>
+                      <label>
+                        <span>Sat.</span>
+                        <input type="range" min="0" max="100" step="1" value={selectedStickerColorHsl.s} onChange={(event) => updateSelectedStickerHsl('s', event.target.value)} />
+                      </label>
+                      <label>
+                        <span>Luz</span>
+                        <input type="range" min="0" max="100" step="1" value={selectedStickerColorHsl.l} onChange={(event) => updateSelectedStickerHsl('l', event.target.value)} />
+                      </label>
+                    </div>
+
+                    <div className="ff-share-studio__popover-row is-sliders">
+                      <label>
+                        <span>Fundo</span>
+                        <input type="range" min="0" max="1" step="0.01" value={selectedStickerAppearance.backgroundOpacity} onChange={(event) => updateSelectedStickerAppearance({ backgroundOpacity: Number(event.target.value) })} />
+                      </label>
+                      <label>
+                        <span>Borda</span>
+                        <input type="range" min="0" max="1" step="0.01" value={selectedStickerAppearance.borderOpacity} onChange={(event) => updateSelectedStickerAppearance({ borderOpacity: Number(event.target.value) })} />
+                      </label>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="ff-share-studio__sticker-popover-body">
+                    <div className="ff-share-studio__popover-row is-actions is-grid">
+                      <button type="button" onClick={() => alignSelectedSticker('left')}>Esq.</button>
+                      <button type="button" onClick={() => alignSelectedSticker('centerX')}>Centro X</button>
+                      <button type="button" onClick={() => alignSelectedSticker('right')}>Dir.</button>
+                      <button type="button" onClick={() => alignSelectedSticker('top')}>Topo</button>
+                      <button type="button" onClick={() => alignSelectedSticker('centerY')}>Meio Y</button>
+                      <button type="button" onClick={() => alignSelectedSticker('bottom')}>Base</button>
+                      <button type="button" onClick={() => alignSelectedSticker('peerLeft')}>Com esq.</button>
+                      <button type="button" onClick={() => alignSelectedSticker('peerCenterX')}>Com centro</button>
+                      <button type="button" onClick={() => alignSelectedSticker('peerBottom')}>Com base</button>
+                    </div>
+                    <div className="ff-share-studio__popover-row is-actions is-grid">
+                      <button type="button" onClick={() => shiftSelectedStickerLayer('back')}>Para trás</button>
+                      <button type="button" onClick={() => shiftSelectedStickerLayer('backward')}>-1 camada</button>
+                      <button type="button" onClick={() => shiftSelectedStickerLayer('forward')}>+1 camada</button>
+                      <button type="button" onClick={() => shiftSelectedStickerLayer('front')}>Para frente</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {!ready && (
               <div className="ff-share-studio__loading">
                 Montando imagem...
@@ -3943,7 +4198,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
           <section className="ff-share-studio__controls">
             <div className="ff-share-studio__tip-card">
               <strong>Editor premium do card</strong>
-              <small>Preview fixo no topo e opções organizadas em menus suspensos para editar sem se perder.</small>
+              <small>Toque numa figurinha para editar perto dela. Menos rolagem, menos confusão e feedback visual mais claro.</small>
             </div>
 
             <div className="ff-share-studio__quick-summary">
@@ -4142,114 +4397,17 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
 
                   <div className="ff-share-studio__overlay-tools">
                     <button type="button" onClick={handleResetStickers}>Resetar</button>
-                    <button type="button" onClick={() => applyLayoutPreset('balanced')}>Layout base</button>
+                    <button type="button" onClick={() => applyLayoutPreset('balanced')}>Base</button>
                     <button type="button" onClick={() => applyLayoutPreset('compact')}>Compacto</button>
-                    <button type="button" onClick={handleSelectedStickerSmaller}>Menor</button>
-                    <button type="button" onClick={handleSelectedStickerBigger}>Maior</button>
+                    <button type="button" onClick={() => applyLayoutPreset('hero')}>Hero</button>
+                    <button type="button" onClick={() => applyLayoutPreset('analytics')}>Analytics</button>
                   </div>
 
-                  <details className="ff-share-studio__subpanel">
-                    <summary>
-                      <span>Alinhamento rápido</span>
-                      <small>Centro, bordas e com outra figurinha</small>
-                    </summary>
-                    <div className="ff-share-studio__align-panel" aria-label="Alinhamento da figurinha selecionada">
-                      <div className="ff-share-studio__align-tools">
-                        <button type="button" onClick={() => alignSelectedSticker('left')}>Esq.</button>
-                        <button type="button" onClick={() => alignSelectedSticker('centerX')}>Centro X</button>
-                        <button type="button" onClick={() => alignSelectedSticker('right')}>Dir.</button>
-                        <button type="button" onClick={() => alignSelectedSticker('top')}>Topo</button>
-                        <button type="button" onClick={() => alignSelectedSticker('centerY')}>Meio Y</button>
-                        <button type="button" onClick={() => alignSelectedSticker('bottom')}>Base</button>
-                        <button type="button" onClick={() => alignSelectedSticker('peerLeft')}>Com esq.</button>
-                        <button type="button" onClick={() => alignSelectedSticker('peerCenterX')}>Com centro</button>
-                        <button type="button" onClick={() => alignSelectedSticker('peerBottom')}>Com base</button>
-                      </div>
-                    </div>
-                  </details>
+                  <div className="ff-share-studio__context-note">
+                    <strong>Toque numa figurinha para editar</strong>
+                    <small>As opções de visual e alinhamento agora abrem diretamente ao lado da figurinha selecionada, no próprio preview.</small>
+                  </div>
 
-                  {selectedSticker && (
-                    <details className="ff-share-studio__sticker-dropdown">
-                      <summary>
-                        <span>
-                          <Sparkles size={16} />
-                          Editar figurinha selecionada
-                        </span>
-                        <small>{SHARE_STICKER_TYPES.find((item) => item.id === selectedStickerId)?.label || 'Figurinha'}</small>
-                      </summary>
-
-                      <div className="ff-share-studio__sticker-customize">
-                        <div className="ff-share-studio__theme-presets" aria-label="Presets visuais de figurinha">
-                          {Object.entries(STICKER_THEME_PRESETS).map(([id, preset]) => (
-                            <button key={id} type="button" onClick={() => applyStickerThemePreset(id)}>
-                              {preset.label}
-                            </button>
-                          ))}
-                          <button type="button" onClick={() => applyStickerThemePreset('glass', 'all')}>Glass em todas</button>
-                        </div>
-
-                        <div className="ff-share-studio__sticker-customize-grid is-tight">
-                          <label>
-                            <span>Editar cor</span>
-                            <select value={stickerColorTarget} onChange={(event) => setStickerColorTarget(event.target.value)}>
-                              <option value="titleColor">Título</option>
-                              <option value="textColor">Texto auxiliar</option>
-                              <option value="accentColor">Destaque</option>
-                              <option value="backgroundColor">Fundo</option>
-                              <option value="borderColor">Borda</option>
-                            </select>
-                          </label>
-                          <label>
-                            <span>Cor atual</span>
-                            <input type="color" value={selectedStickerColorHex} onChange={(event) => updateSelectedStickerAppearance({ [stickerColorTarget]: event.target.value })} />
-                          </label>
-                        </div>
-
-                        <div className="ff-share-studio__color-editor">
-                          <div className="ff-share-studio__color-preview" style={{ background: `linear-gradient(135deg, ${selectedStickerColorHex}, ${selectedStickerAppearance.accentColor})` }} />
-                          <div className="ff-share-studio__hsl-grid">
-                            <label>
-                              <span>Hue</span>
-                              <input type="range" min="0" max="360" step="1" value={selectedStickerColorHsl.h} onChange={(event) => updateSelectedStickerHsl('h', event.target.value)} />
-                              <small>{selectedStickerColorHsl.h}°</small>
-                            </label>
-                            <label>
-                              <span>Saturation</span>
-                              <input type="range" min="0" max="100" step="1" value={selectedStickerColorHsl.s} onChange={(event) => updateSelectedStickerHsl('s', event.target.value)} />
-                              <small>{selectedStickerColorHsl.s}%</small>
-                            </label>
-                            <label>
-                              <span>Lightness</span>
-                              <input type="range" min="0" max="100" step="1" value={selectedStickerColorHsl.l} onChange={(event) => updateSelectedStickerHsl('l', event.target.value)} />
-                              <small>{selectedStickerColorHsl.l}%</small>
-                            </label>
-                          </div>
-                        </div>
-
-                        <div className="ff-share-studio__sticker-customize-grid">
-                          <label>
-                            <span>Transparência do fundo</span>
-                            <input type="range" min="0" max="1" step="0.01" value={selectedStickerAppearance.backgroundOpacity} onChange={(event) => updateSelectedStickerAppearance({ backgroundOpacity: Number(event.target.value) })} />
-                            <small>{Math.round(selectedStickerAppearance.backgroundOpacity * 100)}%</small>
-                          </label>
-                          <label>
-                            <span>Opacidade da borda</span>
-                            <input type="range" min="0" max="1" step="0.01" value={selectedStickerAppearance.borderOpacity} onChange={(event) => updateSelectedStickerAppearance({ borderOpacity: Number(event.target.value) })} />
-                            <small>{Math.round(selectedStickerAppearance.borderOpacity * 100)}%</small>
-                          </label>
-                          <label>
-                            <span>Espessura da borda</span>
-                            <input type="range" min="0" max="8" step="0.5" value={selectedStickerAppearance.borderWidth} onChange={(event) => updateSelectedStickerAppearance({ borderWidth: Number(event.target.value) })} />
-                            <small>{selectedStickerAppearance.borderWidth}px</small>
-                          </label>
-                          <label>
-                            <span>Transparência total rápida</span>
-                            <button type="button" className="ff-share-studio__ghost-button" onClick={() => updateSelectedStickerAppearance({ backgroundOpacity: 0, borderOpacity: 0 })}>Deixar 100% transparente</button>
-                          </label>
-                        </div>
-                      </div>
-                    </details>
-                  )}
                 </div>
               </details>
             )}

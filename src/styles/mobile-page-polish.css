@@ -14638,3 +14638,208 @@ body.ff-share-studio-open .mobile-bottom-nav {
     z-index: 4;
   }
 }
+
+
+/* ForgeFlow 22/06 - Share Studio V18: edição contextual da figurinha */
+.ff-share-studio__editing-badge {
+  position: absolute;
+  top: 0.8rem;
+  left: 0.8rem;
+  z-index: 5;
+  display: inline-grid;
+  gap: 0.08rem;
+  padding: 0.55rem 0.72rem;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 0.9rem;
+  background: rgba(7,10,16,0.74);
+  backdrop-filter: blur(16px);
+}
+
+.ff-share-studio__editing-badge strong {
+  color: rgba(255,255,255,0.96);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.ff-share-studio__editing-badge span {
+  color: rgba(255,255,255,0.68);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.ff-share-studio__sticker-popover {
+  position: absolute;
+  z-index: 8;
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.82rem;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 1rem;
+  background: rgba(7,10,16,0.88);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 1rem 2.6rem rgba(0,0,0,0.32);
+  transform: translate(-50%, calc(-100% - 12px));
+}
+
+.ff-share-studio__sticker-popover.is-bottom {
+  transform: translate(-50%, 0);
+}
+
+.ff-share-studio__sticker-popover::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  border-right: 1px solid rgba(255,255,255,0.12);
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+  background: rgba(7,10,16,0.88);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.ff-share-studio__sticker-popover.is-top::after {
+  bottom: -7px;
+}
+
+.ff-share-studio__sticker-popover.is-bottom::after {
+  top: -7px;
+  transform: translateX(-50%) rotate(225deg);
+}
+
+.ff-share-studio__sticker-popover-head {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.ff-share-studio__sticker-popover-head strong {
+  display: block;
+  color: rgba(255,255,255,0.96);
+  font-size: 0.82rem;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.ff-share-studio__sticker-popover-head small {
+  color: rgba(255,255,255,0.56);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.ff-share-studio__sticker-popover-tabs {
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.ff-share-studio__sticker-popover-tabs button,
+.ff-share-studio__popover-row button,
+.ff-share-studio__context-note {
+  border-radius: 0.82rem;
+}
+
+.ff-share-studio__sticker-popover-tabs button,
+.ff-share-studio__popover-row button {
+  min-height: 2.1rem;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.86);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.ff-share-studio__sticker-popover-tabs button.is-active {
+  border-color: rgba(239,68,68,0.38);
+  background: rgba(239,68,68,0.18);
+  color: #fff;
+}
+
+.ff-share-studio__sticker-popover-body,
+.ff-share-studio__popover-hsl {
+  display: grid;
+  gap: 0.72rem;
+}
+
+.ff-share-studio__popover-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.ff-share-studio__popover-row.is-actions {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.ff-share-studio__popover-row.is-actions.is-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.ff-share-studio__popover-row.is-sliders {
+  grid-template-columns: 1fr;
+}
+
+.ff-share-studio__popover-row label,
+.ff-share-studio__popover-hsl label {
+  display: grid;
+  gap: 0.32rem;
+}
+
+.ff-share-studio__popover-row span,
+.ff-share-studio__popover-hsl span {
+  color: rgba(255,255,255,0.75);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.ff-share-studio__popover-row select,
+.ff-share-studio__popover-row input[type='color'] {
+  width: 100%;
+  min-height: 2.35rem;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 0.78rem;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.92);
+}
+
+.ff-share-studio__popover-row input[type='color'] {
+  padding: 0.14rem;
+}
+
+.ff-share-studio__context-note {
+  display: grid;
+  gap: 0.22rem;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.035);
+}
+
+.ff-share-studio__context-note strong {
+  color: rgba(255,255,255,0.92);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.ff-share-studio__context-note small {
+  color: rgba(255,255,255,0.56);
+  font-size: 0.7rem;
+  line-height: 1.3;
+}
+
+@media (max-width: 767px) {
+  .ff-share-studio__sticker-popover {
+    width: min(calc(100% - 12px), 320px) !important;
+    padding: 0.72rem;
+  }
+
+  .ff-share-studio__popover-row,
+  .ff-share-studio__popover-row.is-actions,
+  .ff-share-studio__popover-row.is-actions.is-grid,
+  .ff-share-studio__sticker-popover-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ff-share-studio__editing-badge {
+    top: 0.55rem;
+    left: 0.55rem;
+  }
+}
