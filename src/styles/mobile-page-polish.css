@@ -14489,3 +14489,131 @@ body.ff-share-studio-open .mobile-bottom-nav {
     min-height: 3.85rem;
   }
 }
+
+
+/* ForgeFlow 22/06 - Share Studio V16: controles em menus suspensos + preview fixo */
+.ff-share-studio__controls {
+  display: grid;
+  gap: 0.9rem;
+  align-content: start;
+}
+
+.ff-share-studio__quick-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.ff-share-studio__quick-summary span {
+  display: grid;
+  gap: 0.12rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 0.95rem;
+  background: rgba(255,255,255,0.04);
+}
+
+.ff-share-studio__quick-summary strong {
+  color: rgba(255,255,255,0.94);
+  font-size: 0.85rem;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.ff-share-studio__quick-summary small {
+  color: rgba(255,255,255,0.55);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.ff-share-studio__panel,
+.ff-share-studio__subpanel {
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 1.05rem;
+  background: rgba(255,255,255,0.035);
+  overflow: hidden;
+}
+
+.ff-share-studio__panel > summary,
+.ff-share-studio__subpanel > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1rem 0.95rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.ff-share-studio__panel > summary::-webkit-details-marker,
+.ff-share-studio__subpanel > summary::-webkit-details-marker {
+  display: none;
+}
+
+.ff-share-studio__panel > summary span,
+.ff-share-studio__subpanel > summary span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: rgba(255,255,255,0.92);
+  font-size: 0.85rem;
+  font-weight: 900;
+}
+
+.ff-share-studio__panel > summary small,
+.ff-share-studio__subpanel > summary small {
+  color: rgba(255,255,255,0.52);
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-align: right;
+}
+
+.ff-share-studio__panel-body {
+  display: grid;
+  gap: 0.95rem;
+  padding: 0 1rem 1rem;
+}
+
+.ff-share-studio__subpanel > .ff-share-studio__align-panel,
+.ff-share-studio__subpanel > .ff-share-studio__panel-body {
+  padding: 0 0.8rem 0.8rem;
+}
+
+.ff-share-studio__panel .ff-share-studio__section-title:first-child {
+  margin-top: 0;
+}
+
+.ff-share-studio__sticker-dropdown {
+  margin-top: 0.15rem;
+}
+
+.ff-share-studio__preview {
+  position: sticky;
+  top: 0.7rem;
+  z-index: 6;
+}
+
+.ff-share-studio__footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 7;
+  margin-top: 0.8rem;
+  padding-top: 0.8rem;
+  background: linear-gradient(180deg, rgba(7,10,16,0), rgba(7,10,16,0.96) 30%, rgba(7,10,16,0.98));
+  backdrop-filter: blur(14px);
+}
+
+@media (max-width: 767px) {
+  .ff-share-studio__preview {
+    top: 0.25rem;
+  }
+
+  .ff-share-studio__panel > summary,
+  .ff-share-studio__subpanel > summary {
+    padding: 0.9rem;
+  }
+
+  .ff-share-studio__panel-body {
+    padding: 0 0.9rem 0.9rem;
+  }
+}

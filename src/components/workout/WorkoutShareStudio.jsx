@@ -3943,87 +3943,35 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
           <section className="ff-share-studio__controls">
             <div className="ff-share-studio__tip-card">
               <strong>Editor premium do card</strong>
-              <small>Use sua foto como destaque e monte um layout premium com figurinhas do ForgeFlow por cima.</small>
+              <small>Preview fixo no topo e opções organizadas em menus suspensos para editar sem se perder.</small>
             </div>
 
-            <div className="ff-share-studio__section-title">
-              <Layers3 size={16} />
-              <span>Formato</span>
+            <div className="ff-share-studio__quick-summary">
+              <span><strong>{SHARE_FORMATS.find((item) => item.id === format)?.label}</strong><small>Formato</small></span>
+              <span><strong>{SHARE_TEMPLATES.find((item) => item.id === template)?.label}</strong><small>Template</small></span>
+              <span><strong>{overlayMode === 'stickers' ? visibleStickers.length : '—'}</strong><small>Figurinhas</small></span>
+              <span><strong>{selectedSticker ? (SHARE_STICKER_TYPES.find((item) => item.id === selectedStickerId)?.label || 'Selecionada') : 'Nenhuma'}</strong><small>Em edição</small></span>
             </div>
 
-            <div className="ff-share-studio__format-grid">
-              {SHARE_FORMATS.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={format === item.id ? 'is-active' : ''}
-                  onClick={() => setFormat(item.id)}
-                >
-                  <strong>{item.label}</strong>
-                  <small>{item.description}</small>
-                </button>
-              ))}
-            </div>
+            <details className="ff-share-studio__panel" open>
+              <summary>
+                <span><Layers3 size={16} /> Visual do card</span>
+                <small>Formato, template, camada e fundo</small>
+              </summary>
 
-            <div className="ff-share-studio__section-title">
-              <Move size={16} />
-              <span>Camada de informações</span>
-            </div>
-
-            <div className="ff-share-studio__overlay-mode">
-              <button
-                type="button"
-                className={overlayMode === 'stickers' ? 'is-active' : ''}
-                onClick={() => {
-                  setOverlayMode('stickers')
-                  setActiveEditLayer('overlay')
-                }}
-              >
-                <strong>Figurinhas</strong>
-                <small>Foto em destaque, informações menores por cima.</small>
-              </button>
-              <button
-                type="button"
-                className={overlayMode === 'fullCard' ? 'is-active' : ''}
-                onClick={() => setOverlayMode('fullCard')}
-              >
-                <strong>Card inteiro</strong>
-                <small>Visual premium ocupando mais espaço.</small>
-              </button>
-            </div>
-
-            {overlayMode === 'stickers' && (
-              <>
-                <div className="ff-share-studio__edit-layer" aria-label="Escolha o que editar no preview">
-                  <button
-                    type="button"
-                    className={activeEditLayer === 'overlay' ? 'is-active' : ''}
-                    onClick={() => setActiveEditLayer('overlay')}
-                  >
-                    Figurinhas
-                  </button>
-                  <button
-                    type="button"
-                    className={activeEditLayer === 'photo' ? 'is-active' : ''}
-                    onClick={() => {
-                      if (hasEditablePhoto) {
-                        setActiveEditLayer('photo')
-                      } else {
-                        fileInputRef.current?.click()
-                      }
-                    }}
-                  >
-                    Foto
-                  </button>
+              <div className="ff-share-studio__panel-body">
+                <div className="ff-share-studio__section-title">
+                  <Layers3 size={16} />
+                  <span>Formato</span>
                 </div>
 
-                <div className="ff-share-studio__sticker-picker" aria-label="Adicionar ou remover figurinhas">
-                  {SHARE_STICKER_TYPES.map((item) => (
+                <div className="ff-share-studio__format-grid">
+                  {SHARE_FORMATS.map((item) => (
                     <button
                       key={item.id}
                       type="button"
-                      className={`${stickers[item.id]?.visible ? 'is-active' : ''}${selectedStickerId === item.id ? ' is-selected' : ''}`}
-                      onClick={() => toggleSticker(item.id)}
+                      className={format === item.id ? 'is-active' : ''}
+                      onClick={() => setFormat(item.id)}
                     >
                       <strong>{item.label}</strong>
                       <small>{item.description}</small>
@@ -4031,267 +3979,355 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
                   ))}
                 </div>
 
-                <div className="ff-share-studio__overlay-tools">
-                  <button type="button" onClick={handleResetStickers}>Resetar layout</button>
-                  <button type="button" onClick={() => applyLayoutPreset('balanced')}>Layout base</button>
-                  <button type="button" onClick={() => applyLayoutPreset('compact')}>Layout compacto</button>
-                  <button type="button" onClick={handleSelectedStickerSmaller}>Menor</button>
-                  <button type="button" onClick={handleSelectedStickerBigger}>Maior</button>
+                <div className="ff-share-studio__section-title">
+                  <Move size={16} />
+                  <span>Camada de informações</span>
                 </div>
 
-                <div className="ff-share-studio__align-panel" aria-label="Alinhamento da figurinha selecionada">
-                  <strong>Alinhar selecionada</strong>
-                  <div className="ff-share-studio__align-tools">
-                    <button type="button" onClick={() => alignSelectedSticker('left')}>Esq.</button>
-                    <button type="button" onClick={() => alignSelectedSticker('centerX')}>Centro X</button>
-                    <button type="button" onClick={() => alignSelectedSticker('right')}>Dir.</button>
-                    <button type="button" onClick={() => alignSelectedSticker('top')}>Topo</button>
-                    <button type="button" onClick={() => alignSelectedSticker('centerY')}>Meio Y</button>
-                    <button type="button" onClick={() => alignSelectedSticker('bottom')}>Base</button>
-                    <button type="button" onClick={() => alignSelectedSticker('peerLeft')}>Com esq.</button>
-                    <button type="button" onClick={() => alignSelectedSticker('peerCenterX')}>Com centro</button>
-                    <button type="button" onClick={() => alignSelectedSticker('peerBottom')}>Com base</button>
+                <div className="ff-share-studio__overlay-mode">
+                  <button
+                    type="button"
+                    className={overlayMode === 'stickers' ? 'is-active' : ''}
+                    onClick={() => {
+                      setOverlayMode('stickers')
+                      setActiveEditLayer('overlay')
+                    }}
+                  >
+                    <strong>Figurinhas</strong>
+                    <small>Foto em destaque, informações menores por cima.</small>
+                  </button>
+                  <button
+                    type="button"
+                    className={overlayMode === 'fullCard' ? 'is-active' : ''}
+                    onClick={() => setOverlayMode('fullCard')}
+                  >
+                    <strong>Card inteiro</strong>
+                    <small>Visual premium ocupando mais espaço.</small>
+                  </button>
+                </div>
+
+                <div className="ff-share-studio__section-title">
+                  <Layers3 size={16} />
+                  <span>Template</span>
+                </div>
+
+                <div className="ff-share-studio__template-grid">
+                  {SHARE_TEMPLATES.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={template === item.id ? 'is-active' : ''}
+                      onClick={() => setTemplate(item.id)}
+                    >
+                      <strong>{item.label}</strong>
+                      <small>{item.description}</small>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="ff-share-studio__section-title">
+                  <Sparkles size={16} />
+                  <span>Fundo</span>
+                </div>
+
+                <div className="ff-share-studio__background-mode">
+                  <button
+                    type="button"
+                    className={backgroundMode === 'theme' ? 'is-active' : ''}
+                    onClick={() => setBackgroundMode('theme')}
+                  >
+                    Fundo premium
+                  </button>
+                  <button
+                    type="button"
+                    className={backgroundMode === 'photo' ? 'is-active' : ''}
+                    onClick={() => {
+                      if (userPhoto?.src) {
+                        setBackgroundMode('photo')
+                        setOverlayMode('stickers')
+                        setActiveEditLayer('photo')
+                        return
+                      }
+                      fileInputRef.current?.click()
+                    }}
+                  >
+                    Foto própria
+                  </button>
+                </div>
+
+                {backgroundMode === 'theme' && (
+                  <div className="ff-share-studio__background-grid">
+                    {SHARE_BACKGROUNDS.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className={selectedBackground === item.id ? 'is-active' : ''}
+                        onClick={() => setSelectedBackground(item.id)}
+                      >
+                        <i className={`ff-share-studio__bg-swatch is-${item.id}`} aria-hidden="true" />
+                        <span>
+                          <strong>{item.label}</strong>
+                          <small>{item.description}</small>
+                        </span>
+                      </button>
+                    ))}
                   </div>
+                )}
+
+                <div className="ff-share-studio__section-title">
+                  <Layers3 size={16} />
+                  <span>Nível de informação</span>
                 </div>
 
-                {selectedSticker && (
-                  <details className="ff-share-studio__sticker-dropdown" open>
+                <div className="ff-share-studio__info-levels">
+                  {INFO_LEVELS.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={infoLevel === item.id ? 'is-active' : ''}
+                      onClick={() => setInfoLevel(item.id)}
+                    >
+                      <strong>{item.label}</strong>
+                      <small>{item.description}</small>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </details>
+
+            {overlayMode === 'stickers' && (
+              <details className="ff-share-studio__panel" open>
+                <summary>
+                  <span><Move size={16} /> Figurinhas</span>
+                  <small>Adicionar, posicionar e alinhar</small>
+                </summary>
+
+                <div className="ff-share-studio__panel-body">
+                  <div className="ff-share-studio__edit-layer" aria-label="Escolha o que editar no preview">
+                    <button
+                      type="button"
+                      className={activeEditLayer === 'overlay' ? 'is-active' : ''}
+                      onClick={() => setActiveEditLayer('overlay')}
+                    >
+                      Figurinhas
+                    </button>
+                    <button
+                      type="button"
+                      className={activeEditLayer === 'photo' ? 'is-active' : ''}
+                      onClick={() => {
+                        if (hasEditablePhoto) {
+                          setActiveEditLayer('photo')
+                        } else {
+                          fileInputRef.current?.click()
+                        }
+                      }}
+                    >
+                      Foto
+                    </button>
+                  </div>
+
+                  <div className="ff-share-studio__sticker-picker" aria-label="Adicionar ou remover figurinhas">
+                    {SHARE_STICKER_TYPES.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className={`${stickers[item.id]?.visible ? 'is-active' : ''}${selectedStickerId === item.id ? ' is-selected' : ''}`}
+                        onClick={() => toggleSticker(item.id)}
+                      >
+                        <strong>{item.label}</strong>
+                        <small>{item.description}</small>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="ff-share-studio__overlay-tools">
+                    <button type="button" onClick={handleResetStickers}>Resetar</button>
+                    <button type="button" onClick={() => applyLayoutPreset('balanced')}>Layout base</button>
+                    <button type="button" onClick={() => applyLayoutPreset('compact')}>Compacto</button>
+                    <button type="button" onClick={handleSelectedStickerSmaller}>Menor</button>
+                    <button type="button" onClick={handleSelectedStickerBigger}>Maior</button>
+                  </div>
+
+                  <details className="ff-share-studio__subpanel">
                     <summary>
-                      <span>
-                        <Sparkles size={16} />
-                        Editar figurinha selecionada
-                      </span>
-                      <small>{SHARE_STICKER_TYPES.find((item) => item.id === selectedStickerId)?.label || 'Figurinha'}</small>
+                      <span>Alinhamento rápido</span>
+                      <small>Centro, bordas e com outra figurinha</small>
                     </summary>
-
-                    <div className="ff-share-studio__sticker-customize">
-                      <div className="ff-share-studio__theme-presets" aria-label="Presets visuais de figurinha">
-                        {Object.entries(STICKER_THEME_PRESETS).map(([id, preset]) => (
-                          <button key={id} type="button" onClick={() => applyStickerThemePreset(id)}>
-                            {preset.label}
-                          </button>
-                        ))}
-                        <button type="button" onClick={() => applyStickerThemePreset('glass', 'all')}>Glass em todas</button>
-                      </div>
-
-                      <div className="ff-share-studio__sticker-customize-grid is-tight">
-                        <label>
-                          <span>Editar cor</span>
-                          <select value={stickerColorTarget} onChange={(event) => setStickerColorTarget(event.target.value)}>
-                            <option value="titleColor">Título</option>
-                            <option value="textColor">Texto auxiliar</option>
-                            <option value="accentColor">Destaque</option>
-                            <option value="backgroundColor">Fundo</option>
-                            <option value="borderColor">Borda</option>
-                          </select>
-                        </label>
-                        <label>
-                          <span>Cor atual</span>
-                          <input type="color" value={selectedStickerColorHex} onChange={(event) => updateSelectedStickerAppearance({ [stickerColorTarget]: event.target.value })} />
-                        </label>
-                      </div>
-
-                      <div className="ff-share-studio__color-editor">
-                        <div className="ff-share-studio__color-preview" style={{ background: `linear-gradient(135deg, ${selectedStickerColorHex}, ${selectedStickerAppearance.accentColor})` }} />
-                        <div className="ff-share-studio__hsl-grid">
-                          <label>
-                            <span>Hue</span>
-                            <input type="range" min="0" max="360" step="1" value={selectedStickerColorHsl.h} onChange={(event) => updateSelectedStickerHsl('h', event.target.value)} />
-                            <small>{selectedStickerColorHsl.h}°</small>
-                          </label>
-                          <label>
-                            <span>Saturation</span>
-                            <input type="range" min="0" max="100" step="1" value={selectedStickerColorHsl.s} onChange={(event) => updateSelectedStickerHsl('s', event.target.value)} />
-                            <small>{selectedStickerColorHsl.s}%</small>
-                          </label>
-                          <label>
-                            <span>Lightness</span>
-                            <input type="range" min="0" max="100" step="1" value={selectedStickerColorHsl.l} onChange={(event) => updateSelectedStickerHsl('l', event.target.value)} />
-                            <small>{selectedStickerColorHsl.l}%</small>
-                          </label>
-                        </div>
-                      </div>
-
-                      <div className="ff-share-studio__sticker-customize-grid">
-                        <label>
-                          <span>Transparência do fundo</span>
-                          <input type="range" min="0" max="1" step="0.01" value={selectedStickerAppearance.backgroundOpacity} onChange={(event) => updateSelectedStickerAppearance({ backgroundOpacity: Number(event.target.value) })} />
-                          <small>{Math.round(selectedStickerAppearance.backgroundOpacity * 100)}%</small>
-                        </label>
-                        <label>
-                          <span>Opacidade da borda</span>
-                          <input type="range" min="0" max="1" step="0.01" value={selectedStickerAppearance.borderOpacity} onChange={(event) => updateSelectedStickerAppearance({ borderOpacity: Number(event.target.value) })} />
-                          <small>{Math.round(selectedStickerAppearance.borderOpacity * 100)}%</small>
-                        </label>
-                        <label>
-                          <span>Espessura da borda</span>
-                          <input type="range" min="0" max="8" step="0.5" value={selectedStickerAppearance.borderWidth} onChange={(event) => updateSelectedStickerAppearance({ borderWidth: Number(event.target.value) })} />
-                          <small>{selectedStickerAppearance.borderWidth}px</small>
-                        </label>
-                        <label>
-                          <span>Transparência total rápida</span>
-                          <button type="button" className="ff-share-studio__ghost-button" onClick={() => updateSelectedStickerAppearance({ backgroundOpacity: 0, borderOpacity: 0 })}>Deixar vidro 100% transparente</button>
-                        </label>
+                    <div className="ff-share-studio__align-panel" aria-label="Alinhamento da figurinha selecionada">
+                      <div className="ff-share-studio__align-tools">
+                        <button type="button" onClick={() => alignSelectedSticker('left')}>Esq.</button>
+                        <button type="button" onClick={() => alignSelectedSticker('centerX')}>Centro X</button>
+                        <button type="button" onClick={() => alignSelectedSticker('right')}>Dir.</button>
+                        <button type="button" onClick={() => alignSelectedSticker('top')}>Topo</button>
+                        <button type="button" onClick={() => alignSelectedSticker('centerY')}>Meio Y</button>
+                        <button type="button" onClick={() => alignSelectedSticker('bottom')}>Base</button>
+                        <button type="button" onClick={() => alignSelectedSticker('peerLeft')}>Com esq.</button>
+                        <button type="button" onClick={() => alignSelectedSticker('peerCenterX')}>Com centro</button>
+                        <button type="button" onClick={() => alignSelectedSticker('peerBottom')}>Com base</button>
                       </div>
                     </div>
                   </details>
+
+                  {selectedSticker && (
+                    <details className="ff-share-studio__sticker-dropdown">
+                      <summary>
+                        <span>
+                          <Sparkles size={16} />
+                          Editar figurinha selecionada
+                        </span>
+                        <small>{SHARE_STICKER_TYPES.find((item) => item.id === selectedStickerId)?.label || 'Figurinha'}</small>
+                      </summary>
+
+                      <div className="ff-share-studio__sticker-customize">
+                        <div className="ff-share-studio__theme-presets" aria-label="Presets visuais de figurinha">
+                          {Object.entries(STICKER_THEME_PRESETS).map(([id, preset]) => (
+                            <button key={id} type="button" onClick={() => applyStickerThemePreset(id)}>
+                              {preset.label}
+                            </button>
+                          ))}
+                          <button type="button" onClick={() => applyStickerThemePreset('glass', 'all')}>Glass em todas</button>
+                        </div>
+
+                        <div className="ff-share-studio__sticker-customize-grid is-tight">
+                          <label>
+                            <span>Editar cor</span>
+                            <select value={stickerColorTarget} onChange={(event) => setStickerColorTarget(event.target.value)}>
+                              <option value="titleColor">Título</option>
+                              <option value="textColor">Texto auxiliar</option>
+                              <option value="accentColor">Destaque</option>
+                              <option value="backgroundColor">Fundo</option>
+                              <option value="borderColor">Borda</option>
+                            </select>
+                          </label>
+                          <label>
+                            <span>Cor atual</span>
+                            <input type="color" value={selectedStickerColorHex} onChange={(event) => updateSelectedStickerAppearance({ [stickerColorTarget]: event.target.value })} />
+                          </label>
+                        </div>
+
+                        <div className="ff-share-studio__color-editor">
+                          <div className="ff-share-studio__color-preview" style={{ background: `linear-gradient(135deg, ${selectedStickerColorHex}, ${selectedStickerAppearance.accentColor})` }} />
+                          <div className="ff-share-studio__hsl-grid">
+                            <label>
+                              <span>Hue</span>
+                              <input type="range" min="0" max="360" step="1" value={selectedStickerColorHsl.h} onChange={(event) => updateSelectedStickerHsl('h', event.target.value)} />
+                              <small>{selectedStickerColorHsl.h}°</small>
+                            </label>
+                            <label>
+                              <span>Saturation</span>
+                              <input type="range" min="0" max="100" step="1" value={selectedStickerColorHsl.s} onChange={(event) => updateSelectedStickerHsl('s', event.target.value)} />
+                              <small>{selectedStickerColorHsl.s}%</small>
+                            </label>
+                            <label>
+                              <span>Lightness</span>
+                              <input type="range" min="0" max="100" step="1" value={selectedStickerColorHsl.l} onChange={(event) => updateSelectedStickerHsl('l', event.target.value)} />
+                              <small>{selectedStickerColorHsl.l}%</small>
+                            </label>
+                          </div>
+                        </div>
+
+                        <div className="ff-share-studio__sticker-customize-grid">
+                          <label>
+                            <span>Transparência do fundo</span>
+                            <input type="range" min="0" max="1" step="0.01" value={selectedStickerAppearance.backgroundOpacity} onChange={(event) => updateSelectedStickerAppearance({ backgroundOpacity: Number(event.target.value) })} />
+                            <small>{Math.round(selectedStickerAppearance.backgroundOpacity * 100)}%</small>
+                          </label>
+                          <label>
+                            <span>Opacidade da borda</span>
+                            <input type="range" min="0" max="1" step="0.01" value={selectedStickerAppearance.borderOpacity} onChange={(event) => updateSelectedStickerAppearance({ borderOpacity: Number(event.target.value) })} />
+                            <small>{Math.round(selectedStickerAppearance.borderOpacity * 100)}%</small>
+                          </label>
+                          <label>
+                            <span>Espessura da borda</span>
+                            <input type="range" min="0" max="8" step="0.5" value={selectedStickerAppearance.borderWidth} onChange={(event) => updateSelectedStickerAppearance({ borderWidth: Number(event.target.value) })} />
+                            <small>{selectedStickerAppearance.borderWidth}px</small>
+                          </label>
+                          <label>
+                            <span>Transparência total rápida</span>
+                            <button type="button" className="ff-share-studio__ghost-button" onClick={() => updateSelectedStickerAppearance({ backgroundOpacity: 0, borderOpacity: 0 })}>Deixar 100% transparente</button>
+                          </label>
+                        </div>
+                      </div>
+                    </details>
+                  )}
+                </div>
+              </details>
+            )}
+
+            <details className="ff-share-studio__panel" open={backgroundMode === 'photo'}>
+              <summary>
+                <span><ImagePlus size={16} /> Foto de fundo</span>
+                <small>Escolher e ajustar a foto</small>
+              </summary>
+
+              <div className="ff-share-studio__panel-body">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/*"
+                  className="sr-only"
+                  onChange={handlePhotoChange}
+                />
+
+                <button
+                  type="button"
+                  className={`ff-share-studio__photo-card${userPhoto ? ' has-photo' : ''}`}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <span className="ff-share-studio__photo-icon"><ImagePlus size={20} /></span>
+                  <span>
+                    <strong>{userPhoto ? userPhoto.name : 'Selecionar foto do celular'}</strong>
+                    <small>{userPhoto ? 'Toque para trocar. A foto continua ao mudar template ou formato.' : 'Use uma foto da galeria como fundo e ajuste com gestos.'}</small>
+                  </span>
+                </button>
+
+                {userPhoto && (
+                  <div className="ff-share-studio__photo-tools">
+                    <button type="button" onClick={handleResetPhoto}>Resetar foto</button>
+                    <button type="button" onClick={handlePhotoFill}>Preencher</button>
+                    <button type="button" onClick={handlePhotoFit}>Ajustar</button>
+                    <button type="button" onClick={handleClearPhoto}>Remover</button>
+                  </div>
                 )}
-              </>
-            )}
-
-            <div className="ff-share-studio__section-title">
-              <Layers3 size={16} />
-              <span>Template</span>
-            </div>
-
-            <div className="ff-share-studio__template-grid">
-              {SHARE_TEMPLATES.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={template === item.id ? 'is-active' : ''}
-                  onClick={() => setTemplate(item.id)}
-                >
-                  <strong>{item.label}</strong>
-                  <small>{item.description}</small>
-                </button>
-              ))}
-            </div>
-
-            <div className="ff-share-studio__section-title">
-              <Sparkles size={16} />
-              <span>Fundo</span>
-            </div>
-
-            <div className="ff-share-studio__background-mode">
-              <button
-                type="button"
-                className={backgroundMode === 'theme' ? 'is-active' : ''}
-                onClick={() => setBackgroundMode('theme')}
-              >
-                Fundo premium
-              </button>
-              <button
-                type="button"
-                className={backgroundMode === 'photo' ? 'is-active' : ''}
-                onClick={() => {
-                  if (userPhoto?.src) {
-                    setBackgroundMode('photo')
-                    setOverlayMode('stickers')
-                    setActiveEditLayer('photo')
-                    return
-                  }
-                  fileInputRef.current?.click()
-                }}
-              >
-                Foto própria
-              </button>
-            </div>
-
-            {backgroundMode === 'theme' && (
-              <div className="ff-share-studio__background-grid">
-                {SHARE_BACKGROUNDS.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className={selectedBackground === item.id ? 'is-active' : ''}
-                    onClick={() => setSelectedBackground(item.id)}
-                  >
-                    <i className={`ff-share-studio__bg-swatch is-${item.id}`} aria-hidden="true" />
-                    <span>
-                      <strong>{item.label}</strong>
-                      <small>{item.description}</small>
-                    </span>
-                  </button>
-                ))}
               </div>
-            )}
+            </details>
 
-            <div className="ff-share-studio__section-title">
-              <Layers3 size={16} />
-              <span>Nível de informação</span>
-            </div>
+            <details className="ff-share-studio__panel">
+              <summary>
+                <span><MessageCircle size={16} /> Mensagem</span>
+                <small>Frase pronta ou personalizada</small>
+              </summary>
 
-            <div className="ff-share-studio__info-levels">
-              {INFO_LEVELS.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={infoLevel === item.id ? 'is-active' : ''}
-                  onClick={() => setInfoLevel(item.id)}
-                >
-                  <strong>{item.label}</strong>
-                  <small>{item.description}</small>
-                </button>
-              ))}
-            </div>
+              <div className="ff-share-studio__panel-body">
+                <label className="ff-share-studio__caption">
+                  <span>Mensagem opcional para aparecer no card</span>
+                  <textarea
+                    value={customCaption}
+                    onChange={(event) => setCustomCaption(event.target.value)}
+                    maxLength={160}
+                    rows={3}
+                    placeholder="Ex: treino pago, progresso construído."
+                  />
+                  <small>Deixe vazio para usar uma frase pronta. Textos longos são quebrados e limitados no canvas.</small>
+                </label>
 
-            <div className="ff-share-studio__section-title">
-              <ImagePlus size={16} />
-              <span>Foto própria</span>
-            </div>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/*"
-              className="sr-only"
-              onChange={handlePhotoChange}
-            />
-
-            <button
-              type="button"
-              className={`ff-share-studio__photo-card${userPhoto ? ' has-photo' : ''}`}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <span className="ff-share-studio__photo-icon"><ImagePlus size={20} /></span>
-              <span>
-                <strong>{userPhoto ? userPhoto.name : 'Selecionar foto do celular'}</strong>
-                <small>{userPhoto ? 'Toque para trocar. A foto continua ao mudar template ou formato.' : 'Use uma foto da galeria como fundo e ajuste com gestos.'}</small>
-              </span>
-            </button>
-
-            {userPhoto && (
-              <div className="ff-share-studio__photo-tools">
-                <button type="button" onClick={handleResetPhoto}>Resetar foto</button>
-                <button type="button" onClick={handlePhotoFill}>Preencher</button>
-                <button type="button" onClick={handlePhotoFit}>Ajustar</button>
-                <button type="button" onClick={handleClearPhoto}>Remover</button>
+                <div className="ff-share-studio__phrase-row" aria-label="Frases prontas">
+                  {SHARE_PHRASES.map((phrase, index) => (
+                    <button
+                      key={phrase}
+                      type="button"
+                      className={phraseId === index && !customCaption ? 'is-active' : ''}
+                      onClick={() => {
+                        setPhraseId(index)
+                        setCustomCaption('')
+                      }}
+                    >
+                      {phrase}
+                    </button>
+                  ))}
+                </div>
               </div>
-            )}
-
-            <div className="ff-share-studio__section-title">
-              <MessageCircle size={16} />
-              <span>Mensagem opcional para aparecer no card</span>
-            </div>
-
-            <label className="ff-share-studio__caption">
-              <span>Mensagem opcional para aparecer no card</span>
-              <textarea
-                value={customCaption}
-                onChange={(event) => setCustomCaption(event.target.value)}
-                maxLength={160}
-                rows={3}
-                placeholder="Ex: treino pago, progresso construído."
-              />
-              <small>Deixe vazio para usar uma frase pronta. Textos longos são quebrados e limitados no canvas.</small>
-            </label>
-
-            <div className="ff-share-studio__phrase-row" aria-label="Frases prontas">
-              {SHARE_PHRASES.map((phrase, index) => (
-                <button
-                  key={phrase}
-                  type="button"
-                  className={phraseId === index && !customCaption ? 'is-active' : ''}
-                  onClick={() => {
-                    setPhraseId(index)
-                    setCustomCaption('')
-                  }}
-                >
-                  {phrase}
-                </button>
-              ))}
-            </div>
+            </details>
 
             <div className="ff-share-studio__stats">
               <span><strong>{stats.completedSetCount}</strong><small>séries</small></span>
