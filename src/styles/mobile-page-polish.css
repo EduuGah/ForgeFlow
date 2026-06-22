@@ -875,7 +875,7 @@
 
 .ff-share-studio__header h2 {
   margin: 0.25rem 0 0;
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   font-size: 1.35rem;
   font-weight: 950;
   line-height: 1.05;
@@ -994,7 +994,7 @@
 .ff-share-studio__template-grid button.is-active {
   border-color: rgba(14, 165, 255, 0.58);
   background: rgba(14, 165, 255, 0.14);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   box-shadow: inset 0 0 0 1px rgba(14, 165, 255, 0.18);
 }
 
@@ -1042,7 +1042,7 @@
 .ff-share-studio__phrase-row button.is-active {
   border-color: rgba(14, 165, 255, 0.55);
   background: rgba(14, 165, 255, 0.14);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
 }
 
 .ff-share-studio__caption {
@@ -1064,7 +1064,7 @@
   border-radius: 18px;
   background: rgba(0, 0, 0, 0.22);
   padding: 0 0.9rem;
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   font-size: 0.95rem;
   font-weight: 800;
   outline: none;
@@ -1099,13 +1099,13 @@
 }
 
 .ff-share-studio__stats strong {
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   font-size: 1.05rem;
   font-weight: 950;
 }
 
 .ff-share-studio__stats small {
-  color: rgba(255, 255, 255, 0.52);
+  color: var(--ff-sticker-text, rgba(255, 255, 255, 0.52));
   font-size: 0.68rem;
   font-weight: 900;
   text-transform: uppercase;
@@ -2771,7 +2771,7 @@
   border-radius: 16px;
   background: var(--ff-accent);
   padding: 0 1rem;
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   font-size: 0.86rem;
   font-weight: 950;
   box-shadow: 0 0 22px var(--ff-accent-shadow);
@@ -4528,7 +4528,7 @@ body {
 .ff-workout-expanded-actions .is-primary {
   border-color: rgba(14, 165, 233, 0.24);
   background: var(--ff-accent);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
 }
 
 .ff-workout-native-card__actions .is-favorite {
@@ -4721,7 +4721,7 @@ body {
   border-radius: 14px;
   background: var(--ff-accent);
   padding: 0 12px;
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   font-size: 0.82rem;
   font-weight: 950;
 }
@@ -8010,7 +8010,7 @@ body {
   justify-content: center;
   border-radius: 16px;
   background: var(--ff-accent);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
 }
 
 .ff-dashboard-v2-active__content,
@@ -8151,7 +8151,7 @@ body {
   justify-content: center;
   border-radius: 15px;
   background: var(--ff-accent);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
 }
 
 .ff-dashboard-v2-next-action div {
@@ -9036,7 +9036,7 @@ body {
   border-radius: 15px;
   background: var(--ff-accent);
   padding: 0 14px;
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   font-size: 0.82rem;
   font-weight: 950;
   box-shadow: 0 0 22px var(--ff-accent-shadow);
@@ -9116,7 +9116,7 @@ body {
 
 .ff-workouts-highlight-card__top button {
   background: var(--ff-accent);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
 }
 
 .ff-workouts-highlight-card h3 {
@@ -9352,7 +9352,7 @@ body {
   padding: 0 18px;
   border-radius: 16px;
   background: var(--ff-accent);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   font-size: 0.9rem;
   font-weight: 900;
   box-shadow: 0 16px 36px var(--ff-accent-shadow);
@@ -9722,7 +9722,7 @@ body {
 .ff-workout-builder-v2-primary-small,
 .ff-workout-builder-v2-full-library-button {
   background: var(--ff-accent);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
 }
 
 .ff-workout-builder-v2-ghost-danger {
@@ -9770,7 +9770,7 @@ body {
   border: 0;
   border-radius: 16px;
   background: var(--ff-accent);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   padding: 0 16px;
   font-weight: 950;
 }
@@ -10152,7 +10152,7 @@ body {
   place-items: center;
   border-radius: 13px;
   background: var(--ff-accent);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   font-size: 0.78rem;
   font-weight: 950;
 }
@@ -10273,7 +10273,7 @@ body {
   min-height: 48px;
   border-radius: 18px;
   background: var(--ff-accent);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   font-weight: 950;
 }
 
@@ -10316,7 +10316,7 @@ body {
 
 .ff-workout-builder-v2-mobile-footer button:last-child {
   background: var(--ff-accent);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
 }
 
 @media (max-width: 1180px) {
@@ -10496,7 +10496,7 @@ body {
   border: 0;
   border-radius: 15px;
   background: var(--ff-accent);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   padding: 0 13px;
   font-size: 0.8rem;
   font-weight: 950;
@@ -10686,7 +10686,7 @@ body {
   gap: 8px;
   border-radius: 16px;
   background: var(--ff-accent);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   padding: 0 16px;
   font-size: 0.85rem;
   font-weight: 950;
@@ -10857,7 +10857,7 @@ body {
 .ff-workout-builder-clean-primary-small,
 .ff-workout-builder-clean-full-library {
   background: var(--ff-accent);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
 }
 
 .ff-workout-builder-clean-danger-soft {
@@ -10914,7 +10914,7 @@ body {
   gap: 7px;
   border-radius: 15px;
   background: var(--ff-accent);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   padding: 0 12px;
   font-size: 0.78rem;
   font-weight: 950;
@@ -10965,7 +10965,7 @@ body {
   gap: 7px;
   border-radius: 15px;
   background: var(--ff-accent);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   padding: 0 14px;
   font-size: 0.82rem;
   font-weight: 950;
@@ -11316,7 +11316,7 @@ body {
   justify-content: center;
   border-radius: 13px;
   background: var(--ff-accent);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   padding: 0 8px;
   font-size: 0.7rem;
   font-weight: 950;
@@ -11530,7 +11530,7 @@ body {
   min-height: 48px;
   border-radius: 17px;
   background: var(--ff-accent);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   font-weight: 950;
 }
 
@@ -11573,7 +11573,7 @@ body {
 
 .ff-workout-builder-clean-mobile-footer button:last-child {
   background: var(--ff-accent);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
 }
 
 @media (max-width: 1180px) {
@@ -12181,7 +12181,7 @@ body.ff-workout-builder-open .mobile-bottom-nav {
   place-items: center;
   border-radius: 14px;
   background: var(--ff-accent);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   font-size: 1rem;
   font-weight: 950;
   justify-self: end;
@@ -12365,7 +12365,7 @@ body.ff-workout-builder-open .mobile-bottom-nav {
 .ff-history-hero-v2__score strong {
   display: block;
   margin-top: 0.15rem;
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   font-size: 2.35rem;
   font-weight: 1000;
   letter-spacing: -0.08em;
@@ -12393,7 +12393,7 @@ body.ff-workout-builder-open .mobile-bottom-nav {
   display: block;
   margin-top: 0.2rem;
   overflow: hidden;
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   font-size: 0.86rem;
   font-weight: 1000;
   text-overflow: ellipsis;
@@ -12449,7 +12449,7 @@ body.ff-workout-builder-open .mobile-bottom-nav {
 .ff-history-filter-field--pr button.is-active {
   border-color: rgba(239, 68, 68, 0.5);
   background: rgba(239, 68, 68, 0.16);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
 }
 
 .ff-history-filter-grid {
@@ -12520,7 +12520,7 @@ body.ff-workout-builder-open .mobile-bottom-nav {
 
 .ff-history-timeline-group__header h3 {
   margin: 0.15rem 0 0;
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   font-size: 1rem;
   font-weight: 1000;
   letter-spacing: -0.03em;
@@ -12838,13 +12838,13 @@ body.ff-share-studio-open .mobile-bottom-nav {
 }
 
 .ff-share-studio__tip-card strong {
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   font-size: 0.9rem;
   line-height: 1.15;
 }
 
 .ff-share-studio__tip-card small {
-  color: rgba(255, 255, 255, 0.62);
+  color: var(--ff-sticker-text, rgba(255, 255, 255, 0.62));
   font-size: 0.76rem;
   line-height: 1.35;
 }
@@ -12860,7 +12860,7 @@ body.ff-share-studio-open .mobile-bottom-nav {
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 1.15rem;
   background: rgba(255, 255, 255, 0.055);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   text-align: left;
 }
 
@@ -12890,7 +12890,7 @@ body.ff-share-studio-open .mobile-bottom-nav {
 .ff-share-studio__photo-card strong {
   min-width: 0;
   overflow: hidden;
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   font-size: 0.91rem;
   line-height: 1.12;
   text-overflow: ellipsis;
@@ -12926,7 +12926,7 @@ body.ff-share-studio-open .mobile-bottom-nav {
   border-radius: 1rem;
   outline: none;
   background: rgba(3, 7, 10, 0.74);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   font: inherit;
   font-size: 0.92rem;
   line-height: 1.35;
@@ -13027,7 +13027,7 @@ body.ff-share-studio-open .mobile-bottom-nav {
 .ff-history-quick-periods button:hover {
   border-color: rgba(239, 68, 68, 0.45);
   background: rgba(239, 68, 68, 0.14);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
 }
 
 .ff-history-feed-card.has-pr {
@@ -13095,7 +13095,7 @@ body.ff-share-studio-open .mobile-bottom-nav {
   display: block;
   min-width: 0;
   overflow: hidden;
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   font-size: 0.82rem;
   font-weight: 950;
   line-height: 1.2;
@@ -13112,7 +13112,7 @@ body.ff-share-studio-open .mobile-bottom-nav {
 }
 
 .ff-history-pr-detail-item b {
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   font-weight: 950;
 }
 
@@ -13154,7 +13154,7 @@ body.ff-share-studio-open .mobile-bottom-nav {
 .ff-share-studio__info-levels button.is-active {
   border-color: rgba(239, 68, 68, 0.5);
   background: rgba(239, 68, 68, 0.14);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
 }
 
 .ff-share-studio__info-levels strong {
@@ -13270,7 +13270,7 @@ body.ff-share-studio-open .mobile-bottom-nav {
 .ff-share-studio__background-grid button.is-active {
   border-color: rgba(239, 68, 68, 0.52);
   background: rgba(239, 68, 68, 0.14);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.12);
 }
 
@@ -13397,7 +13397,7 @@ body.ff-share-studio-open .mobile-bottom-nav {
 .ff-share-studio__photo-tools button:hover {
   border-color: rgba(239, 68, 68, 0.5);
   background: rgba(239, 68, 68, 0.14);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
 }
 
 .ff-share-studio__format-grid strong {
@@ -13442,7 +13442,7 @@ body.ff-share-studio-open .mobile-bottom-nav {
   border-radius: 1rem;
   background: rgba(0, 0, 0, 0.58);
   padding: 0.62rem 0.76rem;
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   box-shadow: 0 16px 38px rgba(0, 0, 0, 0.34);
   backdrop-filter: blur(14px);
 }
@@ -13626,7 +13626,7 @@ body.ff-share-studio-open .mobile-bottom-nav {
 .ff-share-studio__overlay-tools button:hover {
   border-color: rgba(239, 68, 68, 0.52);
   background: rgba(239, 68, 68, 0.14);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
 }
 
 .ff-share-studio__overlay-mode strong {
@@ -13868,11 +13868,11 @@ body.ff-share-studio-open .mobile-bottom-nav {
   display: grid;
   gap: 0.22rem;
   min-width: 5rem;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid var(--ff-sticker-border, rgba(255, 255, 255, 0.16));
   border-radius: clamp(0.8rem, 4vw, 1.2rem);
-  background: rgba(5, 7, 10, 0.72);
+  background: var(--ff-sticker-bg, rgba(5, 7, 10, 0.72));
   box-shadow: 0 1rem 2.6rem rgba(0, 0, 0, 0.42);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
   padding: clamp(0.48rem, 2.4vw, 0.85rem);
   transform-origin: top left;
   pointer-events: auto;
@@ -13904,6 +13904,7 @@ body.ff-share-studio-open .mobile-bottom-nav {
 
 .ff-share-sticker > strong {
   display: block;
+  color: var(--ff-sticker-title, currentColor);
   overflow: hidden;
   font-size: clamp(0.74rem, 3.8vw, 1.08rem);
   font-weight: 950;
@@ -13929,7 +13930,7 @@ body.ff-share-studio-open .mobile-bottom-nav {
 
 .ff-share-sticker__mini-brand,
 .ff-share-sticker__label {
-  color: var(--ff-accent, #ef4444);
+  color: var(--ff-sticker-accent, var(--ff-accent, #ef4444));
   font-weight: 950;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -13949,8 +13950,8 @@ body.ff-share-studio-open .mobile-bottom-nav {
 }
 
 .ff-share-sticker.is-caption {
-  background: rgba(255, 255, 255, 0.92);
-  color: #111827;
+  background: var(--ff-sticker-bg, rgba(255, 255, 255, 0.92));
+  color: var(--ff-sticker-title, #111827);
 }
 
 .ff-share-sticker.is-caption small,
@@ -13960,7 +13961,7 @@ body.ff-share-studio-open .mobile-bottom-nav {
 
 .ff-share-sticker.is-prs {
   border-color: rgba(250, 204, 21, 0.32);
-  background: rgba(22, 14, 4, 0.78);
+  background: var(--ff-sticker-bg, rgba(22, 14, 4, 0.78));
 }
 
 .ff-share-sticker.is-prs .ff-share-sticker__label {
@@ -13969,7 +13970,7 @@ body.ff-share-studio-open .mobile-bottom-nav {
 
 .ff-share-sticker.is-topSet {
   border-color: rgba(96, 165, 250, 0.28);
-  background: linear-gradient(180deg, rgba(9, 17, 32, 0.88), rgba(7, 10, 16, 0.82));
+  background: var(--ff-sticker-bg, linear-gradient(180deg, rgba(9, 17, 32, 0.88), rgba(7, 10, 16, 0.82)));
 }
 
 .ff-share-sticker.is-topSet .ff-share-sticker__label {
@@ -13978,7 +13979,7 @@ body.ff-share-studio-open .mobile-bottom-nav {
 
 .ff-share-sticker.is-repTotal {
   border-color: rgba(52, 211, 153, 0.26);
-  background: linear-gradient(180deg, rgba(6, 20, 14, 0.82), rgba(6, 10, 12, 0.8));
+  background: var(--ff-sticker-bg, linear-gradient(180deg, rgba(6, 20, 14, 0.82), rgba(6, 10, 12, 0.8)));
 }
 
 .ff-share-sticker.is-repTotal .ff-share-sticker__label {
@@ -13986,7 +13987,7 @@ body.ff-share-studio-open .mobile-bottom-nav {
 }
 
 .ff-share-sticker.is-location {
-  background: rgba(5, 7, 10, 0.68);
+  background: var(--ff-sticker-bg, rgba(5, 7, 10, 0.68));
 }
 
 .ff-share-sticker.is-location strong {
@@ -14009,7 +14010,7 @@ body.ff-share-studio-open .mobile-bottom-nav {
   display: grid;
   min-width: 0;
   border-radius: 0.7rem;
-  background: rgba(255, 255, 255, 0.075);
+  background: var(--ff-sticker-chip, rgba(255, 255, 255, 0.075));
   padding: clamp(0.3rem, 1.8vw, 0.55rem);
 }
 
@@ -14024,7 +14025,7 @@ body.ff-share-studio-open .mobile-bottom-nav {
 
 .ff-share-sticker__metric-grid small {
   overflow: hidden;
-  color: var(--ff-accent, #ef4444);
+  color: var(--ff-sticker-accent, var(--ff-accent, #ef4444));
   font-size: clamp(0.42rem, 1.9vw, 0.58rem);
   font-weight: 950;
   line-height: 1.1;
@@ -14043,11 +14044,12 @@ body.ff-share-studio-open .mobile-bottom-nav {
   display: grid;
   min-width: 0;
   padding-left: 0.6rem;
-  border-left: 2px solid var(--ff-accent, #ef4444);
+  border-left: 2px solid var(--ff-sticker-accent, var(--ff-accent, #ef4444));
 }
 
 .ff-share-sticker__rows strong {
   overflow: hidden;
+  color: var(--ff-sticker-title, currentColor);
   font-size: clamp(0.58rem, 2.7vw, 0.82rem);
   font-weight: 920;
   line-height: 1.05;
@@ -14087,7 +14089,7 @@ body.ff-share-studio-open .mobile-bottom-nav {
 .ff-share-studio__sticker-picker button.is-active {
   border-color: rgba(239, 68, 68, 0.42);
   background: rgba(239, 68, 68, 0.12);
-  color: #fff;
+  color: var(--ff-sticker-title, #fff);
 }
 
 .ff-share-studio__sticker-picker button.is-selected {
@@ -14116,6 +14118,164 @@ body.ff-share-studio-open .mobile-bottom-nav {
   line-clamp: 2;
 }
 
+
+.ff-share-studio__layout-presets {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.ff-share-studio__layout-presets button {
+  min-width: 0;
+  padding: 0.72rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.74);
+  text-align: left;
+}
+
+.ff-share-studio__layout-presets button.is-active {
+  border-color: rgba(239, 68, 68, 0.38);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.ff-share-studio__layout-presets strong,
+.ff-share-studio__layout-presets small {
+  display: block;
+}
+
+.ff-share-studio__layout-presets strong {
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.ff-share-studio__layout-presets small {
+  margin-top: 0.16rem;
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 0.62rem;
+  line-height: 1.14;
+}
+
+.ff-share-studio__sticker-style-panel {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.15rem;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.ff-share-studio__sticker-style-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.ff-share-studio__sticker-style-head strong {
+  font-size: 0.84rem;
+  font-weight: 950;
+}
+
+.ff-share-studio__sticker-style-head button {
+  padding: 0.46rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.ff-share-studio__sticker-style-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.ff-share-studio__sticker-style-grid label,
+.ff-share-studio__range-field {
+  display: grid;
+  gap: 0.38rem;
+}
+
+.ff-share-studio__sticker-style-grid span,
+.ff-share-studio__range-field span {
+  font-size: 0.66rem;
+  font-weight: 850;
+  color: rgba(255, 255, 255, 0.64);
+}
+
+.ff-share-studio__sticker-style-grid input[type='color'] {
+  width: 100%;
+  height: 2.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 0.2rem;
+}
+
+.ff-share-studio__range-field {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.ff-share-studio__range-field input[type='range'] {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.ff-share-studio__range-field strong {
+  font-size: 0.72rem;
+  font-weight: 950;
+}
+
+.ff-share-studio__sticker-customize {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 0.75rem;
+  padding: 0.9rem;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 1rem;
+  background: rgba(255,255,255,0.035);
+}
+
+.ff-share-studio__sticker-customize-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.ff-share-studio__sticker-customize-grid label {
+  display: grid;
+  gap: 0.42rem;
+  min-width: 0;
+}
+
+.ff-share-studio__sticker-customize-grid span {
+  color: rgba(255,255,255,0.78);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.ff-share-studio__sticker-customize-grid input[type='color'] {
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.18rem;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 0.8rem;
+  background: rgba(255,255,255,0.06);
+}
+
+.ff-share-studio__sticker-customize-grid input[type='range'] {
+  width: 100%;
+}
+
+.ff-share-studio__sticker-customize-grid small {
+  color: rgba(255,255,255,0.48);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
 @media (max-width: 767px) {
   .ff-share-studio__sticker-layer.is-story {
     width: min(88vw, 390px, calc(54dvh * 9 / 16)) !important;
@@ -14136,6 +14296,10 @@ body.ff-share-studio-open .mobile-bottom-nav {
     grid-template-columns: repeat(4, minmax(7.6rem, 1fr));
     overflow-x: auto;
     padding-bottom: 0.15rem;
+  }
+
+  .ff-share-studio__sticker-customize-grid {
+    grid-template-columns: 1fr;
   }
 
   .ff-share-studio__sticker-picker button {

@@ -19,7 +19,6 @@ import { isNativeApp } from '../../utils/platformUtils'
 import {
   normalizeImageToJpegNative,
   saveImageToGalleryNative,
-  shareImageToInstagramStoryNative,
 } from '../../utils/shareNativeBridge'
 import { formatLocationLabel, getMapsUrl } from '../../services/geolocationService'
 import {
@@ -127,6 +126,8 @@ const SHARE_BACKGROUNDS = [
   { id: 'redSmoke', label: 'Red Smoke', description: 'Fumaça vermelha dramática.' },
   { id: 'gymLight', label: 'Gym Light', description: 'Luz de academia cinematográfica.' },
 ]
+
+
 
 const DEFAULT_PHOTO_TRANSFORM = {
   x: 0,
@@ -283,7 +284,274 @@ const STICKER_CANVAS_SIZE = {
 const STICKER_MIN_SCALE = 0.45
 const STICKER_MAX_SCALE = 2.15
 
+const DEFAULT_STICKER_APPEARANCE = {
+  accentColor: '#ef4444',
+  titleColor: '#ffffff',
+  textColor: '#cbd5e1',
+  backgroundColor: '#05070a',
+  backgroundOpacity: 0.72,
+}
+
+const DEFAULT_STICKER_STYLE = {
+  bgColor: '#05070a',
+  bgOpacity: 72,
+  titleColor: '#ffffff',
+  textColor: '#cbd5e1',
+  accentColor: '#ef4444',
+}
+
+const STICKER_LAYOUT_PRESETS = {
+  story: {
+    balanced: {
+      summary: { x: 68, y: 118, scale: 1 },
+      caption: { x: 68, y: 316, scale: 0.92 },
+      location: { x: 650, y: 320, scale: 0.86 },
+      exerciseList: { x: 68, y: 546, scale: 0.94 },
+      prs: { x: 650, y: 556, scale: 0.86 },
+      setsReps: { x: 68, y: 972, scale: 0.92 },
+      weights: { x: 560, y: 972, scale: 0.92 },
+      topSet: { x: 68, y: 1316, scale: 0.9 },
+      repTotal: { x: 524, y: 1316, scale: 0.9 },
+      volume: { x: 68, y: 1540, scale: 0.86 },
+      metrics: { x: 68, y: 1728, scale: 0.84 },
+    },
+    compact: {
+      summary: { x: 70, y: 124, scale: 0.94 },
+      caption: { x: 70, y: 312, scale: 0.84 },
+      location: { x: 680, y: 320, scale: 0.78 },
+      exerciseList: { x: 70, y: 520, scale: 0.88 },
+      prs: { x: 700, y: 532, scale: 0.78 },
+      setsReps: { x: 70, y: 910, scale: 0.82 },
+      weights: { x: 570, y: 910, scale: 0.82 },
+      topSet: { x: 70, y: 1188, scale: 0.82 },
+      repTotal: { x: 520, y: 1188, scale: 0.82 },
+      volume: { x: 70, y: 1424, scale: 0.78 },
+      metrics: { x: 70, y: 1606, scale: 0.76 },
+    },
+  },
+  feed: {
+    balanced: {
+      summary: { x: 56, y: 54, scale: 0.78 },
+      caption: { x: 56, y: 180, scale: 0.66 },
+      location: { x: 650, y: 180, scale: 0.6 },
+      exerciseList: { x: 56, y: 282, scale: 0.72 },
+      prs: { x: 650, y: 282, scale: 0.62 },
+      setsReps: { x: 56, y: 610, scale: 0.68 },
+      weights: { x: 555, y: 610, scale: 0.68 },
+      topSet: { x: 56, y: 844, scale: 0.68 },
+      repTotal: { x: 470, y: 844, scale: 0.68 },
+      volume: { x: 56, y: 956, scale: 0.58 },
+      metrics: { x: 56, y: 1004, scale: 0.58 },
+    },
+    compact: {
+      summary: { x: 56, y: 54, scale: 0.72 },
+      caption: { x: 56, y: 164, scale: 0.58 },
+      location: { x: 670, y: 164, scale: 0.56 },
+      exerciseList: { x: 56, y: 250, scale: 0.66 },
+      prs: { x: 680, y: 254, scale: 0.56 },
+      setsReps: { x: 56, y: 544, scale: 0.62 },
+      weights: { x: 562, y: 544, scale: 0.62 },
+      topSet: { x: 56, y: 756, scale: 0.6 },
+      repTotal: { x: 470, y: 756, scale: 0.6 },
+      volume: { x: 56, y: 872, scale: 0.52 },
+      metrics: { x: 56, y: 930, scale: 0.52 },
+    },
+  },
+}
+
 const IMAGE_CACHE = new Map()
+
+
+function clampPercent(value, min = 0, max = 100) {
+  return clamp(safeNumber(value), min, max)
+}
+
+function hexToRgba(hex, alpha = 1) {
+  const safe = String(hex || '').replace('#', '')
+  const normalized = safe.length === 3 ? safe.split('').map((char) => char + char).join('') : safe
+  if (normalized.length !== 6) return `rgba(11,13,17,${alpha})`
+  const value = Number.parseInt(normalized, 16)
+  const r = (value >> 16) & 255
+  const g = (value >> 8) & 255
+  const b = value & 255
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
+function getDefaultStickerStyle(stickerId) {
+  if (stickerId === 'caption') {
+    return {
+      bgColor: '#ffffff',
+      bgOpacity: 92,
+      titleColor: '#111827',
+      textColor: '#475569',
+      accentColor: '#ef4444',
+    }
+  }
+
+  if (stickerId === 'prs') {
+    return {
+      bgColor: '#171004',
+      bgOpacity: 82,
+      titleColor: '#ffffff',
+      textColor: '#fde68a',
+      accentColor: '#f59e0b',
+    }
+  }
+
+  if (stickerId === 'topSet') {
+    return {
+      bgColor: '#091120',
+      bgOpacity: 88,
+      titleColor: '#ffffff',
+      textColor: '#bfdbfe',
+      accentColor: '#60a5fa',
+    }
+  }
+
+  if (stickerId === 'repTotal') {
+    return {
+      bgColor: '#07140f',
+      bgOpacity: 82,
+      titleColor: '#ffffff',
+      textColor: '#bbf7d0',
+      accentColor: '#34d399',
+    }
+  }
+
+  return { ...DEFAULT_STICKER_STYLE }
+}
+
+function normalizeStickerStyle(stickerId, style = {}) {
+  const base = getDefaultStickerStyle(stickerId)
+  return {
+    bgColor: style?.bgColor || base.bgColor,
+    bgOpacity: clampPercent(style?.bgOpacity ?? base.bgOpacity, 24, 100),
+    titleColor: style?.titleColor || base.titleColor,
+    textColor: style?.textColor || base.textColor,
+    accentColor: style?.accentColor || base.accentColor,
+  }
+}
+
+// eslint-disable-next-line no-unused-vars
+function getStickerSurfaceStyle(stickerId, style = {}) {
+  const normalized = normalizeStickerStyle(stickerId, style)
+  return {
+    normalized,
+    background: hexToRgba(normalized.bgColor, normalized.bgOpacity / 100),
+    border: hexToRgba(normalized.accentColor, 0.32),
+    subtle: hexToRgba(normalized.textColor, 0.68),
+    chip: hexToRgba('#ffffff', normalized.bgOpacity >= 70 ? 0.08 : 0.18),
+  }
+}
+
+// eslint-disable-next-line no-unused-vars
+function getDefaultStickerLayout(layoutId = 'balanced', format = 'story') {
+  const defaults = STICKER_DEFAULTS[format] || STICKER_DEFAULTS.story
+  const base = SHARE_STICKER_TYPES.reduce((acc, sticker) => {
+    acc[sticker.id] = {
+      visible: sticker.defaultVisible,
+      ...(defaults[sticker.id] || { x: 70, y: 70, scale: 1 }),
+      style: normalizeStickerStyle(sticker.id, defaults[sticker.id]?.style),
+    }
+    return acc
+  }, {})
+  const map = {
+    balanced: {
+      story: {
+        summary: { x: 64, y: 78, scale: 1 },
+        caption: { x: 64, y: 250, scale: 0.96 },
+        location: { x: 642, y: 252, scale: 0.9 },
+        exerciseList: { x: 64, y: 430, scale: 0.96 },
+        prs: { x: 648, y: 430, scale: 0.84 },
+        setsReps: { x: 64, y: 824, scale: 0.92 },
+        weights: { x: 548, y: 824, scale: 0.92 },
+        topSet: { x: 64, y: 1178, scale: 0.9 },
+        repTotal: { x: 540, y: 1178, scale: 0.9 },
+        volume: { x: 64, y: 1380, scale: 0.86 },
+        metrics: { x: 64, y: 1588, scale: 0.82 },
+      },
+      feed: {
+        summary: { x: 48, y: 44, scale: 0.78 },
+        caption: { x: 48, y: 150, scale: 0.68 },
+        location: { x: 670, y: 154, scale: 0.64 },
+        exerciseList: { x: 48, y: 248, scale: 0.72 },
+        prs: { x: 700, y: 250, scale: 0.6 },
+        setsReps: { x: 48, y: 580, scale: 0.68 },
+        weights: { x: 558, y: 580, scale: 0.68 },
+        topSet: { x: 48, y: 800, scale: 0.66 },
+        repTotal: { x: 474, y: 800, scale: 0.64 },
+        volume: { x: 48, y: 920, scale: 0.58 },
+        metrics: { x: 48, y: 968, scale: 0.58 },
+      },
+    },
+    leftRail: {
+      story: {
+        summary: { x: 58, y: 84, scale: 0.96 },
+        caption: { x: 58, y: 246, scale: 0.92 },
+        exerciseList: { x: 58, y: 412, scale: 0.9 },
+        setsReps: { x: 58, y: 798, scale: 0.88 },
+        weights: { x: 58, y: 1132, scale: 0.88 },
+        topSet: { x: 58, y: 1450, scale: 0.86 },
+        repTotal: { x: 516, y: 1450, scale: 0.86 },
+        volume: { x: 58, y: 1646, scale: 0.82 },
+        metrics: { x: 58, y: 1804, scale: 0.8 },
+        prs: { x: 662, y: 412, scale: 0.8 },
+        location: { x: 662, y: 770, scale: 0.84 },
+      },
+      feed: {
+        summary: { x: 48, y: 42, scale: 0.76 },
+        caption: { x: 48, y: 142, scale: 0.68 },
+        exerciseList: { x: 48, y: 240, scale: 0.7 },
+        setsReps: { x: 48, y: 570, scale: 0.66 },
+        weights: { x: 48, y: 790, scale: 0.66 },
+        topSet: { x: 48, y: 974, scale: 0.62 },
+        repTotal: { x: 462, y: 974, scale: 0.62 },
+        volume: { x: 48, y: 1042, scale: 0.52 },
+        metrics: { x: 402, y: 1042, scale: 0.52 },
+        prs: { x: 686, y: 240, scale: 0.58 },
+        location: { x: 686, y: 540, scale: 0.58 },
+      },
+    },
+    performance: {
+      story: {
+        summary: { x: 64, y: 92, scale: 0.94 },
+        metrics: { x: 64, y: 286, scale: 0.86 },
+        volume: { x: 64, y: 492, scale: 0.9 },
+        repTotal: { x: 652, y: 492, scale: 0.84 },
+        topSet: { x: 64, y: 706, scale: 0.88 },
+        exerciseList: { x: 64, y: 914, scale: 0.9 },
+        weights: { x: 64, y: 1304, scale: 0.88 },
+        setsReps: { x: 548, y: 1304, scale: 0.88 },
+        prs: { x: 654, y: 914, scale: 0.82 },
+        caption: { x: 64, y: 1702, scale: 0.88 },
+        location: { x: 614, y: 1710, scale: 0.82 },
+      },
+      feed: {
+        summary: { x: 48, y: 44, scale: 0.74 },
+        metrics: { x: 48, y: 150, scale: 0.62 },
+        volume: { x: 48, y: 294, scale: 0.62 },
+        repTotal: { x: 664, y: 298, scale: 0.58 },
+        topSet: { x: 48, y: 430, scale: 0.64 },
+        exerciseList: { x: 48, y: 616, scale: 0.68 },
+        weights: { x: 48, y: 940, scale: 0.56 },
+        setsReps: { x: 546, y: 940, scale: 0.56 },
+        prs: { x: 700, y: 618, scale: 0.56 },
+        caption: { x: 48, y: 1006, scale: 0.56 },
+        location: { x: 658, y: 1008, scale: 0.56 },
+      },
+    },
+  }
+
+  const selected = map[layoutId]?.[format] || map.balanced[format]
+
+  return Object.keys(base).reduce((acc, key) => {
+    acc[key] = {
+      ...base[key],
+      ...(selected[key] || {}),
+    }
+    return acc
+  }, {})
+}
 
 function getExerciseName(exercise = {}) {
   return (
@@ -300,6 +568,26 @@ function safeNumber(value) {
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value))
+}
+
+function normalizeHexColor(value, fallback) {
+  const input = String(value || '').trim()
+  if (/^#[0-9a-f]{6}$/i.test(input)) return input
+  if (/^#[0-9a-f]{3}$/i.test(input)) {
+    return `#${input[1]}${input[1]}${input[2]}${input[2]}${input[3]}${input[3]}`
+  }
+  return fallback
+}
+
+
+function getStickerAppearance(sticker = {}) {
+  return {
+    accentColor: normalizeHexColor(sticker?.accentColor, DEFAULT_STICKER_APPEARANCE.accentColor),
+    titleColor: normalizeHexColor(sticker?.titleColor, DEFAULT_STICKER_APPEARANCE.titleColor),
+    textColor: normalizeHexColor(sticker?.textColor, DEFAULT_STICKER_APPEARANCE.textColor),
+    backgroundColor: normalizeHexColor(sticker?.backgroundColor, DEFAULT_STICKER_APPEARANCE.backgroundColor),
+    backgroundOpacity: clamp(safeNumber(sticker?.backgroundOpacity) || DEFAULT_STICKER_APPEARANCE.backgroundOpacity, 0.16, 0.96),
+  }
 }
 
 function getWorkingSets(exercise = {}) {
@@ -972,7 +1260,7 @@ function drawBrand(ctx, iconImage, x, y, scale = 1, options = {}) {
   ctx.fillStyle = '#ffffff'
   ctx.font = `950 ${28 * scale}px Inter, Arial, sans-serif`
   ctx.fillText('ForgeFlow', x + iconSize + 18 * scale, y + 31 * scale)
-  ctx.fillStyle = 'rgba(255,255,255,0.62)'
+  ctx.fillStyle = 'rgba(255,255,255,0.68)'
   ctx.font = `800 ${18 * scale}px Inter, Arial, sans-serif`
   ctx.fillText(label, x + iconSize + 18 * scale, y + 58 * scale)
 }
@@ -1354,6 +1642,7 @@ function getDefaultStickerState(format = 'story') {
 
   return SHARE_STICKER_TYPES.reduce((acc, sticker) => {
     acc[sticker.id] = {
+      ...DEFAULT_STICKER_APPEARANCE,
       visible: sticker.defaultVisible,
       ...(defaults[sticker.id] || { x: 70, y: 70, scale: 1 }),
     }
@@ -1372,6 +1661,7 @@ function migrateStickerStateForFormat(currentState, fromFormat = 'story', toForm
     const current = currentState?.[sticker.id]
     const nextFallback = fallback[sticker.id]
     acc[sticker.id] = {
+      ...DEFAULT_STICKER_APPEARANCE,
       ...nextFallback,
       ...current,
       x: current ? safeNumber(current.x) * ratioX : nextFallback.x,
@@ -1390,12 +1680,14 @@ function getStickerCanvasSize(stickerId, format = 'story') {
 function clampStickerTransform(stickerId, transform, format = 'story') {
   const selectedFormat = SHARE_FORMATS.find((item) => item.id === format) || SHARE_FORMATS[0]
   const size = getStickerCanvasSize(stickerId, selectedFormat.id)
+  const appearance = getStickerAppearance(transform)
   const scale = clamp(safeNumber(transform?.scale) || 1, STICKER_MIN_SCALE, STICKER_MAX_SCALE)
   const width = size.width * scale
   const height = size.height * scale
   const margin = 26
 
   return {
+    ...appearance,
     x: clamp(safeNumber(transform?.x), -width + margin, selectedFormat.width - margin),
     y: clamp(safeNumber(transform?.y), -height + margin, selectedFormat.height - margin),
     scale,
@@ -1419,32 +1711,86 @@ function getStickerBounds(stickerId, transform, format = 'story') {
   }
 }
 
-function getStickerSnap(transform, stickerId, format = 'story') {
+function getStickerSnap(transform, stickerId, format = 'story', stickers = {}) {
   const selectedFormat = SHARE_FORMATS.find((item) => item.id === format) || SHARE_FORMATS[0]
-  const threshold = Math.max(20, Math.min(selectedFormat.width, selectedFormat.height) * 0.034)
+  const threshold = Math.max(18, Math.min(selectedFormat.width, selectedFormat.height) * 0.026)
   const next = clampStickerTransform(stickerId, transform, selectedFormat.id)
   const size = getStickerCanvasSize(stickerId, selectedFormat.id)
-  const guide = { x: false, y: false, bottom: false }
+  const guide = { x: null, y: null, bottom: false }
   let bounds = getStickerBounds(stickerId, next, selectedFormat.id)
-  const centerTargetX = selectedFormat.width / 2
-  const centerTargetY = selectedFormat.height / 2
-  const bottomTarget = getStickerBottomTarget(selectedFormat.id, selectedFormat.width, selectedFormat.height)
+  const margin = 40
+  const otherBounds = getVisibleStickerEntries(stickers, format)
+    .filter((entry) => entry.id !== stickerId)
+    .map((entry) => getStickerBounds(entry.id, entry.transform, format))
 
-  if (Math.abs(bounds.centerX - centerTargetX) <= threshold) {
-    next.x = centerTargetX - (size.width * next.scale) / 2
-    guide.x = true
+  const xTargets = [
+    { key: 'left', value: margin, mode: 'left' },
+    { key: 'center', value: selectedFormat.width / 2, mode: 'center' },
+    { key: 'right', value: selectedFormat.width - margin, mode: 'right' },
+  ]
+  const yTargets = [
+    { key: 'top', value: margin, mode: 'top' },
+    { key: 'middle', value: selectedFormat.height / 2, mode: 'center' },
+    { key: 'bottom', value: getStickerBottomTarget(selectedFormat.id, selectedFormat.width, selectedFormat.height), mode: 'bottom' },
+  ]
+
+  otherBounds.forEach((peer) => {
+    xTargets.push(
+      { key: 'peer-left', value: peer.left, mode: 'left' },
+      { key: 'peer-center', value: peer.centerX, mode: 'center' },
+      { key: 'peer-right', value: peer.right, mode: 'right' },
+    )
+    yTargets.push(
+      { key: 'peer-top', value: peer.top, mode: 'top' },
+      { key: 'peer-middle', value: peer.centerY, mode: 'center' },
+      { key: 'peer-bottom', value: peer.bottom, mode: 'bottom' },
+    )
+  })
+
+  let bestX = null
+  const xCandidates = [
+    { mode: 'left', value: bounds.left },
+    { mode: 'center', value: bounds.centerX },
+    { mode: 'right', value: bounds.right },
+  ]
+  xTargets.forEach((target) => {
+    xCandidates.forEach((candidate) => {
+      if (candidate.mode !== target.mode) return
+      const distance = Math.abs(candidate.value - target.value)
+      if (distance <= threshold && (!bestX || distance < bestX.distance)) {
+        bestX = { target, distance }
+      }
+    })
+  })
+  if (bestX) {
+    if (bestX.target.mode === 'left') next.x = bestX.target.value
+    if (bestX.target.mode === 'center') next.x = bestX.target.value - (size.width * next.scale) / 2
+    if (bestX.target.mode === 'right') next.x = bestX.target.value - size.width * next.scale
+    guide.x = (bestX.target.value / selectedFormat.width) * 100
     bounds = getStickerBounds(stickerId, next, selectedFormat.id)
   }
 
-  if (Math.abs(bounds.centerY - centerTargetY) <= threshold) {
-    next.y = centerTargetY - (size.height * next.scale) / 2
-    guide.y = true
-    bounds = getStickerBounds(stickerId, next, selectedFormat.id)
-  }
-
-  if (Math.abs(bounds.bottom - bottomTarget) <= threshold) {
-    next.y = bottomTarget - size.height * next.scale
-    guide.bottom = true
+  let bestY = null
+  const yCandidates = [
+    { mode: 'top', value: bounds.top },
+    { mode: 'center', value: bounds.centerY },
+    { mode: 'bottom', value: bounds.bottom },
+  ]
+  yTargets.forEach((target) => {
+    yCandidates.forEach((candidate) => {
+      if (candidate.mode !== target.mode) return
+      const distance = Math.abs(candidate.value - target.value)
+      if (distance <= threshold && (!bestY || distance < bestY.distance)) {
+        bestY = { target, distance }
+      }
+    })
+  })
+  if (bestY) {
+    if (bestY.target.mode === 'top') next.y = bestY.target.value
+    if (bestY.target.mode === 'center') next.y = bestY.target.value - (size.height * next.scale) / 2
+    if (bestY.target.mode === 'bottom') next.y = bestY.target.value - size.height * next.scale
+    guide.y = (bestY.target.value / selectedFormat.height) * 100
+    guide.bottom = bestY.target.key.includes('bottom')
   }
 
   return {
@@ -1476,6 +1822,10 @@ function getStickerDomStyleForFormat(stickerId, transform, selectedFormat) {
     top: `${(safe.y / currentFormat.height) * 100}%`,
     width: `${(size.width / currentFormat.width) * 100}%`,
     transform: `scale(${safe.scale})`,
+    '--ff-sticker-accent': safe.accentColor,
+    '--ff-sticker-title': safe.titleColor,
+    '--ff-sticker-text': safe.textColor,
+    '--ff-sticker-bg': hexToRgba(safe.backgroundColor, safe.backgroundOpacity),
   }
 }
 
@@ -1582,14 +1932,27 @@ function getStickerRows(stickerId, stats) {
 }
 
 function drawSingleWorkoutSticker(ctx, stickerId, stats, options = {}) {
-  const { format, caption, infoLevel, accentColor = '#ef4444', iconImage } = options
+  const { format, caption, infoLevel, accentColor = '#ef4444', iconImage, stickerStyle } = options
+  const appearance = getStickerAppearance(stickerStyle)
+  const stickerAccent = appearance.accentColor || accentColor
+  const stickerTitle = appearance.titleColor || '#ffffff'
+  const stickerText = appearance.textColor || appearance.titleColor || '#cbd5e1'
+  const stickerFill = hexToRgba(appearance.backgroundColor, appearance.backgroundOpacity)
+  const resolvedAccent = stickerAccent
+  const titleColor = stickerTitle
+  const textColor = hexToRgba(stickerText, 0.72)
+  const surface = {
+    background: stickerFill,
+    border: hexToRgba(stickerAccent, 0.22),
+    chip: hexToRgba('#ffffff', 0.12),
+  }
   const size = getStickerCanvasSize(stickerId, format)
   const { width, height } = size
 
   ctx.save()
 
   if (stickerId === 'summary') {
-    drawStickerPanelBase(ctx, width, height, { fill: 'rgba(5,7,10,0.72)', radius: 36 })
+    drawStickerPanelBase(ctx, width, height, { fill: stickerFill, radius: 36 })
     if (iconImage) {
       drawRoundRect(ctx, 24, 28, 66, 66, 18)
       ctx.save()
@@ -1597,74 +1960,74 @@ function drawSingleWorkoutSticker(ctx, stickerId, stats, options = {}) {
       ctx.drawImage(iconImage, 24, 28, 66, 66)
       ctx.restore()
     }
-    ctx.fillStyle = '#ffffff'
+    ctx.fillStyle = titleColor
     ctx.font = '950 34px Inter, Arial, sans-serif'
     ctx.fillText(truncateText(ctx, stats.workoutName, width - 122), 108, 56)
-    ctx.fillStyle = 'rgba(255,255,255,0.62)'
+    ctx.fillStyle = textColor
     ctx.font = '850 22px Inter, Arial, sans-serif'
     ctx.fillText(truncateText(ctx, `${stats.dateShortLabel} • ${stats.durationLabel}`, width - 122), 108, 91)
-    ctx.fillStyle = accentColor
+    ctx.fillStyle = resolvedAccent
     ctx.font = '950 18px Inter, Arial, sans-serif'
     ctx.fillText('FORGEFLOW', 108, 121)
   } else if (stickerId === 'metrics') {
     const metrics = getVisibleMetrics(stats, infoLevel, 5)
-    drawStickerPanelBase(ctx, width, height, { fill: 'rgba(5,7,10,0.68)', radius: 34 })
+    drawStickerPanelBase(ctx, width, height, { fill: surface.background, stroke: surface.border, radius: 34 })
     const gap = 12
     const chipW = (width - 44 - gap * (metrics.length - 1)) / Math.max(1, metrics.length)
     metrics.forEach((metric, index) => {
       drawStickerMetric(ctx, metric, 22 + index * (chipW + gap), 28, {
         width: chipW,
         height: height - 56,
-        accentColor,
+        accentColor: resolvedAccent,
         compact: true,
-        fill: 'rgba(255,255,255,0.075)',
+        fill: surface.chip,
       })
     })
   } else if (stickerId === 'volume') {
-    drawStickerPanelBase(ctx, width, height, { fill: 'rgba(8,10,14,0.78)', stroke: 'rgba(239,68,68,0.28)', radius: 42 })
-    ctx.fillStyle = accentColor
+    drawStickerPanelBase(ctx, width, height, { fill: surface.background, stroke: surface.border, radius: 42 })
+    ctx.fillStyle = resolvedAccent
     ctx.font = '950 25px Inter, Arial, sans-serif'
     ctx.fillText('VOLUME TOTAL', 34, 55)
-    ctx.fillStyle = '#ffffff'
+    ctx.fillStyle = titleColor
     ctx.font = '950 72px Inter, Arial, sans-serif'
     ctx.fillText(truncateText(ctx, stats.volumeLabel, width - 68), 34, 128)
-    ctx.fillStyle = 'rgba(255,255,255,0.58)'
+    ctx.fillStyle = textColor
     ctx.font = '850 22px Inter, Arial, sans-serif'
     ctx.fillText(`${stats.completedSetCount} séries • ${stats.exerciseCount} exercícios`, 34, 168)
   } else if (stickerId === 'topSet') {
-    drawStickerPanelBase(ctx, width, height, { fill: 'rgba(10,12,18,0.82)', stroke: 'rgba(255,255,255,0.16)', radius: 34 })
-    drawStickerHeader(ctx, 'MELHOR SÉRIE', '', width, accentColor)
-    ctx.fillStyle = '#ffffff'
+    drawStickerPanelBase(ctx, width, height, { fill: surface.background, stroke: surface.border, radius: 34 })
+    drawStickerHeader(ctx, 'MELHOR SÉRIE', '', width, resolvedAccent)
+    ctx.fillStyle = titleColor
     ctx.font = '930 30px Inter, Arial, sans-serif'
     ctx.fillText(truncateText(ctx, stats.topWeightSet?.exerciseName || stats.bestSet?.exerciseName || 'Sem série', width - 48), 24, 104)
     ctx.font = '950 42px Inter, Arial, sans-serif'
     ctx.fillText(truncateText(ctx, formatSetShort(stats.topWeightSet || stats.bestSet), width - 48), 24, 148)
   } else if (stickerId === 'repTotal') {
-    drawStickerPanelBase(ctx, width, height, { fill: 'rgba(8,10,14,0.78)', stroke: 'rgba(255,255,255,0.14)', radius: 34 })
-    ctx.fillStyle = accentColor
+    drawStickerPanelBase(ctx, width, height, { fill: surface.background, stroke: surface.border, radius: 34 })
+    ctx.fillStyle = resolvedAccent
     ctx.font = '950 24px Inter, Arial, sans-serif'
     ctx.fillText('REPS TOTAIS', 28, 52)
-    ctx.fillStyle = '#ffffff'
+    ctx.fillStyle = titleColor
     ctx.font = '950 72px Inter, Arial, sans-serif'
     ctx.fillText(String(stats.totalReps), 28, 122)
-    ctx.fillStyle = 'rgba(255,255,255,0.58)'
+    ctx.fillStyle = textColor
     ctx.font = '850 20px Inter, Arial, sans-serif'
     ctx.fillText(`${String(stats.averageRepsPerSet).replace('.', ',')} reps por série`, 28, 154)
   } else if (stickerId === 'location') {
-    drawStickerPanelBase(ctx, width, height, { fill: 'rgba(5,7,10,0.74)', stroke: 'rgba(255,255,255,0.12)', radius: 28 })
-    drawStickerHeader(ctx, 'SESSÃO', '', width, accentColor)
-    ctx.fillStyle = '#ffffff'
+    drawStickerPanelBase(ctx, width, height, { fill: surface.background, stroke: surface.border, radius: 28 })
+    drawStickerHeader(ctx, 'SESSÃO', '', width, resolvedAccent)
+    ctx.fillStyle = titleColor
     ctx.font = '900 24px Inter, Arial, sans-serif'
     ctx.fillText(truncateText(ctx, stats.locationLabel || 'Sem local registrado', width - 46), 22, 84)
-    ctx.fillStyle = 'rgba(255,255,255,0.56)'
+    ctx.fillStyle = textColor
     ctx.font = '850 19px Inter, Arial, sans-serif'
     ctx.fillText(truncateText(ctx, stats.dateLabel, width - 46), 22, 108)
   } else if (stickerId === 'caption') {
-    drawStickerPanelBase(ctx, width, height, { fill: 'rgba(255,255,255,0.91)', stroke: 'rgba(255,255,255,0.72)', radius: 38 })
-    ctx.fillStyle = '#111827'
+    drawStickerPanelBase(ctx, width, height, { fill: surface.background, stroke: surface.border, radius: 38 })
+    ctx.fillStyle = titleColor
     ctx.font = '950 34px Inter, Arial, sans-serif'
     drawWrappedText(ctx, caption || 'Mais um treino concluído.', 30, 52, width - 60, 42, 2)
-    ctx.fillStyle = accentColor
+    ctx.fillStyle = resolvedAccent
     ctx.font = '950 18px Inter, Arial, sans-serif'
     ctx.fillText('FORGEFLOW NOTE', 30, height - 28)
   } else {
@@ -1676,18 +2039,18 @@ function drawSingleWorkoutSticker(ctx, stickerId, stats, options = {}) {
       prs: stats.prCount > 0 ? 'RECORDES' : 'SEM PR',
     }
     drawStickerPanelBase(ctx, width, height, {
-      fill: stickerId === 'prs' ? 'rgba(22,14,4,0.78)' : 'rgba(5,7,10,0.72)',
-      stroke: stickerId === 'prs' ? 'rgba(250,204,21,0.34)' : 'rgba(255,255,255,0.16)',
+      fill: surface.background,
+      stroke: surface.border,
       radius: 34,
     })
-    drawStickerHeader(ctx, titleMap[stickerId], stickerId === 'exerciseList' ? 'Lista compacta do treino' : '', width, stickerId === 'prs' ? '#fde68a' : accentColor)
+    drawStickerHeader(ctx, titleMap[stickerId], stickerId === 'exerciseList' ? 'Lista compacta do treino' : '', width, resolvedAccent)
     const safeRows = rows.length ? rows : [{ title: stickerId === 'prs' ? 'Treino concluído' : 'Sem dados suficientes', meta: stats.workoutName }]
     drawListRows(ctx, safeRows, 30, 118, width - 60, {
       maxRows: stickerId === 'exerciseList' ? 5 : 4,
       lineHeight: stickerId === 'exerciseList' ? 48 : 52,
       titleSize: stickerId === 'exerciseList' ? 24 : 23,
       metaSize: 18,
-      accentColor: stickerId === 'prs' ? '#fde68a' : accentColor,
+      accentColor: resolvedAccent,
     })
   }
 
@@ -1701,7 +2064,7 @@ function drawStickerSet(ctx, stats, options = {}) {
     ctx.save()
     ctx.translate(transform.x, transform.y)
     ctx.scale(transform.scale, transform.scale)
-    drawSingleWorkoutSticker(ctx, entry.id, stats, options)
+    drawSingleWorkoutSticker(ctx, entry.id, stats, { ...options, stickerStyle: transform })
     ctx.restore()
   })
 }
@@ -1974,7 +2337,7 @@ function drawPerformanceTemplate(ctx, stats, options) {
   ctx.font = `950 ${isStory ? 92 : 68}px Inter, Arial, sans-serif`
   ctx.fillText(truncateText(ctx, stats.volumeLabel, contentWidth - 72), pad + 36, heroPanelY + (isStory ? 154 : 118))
 
-  ctx.fillStyle = 'rgba(255,255,255,0.62)'
+  ctx.fillStyle = 'rgba(255,255,255,0.72)'
   ctx.font = `850 ${isStory ? 29 : 22}px Inter, Arial, sans-serif`
   drawWrappedText(ctx, caption, pad + 36, heroPanelY + (isStory ? 218 : 162), contentWidth - 72, isStory ? 38 : 30, 2)
 
@@ -2333,7 +2696,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   const activeEditLayerRef = useRef('overlay')
   const previewFrameRef = useRef(0)
   const previewRedrawModeRef = useRef('full')
-  const snapGuideRef = useRef({ x: false, y: false, bottom: false })
+  const snapGuideRef = useRef({ x: null, y: null, bottom: false })
 
   const [template, setTemplate] = useState('photoStory')
   const [format, setFormat] = useState('story')
@@ -2349,7 +2712,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   const [overlayTransform, setOverlayTransform] = useState(DEFAULT_OVERLAY_TRANSFORM)
   const [stickers, setStickers] = useState(() => getDefaultStickerState('story'))
   const [selectedStickerId, setSelectedStickerId] = useState('summary')
-  const [snapGuide, setSnapGuide] = useState({ x: false, y: false, bottom: false })
+  const [snapGuide, setSnapGuide] = useState({ x: null, y: null, bottom: false })
   const [status, setStatus] = useState('')
   const [busy, setBusy] = useState(false)
   const [ready, setReady] = useState(false)
@@ -2361,6 +2724,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   const canEditPreview = hasEditablePhoto || overlayMode === 'stickers'
   const snapBottomPercent = `${(getStickerBottomTarget(selectedFormat.id, selectedFormat.width, selectedFormat.height) / selectedFormat.height) * 100}%`
   const visibleStickers = useMemo(() => getVisibleStickerEntries(stickers, format), [format, stickers])
+  const selectedSticker = stickers[selectedStickerId] || getDefaultStickerState(format)[selectedStickerId] || null
 
   const stats = useMemo(() => {
     if (!session) return null
@@ -2525,8 +2889,8 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
 
   function updateSnapGuide(nextGuide) {
     const normalized = {
-      x: Boolean(nextGuide?.x),
-      y: Boolean(nextGuide?.y),
+      x: Number.isFinite(Number(nextGuide?.x)) ? Number(nextGuide.x) : null,
+      y: Number.isFinite(Number(nextGuide?.y)) ? Number(nextGuide.y) : null,
       bottom: Boolean(nextGuide?.bottom),
     }
     const current = snapGuideRef.current
@@ -2544,7 +2908,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       ...transform,
       scale: clamp(safeNumber(transform?.scale) || 1, OVERLAY_MIN_SCALE, OVERLAY_MAX_SCALE),
     }
-    const guide = { x: false, y: false, bottom: false }
+    const guide = { x: null, y: null, bottom: false }
     const bounds = getStickerOverlayBounds(template, currentFormat.id, stats)
     let transformed = getTransformedOverlayBounds(bounds, next, currentFormat.width, currentFormat.height)
     const centerX = (transformed.left + transformed.right) / 2
@@ -2658,7 +3022,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       transformToApply = snapped.transform
       updateSnapGuide(snapped.guide)
     } else if (!options.keepGuide) {
-      updateSnapGuide({ x: false, y: false, bottom: false })
+      updateSnapGuide({ x: null, y: null, bottom: false })
     }
 
     const clamped = clampOverlayTransform(transformToApply, currentFormat.width, currentFormat.height)
@@ -2764,7 +3128,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       gestureRef.current = null
       setPhotoTransform(photoTransformRef.current)
       setOverlayTransform(overlayTransformRef.current)
-      updateSnapGuide({ x: false, y: false, bottom: false })
+      updateSnapGuide({ x: null, y: null, bottom: false })
     }
   }
 
@@ -2840,9 +3204,9 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       ...nextTransform,
       visible: current.visible !== false,
     }
-    const snapped = options.snap ? getStickerSnap(rawNext, stickerId, currentFormat.id) : {
+    const snapped = options.snap ? getStickerSnap(rawNext, stickerId, currentFormat.id, stickersRef.current) : {
       transform: clampStickerTransform(stickerId, rawNext, currentFormat.id),
-      guide: { x: false, y: false, bottom: false },
+      guide: { x: null, y: null, bottom: false },
     }
 
     stickersRef.current = {
@@ -2854,7 +3218,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     }
 
     updateStickerElementStyle(stickerId, snapped.transform)
-    updateSnapGuide(options.snap ? snapped.guide : { x: false, y: false, bottom: false })
+    updateSnapGuide(options.snap ? snapped.guide : { x: null, y: null, bottom: false })
     return snapped.transform
   }
 
@@ -2973,7 +3337,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     }
 
     stickerGestureRef.current = null
-    updateSnapGuide({ x: false, y: false, bottom: false })
+    updateSnapGuide({ x: null, y: null, bottom: false })
     setStickers({ ...stickersRef.current })
   }
 
@@ -3067,7 +3431,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     }
 
     stickerGestureRef.current = null
-    updateSnapGuide({ x: false, y: false, bottom: false })
+    updateSnapGuide({ x: null, y: null, bottom: false })
     setStickers({ ...stickersRef.current })
   }
 
@@ -3092,11 +3456,41 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
 
   function handleResetStickers() {
     const next = getDefaultStickerState(selectedFormatRef.current.id)
+    const preset = STICKER_LAYOUT_PRESETS[selectedFormatRef.current.id]?.balanced || {}
+    Object.keys(preset).forEach((key) => { next[key] = { ...next[key], ...preset[key] } })
     stickersRef.current = next
     setStickers(next)
     setSelectedStickerId('summary')
     selectedStickerIdRef.current = 'summary'
     setStatus('Layout de figurinhas resetado.')
+  }
+
+  function applyLayoutPreset(presetId = 'balanced') {
+    const formatId = selectedFormatRef.current.id
+    const preset = STICKER_LAYOUT_PRESETS[formatId]?.[presetId] || STICKER_LAYOUT_PRESETS[formatId]?.balanced || {}
+    const fallback = getDefaultStickerState(formatId)
+    const next = SHARE_STICKER_TYPES.reduce((acc, item) => {
+      const current = stickersRef.current[item.id] || fallback[item.id]
+      acc[item.id] = clampStickerTransform(item.id, {
+        ...fallback[item.id],
+        ...current,
+        ...(preset[item.id] || {}),
+      }, formatId)
+      return acc
+    }, {})
+    stickersRef.current = next
+    setStickers(next)
+    setStatus(`Layout ${presetId === 'compact' ? 'compacto' : 'equilibrado'} aplicado.`)
+  }
+
+  function updateSelectedStickerAppearance(patch = {}) {
+    const stickerId = selectedStickerIdRef.current
+    const current = stickersRef.current[stickerId]
+    if (!current) return
+    const next = clampStickerTransform(stickerId, { ...current, ...patch }, selectedFormatRef.current.id)
+    stickersRef.current = { ...stickersRef.current, [stickerId]: next }
+    updateStickerElementStyle(stickerId, next)
+    setStickers({ ...stickersRef.current })
   }
 
   function handleSelectedStickerSmaller() {
@@ -3353,7 +3747,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
         if (canShareImageFile(file)) {
           await navigator.share({
             title: 'Salvar imagem ForgeFlow',
-            text: 'Escolha Galeria, Fotos, Arquivos ou Instagram para salvar/usar a imagem.',
+            text: 'Escolha Galeria, Fotos ou Arquivos para salvar/usar a imagem.',
             files: [file],
           })
           setStatus('Não foi possível salvar automaticamente. Use o compartilhamento do sistema para salvar a imagem.')
@@ -3364,7 +3758,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       if (isMobileShareContext() && canShareImageFile(file)) {
         await navigator.share({
           title: 'Salvar imagem ForgeFlow',
-          text: 'Escolha Fotos, Galeria, Arquivos ou Instagram para salvar/usar a imagem.',
+          text: 'Escolha Fotos, Galeria ou Arquivos para salvar/usar a imagem.',
           files: [file],
         })
         setStatus('Imagem gerada. Escolha o app onde quer salvar ou postar.')
@@ -3396,64 +3790,9 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     }
   }
 
-  async function handleOpenInstagram() {
-    if (busy) return
 
-    setBusy(true)
-    setStatus('')
 
-    try {
-      const nativeAssetOptions = { mimeType: 'image/jpeg', extension: 'jpg', quality: 0.88 }
-      const { blob, dataUrl, file, filename, mimeType } = isNativeApp()
-        ? await getImageAsset(nativeAssetOptions)
-        : await getImageAsset()
 
-      if (isNativeApp()) {
-        try {
-          const result = await shareImageToInstagramStoryNative({
-            dataUrl,
-            filename,
-            mimeType,
-            shareText,
-          })
-
-          if (result?.opened !== false) {
-            setStatus('Imagem salva em Pictures/ForgeFlow e tentativa de abrir o Instagram Stories iniciada. Se o Story não vier com a imagem, selecione o card no álbum ForgeFlow.')
-            return
-          }
-        } catch (nativeError) {
-          console.warn('ForgeFlowMedia.shareImageToInstagramStory indisponível:', nativeError)
-        }
-      }
-
-      if (canShareImageFile(file)) {
-        await navigator.share({
-          title: 'Publicar treino no Instagram',
-          text: shareText,
-          files: [file],
-        })
-        setStatus('Imagem pronta. Se aparecer a opção, escolha Instagram Stories no compartilhamento.')
-        return
-      }
-
-      triggerImageDownload(blob, filename)
-      setStatus('Imagem baixada. No navegador não há garantia de anexar direto no Story; abra o Instagram e selecione o card na galeria.')
-      window.setTimeout(() => {
-        window.location.href = 'instagram://story-camera'
-
-        window.setTimeout(() => {
-          window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer')
-        }, 900)
-      }, 300)
-    } catch (error) {
-      if (error?.name !== 'AbortError') {
-        console.error(error)
-        setStatus('Não deu para abrir o Instagram com a imagem. Use Salvar imagem ou Compartilhar imagem.')
-      }
-    } finally {
-      setBusy(false)
-    }
-  }
 
   const dialog = (
     <div className="ff-share-studio" role="dialog" aria-modal="true" aria-label="Compartilhar treino">
@@ -3525,8 +3864,8 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
               </div>
             )}
 
-            {snapGuide.x && <span className="ff-share-studio__snap-line is-vertical" aria-hidden="true" />}
-            {snapGuide.y && <span className="ff-share-studio__snap-line is-horizontal" aria-hidden="true" />}
+            {snapGuide.x !== null && <span className="ff-share-studio__snap-line is-vertical" aria-hidden="true" style={{ left: `${snapGuide.x}%` }} />}
+            {snapGuide.y !== null && <span className="ff-share-studio__snap-line is-horizontal" aria-hidden="true" style={{ top: `${snapGuide.y}%` }} />}
             {snapGuide.bottom && <span className="ff-share-studio__snap-line is-bottom" aria-hidden="true" />}
 
             {!ready && (
@@ -3539,7 +3878,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
           <section className="ff-share-studio__controls">
             <div className="ff-share-studio__tip-card">
               <strong>Editor premium do card</strong>
-              <small>Use sua foto como destaque e deixe as informações como figurinhas por cima, no estilo Story do Instagram.</small>
+              <small>Use sua foto como destaque e monte um layout premium com figurinhas do ForgeFlow por cima.</small>
             </div>
 
             <div className="ff-share-studio__section-title">
@@ -3629,9 +3968,43 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
 
                 <div className="ff-share-studio__overlay-tools">
                   <button type="button" onClick={handleResetStickers}>Resetar layout</button>
+                  <button type="button" onClick={() => applyLayoutPreset('balanced')}>Layout base</button>
+                  <button type="button" onClick={() => applyLayoutPreset('compact')}>Layout compacto</button>
                   <button type="button" onClick={handleSelectedStickerSmaller}>Menor</button>
                   <button type="button" onClick={handleSelectedStickerBigger}>Maior</button>
                 </div>
+
+                {selectedSticker && (
+                  <div className="ff-share-studio__sticker-customize">
+                    <div className="ff-share-studio__section-title">
+                      <Sparkles size={16} />
+                      <span>Personalizar figurinha</span>
+                    </div>
+                    <div className="ff-share-studio__sticker-customize-grid">
+                      <label>
+                        <span>Cor do título</span>
+                        <input type="color" value={getStickerAppearance(selectedSticker).titleColor} onChange={(event) => updateSelectedStickerAppearance({ titleColor: event.target.value })} />
+                      </label>
+                      <label>
+                        <span>Cor de destaque</span>
+                        <input type="color" value={getStickerAppearance(selectedSticker).accentColor} onChange={(event) => updateSelectedStickerAppearance({ accentColor: event.target.value })} />
+                      </label>
+                      <label>
+                        <span>Cor do fundo</span>
+                        <input type="color" value={getStickerAppearance(selectedSticker).backgroundColor} onChange={(event) => updateSelectedStickerAppearance({ backgroundColor: event.target.value })} />
+                      </label>
+                      <label>
+                        <span>Cor auxiliar</span>
+                        <input type="color" value={getStickerAppearance(selectedSticker).textColor || getStickerAppearance(selectedSticker).titleColor} onChange={(event) => updateSelectedStickerAppearance({ textColor: event.target.value })} />
+                      </label>
+                      <label>
+                        <span>Transparência</span>
+                        <input type="range" min="0.16" max="0.96" step="0.02" value={getStickerAppearance(selectedSticker).backgroundOpacity} onChange={(event) => updateSelectedStickerAppearance({ backgroundOpacity: Number(event.target.value) })} />
+                        <small>{Math.round(getStickerAppearance(selectedSticker).backgroundOpacity * 100)}%</small>
+                      </label>
+                    </div>
+                  </div>
+                )}
               </>
             )}
 
@@ -3815,10 +4188,6 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
             Salvar na galeria
           </Button>
 
-          <Button type="button" variant="secondary" onClick={handleOpenInstagram} disabled={busy || !ready}>
-            <ImagePlus size={18} />
-            Instagram/Story
-          </Button>
 
           <Button type="button" variant="secondary" onClick={handleCopy} disabled={!shareText}>
             <Copy size={18} />
