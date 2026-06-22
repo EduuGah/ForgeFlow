@@ -444,6 +444,17 @@ function drawMetric(ctx, metric, x, y, width, height, compact = false) {
   ctx.fillText(metric.label.toUpperCase(), x + 24, y + height - 20)
 }
 
+function getMetricGridHeight(metrics, columns = 2, compact = false) {
+  const count = Array.isArray(metrics) ? metrics.length : 0
+  if (!count) return 0
+
+  const gap = compact ? 18 : 24
+  const itemHeight = compact ? 86 : 104
+  const rows = Math.ceil(count / columns)
+
+  return rows * itemHeight + Math.max(0, rows - 1) * gap
+}
+
 function drawMetricGrid(ctx, metrics, x, y, width, columns = 2, compact = false) {
   const gap = compact ? 18 : 24
   const itemHeight = compact ? 86 : 104
@@ -463,7 +474,7 @@ function drawMetricGrid(ctx, metrics, x, y, width, columns = 2, compact = false)
     )
   })
 
-  return y + Math.ceil(metrics.length / columns) * itemHeight + Math.max(0, Math.ceil(metrics.length / columns) - 1) * gap
+  return y + getMetricGridHeight(metrics, columns, compact)
 }
 
 function drawCircuitLines(ctx, width, height, accentColor, alpha = 0.16) {
@@ -618,27 +629,31 @@ function drawBackground(ctx, width, height, backgroundStyle, photoImage, accentS
   ctx.restore()
 }
 
-function drawFocusBlock(ctx, stats, template, x, y, width, accentColor) {
+function drawFocusBlock(ctx, stats, template, x, y, width, accentColor, compact = false) {
+  const labelSize = compact ? 27 : 30
+  const numberSize = compact ? 78 : 88
+  const numberLineHeight = compact ? 82 : 92
+
   if (template === 'volume') {
     ctx.fillStyle = accentColor
-    ctx.font = '900 34px Inter, Arial, sans-serif'
+    ctx.font = `900 ${labelSize}px Inter, Arial, sans-serif`
     ctx.fillText('VOLUME TOTAL', x, y)
 
     ctx.fillStyle = '#ffffff'
-    ctx.font = '950 96px Inter, Arial, sans-serif'
-    wrapText(ctx, stats.volumeLabel, x, y + 112, width, 104, 1)
-    return y + 155
+    ctx.font = `950 ${numberSize}px Inter, Arial, sans-serif`
+    wrapText(ctx, stats.volumeLabel, x, y + numberLineHeight, width, numberLineHeight, 1)
+    return y + numberLineHeight + 42
   }
 
   if (template === 'pr') {
     ctx.fillStyle = accentColor
-    ctx.font = '900 34px Inter, Arial, sans-serif'
+    ctx.font = `900 ${labelSize}px Inter, Arial, sans-serif`
     ctx.fillText(stats.prCount > 0 ? 'RECORDE BATIDO' : 'TREINO SEM PR', x, y)
 
     ctx.fillStyle = '#ffffff'
-    ctx.font = '950 92px Inter, Arial, sans-serif'
-    wrapText(ctx, `${stats.prCount} PR${stats.prCount === 1 ? '' : 's'}`, x, y + 112, width, 100, 1)
-    return y + 155
+    ctx.font = `950 ${numberSize}px Inter, Arial, sans-serif`
+    wrapText(ctx, `${stats.prCount} PR${stats.prCount === 1 ? '' : 's'}`, x, y + numberLineHeight, width, numberLineHeight, 1)
+    return y + numberLineHeight + 42
   }
 
   return y
@@ -735,43 +750,53 @@ async function drawWorkoutShareCanvas(canvas, options) {
   ctx.fillText(currentTemplate.tag.toUpperCase(), innerX + 28, cursorY + 2)
   cursorY += 92
 
-  cursorY = drawFocusBlock(ctx, stats, template, innerX, cursorY - 12, innerW, accentColor)
+  const metrics = getMetricsForLevel(stats, infoLevel)
+  const columns = 2
+  const maxMetricCount = isSquare ? 4 : infoLevel === 'full' ? 6 : 4
+  const visibleMetrics = metrics.slice(0, maxMetricCount)
+  const metricGridHeight = getMetricGridHeight(visibleMetrics, columns, isSquare)
+  const footerText = infoLevel === 'full' && stats.topExercises.length > 0
+    ? `Exercícios: ${stats.topExercises.join(', ')}`
+    : `Built with ForgeFlow • ${stats.completedSetCount} séries • ${stats.prCount} PRs`
+  const footerY = panelY + panelHeight - 58
+  const metricGridY = Math.max(cursorY + 22, footerY - metricGridHeight - 54)
+  const isFocusTemplate = template === 'volume' || template === 'pr'
 
-  if (template !== 'volume' && template !== 'pr') {
+  cursorY = drawFocusBlock(ctx, stats, template, innerX, cursorY - 12, innerW, accentColor, isSquare || isFocusTemplate)
+
+  if (!isFocusTemplate) {
     ctx.fillStyle = '#ffffff'
     ctx.font = `950 ${isSquare ? 68 : 82}px Inter, Arial, sans-serif`
     cursorY = wrapText(ctx, stats.workoutName, innerX, cursorY, innerW, isSquare ? 75 : 92, 2)
   } else {
     ctx.fillStyle = '#ffffff'
-    ctx.font = '900 48px Inter, Arial, sans-serif'
-    cursorY = wrapText(ctx, stats.workoutName, innerX, cursorY + 12, innerW, 56, 2)
+    ctx.font = `900 ${isSquare ? 38 : 42}px Inter, Arial, sans-serif`
+    cursorY = wrapText(ctx, stats.workoutName, innerX, cursorY + 4, innerW, isSquare ? 44 : 49, 1)
   }
 
-  if (infoLevel !== 'light' || template === 'quote') {
+  const shouldDrawCaption = infoLevel !== 'light' || template === 'quote'
+  if (shouldDrawCaption && metricGridY - cursorY > 64) {
     ctx.fillStyle = 'rgba(255,255,255,0.80)'
-    ctx.font = `800 ${isSquare ? 29 : 35}px Inter, Arial, sans-serif`
-    cursorY = wrapText(ctx, caption, innerX, cursorY + 42, innerW, isSquare ? 39 : 46, isSquare ? 2 : 3)
+    ctx.font = `800 ${isSquare || isFocusTemplate ? 28 : 35}px Inter, Arial, sans-serif`
+    const maxCaptionLines = isFocusTemplate ? 1 : isSquare ? 2 : 3
+    const lineHeight = isSquare || isFocusTemplate ? 36 : 46
+    const captionY = cursorY + (isFocusTemplate ? 26 : 42)
+    const availableCaptionLines = Math.max(1, Math.min(maxCaptionLines, Math.floor((metricGridY - captionY - 20) / lineHeight)))
+    cursorY = wrapText(ctx, caption, innerX, captionY, innerW, lineHeight, availableCaptionLines)
   }
 
-  const metrics = getMetricsForLevel(stats, infoLevel)
-  const columns = metrics.length <= 2 ? 2 : 2
-  const maxMetricCount = isSquare ? 4 : infoLevel === 'full' ? 6 : 4
-  drawMetricGrid(ctx, metrics.slice(0, maxMetricCount), innerX, Math.min(cursorY + 42, panelY + panelHeight - (infoLevel === 'full' ? 320 : 210)), innerW, columns, isSquare)
-
-  const footerText = infoLevel === 'full' && stats.topExercises.length > 0
-    ? `Exercícios: ${stats.topExercises.join(', ')}`
-    : `Built with ForgeFlow • ${stats.completedSetCount} séries • ${stats.prCount} PRs`
+  drawMetricGrid(ctx, visibleMetrics, innerX, metricGridY, innerW, columns, isSquare)
 
   ctx.fillStyle = 'rgba(255,255,255,0.68)'
-  ctx.font = `800 ${isSquare ? 24 : 28}px Inter, Arial, sans-serif`
-  wrapText(ctx, footerText, innerX, panelY + panelHeight - 56, innerW, 34, 1)
+  ctx.font = `800 ${isSquare ? 22 : 24}px Inter, Arial, sans-serif`
+  wrapText(ctx, footerText, innerX, footerY, innerW, 30, 1)
 
   ctx.restore()
 
   return stats
 }
 
-function canvasToBlob(canvas) {
+function canvasToBlob(canvas, type = 'image/png', quality = 0.95) {
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => {
       if (!blob) {
@@ -780,7 +805,7 @@ function canvasToBlob(canvas) {
       }
 
       resolve(blob)
-    }, 'image/png', 0.95)
+    }, type, quality)
   })
 }
 
@@ -801,15 +826,16 @@ async function copyText(text) {
   textarea.remove()
 }
 
-function getFileName(session = {}, template = 'story') {
+function getFileName(session = {}, template = 'story', extension = 'png') {
   const rawName = String(session.workoutName || session.name || 'treino')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/gi, '-')
     .replace(/^-+|-+$/g, '')
     .toLowerCase()
+  const safeExtension = String(extension || 'png').replace(/^\./, '').toLowerCase()
 
-  return `forgeflow-${rawName || 'treino'}-${template}.png`
+  return `forgeflow-${rawName || 'treino'}-${template}.${safeExtension}`
 }
 
 function canShareImageFile(file) {
@@ -947,8 +973,10 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     setStatus('Foto removida do card.')
   }
 
-  async function getImageBlob() {
+  async function getImageBlob(options = {}) {
     if (!canvasRef.current) throw new Error('Imagem indisponível.')
+
+    const { mimeType = 'image/png', quality = 0.95 } = options
 
     await drawWorkoutShareCanvas(canvasRef.current, {
       session,
@@ -960,11 +988,13 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       backgroundStyle,
     })
 
-    return canvasToBlob(canvasRef.current)
+    return canvasToBlob(canvasRef.current, mimeType, quality)
   }
 
-  async function getImageAsset() {
+  async function getImageAsset(options = {}) {
     if (!canvasRef.current) throw new Error('Imagem indisponível.')
+
+    const { mimeType = 'image/png', extension = 'png', quality = 0.95 } = options
 
     await drawWorkoutShareCanvas(canvasRef.current, {
       session,
@@ -976,12 +1006,12 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       backgroundStyle,
     })
 
-    const dataUrl = canvasRef.current.toDataURL('image/png', 0.95)
-    const blob = await canvasToBlob(canvasRef.current)
-    const filename = getFileName(session, template)
-    const file = new File([blob], filename, { type: 'image/png' })
+    const dataUrl = canvasRef.current.toDataURL(mimeType, quality)
+    const blob = await canvasToBlob(canvasRef.current, mimeType, quality)
+    const filename = getFileName(session, template, extension)
+    const file = new File([blob], filename, { type: mimeType })
 
-    return { blob, dataUrl, file, filename }
+    return { blob, dataUrl, file, filename, mimeType }
   }
 
   async function handleShare() {
@@ -1037,11 +1067,14 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     setStatus('')
 
     try {
-      const { blob, dataUrl, file, filename } = await getImageAsset()
+      const nativeAssetOptions = { mimeType: 'image/jpeg', extension: 'jpg', quality: 0.88 }
+      const { blob, dataUrl, file, filename, mimeType } = isNativeApp()
+        ? await getImageAsset(nativeAssetOptions)
+        : await getImageAsset()
 
       if (isNativeApp()) {
         try {
-          const result = await saveImageToGalleryNative({ dataUrl, filename })
+          const result = await saveImageToGalleryNative({ dataUrl, filename, mimeType })
           if (result?.saved !== false) {
             setStatus('Imagem salva na galeria do celular, no álbum ForgeFlow.')
             return
@@ -1056,7 +1089,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
             text: 'Escolha Galeria, Fotos, Arquivos ou Instagram para salvar/usar a imagem.',
             files: [file],
           })
-          setStatus('Imagem pronta. Para salvar direto na galeria do APK, aplique o plugin nativo ForgeFlowMedia incluído no zip.')
+          setStatus('Imagem pronta, mas o salvamento nativo não respondeu. Rode npm run android:install-media-plugin e gere o APK novamente.')
           return
         }
       }
@@ -1103,13 +1136,17 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     setStatus('')
 
     try {
-      const { blob, dataUrl, file, filename } = await getImageAsset()
+      const nativeAssetOptions = { mimeType: 'image/jpeg', extension: 'jpg', quality: 0.88 }
+      const { blob, dataUrl, file, filename, mimeType } = isNativeApp()
+        ? await getImageAsset(nativeAssetOptions)
+        : await getImageAsset()
 
       if (isNativeApp()) {
         try {
           const result = await shareImageToInstagramStoryNative({
             dataUrl,
             filename,
+            mimeType,
             shareText,
           })
 

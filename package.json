@@ -6,9 +6,9 @@
   "scripts": {
     "dev": "vite",
     "dev:mobile": "vite --host 0.0.0.0",
-    "android:sync": "npm run build && npx cap sync android",
-    "android:run": "npm run build && npx cap run android",
-    "android:apk": "npm run build && npx cap sync android && cd android && gradlew.bat assembleDebug",
+    "android:sync": "npm run build && npx cap sync android && npm run android:install-media-plugin",
+    "android:run": "npm run build && npx cap sync android && npm run android:install-media-plugin && npx cap run android",
+    "android:apk": "npm run build && npx cap sync android && npm run android:install-media-plugin && cd android && gradlew.bat assembleDebug",
     "build": "vite build",
     "import:exercisedb": "node scripts/importExerciseDb.js",
     "import:exercisedgifs": "node scripts/downloadExerciseGifs.js",
@@ -26,7 +26,8 @@
     "test:frontend": "eslint src public scripts",
     "test:server": "node server/scripts/sanity-check.mjs && node server/scripts/workout-validation.test.mjs",
     "check:client": "npm run build",
-    "postinstall": "node scripts/patch-capacitor-gradle.mjs"
+    "postinstall": "node scripts/patch-capacitor-gradle.mjs",
+    "android:install-media-plugin": "node scripts/install-android-media-plugin.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.4",
