@@ -17,6 +17,7 @@ import forgeflowIcon from '../../assets/forgeflow-icon.png'
 import Button from '../ui/Button'
 import { isNativeApp } from '../../utils/platformUtils'
 import {
+  normalizeImageToJpegNative,
   saveImageToGalleryNative,
   shareImageToInstagramStoryNative,
 } from '../../utils/shareNativeBridge'
@@ -144,13 +145,13 @@ const PHOTO_FIT_TRANSFORM = {
 const DEFAULT_OVERLAY_TRANSFORM = {
   x: 0,
   y: 0,
-  scale: 1,
+  scale: 1.16,
 }
 
 const PHOTO_MIN_SCALE = 1
 const PHOTO_MAX_SCALE = 3.35
-const OVERLAY_MIN_SCALE = 0.58
-const OVERLAY_MAX_SCALE = 1.85
+const OVERLAY_MIN_SCALE = 0.78
+const OVERLAY_MAX_SCALE = 2.2
 const IMAGE_CACHE = new Map()
 
 function getExerciseName(exercise = {}) {
@@ -350,6 +351,39 @@ function readFileAsDataUrl(file) {
 }
 
 
+function getDataUrlMimeType(dataUrl = '') {
+  const match = String(dataUrl).match(/^data:([^;,]+)[;,]/i)
+  return match?.[1]?.toLowerCase() || ''
+}
+
+function isLikelyHeicFile(file) {
+  const name = String(file?.name || '').toLowerCase()
+  const type = String(file?.type || '').toLowerCase()
+
+  return type.includes('heic') || type.includes('heif') || /\.(heic|heif)$/i.test(name)
+}
+
+async function tryNormalizeWithNativeBridge(file, dataUrl) {
+  if (!isNativeApp() || !dataUrl) return null
+
+  const result = await normalizeImageToJpegNative({
+    dataUrl,
+    filename: file?.name || 'forgeflow-photo',
+    mimeType: file?.type || getDataUrlMimeType(dataUrl) || 'image/heic',
+    maxSide: 2600,
+    quality: 90,
+  })
+
+  if (!result?.dataUrl) return null
+
+  return {
+    src: result.dataUrl,
+    width: safeNumber(result.width),
+    height: safeNumber(result.height),
+  }
+}
+
+
 function canvasToDataUrl(canvas, mimeType = 'image/jpeg', quality = 0.92) {
   try {
     return canvas.toDataURL(mimeType, quality)
@@ -397,8 +431,34 @@ async function createUserPhotoFromFile(file) {
   if (!file) throw new Error('Nenhuma imagem selecionada.')
 
   const mimeType = String(file.type || '')
-  if (mimeType && !mimeType.startsWith('image/')) {
+  const isHeic = isLikelyHeicFile(file)
+  if (mimeType && !mimeType.startsWith('image/') && !isHeic) {
     throw new Error('Selecione um arquivo de imagem válido.')
+  }
+
+  let rawDataUrl = ''
+
+  try {
+    rawDataUrl = await readFileAsDataUrl(file)
+  } catch (error) {
+    console.warn('Falha ao ler foto original:', error)
+  }
+
+  if (isHeic && rawDataUrl) {
+    try {
+      const nativePhoto = await tryNormalizeWithNativeBridge(file, rawDataUrl)
+      if (nativePhoto?.src) {
+        return {
+          file,
+          src: nativePhoto.src,
+          name: file.name || 'foto-do-treino.jpg',
+          width: nativePhoto.width,
+          height: nativePhoto.height,
+        }
+      }
+    } catch (nativeError) {
+      console.warn('Conversão nativa HEIC/HEIF falhou:', nativeError)
+    }
   }
 
   let src
@@ -411,28 +471,45 @@ async function createUserPhotoFromFile(file) {
   } catch (firstError) {
     console.warn('Falha ao carregar foto normalizada:', firstError)
 
-    try {
-      objectUrl = URL.createObjectURL(file)
-      image = await loadShareImage(objectUrl)
+    if (rawDataUrl) {
+      try {
+        const nativePhoto = await tryNormalizeWithNativeBridge(file, rawDataUrl)
+        if (nativePhoto?.src) {
+          src = nativePhoto.src
+          image = await loadShareImage(src)
+        }
+      } catch (nativeError) {
+        console.warn('Conversão nativa da foto falhou:', nativeError)
+      }
+    }
 
-      const canvas = document.createElement('canvas')
-      const width = image.naturalWidth || image.width
-      const height = image.naturalHeight || image.height
-      const maxSide = 2600
-      const ratio = Math.min(1, maxSide / Math.max(width || 1, height || 1))
-      canvas.width = Math.max(1, Math.round(width * ratio))
-      canvas.height = Math.max(1, Math.round(height * ratio))
-      const ctx = canvas.getContext('2d', { alpha: false })
-      ctx.fillStyle = '#050505'
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-      ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
-      src = canvasToDataUrl(canvas, 'image/jpeg', 0.92)
-      image = await loadShareImage(src)
-    } catch (secondError) {
-      console.warn('Falha ao carregar foto por ObjectURL:', secondError)
-      throw new Error('Não foi possível carregar a imagem escolhida. Tente selecionar uma foto JPG, PNG ou WEBP; alguns celulares salvam em HEIC, que o WebView pode não conseguir desenhar no canvas.', { cause: secondError })
-    } finally {
-      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    if (!image) {
+      try {
+        objectUrl = URL.createObjectURL(file)
+        image = await loadShareImage(objectUrl)
+
+        const canvas = document.createElement('canvas')
+        const width = image.naturalWidth || image.width
+        const height = image.naturalHeight || image.height
+        const maxSide = 2600
+        const ratio = Math.min(1, maxSide / Math.max(width || 1, height || 1))
+        canvas.width = Math.max(1, Math.round(width * ratio))
+        canvas.height = Math.max(1, Math.round(height * ratio))
+        const ctx = canvas.getContext('2d', { alpha: false })
+        ctx.fillStyle = '#050505'
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
+        src = canvasToDataUrl(canvas, 'image/jpeg', 0.92)
+        image = await loadShareImage(src)
+      } catch (secondError) {
+        console.warn('Falha ao carregar foto por ObjectURL:', secondError)
+        const heicMessage = isHeic
+          ? 'O arquivo parece HEIC/HEIF. No APK atualizado o ForgeFlow tenta converter pelo Android antes de desenhar; no navegador alguns HEIC ainda não abrem. Gere o APK de novo e teste pela galeria do celular.'
+          : 'Tente outra foto JPG, PNG ou WEBP.'
+        throw new Error(`Não foi possível carregar a imagem escolhida. ${heicMessage}`, { cause: secondError })
+      } finally {
+        if (objectUrl) URL.revokeObjectURL(objectUrl)
+      }
     }
   }
 
@@ -1046,145 +1123,361 @@ function clampOverlayTransform(transform, canvasWidth, canvasHeight) {
 
 function drawStickerPill(ctx, text, x, y, options = {}) {
   const {
-    fontSize = 24,
-    height = 58,
-    padX = 22,
-    maxWidth = 500,
+    fontSize = 26,
+    height = 62,
+    padX = 24,
+    maxWidth = 540,
     color = '#ffffff',
-    fill = 'rgba(8,10,14,0.72)',
-    stroke = 'rgba(255,255,255,0.16)',
+    fill = 'rgba(8,10,14,0.76)',
+    stroke = 'rgba(255,255,255,0.18)',
+    align = 'left',
   } = options
 
   ctx.save()
-  ctx.font = `900 ${fontSize}px Inter, Arial, sans-serif`
+  ctx.font = `950 ${fontSize}px Inter, Arial, sans-serif`
   const width = Math.min(maxWidth, Math.max(height, ctx.measureText(text).width + padX * 2))
-  drawRoundRect(ctx, x, y, width, height, height / 2)
+  const drawX = align === 'right' ? x - width : x
+  drawRoundRect(ctx, drawX, y, width, height, height / 2)
   ctx.fillStyle = fill
   ctx.fill()
   ctx.strokeStyle = stroke
   ctx.lineWidth = 2
   ctx.stroke()
   ctx.fillStyle = color
-  ctx.fillText(truncateText(ctx, text, width - padX * 2), x + padX, y + height / 2 + fontSize * 0.34)
+  ctx.fillText(truncateText(ctx, text, width - padX * 2), drawX + padX, y + height / 2 + fontSize * 0.34)
   ctx.restore()
 
-  return width
+  return { x: drawX, y, width, height }
 }
 
 function drawStickerMetric(ctx, metric, x, y, options = {}) {
   const {
-    width = 220,
-    height = 104,
+    width = 238,
+    height = 112,
     accentColor = '#ef4444',
     compact = false,
+    fill = 'rgba(7,9,13,0.74)',
+    valueSize = compact ? 28 : 38,
+    labelSize = compact ? 15 : 18,
   } = options
 
   drawGlassPanel(ctx, x, y, width, height, compact ? 28 : 34, {
-    fill: 'rgba(8,10,14,0.66)',
-    stroke: 'rgba(255,255,255,0.16)',
+    fill,
+    stroke: 'rgba(255,255,255,0.18)',
     shadow: true,
   })
 
   ctx.fillStyle = '#ffffff'
-  ctx.font = `950 ${compact ? 28 : 36}px Inter, Arial, sans-serif`
-  ctx.fillText(truncateText(ctx, metric.value, width - 36), x + 18, y + (compact ? 40 : 50))
+  ctx.font = `950 ${valueSize}px Inter, Arial, sans-serif`
+  ctx.fillText(truncateText(ctx, metric.value, width - 38), x + 20, y + height * 0.48)
   ctx.fillStyle = accentColor
-  ctx.font = `900 ${compact ? 15 : 18}px Inter, Arial, sans-serif`
-  ctx.fillText(truncateText(ctx, String(metric.label || '').toUpperCase(), width - 36), x + 18, y + height - 20)
+  ctx.font = `950 ${labelSize}px Inter, Arial, sans-serif`
+  ctx.fillText(truncateText(ctx, String(metric.label || '').toUpperCase(), width - 38), x + 20, y + height - 22)
 }
 
-function drawStickerOverlayContent(ctx, stats, options) {
-  const { width, height, caption, infoLevel, iconImage, accentColor, format, template } = options
-  const isStory = format === 'story'
-  const pad = isStory ? 64 : 46
-  const safeBottom = isStory ? 132 : 78
-  const contentWidth = width - pad * 2
-  const basePanelW = isStory ? contentWidth : contentWidth * 0.94
-  const metrics = getVisibleMetrics(stats, infoLevel, template === 'performance' || template === 'darkGlass' ? 4 : 3)
+function getCoreStickerMetrics(stats, infoLevel, maxCount = 3) {
+  const metrics = getMetricsForLevel(stats, infoLevel)
+  const prioritized = [
+    metrics.find((item) => item.label === 'Duração'),
+    metrics.find((item) => item.label === 'Volume'),
+    metrics.find((item) => item.label === 'PRs'),
+    metrics.find((item) => item.label === 'Exercícios'),
+    metrics.find((item) => item.label === 'Séries'),
+  ].filter(Boolean)
 
-  if (template === 'editorial') {
-    const panelH = isStory ? 420 : 300
-    const panelY = height - safeBottom - panelH
-    drawGlassPanel(ctx, pad, panelY, basePanelW, panelH, isStory ? 54 : 42, {
-      fill: 'rgba(250,250,250,0.90)',
-      stroke: 'rgba(255,255,255,0.74)',
-    })
-    ctx.fillStyle = '#0f1115'
-    ctx.font = `950 ${isStory ? 48 : 34}px Inter, Arial, sans-serif`
-    drawWrappedText(ctx, caption, pad + 34, panelY + 72, basePanelW - 68, isStory ? 58 : 42, isStory ? 3 : 2)
-    ctx.fillStyle = accentColor
-    ctx.font = `950 ${isStory ? 24 : 18}px Inter, Arial, sans-serif`
-    ctx.fillText('FORGEFLOW', pad + 34, panelY + panelH - 88)
-    ctx.fillStyle = 'rgba(15,17,21,0.72)'
-    ctx.font = `850 ${isStory ? 28 : 20}px Inter, Arial, sans-serif`
-    ctx.fillText(truncateText(ctx, `${stats.workoutName} • ${stats.durationLabel}`, basePanelW - 68), pad + 34, panelY + panelH - 46)
-    return
-  }
+  return prioritized.slice(0, maxCount)
+}
 
-  if (template === 'heroPr') {
-    const hasPr = stats.prCount > 0
-    const heroW = isStory ? 430 : 310
-    const heroH = isStory ? 270 : 190
-    const heroX = pad
-    const heroY = height - safeBottom - heroH - (isStory ? 235 : 160)
-    drawGlassPanel(ctx, heroX, heroY, heroW, heroH, isStory ? 48 : 36, {
-      fill: 'rgba(8,10,14,0.74)',
-      stroke: hasPr ? 'rgba(250,204,21,0.32)' : 'rgba(255,255,255,0.18)',
-    })
-    ctx.fillStyle = hasPr ? '#fde68a' : accentColor
-    ctx.font = `950 ${isStory ? 24 : 18}px Inter, Arial, sans-serif`
-    ctx.fillText(hasPr ? 'NOVO RECORDE' : 'TREINO FEITO', heroX + 28, heroY + 52)
-    ctx.fillStyle = '#ffffff'
-    ctx.font = `950 ${isStory ? 88 : 60}px Inter, Arial, sans-serif`
-    ctx.fillText(hasPr ? `${stats.prCount} PR${stats.prCount > 1 ? 's' : ''}` : 'OK', heroX + 28, heroY + (isStory ? 142 : 102))
-    ctx.fillStyle = 'rgba(255,255,255,0.68)'
-    ctx.font = `850 ${isStory ? 22 : 17}px Inter, Arial, sans-serif`
-    const prText = hasPr ? getPrText(stats.prs[0]) : stats.workoutName
-    drawWrappedText(ctx, prText, heroX + 28, heroY + (isStory ? 190 : 136), heroW - 56, isStory ? 30 : 23, 2)
-  }
+function drawTinyBrandSticker(ctx, iconImage, x, y, options = {}) {
+  const { scale = 1, label = 'ForgeFlow' } = options
+  const width = 250 * scale
+  const height = 68 * scale
+  const iconSize = 46 * scale
 
-  const panelH = isStory ? 360 : 256
-  const panelY = height - safeBottom - panelH
-  const panelX = isStory ? pad : (width - basePanelW) / 2
-  drawGlassPanel(ctx, panelX, panelY, basePanelW, panelH, isStory ? 54 : 42, {
-    fill: 'rgba(8,10,14,0.64)',
-    stroke: 'rgba(255,255,255,0.18)',
+  drawGlassPanel(ctx, x, y, width, height, height / 2, {
+    fill: 'rgba(5,7,10,0.68)',
+    stroke: 'rgba(255,255,255,0.16)',
+    shadow: true,
   })
 
-  drawBrand(ctx, iconImage, panelX + 30, panelY + 30, isStory ? 0.64 : 0.48, { muted: true, label: 'sticker card' })
-
-  ctx.fillStyle = '#ffffff'
-  ctx.font = `950 ${isStory ? 42 : 30}px Inter, Arial, sans-serif`
-  drawWrappedText(ctx, stats.workoutName, panelX + 30, panelY + (isStory ? 132 : 98), basePanelW - 60, isStory ? 50 : 36, 2)
-
-  if (template !== 'heroPr') {
-    ctx.fillStyle = 'rgba(255,255,255,0.78)'
-    ctx.font = `850 ${isStory ? 25 : 18}px Inter, Arial, sans-serif`
-    drawWrappedText(ctx, caption, panelX + 30, panelY + (isStory ? 238 : 170), basePanelW - 60, isStory ? 34 : 25, 2)
+  ctx.save()
+  drawRoundRect(ctx, x + 13 * scale, y + 11 * scale, iconSize, iconSize, 14 * scale)
+  ctx.fillStyle = 'rgba(239,68,68,0.22)'
+  ctx.fill()
+  ctx.clip()
+  if (iconImage) {
+    ctx.drawImage(iconImage, x + 13 * scale, y + 11 * scale, iconSize, iconSize)
   }
+  ctx.restore()
 
-  const metricY = panelY + panelH + (isStory ? 22 : 14)
-  const metricW = (basePanelW - (metrics.length - 1) * 14) / Math.max(1, Math.min(metrics.length, isStory ? 3 : 3))
-  metrics.slice(0, isStory ? 3 : 3).forEach((metric, index) => {
-    drawStickerMetric(ctx, metric, panelX + index * (metricW + 14), metricY, {
-      width: metricW,
-      height: isStory ? 92 : 74,
+  ctx.fillStyle = '#fff'
+  ctx.font = `950 ${22 * scale}px Inter, Arial, sans-serif`
+  ctx.fillText(label, x + 70 * scale, y + 39 * scale)
+  ctx.fillStyle = 'rgba(255,255,255,0.56)'
+  ctx.font = `850 ${13 * scale}px Inter, Arial, sans-serif`
+  ctx.fillText('workout sticker', x + 70 * scale, y + 56 * scale)
+}
+
+function drawPhotoStoryStickerOverlay(ctx, stats, options) {
+  const { width, height, caption, infoLevel, iconImage, accentColor, format } = options
+  const isStory = format === 'story'
+  const pad = isStory ? 70 : 54
+  const clusterW = isStory ? width - pad * 2 : width - pad * 2
+  const metricCount = isStory ? 3 : 3
+  const metrics = getCoreStickerMetrics(stats, infoLevel, metricCount)
+  const chipGap = isStory ? 16 : 12
+  const chipH = isStory ? 92 : 76
+  const chipW = (clusterW - chipGap * (metrics.length - 1)) / Math.max(1, metrics.length)
+  const quoteH = isStory ? 178 : 132
+  const startY = height - (isStory ? 455 : 315)
+
+  drawTinyBrandSticker(ctx, iconImage, pad, startY - (isStory ? 88 : 74), { scale: isStory ? 1 : 0.78 })
+
+  drawGlassPanel(ctx, pad, startY, clusterW, quoteH, isStory ? 44 : 34, {
+    fill: 'rgba(5,7,10,0.60)',
+    stroke: 'rgba(255,255,255,0.18)',
+    shadow: true,
+  })
+
+  ctx.fillStyle = '#fff'
+  ctx.font = `950 ${isStory ? 40 : 30}px Inter, Arial, sans-serif`
+  drawWrappedText(ctx, caption || 'Mais um treino concluído.', pad + 30, startY + (isStory ? 58 : 44), clusterW - 60, isStory ? 48 : 36, 2)
+
+  ctx.fillStyle = accentColor
+  ctx.font = `950 ${isStory ? 22 : 17}px Inter, Arial, sans-serif`
+  ctx.fillText(truncateText(ctx, stats.workoutName.toUpperCase(), clusterW - 60), pad + 30, startY + quoteH - 30)
+
+  metrics.forEach((metric, index) => {
+    drawStickerMetric(ctx, metric, pad + index * (chipW + chipGap), startY + quoteH + (isStory ? 18 : 14), {
+      width: chipW,
+      height: chipH,
       accentColor,
       compact: true,
     })
   })
+}
 
-  if (template === 'performance' || template === 'darkGlass') {
-    const extra = template === 'performance' ? stats.volumeLabel : `${stats.prCount} PR${stats.prCount === 1 ? '' : 's'}`
-    drawStickerPill(ctx, extra, width - pad - (isStory ? 310 : 230), isStory ? pad + 40 : pad + 12, {
-      maxWidth: isStory ? 310 : 230,
-      fontSize: isStory ? 28 : 21,
-      height: isStory ? 66 : 50,
-      color: '#fff',
-      fill: 'rgba(239,68,68,0.72)',
-      stroke: 'rgba(255,255,255,0.24)',
+function drawHeroPrStickerOverlay(ctx, stats, options) {
+  const { width, height, caption, iconImage, accentColor, format } = options
+  const isStory = format === 'story'
+  const pad = isStory ? 72 : 58
+  const hasPr = stats.prCount > 0
+  const heroW = isStory ? 455 : 330
+  const heroH = isStory ? 330 : 242
+  const heroX = pad
+  const heroY = isStory ? height - 780 : height - 555
+
+  drawTinyBrandSticker(ctx, iconImage, pad, heroY - (isStory ? 92 : 74), { scale: isStory ? 0.95 : 0.76, label: hasPr ? 'Novo PR' : 'ForgeFlow' })
+
+  drawGlassPanel(ctx, heroX, heroY, heroW, heroH, isStory ? 58 : 44, {
+    fill: hasPr ? 'rgba(30,20,4,0.76)' : 'rgba(8,10,14,0.72)',
+    stroke: hasPr ? 'rgba(250,204,21,0.38)' : 'rgba(255,255,255,0.18)',
+    shadow: true,
+  })
+
+  ctx.fillStyle = hasPr ? '#fde68a' : accentColor
+  ctx.font = `950 ${isStory ? 26 : 20}px Inter, Arial, sans-serif`
+  ctx.fillText(hasPr ? 'NOVO RECORDE' : 'TREINO CONCLUÍDO', heroX + 34, heroY + (isStory ? 60 : 46))
+
+  ctx.fillStyle = '#fff'
+  ctx.font = `950 ${isStory ? 100 : 72}px Inter, Arial, sans-serif`
+  ctx.fillText(hasPr ? `${stats.prCount} PR${stats.prCount > 1 ? 's' : ''}` : 'OK', heroX + 34, heroY + (isStory ? 162 : 118))
+
+  ctx.fillStyle = 'rgba(255,255,255,0.72)'
+  ctx.font = `850 ${isStory ? 24 : 18}px Inter, Arial, sans-serif`
+  const heroLine = hasPr ? getPrText(stats.prs[0]) : caption
+  drawWrappedText(ctx, heroLine, heroX + 34, heroY + (isStory ? 220 : 160), heroW - 68, isStory ? 32 : 25, 2)
+
+  const listX = isStory ? pad + 36 : pad + 20
+  const listY = heroY + heroH + (isStory ? 22 : 16)
+  const listW = isStory ? width - pad * 2 - 42 : width - pad * 2 - 22
+  const items = hasPr
+    ? stats.prs.slice(1, isStory ? 3 : 2).map(getPrText)
+    : [`${stats.volumeLabel} de volume`, `${stats.completedSetCount} séries registradas`]
+
+  items.forEach((item, index) => {
+    drawStickerPill(ctx, item, listX, listY + index * (isStory ? 72 : 56), {
+      maxWidth: listW,
+      fontSize: isStory ? 23 : 17,
+      height: isStory ? 58 : 46,
+      fill: 'rgba(7,9,13,0.70)',
+      stroke: 'rgba(255,255,255,0.16)',
+      color: index === 0 && hasPr ? '#fde68a' : '#fff',
+    })
+  })
+
+  if (hasPr && stats.prs.length > (isStory ? 3 : 2)) {
+    drawStickerPill(ctx, `+${stats.prs.length - (isStory ? 3 : 2)} PRs`, listX, listY + items.length * (isStory ? 72 : 56), {
+      maxWidth: isStory ? 210 : 160,
+      fontSize: isStory ? 22 : 17,
+      height: isStory ? 54 : 44,
+      fill: 'rgba(250,204,21,0.16)',
+      stroke: 'rgba(250,204,21,0.28)',
+      color: '#fde68a',
     })
   }
+}
+
+function drawPerformanceStickerOverlay(ctx, stats, options) {
+  const { width, height, infoLevel, iconImage, accentColor, format } = options
+  const isStory = format === 'story'
+  const pad = isStory ? 68 : 52
+  const cardW = isStory ? width - pad * 2 : width - pad * 2
+  const cardH = isStory ? 430 : 305
+  const cardX = pad
+  const cardY = height - (isStory ? 610 : 430)
+
+  drawGlassPanel(ctx, cardX, cardY, cardW, cardH, isStory ? 50 : 38, {
+    fill: 'rgba(5,8,14,0.72)',
+    stroke: 'rgba(255,255,255,0.18)',
+    shadow: true,
+  })
+
+  drawTinyBrandSticker(ctx, iconImage, cardX + 26, cardY + 24, { scale: isStory ? 0.82 : 0.64, label: 'Performance' })
+
+  ctx.fillStyle = accentColor
+  ctx.font = `950 ${isStory ? 22 : 17}px Inter, Arial, sans-serif`
+  ctx.fillText('VOLUME TOTAL', cardX + 32, cardY + (isStory ? 132 : 98))
+  ctx.fillStyle = '#fff'
+  ctx.font = `950 ${isStory ? 74 : 52}px Inter, Arial, sans-serif`
+  ctx.fillText(truncateText(ctx, stats.volumeLabel, cardW - 64), cardX + 32, cardY + (isStory ? 208 : 152))
+
+  const metrics = getCoreStickerMetrics(stats, infoLevel, 4).filter((metric) => metric.label !== 'Volume').slice(0, 3)
+  const chipW = (cardW - 64 - 18 * 2) / 3
+  const chipY = cardY + (isStory ? 270 : 198)
+  metrics.forEach((metric, index) => {
+    drawStickerMetric(ctx, metric, cardX + 32 + index * (chipW + 18), chipY, {
+      width: chipW,
+      height: isStory ? 102 : 78,
+      accentColor,
+      compact: true,
+      fill: 'rgba(255,255,255,0.072)',
+    })
+  })
+
+  const best = stats.topWeightSet ? getSetLabel(stats.topWeightSet) : stats.workoutName
+  drawStickerPill(ctx, best, cardX + 32, cardY + cardH + (isStory ? 20 : 14), {
+    maxWidth: cardW - 64,
+    fontSize: isStory ? 23 : 18,
+    height: isStory ? 58 : 46,
+    fill: 'rgba(239,68,68,0.74)',
+    stroke: 'rgba(255,255,255,0.22)',
+  })
+}
+
+function drawEditorialStickerOverlay(ctx, stats, options) {
+  const { width, height, caption, infoLevel, iconImage, accentColor, format } = options
+  const isStory = format === 'story'
+  const pad = isStory ? 76 : 60
+  const cardW = isStory ? width - pad * 2 : width - pad * 2
+  const cardH = isStory ? 390 : 282
+  const cardX = pad
+  const cardY = height - (isStory ? 560 : 392)
+
+  drawGlassPanel(ctx, cardX, cardY, cardW, cardH, isStory ? 46 : 36, {
+    fill: 'rgba(255,255,255,0.92)',
+    stroke: 'rgba(255,255,255,0.78)',
+    shadow: true,
+  })
+
+  ctx.fillStyle = accentColor
+  ctx.font = `950 ${isStory ? 24 : 18}px Inter, Arial, sans-serif`
+  ctx.fillText('FORGEFLOW NOTE', cardX + 34, cardY + (isStory ? 58 : 44))
+
+  ctx.fillStyle = '#0f1115'
+  ctx.font = `950 ${isStory ? 48 : 34}px Inter, Arial, sans-serif`
+  drawWrappedText(ctx, caption || 'Disciplina acima da motivação.', cardX + 34, cardY + (isStory ? 126 : 94), cardW - 68, isStory ? 58 : 42, isStory ? 3 : 2)
+
+  ctx.fillStyle = 'rgba(15,17,21,0.68)'
+  ctx.font = `850 ${isStory ? 26 : 19}px Inter, Arial, sans-serif`
+  ctx.fillText(truncateText(ctx, `${stats.workoutName} • ${stats.durationLabel}`, cardW - 68), cardX + 34, cardY + cardH - (isStory ? 52 : 40))
+
+  const metrics = getCoreStickerMetrics(stats, infoLevel, 2)
+  const chipY = cardY + cardH + (isStory ? 18 : 14)
+  metrics.forEach((metric, index) => {
+    drawStickerPill(ctx, `${metric.value} ${metric.label}`, index === 0 ? cardX : width - pad, chipY + index * 0, {
+      align: index === 0 ? 'left' : 'right',
+      maxWidth: isStory ? 340 : 245,
+      fontSize: isStory ? 22 : 17,
+      height: isStory ? 54 : 42,
+      fill: 'rgba(8,10,14,0.70)',
+      color: '#fff',
+    })
+  })
+
+  drawTinyBrandSticker(ctx, iconImage, cardX, cardY - (isStory ? 86 : 68), { scale: isStory ? 0.82 : 0.64 })
+}
+
+function drawDarkGlassStickerOverlay(ctx, stats, options) {
+  const { width, height, caption, infoLevel, iconImage, accentColor, format } = options
+  const isStory = format === 'story'
+  const pad = isStory ? 70 : 54
+  const startY = height - (isStory ? 640 : 455)
+  const metrics = getCoreStickerMetrics(stats, infoLevel, 4)
+
+  drawTinyBrandSticker(ctx, iconImage, pad, startY - (isStory ? 92 : 72), { scale: isStory ? 0.9 : 0.7, label: 'Dark Glass' })
+
+  drawStickerPill(ctx, stats.prCount > 0 ? `${stats.prCount} PR${stats.prCount > 1 ? 's' : ''} no treino` : 'Treino registrado', width - pad, startY - (isStory ? 92 : 70), {
+    align: 'right',
+    maxWidth: isStory ? 380 : 280,
+    fontSize: isStory ? 24 : 18,
+    height: isStory ? 60 : 46,
+    fill: 'rgba(239,68,68,0.78)',
+    stroke: 'rgba(255,255,255,0.22)',
+  })
+
+  drawGlassPanel(ctx, pad, startY, width - pad * 2, isStory ? 215 : 150, isStory ? 42 : 32, {
+    fill: 'rgba(7,9,13,0.66)',
+    stroke: 'rgba(255,255,255,0.18)',
+    shadow: true,
+  })
+
+  ctx.fillStyle = '#fff'
+  ctx.font = `950 ${isStory ? 38 : 28}px Inter, Arial, sans-serif`
+  drawWrappedText(ctx, stats.workoutName, pad + 30, startY + (isStory ? 62 : 46), width - pad * 2 - 60, isStory ? 46 : 34, 2)
+
+  ctx.fillStyle = 'rgba(255,255,255,0.70)'
+  ctx.font = `850 ${isStory ? 24 : 18}px Inter, Arial, sans-serif`
+  drawWrappedText(ctx, caption, pad + 30, startY + (isStory ? 160 : 112), width - pad * 2 - 60, isStory ? 32 : 24, 1)
+
+  const gridY = startY + (isStory ? 240 : 170)
+  const gap = isStory ? 16 : 12
+  const chipW = (width - pad * 2 - gap) / 2
+  metrics.slice(0, 4).forEach((metric, index) => {
+    const x = pad + (index % 2) * (chipW + gap)
+    const y = gridY + Math.floor(index / 2) * (isStory ? 108 : 82)
+    drawStickerMetric(ctx, metric, x, y, {
+      width: chipW,
+      height: isStory ? 92 : 70,
+      accentColor,
+      compact: true,
+      fill: 'rgba(255,255,255,0.075)',
+    })
+  })
+}
+
+function drawStickerOverlayContent(ctx, stats, options) {
+  if (options.template === 'heroPr') {
+    drawHeroPrStickerOverlay(ctx, stats, options)
+    return
+  }
+
+  if (options.template === 'performance') {
+    drawPerformanceStickerOverlay(ctx, stats, options)
+    return
+  }
+
+  if (options.template === 'editorial') {
+    drawEditorialStickerOverlay(ctx, stats, options)
+    return
+  }
+
+  if (options.template === 'darkGlass') {
+    drawDarkGlassStickerOverlay(ctx, stats, options)
+    return
+  }
+
+  drawPhotoStoryStickerOverlay(ctx, stats, options)
 }
 
 function drawTransformedOverlay(ctx, stats, options) {
@@ -1711,6 +2004,8 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   const userPhotoRef = useRef(null)
   const selectedFormatRef = useRef(SHARE_FORMATS[0])
   const activeEditLayerRef = useRef('overlay')
+  const previewFrameRef = useRef(0)
+  const snapGuideRef = useRef({ x: false, y: false })
 
   const [template, setTemplate] = useState('photoStory')
   const [format, setFormat] = useState('story')
@@ -1724,6 +2019,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   const [userPhoto, setUserPhoto] = useState(null)
   const [photoTransform, setPhotoTransform] = useState(DEFAULT_PHOTO_TRANSFORM)
   const [overlayTransform, setOverlayTransform] = useState(DEFAULT_OVERLAY_TRANSFORM)
+  const [snapGuide, setSnapGuide] = useState({ x: false, y: false })
   const [status, setStatus] = useState('')
   const [busy, setBusy] = useState(false)
   const [ready, setReady] = useState(false)
@@ -1764,6 +2060,13 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     selectedFormatRef.current = selectedFormat
   }, [selectedFormat])
 
+  useEffect(() => () => {
+    if (previewFrameRef.current) {
+      window.cancelAnimationFrame(previewFrameRef.current)
+      previewFrameRef.current = 0
+    }
+  }, [])
+
   useEffect(() => {
     if (!open || !session || !canvasRef.current) return undefined
 
@@ -1779,10 +2082,10 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       phrase: caption,
       backgroundMode,
       selectedBackground,
-      userPhoto,
-      photoTransform,
+      userPhoto: userPhotoRef.current || userPhoto,
+      photoTransform: photoTransformRef.current,
       overlayMode,
-      overlayTransform,
+      overlayTransform: overlayTransformRef.current,
     })
       .then(() => {
         if (active) setReady(true)
@@ -1830,6 +2133,68 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   }, [backgroundMode, selectedFormat.height, selectedFormat.width, userPhoto])
 
   if (!open || !session || !stats) return null
+
+  function drawPreviewWithRefs() {
+    if (!canvasRef.current) return
+
+    drawWorkoutShareCanvas(canvasRef.current, {
+      session,
+      meta,
+      template,
+      format,
+      infoLevel,
+      phrase: caption,
+      backgroundMode,
+      selectedBackground,
+      userPhoto: userPhotoRef.current,
+      photoTransform: photoTransformRef.current,
+      overlayMode,
+      overlayTransform: overlayTransformRef.current,
+    }).catch((error) => {
+      console.error(error)
+    })
+  }
+
+  function schedulePreviewRedraw() {
+    if (previewFrameRef.current || typeof window === 'undefined') return
+
+    previewFrameRef.current = window.requestAnimationFrame(() => {
+      previewFrameRef.current = 0
+      drawPreviewWithRefs()
+    })
+  }
+
+  function updateSnapGuide(nextGuide) {
+    const normalized = {
+      x: Boolean(nextGuide?.x),
+      y: Boolean(nextGuide?.y),
+    }
+    const current = snapGuideRef.current
+
+    if (current.x === normalized.x && current.y === normalized.y) return
+
+    snapGuideRef.current = normalized
+    setSnapGuide(normalized)
+  }
+
+  function applyCenterSnap(transform) {
+    const currentFormat = selectedFormatRef.current
+    const threshold = Math.max(28, Math.min(currentFormat.width, currentFormat.height) * 0.04)
+    const next = { ...transform }
+    const guide = { x: false, y: false }
+
+    if (Math.abs(safeNumber(next.x)) <= threshold) {
+      next.x = 0
+      guide.x = true
+    }
+
+    if (Math.abs(safeNumber(next.y)) <= threshold) {
+      next.y = 0
+      guide.y = true
+    }
+
+    return { transform: next, guide }
+  }
 
   function getCanvasPoint(event) {
     const rect = canvasRef.current?.getBoundingClientRect()
@@ -1896,28 +2261,53 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     }
   }
 
-  function applyPhotoTransform(nextTransform) {
+  function applyPhotoTransform(nextTransform, options = {}) {
     const currentPhoto = userPhotoRef.current
     const currentFormat = selectedFormatRef.current
     const clamped = clampPhotoTransform(nextTransform, currentPhoto, currentFormat.width, currentFormat.height)
     photoTransformRef.current = clamped
-    setPhotoTransform(clamped)
-  }
 
-  function applyOverlayTransform(nextTransform) {
-    const currentFormat = selectedFormatRef.current
-    const clamped = clampOverlayTransform(nextTransform, currentFormat.width, currentFormat.height)
-    overlayTransformRef.current = clamped
-    setOverlayTransform(clamped)
-  }
-
-  function applyLayerTransform(layer, nextTransform) {
-    if (layer === 'photo') {
-      applyPhotoTransform(nextTransform)
-      return
+    if (options.live) {
+      schedulePreviewRedraw()
+      return clamped
     }
 
-    applyOverlayTransform(nextTransform)
+    setPhotoTransform(clamped)
+    schedulePreviewRedraw()
+    return clamped
+  }
+
+  function applyOverlayTransform(nextTransform, options = {}) {
+    const currentFormat = selectedFormatRef.current
+    let transformToApply = nextTransform
+
+    if (options.snap) {
+      const snapped = applyCenterSnap(nextTransform)
+      transformToApply = snapped.transform
+      updateSnapGuide(snapped.guide)
+    } else if (!options.keepGuide) {
+      updateSnapGuide({ x: false, y: false })
+    }
+
+    const clamped = clampOverlayTransform(transformToApply, currentFormat.width, currentFormat.height)
+    overlayTransformRef.current = clamped
+
+    if (options.live) {
+      schedulePreviewRedraw()
+      return clamped
+    }
+
+    setOverlayTransform(clamped)
+    schedulePreviewRedraw()
+    return clamped
+  }
+
+  function applyLayerTransform(layer, nextTransform, options = {}) {
+    if (layer === 'photo') {
+      return applyPhotoTransform(nextTransform, options)
+    }
+
+    return applyOverlayTransform(nextTransform, options)
   }
 
   function handlePointerDown(event) {
@@ -1953,6 +2343,9 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
         ...gesture.startTransform,
         x: safeNumber(gesture.startTransform.x) + current.canvas.x - gesture.startPoint.x,
         y: safeNumber(gesture.startTransform.y) + current.canvas.y - gesture.startPoint.y,
+      }, {
+        live: true,
+        snap: gesture.layer === 'overlay',
       })
       return
     }
@@ -1977,7 +2370,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
         scale: nextScale,
         x: nextImageCenter.x - currentFormat.width / 2,
         y: nextImageCenter.y - currentFormat.height / 2,
-      })
+      }, { live: true })
     }
   }
 
@@ -1997,6 +2390,9 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       startGestureFromPointers()
     } else {
       gestureRef.current = null
+      setPhotoTransform(photoTransformRef.current)
+      setOverlayTransform(overlayTransformRef.current)
+      updateSnapGuide({ x: false, y: false })
     }
   }
 
@@ -2010,12 +2406,16 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
 
     try {
       const nextPhoto = await createUserPhotoFromFile(file)
+      userPhotoRef.current = nextPhoto
+      photoTransformRef.current = PHOTO_FIT_TRANSFORM
+      overlayTransformRef.current = DEFAULT_OVERLAY_TRANSFORM
       setUserPhoto(nextPhoto)
       setBackgroundMode('photo')
       setOverlayMode('stickers')
       setActiveEditLayer('overlay')
       setPhotoTransform(PHOTO_FIT_TRANSFORM)
-      setStatus('Foto aplicada. As informações viraram figurinhas; selecione Foto ou Informações para mover e dar zoom no preview.')
+      setOverlayTransform(DEFAULT_OVERLAY_TRANSFORM)
+      setStatus(isLikelyHeicFile(file) ? 'Foto HEIC convertida pelo Android e aplicada como fundo. As informações ficam em figurinhas por cima.' : 'Foto aplicada como fundo. As informações ficam em figurinhas por cima.')
     } catch (error) {
       console.error(error)
       setStatus(error?.message || 'Não foi possível carregar essa foto.')
@@ -2071,10 +2471,10 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       phrase: caption,
       backgroundMode,
       selectedBackground,
-      userPhoto,
-      photoTransform,
+      userPhoto: userPhotoRef.current || userPhoto,
+      photoTransform: photoTransformRef.current,
       overlayMode,
-      overlayTransform,
+      overlayTransform: overlayTransformRef.current,
     })
 
     return canvasToBlob(canvasRef.current, mimeType, quality)
@@ -2094,10 +2494,10 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       phrase: caption,
       backgroundMode,
       selectedBackground,
-      userPhoto,
-      photoTransform,
+      userPhoto: userPhotoRef.current || userPhoto,
+      photoTransform: photoTransformRef.current,
       overlayMode,
-      overlayTransform,
+      overlayTransform: overlayTransformRef.current,
     })
 
     const dataUrl = canvasRef.current.toDataURL(mimeType, quality)
@@ -2310,12 +2710,8 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
               onPointerLeave={handlePointerUp}
             />
 
-            {canEditPreview && (
-              <div className="ff-share-studio__gesture-hint" aria-hidden="true">
-                <strong>{activeEditLayer === 'photo' ? 'Editando foto' : 'Editando figurinhas'}</strong>
-                <span>Arraste para mover • dois dedos para zoom</span>
-              </div>
-            )}
+            {snapGuide.x && <span className="ff-share-studio__snap-line is-vertical" aria-hidden="true" />}
+            {snapGuide.y && <span className="ff-share-studio__snap-line is-horizontal" aria-hidden="true" />}
 
             {!ready && (
               <div className="ff-share-studio__loading">

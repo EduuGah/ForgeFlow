@@ -13713,3 +13713,75 @@ body.ff-share-studio-open .mobile-bottom-nav {
     bottom: 0.85rem;
   }
 }
+
+/* ForgeFlow 22/06 - Share Studio V8: HEIC, snap center e stickers premium */
+.ff-share-studio__gesture-hint {
+  display: none !important;
+}
+
+.ff-share-studio__preview {
+  isolation: isolate;
+}
+
+.ff-share-studio__snap-line {
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow:
+    0 0 0 1px rgba(239, 68, 68, 0.45),
+    0 0 22px rgba(239, 68, 68, 0.5);
+}
+
+.ff-share-studio__snap-line.is-vertical {
+  top: 0.9rem;
+  bottom: 0.9rem;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+}
+
+.ff-share-studio__snap-line.is-horizontal {
+  right: 0.9rem;
+  left: 0.9rem;
+  top: 50%;
+  height: 2px;
+  transform: translateY(-50%);
+}
+
+.ff-share-studio__canvas.editing-overlay {
+  outline: 2px solid rgba(239, 68, 68, 0.18);
+  outline-offset: 4px;
+}
+
+.ff-share-studio__canvas.editing-photo {
+  outline: 2px solid rgba(14, 165, 255, 0.18);
+  outline-offset: 4px;
+}
+
+.ff-share-studio__overlay-tools button,
+.ff-share-studio__photo-tools button {
+  touch-action: manipulation;
+}
+
+@media (max-width: 767px) {
+  .ff-share-studio__preview {
+    max-height: none !important;
+    padding: 8px !important;
+  }
+
+  .ff-share-studio__canvas.is-story {
+    max-width: min(88vw, 390px) !important;
+    max-height: 54dvh !important;
+  }
+
+  .ff-share-studio__canvas.is-feed {
+    max-width: min(88vw, 390px) !important;
+    max-height: 48dvh !important;
+  }
+
+  .ff-share-studio__canvas {
+    max-height: 54dvh !important;
+  }
+}

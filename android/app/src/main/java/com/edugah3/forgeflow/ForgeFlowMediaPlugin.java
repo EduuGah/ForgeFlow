@@ -6,6 +6,9 @@ import android.content.ClipData;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.ImageDecoder;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -18,14 +21,56 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.util.Locale;
 
 @CapacitorPlugin(name = "ForgeFlowMedia")
 public class ForgeFlowMediaPlugin extends Plugin {
     private static final String INSTAGRAM_PACKAGE = "com.instagram.android";
+
+
+    @PluginMethod
+    public void normalizeImageToJpeg(PluginCall call) {
+        try {
+            byte[] bytes = decodeBase64(call.getString("base64"));
+            int maxSide = Math.max(720, call.getInt("maxSide", 2600));
+            int quality = Math.max(72, Math.min(96, call.getInt("quality", 90)));
+
+            Bitmap decoded = decodeBitmap(bytes);
+            Bitmap normalized = scaleBitmap(decoded, maxSide);
+
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            boolean compressed = normalized.compress(Bitmap.CompressFormat.JPEG, quality, outputStream);
+            if (!compressed) {
+                throw new Exception("Android não conseguiu converter a imagem para JPG.");
+            }
+
+            byte[] jpegBytes = outputStream.toByteArray();
+            if (jpegBytes.length == 0) {
+                throw new Exception("Imagem JPG ficou vazia após conversão.");
+            }
+
+            String jpegBase64 = Base64.encodeToString(jpegBytes, Base64.NO_WRAP);
+
+            JSObject result = new JSObject();
+            result.put("converted", true);
+            result.put("mimeType", "image/jpeg");
+            result.put("width", normalized.getWidth());
+            result.put("height", normalized.getHeight());
+            result.put("dataUrl", "data:image/jpeg;base64," + jpegBase64);
+            call.resolve(result);
+
+            if (normalized != decoded && !decoded.isRecycled()) {
+                decoded.recycle();
+            }
+        } catch (Exception exception) {
+            call.reject("Não foi possível converter a imagem para JPG no Android: " + exception.getMessage(), exception);
+        }
+    }
 
     @PluginMethod
     public void saveImageToGallery(PluginCall call) {
@@ -86,6 +131,45 @@ public class ForgeFlowMediaPlugin extends Plugin {
         } catch (Exception exception) {
             call.reject("Não foi possível abrir o Instagram Stories com a imagem: " + exception.getMessage(), exception);
         }
+    }
+
+
+    private Bitmap decodeBitmap(byte[] bytes) throws Exception {
+        Bitmap bitmap = null;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            ImageDecoder.Source source = ImageDecoder.createSource(ByteBuffer.wrap(bytes));
+            bitmap = ImageDecoder.decodeBitmap(source, (decoder, info, src) -> {
+                decoder.setAllocator(ImageDecoder.ALLOCATOR_SOFTWARE);
+                decoder.setMutableRequired(false);
+            });
+        } else {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+            bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
+        }
+
+        if (bitmap == null || bitmap.getWidth() <= 0 || bitmap.getHeight() <= 0) {
+            throw new Exception("Formato de imagem não suportado pelo Android.");
+        }
+
+        return bitmap;
+    }
+
+    private Bitmap scaleBitmap(Bitmap bitmap, int maxSide) {
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+        int longest = Math.max(width, height);
+
+        if (longest <= maxSide) {
+            return bitmap;
+        }
+
+        float ratio = (float) maxSide / (float) longest;
+        int targetWidth = Math.max(1, Math.round(width * ratio));
+        int targetHeight = Math.max(1, Math.round(height * ratio));
+
+        return Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true);
     }
 
     private byte[] decodeBase64(String base64) throws Exception {
