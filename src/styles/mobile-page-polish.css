@@ -13359,3 +13359,235 @@ body.ff-share-studio-open .mobile-bottom-nav {
     min-height: 4.15rem;
   }
 }
+
+/* ForgeFlow 22/06 - Share Studio V6: foto própria real, gestos pointer/pinch e templates premium */
+.ff-share-studio__format-grid,
+.ff-share-studio__background-mode {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.ff-share-studio__format-grid button,
+.ff-share-studio__background-mode button,
+.ff-share-studio__photo-tools button {
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.048);
+  color: rgba(255, 255, 255, 0.74);
+  text-align: left;
+  font-weight: 900;
+}
+
+.ff-share-studio__format-grid button {
+  min-height: 4.35rem;
+  padding: 0.72rem;
+}
+
+.ff-share-studio__background-mode button,
+.ff-share-studio__photo-tools button {
+  min-height: 2.75rem;
+  padding: 0 0.82rem;
+  text-align: center;
+}
+
+.ff-share-studio__format-grid button.is-active,
+.ff-share-studio__background-mode button.is-active,
+.ff-share-studio__photo-tools button:hover {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.14);
+  color: #fff;
+}
+
+.ff-share-studio__format-grid strong {
+  display: block;
+  color: inherit;
+  font-size: 0.9rem;
+  line-height: 1.12;
+}
+
+.ff-share-studio__format-grid small {
+  display: -webkit-box;
+  margin-top: 0.25rem;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 0.69rem;
+  line-height: 1.18;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.ff-share-studio__canvas.is-editing-photo {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  overscroll-behavior: contain;
+}
+
+.ff-share-studio__canvas.is-editing-photo:active {
+  cursor: grabbing;
+}
+
+.ff-share-studio__gesture-hint {
+  position: absolute;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  display: grid;
+  gap: 0.12rem;
+  max-width: min(16rem, calc(100% - 2.5rem));
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 1rem;
+  background: rgba(0, 0, 0, 0.58);
+  padding: 0.62rem 0.76rem;
+  color: #fff;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(14px);
+}
+
+.ff-share-studio__gesture-hint strong {
+  font-size: 0.78rem;
+  font-weight: 950;
+  line-height: 1.1;
+}
+
+.ff-share-studio__gesture-hint span {
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.ff-share-studio__photo-tools {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.ff-share-studio__photo-tools button {
+  border-radius: 0.85rem;
+  padding: 0 0.5rem;
+  font-size: 0.73rem;
+  white-space: nowrap;
+}
+
+.ff-share-studio__background-grid button {
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.ff-share-studio__background-grid button:hover,
+.ff-share-studio__template-grid button:hover,
+.ff-share-studio__format-grid button:hover,
+.ff-share-studio__info-levels button:hover {
+  transform: translateY(-1px);
+}
+
+.ff-share-studio__bg-swatch.is-forgeRed {
+  background: radial-gradient(circle at 70% 18%, rgba(239, 68, 68, 0.85), transparent 44%), linear-gradient(135deg, #05070b, #171717 56%, #050505);
+}
+
+.ff-share-studio__bg-swatch.is-obsidian {
+  background: linear-gradient(135deg, #05070b, #12151c 54%, #020203);
+}
+
+.ff-share-studio__bg-swatch.is-carbonGrid {
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.1) 0 1px, transparent 1px 8px), linear-gradient(135deg, #07090d, #171a1f);
+}
+
+.ff-share-studio__bg-swatch.is-ember {
+  background: radial-gradient(circle at 25% 70%, rgba(249, 115, 22, 0.82), transparent 42%), linear-gradient(135deg, #190805, #070404);
+}
+
+.ff-share-studio__bg-swatch.is-neonFlow {
+  background: linear-gradient(135deg, rgba(14, 165, 255, 0.6), transparent 28%), linear-gradient(315deg, rgba(239, 68, 68, 0.62), transparent 35%), #030712;
+}
+
+.ff-share-studio__bg-swatch.is-nightPr {
+  background: radial-gradient(circle at 72% 22%, rgba(168, 85, 247, 0.8), transparent 45%), linear-gradient(135deg, #10081f, #050408);
+}
+
+.ff-share-studio__bg-swatch.is-topoLines {
+  background: repeating-radial-gradient(circle at 20% 25%, rgba(255, 255, 255, 0.18) 0 1px, transparent 1px 7px), linear-gradient(135deg, #061012, #121719);
+}
+
+.ff-share-studio__bg-swatch.is-steel {
+  background: linear-gradient(135deg, #151922, #3f4652 55%, #05070a);
+}
+
+.ff-share-studio__bg-swatch.is-aurora {
+  background: radial-gradient(circle at 24% 70%, rgba(74, 222, 128, 0.58), transparent 42%), radial-gradient(circle at 74% 18%, rgba(34, 211, 238, 0.6), transparent 44%), #07111f;
+}
+
+.ff-share-studio__bg-swatch.is-blackMarble {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0 1px, transparent 1px 48%), linear-gradient(135deg, #070707, #171717, #020202);
+}
+
+.ff-share-studio__bg-swatch.is-redSmoke {
+  background: radial-gradient(circle at 40% 60%, rgba(239, 68, 68, 0.62), transparent 42%), linear-gradient(135deg, #140506, #121113, #040404);
+}
+
+.ff-share-studio__bg-swatch.is-gymLight {
+  background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.4), transparent 32%), linear-gradient(135deg, #18100d, #111827, #050505);
+}
+
+.ff-share-studio__caption span {
+  letter-spacing: 0.01em;
+}
+
+.ff-share-studio__caption textarea::placeholder {
+  color: rgba(255, 255, 255, 0.34);
+}
+
+.ff-share-studio__photo-card.has-photo strong {
+  white-space: normal;
+  word-break: break-word;
+}
+
+@media (max-width: 767px) {
+  .ff-share-studio__format-grid {
+    grid-template-columns: repeat(2, minmax(8.6rem, 1fr));
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
+  }
+
+  .ff-share-studio__format-grid button {
+    min-height: 4rem;
+  }
+
+  .ff-share-studio__template-grid {
+    grid-template-columns: repeat(5, minmax(9.25rem, 1fr)) !important;
+    overflow-x: auto !important;
+    padding-bottom: 0.2rem;
+  }
+
+  .ff-share-studio__template-grid button {
+    min-height: 4.65rem !important;
+  }
+
+  .ff-share-studio__photo-tools {
+    grid-template-columns: repeat(4, minmax(5rem, 1fr));
+    overflow-x: auto;
+    padding-bottom: 0.1rem;
+  }
+
+  .ff-share-studio__photo-tools button {
+    min-height: 2.45rem;
+  }
+
+  .ff-share-studio__gesture-hint {
+    right: 0.85rem;
+    bottom: 0.85rem;
+    padding: 0.5rem 0.62rem;
+  }
+
+  .ff-share-studio__canvas.is-story {
+    max-width: min(72vw, 300px) !important;
+    max-height: 38dvh !important;
+  }
+
+  .ff-share-studio__canvas.is-feed {
+    max-width: min(82vw, 330px) !important;
+    max-height: 38dvh !important;
+  }
+}

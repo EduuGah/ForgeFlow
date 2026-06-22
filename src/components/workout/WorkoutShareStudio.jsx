@@ -30,80 +30,71 @@ import {
   getSessionVolumeFromSets,
 } from '../../features/history/historyUtils'
 
-const SHARE_TEMPLATES = [
+const SHARE_FORMATS = [
   {
     id: 'story',
-    label: 'Story',
-    description: 'Vertical 9:16 para Instagram, WhatsApp e status.',
+    label: 'Story 9:16',
+    description: 'Ideal para Instagram Stories, WhatsApp e status.',
     width: 1080,
     height: 1920,
-    tag: 'Treino concluído',
   },
   {
     id: 'feed',
-    label: 'Feed',
-    description: 'Quadrado 1:1 com resumo equilibrado.',
+    label: 'Feed 1:1',
+    description: 'Quadrado para feed e compartilhamento geral.',
     width: 1080,
     height: 1080,
-    tag: 'Resumo do treino',
+  },
+]
+
+const SHARE_TEMPLATES = [
+  {
+    id: 'photoStory',
+    label: 'Photo Story',
+    description: 'Foto grande, título forte e chips premium na base.',
+    tag: 'Treino concluído',
   },
   {
-    id: 'minimal',
-    label: 'Minimalista',
-    description: 'Pouco texto, visual limpo e elegante.',
-    width: 1080,
-    height: 1350,
-    tag: 'ForgeFlow',
-  },
-  {
-    id: 'pr',
-    label: 'Foco PR',
-    description: 'Dá destaque aos recordes batidos.',
-    width: 1080,
-    height: 1350,
+    id: 'heroPr',
+    label: 'Hero PR',
+    description: 'Recordes em destaque com selo e lista curta.',
     tag: 'Novo recorde',
   },
   {
-    id: 'volume',
-    label: 'Volume',
-    description: 'Mostra o volume total como protagonista.',
-    width: 1080,
-    height: 1350,
-    tag: 'Volume acumulado',
+    id: 'performance',
+    label: 'Performance',
+    description: 'Dados do treino em cards técnicos e modernos.',
+    tag: 'Performance',
   },
   {
-    id: 'quote',
-    label: 'Frase',
-    description: 'Legenda motivacional em destaque.',
-    width: 1080,
-    height: 1350,
-    tag: 'Registro do dia',
+    id: 'editorial',
+    label: 'Editorial Minimal',
+    description: 'Clean, elegante e com frase protagonista.',
+    tag: 'ForgeFlow editorial',
   },
   {
-    id: 'photo',
-    label: 'Foto',
-    description: 'Usa uma foto própria como fundo do story.',
-    width: 1080,
-    height: 1920,
-    tag: 'Treino registrado',
+    id: 'darkGlass',
+    label: 'Dark Glass',
+    description: 'Gradientes, painéis translúcidos e badges.',
+    tag: 'Registro premium',
   },
 ]
 
 const INFO_LEVELS = [
   {
     id: 'light',
-    label: 'Poucas',
+    label: 'Leve',
     description: 'Nome, data e duração.',
   },
   {
     id: 'medium',
-    label: 'Médias',
+    label: 'Médio',
     description: 'Tempo, volume, exercícios e PRs.',
   },
   {
     id: 'full',
-    label: 'Completas',
-    description: 'Inclui séries, local e frase.',
+    label: 'Completo',
+    description: 'Inclui séries, local e detalhes extras.',
   },
 ]
 
@@ -116,52 +107,35 @@ const SHARE_PHRASES = [
   'Cada série conta.',
   'ForgeFlow registrou mais uma batalha.',
   'Mais volume, mais força, mais evolução.',
+  'Sem pressa. Sem pausa.',
+  'Força construída série por série.',
 ]
-
 
 const SHARE_BACKGROUNDS = [
-  {
-    id: 'forge',
-    label: 'Forge red',
-    description: 'Preto premium com brilho vermelho.',
-  },
-  {
-    id: 'obsidian',
-    label: 'Obsidian',
-    description: 'Escuro limpo e elegante.',
-  },
-  {
-    id: 'carbon',
-    label: 'Carbon grid',
-    description: 'Textura técnica com grade sutil.',
-  },
-  {
-    id: 'ember',
-    label: 'Ember',
-    description: 'Energia quente de treino pesado.',
-  },
-  {
-    id: 'neon',
-    label: 'Neon flow',
-    description: 'Linhas modernas em alto contraste.',
-  },
-  {
-    id: 'purple',
-    label: 'Night PR',
-    description: 'Roxo escuro para cards de recorde.',
-  },
-  {
-    id: 'topo',
-    label: 'Topo lines',
-    description: 'Linhas orgânicas de mapa/progresso.',
-  },
-  {
-    id: 'photo',
-    label: 'Foto própria',
-    description: 'Usa a imagem escolhida da galeria.',
-  },
+  { id: 'forgeRed', label: 'Forge Red', description: 'Preto premium com brilho vermelho.' },
+  { id: 'obsidian', label: 'Obsidian', description: 'Escuro limpo e elegante.' },
+  { id: 'carbonGrid', label: 'Carbon Grid', description: 'Grade técnica sutil.' },
+  { id: 'ember', label: 'Ember', description: 'Energia quente de treino pesado.' },
+  { id: 'neonFlow', label: 'Neon Flow', description: 'Linhas modernas em alto contraste.' },
+  { id: 'nightPr', label: 'Night PR', description: 'Roxo escuro para recordes.' },
+  { id: 'topoLines', label: 'Topo Lines', description: 'Linhas orgânicas de progresso.' },
+  { id: 'steel', label: 'Steel', description: 'Cinza metálico premium.' },
+  { id: 'aurora', label: 'Aurora', description: 'Brilho colorido suave.' },
+  { id: 'blackMarble', label: 'Black Marble', description: 'Mármore escuro abstrato.' },
+  { id: 'redSmoke', label: 'Red Smoke', description: 'Fumaça vermelha dramática.' },
+  { id: 'gymLight', label: 'Gym Light', description: 'Luz de academia cinematográfica.' },
 ]
 
+const DEFAULT_PHOTO_TRANSFORM = {
+  x: 0,
+  y: 0,
+  scale: 1,
+  fit: 'cover',
+}
+
+const PHOTO_MIN_SCALE = 1
+const PHOTO_MAX_SCALE = 3.35
+const IMAGE_CACHE = new Map()
 
 function getExerciseName(exercise = {}) {
   return (
@@ -174,6 +148,24 @@ function getExerciseName(exercise = {}) {
 
 function safeNumber(value) {
   return Number.isFinite(Number(value)) ? Number(value) : 0
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value))
+}
+
+function getShortDate(dateString) {
+  if (!dateString) return 'Sem data'
+
+  try {
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: '2-digit',
+    })
+  } catch {
+    return 'Sem data'
+  }
 }
 
 function getWorkoutStats(session = {}, meta = {}) {
@@ -205,11 +197,14 @@ function getWorkoutStats(session = {}, meta = {}) {
     return weight > bestWeight ? set : best
   }, null)
 
+  const finishedDate = session.finishedAt || session.createdAt
   const locationLabel = getMapsUrl(session.location) ? formatLocationLabel(session.location) : ''
+  const topExercises = exercises.map(getExerciseName).filter(Boolean)
 
   return {
     workoutName: session.workoutName || session.name || 'Treino ForgeFlow',
-    dateLabel: formatDate(session.finishedAt || session.createdAt),
+    dateLabel: formatDate(finishedDate),
+    dateShortLabel: getShortDate(finishedDate),
     durationLabel: formatTime(session.duration || session.durationSeconds || 0),
     volume: sessionVolume,
     volumeLabel: formatVolume(sessionVolume),
@@ -217,7 +212,7 @@ function getWorkoutStats(session = {}, meta = {}) {
     completedSetCount: completedSets.length,
     prCount: sessionPRs.length,
     prs: sessionPRs,
-    topExercises: exercises.map(getExerciseName).filter(Boolean).slice(0, 5),
+    topExercises: topExercises.slice(0, 6),
     bestSet,
     topWeightSet,
     locationLabel,
@@ -234,6 +229,31 @@ function getSetLabel(set) {
   if (!weight && !reps) return name
 
   return `${name} ${weight || '-'}kg × ${reps || '-'}`
+}
+
+function getPrDisplayValue(pr = {}) {
+  const value = safeNumber(pr.value)
+  const unit = pr.unit || 'kg'
+
+  if (pr.weight || pr.reps) {
+    const weight = safeNumber(pr.weight)
+    const reps = safeNumber(pr.reps)
+    if (weight && reps) return `${weight}kg × ${reps}`
+  }
+
+  if (value) return `${value.toLocaleString('pt-BR')}${unit}`
+
+  if (pr.volume) return `${safeNumber(pr.volume).toLocaleString('pt-BR')}kg`
+
+  return pr.label || 'Recorde'
+}
+
+function getPrText(pr = {}) {
+  const name = pr.exerciseName || pr.exercise || 'Exercício'
+  const label = pr.label || 'PR'
+  const value = getPrDisplayValue(pr)
+
+  return `${name} • ${label} ${value}`
 }
 
 function buildShareText(stats, caption) {
@@ -255,14 +275,81 @@ function buildShareText(stats, caption) {
   return lines.join('\n')
 }
 
-function loadImage(src) {
-  return new Promise((resolve, reject) => {
+function isLocalImageSource(src = '') {
+  return /^data:|^blob:/i.test(String(src || ''))
+}
+
+function loadShareImage(src, options = {}) {
+  const { anonymous = false } = options
+  const safeSrc = String(src || '')
+
+  if (!safeSrc) return Promise.reject(new Error('Imagem sem origem.'))
+
+  const cacheKey = `${anonymous ? 'anonymous' : 'plain'}:${safeSrc}`
+  if (IMAGE_CACHE.has(cacheKey)) return IMAGE_CACHE.get(cacheKey)
+
+  const promise = new Promise((resolve, reject) => {
     const image = new Image()
-    image.crossOrigin = 'anonymous'
-    image.onload = () => resolve(image)
-    image.onerror = reject
-    image.src = src
+
+    if (anonymous && !isLocalImageSource(safeSrc)) {
+      image.crossOrigin = 'anonymous'
+    }
+
+    image.onload = async () => {
+      try {
+        if (typeof image.decode === 'function') {
+          await image.decode()
+        }
+      } catch {
+        // Alguns WebViews resolvem onload e falham no decode. O canvas ainda consegue desenhar.
+      }
+
+      if (!image.naturalWidth && !image.width) {
+        reject(new Error('Imagem carregada sem dimensão válida.'))
+        return
+      }
+
+      resolve(image)
+    }
+
+    image.onerror = () => {
+      IMAGE_CACHE.delete(cacheKey)
+      reject(new Error('Não foi possível carregar a imagem escolhida.'))
+    }
+
+    image.src = safeSrc
   })
+
+  IMAGE_CACHE.set(cacheKey, promise)
+  return promise
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result || ''))
+    reader.onerror = () => reject(new Error('Falha ao ler a imagem selecionada.'))
+    reader.readAsDataURL(file)
+  })
+}
+
+async function createUserPhotoFromFile(file) {
+  if (!file) throw new Error('Nenhuma imagem selecionada.')
+
+  if (!String(file.type || '').startsWith('image/')) {
+    throw new Error('Selecione um arquivo de imagem válido.')
+  }
+
+  const src = await readFileAsDataUrl(file)
+  const image = await loadShareImage(src)
+
+  return {
+    file,
+    src,
+    name: file.name || 'foto-do-treino',
+    width: image.naturalWidth || image.width,
+    height: image.naturalHeight || image.height,
+  }
 }
 
 async function waitForFonts() {
@@ -307,14 +394,20 @@ function drawRoundRect(ctx, x, y, width, height, radius) {
   ctx.closePath()
 }
 
-function drawCoverImage(ctx, image, x, y, width, height) {
-  const scale = Math.max(width / image.width, height / image.height)
-  const sourceWidth = width / scale
-  const sourceHeight = height / scale
-  const sourceX = (image.width - sourceWidth) / 2
-  const sourceY = (image.height - sourceHeight) / 2
+function truncateText(ctx, text, maxWidth) {
+  const value = String(text || '').replace(/\s+/g, ' ').trim()
+  if (!value) return ''
+  if (ctx.measureText(value).width <= maxWidth) return value
 
-  ctx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, x, y, width, height)
+  const suffix = '…'
+  let output = value
+  const available = Math.max(0, maxWidth - ctx.measureText(suffix).width)
+
+  while (output.length > 1 && ctx.measureText(output).width > available) {
+    output = output.slice(0, -1)
+  }
+
+  return `${output}${suffix}`
 }
 
 function splitLongWord(ctx, word, maxWidth) {
@@ -335,7 +428,7 @@ function splitLongWord(ctx, word, maxWidth) {
   return chunks
 }
 
-function wrapText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 3) {
+function getWrappedLines(ctx, text, maxWidth, maxLines = 3) {
   const rawWords = String(text || '').replace(/\s+/g, ' ').trim().split(' ').filter(Boolean)
   const words = rawWords.flatMap((word) => (
     ctx.measureText(word).width > maxWidth ? splitLongWord(ctx, word, maxWidth) : [word]
@@ -358,55 +451,461 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 3) {
   if (line) lines.push(line)
 
   const visibleLines = lines.slice(0, maxLines)
+  const overflowed = lines.length > maxLines
 
-  visibleLines.forEach((currentLine, index) => {
-    const shouldTruncate = index === maxLines - 1 && lines.length > maxLines
-    const suffix = shouldTruncate ? '…' : ''
-    const availableWidth = shouldTruncate ? maxWidth - ctx.measureText(suffix).width : maxWidth
-    let lineText = currentLine
+  if (overflowed && visibleLines.length) {
+    visibleLines[visibleLines.length - 1] = truncateText(ctx, visibleLines[visibleLines.length - 1], maxWidth)
+  }
 
-    while (shouldTruncate && ctx.measureText(lineText).width > availableWidth && lineText.length > 1) {
-      lineText = lineText.slice(0, -1)
-    }
-
-    ctx.fillText(`${lineText}${suffix}`, x, y + index * lineHeight)
-  })
-
-  return y + Math.max(visibleLines.length, 1) * lineHeight
+  return {
+    lines: visibleLines,
+    overflowed,
+  }
 }
 
-function drawBrand(ctx, iconImage, x, y, scale = 1, transparent = false) {
-  const iconSize = 78 * scale
-  const radius = 22 * scale
+function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 3, options = {}) {
+  const { align = 'left', baseline = 'alphabetic' } = options
+  const { lines } = getWrappedLines(ctx, text, maxWidth, maxLines)
+  const visibleLines = lines.length ? lines : ['']
+  const previousAlign = ctx.textAlign
+  const previousBaseline = ctx.textBaseline
+
+  ctx.textAlign = align
+  ctx.textBaseline = baseline
+
+  visibleLines.forEach((line, index) => {
+    let lineX = x
+    if (align === 'center') lineX = x + maxWidth / 2
+    if (align === 'right') lineX = x + maxWidth
+    ctx.fillText(line, lineX, y + index * lineHeight)
+  })
+
+  ctx.textAlign = previousAlign
+  ctx.textBaseline = previousBaseline
+
+  return {
+    lines: visibleLines.length,
+    height: Math.max(visibleLines.length, 1) * lineHeight,
+    nextY: y + Math.max(visibleLines.length, 1) * lineHeight,
+  }
+}
+
+function drawGlassPanel(ctx, x, y, width, height, radius = 42, options = {}) {
+  const {
+    fill = 'rgba(255,255,255,0.075)',
+    stroke = 'rgba(255,255,255,0.13)',
+    shadow = true,
+  } = options
+
+  ctx.save()
+  if (shadow) {
+    ctx.shadowColor = 'rgba(0,0,0,0.28)'
+    ctx.shadowBlur = 26
+    ctx.shadowOffsetY = 12
+  }
+  drawRoundRect(ctx, x, y, width, height, radius)
+  ctx.fillStyle = fill
+  ctx.fill()
+  ctx.shadowColor = 'transparent'
+  ctx.strokeStyle = stroke
+  ctx.lineWidth = 2
+  ctx.stroke()
+  ctx.restore()
+}
+
+function drawBadge(ctx, text, x, y, options = {}) {
+  const {
+    color = '#ffffff',
+    fill = 'rgba(255,255,255,0.1)',
+    stroke = 'rgba(255,255,255,0.14)',
+    fontSize = 23,
+    padX = 24,
+    height = 58,
+  } = options
+
+  ctx.save()
+  ctx.font = `900 ${fontSize}px Inter, Arial, sans-serif`
+  const width = Math.min(options.maxWidth || 520, ctx.measureText(text).width + padX * 2)
+  drawRoundRect(ctx, x, y, width, height, height / 2)
+  ctx.fillStyle = fill
+  ctx.fill()
+  ctx.strokeStyle = stroke
+  ctx.lineWidth = 2
+  ctx.stroke()
+  ctx.fillStyle = color
+  ctx.fillText(truncateText(ctx, text, width - padX * 2), x + padX, y + height / 2 + fontSize * 0.34)
+  ctx.restore()
+
+  return width
+}
+
+function drawMetricChip(ctx, metric, x, y, width, height, options = {}) {
+  const {
+    accentColor = '#ef4444',
+    compact = false,
+    fill = 'rgba(255,255,255,0.086)',
+  } = options
+
+  drawGlassPanel(ctx, x, y, width, height, compact ? 24 : 31, {
+    fill,
+    stroke: 'rgba(255,255,255,0.13)',
+    shadow: false,
+  })
+
+  ctx.fillStyle = '#ffffff'
+  ctx.font = `950 ${compact ? 25 : 32}px Inter, Arial, sans-serif`
+  ctx.fillText(truncateText(ctx, metric.value, width - 44), x + 22, y + (compact ? 35 : 44))
+
+  ctx.fillStyle = accentColor
+  ctx.font = `900 ${compact ? 15 : 18}px Inter, Arial, sans-serif`
+  ctx.fillText(truncateText(ctx, String(metric.label || '').toUpperCase(), width - 44), x + 22, y + height - 19)
+}
+
+function drawMetricGrid(ctx, metrics, x, y, width, options = {}) {
+  const { columns = 2, gap = 18, itemHeight = 92, compact = false, accentColor = '#ef4444' } = options
+  const itemWidth = (width - gap * (columns - 1)) / columns
+
+  metrics.forEach((metric, index) => {
+    const col = index % columns
+    const row = Math.floor(index / columns)
+    drawMetricChip(ctx, metric, x + col * (itemWidth + gap), y + row * (itemHeight + gap), itemWidth, itemHeight, {
+      compact,
+      accentColor,
+    })
+  })
+
+  return y + Math.ceil(metrics.length / columns) * itemHeight + Math.max(0, Math.ceil(metrics.length / columns) - 1) * gap
+}
+
+function drawBrand(ctx, iconImage, x, y, scale = 1, options = {}) {
+  const { muted = false, label = 'treino registrado' } = options
+  const iconSize = 68 * scale
+  const radius = 18 * scale
 
   ctx.save()
   drawRoundRect(ctx, x, y, iconSize, iconSize, radius)
-  ctx.fillStyle = transparent ? 'rgba(0,0,0,0.38)' : 'rgba(255,255,255,0.08)'
+  ctx.fillStyle = muted ? 'rgba(255,255,255,0.055)' : 'rgba(0,0,0,0.38)'
   ctx.fill()
   ctx.clip()
 
   if (iconImage) {
     ctx.drawImage(iconImage, x, y, iconSize, iconSize)
   } else {
-    ctx.fillStyle = getShareAccentColor()
-    ctx.font = `${48 * scale}px Inter, Arial, sans-serif`
-    ctx.fillText('F', x + 24 * scale, y + 55 * scale)
+    ctx.fillStyle = '#ef4444'
+    ctx.font = `${42 * scale}px Inter, Arial, sans-serif`
+    ctx.fillText('F', x + 22 * scale, y + 49 * scale)
   }
 
   ctx.restore()
 
   ctx.fillStyle = '#ffffff'
-  ctx.font = `900 ${31 * scale}px Inter, Arial, sans-serif`
-  ctx.fillText('ForgeFlow', x + iconSize + 20 * scale, y + 34 * scale)
+  ctx.font = `950 ${28 * scale}px Inter, Arial, sans-serif`
+  ctx.fillText('ForgeFlow', x + iconSize + 18 * scale, y + 31 * scale)
   ctx.fillStyle = 'rgba(255,255,255,0.62)'
-  ctx.font = `700 ${20 * scale}px Inter, Arial, sans-serif`
-  ctx.fillText('treino registrado', x + iconSize + 20 * scale, y + 65 * scale)
+  ctx.font = `800 ${18 * scale}px Inter, Arial, sans-serif`
+  ctx.fillText(label, x + iconSize + 18 * scale, y + 58 * scale)
+}
+
+function seededRandom(seed) {
+  const value = Math.sin(seed * 9999) * 10000
+  return value - Math.floor(value)
+}
+
+function drawNoise(ctx, width, height, alpha = 0.035) {
+  ctx.save()
+  ctx.globalAlpha = alpha
+  ctx.fillStyle = '#ffffff'
+
+  for (let i = 0; i < 260; i += 1) {
+    const x = seededRandom(i + 1) * width
+    const y = seededRandom(i + 77) * height
+    const size = 1 + seededRandom(i + 313) * 2.2
+    ctx.fillRect(x, y, size, size)
+  }
+
+  ctx.restore()
+}
+
+function drawCircuitLines(ctx, width, height, color = 'rgba(239,68,68,0.18)') {
+  ctx.save()
+  ctx.strokeStyle = color
+  ctx.lineWidth = 3
+  ctx.globalAlpha = 0.7
+
+  for (let i = 0; i < 12; i += 1) {
+    const y = 118 + i * 146
+    ctx.beginPath()
+    ctx.moveTo(70, y)
+    ctx.lineTo(width * 0.28, y)
+    ctx.lineTo(width * 0.41, y + 54)
+    ctx.lineTo(width - 76, y + 54)
+    ctx.stroke()
+
+    ctx.beginPath()
+    ctx.arc(width * 0.41, y + 54, 8, 0, Math.PI * 2)
+    ctx.stroke()
+  }
+
+  ctx.restore()
+}
+
+function drawTopographicLines(ctx, width, height) {
+  ctx.save()
+  ctx.strokeStyle = 'rgba(255,255,255,0.075)'
+  ctx.lineWidth = 3
+
+  const centers = [
+    [width * 0.08, height * 0.25],
+    [width * 0.92, height * 0.64],
+    [width * 0.55, height * 0.06],
+  ]
+
+  centers.forEach(([cx, cy]) => {
+    for (let i = 0; i < 10; i += 1) {
+      ctx.beginPath()
+      ctx.ellipse(cx, cy, 110 + i * 54, 58 + i * 36, i * 0.08, 0, Math.PI * 2)
+      ctx.stroke()
+    }
+  })
+
+  ctx.restore()
+}
+
+function drawPremiumBackground(ctx, width, height, selectedBackground, accentSoftColor, accentColor) {
+  const style = selectedBackground || 'forgeRed'
+  const bg = ctx.createLinearGradient(0, 0, width, height)
+
+  if (style === 'obsidian') {
+    bg.addColorStop(0, '#05070b')
+    bg.addColorStop(0.54, '#12151c')
+    bg.addColorStop(1, '#020203')
+  } else if (style === 'carbonGrid') {
+    bg.addColorStop(0, '#07090d')
+    bg.addColorStop(0.48, '#171a1f')
+    bg.addColorStop(1, '#050505')
+  } else if (style === 'ember') {
+    bg.addColorStop(0, '#190804')
+    bg.addColorStop(0.52, '#20100b')
+    bg.addColorStop(1, '#050404')
+  } else if (style === 'neonFlow') {
+    bg.addColorStop(0, '#020914')
+    bg.addColorStop(0.46, '#101827')
+    bg.addColorStop(1, '#030506')
+  } else if (style === 'nightPr') {
+    bg.addColorStop(0, '#10081f')
+    bg.addColorStop(0.5, '#17111f')
+    bg.addColorStop(1, '#050408')
+  } else if (style === 'topoLines') {
+    bg.addColorStop(0, '#061012')
+    bg.addColorStop(0.48, '#121719')
+    bg.addColorStop(1, '#030505')
+  } else if (style === 'steel') {
+    bg.addColorStop(0, '#151922')
+    bg.addColorStop(0.5, '#2a2f38')
+    bg.addColorStop(1, '#05070a')
+  } else if (style === 'aurora') {
+    bg.addColorStop(0, '#07111f')
+    bg.addColorStop(0.42, '#12241d')
+    bg.addColorStop(1, '#080611')
+  } else if (style === 'blackMarble') {
+    bg.addColorStop(0, '#070707')
+    bg.addColorStop(0.5, '#151515')
+    bg.addColorStop(1, '#020202')
+  } else if (style === 'redSmoke') {
+    bg.addColorStop(0, '#140506')
+    bg.addColorStop(0.56, '#121113')
+    bg.addColorStop(1, '#040404')
+  } else if (style === 'gymLight') {
+    bg.addColorStop(0, '#18100d')
+    bg.addColorStop(0.48, '#111827')
+    bg.addColorStop(1, '#050505')
+  } else {
+    bg.addColorStop(0, '#05070b')
+    bg.addColorStop(0.48, '#151518')
+    bg.addColorStop(1, '#070707')
+  }
+
+  ctx.fillStyle = bg
+  ctx.fillRect(0, 0, width, height)
+
+  const topGlow = ctx.createRadialGradient(width * 0.78, height * 0.14, 20, width * 0.78, height * 0.14, width * 0.78)
+  topGlow.addColorStop(0, style === 'nightPr' ? 'rgba(168,85,247,0.38)' : style === 'aurora' ? 'rgba(34,211,238,0.25)' : accentSoftColor)
+  topGlow.addColorStop(1, 'rgba(0,0,0,0)')
+  ctx.fillStyle = topGlow
+  ctx.fillRect(0, 0, width, height)
+
+  const lowGlow = ctx.createRadialGradient(width * 0.16, height * 0.88, 30, width * 0.16, height * 0.88, width * 0.72)
+  lowGlow.addColorStop(0, style === 'ember' ? 'rgba(249,115,22,0.32)' : style === 'aurora' ? 'rgba(74,222,128,0.16)' : 'rgba(255,255,255,0.055)')
+  lowGlow.addColorStop(1, 'rgba(0,0,0,0)')
+  ctx.fillStyle = lowGlow
+  ctx.fillRect(0, 0, width, height)
+
+  if (style === 'carbonGrid') {
+    ctx.save()
+    ctx.strokeStyle = 'rgba(255,255,255,0.045)'
+    ctx.lineWidth = 2
+    const step = 72
+    for (let x = -step; x < width + step; x += step) {
+      ctx.beginPath()
+      ctx.moveTo(x, 0)
+      ctx.lineTo(x + height * 0.22, height)
+      ctx.stroke()
+    }
+    for (let y = 0; y < height; y += step) {
+      ctx.beginPath()
+      ctx.moveTo(0, y)
+      ctx.lineTo(width, y)
+      ctx.stroke()
+    }
+    ctx.restore()
+  }
+
+  if (style === 'neonFlow') {
+    drawCircuitLines(ctx, width, height, 'rgba(14,165,255,0.16)')
+    drawCircuitLines(ctx, width, height, 'rgba(239,68,68,0.12)')
+  }
+
+  if (style === 'topoLines') drawTopographicLines(ctx, width, height)
+
+  if (style === 'blackMarble') {
+    ctx.save()
+    ctx.strokeStyle = 'rgba(255,255,255,0.065)'
+    ctx.lineWidth = 4
+    for (let i = 0; i < 9; i += 1) {
+      ctx.beginPath()
+      const startY = height * seededRandom(i + 20)
+      ctx.moveTo(-40, startY)
+      for (let x = 0; x <= width + 80; x += 120) {
+        const y = startY + Math.sin((x + i * 90) / 150) * 48 + (seededRandom(i + x) - 0.5) * 70
+        ctx.lineTo(x, y)
+      }
+      ctx.stroke()
+    }
+    ctx.restore()
+  }
+
+  if (style === 'redSmoke' || style === 'gymLight') {
+    ctx.save()
+    for (let i = 0; i < 7; i += 1) {
+      const cx = width * seededRandom(i + 40)
+      const cy = height * seededRandom(i + 82)
+      const r = width * (0.12 + seededRandom(i + 71) * 0.18)
+      const smoke = ctx.createRadialGradient(cx, cy, 0, cx, cy, r)
+      smoke.addColorStop(0, style === 'gymLight' ? 'rgba(255,255,255,0.09)' : 'rgba(239,68,68,0.14)')
+      smoke.addColorStop(1, 'rgba(0,0,0,0)')
+      ctx.fillStyle = smoke
+      ctx.fillRect(0, 0, width, height)
+    }
+    ctx.restore()
+  }
+
+  ctx.save()
+  ctx.translate(width * 0.56, -height * 0.06)
+  ctx.rotate(0.19)
+  drawRoundRect(ctx, 0, 0, width * 0.44, height * 1.08, 76)
+  ctx.fillStyle = style === 'nightPr' ? 'rgba(168,85,247,0.14)' : 'rgba(255,255,255,0.04)'
+  ctx.fill()
+  ctx.restore()
+
+  drawNoise(ctx, width, height)
+
+  const vignette = ctx.createRadialGradient(width / 2, height / 2, width * 0.1, width / 2, height / 2, height * 0.72)
+  vignette.addColorStop(0, 'rgba(0,0,0,0)')
+  vignette.addColorStop(1, 'rgba(0,0,0,0.42)')
+  ctx.fillStyle = vignette
+  ctx.fillRect(0, 0, width, height)
+
+  ctx.save()
+  ctx.globalAlpha = 0.1
+  ctx.strokeStyle = accentColor
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  ctx.moveTo(width * 0.08, height * 0.2)
+  ctx.bezierCurveTo(width * 0.4, height * 0.08, width * 0.64, height * 0.4, width * 0.94, height * 0.26)
+  ctx.stroke()
+  ctx.restore()
+}
+
+function getPhotoDrawBox(image, canvasWidth, canvasHeight, transform = DEFAULT_PHOTO_TRANSFORM) {
+  const fit = transform.fit === 'contain' ? 'contain' : 'cover'
+  const baseScale = fit === 'contain'
+    ? Math.min(canvasWidth / image.width, canvasHeight / image.height)
+    : Math.max(canvasWidth / image.width, canvasHeight / image.height)
+  const scale = clamp(safeNumber(transform.scale) || 1, PHOTO_MIN_SCALE, PHOTO_MAX_SCALE)
+  const finalScale = baseScale * scale
+  const width = image.width * finalScale
+  const height = image.height * finalScale
+
+  return {
+    x: (canvasWidth - width) / 2 + safeNumber(transform.x),
+    y: (canvasHeight - height) / 2 + safeNumber(transform.y),
+    width,
+    height,
+    fit,
+    scale,
+  }
+}
+
+function clampPhotoTransform(transform, photo, canvasWidth, canvasHeight) {
+  if (!photo?.width || !photo?.height) {
+    return {
+      ...DEFAULT_PHOTO_TRANSFORM,
+      ...transform,
+      scale: clamp(safeNumber(transform?.scale) || 1, PHOTO_MIN_SCALE, PHOTO_MAX_SCALE),
+    }
+  }
+
+  const imageLike = { width: photo.width, height: photo.height }
+  const next = {
+    ...DEFAULT_PHOTO_TRANSFORM,
+    ...transform,
+    scale: clamp(safeNumber(transform?.scale) || 1, PHOTO_MIN_SCALE, PHOTO_MAX_SCALE),
+    fit: transform?.fit === 'contain' ? 'contain' : 'cover',
+  }
+  const box = getPhotoDrawBox(imageLike, canvasWidth, canvasHeight, next)
+  const overflowX = Math.max(0, (box.width - canvasWidth) / 2)
+  const overflowY = Math.max(0, (box.height - canvasHeight) / 2)
+
+  return {
+    ...next,
+    x: clamp(safeNumber(next.x), -overflowX, overflowX),
+    y: clamp(safeNumber(next.y), -overflowY, overflowY),
+  }
+}
+
+function drawPhotoBackground(ctx, image, canvasWidth, canvasHeight, photoTransform = DEFAULT_PHOTO_TRANSFORM) {
+  const transform = {
+    ...DEFAULT_PHOTO_TRANSFORM,
+    ...photoTransform,
+  }
+
+  if (transform.fit === 'contain') {
+    const coverBox = getPhotoDrawBox(image, canvasWidth, canvasHeight, { x: 0, y: 0, scale: 1, fit: 'cover' })
+    ctx.save()
+    ctx.globalAlpha = 0.34
+    ctx.drawImage(image, coverBox.x, coverBox.y, coverBox.width, coverBox.height)
+    ctx.restore()
+
+    ctx.fillStyle = 'rgba(0,0,0,0.42)'
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight)
+  }
+
+  const box = getPhotoDrawBox(image, canvasWidth, canvasHeight, transform)
+  ctx.drawImage(image, box.x, box.y, box.width, box.height)
+
+  const photoOverlay = ctx.createLinearGradient(0, 0, 0, canvasHeight)
+  photoOverlay.addColorStop(0, 'rgba(0,0,0,0.20)')
+  photoOverlay.addColorStop(0.35, 'rgba(0,0,0,0.24)')
+  photoOverlay.addColorStop(0.68, 'rgba(0,0,0,0.34)')
+  photoOverlay.addColorStop(1, 'rgba(0,0,0,0.84)')
+  ctx.fillStyle = photoOverlay
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight)
 }
 
 function getMetricsForLevel(stats, infoLevel) {
   const base = [
     { label: 'Duração', value: stats.durationLabel },
-    { label: 'Data', value: stats.dateLabel.replace(' de ', '/').replace(' de ', '/') },
+    { label: 'Data', value: stats.dateShortLabel },
   ]
 
   if (infoLevel === 'light') return base
@@ -427,252 +926,374 @@ function getMetricsForLevel(stats, infoLevel) {
   ]
 }
 
-function drawMetric(ctx, metric, x, y, width, height, compact = false) {
-  drawRoundRect(ctx, x, y, width, height, compact ? 22 : 28)
-  ctx.fillStyle = 'rgba(255,255,255,0.075)'
-  ctx.fill()
-  ctx.strokeStyle = 'rgba(255,255,255,0.12)'
-  ctx.lineWidth = 2
-  ctx.stroke()
+function getVisibleMetrics(stats, infoLevel, maxCount) {
+  return getMetricsForLevel(stats, infoLevel).slice(0, maxCount)
+}
+
+function drawFooter(ctx, width, height, pad, text = 'Built with ForgeFlow') {
+  ctx.fillStyle = 'rgba(255,255,255,0.55)'
+  ctx.font = '850 23px Inter, Arial, sans-serif'
+  ctx.fillText(truncateText(ctx, text, width - pad * 2), pad, height - pad)
+}
+
+function drawPhotoStoryTemplate(ctx, stats, options) {
+  const { width, height, caption, infoLevel, iconImage, accentColor, format } = options
+  const isStory = format === 'story'
+  const pad = isStory ? 76 : 58
+  const contentWidth = width - pad * 2
+  const bottomPad = isStory ? 94 : 66
+  const chips = getVisibleMetrics(stats, infoLevel, isStory ? 4 : 3)
+  const columns = isStory ? 2 : Math.min(3, chips.length)
+  const chipHeight = isStory ? 94 : 84
+  const chipGap = 18
+  const rows = Math.ceil(chips.length / columns)
+  const chipsHeight = rows * chipHeight + Math.max(0, rows - 1) * chipGap
+  const footerY = height - bottomPad
+  const chipsY = footerY - 58 - chipsHeight
+  const phraseLines = isStory ? 2 : 1
+  const phraseLineHeight = isStory ? 40 : 34
+  const phraseY = chipsY - 42 - phraseLineHeight * phraseLines
+  const titleLineHeight = isStory ? 88 : 66
+  const titleMaxLines = isStory ? 2 : 2
+  const titleY = Math.max(pad + 160, phraseY - 54 - titleLineHeight * titleMaxLines)
+
+  drawBrand(ctx, iconImage, pad, pad, isStory ? 1 : 0.82, { label: 'share premium' })
+
+  drawBadge(ctx, 'TREINO CONCLUÍDO', pad, titleY - 82, {
+    color: accentColor,
+    fill: 'rgba(0,0,0,0.32)',
+    stroke: 'rgba(255,255,255,0.14)',
+    fontSize: isStory ? 23 : 18,
+    height: isStory ? 56 : 46,
+    maxWidth: 420,
+  })
 
   ctx.fillStyle = '#ffffff'
-  ctx.font = `900 ${compact ? 27 : 34}px Inter, Arial, sans-serif`
-  wrapText(ctx, metric.value, x + 24, y + (compact ? 36 : 43), width - 48, compact ? 29 : 34, compact ? 1 : 2)
+  ctx.font = `950 ${isStory ? 78 : 58}px Inter, Arial, sans-serif`
+  drawWrappedText(ctx, stats.workoutName, pad, titleY, contentWidth, titleLineHeight, titleMaxLines)
+
+  if (caption && phraseY > titleY + titleLineHeight) {
+    ctx.fillStyle = 'rgba(255,255,255,0.86)'
+    ctx.font = `850 ${isStory ? 34 : 28}px Inter, Arial, sans-serif`
+    drawWrappedText(ctx, caption, pad, phraseY, contentWidth, phraseLineHeight, phraseLines)
+  }
+
+  drawMetricGrid(ctx, chips, pad, chipsY, contentWidth, {
+    columns,
+    gap: chipGap,
+    itemHeight: chipHeight,
+    compact: !isStory,
+    accentColor,
+  })
+
+  drawFooter(ctx, width, height, pad, `ForgeFlow • ${stats.completedSetCount} séries • ${stats.prCount} PRs`)
+}
+
+function drawHeroPrTemplate(ctx, stats, options) {
+  const { width, height, caption, infoLevel, iconImage, accentColor, format } = options
+  const isStory = format === 'story'
+  const pad = isStory ? 76 : 58
+  const contentWidth = width - pad * 2
+  const prCount = stats.prCount
+  const hasPr = prCount > 0
+  const titleText = hasPr ? `${prCount} PR${prCount === 1 ? '' : 's'}` : 'Treino\nconcluído'
+  const topY = isStory ? 104 : 64
+
+  drawBrand(ctx, iconImage, pad, topY, isStory ? 1 : 0.82, { label: hasPr ? 'novo recorde' : 'treino finalizado' })
+
+  ctx.save()
+  ctx.globalAlpha = 0.16
+  ctx.fillStyle = accentColor
+  ctx.font = `950 ${isStory ? 270 : 170}px Inter, Arial, sans-serif`
+  ctx.fillText('PR', pad - 18, isStory ? 575 : 360)
+  ctx.restore()
+
+  const heroY = isStory ? 560 : 330
+  drawBadge(ctx, hasPr ? 'NOVO RECORDE' : 'SEM PR NESTE TREINO', pad, heroY - (isStory ? 138 : 95), {
+    color: hasPr ? '#fde68a' : accentColor,
+    fill: hasPr ? 'rgba(250,204,21,0.12)' : 'rgba(239,68,68,0.12)',
+    stroke: hasPr ? 'rgba(250,204,21,0.24)' : 'rgba(239,68,68,0.22)',
+    fontSize: isStory ? 26 : 20,
+    height: isStory ? 62 : 48,
+  })
+
+  ctx.fillStyle = '#ffffff'
+  ctx.font = `950 ${isStory ? 154 : 96}px Inter, Arial, sans-serif`
+  if (hasPr) {
+    ctx.fillText(titleText, pad, heroY)
+  } else {
+    drawWrappedText(ctx, titleText, pad, heroY - 78, contentWidth, isStory ? 128 : 82, 2)
+  }
+
+  ctx.fillStyle = 'rgba(255,255,255,0.72)'
+  ctx.font = `850 ${isStory ? 33 : 25}px Inter, Arial, sans-serif`
+  drawWrappedText(ctx, stats.workoutName, pad, heroY + (hasPr ? 70 : 112), contentWidth, isStory ? 42 : 32, 1)
+
+  const panelHeight = isStory ? 560 : 440
+  const panelY = height - panelHeight - (isStory ? 94 : 58)
+  drawGlassPanel(ctx, pad, panelY, contentWidth, panelHeight, isStory ? 54 : 42, {
+    fill: 'rgba(8,10,14,0.72)',
+    stroke: 'rgba(255,255,255,0.14)',
+  })
+
+  let cursorY = panelY + (isStory ? 78 : 56)
+  ctx.fillStyle = accentColor
+  ctx.font = `950 ${isStory ? 31 : 24}px Inter, Arial, sans-serif`
+  ctx.fillText(hasPr ? 'PRINCIPAIS RECORDES' : 'RESUMO DO TREINO', pad + 38, cursorY)
+  cursorY += isStory ? 54 : 42
+
+  if (hasPr) {
+    const visiblePrs = stats.prs.slice(0, isStory ? 3 : 2)
+    visiblePrs.forEach((pr, index) => {
+      const itemY = cursorY + index * (isStory ? 84 : 68)
+      ctx.fillStyle = index === 0 ? '#fde68a' : 'rgba(255,255,255,0.88)'
+      ctx.font = `900 ${isStory ? 29 : 22}px Inter, Arial, sans-serif`
+      ctx.fillText(truncateText(ctx, getPrText(pr), contentWidth - 94), pad + 38, itemY)
+    })
+
+    if (stats.prs.length > visiblePrs.length) {
+      ctx.fillStyle = 'rgba(255,255,255,0.58)'
+      ctx.font = `850 ${isStory ? 27 : 21}px Inter, Arial, sans-serif`
+      ctx.fillText(`+${stats.prs.length - visiblePrs.length} PRs registrados no histórico`, pad + 38, cursorY + visiblePrs.length * (isStory ? 84 : 68))
+    }
+  } else {
+    ctx.fillStyle = 'rgba(255,255,255,0.82)'
+    ctx.font = `850 ${isStory ? 34 : 26}px Inter, Arial, sans-serif`
+    drawWrappedText(ctx, caption, pad + 38, cursorY, contentWidth - 76, isStory ? 44 : 34, isStory ? 3 : 2)
+  }
+
+  const metrics = getVisibleMetrics(stats, infoLevel, isStory ? 4 : 3)
+  const metricY = panelY + panelHeight - (isStory ? 190 : 138)
+  drawMetricGrid(ctx, metrics, pad + 38, metricY, contentWidth - 76, {
+    columns: isStory ? 2 : 3,
+    gap: 14,
+    itemHeight: isStory ? 86 : 74,
+    compact: true,
+    accentColor,
+  })
+
+  drawFooter(ctx, width, height, pad, 'ForgeFlow • recordes protegidos contra texto sobreposto')
+}
+
+function drawPerformanceTemplate(ctx, stats, options) {
+  const { width, height, caption, infoLevel, iconImage, accentColor, format } = options
+  const isStory = format === 'story'
+  const pad = isStory ? 72 : 56
+  const contentWidth = width - pad * 2
+
+  drawBrand(ctx, iconImage, pad, isStory ? 84 : 58, isStory ? 0.94 : 0.78, { label: 'performance report' })
+
+  const headerY = isStory ? 290 : 190
+  ctx.fillStyle = accentColor
+  ctx.font = `950 ${isStory ? 28 : 21}px Inter, Arial, sans-serif`
+  ctx.fillText('RELATÓRIO DO TREINO', pad, headerY)
+
+  ctx.fillStyle = '#ffffff'
+  ctx.font = `950 ${isStory ? 66 : 48}px Inter, Arial, sans-serif`
+  drawWrappedText(ctx, stats.workoutName, pad, headerY + (isStory ? 80 : 54), contentWidth, isStory ? 75 : 55, 2)
+
+  const heroPanelY = isStory ? 560 : 360
+  const heroPanelH = isStory ? 310 : 220
+  drawGlassPanel(ctx, pad, heroPanelY, contentWidth, heroPanelH, isStory ? 50 : 38, {
+    fill: 'rgba(255,255,255,0.072)',
+    stroke: 'rgba(255,255,255,0.14)',
+  })
 
   ctx.fillStyle = 'rgba(255,255,255,0.58)'
-  ctx.font = `800 ${compact ? 18 : 21}px Inter, Arial, sans-serif`
-  ctx.fillText(metric.label.toUpperCase(), x + 24, y + height - 20)
-}
+  ctx.font = `900 ${isStory ? 24 : 18}px Inter, Arial, sans-serif`
+  ctx.fillText('VOLUME TOTAL', pad + 36, heroPanelY + (isStory ? 62 : 48))
+  ctx.fillStyle = '#ffffff'
+  ctx.font = `950 ${isStory ? 92 : 68}px Inter, Arial, sans-serif`
+  ctx.fillText(truncateText(ctx, stats.volumeLabel, contentWidth - 72), pad + 36, heroPanelY + (isStory ? 154 : 118))
 
-function getMetricGridHeight(metrics, columns = 2, compact = false) {
-  const count = Array.isArray(metrics) ? metrics.length : 0
-  if (!count) return 0
+  ctx.fillStyle = 'rgba(255,255,255,0.62)'
+  ctx.font = `850 ${isStory ? 29 : 22}px Inter, Arial, sans-serif`
+  drawWrappedText(ctx, caption, pad + 36, heroPanelY + (isStory ? 218 : 162), contentWidth - 72, isStory ? 38 : 30, 2)
 
-  const gap = compact ? 18 : 24
-  const itemHeight = compact ? 86 : 104
-  const rows = Math.ceil(count / columns)
-
-  return rows * itemHeight + Math.max(0, rows - 1) * gap
-}
-
-function drawMetricGrid(ctx, metrics, x, y, width, columns = 2, compact = false) {
-  const gap = compact ? 18 : 24
-  const itemHeight = compact ? 86 : 104
-  const itemWidth = (width - gap * (columns - 1)) / columns
-
-  metrics.forEach((metric, index) => {
-    const col = index % columns
-    const row = Math.floor(index / columns)
-    drawMetric(
-      ctx,
-      metric,
-      x + col * (itemWidth + gap),
-      y + row * (itemHeight + gap),
-      itemWidth,
-      itemHeight,
-      compact
-    )
+  const metrics = getVisibleMetrics(stats, infoLevel, isStory ? 6 : 4)
+  const metricsY = isStory ? 940 : 640
+  drawMetricGrid(ctx, metrics, pad, metricsY, contentWidth, {
+    columns: 2,
+    gap: isStory ? 20 : 16,
+    itemHeight: isStory ? 110 : 88,
+    compact: !isStory,
+    accentColor,
   })
 
-  return y + getMetricGridHeight(metrics, columns, compact)
-}
+  const listY = isStory ? 1375 : 910
+  const availableH = height - listY - (isStory ? 176 : 120)
+  if (availableH > 130) {
+    drawGlassPanel(ctx, pad, listY, contentWidth, availableH, isStory ? 42 : 32, {
+      fill: 'rgba(0,0,0,0.26)',
+      stroke: 'rgba(255,255,255,0.11)',
+      shadow: false,
+    })
 
-function drawCircuitLines(ctx, width, height, accentColor, alpha = 0.16) {
-  ctx.save()
-  ctx.strokeStyle = accentColor.replace('rgb', 'rgba').replace(')', `, ${alpha})`).replace('rgbaa', 'rgba')
-  ctx.lineWidth = 3
-  ctx.globalAlpha = 0.55
+    ctx.fillStyle = accentColor
+    ctx.font = `950 ${isStory ? 26 : 20}px Inter, Arial, sans-serif`
+    ctx.fillText('EXERCÍCIOS PRINCIPAIS', pad + 32, listY + (isStory ? 58 : 44))
 
-  for (let i = 0; i < 11; i += 1) {
-    const y = 130 + i * 150
-    ctx.beginPath()
-    ctx.moveTo(70, y)
-    ctx.lineTo(width * 0.32, y)
-    ctx.lineTo(width * 0.42, y + 52)
-    ctx.lineTo(width - 72, y + 52)
-    ctx.stroke()
+    const maxItems = isStory ? 4 : 2
+    stats.topExercises.slice(0, maxItems).forEach((exercise, index) => {
+      ctx.fillStyle = 'rgba(255,255,255,0.84)'
+      ctx.font = `850 ${isStory ? 28 : 21}px Inter, Arial, sans-serif`
+      ctx.fillText(truncateText(ctx, exercise, contentWidth - 64), pad + 32, listY + (isStory ? 112 : 86) + index * (isStory ? 42 : 32))
+    })
 
-    ctx.beginPath()
-    ctx.arc(width * 0.42, y + 52, 9, 0, Math.PI * 2)
-    ctx.stroke()
+    if (stats.topExercises.length > maxItems) {
+      ctx.fillStyle = 'rgba(255,255,255,0.5)'
+      ctx.font = `800 ${isStory ? 24 : 18}px Inter, Arial, sans-serif`
+      ctx.fillText(`+${stats.topExercises.length - maxItems} exercícios`, pad + 32, listY + (isStory ? 112 : 86) + maxItems * (isStory ? 42 : 32))
+    }
   }
 
-  ctx.restore()
+  drawFooter(ctx, width, height, pad, `ForgeFlow • ${stats.dateShortLabel}`)
 }
 
-function drawTopographicLines(ctx, width, height) {
-  ctx.save()
-  ctx.strokeStyle = 'rgba(255,255,255,0.075)'
-  ctx.lineWidth = 3
+function drawEditorialTemplate(ctx, stats, options) {
+  const { width, height, caption, infoLevel, iconImage, accentColor, format } = options
+  const isStory = format === 'story'
+  const pad = isStory ? 82 : 64
+  const contentWidth = width - pad * 2
+  const cardY = isStory ? 310 : 168
+  const cardH = isStory ? 1050 : 710
 
-  const centers = [
-    [width * 0.08, height * 0.25],
-    [width * 0.92, height * 0.64],
-    [width * 0.55, height * 0.06],
-  ]
-
-  centers.forEach(([cx, cy]) => {
-    for (let i = 0; i < 9; i += 1) {
-      ctx.beginPath()
-      ctx.ellipse(cx, cy, 120 + i * 54, 60 + i * 36, i * 0.08, 0, Math.PI * 2)
-      ctx.stroke()
-    }
+  drawGlassPanel(ctx, pad, cardY, contentWidth, cardH, isStory ? 56 : 42, {
+    fill: 'rgba(255,255,255,0.09)',
+    stroke: 'rgba(255,255,255,0.16)',
   })
 
-  ctx.restore()
+  drawBrand(ctx, iconImage, pad + 42, cardY + 48, isStory ? 0.86 : 0.68, { muted: true, label: 'editorial minimal' })
+
+  ctx.fillStyle = '#ffffff'
+  ctx.font = `950 ${isStory ? 72 : 52}px Inter, Arial, sans-serif`
+  drawWrappedText(ctx, caption, pad + 42, cardY + (isStory ? 260 : 190), contentWidth - 84, isStory ? 84 : 62, isStory ? 4 : 3)
+
+  const separatorY = cardY + cardH - (isStory ? 340 : 250)
+  ctx.strokeStyle = 'rgba(255,255,255,0.14)'
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  ctx.moveTo(pad + 42, separatorY)
+  ctx.lineTo(width - pad - 42, separatorY)
+  ctx.stroke()
+
+  ctx.fillStyle = accentColor
+  ctx.font = `950 ${isStory ? 29 : 22}px Inter, Arial, sans-serif`
+  ctx.fillText('TREINO', pad + 42, separatorY + (isStory ? 68 : 50))
+
+  ctx.fillStyle = 'rgba(255,255,255,0.88)'
+  ctx.font = `900 ${isStory ? 38 : 29}px Inter, Arial, sans-serif`
+  drawWrappedText(ctx, stats.workoutName, pad + 42, separatorY + (isStory ? 126 : 94), contentWidth - 84, isStory ? 46 : 36, 2)
+
+  const metrics = getVisibleMetrics(stats, infoLevel, isStory ? 3 : 3)
+  const metricY = cardY + cardH - (isStory ? 180 : 130)
+  drawMetricGrid(ctx, metrics, pad + 42, metricY, contentWidth - 84, {
+    columns: 3,
+    gap: 12,
+    itemHeight: isStory ? 88 : 72,
+    compact: true,
+    accentColor,
+  })
+
+  drawFooter(ctx, width, height, pad, 'ForgeFlow • disciplina acima da motivação')
 }
 
-function drawBackground(ctx, width, height, backgroundStyle, photoImage, accentSoftColor, accentColor) {
-  const style = backgroundStyle || 'forge'
-  const shouldUsePhoto = style === 'photo' && photoImage
+function drawDarkGlassTemplate(ctx, stats, options) {
+  const { width, height, caption, infoLevel, iconImage, accentColor, format } = options
+  const isStory = format === 'story'
+  const pad = isStory ? 72 : 54
+  const contentWidth = width - pad * 2
 
-  if (shouldUsePhoto) {
-    drawCoverImage(ctx, photoImage, 0, 0, width, height)
-    const photoOverlay = ctx.createLinearGradient(0, 0, 0, height)
-    photoOverlay.addColorStop(0, 'rgba(0,0,0,0.16)')
-    photoOverlay.addColorStop(0.45, 'rgba(0,0,0,0.28)')
-    photoOverlay.addColorStop(1, 'rgba(0,0,0,0.84)')
-    ctx.fillStyle = photoOverlay
-    ctx.fillRect(0, 0, width, height)
-    return
-  }
+  drawBrand(ctx, iconImage, pad, isStory ? 82 : 56, isStory ? 0.94 : 0.78, { label: 'dark glass' })
 
-  const bg = ctx.createLinearGradient(0, 0, width, height)
+  const titlePanelY = isStory ? 280 : 176
+  drawGlassPanel(ctx, pad, titlePanelY, contentWidth, isStory ? 360 : 250, isStory ? 52 : 40, {
+    fill: 'rgba(255,255,255,0.075)',
+    stroke: 'rgba(255,255,255,0.16)',
+  })
 
-  if (style === 'obsidian') {
-    bg.addColorStop(0, '#05070b')
-    bg.addColorStop(0.52, '#101217')
-    bg.addColorStop(1, '#030305')
-  } else if (style === 'carbon') {
-    bg.addColorStop(0, '#07090d')
-    bg.addColorStop(0.48, '#15171c')
-    bg.addColorStop(1, '#070707')
-  } else if (style === 'ember') {
-    bg.addColorStop(0, '#160805')
-    bg.addColorStop(0.42, '#1b1110')
-    bg.addColorStop(1, '#050404')
-  } else if (style === 'neon') {
-    bg.addColorStop(0, '#020914')
-    bg.addColorStop(0.46, '#101827')
-    bg.addColorStop(1, '#050608')
-  } else if (style === 'purple') {
-    bg.addColorStop(0, '#10081f')
-    bg.addColorStop(0.5, '#17111f')
-    bg.addColorStop(1, '#050408')
-  } else if (style === 'topo') {
-    bg.addColorStop(0, '#061012')
-    bg.addColorStop(0.48, '#121719')
-    bg.addColorStop(1, '#030505')
-  } else {
-    bg.addColorStop(0, '#05070b')
-    bg.addColorStop(0.48, '#151518')
-    bg.addColorStop(1, '#070707')
-  }
+  drawBadge(ctx, 'REGISTRO PREMIUM', pad + 34, titlePanelY + 38, {
+    color: accentColor,
+    fill: 'rgba(239,68,68,0.14)',
+    stroke: 'rgba(239,68,68,0.26)',
+    fontSize: isStory ? 23 : 18,
+    height: isStory ? 54 : 42,
+  })
 
-  ctx.fillStyle = bg
-  ctx.fillRect(0, 0, width, height)
+  ctx.fillStyle = '#ffffff'
+  ctx.font = `950 ${isStory ? 64 : 47}px Inter, Arial, sans-serif`
+  drawWrappedText(ctx, stats.workoutName, pad + 34, titlePanelY + (isStory ? 150 : 112), contentWidth - 68, isStory ? 74 : 54, 2)
 
-  if (style === 'carbon') {
-    ctx.save()
-    ctx.strokeStyle = 'rgba(255,255,255,0.045)'
-    ctx.lineWidth = 2
-    const step = 72
-    for (let x = -step; x < width + step; x += step) {
-      ctx.beginPath()
-      ctx.moveTo(x, 0)
-      ctx.lineTo(x + height * 0.22, height)
-      ctx.stroke()
-    }
-    for (let y = 0; y < height; y += step) {
-      ctx.beginPath()
-      ctx.moveTo(0, y)
-      ctx.lineTo(width, y)
-      ctx.stroke()
-    }
-    ctx.restore()
-  }
+  ctx.fillStyle = 'rgba(255,255,255,0.70)'
+  ctx.font = `850 ${isStory ? 28 : 21}px Inter, Arial, sans-serif`
+  drawWrappedText(ctx, caption, pad + 34, titlePanelY + (isStory ? 298 : 214), contentWidth - 68, isStory ? 36 : 28, 1)
 
-  if (style === 'neon') {
-    drawCircuitLines(ctx, width, height, accentColor, 0.18)
-  }
+  const metrics = getVisibleMetrics(stats, infoLevel, isStory ? 6 : 4)
+  const metricsY = isStory ? 735 : 490
+  drawMetricGrid(ctx, metrics, pad, metricsY, contentWidth, {
+    columns: 2,
+    gap: isStory ? 20 : 16,
+    itemHeight: isStory ? 112 : 88,
+    compact: !isStory,
+    accentColor,
+  })
 
-  if (style === 'topo') {
-    drawTopographicLines(ctx, width, height)
-  }
+  const lowerY = isStory ? 1275 : 850
+  const lowerH = height - lowerY - (isStory ? 178 : 118)
+  if (lowerH > 130) {
+    drawGlassPanel(ctx, pad, lowerY, contentWidth, lowerH, isStory ? 46 : 34, {
+      fill: 'rgba(0,0,0,0.28)',
+      stroke: 'rgba(255,255,255,0.12)',
+      shadow: false,
+    })
 
-  const glow = ctx.createRadialGradient(width * 0.82, height * 0.18, 20, width * 0.82, height * 0.18, width * 0.74)
-  glow.addColorStop(0, style === 'purple' ? 'rgba(168,85,247,0.32)' : accentSoftColor)
-  glow.addColorStop(1, 'rgba(0,0,0,0)')
-  ctx.fillStyle = glow
-  ctx.fillRect(0, 0, width, height)
-
-  const lowGlow = ctx.createRadialGradient(width * 0.14, height * 0.9, 30, width * 0.14, height * 0.9, width * 0.62)
-  lowGlow.addColorStop(0, style === 'ember' ? 'rgba(249,115,22,0.22)' : 'rgba(255,255,255,0.06)')
-  lowGlow.addColorStop(1, 'rgba(0,0,0,0)')
-  ctx.fillStyle = lowGlow
-  ctx.fillRect(0, 0, width, height)
-
-  ctx.save()
-  ctx.translate(width * 0.58, -height * 0.08)
-  ctx.rotate(0.2)
-  drawRoundRect(ctx, 0, 0, width * 0.42, height * 1.08, 70)
-  ctx.fillStyle = style === 'purple' ? 'rgba(168,85,247,0.14)' : accentSoftColor
-  ctx.fill()
-  ctx.restore()
-
-  ctx.save()
-  ctx.translate(-width * 0.2, height * 0.68)
-  ctx.rotate(-0.18)
-  drawRoundRect(ctx, 0, 0, width * 0.52, height * 0.34, 64)
-  ctx.fillStyle = 'rgba(255,255,255,0.035)'
-  ctx.fill()
-  ctx.restore()
-}
-
-function drawFocusBlock(ctx, stats, template, x, y, width, accentColor, compact = false) {
-  const labelSize = compact ? 27 : 30
-  const numberSize = compact ? 78 : 88
-  const numberLineHeight = compact ? 82 : 92
-
-  if (template === 'volume') {
     ctx.fillStyle = accentColor
-    ctx.font = `900 ${labelSize}px Inter, Arial, sans-serif`
-    ctx.fillText('VOLUME TOTAL', x, y)
+    ctx.font = `950 ${isStory ? 27 : 20}px Inter, Arial, sans-serif`
+    ctx.fillText(stats.prCount > 0 ? 'DESTAQUES DO TREINO' : 'RESUMO', pad + 34, lowerY + (isStory ? 58 : 44))
 
-    ctx.fillStyle = '#ffffff'
-    ctx.font = `950 ${numberSize}px Inter, Arial, sans-serif`
-    wrapText(ctx, stats.volumeLabel, x, y + numberLineHeight, width, numberLineHeight, 1)
-    return y + numberLineHeight + 42
+    const highlights = stats.prCount > 0
+      ? stats.prs.slice(0, isStory ? 3 : 2).map(getPrText)
+      : [
+        `${stats.completedSetCount} séries concluídas`,
+        `${stats.exerciseCount} exercícios registrados`,
+        `${stats.volumeLabel} de volume total`,
+      ]
+
+    highlights.forEach((item, index) => {
+      ctx.fillStyle = 'rgba(255,255,255,0.84)'
+      ctx.font = `850 ${isStory ? 28 : 21}px Inter, Arial, sans-serif`
+      ctx.fillText(truncateText(ctx, item, contentWidth - 68), pad + 34, lowerY + (isStory ? 116 : 88) + index * (isStory ? 45 : 34))
+    })
   }
 
-  if (template === 'pr') {
-    ctx.fillStyle = accentColor
-    ctx.font = `900 ${labelSize}px Inter, Arial, sans-serif`
-    ctx.fillText(stats.prCount > 0 ? 'RECORDE BATIDO' : 'TREINO SEM PR', x, y)
-
-    ctx.fillStyle = '#ffffff'
-    ctx.font = `950 ${numberSize}px Inter, Arial, sans-serif`
-    wrapText(ctx, `${stats.prCount} PR${stats.prCount === 1 ? '' : 's'}`, x, y + numberLineHeight, width, numberLineHeight, 1)
-    return y + numberLineHeight + 42
-  }
-
-  return y
+  drawFooter(ctx, width, height, pad, `ForgeFlow • ${stats.volumeLabel} • ${stats.durationLabel}`)
 }
 
 async function drawWorkoutShareCanvas(canvas, options) {
-  const { session, meta, template, photoDataUrl, caption, infoLevel, backgroundStyle } = options
+  const {
+    session,
+    meta,
+    template,
+    format,
+    infoLevel,
+    phrase,
+    caption,
+    backgroundMode,
+    selectedBackground,
+    userPhoto,
+    photoTransform,
+  } = options
+
   await waitForFonts()
 
   const ctx = canvas.getContext('2d')
   const stats = getWorkoutStats(session, meta)
-  const currentTemplate = SHARE_TEMPLATES.find((item) => item.id === template) || SHARE_TEMPLATES[0]
-  const { width, height } = currentTemplate
-  const overlay = template === 'overlay'
+  const selectedFormat = SHARE_FORMATS.find((item) => item.id === format) || SHARE_FORMATS[0]
+  const selectedTemplate = SHARE_TEMPLATES.find((item) => item.id === template) || SHARE_TEMPLATES[0]
+  const { width, height } = selectedFormat
   const accentColor = getShareAccentColor()
   const accentSoftColor = getShareAccentSoftColor()
-  const isSquare = width === height
-  const isStory = height / width > 1.5
-  const isCompact = isSquare || template === 'feed'
+  const safeCaption = String(phrase ?? caption ?? '').trim() || SHARE_PHRASES[0]
 
   canvas.width = width
   canvas.height = height
@@ -682,116 +1303,49 @@ async function drawWorkoutShareCanvas(canvas, options) {
   let photoImage = null
 
   try {
-    iconImage = await loadImage(forgeflowIcon)
+    iconImage = await loadShareImage(forgeflowIcon, { anonymous: true })
   } catch {
     // O texto da marca continua sendo desenhado sem o ícone.
   }
 
-  if (photoDataUrl && (template === 'photo' || backgroundStyle === 'photo')) {
+  if (backgroundMode === 'photo' && userPhoto?.src) {
     try {
-      photoImage = await loadImage(photoDataUrl)
-    } catch {
+      photoImage = await loadShareImage(userPhoto.src)
+    } catch (error) {
+      console.warn('Foto própria não pôde ser desenhada no canvas:', error)
       photoImage = null
     }
   }
 
-  drawBackground(ctx, width, height, backgroundStyle, photoImage, accentSoftColor, accentColor)
-
-  ctx.save()
-  if (overlay) {
-    ctx.shadowColor = 'rgba(0,0,0,0.78)'
-    ctx.shadowBlur = 22
-    ctx.shadowOffsetY = 8
-  }
-
-  const pad = isSquare ? 64 : 78
-  drawBrand(ctx, iconImage, pad, isSquare ? 60 : 86, isCompact ? 0.86 : 1, overlay)
-
-  if (template === 'quote') {
-    ctx.fillStyle = accentColor
-    ctx.font = '900 31px Inter, Arial, sans-serif'
-    ctx.fillText('MENSAGEM DO TREINO', pad, 265)
-
-    ctx.fillStyle = '#ffffff'
-    ctx.font = '950 76px Inter, Arial, sans-serif'
-    const nextY = wrapText(ctx, caption, pad, 390, width - pad * 2, 86, 4)
-
-    ctx.fillStyle = 'rgba(255,255,255,0.70)'
-    ctx.font = '800 32px Inter, Arial, sans-serif'
-    wrapText(ctx, `${stats.workoutName} • ${stats.durationLabel}`, pad, nextY + 80, width - pad * 2, 40, 2)
-
-    drawMetricGrid(ctx, getMetricsForLevel(stats, infoLevel).slice(0, 4), pad, height - 360, width - pad * 2, 2, true)
-    ctx.restore()
-    return stats
-  }
-
-  const panelHeight = isSquare ? 730 : isStory ? 740 : 760
-  const panelY = isSquare ? 220 : height - panelHeight - 86
-
-  drawRoundRect(ctx, pad, panelY, width - pad * 2, panelHeight, isSquare ? 48 : 58)
-  ctx.fillStyle = photoImage ? 'rgba(6,10,15,0.78)' : 'rgba(255,255,255,0.065)'
-  ctx.fill()
-  ctx.strokeStyle = 'rgba(255,255,255,0.15)'
-  ctx.lineWidth = 2
-  ctx.stroke()
-
-  const innerX = pad + 36
-  const innerW = width - pad * 2 - 72
-  let cursorY = panelY + 74
-
-  drawRoundRect(ctx, innerX, cursorY - 36, Math.min(430, innerW), 58, 29)
-  ctx.fillStyle = accentSoftColor
-  ctx.fill()
-  ctx.strokeStyle = 'rgba(239,68,68,0.38)'
-  ctx.stroke()
-
-  ctx.fillStyle = accentColor
-  ctx.font = '900 25px Inter, Arial, sans-serif'
-  ctx.fillText(currentTemplate.tag.toUpperCase(), innerX + 28, cursorY + 2)
-  cursorY += 92
-
-  const metrics = getMetricsForLevel(stats, infoLevel)
-  const columns = 2
-  const maxMetricCount = isSquare ? 4 : infoLevel === 'full' ? 6 : 4
-  const visibleMetrics = metrics.slice(0, maxMetricCount)
-  const metricGridHeight = getMetricGridHeight(visibleMetrics, columns, isSquare)
-  const footerText = infoLevel === 'full' && stats.topExercises.length > 0
-    ? `Exercícios: ${stats.topExercises.join(', ')}`
-    : `Built with ForgeFlow • ${stats.completedSetCount} séries • ${stats.prCount} PRs`
-  const footerY = panelY + panelHeight - 58
-  const metricGridY = Math.max(cursorY + 22, footerY - metricGridHeight - 54)
-  const isFocusTemplate = template === 'volume' || template === 'pr'
-
-  cursorY = drawFocusBlock(ctx, stats, template, innerX, cursorY - 12, innerW, accentColor, isSquare || isFocusTemplate)
-
-  if (!isFocusTemplate) {
-    ctx.fillStyle = '#ffffff'
-    ctx.font = `950 ${isSquare ? 68 : 82}px Inter, Arial, sans-serif`
-    cursorY = wrapText(ctx, stats.workoutName, innerX, cursorY, innerW, isSquare ? 75 : 92, 2)
+  if (backgroundMode === 'photo' && photoImage) {
+    drawPhotoBackground(ctx, photoImage, width, height, photoTransform)
   } else {
-    ctx.fillStyle = '#ffffff'
-    ctx.font = `900 ${isSquare ? 38 : 42}px Inter, Arial, sans-serif`
-    cursorY = wrapText(ctx, stats.workoutName, innerX, cursorY + 4, innerW, isSquare ? 44 : 49, 1)
+    drawPremiumBackground(ctx, width, height, selectedBackground, accentSoftColor, accentColor)
   }
 
-  const shouldDrawCaption = infoLevel !== 'light' || template === 'quote'
-  if (shouldDrawCaption && metricGridY - cursorY > 64) {
-    ctx.fillStyle = 'rgba(255,255,255,0.80)'
-    ctx.font = `800 ${isSquare || isFocusTemplate ? 28 : 35}px Inter, Arial, sans-serif`
-    const maxCaptionLines = isFocusTemplate ? 1 : isSquare ? 2 : 3
-    const lineHeight = isSquare || isFocusTemplate ? 36 : 46
-    const captionY = cursorY + (isFocusTemplate ? 26 : 42)
-    const availableCaptionLines = Math.max(1, Math.min(maxCaptionLines, Math.floor((metricGridY - captionY - 20) / lineHeight)))
-    cursorY = wrapText(ctx, caption, innerX, captionY, innerW, lineHeight, availableCaptionLines)
+  const templateOptions = {
+    width,
+    height,
+    caption: safeCaption,
+    infoLevel,
+    iconImage,
+    accentColor,
+    accentSoftColor,
+    template: selectedTemplate,
+    format: selectedFormat.id,
   }
 
-  drawMetricGrid(ctx, visibleMetrics, innerX, metricGridY, innerW, columns, isSquare)
-
-  ctx.fillStyle = 'rgba(255,255,255,0.68)'
-  ctx.font = `800 ${isSquare ? 22 : 24}px Inter, Arial, sans-serif`
-  wrapText(ctx, footerText, innerX, footerY, innerW, 30, 1)
-
-  ctx.restore()
+  if (selectedTemplate.id === 'heroPr') {
+    drawHeroPrTemplate(ctx, stats, templateOptions)
+  } else if (selectedTemplate.id === 'performance') {
+    drawPerformanceTemplate(ctx, stats, templateOptions)
+  } else if (selectedTemplate.id === 'editorial') {
+    drawEditorialTemplate(ctx, stats, templateOptions)
+  } else if (selectedTemplate.id === 'darkGlass') {
+    drawDarkGlassTemplate(ctx, stats, templateOptions)
+  } else {
+    drawPhotoStoryTemplate(ctx, stats, templateOptions)
+  }
 
   return stats
 }
@@ -826,7 +1380,7 @@ async function copyText(text) {
   textarea.remove()
 }
 
-function getFileName(session = {}, template = 'story', extension = 'png') {
+function getFileName(session = {}, template = 'photoStory', format = 'story', extension = 'png') {
   const rawName = String(session.workoutName || session.name || 'treino')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -835,7 +1389,7 @@ function getFileName(session = {}, template = 'story', extension = 'png') {
     .toLowerCase()
   const safeExtension = String(extension || 'png').replace(/^\./, '').toLowerCase()
 
-  return `forgeflow-${rawName || 'treino'}-${template}.${safeExtension}`
+  return `forgeflow-${rawName || 'treino'}-${template}-${format}.${safeExtension}`
 }
 
 function canShareImageFile(file) {
@@ -868,22 +1422,43 @@ function openImageFallback(blob) {
   return Boolean(newWindow)
 }
 
+function getDistance(pointA, pointB) {
+  return Math.hypot(pointA.x - pointB.x, pointA.y - pointB.y)
+}
+
+function getCenter(pointA, pointB) {
+  return {
+    x: (pointA.x + pointB.x) / 2,
+    y: (pointA.y + pointB.y) / 2,
+  }
+}
+
 function WorkoutShareStudio({ open, session, meta, onClose }) {
   const canvasRef = useRef(null)
   const fileInputRef = useRef(null)
-  const [template, setTemplate] = useState('story')
+  const activePointers = useRef(new Map())
+  const gestureRef = useRef(null)
+  const photoTransformRef = useRef(DEFAULT_PHOTO_TRANSFORM)
+  const userPhotoRef = useRef(null)
+  const selectedFormatRef = useRef(SHARE_FORMATS[0])
+
+  const [template, setTemplate] = useState('photoStory')
+  const [format, setFormat] = useState('story')
   const [infoLevel, setInfoLevel] = useState('medium')
   const [phraseId, setPhraseId] = useState(0)
   const [customCaption, setCustomCaption] = useState('')
-  const [photoDataUrl, setPhotoDataUrl] = useState('')
-  const [backgroundStyle, setBackgroundStyle] = useState('forge')
+  const [backgroundMode, setBackgroundMode] = useState('theme')
+  const [selectedBackground, setSelectedBackground] = useState('forgeRed')
+  const [userPhoto, setUserPhoto] = useState(null)
+  const [photoTransform, setPhotoTransform] = useState(DEFAULT_PHOTO_TRANSFORM)
   const [status, setStatus] = useState('')
   const [busy, setBusy] = useState(false)
   const [ready, setReady] = useState(false)
 
-  const selectedTemplate = SHARE_TEMPLATES.find((item) => item.id === template) || SHARE_TEMPLATES[0]
+  const selectedFormat = SHARE_FORMATS.find((item) => item.id === format) || SHARE_FORMATS[0]
   const selectedPhrase = SHARE_PHRASES[phraseId] || SHARE_PHRASES[0]
   const caption = customCaption.trim() || selectedPhrase
+  const hasEditablePhoto = backgroundMode === 'photo' && Boolean(userPhoto?.src)
 
   const stats = useMemo(() => {
     if (!session) return null
@@ -896,6 +1471,18 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   }, [caption, stats])
 
   useEffect(() => {
+    photoTransformRef.current = photoTransform
+  }, [photoTransform])
+
+  useEffect(() => {
+    userPhotoRef.current = userPhoto
+  }, [userPhoto])
+
+  useEffect(() => {
+    selectedFormatRef.current = selectedFormat
+  }, [selectedFormat])
+
+  useEffect(() => {
     if (!open || !session || !canvasRef.current) return undefined
 
     let active = true
@@ -905,10 +1492,13 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       session,
       meta,
       template,
-      photoDataUrl,
-      caption,
+      format,
       infoLevel,
-      backgroundStyle,
+      phrase: caption,
+      backgroundMode,
+      selectedBackground,
+      userPhoto,
+      photoTransform,
     })
       .then(() => {
         if (active) setReady(true)
@@ -924,7 +1514,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     return () => {
       active = false
     }
-  }, [backgroundStyle, caption, infoLevel, meta, open, photoDataUrl, session, template])
+  }, [backgroundMode, caption, format, infoLevel, meta, open, photoTransform, selectedBackground, session, template, userPhoto])
 
   useEffect(() => {
     if (!open || typeof document === 'undefined') return undefined
@@ -943,34 +1533,202 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     if (!open) {
       setStatus('')
       setBusy(false)
+      activePointers.current.clear()
+      gestureRef.current = null
     }
   }, [open])
 
+  useEffect(() => {
+    if (!userPhoto || backgroundMode !== 'photo') return
+
+    setPhotoTransform((current) => clampPhotoTransform(current, userPhoto, selectedFormat.width, selectedFormat.height))
+  }, [backgroundMode, selectedFormat.height, selectedFormat.width, userPhoto])
+
   if (!open || !session || !stats) return null
 
-  function handlePhotoChange(event) {
+  function getCanvasPoint(event) {
+    const rect = canvasRef.current?.getBoundingClientRect()
+    const currentFormat = selectedFormatRef.current
+
+    if (!rect || !currentFormat) {
+      return { x: 0, y: 0 }
+    }
+
+    return {
+      x: (event.clientX - rect.left) * (currentFormat.width / rect.width),
+      y: (event.clientY - rect.top) * (currentFormat.height / rect.height),
+    }
+  }
+
+  function getPointerSnapshot(event) {
+    return {
+      id: event.pointerId,
+      clientX: event.clientX,
+      clientY: event.clientY,
+      canvas: getCanvasPoint(event),
+    }
+  }
+
+  function startGestureFromPointers() {
+    const pointers = Array.from(activePointers.current.values())
+    const currentTransform = photoTransformRef.current
+    const currentFormat = selectedFormatRef.current
+
+    if (pointers.length === 1) {
+      gestureRef.current = {
+        type: 'drag',
+        pointerId: pointers[0].id,
+        startPoint: pointers[0].canvas,
+        startTransform: currentTransform,
+      }
+      return
+    }
+
+    if (pointers.length >= 2) {
+      const first = pointers[0].canvas
+      const second = pointers[1].canvas
+      const startCenter = getCenter(first, second)
+      const startTransform = currentTransform
+      const imageCenter = {
+        x: currentFormat.width / 2 + safeNumber(startTransform.x),
+        y: currentFormat.height / 2 + safeNumber(startTransform.y),
+      }
+
+      gestureRef.current = {
+        type: 'pinch',
+        startDistance: Math.max(1, getDistance(first, second)),
+        startCenter,
+        startTransform,
+        imageCenter,
+        centerOffset: {
+          x: startCenter.x - imageCenter.x,
+          y: startCenter.y - imageCenter.y,
+        },
+      }
+    }
+  }
+
+  function applyPhotoTransform(nextTransform) {
+    const currentPhoto = userPhotoRef.current
+    const currentFormat = selectedFormatRef.current
+    const clamped = clampPhotoTransform(nextTransform, currentPhoto, currentFormat.width, currentFormat.height)
+    photoTransformRef.current = clamped
+    setPhotoTransform(clamped)
+  }
+
+  function handlePointerDown(event) {
+    if (!hasEditablePhoto) return
+
+    event.preventDefault()
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+    activePointers.current.set(event.pointerId, getPointerSnapshot(event))
+    startGestureFromPointers()
+  }
+
+  function handlePointerMove(event) {
+    if (!hasEditablePhoto || !activePointers.current.has(event.pointerId)) return
+
+    event.preventDefault()
+    activePointers.current.set(event.pointerId, getPointerSnapshot(event))
+
+    const gesture = gestureRef.current
+    if (!gesture) return
+
+    const pointers = Array.from(activePointers.current.values())
+
+    if (gesture.type === 'drag' && pointers.length === 1) {
+      const current = activePointers.current.get(gesture.pointerId)
+      if (!current) return
+
+      applyPhotoTransform({
+        ...gesture.startTransform,
+        x: safeNumber(gesture.startTransform.x) + current.canvas.x - gesture.startPoint.x,
+        y: safeNumber(gesture.startTransform.y) + current.canvas.y - gesture.startPoint.y,
+      })
+      return
+    }
+
+    if (gesture.type === 'pinch' && pointers.length >= 2) {
+      const first = pointers[0].canvas
+      const second = pointers[1].canvas
+      const currentCenter = getCenter(first, second)
+      const distance = Math.max(1, getDistance(first, second))
+      const nextScale = clamp(safeNumber(gesture.startTransform.scale) * (distance / gesture.startDistance), PHOTO_MIN_SCALE, PHOTO_MAX_SCALE)
+      const ratio = nextScale / Math.max(PHOTO_MIN_SCALE, safeNumber(gesture.startTransform.scale) || 1)
+      const nextImageCenter = {
+        x: currentCenter.x - gesture.centerOffset.x * ratio,
+        y: currentCenter.y - gesture.centerOffset.y * ratio,
+      }
+      const currentFormat = selectedFormatRef.current
+
+      applyPhotoTransform({
+        ...gesture.startTransform,
+        scale: nextScale,
+        x: nextImageCenter.x - currentFormat.width / 2,
+        y: nextImageCenter.y - currentFormat.height / 2,
+      })
+    }
+  }
+
+  function handlePointerUp(event) {
+    if (!activePointers.current.has(event.pointerId)) return
+
+    event.preventDefault()
+    try {
+      event.currentTarget.releasePointerCapture?.(event.pointerId)
+    } catch {
+      // O browser pode liberar automaticamente o capture.
+    }
+
+    activePointers.current.delete(event.pointerId)
+
+    if (activePointers.current.size > 0) {
+      startGestureFromPointers()
+    } else {
+      gestureRef.current = null
+    }
+  }
+
+  async function handlePhotoChange(event) {
     const file = event.target.files?.[0]
+    event.target.value = ''
     if (!file) return
 
-    const reader = new FileReader()
-    reader.onload = () => {
-      setPhotoDataUrl(String(reader.result || ''))
-      setTemplate('photo')
-      setBackgroundStyle('photo')
-      setStatus('Foto aplicada. O modelo mudou para Foto.')
+    setStatus('Carregando foto...')
+    setReady(false)
+
+    try {
+      const nextPhoto = await createUserPhotoFromFile(file)
+      setUserPhoto(nextPhoto)
+      setBackgroundMode('photo')
+      setPhotoTransform(DEFAULT_PHOTO_TRANSFORM)
+      setStatus('Foto aplicada. Arraste no preview para mover e use dois dedos para dar zoom.')
+    } catch (error) {
+      console.error(error)
+      setStatus(error?.message || 'Não foi possível carregar essa foto.')
     }
-    reader.onerror = () => {
-      setStatus('Não foi possível carregar essa foto.')
-    }
-    reader.readAsDataURL(file)
-    event.target.value = ''
   }
 
   function handleClearPhoto() {
-    setPhotoDataUrl('')
-    setTemplate((currentTemplate) => currentTemplate === 'photo' ? 'story' : currentTemplate)
-    setBackgroundStyle((currentStyle) => currentStyle === 'photo' ? 'forge' : currentStyle)
-    setStatus('Foto removida do card.')
+    setUserPhoto(null)
+    setBackgroundMode('theme')
+    setPhotoTransform(DEFAULT_PHOTO_TRANSFORM)
+    setStatus('Foto removida. O card voltou para o fundo temático.')
+  }
+
+  function handleResetPhoto() {
+    applyPhotoTransform(DEFAULT_PHOTO_TRANSFORM)
+    setStatus('Enquadramento resetado.')
+  }
+
+  function handlePhotoFill() {
+    applyPhotoTransform({ x: 0, y: 0, scale: 1, fit: 'cover' })
+    setStatus('Foto preenchendo todo o card.')
+  }
+
+  function handlePhotoFit() {
+    applyPhotoTransform({ x: 0, y: 0, scale: 1, fit: 'contain' })
+    setStatus('Foto ajustada inteira no card.')
   }
 
   async function getImageBlob(options = {}) {
@@ -982,10 +1740,13 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       session,
       meta,
       template,
-      photoDataUrl,
-      caption,
+      format,
       infoLevel,
-      backgroundStyle,
+      phrase: caption,
+      backgroundMode,
+      selectedBackground,
+      userPhoto,
+      photoTransform,
     })
 
     return canvasToBlob(canvasRef.current, mimeType, quality)
@@ -1000,15 +1761,18 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       session,
       meta,
       template,
-      photoDataUrl,
-      caption,
+      format,
       infoLevel,
-      backgroundStyle,
+      phrase: caption,
+      backgroundMode,
+      selectedBackground,
+      userPhoto,
+      photoTransform,
     })
 
     const dataUrl = canvasRef.current.toDataURL(mimeType, quality)
     const blob = await canvasToBlob(canvasRef.current, mimeType, quality)
-    const filename = getFileName(session, template, extension)
+    const filename = getFileName(session, template, format, extension)
     const file = new File([blob], filename, { type: mimeType })
 
     return { blob, dataUrl, file, filename, mimeType }
@@ -1076,7 +1840,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
         try {
           const result = await saveImageToGalleryNative({ dataUrl, filename, mimeType })
           if (result?.saved !== false) {
-            setStatus('Imagem salva na galeria do celular, no álbum ForgeFlow.')
+            setStatus('Imagem salva na galeria do celular, em Pictures/ForgeFlow.')
             return
           }
         } catch (nativeError) {
@@ -1089,7 +1853,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
             text: 'Escolha Galeria, Fotos, Arquivos ou Instagram para salvar/usar a imagem.',
             files: [file],
           })
-          setStatus('Imagem pronta, mas o salvamento nativo não respondeu. Rode npm run android:install-media-plugin e gere o APK novamente.')
+          setStatus('Não foi possível salvar automaticamente. Use o compartilhamento do sistema para salvar a imagem.')
           return
         }
       }
@@ -1151,7 +1915,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
           })
 
           if (result?.opened !== false) {
-            setStatus('Instagram Stories aberto com o card anexado. Finalize a publicação no Instagram.')
+            setStatus('Imagem salva em Pictures/ForgeFlow e tentativa de abrir o Instagram Stories iniciada. Se o Story não vier com a imagem, selecione o card no álbum ForgeFlow.')
             return
           }
         } catch (nativeError) {
@@ -1170,7 +1934,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       }
 
       triggerImageDownload(blob, filename)
-      setStatus('Imagem baixada. No navegador não dá para anexar direto no Story; abra o Instagram e selecione o card na galeria.')
+      setStatus('Imagem baixada. No navegador não há garantia de anexar direto no Story; abra o Instagram e selecione o card na galeria.')
       window.setTimeout(() => {
         window.location.href = 'instagram://story-camera'
 
@@ -1187,7 +1951,6 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       setBusy(false)
     }
   }
-
 
   const dialog = (
     <div className="ff-share-studio" role="dialog" aria-modal="true" aria-label="Compartilhar treino">
@@ -1208,9 +1971,21 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
           <section className="ff-share-studio__preview" aria-label="Prévia da imagem">
             <canvas
               ref={canvasRef}
-              className={`ff-share-studio__canvas is-${template} bg-${backgroundStyle}`}
-              style={{ aspectRatio: `${selectedTemplate.width} / ${selectedTemplate.height}` }}
+              className={`ff-share-studio__canvas is-${format} template-${template} bg-${selectedBackground}${hasEditablePhoto ? ' is-editing-photo' : ''}`}
+              style={{ aspectRatio: `${selectedFormat.width} / ${selectedFormat.height}` }}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerUp}
+              onPointerLeave={handlePointerUp}
             />
+
+            {hasEditablePhoto && (
+              <div className="ff-share-studio__gesture-hint" aria-hidden="true">
+                <strong>Arraste para mover</strong>
+                <span>Use dois dedos para dar zoom</span>
+              </div>
+            )}
 
             {!ready && (
               <div className="ff-share-studio__loading">
@@ -1221,13 +1996,32 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
 
           <section className="ff-share-studio__controls">
             <div className="ff-share-studio__tip-card">
-              <strong>Monte o card antes de postar</strong>
-              <small>Escolha o formato, defina quantas informações aparecem e personalize a frase que vai dentro da imagem.</small>
+              <strong>Editor premium do card</strong>
+              <small>Escolha o visual, use foto própria como fundo e ajuste o enquadramento diretamente na prévia.</small>
             </div>
 
             <div className="ff-share-studio__section-title">
               <Layers3 size={16} />
-              <span>Formato do card</span>
+              <span>Formato</span>
+            </div>
+
+            <div className="ff-share-studio__format-grid">
+              {SHARE_FORMATS.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={format === item.id ? 'is-active' : ''}
+                  onClick={() => setFormat(item.id)}
+                >
+                  <strong>{item.label}</strong>
+                  <small>{item.description}</small>
+                </button>
+              ))}
+            </div>
+
+            <div className="ff-share-studio__section-title">
+              <Layers3 size={16} />
+              <span>Template</span>
             </div>
 
             <div className="ff-share-studio__template-grid">
@@ -1246,36 +2040,50 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
 
             <div className="ff-share-studio__section-title">
               <Sparkles size={16} />
-              <span>Fundo do card</span>
+              <span>Fundo</span>
             </div>
 
-            <div className="ff-share-studio__background-grid">
-              {SHARE_BACKGROUNDS.map((item) => {
-                const disabled = item.id === 'photo' && !photoDataUrl
+            <div className="ff-share-studio__background-mode">
+              <button
+                type="button"
+                className={backgroundMode === 'theme' ? 'is-active' : ''}
+                onClick={() => setBackgroundMode('theme')}
+              >
+                Fundo premium
+              </button>
+              <button
+                type="button"
+                className={backgroundMode === 'photo' ? 'is-active' : ''}
+                onClick={() => {
+                  if (userPhoto?.src) {
+                    setBackgroundMode('photo')
+                    return
+                  }
+                  fileInputRef.current?.click()
+                }}
+              >
+                Foto própria
+              </button>
+            </div>
 
-                return (
+            {backgroundMode === 'theme' && (
+              <div className="ff-share-studio__background-grid">
+                {SHARE_BACKGROUNDS.map((item) => (
                   <button
                     key={item.id}
                     type="button"
-                    className={backgroundStyle === item.id ? 'is-active' : ''}
-                    disabled={disabled}
-                    onClick={() => {
-                      if (item.id === 'photo' && !photoDataUrl) {
-                        fileInputRef.current?.click()
-                        return
-                      }
-                      setBackgroundStyle(item.id)
-                    }}
+                    className={selectedBackground === item.id ? 'is-active' : ''}
+                    onClick={() => setSelectedBackground(item.id)}
                   >
                     <i className={`ff-share-studio__bg-swatch is-${item.id}`} aria-hidden="true" />
                     <span>
                       <strong>{item.label}</strong>
-                      <small>{disabled ? 'Selecione uma foto primeiro.' : item.description}</small>
+                      <small>{item.description}</small>
                     </span>
                   </button>
-                )
-              })}
-            </div>
+                ))}
+              </div>
+            )}
 
             <div className="ff-share-studio__section-title">
               <Layers3 size={16} />
@@ -1311,37 +2119,40 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
 
             <button
               type="button"
-              className={`ff-share-studio__photo-card${photoDataUrl ? ' has-photo' : ''}`}
+              className={`ff-share-studio__photo-card${userPhoto ? ' has-photo' : ''}`}
               onClick={() => fileInputRef.current?.click()}
             >
               <span className="ff-share-studio__photo-icon"><ImagePlus size={20} /></span>
               <span>
-                <strong>{photoDataUrl ? 'Foto aplicada' : 'Selecionar foto do celular'}</strong>
-                <small>{photoDataUrl ? 'Toque para trocar a foto de fundo.' : 'Use uma foto da galeria como fundo do modelo Foto.'}</small>
+                <strong>{userPhoto ? userPhoto.name : 'Selecionar foto do celular'}</strong>
+                <small>{userPhoto ? 'Toque para trocar. A foto continua ao mudar template ou formato.' : 'Use uma foto da galeria como fundo e ajuste com gestos.'}</small>
               </span>
             </button>
 
-            {photoDataUrl && (
-              <button type="button" className="ff-share-studio__clear-photo" onClick={handleClearPhoto}>
-                Remover foto e voltar ao modelo padrão
-              </button>
+            {userPhoto && (
+              <div className="ff-share-studio__photo-tools">
+                <button type="button" onClick={handleResetPhoto}>Resetar foto</button>
+                <button type="button" onClick={handlePhotoFill}>Preencher</button>
+                <button type="button" onClick={handlePhotoFit}>Ajustar</button>
+                <button type="button" onClick={handleClearPhoto}>Remover</button>
+              </div>
             )}
 
             <div className="ff-share-studio__section-title">
               <MessageCircle size={16} />
-              <span>Frase opcional</span>
+              <span>Mensagem opcional para aparecer no card</span>
             </div>
 
             <label className="ff-share-studio__caption">
-              <span>Texto que aparece dentro da imagem</span>
+              <span>Mensagem opcional para aparecer no card</span>
               <textarea
                 value={customCaption}
                 onChange={(event) => setCustomCaption(event.target.value)}
-                maxLength={140}
+                maxLength={160}
                 rows={3}
-                placeholder={`Ex: ${selectedPhrase}`}
+                placeholder="Ex: treino pago, progresso construído."
               />
-              <small>Você pode editar livremente. Deixe vazio para usar uma frase pronta.</small>
+              <small>Deixe vazio para usar uma frase pronta. Textos longos são quebrados e limitados no canvas.</small>
             </label>
 
             <div className="ff-share-studio__phrase-row" aria-label="Frases prontas">
