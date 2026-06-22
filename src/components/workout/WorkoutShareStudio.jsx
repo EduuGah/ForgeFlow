@@ -7,6 +7,7 @@ import {
   ImagePlus,
   Layers3,
   MessageCircle,
+  Move,
   Share2,
   Sparkles,
   X,
@@ -133,8 +134,23 @@ const DEFAULT_PHOTO_TRANSFORM = {
   fit: 'cover',
 }
 
+const PHOTO_FIT_TRANSFORM = {
+  x: 0,
+  y: 0,
+  scale: 1,
+  fit: 'contain',
+}
+
+const DEFAULT_OVERLAY_TRANSFORM = {
+  x: 0,
+  y: 0,
+  scale: 1,
+}
+
 const PHOTO_MIN_SCALE = 1
 const PHOTO_MAX_SCALE = 3.35
+const OVERLAY_MIN_SCALE = 0.58
+const OVERLAY_MAX_SCALE = 1.85
 const IMAGE_CACHE = new Map()
 
 function getExerciseName(exercise = {}) {
@@ -333,15 +349,92 @@ function readFileAsDataUrl(file) {
   })
 }
 
+
+function canvasToDataUrl(canvas, mimeType = 'image/jpeg', quality = 0.92) {
+  try {
+    return canvas.toDataURL(mimeType, quality)
+  } catch {
+    return canvas.toDataURL('image/png')
+  }
+}
+
+async function normalizeImageFileToDataUrl(file) {
+  if (typeof document === 'undefined') {
+    return readFileAsDataUrl(file)
+  }
+
+  if (typeof createImageBitmap === 'function') {
+    try {
+      let bitmap
+      try {
+        bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' })
+      } catch {
+        bitmap = await createImageBitmap(file)
+      }
+
+      const maxSide = 2600
+      const ratio = Math.min(1, maxSide / Math.max(bitmap.width || 1, bitmap.height || 1))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.max(1, Math.round(bitmap.width * ratio))
+      canvas.height = Math.max(1, Math.round(bitmap.height * ratio))
+      const ctx = canvas.getContext('2d', { alpha: false })
+
+      ctx.fillStyle = '#050505'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+      bitmap.close?.()
+
+      return canvasToDataUrl(canvas, 'image/jpeg', 0.92)
+    } catch (error) {
+      console.warn('createImageBitmap não conseguiu normalizar a foto:', error)
+    }
+  }
+
+  return readFileAsDataUrl(file)
+}
+
 async function createUserPhotoFromFile(file) {
   if (!file) throw new Error('Nenhuma imagem selecionada.')
 
-  if (!String(file.type || '').startsWith('image/')) {
+  const mimeType = String(file.type || '')
+  if (mimeType && !mimeType.startsWith('image/')) {
     throw new Error('Selecione um arquivo de imagem válido.')
   }
 
-  const src = await readFileAsDataUrl(file)
-  const image = await loadShareImage(src)
+  let src
+  let image
+  let objectUrl = ''
+
+  try {
+    src = await normalizeImageFileToDataUrl(file)
+    image = await loadShareImage(src)
+  } catch (firstError) {
+    console.warn('Falha ao carregar foto normalizada:', firstError)
+
+    try {
+      objectUrl = URL.createObjectURL(file)
+      image = await loadShareImage(objectUrl)
+
+      const canvas = document.createElement('canvas')
+      const width = image.naturalWidth || image.width
+      const height = image.naturalHeight || image.height
+      const maxSide = 2600
+      const ratio = Math.min(1, maxSide / Math.max(width || 1, height || 1))
+      canvas.width = Math.max(1, Math.round(width * ratio))
+      canvas.height = Math.max(1, Math.round(height * ratio))
+      const ctx = canvas.getContext('2d', { alpha: false })
+      ctx.fillStyle = '#050505'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
+      src = canvasToDataUrl(canvas, 'image/jpeg', 0.92)
+      image = await loadShareImage(src)
+    } catch (secondError) {
+      console.warn('Falha ao carregar foto por ObjectURL:', secondError)
+      throw new Error('Não foi possível carregar a imagem escolhida. Tente selecionar uma foto JPG, PNG ou WEBP; alguns celulares salvam em HEIC, que o WebView pode não conseguir desenhar no canvas.', { cause: secondError })
+    } finally {
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+  }
 
   return {
     file,
@@ -894,10 +987,10 @@ function drawPhotoBackground(ctx, image, canvasWidth, canvasHeight, photoTransfo
   ctx.drawImage(image, box.x, box.y, box.width, box.height)
 
   const photoOverlay = ctx.createLinearGradient(0, 0, 0, canvasHeight)
-  photoOverlay.addColorStop(0, 'rgba(0,0,0,0.20)')
-  photoOverlay.addColorStop(0.35, 'rgba(0,0,0,0.24)')
-  photoOverlay.addColorStop(0.68, 'rgba(0,0,0,0.34)')
-  photoOverlay.addColorStop(1, 'rgba(0,0,0,0.84)')
+  photoOverlay.addColorStop(0, 'rgba(0,0,0,0.06)')
+  photoOverlay.addColorStop(0.36, 'rgba(0,0,0,0.10)')
+  photoOverlay.addColorStop(0.7, 'rgba(0,0,0,0.18)')
+  photoOverlay.addColorStop(1, 'rgba(0,0,0,0.46)')
   ctx.fillStyle = photoOverlay
   ctx.fillRect(0, 0, canvasWidth, canvasHeight)
 }
@@ -934,6 +1027,176 @@ function drawFooter(ctx, width, height, pad, text = 'Built with ForgeFlow') {
   ctx.fillStyle = 'rgba(255,255,255,0.55)'
   ctx.font = '850 23px Inter, Arial, sans-serif'
   ctx.fillText(truncateText(ctx, text, width - pad * 2), pad, height - pad)
+}
+
+
+function clampOverlayTransform(transform, canvasWidth, canvasHeight) {
+  const next = {
+    ...DEFAULT_OVERLAY_TRANSFORM,
+    ...transform,
+    scale: clamp(safeNumber(transform?.scale) || 1, OVERLAY_MIN_SCALE, OVERLAY_MAX_SCALE),
+  }
+
+  return {
+    ...next,
+    x: clamp(safeNumber(next.x), -canvasWidth * 0.42, canvasWidth * 0.42),
+    y: clamp(safeNumber(next.y), -canvasHeight * 0.42, canvasHeight * 0.42),
+  }
+}
+
+function drawStickerPill(ctx, text, x, y, options = {}) {
+  const {
+    fontSize = 24,
+    height = 58,
+    padX = 22,
+    maxWidth = 500,
+    color = '#ffffff',
+    fill = 'rgba(8,10,14,0.72)',
+    stroke = 'rgba(255,255,255,0.16)',
+  } = options
+
+  ctx.save()
+  ctx.font = `900 ${fontSize}px Inter, Arial, sans-serif`
+  const width = Math.min(maxWidth, Math.max(height, ctx.measureText(text).width + padX * 2))
+  drawRoundRect(ctx, x, y, width, height, height / 2)
+  ctx.fillStyle = fill
+  ctx.fill()
+  ctx.strokeStyle = stroke
+  ctx.lineWidth = 2
+  ctx.stroke()
+  ctx.fillStyle = color
+  ctx.fillText(truncateText(ctx, text, width - padX * 2), x + padX, y + height / 2 + fontSize * 0.34)
+  ctx.restore()
+
+  return width
+}
+
+function drawStickerMetric(ctx, metric, x, y, options = {}) {
+  const {
+    width = 220,
+    height = 104,
+    accentColor = '#ef4444',
+    compact = false,
+  } = options
+
+  drawGlassPanel(ctx, x, y, width, height, compact ? 28 : 34, {
+    fill: 'rgba(8,10,14,0.66)',
+    stroke: 'rgba(255,255,255,0.16)',
+    shadow: true,
+  })
+
+  ctx.fillStyle = '#ffffff'
+  ctx.font = `950 ${compact ? 28 : 36}px Inter, Arial, sans-serif`
+  ctx.fillText(truncateText(ctx, metric.value, width - 36), x + 18, y + (compact ? 40 : 50))
+  ctx.fillStyle = accentColor
+  ctx.font = `900 ${compact ? 15 : 18}px Inter, Arial, sans-serif`
+  ctx.fillText(truncateText(ctx, String(metric.label || '').toUpperCase(), width - 36), x + 18, y + height - 20)
+}
+
+function drawStickerOverlayContent(ctx, stats, options) {
+  const { width, height, caption, infoLevel, iconImage, accentColor, format, template } = options
+  const isStory = format === 'story'
+  const pad = isStory ? 64 : 46
+  const safeBottom = isStory ? 132 : 78
+  const contentWidth = width - pad * 2
+  const basePanelW = isStory ? contentWidth : contentWidth * 0.94
+  const metrics = getVisibleMetrics(stats, infoLevel, template === 'performance' || template === 'darkGlass' ? 4 : 3)
+
+  if (template === 'editorial') {
+    const panelH = isStory ? 420 : 300
+    const panelY = height - safeBottom - panelH
+    drawGlassPanel(ctx, pad, panelY, basePanelW, panelH, isStory ? 54 : 42, {
+      fill: 'rgba(250,250,250,0.90)',
+      stroke: 'rgba(255,255,255,0.74)',
+    })
+    ctx.fillStyle = '#0f1115'
+    ctx.font = `950 ${isStory ? 48 : 34}px Inter, Arial, sans-serif`
+    drawWrappedText(ctx, caption, pad + 34, panelY + 72, basePanelW - 68, isStory ? 58 : 42, isStory ? 3 : 2)
+    ctx.fillStyle = accentColor
+    ctx.font = `950 ${isStory ? 24 : 18}px Inter, Arial, sans-serif`
+    ctx.fillText('FORGEFLOW', pad + 34, panelY + panelH - 88)
+    ctx.fillStyle = 'rgba(15,17,21,0.72)'
+    ctx.font = `850 ${isStory ? 28 : 20}px Inter, Arial, sans-serif`
+    ctx.fillText(truncateText(ctx, `${stats.workoutName} • ${stats.durationLabel}`, basePanelW - 68), pad + 34, panelY + panelH - 46)
+    return
+  }
+
+  if (template === 'heroPr') {
+    const hasPr = stats.prCount > 0
+    const heroW = isStory ? 430 : 310
+    const heroH = isStory ? 270 : 190
+    const heroX = pad
+    const heroY = height - safeBottom - heroH - (isStory ? 235 : 160)
+    drawGlassPanel(ctx, heroX, heroY, heroW, heroH, isStory ? 48 : 36, {
+      fill: 'rgba(8,10,14,0.74)',
+      stroke: hasPr ? 'rgba(250,204,21,0.32)' : 'rgba(255,255,255,0.18)',
+    })
+    ctx.fillStyle = hasPr ? '#fde68a' : accentColor
+    ctx.font = `950 ${isStory ? 24 : 18}px Inter, Arial, sans-serif`
+    ctx.fillText(hasPr ? 'NOVO RECORDE' : 'TREINO FEITO', heroX + 28, heroY + 52)
+    ctx.fillStyle = '#ffffff'
+    ctx.font = `950 ${isStory ? 88 : 60}px Inter, Arial, sans-serif`
+    ctx.fillText(hasPr ? `${stats.prCount} PR${stats.prCount > 1 ? 's' : ''}` : 'OK', heroX + 28, heroY + (isStory ? 142 : 102))
+    ctx.fillStyle = 'rgba(255,255,255,0.68)'
+    ctx.font = `850 ${isStory ? 22 : 17}px Inter, Arial, sans-serif`
+    const prText = hasPr ? getPrText(stats.prs[0]) : stats.workoutName
+    drawWrappedText(ctx, prText, heroX + 28, heroY + (isStory ? 190 : 136), heroW - 56, isStory ? 30 : 23, 2)
+  }
+
+  const panelH = isStory ? 360 : 256
+  const panelY = height - safeBottom - panelH
+  const panelX = isStory ? pad : (width - basePanelW) / 2
+  drawGlassPanel(ctx, panelX, panelY, basePanelW, panelH, isStory ? 54 : 42, {
+    fill: 'rgba(8,10,14,0.64)',
+    stroke: 'rgba(255,255,255,0.18)',
+  })
+
+  drawBrand(ctx, iconImage, panelX + 30, panelY + 30, isStory ? 0.64 : 0.48, { muted: true, label: 'sticker card' })
+
+  ctx.fillStyle = '#ffffff'
+  ctx.font = `950 ${isStory ? 42 : 30}px Inter, Arial, sans-serif`
+  drawWrappedText(ctx, stats.workoutName, panelX + 30, panelY + (isStory ? 132 : 98), basePanelW - 60, isStory ? 50 : 36, 2)
+
+  if (template !== 'heroPr') {
+    ctx.fillStyle = 'rgba(255,255,255,0.78)'
+    ctx.font = `850 ${isStory ? 25 : 18}px Inter, Arial, sans-serif`
+    drawWrappedText(ctx, caption, panelX + 30, panelY + (isStory ? 238 : 170), basePanelW - 60, isStory ? 34 : 25, 2)
+  }
+
+  const metricY = panelY + panelH + (isStory ? 22 : 14)
+  const metricW = (basePanelW - (metrics.length - 1) * 14) / Math.max(1, Math.min(metrics.length, isStory ? 3 : 3))
+  metrics.slice(0, isStory ? 3 : 3).forEach((metric, index) => {
+    drawStickerMetric(ctx, metric, panelX + index * (metricW + 14), metricY, {
+      width: metricW,
+      height: isStory ? 92 : 74,
+      accentColor,
+      compact: true,
+    })
+  })
+
+  if (template === 'performance' || template === 'darkGlass') {
+    const extra = template === 'performance' ? stats.volumeLabel : `${stats.prCount} PR${stats.prCount === 1 ? '' : 's'}`
+    drawStickerPill(ctx, extra, width - pad - (isStory ? 310 : 230), isStory ? pad + 40 : pad + 12, {
+      maxWidth: isStory ? 310 : 230,
+      fontSize: isStory ? 28 : 21,
+      height: isStory ? 66 : 50,
+      color: '#fff',
+      fill: 'rgba(239,68,68,0.72)',
+      stroke: 'rgba(255,255,255,0.24)',
+    })
+  }
+}
+
+function drawTransformedOverlay(ctx, stats, options) {
+  const { width, height, overlayTransform } = options
+  const transform = clampOverlayTransform(overlayTransform, width, height)
+
+  ctx.save()
+  ctx.translate(width / 2 + transform.x, height / 2 + transform.y)
+  ctx.scale(transform.scale, transform.scale)
+  ctx.translate(-width / 2, -height / 2)
+  drawStickerOverlayContent(ctx, stats, options)
+  ctx.restore()
 }
 
 function drawPhotoStoryTemplate(ctx, stats, options) {
@@ -1282,6 +1545,8 @@ async function drawWorkoutShareCanvas(canvas, options) {
     selectedBackground,
     userPhoto,
     photoTransform,
+    overlayMode = 'fullCard',
+    overlayTransform = DEFAULT_OVERLAY_TRANSFORM,
   } = options
 
   await waitForFonts()
@@ -1331,11 +1596,14 @@ async function drawWorkoutShareCanvas(canvas, options) {
     iconImage,
     accentColor,
     accentSoftColor,
-    template: selectedTemplate,
+    template: selectedTemplate.id,
     format: selectedFormat.id,
+    overlayTransform,
   }
 
-  if (selectedTemplate.id === 'heroPr') {
+  if (overlayMode === 'stickers') {
+    drawTransformedOverlay(ctx, stats, templateOptions)
+  } else if (selectedTemplate.id === 'heroPr') {
     drawHeroPrTemplate(ctx, stats, templateOptions)
   } else if (selectedTemplate.id === 'performance') {
     drawPerformanceTemplate(ctx, stats, templateOptions)
@@ -1439,8 +1707,10 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   const activePointers = useRef(new Map())
   const gestureRef = useRef(null)
   const photoTransformRef = useRef(DEFAULT_PHOTO_TRANSFORM)
+  const overlayTransformRef = useRef(DEFAULT_OVERLAY_TRANSFORM)
   const userPhotoRef = useRef(null)
   const selectedFormatRef = useRef(SHARE_FORMATS[0])
+  const activeEditLayerRef = useRef('overlay')
 
   const [template, setTemplate] = useState('photoStory')
   const [format, setFormat] = useState('story')
@@ -1449,8 +1719,11 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   const [customCaption, setCustomCaption] = useState('')
   const [backgroundMode, setBackgroundMode] = useState('theme')
   const [selectedBackground, setSelectedBackground] = useState('forgeRed')
+  const [overlayMode, setOverlayMode] = useState('stickers')
+  const [activeEditLayer, setActiveEditLayer] = useState('overlay')
   const [userPhoto, setUserPhoto] = useState(null)
   const [photoTransform, setPhotoTransform] = useState(DEFAULT_PHOTO_TRANSFORM)
+  const [overlayTransform, setOverlayTransform] = useState(DEFAULT_OVERLAY_TRANSFORM)
   const [status, setStatus] = useState('')
   const [busy, setBusy] = useState(false)
   const [ready, setReady] = useState(false)
@@ -1459,6 +1732,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   const selectedPhrase = SHARE_PHRASES[phraseId] || SHARE_PHRASES[0]
   const caption = customCaption.trim() || selectedPhrase
   const hasEditablePhoto = backgroundMode === 'photo' && Boolean(userPhoto?.src)
+  const canEditPreview = hasEditablePhoto || overlayMode === 'stickers'
 
   const stats = useMemo(() => {
     if (!session) return null
@@ -1473,6 +1747,14 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   useEffect(() => {
     photoTransformRef.current = photoTransform
   }, [photoTransform])
+
+  useEffect(() => {
+    overlayTransformRef.current = overlayTransform
+  }, [overlayTransform])
+
+  useEffect(() => {
+    activeEditLayerRef.current = activeEditLayer
+  }, [activeEditLayer])
 
   useEffect(() => {
     userPhotoRef.current = userPhoto
@@ -1499,6 +1781,8 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       selectedBackground,
       userPhoto,
       photoTransform,
+      overlayMode,
+      overlayTransform,
     })
       .then(() => {
         if (active) setReady(true)
@@ -1514,7 +1798,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     return () => {
       active = false
     }
-  }, [backgroundMode, caption, format, infoLevel, meta, open, photoTransform, selectedBackground, session, template, userPhoto])
+  }, [backgroundMode, caption, format, infoLevel, meta, open, overlayMode, overlayTransform, photoTransform, selectedBackground, session, template, userPhoto])
 
   useEffect(() => {
     if (!open || typeof document === 'undefined') return undefined
@@ -1535,6 +1819,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       setBusy(false)
       activePointers.current.clear()
       gestureRef.current = null
+      setActiveEditLayer('overlay')
     }
   }, [open])
 
@@ -1571,12 +1856,14 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
 
   function startGestureFromPointers() {
     const pointers = Array.from(activePointers.current.values())
-    const currentTransform = photoTransformRef.current
+    const layer = activeEditLayerRef.current === 'photo' && userPhotoRef.current?.src ? 'photo' : 'overlay'
+    const currentTransform = layer === 'photo' ? photoTransformRef.current : overlayTransformRef.current
     const currentFormat = selectedFormatRef.current
 
     if (pointers.length === 1) {
       gestureRef.current = {
         type: 'drag',
+        layer,
         pointerId: pointers[0].id,
         startPoint: pointers[0].canvas,
         startTransform: currentTransform,
@@ -1596,6 +1883,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
 
       gestureRef.current = {
         type: 'pinch',
+        layer,
         startDistance: Math.max(1, getDistance(first, second)),
         startCenter,
         startTransform,
@@ -1616,8 +1904,29 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     setPhotoTransform(clamped)
   }
 
+  function applyOverlayTransform(nextTransform) {
+    const currentFormat = selectedFormatRef.current
+    const clamped = clampOverlayTransform(nextTransform, currentFormat.width, currentFormat.height)
+    overlayTransformRef.current = clamped
+    setOverlayTransform(clamped)
+  }
+
+  function applyLayerTransform(layer, nextTransform) {
+    if (layer === 'photo') {
+      applyPhotoTransform(nextTransform)
+      return
+    }
+
+    applyOverlayTransform(nextTransform)
+  }
+
   function handlePointerDown(event) {
-    if (!hasEditablePhoto) return
+    if (!canEditPreview) return
+
+    if (activeEditLayer === 'photo' && !hasEditablePhoto) {
+      setActiveEditLayer('overlay')
+      activeEditLayerRef.current = 'overlay'
+    }
 
     event.preventDefault()
     event.currentTarget.setPointerCapture?.(event.pointerId)
@@ -1626,7 +1935,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   }
 
   function handlePointerMove(event) {
-    if (!hasEditablePhoto || !activePointers.current.has(event.pointerId)) return
+    if (!canEditPreview || !activePointers.current.has(event.pointerId)) return
 
     event.preventDefault()
     activePointers.current.set(event.pointerId, getPointerSnapshot(event))
@@ -1640,7 +1949,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       const current = activePointers.current.get(gesture.pointerId)
       if (!current) return
 
-      applyPhotoTransform({
+      applyLayerTransform(gesture.layer, {
         ...gesture.startTransform,
         x: safeNumber(gesture.startTransform.x) + current.canvas.x - gesture.startPoint.x,
         y: safeNumber(gesture.startTransform.y) + current.canvas.y - gesture.startPoint.y,
@@ -1653,15 +1962,17 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       const second = pointers[1].canvas
       const currentCenter = getCenter(first, second)
       const distance = Math.max(1, getDistance(first, second))
-      const nextScale = clamp(safeNumber(gesture.startTransform.scale) * (distance / gesture.startDistance), PHOTO_MIN_SCALE, PHOTO_MAX_SCALE)
-      const ratio = nextScale / Math.max(PHOTO_MIN_SCALE, safeNumber(gesture.startTransform.scale) || 1)
+      const minScale = gesture.layer === 'photo' ? PHOTO_MIN_SCALE : OVERLAY_MIN_SCALE
+      const maxScale = gesture.layer === 'photo' ? PHOTO_MAX_SCALE : OVERLAY_MAX_SCALE
+      const nextScale = clamp(safeNumber(gesture.startTransform.scale) * (distance / gesture.startDistance), minScale, maxScale)
+      const ratio = nextScale / Math.max(minScale, safeNumber(gesture.startTransform.scale) || 1)
       const nextImageCenter = {
         x: currentCenter.x - gesture.centerOffset.x * ratio,
         y: currentCenter.y - gesture.centerOffset.y * ratio,
       }
       const currentFormat = selectedFormatRef.current
 
-      applyPhotoTransform({
+      applyLayerTransform(gesture.layer, {
         ...gesture.startTransform,
         scale: nextScale,
         x: nextImageCenter.x - currentFormat.width / 2,
@@ -1701,8 +2012,10 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       const nextPhoto = await createUserPhotoFromFile(file)
       setUserPhoto(nextPhoto)
       setBackgroundMode('photo')
-      setPhotoTransform(DEFAULT_PHOTO_TRANSFORM)
-      setStatus('Foto aplicada. Arraste no preview para mover e use dois dedos para dar zoom.')
+      setOverlayMode('stickers')
+      setActiveEditLayer('overlay')
+      setPhotoTransform(PHOTO_FIT_TRANSFORM)
+      setStatus('Foto aplicada. As informações viraram figurinhas; selecione Foto ou Informações para mover e dar zoom no preview.')
     } catch (error) {
       console.error(error)
       setStatus(error?.message || 'Não foi possível carregar essa foto.')
@@ -1728,7 +2041,20 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
 
   function handlePhotoFit() {
     applyPhotoTransform({ x: 0, y: 0, scale: 1, fit: 'contain' })
-    setStatus('Foto ajustada inteira no card.')
+    setStatus('Foto ajustada inteira no card, sem cortar o enquadramento principal.')
+  }
+
+  function handleResetOverlay() {
+    applyOverlayTransform(DEFAULT_OVERLAY_TRANSFORM)
+    setStatus('Figurinhas resetadas para a posição original.')
+  }
+
+  function handleOverlaySmaller() {
+    applyOverlayTransform({ ...overlayTransformRef.current, scale: Math.max(OVERLAY_MIN_SCALE, safeNumber(overlayTransformRef.current.scale) - 0.12) })
+  }
+
+  function handleOverlayBigger() {
+    applyOverlayTransform({ ...overlayTransformRef.current, scale: Math.min(OVERLAY_MAX_SCALE, safeNumber(overlayTransformRef.current.scale) + 0.12) })
   }
 
   async function getImageBlob(options = {}) {
@@ -1747,6 +2073,8 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       selectedBackground,
       userPhoto,
       photoTransform,
+      overlayMode,
+      overlayTransform,
     })
 
     return canvasToBlob(canvasRef.current, mimeType, quality)
@@ -1768,6 +2096,8 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       selectedBackground,
       userPhoto,
       photoTransform,
+      overlayMode,
+      overlayTransform,
     })
 
     const dataUrl = canvasRef.current.toDataURL(mimeType, quality)
@@ -1971,7 +2301,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
           <section className="ff-share-studio__preview" aria-label="Prévia da imagem">
             <canvas
               ref={canvasRef}
-              className={`ff-share-studio__canvas is-${format} template-${template} bg-${selectedBackground}${hasEditablePhoto ? ' is-editing-photo' : ''}`}
+              className={`ff-share-studio__canvas is-${format} template-${template} bg-${selectedBackground}${canEditPreview ? ' is-editing-photo' : ''} editing-${activeEditLayer}`}
               style={{ aspectRatio: `${selectedFormat.width} / ${selectedFormat.height}` }}
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
@@ -1980,10 +2310,10 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
               onPointerLeave={handlePointerUp}
             />
 
-            {hasEditablePhoto && (
+            {canEditPreview && (
               <div className="ff-share-studio__gesture-hint" aria-hidden="true">
-                <strong>Arraste para mover</strong>
-                <span>Use dois dedos para dar zoom</span>
+                <strong>{activeEditLayer === 'photo' ? 'Editando foto' : 'Editando figurinhas'}</strong>
+                <span>Arraste para mover • dois dedos para zoom</span>
               </div>
             )}
 
@@ -1997,7 +2327,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
           <section className="ff-share-studio__controls">
             <div className="ff-share-studio__tip-card">
               <strong>Editor premium do card</strong>
-              <small>Escolha o visual, use foto própria como fundo e ajuste o enquadramento diretamente na prévia.</small>
+              <small>Use sua foto como destaque e deixe as informações como figurinhas por cima, no estilo Story do Instagram.</small>
             </div>
 
             <div className="ff-share-studio__section-title">
@@ -2018,6 +2348,66 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
                 </button>
               ))}
             </div>
+
+            <div className="ff-share-studio__section-title">
+              <Move size={16} />
+              <span>Camada de informações</span>
+            </div>
+
+            <div className="ff-share-studio__overlay-mode">
+              <button
+                type="button"
+                className={overlayMode === 'stickers' ? 'is-active' : ''}
+                onClick={() => {
+                  setOverlayMode('stickers')
+                  setActiveEditLayer('overlay')
+                }}
+              >
+                <strong>Figurinhas</strong>
+                <small>Foto em destaque, informações menores por cima.</small>
+              </button>
+              <button
+                type="button"
+                className={overlayMode === 'fullCard' ? 'is-active' : ''}
+                onClick={() => setOverlayMode('fullCard')}
+              >
+                <strong>Card inteiro</strong>
+                <small>Visual premium ocupando mais espaço.</small>
+              </button>
+            </div>
+
+            {overlayMode === 'stickers' && (
+              <>
+                <div className="ff-share-studio__edit-layer" aria-label="Escolha o que editar no preview">
+                  <button
+                    type="button"
+                    className={activeEditLayer === 'overlay' ? 'is-active' : ''}
+                    onClick={() => setActiveEditLayer('overlay')}
+                  >
+                    Informações
+                  </button>
+                  <button
+                    type="button"
+                    className={activeEditLayer === 'photo' ? 'is-active' : ''}
+                    onClick={() => {
+                      if (hasEditablePhoto) {
+                        setActiveEditLayer('photo')
+                      } else {
+                        fileInputRef.current?.click()
+                      }
+                    }}
+                  >
+                    Foto
+                  </button>
+                </div>
+
+                <div className="ff-share-studio__overlay-tools">
+                  <button type="button" onClick={handleResetOverlay}>Resetar figurinhas</button>
+                  <button type="button" onClick={handleOverlaySmaller}>Menor</button>
+                  <button type="button" onClick={handleOverlayBigger}>Maior</button>
+                </div>
+              </>
+            )}
 
             <div className="ff-share-studio__section-title">
               <Layers3 size={16} />
@@ -2057,6 +2447,8 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
                 onClick={() => {
                   if (userPhoto?.src) {
                     setBackgroundMode('photo')
+                    setOverlayMode('stickers')
+                    setActiveEditLayer('photo')
                     return
                   }
                   fileInputRef.current?.click()

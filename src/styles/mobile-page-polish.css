@@ -13591,3 +13591,125 @@ body.ff-share-studio-open .mobile-bottom-nav {
     max-height: 38dvh !important;
   }
 }
+
+/* ForgeFlow 22/06 - Share Studio V7: figurinhas editáveis sobre foto */
+.ff-share-studio__overlay-mode,
+.ff-share-studio__edit-layer,
+.ff-share-studio__overlay-tools {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.ff-share-studio__overlay-mode {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ff-share-studio__overlay-mode button,
+.ff-share-studio__edit-layer button,
+.ff-share-studio__overlay-tools button {
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.048);
+  color: rgba(255, 255, 255, 0.74);
+  font-weight: 900;
+}
+
+.ff-share-studio__overlay-mode button {
+  min-height: 4.55rem;
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.ff-share-studio__overlay-mode button.is-active,
+.ff-share-studio__edit-layer button.is-active,
+.ff-share-studio__overlay-tools button:hover {
+  border-color: rgba(239, 68, 68, 0.52);
+  background: rgba(239, 68, 68, 0.14);
+  color: #fff;
+}
+
+.ff-share-studio__overlay-mode strong {
+  display: block;
+  font-size: 0.88rem;
+  line-height: 1.12;
+}
+
+.ff-share-studio__overlay-mode small {
+  display: -webkit-box;
+  margin-top: 0.24rem;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 0.68rem;
+  line-height: 1.18;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.ff-share-studio__edit-layer {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 1rem;
+  background: rgba(0, 0, 0, 0.18);
+  padding: 0.35rem;
+}
+
+.ff-share-studio__edit-layer button {
+  min-height: 2.45rem;
+  border-radius: 0.78rem;
+  text-align: center;
+}
+
+.ff-share-studio__overlay-tools {
+  grid-template-columns: 1.3fr 0.8fr 0.8fr;
+}
+
+.ff-share-studio__overlay-tools button {
+  min-height: 2.55rem;
+  border-radius: 0.85rem;
+  padding: 0 0.55rem;
+  text-align: center;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.ff-share-studio__canvas.editing-overlay {
+  outline: 2px solid rgba(239, 68, 68, 0.28);
+  outline-offset: 4px;
+}
+
+.ff-share-studio__canvas.editing-photo {
+  outline: 2px solid rgba(14, 165, 255, 0.28);
+  outline-offset: 4px;
+}
+
+.ff-share-studio__gesture-hint {
+  left: 1.25rem;
+  right: auto;
+  bottom: 1.25rem;
+}
+
+@media (max-width: 767px) {
+  .ff-share-studio__overlay-mode {
+    grid-template-columns: repeat(2, minmax(9.25rem, 1fr));
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
+  }
+
+  .ff-share-studio__overlay-mode button {
+    min-height: 4.25rem;
+  }
+
+  .ff-share-studio__overlay-tools {
+    grid-template-columns: repeat(3, minmax(6.2rem, 1fr));
+    overflow-x: auto;
+    padding-bottom: 0.1rem;
+  }
+
+  .ff-share-studio__gesture-hint {
+    left: 0.85rem;
+    right: auto;
+    bottom: 0.85rem;
+  }
+}
