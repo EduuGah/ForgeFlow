@@ -15495,10 +15495,33 @@ body.ff-share-studio-open .mobile-bottom-nav {
 
 .ff-share-next__canvas {
   display: block;
+  image-rendering: auto;
 }
 
 .ff-share-next__stickers {
   pointer-events: none;
+}
+
+.ff-share-next__guide {
+  position: absolute;
+  pointer-events: none;
+  z-index: 12;
+  background: rgba(239, 68, 68, 0.92);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.24), 0 0 24px rgba(239, 68, 68, 0.28);
+}
+
+.ff-share-next__guide--vertical {
+  top: 18px;
+  bottom: 18px;
+  width: 2px;
+  transform: translateX(-50%);
+}
+
+.ff-share-next__guide--horizontal {
+  left: 18px;
+  right: 18px;
+  height: 2px;
+  transform: translateY(-50%);
 }
 
 .ff-share-next__sticker {

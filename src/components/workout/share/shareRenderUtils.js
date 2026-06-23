@@ -2059,12 +2059,14 @@ function drawStickerSet(ctx, stats, options = {}) {
 
 function renderStickerPreviewDataUrl(stickerId, stats, options = {}) {
   if (typeof document === 'undefined') return ''
-  const { format = 'story' } = options
+  const { format = 'story', pixelRatio = 1 } = options
   const size = getStickerCanvasSize(stickerId, format)
+  const ratio = Math.max(1, Number(pixelRatio) || 1)
   const canvas = document.createElement('canvas')
-  canvas.width = size.width
-  canvas.height = size.height
+  canvas.width = Math.round(size.width * ratio)
+  canvas.height = Math.round(size.height * ratio)
   const ctx = canvas.getContext('2d')
+  ctx.scale(ratio, ratio)
   drawSingleWorkoutSticker(ctx, stickerId, stats, options)
   return canvas.toDataURL('image/png')
 }
@@ -2532,6 +2534,7 @@ async function drawWorkoutShareCanvas(canvas, options) {
     overlayMode = 'fullCard',
     overlayTransform = DEFAULT_OVERLAY_TRANSFORM,
     stickers = null,
+    pixelRatio = 1,
   } = options
 
   await waitForFonts()
@@ -2545,8 +2548,14 @@ async function drawWorkoutShareCanvas(canvas, options) {
   const accentSoftColor = getShareAccentSoftColor()
   const safeCaption = String(phrase ?? caption ?? '').trim() || SHARE_PHRASES[0]
 
-  canvas.width = width
-  canvas.height = height
+  const ratio = Math.max(1, Number(pixelRatio) || 1)
+  canvas.width = Math.round(width * ratio)
+  canvas.height = Math.round(height * ratio)
+  if (canvas.style) {
+    canvas.style.width = '100%'
+    canvas.style.height = '100%'
+  }
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0)
   ctx.clearRect(0, 0, width, height)
 
   let iconImage = null
