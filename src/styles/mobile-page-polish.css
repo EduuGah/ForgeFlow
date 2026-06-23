@@ -15102,3 +15102,189 @@ body.ff-share-studio-open .mobile-bottom-nav {
     justify-content: center !important;
   }
 }
+
+/* ForgeFlow 23/06 - Share Studio V23: mini-menu simplificado, fechável e sem scroll lateral */
+.ff-share-studio,
+.ff-share-studio__panel,
+.ff-share-studio__body,
+.ff-share-studio__preview,
+.ff-share-studio__controls {
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+}
+
+.ff-share-studio__sticker-popover {
+  position: fixed !important;
+  z-index: 2147483647 !important;
+  display: grid !important;
+  gap: 0.5rem !important;
+  max-width: calc(100vw - 24px) !important;
+  max-height: min(42dvh, 250px) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  padding: 0.6rem !important;
+  border-radius: 0.92rem !important;
+  background: rgba(7, 10, 16, 0.96) !important;
+  transform: none !important;
+  overscroll-behavior: contain !important;
+}
+
+.ff-share-studio__sticker-popover::after {
+  display: none !important;
+}
+
+.ff-share-studio__sticker-popover * {
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.ff-share-studio__sticker-popover-head.is-compact {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 2rem !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+.ff-share-studio__sticker-popover-title {
+  min-width: 0 !important;
+}
+
+.ff-share-studio__sticker-popover-title i {
+  width: 1.65rem !important;
+  height: 1.65rem !important;
+  font-size: 0.82rem !important;
+}
+
+.ff-share-studio__sticker-popover-title strong {
+  overflow: hidden !important;
+  font-size: 0.78rem !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.ff-share-studio__sticker-popover-title small {
+  overflow: hidden !important;
+  font-size: 0.62rem !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.ff-share-studio__popover-close {
+  width: 2rem !important;
+  height: 2rem !important;
+  min-height: 2rem !important;
+  padding: 0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+  font-size: 1.1rem !important;
+  font-weight: 900 !important;
+}
+
+.ff-share-studio__sticker-popover-tabs.is-compact,
+.ff-share-studio__sticker-popover-tabs {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0.32rem !important;
+}
+
+.ff-share-studio__sticker-popover-tabs button,
+.ff-share-studio__popover-row button {
+  min-height: 1.82rem !important;
+  padding: 0.24rem 0.34rem !important;
+  overflow: hidden !important;
+  font-size: 0.66rem !important;
+  line-height: 1 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.ff-share-studio__sticker-popover-body.is-simple,
+.ff-share-studio__sticker-popover-body {
+  gap: 0.45rem !important;
+}
+
+.ff-share-studio__popover-row,
+.ff-share-studio__popover-row.is-actions,
+.ff-share-studio__popover-row.is-actions.is-grid,
+.ff-share-studio__popover-row.is-actions.is-compact-four,
+.ff-share-studio__popover-row.is-actions.is-compact-three,
+.ff-share-studio__popover-row.is-actions.is-two-up,
+.ff-share-studio__popover-row.is-color-only,
+.ff-share-studio__popover-row.is-sliders.is-two-up {
+  display: grid !important;
+  gap: 0.34rem !important;
+  overflow: hidden !important;
+}
+
+.ff-share-studio__popover-row.is-actions.is-compact-four {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+.ff-share-studio__popover-row.is-actions.is-compact-three,
+.ff-share-studio__popover-row.is-actions.is-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+.ff-share-studio__popover-row.is-actions.is-two-up,
+.ff-share-studio__popover-row.is-color-only,
+.ff-share-studio__popover-row.is-sliders.is-two-up {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.ff-share-studio__popover-row select,
+.ff-share-studio__popover-row input[type='color'] {
+  min-height: 2rem !important;
+  width: 100% !important;
+  font-size: 0.7rem !important;
+}
+
+.ff-share-studio__mini-slider {
+  display: grid !important;
+  grid-template-columns: 2.8rem minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
+}
+
+.ff-share-studio__mini-slider span {
+  color: rgba(255,255,255,0.7) !important;
+  font-size: 0.64rem !important;
+  font-weight: 850 !important;
+}
+
+.ff-share-studio__floating-toolbar.is-compact {
+  left: 12px !important;
+  right: 12px !important;
+  bottom: calc(78px + env(safe-area-inset-bottom)) !important;
+  width: auto !important;
+  max-width: none !important;
+  transform: none !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto auto !important;
+  gap: 0.45rem !important;
+  overflow-x: hidden !important;
+  z-index: 2147483647 !important;
+}
+
+.ff-share-studio__floating-toolbar.is-compact button {
+  min-width: 0 !important;
+  white-space: nowrap !important;
+}
+
+@media (max-width: 767px) {
+  .ff-share-studio__sticker-popover {
+    width: min(calc(100vw - 24px), 276px) !important;
+    max-height: min(38dvh, 224px) !important;
+  }
+
+  .ff-share-studio__popover-row.is-actions.is-compact-four {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .ff-share-studio__popover-row.is-actions.is-compact-three,
+  .ff-share-studio__popover-row.is-actions.is-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}

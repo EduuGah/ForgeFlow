@@ -2745,6 +2745,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   const [selectedStickerId, setSelectedStickerId] = useState('summary')
   const [stickerPopoverPosition, setStickerPopoverPosition] = useState(null)
   const [stickerPopoverTab, setStickerPopoverTab] = useState('quick')
+  const [stickerPopoverVisible, setStickerPopoverVisible] = useState(true)
   const [snapGuide, setSnapGuide] = useState({ x: null, y: null, bottom: false })
   const [status, setStatus] = useState('')
   const [busy, setBusy] = useState(false)
@@ -2794,6 +2795,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
 
   useEffect(() => {
     setStickerPopoverTab('quick')
+    setStickerPopoverVisible(true)
   }, [selectedStickerId])
 
   useEffect(() => {
@@ -2837,15 +2839,14 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   }, [caption, format, infoLevel, open, overlayMode, previewIconImage, stats, visibleStickers])
 
   useEffect(() => {
-    if (overlayMode !== 'stickers' || activeEditLayer !== 'overlay' || !selectedSticker || !previewShellRef.current || typeof window === 'undefined') {
+    if (!stickerPopoverVisible || overlayMode !== 'stickers' || activeEditLayer !== 'overlay' || !selectedSticker || typeof window === 'undefined') {
       setStickerPopoverPosition(null)
       return undefined
     }
 
     const updatePopoverPosition = () => {
-      const previewEl = previewShellRef.current
       const stickerEl = stickerElementRefs.current.get(selectedStickerId)
-      if (!previewEl || !stickerEl) {
+      if (!stickerEl) {
         setStickerPopoverPosition(null)
         return
       }
@@ -2853,22 +2854,20 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       const stickerRect = stickerEl.getBoundingClientRect()
       const viewportWidth = window.innerWidth
       const viewportHeight = window.innerHeight
-      const width = Math.min(Math.max(Math.min(viewportWidth - 20, 260), 220), 260)
-      const margin = 10
-      const desiredLeft = stickerRect.left + (stickerRect.width / 2) - (width / 2)
-      const left = clamp(desiredLeft, margin, viewportWidth - width - margin)
-      const preferredHeight = stickerPopoverTab === 'color' ? 248 : 214
-      const spaceAbove = stickerRect.top - margin
-      const spaceBelow = viewportHeight - stickerRect.bottom - margin
-      const placeAbove = spaceAbove > preferredHeight || spaceAbove > spaceBelow
-      const top = placeAbove
-        ? Math.max(margin, stickerRect.top - preferredHeight - 14)
-        : Math.min(viewportHeight - preferredHeight - margin, stickerRect.bottom + 14)
+      const margin = 12
+      const width = Math.min(viewportWidth - margin * 2, 276)
+      const estimatedHeight = stickerPopoverTab === 'color' ? 194 : stickerPopoverTab === 'align' ? 178 : 156
+      const stickerCenterY = stickerRect.top + stickerRect.height / 2
+      const placeAtTop = stickerCenterY > viewportHeight / 2
+      const top = placeAtTop
+        ? margin + Math.max(0, Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sat') || '0'))
+        : viewportHeight - estimatedHeight - margin - 72
+      const left = clamp((viewportWidth - width) / 2, margin, viewportWidth - width - margin)
 
       setStickerPopoverPosition({
         left,
-        top,
-        placement: placeAbove ? 'top' : 'bottom',
+        top: clamp(top, margin, Math.max(margin, viewportHeight - estimatedHeight - margin)),
+        placement: placeAtTop ? 'top-fixed' : 'bottom-fixed',
         width,
       })
     }
@@ -2880,7 +2879,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       window.removeEventListener('resize', updatePopoverPosition)
       window.removeEventListener('scroll', updatePopoverPosition, true)
     }
-  }, [activeEditLayer, overlayMode, selectedSticker, selectedStickerId, stickers, format])
+  }, [activeEditLayer, overlayMode, selectedSticker, selectedStickerId, stickers, format, stickerPopoverTab, stickerPopoverVisible])
 
   useEffect(() => {
     selectedFormatRef.current = selectedFormat
@@ -4102,93 +4101,67 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
                   width: stickerPopoverPosition.width,
                 }}
               >
-                <div className="ff-share-studio__sticker-popover-head">
+                <div className="ff-share-studio__sticker-popover-head is-compact">
                   <div className="ff-share-studio__sticker-popover-title">
                     <i aria-hidden="true">✦</i>
                     <span>
                       <strong>{selectedStickerMeta.label}</strong>
-                      <small>{stickerPopoverTab === 'quick' ? 'Ações rápidas' : stickerPopoverTab === 'color' ? 'Cores e HSL' : 'Posição e camadas'}</small>
+                      <small>{stickerPopoverTab === 'quick' ? 'Edição rápida' : stickerPopoverTab === 'color' ? 'Cor principal' : 'Posição'}</small>
                     </span>
                   </div>
-                  <div className="ff-share-studio__sticker-popover-tabs">
-                    <button type="button" className={stickerPopoverTab === 'quick' ? 'is-active' : ''} onClick={() => setStickerPopoverTab('quick')}>⚡ Rápido</button>
-                    <button type="button" className={stickerPopoverTab === 'color' ? 'is-active' : ''} onClick={() => setStickerPopoverTab('color')}>🎨 Cor</button>
-                    <button type="button" className={stickerPopoverTab === 'align' ? 'is-active' : ''} onClick={() => setStickerPopoverTab('align')}>📐 Alinhar</button>
-                  </div>
+                  <button type="button" className="ff-share-studio__popover-close" aria-label="Fechar menu" onClick={() => setStickerPopoverVisible(false)}>×</button>
+                </div>
+
+                <div className="ff-share-studio__sticker-popover-tabs is-compact">
+                  <button type="button" className={stickerPopoverTab === 'quick' ? 'is-active' : ''} onClick={() => setStickerPopoverTab('quick')}>Rápido</button>
+                  <button type="button" className={stickerPopoverTab === 'color' ? 'is-active' : ''} onClick={() => setStickerPopoverTab('color')}>Cor</button>
+                  <button type="button" className={stickerPopoverTab === 'align' ? 'is-active' : ''} onClick={() => setStickerPopoverTab('align')}>Alinhar</button>
                 </div>
 
                 {stickerPopoverTab === 'quick' ? (
-                  <div className="ff-share-studio__sticker-popover-body">
+                  <div className="ff-share-studio__sticker-popover-body is-simple">
                     <div className="ff-share-studio__popover-row is-actions is-compact-four">
-                      <button type="button" onClick={handleSelectedStickerSmaller}>− Menor</button>
-                      <button type="button" onClick={handleSelectedStickerBigger}>+ Maior</button>
-                      <button type="button" onClick={() => applyStickerThemePreset('glass')}>▣ Glass</button>
-                      <button type="button" onClick={() => applyStickerThemePreset('clean')}>□ Clean</button>
+                      <button type="button" onClick={handleSelectedStickerSmaller}>−</button>
+                      <button type="button" onClick={handleSelectedStickerBigger}>+</button>
+                      <button type="button" onClick={() => applyStickerThemePreset('glass')}>Glass</button>
+                      <button type="button" onClick={() => applyStickerThemePreset('transparent')}>Transp.</button>
                     </div>
-                    <div className="ff-share-studio__popover-row is-actions is-compact-three">
-                      <button type="button" onClick={() => applyStickerThemePreset('minimal')}>◇ Minimal</button>
-                      <button type="button" onClick={() => applyStickerThemePreset('transparent')}>◎ Transpar.</button>
-                      <button type="button" onClick={() => toggleSticker(selectedStickerId)}>👁 Ocultar</button>
-                    </div>
-                    <div className="ff-share-studio__popover-row is-sliders is-two-up">
-                      <label>
-                        <span>Fundo</span>
-                        <input type="range" min="0" max="1" step="0.01" value={selectedStickerAppearance.backgroundOpacity} onChange={(event) => updateSelectedStickerAppearance({ backgroundOpacity: Number(event.target.value) })} />
-                      </label>
-                      <label>
-                        <span>Borda</span>
-                        <input type="range" min="0" max="1" step="0.01" value={selectedStickerAppearance.borderOpacity} onChange={(event) => updateSelectedStickerAppearance({ borderOpacity: Number(event.target.value) })} />
-                      </label>
-                    </div>
+                    <label className="ff-share-studio__mini-slider">
+                      <span>Fundo</span>
+                      <input type="range" min="0" max="1" step="0.01" value={selectedStickerAppearance.backgroundOpacity} onChange={(event) => updateSelectedStickerAppearance({ backgroundOpacity: Number(event.target.value) })} />
+                    </label>
                   </div>
                 ) : stickerPopoverTab === 'color' ? (
-                  <div className="ff-share-studio__sticker-popover-body">
-                    <div className="ff-share-studio__popover-row">
-                      <label>
-                        <span>Editar</span>
-                        <select value={stickerColorTarget} onChange={(event) => setStickerColorTarget(event.target.value)}>
-                          <option value="titleColor">Título</option>
-                          <option value="textColor">Texto</option>
-                          <option value="accentColor">Destaque</option>
-                          <option value="backgroundColor">Fundo</option>
-                          <option value="borderColor">Borda</option>
-                        </select>
-                      </label>
-                      <label>
-                        <span>Cor</span>
-                        <input type="color" value={selectedStickerColorHex} onChange={(event) => updateSelectedStickerAppearance({ [stickerColorTarget]: event.target.value })} />
-                      </label>
+                  <div className="ff-share-studio__sticker-popover-body is-simple">
+                    <div className="ff-share-studio__popover-row is-color-only">
+                      <select value={stickerColorTarget} onChange={(event) => setStickerColorTarget(event.target.value)}>
+                        <option value="titleColor">Título</option>
+                        <option value="accentColor">Destaque</option>
+                        <option value="backgroundColor">Fundo</option>
+                        <option value="borderColor">Borda</option>
+                      </select>
+                      <input type="color" value={selectedStickerColorHex} onChange={(event) => updateSelectedStickerAppearance({ [stickerColorTarget]: event.target.value })} />
                     </div>
-                    <div className="ff-share-studio__popover-hsl">
-                      <label>
-                        <span>Hue</span>
-                        <input type="range" min="0" max="360" step="1" value={selectedStickerColorHsl.h} onChange={(event) => updateSelectedStickerHsl('h', event.target.value)} />
-                      </label>
-                      <label>
-                        <span>Sat.</span>
-                        <input type="range" min="0" max="100" step="1" value={selectedStickerColorHsl.s} onChange={(event) => updateSelectedStickerHsl('s', event.target.value)} />
-                      </label>
-                      <label>
-                        <span>Luz</span>
-                        <input type="range" min="0" max="100" step="1" value={selectedStickerColorHsl.l} onChange={(event) => updateSelectedStickerHsl('l', event.target.value)} />
-                      </label>
-                    </div>
+                    <label className="ff-share-studio__mini-slider">
+                      <span>Luz</span>
+                      <input type="range" min="0" max="100" step="1" value={selectedStickerColorHsl.l} onChange={(event) => updateSelectedStickerHsl('l', event.target.value)} />
+                    </label>
                   </div>
                 ) : (
-                  <div className="ff-share-studio__sticker-popover-body">
-                    <div className="ff-share-studio__popover-row is-actions is-grid">
-                      <button type="button" onClick={() => alignSelectedSticker('left')}>⬅ Esq.</button>
-                      <button type="button" onClick={() => alignSelectedSticker('centerX')}>↔ Centro</button>
-                      <button type="button" onClick={() => alignSelectedSticker('right')}>Dir. ➡</button>
-                      <button type="button" onClick={() => alignSelectedSticker('top')}>⬆ Topo</button>
-                      <button type="button" onClick={() => alignSelectedSticker('centerY')}>↕ Meio</button>
-                      <button type="button" onClick={() => alignSelectedSticker('bottom')}>⬇ Base</button>
+                  <div className="ff-share-studio__sticker-popover-body is-simple">
+                    <div className="ff-share-studio__popover-row is-actions is-compact-three">
+                      <button type="button" onClick={() => alignSelectedSticker('left')}>Esq.</button>
+                      <button type="button" onClick={() => alignSelectedSticker('centerX')}>Centro</button>
+                      <button type="button" onClick={() => alignSelectedSticker('right')}>Dir.</button>
                     </div>
-                    <div className="ff-share-studio__popover-row is-actions is-grid">
-                      <button type="button" onClick={() => shiftSelectedStickerLayer('back')}>⤓ Fundo</button>
-                      <button type="button" onClick={() => shiftSelectedStickerLayer('backward')}>− Camada</button>
-                      <button type="button" onClick={() => shiftSelectedStickerLayer('forward')}>+ Camada</button>
-                      <button type="button" onClick={() => shiftSelectedStickerLayer('front')}>⤒ Frente</button>
+                    <div className="ff-share-studio__popover-row is-actions is-compact-three">
+                      <button type="button" onClick={() => alignSelectedSticker('top')}>Topo</button>
+                      <button type="button" onClick={() => alignSelectedSticker('centerY')}>Meio</button>
+                      <button type="button" onClick={() => alignSelectedSticker('bottom')}>Base</button>
+                    </div>
+                    <div className="ff-share-studio__popover-row is-actions is-two-up">
+                      <button type="button" onClick={() => shiftSelectedStickerLayer('back')}>Fundo</button>
+                      <button type="button" onClick={() => shiftSelectedStickerLayer('front')}>Frente</button>
                     </div>
                   </div>
                 )}
@@ -4196,16 +4169,13 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
               document.body,
             )}
 
-            {overlayMode === 'stickers' && selectedSticker && selectedStickerMeta && createPortal(
-              <div className="ff-share-studio__floating-toolbar">
+            {overlayMode === 'stickers' && selectedSticker && selectedStickerMeta && !stickerPopoverVisible && createPortal(
+              <div className="ff-share-studio__floating-toolbar is-compact">
                 <span>
                   <strong>{selectedStickerMeta.label}</strong>
-                  <small>Selecionada</small>
                 </span>
-                <button type="button" className={stickerPopoverTab === 'quick' ? 'is-active' : ''} onClick={() => setStickerPopoverTab('quick')}>⚡</button>
-                <button type="button" className={stickerPopoverTab === 'color' ? 'is-active' : ''} onClick={() => setStickerPopoverTab('color')}>🎨</button>
-                <button type="button" className={stickerPopoverTab === 'align' ? 'is-active' : ''} onClick={() => setStickerPopoverTab('align')}>📐</button>
-                <button type="button" onClick={() => shiftSelectedStickerLayer('front')}>⤒</button>
+                <button type="button" onClick={() => setStickerPopoverVisible(true)}>Editar</button>
+                <button type="button" onClick={() => shiftSelectedStickerLayer('front')}>Frente</button>
               </div>,
               document.body,
             )}
