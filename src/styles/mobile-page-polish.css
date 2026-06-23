@@ -14668,84 +14668,81 @@ body.ff-share-studio-open .mobile-bottom-nav {
 }
 
 .ff-share-studio__sticker-popover {
-  position: absolute;
-  z-index: 8;
+  position: fixed;
+  z-index: 40;
   display: grid;
-  gap: 0.75rem;
-  padding: 0.82rem;
+  gap: 0.62rem;
+  padding: 0.7rem;
   border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 1rem;
-  background: rgba(7,10,16,0.88);
+  border-radius: 0.95rem;
+  background: rgba(7,10,16,0.94);
   backdrop-filter: blur(18px);
-  box-shadow: 0 1rem 2.6rem rgba(0,0,0,0.32);
-  transform: translate(-50%, calc(-100% - 12px));
-}
-
-.ff-share-studio__sticker-popover.is-bottom {
-  transform: translate(-50%, 0);
+  box-shadow: 0 1rem 2.6rem rgba(0,0,0,0.34);
 }
 
 .ff-share-studio__sticker-popover::after {
   content: '';
   position: absolute;
   left: 50%;
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-right: 1px solid rgba(255,255,255,0.12);
   border-bottom: 1px solid rgba(255,255,255,0.12);
-  background: rgba(7,10,16,0.88);
-  transform: translateX(-50%) rotate(45deg);
+  background: rgba(7,10,16,0.94);
 }
 
 .ff-share-studio__sticker-popover.is-top::after {
-  bottom: -7px;
+  bottom: -6px;
+  transform: translateX(-50%) rotate(45deg);
 }
 
 .ff-share-studio__sticker-popover.is-bottom::after {
-  top: -7px;
+  top: -6px;
   transform: translateX(-50%) rotate(225deg);
 }
 
 .ff-share-studio__sticker-popover-head {
   display: grid;
-  gap: 0.6rem;
+  gap: 0.48rem;
 }
 
 .ff-share-studio__sticker-popover-head strong {
   display: block;
   color: rgba(255,255,255,0.96);
-  font-size: 0.82rem;
+  font-size: 0.79rem;
   font-weight: 900;
-  line-height: 1.1;
+  line-height: 1.05;
 }
 
 .ff-share-studio__sticker-popover-head small {
   color: rgba(255,255,255,0.56);
-  font-size: 0.68rem;
+  font-size: 0.64rem;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.15;
 }
 
 .ff-share-studio__sticker-popover-tabs {
-  display: inline-grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.45rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem;
 }
 
 .ff-share-studio__sticker-popover-tabs button,
 .ff-share-studio__popover-row button,
 .ff-share-studio__context-note {
-  border-radius: 0.82rem;
+  border-radius: 0.75rem;
 }
 
 .ff-share-studio__sticker-popover-tabs button,
 .ff-share-studio__popover-row button {
-  min-height: 2.1rem;
+  min-height: 1.95rem;
+  padding: 0.2rem 0.42rem;
   border: 1px solid rgba(255,255,255,0.1);
   background: rgba(255,255,255,0.05);
   color: rgba(255,255,255,0.86);
-  font-size: 0.74rem;
+  font-size: 0.69rem;
   font-weight: 800;
+  line-height: 1.05;
 }
 
 .ff-share-studio__sticker-popover-tabs button.is-active {
@@ -14757,52 +14754,54 @@ body.ff-share-studio-open .mobile-bottom-nav {
 .ff-share-studio__sticker-popover-body,
 .ff-share-studio__popover-hsl {
   display: grid;
-  gap: 0.72rem;
+  gap: 0.56rem;
 }
 
 .ff-share-studio__popover-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.55rem;
+  gap: 0.42rem;
 }
 
-.ff-share-studio__popover-row.is-actions {
+.ff-share-studio__popover-row.is-actions,
+.ff-share-studio__popover-row.is-actions.is-grid,
+.ff-share-studio__popover-row.is-actions.is-compact-four {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.ff-share-studio__popover-row.is-actions.is-grid {
+.ff-share-studio__popover-row.is-actions.is-compact-three {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.ff-share-studio__popover-row.is-sliders {
-  grid-template-columns: 1fr;
+.ff-share-studio__popover-row.is-sliders.is-two-up {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .ff-share-studio__popover-row label,
 .ff-share-studio__popover-hsl label {
   display: grid;
-  gap: 0.32rem;
+  gap: 0.25rem;
 }
 
 .ff-share-studio__popover-row span,
 .ff-share-studio__popover-hsl span {
   color: rgba(255,255,255,0.75);
-  font-size: 0.68rem;
+  font-size: 0.63rem;
   font-weight: 800;
 }
 
 .ff-share-studio__popover-row select,
 .ff-share-studio__popover-row input[type='color'] {
   width: 100%;
-  min-height: 2.35rem;
+  min-height: 2.1rem;
   border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 0.78rem;
+  border-radius: 0.7rem;
   background: rgba(255,255,255,0.06);
   color: rgba(255,255,255,0.92);
 }
 
 .ff-share-studio__popover-row input[type='color'] {
-  padding: 0.14rem;
+  padding: 0.12rem;
 }
 
 .ff-share-studio__context-note {
@@ -14827,19 +14826,196 @@ body.ff-share-studio-open .mobile-bottom-nav {
 
 @media (max-width: 767px) {
   .ff-share-studio__sticker-popover {
-    width: min(calc(100% - 12px), 320px) !important;
-    padding: 0.72rem;
+    width: min(calc(100vw - 16px), 252px) !important;
+    padding: 0.62rem;
   }
 
-  .ff-share-studio__popover-row,
   .ff-share-studio__popover-row.is-actions,
   .ff-share-studio__popover-row.is-actions.is-grid,
-  .ff-share-studio__sticker-popover-tabs {
+  .ff-share-studio__popover-row.is-actions.is-compact-four,
+  .ff-share-studio__popover-row.is-actions.is-compact-three,
+  .ff-share-studio__popover-row.is-sliders.is-two-up {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .ff-share-studio__editing-badge {
     top: 0.55rem;
     left: 0.55rem;
+  }
+}
+
+/* ForgeFlow 22/06 - Share Studio V21: mini inspector premium + toolbar flutuante */
+.ff-share-studio__sticker-popover {
+  gap: 0.5rem !important;
+  padding: 0.58rem !important;
+  border-radius: 0.9rem !important;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(239,68,68,0.16), transparent 34%),
+    rgba(7,10,16,0.94) !important;
+  box-shadow:
+    0 1.1rem 2.8rem rgba(0,0,0,0.38),
+    inset 0 1px 0 rgba(255,255,255,0.08) !important;
+}
+
+.ff-share-studio__sticker-popover-title {
+  display: flex;
+  align-items: center;
+  gap: 0.48rem;
+  min-width: 0;
+}
+
+.ff-share-studio__sticker-popover-title i {
+  display: grid;
+  width: 1.55rem;
+  height: 1.55rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 0.55rem;
+  background: rgba(239,68,68,0.18);
+  color: #fecaca;
+  font-style: normal;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.ff-share-studio__sticker-popover-title span {
+  display: grid;
+  min-width: 0;
+  gap: 0.05rem;
+}
+
+.ff-share-studio__sticker-popover-title strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-share-studio__sticker-popover-tabs {
+  padding: 0.14rem;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 0.78rem;
+  background: rgba(255,255,255,0.035);
+}
+
+.ff-share-studio__sticker-popover-tabs button,
+.ff-share-studio__popover-row button {
+  min-height: 1.82rem !important;
+  padding: 0.2rem 0.34rem !important;
+  border-radius: 0.62rem !important;
+  font-size: 0.65rem !important;
+}
+
+.ff-share-studio__sticker-popover-tabs button.is-active,
+.ff-share-studio__floating-toolbar button.is-active {
+  border-color: rgba(239,68,68,0.48) !important;
+  background: linear-gradient(180deg, rgba(239,68,68,0.28), rgba(239,68,68,0.14)) !important;
+  box-shadow: 0 0 0 1px rgba(239,68,68,0.1) inset;
+}
+
+.ff-share-studio__popover-row {
+  gap: 0.36rem !important;
+}
+
+.ff-share-studio__popover-row select,
+.ff-share-studio__popover-row input[type='color'] {
+  min-height: 2rem !important;
+  border-radius: 0.62rem !important;
+}
+
+.ff-share-studio__popover-hsl {
+  gap: 0.48rem !important;
+}
+
+.ff-share-studio__popover-hsl input[type='range'],
+.ff-share-studio__popover-row input[type='range'] {
+  accent-color: #ef4444;
+}
+
+.ff-share-studio__floating-toolbar {
+  position: fixed;
+  left: 50%;
+  bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  z-index: 39;
+  display: flex;
+  align-items: center;
+  gap: 0.42rem;
+  max-width: min(calc(100vw - 1rem), 25rem);
+  padding: 0.42rem;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 999px;
+  background: rgba(7,10,16,0.88);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 1rem 2.4rem rgba(0,0,0,0.36);
+  transform: translateX(-50%);
+}
+
+.ff-share-studio__floating-toolbar span {
+  display: grid;
+  min-width: 5.2rem;
+  max-width: 8.6rem;
+  padding: 0 0.44rem 0 0.3rem;
+}
+
+.ff-share-studio__floating-toolbar strong,
+.ff-share-studio__floating-toolbar small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-share-studio__floating-toolbar strong {
+  color: rgba(255,255,255,0.94);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.ff-share-studio__floating-toolbar small {
+  color: rgba(255,255,255,0.5);
+  font-size: 0.58rem;
+  font-weight: 800;
+}
+
+.ff-share-studio__floating-toolbar button {
+  display: grid;
+  width: 2.05rem;
+  height: 2.05rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 767px) {
+  .ff-share-studio__sticker-popover {
+    width: min(calc(100vw - 18px), 238px) !important;
+    padding: 0.52rem !important;
+  }
+
+  .ff-share-studio__sticker-popover-head {
+    gap: 0.38rem !important;
+  }
+
+  .ff-share-studio__sticker-popover-title i {
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+
+  .ff-share-studio__sticker-popover-tabs button,
+  .ff-share-studio__popover-row button {
+    min-height: 1.72rem !important;
+    font-size: 0.61rem !important;
+  }
+
+  .ff-share-studio__floating-toolbar {
+    bottom: calc(0.55rem + env(safe-area-inset-bottom));
+    max-width: min(calc(100vw - 0.75rem), 22rem);
+  }
+
+  .ff-share-studio__floating-toolbar span {
+    min-width: 4.7rem;
+    max-width: 7rem;
   }
 }
