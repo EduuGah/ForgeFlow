@@ -15019,3 +15019,86 @@ body.ff-share-studio-open .mobile-bottom-nav {
     max-width: 7rem;
   }
 }
+
+/* ForgeFlow 23/06 - Share Studio V22: popover acima da modal + sem corte lateral */
+.ff-share-studio__sticker-popover,
+.ff-share-studio__floating-toolbar {
+  z-index: 2147483647 !important;
+}
+
+.ff-share-studio,
+.ff-share-studio__panel,
+.ff-share-studio__body,
+.ff-share-studio__controls,
+.ff-share-studio__preview {
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+}
+
+.ff-share-studio__panel,
+.ff-share-studio__body,
+.ff-share-studio__controls,
+.ff-share-studio__panel-body,
+.ff-share-studio__quick-summary,
+.ff-share-studio__format-grid,
+.ff-share-studio__overlay-mode,
+.ff-share-studio__template-grid,
+.ff-share-studio__background-mode,
+.ff-share-studio__background-grid,
+.ff-share-studio__info-levels,
+.ff-share-studio__sticker-picker,
+.ff-share-studio__overlay-tools,
+.ff-share-studio__photo-tools,
+.ff-share-studio__phrase-row,
+.ff-share-studio__stats {
+  min-width: 0 !important;
+}
+
+.ff-share-studio__sticker-popover {
+  max-width: calc(100vw - 16px) !important;
+  box-sizing: border-box !important;
+}
+
+.ff-share-studio__floating-toolbar {
+  max-width: calc(100vw - 12px) !important;
+  box-sizing: border-box !important;
+}
+
+.ff-share-studio__floating-toolbar button,
+.ff-share-studio__sticker-popover button,
+.ff-share-studio__sticker-popover select,
+.ff-share-studio__sticker-popover input {
+  max-width: 100% !important;
+}
+
+@media (max-width: 767px) {
+  html.ff-share-studio-open,
+  body.ff-share-studio-open {
+    overflow-x: hidden !important;
+  }
+
+  .ff-share-studio {
+    overflow-x: hidden !important;
+  }
+
+  .ff-share-studio__body {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+
+  .ff-share-studio__sticker-popover {
+    width: min(244px, calc(100vw - 18px)) !important;
+    max-height: min(56dvh, 320px) !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+  }
+
+  .ff-share-studio__floating-toolbar {
+    left: max(6px, env(safe-area-inset-left)) !important;
+    right: max(6px, env(safe-area-inset-right)) !important;
+    width: auto !important;
+    transform: none !important;
+    justify-content: center !important;
+  }
+}
