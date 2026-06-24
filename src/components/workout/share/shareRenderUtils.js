@@ -2025,9 +2025,6 @@ function drawSingleWorkoutSticker(ctx, stickerId, stats, options = {}) {
     ctx.fillStyle = titleColor
     ctx.font = '950 34px Inter, Arial, sans-serif'
     drawWrappedText(ctx, caption || 'Mais um treino concluído.', 30, 52, width - 60, 42, 2)
-    ctx.fillStyle = resolvedAccent
-    ctx.font = '950 18px Inter, Arial, sans-serif'
-    ctx.fillText('FORGEFLOW NOTE', 30, height - 28)
   } else {
     const rows = getStickerRows(stickerId, stats)
     const titleMap = {

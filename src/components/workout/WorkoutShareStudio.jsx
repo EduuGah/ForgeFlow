@@ -107,6 +107,10 @@ const COLOR_TARGETS = [
   { id: 'borderColor', label: 'Borda' },
 ]
 
+const COLOR_SWATCHES = [
+  '#ffffff', '#e2e8f0', '#cbd5e1', '#0f172a', '#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#f43f5e',
+]
+
 const LAYOUT_PRESET_LABELS = [
   { id: 'balanced', label: 'Base' },
   { id: 'compact', label: 'Compacto' },
@@ -193,7 +197,7 @@ function formatOpacityLabel(value) {
   return percent === 0 ? '0% · transparente' : `${percent}%`
 }
 
-function StickerAppearancePreview({ sticker, stickerMeta, previewImage }) {
+function StickerAppearancePreview({ sticker, stickerMeta }) {
   if (!sticker || !stickerMeta) return null
 
   return (
@@ -209,15 +213,14 @@ function StickerAppearancePreview({ sticker, stickerMeta, previewImage }) {
           }}
         >
           <div className="ff-share-next__style-preview-copy">
-            <span style={{ color: sticker.accentColor }}>Destaque</span>
+            <span style={{ color: sticker.accentColor }}>Exemplo visual</span>
             <strong style={{ color: sticker.titleColor }}>{stickerMeta.label}</strong>
-            <small style={{ color: sticker.textColor }}>Prévia rápida para ver fundo, borda e transparência.</small>
+            <small style={{ color: sticker.textColor }}>Use esta prévia para conferir cor, fundo, borda e transparência.</small>
           </div>
-          {previewImage && (
-            <div className="ff-share-next__style-preview-thumb">
-              <img src={previewImage} alt="" draggable="false" />
-            </div>
-          )}
+          <div className="ff-share-next__style-preview-meta">
+            <b style={{ color: sticker.textColor }}>{formatOpacityLabel(sticker.backgroundOpacity ?? 0)}</b>
+            <small style={{ color: sticker.textColor }}>Fundo</small>
+          </div>
         </div>
       </div>
     </div>
@@ -236,7 +239,7 @@ function CompactStickerBar({ selectedStickerMeta, selectedSticker, previewImage,
         <div className="ff-share-next__quickbar-label">
           <span>Figurinha selecionada</span>
           <strong>{selectedStickerMeta.label}</strong>
-          <small>Arraste com 1 dedo. Use 2 dedos para zoom.</small>
+          <small>Toque para abrir cores, aparência ou posição.</small>
         </div>
       </div>
       <div className="ff-share-next__quickbar-actions">
@@ -294,8 +297,14 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   const stickerGestureRef = useRef(null)
   const stickerMoveRafRef = useRef(0)
   const pendingStickerFrameRef = useRef(null)
+  const liveStickerTransformRef = useRef(null)
+  const stickerNodeRefs = useRef({})
+  const verticalGuideRef = useRef(null)
+  const horizontalGuideRef = useRef(null)
   const photoPointersRef = useRef(new Map())
   const photoGestureRef = useRef(null)
+  const photoMoveRafRef = useRef(0)
+  const pendingPhotoTransformRef = useRef(null)
 
   const [format, setFormat] = useState('story')
   const [template, setTemplate] = useState('premium')
@@ -316,11 +325,13 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   const [status, setStatus] = useState('')
   const [busy, setBusy] = useState(false)
   const [ready, setReady] = useState(false)
-  const [snapGuides, setSnapGuides] = useState(null)
 
   const previewPixelRatio = useMemo(() => {
     if (typeof window === 'undefined') return 1
-    return Math.min(window.devicePixelRatio || 1, 2)
+    const deviceRatio = window.devicePixelRatio || 1
+    return window.innerWidth <= 640
+      ? Math.min(deviceRatio, 1.35)
+      : Math.min(deviceRatio, 1.75)
   }, [])
 
   const selectedFormat = useMemo(() => getFormat(format), [format])
@@ -448,6 +459,11 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       setActiveSheet(null)
       photoPointersRef.current.clear()
       photoGestureRef.current = null
+      pendingPhotoTransformRef.current = null
+      if (typeof window !== 'undefined' && photoMoveRafRef.current) {
+        window.cancelAnimationFrame(photoMoveRafRef.current)
+        photoMoveRafRef.current = 0
+      }
       stickerPointersRef.current.clear()
       stickerGestureRef.current = null
       pendingStickerFrameRef.current = null
@@ -455,7 +471,8 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
         window.cancelAnimationFrame(stickerMoveRafRef.current)
         stickerMoveRafRef.current = 0
       }
-      setSnapGuides(null)
+      verticalGuideRef.current?.classList.remove('is-visible')
+      horizontalGuideRef.current?.classList.remove('is-visible')
     }
   }, [open])
 
@@ -661,6 +678,45 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     }
   }
 
+  function applyStickerLiveStyle(stickerId, transform) {
+    const node = stickerNodeRefs.current[stickerId]
+    if (!node) return
+
+    const style = getStickerDomStyleForFormat(stickerId, transform, selectedFormat)
+    node.style.left = style.left
+    node.style.top = style.top
+    node.style.width = style.width
+    node.style.transform = style.transform
+    node.style.zIndex = String(style.zIndex || 1)
+  }
+
+  function showLiveGuides(guides) {
+    const vertical = verticalGuideRef.current
+    const horizontal = horizontalGuideRef.current
+
+    if (vertical) {
+      if (guides?.vertical != null) {
+        vertical.style.left = `${(guides.vertical / selectedFormat.width) * 100}%`
+        vertical.classList.add('is-visible')
+      } else {
+        vertical.classList.remove('is-visible')
+      }
+    }
+
+    if (horizontal) {
+      if (guides?.horizontal != null) {
+        horizontal.style.top = `${(guides.horizontal / selectedFormat.height) * 100}%`
+        horizontal.classList.add('is-visible')
+      } else {
+        horizontal.classList.remove('is-visible')
+      }
+    }
+  }
+
+  function hideLiveGuides() {
+    showLiveGuides(null)
+  }
+
   function alignSticker(action) {
     if (!selectedStickerId || !selectedSticker) return
 
@@ -673,9 +729,9 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       const snapped = getAutoSnapResult(selectedStickerId, selectedSticker)
       if (snapped.guides) {
         updateSelectedSticker(snapped.transform)
-        setSnapGuides(snapped.guides)
+        showLiveGuides(snapped.guides)
         if (typeof window !== 'undefined') {
-          window.setTimeout(() => setSnapGuides(null), 520)
+          window.setTimeout(hideLiveGuides, 520)
         }
         setStatus(`Autoalinhamento aplicado em ${selectedStickerMeta?.label || 'figurinha'}.`)
         return
@@ -708,9 +764,12 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
 
   function startStickerGestureSnapshot(stickerId = selectedStickerId) {
     const points = stickerPointersRef.current
+    const live = liveStickerTransformRef.current?.stickerId === stickerId
+      ? liveStickerTransformRef.current.transform
+      : null
     stickerGestureRef.current = {
       stickerId,
-      startTransform: stickersRef.current[stickerId],
+      startTransform: live || stickersRef.current[stickerId],
       startCenter: getPointerCenter(points),
       startDistance: getPointerDistance(points),
       previewRect: previewRef.current?.getBoundingClientRect(),
@@ -776,25 +835,12 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       pendingStickerFrameRef.current = null
       if (!pending) return
 
-      setSnapGuides(pending.guides)
-      setStickers((current) => {
-        const previous = current[pending.stickerId]
-        const nextTransform = pending.transform
-        if (
-          previous
-          && previous.x === nextTransform.x
-          && previous.y === nextTransform.y
-          && previous.scale === nextTransform.scale
-          && previous.zIndex === nextTransform.zIndex
-        ) {
-          return current
-        }
-
-        return {
-          ...current,
-          [pending.stickerId]: nextTransform,
-        }
-      })
+      liveStickerTransformRef.current = {
+        stickerId: pending.stickerId,
+        transform: pending.transform,
+      }
+      applyStickerLiveStyle(pending.stickerId, pending.transform)
+      showLiveGuides(pending.guides)
     })
   }
 
@@ -813,13 +859,32 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       return
     }
 
-    stickerGestureRef.current = null
-    pendingStickerFrameRef.current = null
     if (typeof window !== 'undefined' && stickerMoveRafRef.current) {
       window.cancelAnimationFrame(stickerMoveRafRef.current)
       stickerMoveRafRef.current = 0
     }
-    setSnapGuides(null)
+
+    const pending = pendingStickerFrameRef.current
+    if (pending) {
+      liveStickerTransformRef.current = {
+        stickerId: pending.stickerId,
+        transform: pending.transform,
+      }
+      applyStickerLiveStyle(pending.stickerId, pending.transform)
+    }
+
+    const live = liveStickerTransformRef.current
+    if (live?.stickerId && live.transform) {
+      setStickers((current) => ({
+        ...current,
+        [live.stickerId]: live.transform,
+      }))
+    }
+
+    stickerGestureRef.current = null
+    pendingStickerFrameRef.current = null
+    liveStickerTransformRef.current = null
+    hideLiveGuides()
   }
 
   function startPhotoGestureSnapshot() {
@@ -857,14 +922,21 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     const delta = getPointerCanvasDelta(gesture.startCenter, center, gesture.previewRect, selectedFormat)
     const distance = getPointerDistance(photoPointersRef.current)
     const scaleRatio = photoPointersRef.current.size > 1 ? distance / Math.max(1, gesture.startDistance) : 1
-    const nextTransform = clampPhotoTransform({
+    pendingPhotoTransformRef.current = clampPhotoTransform({
       ...gesture.startTransform,
       x: Number(gesture.startTransform.x || 0) + delta.x,
       y: Number(gesture.startTransform.y || 0) + delta.y,
       scale: clamp(Number(gesture.startTransform.scale || 1) * scaleRatio, 0.4, PHOTO_MAX_SCALE),
     }, userPhoto, selectedFormat.width, selectedFormat.height)
 
-    setPhotoTransform(nextTransform)
+    if (photoMoveRafRef.current || typeof window === 'undefined') return
+
+    photoMoveRafRef.current = window.requestAnimationFrame(() => {
+      photoMoveRafRef.current = 0
+      if (!pendingPhotoTransformRef.current) return
+      setPhotoTransform(pendingPhotoTransformRef.current)
+      pendingPhotoTransformRef.current = null
+    })
   }
 
   function handlePreviewPointerUp(event) {
@@ -880,6 +952,14 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     if (photoPointersRef.current.size) {
       startPhotoGestureSnapshot()
     } else {
+      if (typeof window !== 'undefined' && photoMoveRafRef.current) {
+        window.cancelAnimationFrame(photoMoveRafRef.current)
+        photoMoveRafRef.current = 0
+      }
+      if (pendingPhotoTransformRef.current) {
+        setPhotoTransform(pendingPhotoTransformRef.current)
+        pendingPhotoTransformRef.current = null
+      }
       photoGestureRef.current = null
     }
   }
@@ -1109,6 +1189,10 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
                     key={entry.id}
                     type="button"
                     data-sticker-id={entry.id}
+                    ref={(node) => {
+                      if (node) stickerNodeRefs.current[entry.id] = node
+                      else delete stickerNodeRefs.current[entry.id]
+                    }}
                     className={`ff-share-next__sticker${selectedStickerId === entry.id ? ' is-selected' : ''}`}
                     style={getStickerDomStyleForFormat(entry.id, entry.transform, selectedFormat)}
                     onClick={() => {
@@ -1127,18 +1211,8 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
                 ))}
               </div>
 
-              {snapGuides?.vertical != null && (
-                <div
-                  className="ff-share-next__guide ff-share-next__guide--vertical"
-                  style={{ left: `${(snapGuides.vertical / selectedFormat.width) * 100}%` }}
-                />
-              )}
-              {snapGuides?.horizontal != null && (
-                <div
-                  className="ff-share-next__guide ff-share-next__guide--horizontal"
-                  style={{ top: `${(snapGuides.horizontal / selectedFormat.height) * 100}%` }}
-                />
-              )}
+              <div ref={verticalGuideRef} className="ff-share-next__guide ff-share-next__guide--vertical" />
+              <div ref={horizontalGuideRef} className="ff-share-next__guide ff-share-next__guide--horizontal" />
 
               {activeEditLayer === 'photo' && hasPhoto && (
                 <div className="ff-share-next__photo-hint">Arraste ou use dois dedos na foto</div>
@@ -1167,7 +1241,6 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
                   <StickerAppearancePreview
                     sticker={selectedSticker}
                     stickerMeta={selectedStickerMeta}
-                    previewImage={selectedStickerId ? stickerPreviewImages[selectedStickerId] : ''}
                   />
 
                   <SegmentedControl
@@ -1187,6 +1260,19 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
                     <code>{selectedSticker[colorTarget] || '#ffffff'}</code>
                   </label>
 
+                  <div className="ff-share-next__swatch-row" aria-label="Sugestões de cor">
+                    {COLOR_SWATCHES.map((swatch) => (
+                      <button
+                        key={swatch}
+                        type="button"
+                        className={selectedSticker[colorTarget] === swatch ? 'is-active' : ''}
+                        style={{ '--ff-swatch': swatch }}
+                        onClick={() => updateStickerColor(swatch)}
+                        aria-label={`Usar cor ${swatch}`}
+                      />
+                    ))}
+                  </div>
+
                   <details className="ff-share-next__advanced">
                     <summary>Ajuste fino (HSL)</summary>
                     <label><span>Matiz</span><input type="range" min="0" max="360" value={selectedStickerHsl.h} onChange={(event) => updateStickerColorFromHsl('h', event.target.value)} /></label>
@@ -1201,7 +1287,6 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
                   <StickerAppearancePreview
                     sticker={selectedSticker}
                     stickerMeta={selectedStickerMeta}
-                    previewImage={selectedStickerId ? stickerPreviewImages[selectedStickerId] : ''}
                   />
 
                   <div className="ff-share-next__preset-row">
@@ -1214,6 +1299,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
                   </div>
 
                   <div className="ff-share-next__mini-action-row">
+                    <button type="button" onClick={() => setActiveSheet('color')}>Alterar cores</button>
                     <button type="button" onClick={() => updateSelectedSticker({ backgroundOpacity: 0 })}>Sem fundo</button>
                     <button type="button" onClick={() => updateSelectedSticker({ borderOpacity: 0, borderWidth: 0 })}>Sem borda</button>
                     <button type="button" onClick={() => applyStickerPreset('glass')}>Restaurar</button>
@@ -1239,7 +1325,6 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
                   <StickerAppearancePreview
                     sticker={selectedSticker}
                     stickerMeta={selectedStickerMeta}
-                    previewImage={selectedStickerId ? stickerPreviewImages[selectedStickerId] : ''}
                   />
                   <div className="ff-share-next__align-grid">
                     <button type="button" onClick={() => alignSticker('auto')}>Auto</button>

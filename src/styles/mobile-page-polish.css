@@ -13421,7 +13421,7 @@ body.ff-share-studio-open .mobile-bottom-nav {
 
 .ff-share-studio__canvas.is-editing-photo {
   cursor: grab;
-  touch-action: none;
+  touch-action: pan-y pinch-zoom;
   user-select: none;
   overscroll-behavior: contain;
 }
@@ -15476,13 +15476,14 @@ body.ff-share-studio-open .mobile-bottom-nav {
   background: #020306;
   box-shadow: 0 22px 54px rgba(0, 0, 0, 0.46);
   overflow: hidden;
-  touch-action: none;
+  touch-action: pan-y pinch-zoom;
   user-select: none;
 }
 
 .ff-share-next__preview.is-photo-editing {
-  outline: 2px solid rgba(239, 68, 68, 0.34);
+  outline: 2px solid rgba(239, 68, 68, 0.28);
   outline-offset: 3px;
+  touch-action: none;
 }
 
 .ff-share-next__canvas,
@@ -15506,8 +15507,13 @@ body.ff-share-studio-open .mobile-bottom-nav {
   position: absolute;
   pointer-events: none;
   z-index: 12;
+  display: none;
   background: rgba(239, 68, 68, 0.92);
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.24), 0 0 24px rgba(239, 68, 68, 0.28);
+}
+
+.ff-share-next__guide.is-visible {
+  display: block;
 }
 
 .ff-share-next__guide--vertical {
@@ -15554,10 +15560,10 @@ body.ff-share-studio-open .mobile-bottom-nav {
 .ff-share-next__sticker.is-selected::after {
   content: '';
   position: absolute;
-  inset: -7px;
-  border: 2px solid rgba(239, 68, 68, 0.95);
+  inset: -6px;
+  border: 2px solid rgba(255, 255, 255, 0.92);
   border-radius: 22px;
-  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.16);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12), 0 8px 20px rgba(2, 6, 23, 0.28);
   pointer-events: none;
 }
 
@@ -15686,11 +15692,10 @@ body.ff-share-studio-open .mobile-bottom-nav {
 }
 
 .ff-share-next__sheet {
-  position: sticky;
-  bottom: 0;
+  position: relative;
   z-index: 10;
   width: min(100%, 560px);
-  max-height: min(42vh, 420px);
+  max-height: none;
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr);
   border: 1px solid rgba(255, 255, 255, 0.13);
@@ -15755,8 +15760,7 @@ body.ff-share-studio-open .mobile-bottom-nav {
   min-width: 0;
   min-height: 0;
   padding: 12px;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: visible;
 }
 
 .ff-share-next__sheet-grid {
@@ -15817,6 +15821,24 @@ body.ff-share-studio-open .mobile-bottom-nav {
   line-height: 1.35;
 }
 
+.ff-share-next__style-preview-meta {
+  min-width: 76px;
+  display: grid;
+  gap: 4px;
+  align-items: center;
+  justify-items: end;
+}
+
+.ff-share-next__style-preview-meta b {
+  font-size: 0.84rem;
+  font-weight: 950;
+}
+
+.ff-share-next__style-preview-meta small {
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
 .ff-share-next__style-preview-thumb {
   width: 82px;
   height: 82px;
@@ -15836,7 +15858,7 @@ body.ff-share-studio-open .mobile-bottom-nav {
 
 .ff-share-next__mini-action-row {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -15930,6 +15952,26 @@ body.ff-share-studio-open .mobile-bottom-nav {
   accent-color: #ef4444;
 }
 
+.ff-share-next__swatch-row {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ff-share-next__swatch-row button {
+  width: 100%;
+  aspect-ratio: 1;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: var(--ff-swatch);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+}
+
+.ff-share-next__swatch-row button.is-active {
+  border-color: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.16);
+}
+
 .ff-share-next__preset-row,
 .ff-share-next__template-row,
 .ff-share-next__background-row,
@@ -15949,6 +15991,18 @@ body.ff-share-studio-open .mobile-bottom-nav {
 .ff-share-next__background-row::-webkit-scrollbar,
 .ff-share-next__phrase-row::-webkit-scrollbar {
   display: none;
+}
+
+.ff-share-next__sheet .ff-share-next__preset-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  overflow: visible;
+  padding-bottom: 0;
+}
+
+.ff-share-next__sheet .ff-share-next__preset-row button {
+  width: 100%;
+  max-width: none;
 }
 
 .ff-share-next__preset-row button,
@@ -16292,7 +16346,7 @@ body.ff-share-studio-open .mobile-bottom-nav {
   .ff-share-next__quickbar-actions {
     justify-content: stretch;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .ff-share-next__quickbar-actions button {
@@ -16303,10 +16357,9 @@ body.ff-share-studio-open .mobile-bottom-nav {
   }
 
   .ff-share-next__sheet {
-    position: sticky;
-    bottom: 0;
+    position: relative;
     width: 100%;
-    max-height: 40vh;
+    max-height: none;
     border-radius: 22px;
   }
 
@@ -16342,7 +16395,8 @@ body.ff-share-studio-open .mobile-bottom-nav {
   .ff-share-next__align-grid,
   .ff-share-next__layout-row,
   .ff-share-next__photo-tools,
-  .ff-share-next__mini-action-row {
+  .ff-share-next__mini-action-row,
+  .ff-share-next__swatch-row {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
