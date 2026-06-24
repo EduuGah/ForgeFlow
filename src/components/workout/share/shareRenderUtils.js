@@ -1823,6 +1823,17 @@ function drawStickerHeader(ctx, title, subtitle, width, accentColor, options = {
   }
 }
 
+function getColorAlpha(color) {
+  const input = String(color || '').trim().toLowerCase()
+  if (!input) return 0
+  if (input.startsWith('rgba(')) {
+    const parts = input.slice(5, -1).split(',').map((item) => item.trim())
+    return clamp(Number(parts[3] ?? 1), 0, 1)
+  }
+  if (input.startsWith('rgb(') || input.startsWith('#')) return 1
+  return 1
+}
+
 function drawStickerPanelBase(ctx, width, height, options = {}) {
   const {
     radius = 34,
@@ -1832,7 +1843,9 @@ function drawStickerPanelBase(ctx, width, height, options = {}) {
     lineWidth = 2,
   } = options
 
-  drawGlassPanel(ctx, 0, 0, width, height, radius, { fill, stroke, shadow, lineWidth })
+  const resolvedShadow = shadow && (getColorAlpha(fill) > 0.02 || (lineWidth > 0 && getColorAlpha(stroke) > 0.02))
+
+  drawGlassPanel(ctx, 0, 0, width, height, radius, { fill, stroke, shadow: resolvedShadow, lineWidth })
 }
 
 function drawListRows(ctx, rows, x, y, width, options = {}) {

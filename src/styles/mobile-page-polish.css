@@ -15581,21 +15581,58 @@ body.ff-share-studio-open .mobile-bottom-nav {
 }
 
 .ff-share-next__quickbar {
-  width: min(100%, 520px);
+  width: min(100%, 560px);
   min-width: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
-  align-items: center;
-  padding: 10px;
+  gap: 12px;
+  padding: 12px;
   border: 1px solid rgba(255, 255, 255, 0.11);
-  border-radius: 22px;
-  background: rgba(12, 15, 22, 0.9);
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(14, 18, 27, 0.96), rgba(8, 11, 18, 0.96));
   box-shadow: 0 18px 44px rgba(0, 0, 0, 0.32);
+}
+
+.ff-share-next__quickbar-main {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.ff-share-next__quickbar-preview {
+  width: 62px;
+  height: 62px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  background:
+    linear-gradient(45deg, rgba(255,255,255,0.06) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.06) 75%),
+    linear-gradient(45deg, rgba(255,255,255,0.06) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.06) 75%),
+    rgba(255, 255, 255, 0.03);
+  background-position: 0 0, 10px 10px, 0 0;
+  background-size: 20px 20px;
+}
+
+.ff-share-next__quickbar-preview img {
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+}
+
+.ff-share-next__quickbar-preview span {
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 950;
 }
 
 .ff-share-next__quickbar-label {
   min-width: 0;
+  display: grid;
+  gap: 3px;
 }
 
 .ff-share-next__quickbar-label span {
@@ -15611,36 +15648,37 @@ body.ff-share-studio-open .mobile-bottom-nav {
   display: block;
   overflow: hidden;
   color: #fff;
-  font-size: 0.92rem;
+  font-size: 1rem;
   line-height: 1.1;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.ff-share-next__quickbar-label small {
+  color: rgba(226, 232, 240, 0.72);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
 .ff-share-next__quickbar-actions {
   min-width: 0;
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .ff-share-next__quickbar-actions button {
-  min-width: 38px;
-  max-width: 76px;
-  min-height: 36px;
-  padding: 8px 10px;
+  min-width: 0;
+  min-height: 40px;
+  padding: 10px 12px;
   border: 1px solid rgba(255, 255, 255, 0.11);
-  border-radius: 12px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.06);
   color: #fff;
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   font-weight: 950;
-  line-height: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.15;
+  text-align: center;
 }
 
 .ff-share-next__quickbar-actions button.is-close {
@@ -15705,6 +15743,14 @@ body.ff-share-studio-open .mobile-bottom-nav {
   white-space: nowrap;
 }
 
+.ff-share-next__sheet-note {
+  margin: 4px 0 0;
+  color: rgba(226, 232, 240, 0.68);
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
 .ff-share-next__sheet-body {
   min-width: 0;
   min-height: 0;
@@ -15717,6 +15763,92 @@ body.ff-share-studio-open .mobile-bottom-nav {
   display: grid;
   gap: 12px;
   min-width: 0;
+}
+
+.ff-share-next__style-preview-wrap {
+  display: grid;
+  gap: 8px;
+}
+
+.ff-share-next__style-preview-checker {
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  background:
+    linear-gradient(45deg, rgba(255,255,255,0.05) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.05) 75%),
+    linear-gradient(45deg, rgba(255,255,255,0.05) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.05) 75%),
+    rgba(255,255,255,0.025);
+  background-position: 0 0, 12px 12px, 0 0;
+  background-size: 24px 24px;
+}
+
+.ff-share-next__style-preview-card {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border-style: solid;
+  border-radius: 18px;
+}
+
+.ff-share-next__style-preview-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.ff-share-next__style-preview-copy span {
+  font-size: 0.73rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.ff-share-next__style-preview-copy strong {
+  color: #fff;
+  font-size: 0.96rem;
+  line-height: 1.1;
+}
+
+.ff-share-next__style-preview-copy small {
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
+.ff-share-next__style-preview-thumb {
+  width: 82px;
+  height: 82px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.ff-share-next__style-preview-thumb img {
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+}
+
+.ff-share-next__mini-action-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ff-share-next__mini-action-row button {
+  min-height: 40px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.055);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 900;
 }
 
 .ff-share-next__field,
@@ -16153,7 +16285,6 @@ body.ff-share-studio-open .mobile-bottom-nav {
 
   .ff-share-next__quickbar {
     width: 100%;
-    grid-template-columns: minmax(0, 1fr);
     gap: 8px;
     border-radius: 18px;
   }
@@ -16161,7 +16292,7 @@ body.ff-share-studio-open .mobile-bottom-nav {
   .ff-share-next__quickbar-actions {
     justify-content: stretch;
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .ff-share-next__quickbar-actions button {
@@ -16210,7 +16341,8 @@ body.ff-share-studio-open .mobile-bottom-nav {
   .ff-share-next__sticker-list,
   .ff-share-next__align-grid,
   .ff-share-next__layout-row,
-  .ff-share-next__photo-tools {
+  .ff-share-next__photo-tools,
+  .ff-share-next__mini-action-row {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 

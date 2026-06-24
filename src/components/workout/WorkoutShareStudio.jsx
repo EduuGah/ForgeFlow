@@ -188,22 +188,64 @@ function SegmentedControl({ label, options, value, onChange }) {
   )
 }
 
-function CompactStickerBar({ selectedStickerMeta, selectedSticker, onClose, onScale, onOpenSheet }) {
+function formatOpacityLabel(value) {
+  const percent = Math.round(Number(value || 0) * 100)
+  return percent === 0 ? '0% · transparente' : `${percent}%`
+}
+
+function StickerAppearancePreview({ sticker, stickerMeta, previewImage }) {
+  if (!sticker || !stickerMeta) return null
+
+  return (
+    <div className="ff-share-next__style-preview-wrap">
+      <span className="ff-share-next__field-label">Prévia da figurinha</span>
+      <div className="ff-share-next__style-preview-checker">
+        <div
+          className="ff-share-next__style-preview-card"
+          style={{
+            background: `rgba(5, 7, 10, ${Number(sticker.backgroundOpacity ?? 0)})`,
+            borderColor: `rgba(255, 255, 255, ${Number(sticker.borderOpacity ?? 0)})`,
+            borderWidth: `${Number(sticker.borderWidth ?? 0)}px`,
+          }}
+        >
+          <div className="ff-share-next__style-preview-copy">
+            <span style={{ color: sticker.accentColor }}>Destaque</span>
+            <strong style={{ color: sticker.titleColor }}>{stickerMeta.label}</strong>
+            <small style={{ color: sticker.textColor }}>Prévia rápida para ver fundo, borda e transparência.</small>
+          </div>
+          {previewImage && (
+            <div className="ff-share-next__style-preview-thumb">
+              <img src={previewImage} alt="" draggable="false" />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function CompactStickerBar({ selectedStickerMeta, selectedSticker, previewImage, onClose, onScale, onOpenSheet }) {
   if (!selectedStickerMeta || !selectedSticker?.visible) return null
 
   return (
     <div className="ff-share-next__quickbar" aria-label="Edição rápida da figurinha selecionada">
-      <div className="ff-share-next__quickbar-label">
-        <span>Editando</span>
-        <strong>{selectedStickerMeta.label}</strong>
+      <div className="ff-share-next__quickbar-main">
+        <div className="ff-share-next__quickbar-preview">
+          {previewImage ? <img src={previewImage} alt="" draggable="false" /> : <span>{selectedStickerMeta.label.slice(0, 2)}</span>}
+        </div>
+        <div className="ff-share-next__quickbar-label">
+          <span>Figurinha selecionada</span>
+          <strong>{selectedStickerMeta.label}</strong>
+          <small>Arraste com 1 dedo. Use 2 dedos para zoom.</small>
+        </div>
       </div>
       <div className="ff-share-next__quickbar-actions">
-        <button type="button" onClick={() => onScale(-0.08)} aria-label="Diminuir figurinha">−</button>
-        <button type="button" onClick={() => onScale(0.08)} aria-label="Aumentar figurinha">+</button>
-        <button type="button" onClick={() => onOpenSheet('color')}>Cor</button>
-        <button type="button" onClick={() => onOpenSheet('style')}>Estilo</button>
-        <button type="button" onClick={() => onOpenSheet('align')}>Alinhar</button>
-        <button type="button" className="is-close" onClick={onClose} aria-label="Fechar edição">×</button>
+        <button type="button" onClick={() => onScale(-0.08)} aria-label="Diminuir tamanho">Tamanho −</button>
+        <button type="button" onClick={() => onScale(0.08)} aria-label="Aumentar tamanho">Tamanho +</button>
+        <button type="button" onClick={() => onOpenSheet('color')}>Cores</button>
+        <button type="button" onClick={() => onOpenSheet('style')}>Aparência</button>
+        <button type="button" onClick={() => onOpenSheet('align')}>Posição</button>
+        <button type="button" className="is-close" onClick={onClose} aria-label="Fechar edição">Fechar</button>
       </div>
     </div>
   )
@@ -214,8 +256,14 @@ function BottomSheet({ mode, selectedStickerMeta, children, onClose }) {
 
   const titles = {
     color: 'Cores da figurinha',
-    style: 'Estilo da figurinha',
+    style: 'Aparência e transparência',
     align: 'Posição e camada',
+  }
+
+  const notes = {
+    color: 'Escolha o que deseja colorir e veja a prévia antes de exportar.',
+    style: 'Ajuste fundo, borda e transparência de forma visual e simples.',
+    align: 'Use para alinhar na tela, alinhar com outras figurinhas e ajustar a camada.',
   }
 
   return (
@@ -225,6 +273,7 @@ function BottomSheet({ mode, selectedStickerMeta, children, onClose }) {
         <div>
           <span>{selectedStickerMeta ? `Editando: ${selectedStickerMeta.label}` : 'Edição'}</span>
           <strong>{titles[mode]}</strong>
+          <p className="ff-share-next__sheet-note">{notes[mode]}</p>
         </div>
         <button type="button" onClick={onClose} aria-label="Fechar painel"><X size={18} /></button>
       </header>
@@ -243,6 +292,8 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   const stickersRef = useRef(getDefaultStickerState('story'))
   const stickerPointersRef = useRef(new Map())
   const stickerGestureRef = useRef(null)
+  const stickerMoveRafRef = useRef(0)
+  const pendingStickerFrameRef = useRef(null)
   const photoPointersRef = useRef(new Map())
   const photoGestureRef = useRef(null)
 
@@ -279,6 +330,18 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   const selectedStickerMeta = selectedStickerId ? getStickerMeta(selectedStickerId) : null
   const selectedStickerHsl = useMemo(() => hexToHsl(selectedSticker?.[colorTarget] || '#ffffff'), [colorTarget, selectedSticker])
   const visibleStickers = useMemo(() => getVisibleStickerEntries(stickers, format), [format, stickers])
+  const stickerPreviewSignature = useMemo(() => visibleStickers.map((entry) => ([
+    entry.id,
+    entry.transform.titleColor,
+    entry.transform.textColor,
+    entry.transform.accentColor,
+    entry.transform.backgroundColor,
+    entry.transform.backgroundOpacity,
+    entry.transform.borderColor,
+    entry.transform.borderOpacity,
+    entry.transform.borderWidth,
+    entry.transform.visible,
+  ].join(':'))).join('|'), [visibleStickers])
   const shareText = useMemo(() => stats ? buildShareText(stats, caption) : '', [caption, stats])
   const hasPhoto = backgroundMode === 'photo' && Boolean(userPhoto?.src)
 
@@ -324,14 +387,11 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       meta,
       template,
       format,
-      infoLevel,
-      phrase: caption,
       backgroundMode,
       selectedBackground,
       userPhoto,
       photoTransform,
       overlayMode: 'none',
-      stickers,
       pixelRatio: previewPixelRatio,
     })
       .then(() => {
@@ -348,7 +408,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     return () => {
       active = false
     }
-  }, [backgroundMode, caption, format, infoLevel, meta, open, photoTransform, previewPixelRatio, selectedBackground, session, stickers, template, userPhoto])
+  }, [backgroundMode, format, meta, open, photoTransform, previewPixelRatio, selectedBackground, session, template, userPhoto])
 
   useEffect(() => {
     if (!open || !stats) return
@@ -366,7 +426,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       })
     })
     setStickerPreviewImages(next)
-  }, [caption, format, infoLevel, open, previewIconImage, previewPixelRatio, stats, visibleStickers])
+  }, [caption, format, infoLevel, open, previewIconImage, previewPixelRatio, stats, stickerPreviewSignature, visibleStickers])
 
   useEffect(() => {
     if (!open || typeof document === 'undefined') return undefined
@@ -390,6 +450,11 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       photoGestureRef.current = null
       stickerPointersRef.current.clear()
       stickerGestureRef.current = null
+      pendingStickerFrameRef.current = null
+      if (typeof window !== 'undefined' && stickerMoveRafRef.current) {
+        window.cancelAnimationFrame(stickerMoveRafRef.current)
+        stickerMoveRafRef.current = 0
+      }
       setSnapGuides(null)
     }
   }, [open])
@@ -532,42 +597,63 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   function getAutoSnapResult(stickerId, transform) {
     const margin = format === 'story' ? 54 : 38
     const threshold = format === 'story' ? 24 : 18
-    const bounds = getStickerBounds(stickerId, transform, format)
-    const verticalTargets = [
-      { key: 'left', value: margin },
-      { key: 'center', value: (selectedFormat.width - bounds.width) / 2 },
-      { key: 'right', value: selectedFormat.width - bounds.width - margin },
-    ]
-    const horizontalTargets = [
-      { key: 'top', value: margin },
-      { key: 'middle', value: (selectedFormat.height - bounds.height) / 2 },
-      { key: 'bottom', value: selectedFormat.height - bounds.height - margin },
-    ]
-
+    const currentBounds = getStickerBounds(stickerId, transform, format)
     const next = { ...transform }
+
+    const verticalCandidates = [
+      { value: margin, nextX: margin },
+      { value: selectedFormat.width / 2, nextX: (selectedFormat.width - currentBounds.width) / 2 },
+      { value: selectedFormat.width - margin, nextX: selectedFormat.width - currentBounds.width - margin },
+    ]
+    const horizontalCandidates = [
+      { value: margin, nextY: margin },
+      { value: selectedFormat.height / 2, nextY: (selectedFormat.height - currentBounds.height) / 2 },
+      { value: selectedFormat.height - margin, nextY: selectedFormat.height - currentBounds.height - margin },
+    ]
+
+    getVisibleStickerEntries(stickersRef.current, format).forEach((entry) => {
+      if (entry.id === stickerId) return
+      const other = getStickerBounds(entry.id, entry.transform, format)
+
+      verticalCandidates.push(
+        { value: other.left, nextX: other.left },
+        { value: other.centerX, nextX: other.centerX - currentBounds.width / 2 },
+        { value: other.right, nextX: other.right - currentBounds.width },
+      )
+      horizontalCandidates.push(
+        { value: other.top, nextY: other.top },
+        { value: other.centerY, nextY: other.centerY - currentBounds.height / 2 },
+        { value: other.bottom, nextY: other.bottom - currentBounds.height },
+      )
+    })
+
+    let bestVertical = null
+    verticalCandidates.forEach((candidate) => {
+      const delta = Math.abs(next.x - candidate.nextX)
+      if (delta > threshold) return
+      if (!bestVertical || delta < bestVertical.delta) {
+        bestVertical = { ...candidate, delta }
+      }
+    })
+
+    let bestHorizontal = null
+    horizontalCandidates.forEach((candidate) => {
+      const delta = Math.abs(next.y - candidate.nextY)
+      if (delta > threshold) return
+      if (!bestHorizontal || delta < bestHorizontal.delta) {
+        bestHorizontal = { ...candidate, delta }
+      }
+    })
+
     const guides = {}
-
-    verticalTargets.forEach((target) => {
-      if (Math.abs(next.x - target.value) <= threshold) {
-        next.x = target.value
-        guides.vertical = target.key === 'center'
-          ? selectedFormat.width / 2
-          : target.key === 'left'
-            ? margin
-            : selectedFormat.width - margin
-      }
-    })
-
-    horizontalTargets.forEach((target) => {
-      if (Math.abs(next.y - target.value) <= threshold) {
-        next.y = target.value
-        guides.horizontal = target.key === 'middle'
-          ? selectedFormat.height / 2
-          : target.key === 'top'
-            ? margin
-            : selectedFormat.height - margin
-      }
-    })
+    if (bestVertical) {
+      next.x = bestVertical.nextX
+      guides.vertical = bestVertical.value
+    }
+    if (bestHorizontal) {
+      next.y = bestHorizontal.nextY
+      guides.horizontal = bestHorizontal.value
+    }
 
     return {
       transform: clampStickerTransform(stickerId, next, format),
@@ -584,6 +670,17 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     const bounds = getStickerBounds(selectedStickerId, selectedSticker, format)
 
     if (action === 'auto') {
+      const snapped = getAutoSnapResult(selectedStickerId, selectedSticker)
+      if (snapped.guides) {
+        updateSelectedSticker(snapped.transform)
+        setSnapGuides(snapped.guides)
+        if (typeof window !== 'undefined') {
+          window.setTimeout(() => setSnapGuides(null), 520)
+        }
+        setStatus(`Autoalinhamento aplicado em ${selectedStickerMeta?.label || 'figurinha'}.`)
+        return
+      }
+
       const preset = STICKER_LAYOUT_PRESETS[format]?.[getSuggestedLayoutId()]?.[selectedStickerId]
       if (preset) {
         updateSelectedSticker((current) => ({
@@ -666,9 +763,39 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       y: Number(gesture.startTransform.y || 0) + delta.y,
       scale: clamp(Number(gesture.startTransform.scale || 1) * scaleRatio, STICKER_MIN_SCALE, STICKER_MAX_SCALE),
     }
-    const snapped = getAutoSnapResult(gesture.stickerId, candidate)
-    setSnapGuides(snapped.guides)
-    updateSticker(gesture.stickerId, snapped.transform)
+    pendingStickerFrameRef.current = {
+      stickerId: gesture.stickerId,
+      ...getAutoSnapResult(gesture.stickerId, candidate),
+    }
+
+    if (stickerMoveRafRef.current || typeof window === 'undefined') return
+
+    stickerMoveRafRef.current = window.requestAnimationFrame(() => {
+      stickerMoveRafRef.current = 0
+      const pending = pendingStickerFrameRef.current
+      pendingStickerFrameRef.current = null
+      if (!pending) return
+
+      setSnapGuides(pending.guides)
+      setStickers((current) => {
+        const previous = current[pending.stickerId]
+        const nextTransform = pending.transform
+        if (
+          previous
+          && previous.x === nextTransform.x
+          && previous.y === nextTransform.y
+          && previous.scale === nextTransform.scale
+          && previous.zIndex === nextTransform.zIndex
+        ) {
+          return current
+        }
+
+        return {
+          ...current,
+          [pending.stickerId]: nextTransform,
+        }
+      })
+    })
   }
 
   function handlePreviewStickerPointerUpCapture(event) {
@@ -687,6 +814,11 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     }
 
     stickerGestureRef.current = null
+    pendingStickerFrameRef.current = null
+    if (typeof window !== 'undefined' && stickerMoveRafRef.current) {
+      window.cancelAnimationFrame(stickerMoveRafRef.current)
+      stickerMoveRafRef.current = 0
+    }
     setSnapGuides(null)
   }
 
@@ -1016,6 +1148,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
             <CompactStickerBar
               selectedStickerMeta={selectedStickerMeta}
               selectedSticker={selectedSticker}
+              previewImage={selectedStickerId ? stickerPreviewImages[selectedStickerId] : ''}
               onScale={bumpStickerScale}
               onOpenSheet={setActiveSheet}
               onClose={() => {
@@ -1031,8 +1164,14 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
             >
               {activeSheet === 'color' && selectedSticker && (
                 <div className="ff-share-next__sheet-grid">
+                  <StickerAppearancePreview
+                    sticker={selectedSticker}
+                    stickerMeta={selectedStickerMeta}
+                    previewImage={selectedStickerId ? stickerPreviewImages[selectedStickerId] : ''}
+                  />
+
                   <SegmentedControl
-                    label="Editar cor"
+                    label="O que deseja colorir?"
                     options={COLOR_TARGETS}
                     value={colorTarget}
                     onChange={setColorTarget}
@@ -1049,7 +1188,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
                   </label>
 
                   <details className="ff-share-next__advanced">
-                    <summary>Avançado HSL</summary>
+                    <summary>Ajuste fino (HSL)</summary>
                     <label><span>Matiz</span><input type="range" min="0" max="360" value={selectedStickerHsl.h} onChange={(event) => updateStickerColorFromHsl('h', event.target.value)} /></label>
                     <label><span>Saturação</span><input type="range" min="0" max="100" value={selectedStickerHsl.s} onChange={(event) => updateStickerColorFromHsl('s', event.target.value)} /></label>
                     <label><span>Luz</span><input type="range" min="0" max="100" value={selectedStickerHsl.l} onChange={(event) => updateStickerColorFromHsl('l', event.target.value)} /></label>
@@ -1059,6 +1198,12 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
 
               {activeSheet === 'style' && selectedSticker && (
                 <div className="ff-share-next__sheet-grid">
+                  <StickerAppearancePreview
+                    sticker={selectedSticker}
+                    stickerMeta={selectedStickerMeta}
+                    previewImage={selectedStickerId ? stickerPreviewImages[selectedStickerId] : ''}
+                  />
+
                   <div className="ff-share-next__preset-row">
                     {Object.entries(STICKER_THEME_PRESETS).map(([id, preset]) => (
                       <button key={id} type="button" onClick={() => applyStickerPreset(id)}>
@@ -1068,32 +1213,45 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
                     ))}
                   </div>
 
+                  <div className="ff-share-next__mini-action-row">
+                    <button type="button" onClick={() => updateSelectedSticker({ backgroundOpacity: 0 })}>Sem fundo</button>
+                    <button type="button" onClick={() => updateSelectedSticker({ borderOpacity: 0, borderWidth: 0 })}>Sem borda</button>
+                    <button type="button" onClick={() => applyStickerPreset('glass')}>Restaurar</button>
+                  </div>
+
                   <label className="ff-share-next__range-field">
-                    <span>Opacidade fundo <b>{Math.round(Number(selectedSticker.backgroundOpacity ?? 0) * 100)}%</b></span>
+                    <span>Transparência do fundo <b>{formatOpacityLabel(selectedSticker.backgroundOpacity ?? 0)}</b></span>
                     <input type="range" min="0" max="1" step="0.01" value={selectedSticker.backgroundOpacity ?? 0} onChange={(event) => updateSelectedSticker({ backgroundOpacity: Number(event.target.value) })} />
                   </label>
                   <label className="ff-share-next__range-field">
-                    <span>Opacidade borda <b>{Math.round(Number(selectedSticker.borderOpacity ?? 0) * 100)}%</b></span>
+                    <span>Transparência da borda <b>{formatOpacityLabel(selectedSticker.borderOpacity ?? 0)}</b></span>
                     <input type="range" min="0" max="1" step="0.01" value={selectedSticker.borderOpacity ?? 0} onChange={(event) => updateSelectedSticker({ borderOpacity: Number(event.target.value) })} />
                   </label>
                   <label className="ff-share-next__range-field">
-                    <span>Espessura borda <b>{Number(selectedSticker.borderWidth ?? 0).toFixed(1)}px</b></span>
+                    <span>Espessura da borda <b>{Number(selectedSticker.borderWidth ?? 0).toFixed(1)}px</b></span>
                     <input type="range" min="0" max="8" step="0.5" value={selectedSticker.borderWidth ?? 0} onChange={(event) => updateSelectedSticker({ borderWidth: Number(event.target.value) })} />
                   </label>
                 </div>
               )}
 
               {activeSheet === 'align' && selectedSticker && (
-                <div className="ff-share-next__align-grid">
-                  <button type="button" onClick={() => alignSticker('auto')}>Auto</button>
-                  <button type="button" onClick={() => alignSticker('left')}>Esquerda</button>
-                  <button type="button" onClick={() => alignSticker('center')}>Centro</button>
-                  <button type="button" onClick={() => alignSticker('right')}>Direita</button>
-                  <button type="button" onClick={() => alignSticker('top')}>Topo</button>
-                  <button type="button" onClick={() => alignSticker('middle')}>Meio</button>
-                  <button type="button" onClick={() => alignSticker('bottom')}>Base</button>
-                  <button type="button" onClick={() => alignSticker('front')}>Frente</button>
-                  <button type="button" onClick={() => alignSticker('back')}>Atrás</button>
+                <div className="ff-share-next__sheet-grid">
+                  <StickerAppearancePreview
+                    sticker={selectedSticker}
+                    stickerMeta={selectedStickerMeta}
+                    previewImage={selectedStickerId ? stickerPreviewImages[selectedStickerId] : ''}
+                  />
+                  <div className="ff-share-next__align-grid">
+                    <button type="button" onClick={() => alignSticker('auto')}>Auto</button>
+                    <button type="button" onClick={() => alignSticker('left')}>Esquerda</button>
+                    <button type="button" onClick={() => alignSticker('center')}>Centro</button>
+                    <button type="button" onClick={() => alignSticker('right')}>Direita</button>
+                    <button type="button" onClick={() => alignSticker('top')}>Topo</button>
+                    <button type="button" onClick={() => alignSticker('middle')}>Meio</button>
+                    <button type="button" onClick={() => alignSticker('bottom')}>Base</button>
+                    <button type="button" onClick={() => alignSticker('front')}>Trazer à frente</button>
+                    <button type="button" onClick={() => alignSticker('back')}>Mandar para trás</button>
+                  </div>
                 </div>
               )}
             </BottomSheet>
