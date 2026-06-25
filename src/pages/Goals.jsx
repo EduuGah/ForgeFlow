@@ -13,14 +13,71 @@ import {
   saveUserStorageData,
 } from '../utils/userStorage'
 
-import { normalizeGoal } from '../features/goals/goalUtils'
+import {
+  enrichGoalWithLocalProgress,
+  getGoalDeadlineState,
+  getLocalDateKey,
+  normalizeGoal,
+  parseLocalDate,
+} from '../features/goals/goalUtils'
 
 import AppPageIntro from '../components/app/AppPageIntro'
+
+function createLocalGoal(data, existingGoal = null) {
+  const now = new Date().toISOString()
+
+  return normalizeGoal({
+    ...existingGoal,
+    ...data,
+    id: existingGoal?.id || existingGoal?._id || `local-goal-${Date.now()}`,
+    _id: existingGoal?._id,
+    createdAt: existingGoal?.createdAt || now,
+    updatedAt: now,
+  })
+}
+
+function getWeekStart(date = new Date()) {
+  const start = parseLocalDate(date) || new Date()
+  const day = start.getDay() || 7
+  start.setDate(start.getDate() - day + 1)
+  return start
+}
+
+function getActiveWorkoutStreak(history = []) {
+  const trainedDays = new Set(history.map((session) => (
+    getLocalDateKey(session.finishedAt || session.completedAt || session.date || session.createdAt || session.startedAt)
+  )).filter(Boolean))
+
+  let cursor = parseLocalDate(new Date())
+  let streak = 0
+
+  while (cursor) {
+    const key = getLocalDateKey(cursor)
+    if (!trainedDays.has(key)) break
+
+    streak += 1
+    cursor.setDate(cursor.getDate() - 1)
+  }
+
+  return streak
+}
+
+function isCompletedThisWeek(goal) {
+  if (!(goal.status === 'completed' || goal.isCompleted)) return false
+
+  const completedDate = parseLocalDate(goal.completedAt || goal.updatedAt)
+  if (!completedDate) return false
+
+  return completedDate >= getWeekStart(new Date())
+}
 
 function Goals() {
   const { user } = useAuth()
 
   const [goals, setGoals] = useState([])
+  const [history, setHistory] = useState([])
+  const [bodyWeight, setBodyWeight] = useState([])
+  const [progressPhotos, setProgressPhotos] = useState([])
   const [exercises, setExercises] = useState([])
   const [loading, setLoading] = useState(true)
   const [source, setSource] = useState('local')
@@ -33,55 +90,108 @@ function Goals() {
   const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
-    if (!user) return
+    if (!user) return undefined
+
+    let isMounted = true
 
     async function loadData() {
       setLoading(true)
 
       const cachedGoals = getUserStorageData(user, 'goals', [])
       const cachedExercises = getUserStorageData(user, 'exercises', [])
+      const cachedHistory = getUserStorageData(user, 'history', [])
+      const cachedBodyWeight = getUserStorageData(user, 'bodyweight', [])
+      const cachedProgressPhotos = getUserStorageData(user, 'progress-photos', [])
 
-      try {
-        const [goalsFromApi, exercisesFromApi] = await Promise.all([
-          apiFetch('/goals'),
-          apiFetch('/exercises'),
-        ])
+      if (isMounted) {
+        setGoals(Array.isArray(cachedGoals) ? cachedGoals.map(normalizeGoal) : [])
+        setExercises(Array.isArray(cachedExercises) ? cachedExercises : [])
+        setHistory(Array.isArray(cachedHistory) ? cachedHistory : [])
+        setBodyWeight(Array.isArray(cachedBodyWeight) ? cachedBodyWeight : [])
+        setProgressPhotos(Array.isArray(cachedProgressPhotos) ? cachedProgressPhotos : [])
+        setSource('local')
+      }
 
-        const normalizedGoals = Array.isArray(goalsFromApi)
-          ? goalsFromApi.map(normalizeGoal)
-          : []
+      const results = await Promise.allSettled([
+        apiFetch('/goals'),
+        apiFetch('/exercises'),
+        apiFetch('/workout-history'),
+        apiFetch('/body-weight'),
+        apiFetch('/progress-photos'),
+      ])
 
-        const normalizedExercises = Array.isArray(exercisesFromApi)
-          ? exercisesFromApi.map((exercise) => ({
-              ...exercise,
-              id: exercise._id || exercise.id,
-            }))
+      if (!isMounted) return
+
+      const [goalsResult, exercisesResult, historyResult, bodyWeightResult, progressPhotosResult] = results
+      const hasRemoteGoals = goalsResult.status === 'fulfilled'
+      const hasAnyRemoteData = results.some((result) => result.status === 'fulfilled')
+
+      if (hasRemoteGoals) {
+        const normalizedGoals = Array.isArray(goalsResult.value)
+          ? goalsResult.value.map(normalizeGoal)
           : []
 
         setGoals(normalizedGoals)
-        setExercises(normalizedExercises)
         saveUserStorageData(user, 'goals', normalizedGoals)
-        saveUserStorageData(user, 'exercises', normalizedExercises)
-        setSource('database')
-      } catch (error) {
-        console.error(error)
-
-        setGoals(Array.isArray(cachedGoals) ? cachedGoals.map(normalizeGoal) : [])
-        setExercises(Array.isArray(cachedExercises) ? cachedExercises : [])
-        setSource('local')
-      } finally {
-        setLoading(false)
       }
+
+      if (exercisesResult.status === 'fulfilled') {
+        const normalizedExercises = Array.isArray(exercisesResult.value)
+          ? exercisesResult.value.map((exercise) => ({ ...exercise, id: exercise._id || exercise.id }))
+          : []
+
+        setExercises(normalizedExercises)
+        saveUserStorageData(user, 'exercises', normalizedExercises)
+      }
+
+      if (historyResult.status === 'fulfilled') {
+        const normalizedHistory = Array.isArray(historyResult.value)
+          ? historyResult.value
+          : historyResult.value?.history || []
+
+        setHistory(normalizedHistory)
+        saveUserStorageData(user, 'history', normalizedHistory)
+      }
+
+      if (bodyWeightResult.status === 'fulfilled') {
+        const normalizedBodyWeight = Array.isArray(bodyWeightResult.value) ? bodyWeightResult.value : []
+        setBodyWeight(normalizedBodyWeight)
+        saveUserStorageData(user, 'bodyweight', normalizedBodyWeight)
+      }
+
+      if (progressPhotosResult.status === 'fulfilled') {
+        const normalizedProgressPhotos = Array.isArray(progressPhotosResult.value) ? progressPhotosResult.value : []
+        setProgressPhotos(normalizedProgressPhotos)
+        saveUserStorageData(user, 'progress-photos', normalizedProgressPhotos)
+      }
+
+      setSource(hasAnyRemoteData ? 'database' : 'local')
+      setLoading(false)
     }
 
-    loadData()
+    loadData().catch((error) => {
+      console.error(error)
+      if (isMounted) {
+        setLoading(false)
+        setSource('local')
+      }
+    })
+
+    return () => {
+      isMounted = false
+    }
   }, [user, refreshKey])
 
   function showToast(type, title, message = '') {
     setToast({ type, title, message })
-
-    setTimeout(() => setToast(null), 3200)
+    window.setTimeout(() => setToast(null), 3200)
   }
+
+  const progressContext = useMemo(() => ({ history, bodyWeight, progressPhotos }), [history, bodyWeight, progressPhotos])
+
+  const enrichedGoals = useMemo(() => {
+    return goals.map((goal) => enrichGoalWithLocalProgress(goal, progressContext))
+  }, [goals, progressContext])
 
   const exerciseOptions = useMemo(() => {
     return exercises
@@ -91,32 +201,44 @@ function Goals() {
   }, [exercises])
 
   const stats = useMemo(() => {
-    const active = goals.filter((goal) => goal.status === 'active')
-    const completed = goals.filter((goal) => goal.status === 'completed' || goal.isCompleted)
-    const archived = goals.filter((goal) => goal.status === 'archived')
+    const active = enrichedGoals.filter((goal) => goal.status === 'active' && !goal.isCompleted)
+    const completed = enrichedGoals.filter((goal) => goal.status === 'completed' || goal.isCompleted)
+    const archived = enrichedGoals.filter((goal) => goal.status === 'archived')
+    const overdue = enrichedGoals.filter((goal) => goal.status === 'active' && getGoalDeadlineState(goal) === 'overdue')
+    const almostDone = active.filter((goal) => Number(goal.progressPercent || 0) >= 75)
+    const completedThisWeek = completed.filter(isCompletedThisWeek)
     const averageProgress = active.length > 0
       ? Math.round(active.reduce((total, goal) => total + Number(goal.progressPercent || 0), 0) / active.length)
       : 0
 
     return {
-      total: goals.length,
+      total: enrichedGoals.length,
       active: active.length,
       completed: completed.length,
+      completedThisWeek: completedThisWeek.length,
       archived: archived.length,
+      overdue: overdue.length,
+      almostDone: almostDone.length,
+      streak: getActiveWorkoutStreak(history),
       averageProgress,
     }
-  }, [goals])
+  }, [enrichedGoals, history])
 
   const filteredGoals = useMemo(() => {
     const term = search.toLowerCase().trim()
 
-    return goals
+    return enrichedGoals
       .filter((goal) => {
+        const deadlineState = getGoalDeadlineState(goal)
         const matchesStatus = statusFilter === 'all'
           ? true
           : statusFilter === 'completed'
             ? goal.status === 'completed' || goal.isCompleted
-            : goal.status === statusFilter
+            : statusFilter === 'overdue'
+              ? goal.status === 'active' && deadlineState === 'overdue'
+              : statusFilter === 'active'
+                ? goal.status === 'active' && !goal.isCompleted
+                : goal.status === statusFilter
 
         const matchesSearch = term
           ? `${goal.title} ${goal.description} ${goal.exerciseName} ${goal.type}`
@@ -127,16 +249,20 @@ function Goals() {
         return matchesStatus && matchesSearch
       })
       .sort((a, b) => {
+        const aDeadline = getGoalDeadlineState(a)
+        const bDeadline = getGoalDeadlineState(b)
+
+        if (aDeadline === 'overdue' && bDeadline !== 'overdue') return -1
+        if (aDeadline !== 'overdue' && bDeadline === 'overdue') return 1
         if (a.status === 'active' && b.status !== 'active') return -1
         if (a.status !== 'active' && b.status === 'active') return 1
 
         const progressDiff = Number(b.progressPercent || 0) - Number(a.progressPercent || 0)
-
         if (progressDiff !== 0) return progressDiff
 
         return new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0)
       })
-  }, [goals, search, statusFilter])
+  }, [enrichedGoals, search, statusFilter])
 
   function openCreateModal() {
     setModalGoal(null)
@@ -153,6 +279,11 @@ function Goals() {
     setIsModalOpen(false)
   }
 
+  function persistGoals(nextGoals) {
+    setGoals(nextGoals)
+    saveUserStorageData(user, 'goals', nextGoals)
+  }
+
   async function handleSubmitGoal(data) {
     try {
       const path = modalGoal ? `/goals/${modalGoal.id}` : '/goals'
@@ -164,13 +295,13 @@ function Goals() {
       })
 
       const normalizedGoal = normalizeGoal(goalFromApi)
-
       const updatedGoals = modalGoal
         ? goals.map((goal) => (goal.id === normalizedGoal.id ? normalizedGoal : goal))
         : [normalizedGoal, ...goals]
 
-      setGoals(updatedGoals)
-      saveUserStorageData(user, 'goals', updatedGoals)
+      persistGoals(updatedGoals)
+      setSource('database')
+
       if (modalGoal) {
         generateSmartNotifications({
           user,
@@ -186,7 +317,16 @@ function Goals() {
       showToast('success', modalGoal ? 'Meta atualizada' : 'Meta criada', 'A meta foi salva com sucesso.')
     } catch (error) {
       console.error(error)
-      showToast('error', 'Erro ao salvar meta', error.message || 'Não foi possível salvar a meta.')
+
+      const localGoal = createLocalGoal(data, modalGoal)
+      const updatedGoals = modalGoal
+        ? goals.map((goal) => (goal.id === localGoal.id ? localGoal : goal))
+        : [localGoal, ...goals]
+
+      persistGoals(updatedGoals)
+      setSource('local')
+      closeModal()
+      showToast('success', modalGoal ? 'Meta salva localmente' : 'Meta criada localmente', 'Não consegui sincronizar agora, mas preservei a meta no aparelho.')
     }
   }
 
@@ -204,8 +344,8 @@ function Goals() {
           const normalizedGoal = normalizeGoal(goalFromApi)
           const updatedGoals = goals.map((item) => item.id === normalizedGoal.id ? normalizedGoal : item)
 
-          setGoals(updatedGoals)
-          saveUserStorageData(user, 'goals', updatedGoals)
+          persistGoals(updatedGoals)
+          setSource('database')
 
           if (goalFromApi?.createdNotification) {
             showNotificationPopup({
@@ -232,7 +372,14 @@ function Goals() {
           showToast('success', 'Meta concluída', 'Boa! Sua meta foi marcada como concluída.')
         } catch (error) {
           console.error(error)
-          showToast('error', 'Erro ao concluir', error.message || 'Não foi possível concluir a meta.')
+          const updatedGoals = goals.map((item) => item.id === goal.id
+            ? normalizeGoal({ ...item, status: 'completed', completedAt: new Date().toISOString(), progressPercent: 100, isCompleted: true })
+            : item)
+
+          persistGoals(updatedGoals)
+          setConfirmModal(null)
+          setSource('local')
+          showToast('success', 'Meta concluída localmente', 'Não consegui sincronizar agora, mas preservei a alteração no aparelho.')
         }
       },
     })
@@ -252,13 +399,17 @@ function Goals() {
           const normalizedGoal = normalizeGoal(goalFromApi)
           const updatedGoals = goals.map((item) => item.id === normalizedGoal.id ? normalizedGoal : item)
 
-          setGoals(updatedGoals)
-          saveUserStorageData(user, 'goals', updatedGoals)
+          persistGoals(updatedGoals)
+          setSource('database')
           setConfirmModal(null)
           showToast('success', 'Meta arquivada', 'A meta foi arquivada.')
         } catch (error) {
           console.error(error)
-          showToast('error', 'Erro ao arquivar', error.message || 'Não foi possível arquivar a meta.')
+          const updatedGoals = goals.map((item) => item.id === goal.id ? normalizeGoal({ ...item, status: 'archived' }) : item)
+          persistGoals(updatedGoals)
+          setSource('local')
+          setConfirmModal(null)
+          showToast('success', 'Meta arquivada localmente', 'Não consegui sincronizar agora, mas preservei a alteração no aparelho.')
         }
       },
     })
@@ -270,25 +421,28 @@ function Goals() {
       description: `A meta "${goal.title}" voltará para suas metas ativas.`,
       confirmText: 'Desarquivar',
       onConfirm: async () => {
+        const nextPayload = { status: 'active', completedAt: null }
+
         try {
           const goalFromApi = await apiFetch(`/goals/${goal.id}`, {
             method: 'PUT',
-            body: JSON.stringify({
-              status: 'active',
-              completedAt: null,
-            }),
+            body: JSON.stringify(nextPayload),
           })
 
           const normalizedGoal = normalizeGoal(goalFromApi)
           const updatedGoals = goals.map((item) => item.id === normalizedGoal.id ? normalizedGoal : item)
 
-          setGoals(updatedGoals)
-          saveUserStorageData(user, 'goals', updatedGoals)
+          persistGoals(updatedGoals)
+          setSource('database')
           setConfirmModal(null)
           showToast('success', 'Meta desarquivada', 'A meta voltou para a lista de ativas.')
         } catch (error) {
           console.error(error)
-          showToast('error', 'Erro ao desarquivar', error.message || 'Não foi possível desarquivar a meta.')
+          const updatedGoals = goals.map((item) => item.id === goal.id ? normalizeGoal({ ...item, ...nextPayload, isCompleted: false }) : item)
+          persistGoals(updatedGoals)
+          setSource('local')
+          setConfirmModal(null)
+          showToast('success', 'Meta desarquivada localmente', 'Não consegui sincronizar agora, mas preservei a alteração no aparelho.')
         }
       },
     })
@@ -300,25 +454,28 @@ function Goals() {
       description: `A meta "${goal.title}" voltará para andamento.`,
       confirmText: 'Reativar',
       onConfirm: async () => {
+        const nextPayload = { status: 'active', completedAt: null }
+
         try {
           const goalFromApi = await apiFetch(`/goals/${goal.id}`, {
             method: 'PUT',
-            body: JSON.stringify({
-              status: 'active',
-              completedAt: null,
-            }),
+            body: JSON.stringify(nextPayload),
           })
 
           const normalizedGoal = normalizeGoal(goalFromApi)
           const updatedGoals = goals.map((item) => item.id === normalizedGoal.id ? normalizedGoal : item)
 
-          setGoals(updatedGoals)
-          saveUserStorageData(user, 'goals', updatedGoals)
+          persistGoals(updatedGoals)
+          setSource('database')
           setConfirmModal(null)
           showToast('success', 'Meta reativada', 'A meta voltou para andamento.')
         } catch (error) {
           console.error(error)
-          showToast('error', 'Erro ao reativar', error.message || 'Não foi possível reativar a meta.')
+          const updatedGoals = goals.map((item) => item.id === goal.id ? normalizeGoal({ ...item, ...nextPayload, isCompleted: false }) : item)
+          persistGoals(updatedGoals)
+          setSource('local')
+          setConfirmModal(null)
+          showToast('success', 'Meta reativada localmente', 'Não consegui sincronizar agora, mas preservei a alteração no aparelho.')
         }
       },
     })
@@ -338,64 +495,66 @@ function Goals() {
 
           const updatedGoals = goals.filter((item) => item.id !== goal.id)
 
-          setGoals(updatedGoals)
-          saveUserStorageData(user, 'goals', updatedGoals)
+          persistGoals(updatedGoals)
+          setSource('database')
           setConfirmModal(null)
           showToast('success', 'Meta excluída', 'A meta foi removida.')
         } catch (error) {
           console.error(error)
-          showToast('error', 'Erro ao excluir', error.message || 'Não foi possível excluir a meta.')
+          const updatedGoals = goals.filter((item) => item.id !== goal.id)
+          persistGoals(updatedGoals)
+          setSource('local')
+          setConfirmModal(null)
+          showToast('success', 'Meta excluída localmente', 'Não consegui sincronizar agora, mas removi a meta deste aparelho.')
         }
       },
     })
   }
 
   return (
-    <div className="ff-hevy-page ff-hevy-page-goals">
-
+    <div className="ff-hevy-page ff-hevy-page-goals ff-goals-page">
       <AppPageIntro
         eyebrow="Metas"
-        title="Objetivos"
-        description="Acompanhe metas com visual de app, ações claras e menos poluição."
+        title="Transforme consistência em progresso"
+        description="Metas automáticas, progresso claro e ações simples para manter o ritmo."
         metrics={[
-          { label: 'Total', value: goals.length },
           { label: 'Ativas', value: stats.active },
-          { label: 'Concluídas', value: stats.completed },
+          { label: 'Concluída na semana', value: stats.completedThisWeek },
+          { label: 'Progresso médio', value: `${stats.averageProgress}%` },
         ]}
       />
 
-    <div className="ff-goals-body ff-page-mobile-main-grid">
-      <GoalsPageSections
-        source={source}
-        loading={loading}
-        stats={stats}
-        search={search}
-        statusFilter={statusFilter}
-        goals={goals}
-        filteredGoals={filteredGoals}
-        isModalOpen={isModalOpen}
-        modalGoal={modalGoal}
-        exerciseOptions={exerciseOptions}
-        exercises={exercises}
-        confirmModal={confirmModal}
-        toast={toast}
-        onRefresh={() => setRefreshKey((key) => key + 1)}
-        onCreate={openCreateModal}
-        onSearchChange={setSearch}
-        onStatusFilterChange={setStatusFilter}
-        onEdit={openEditModal}
-        onDelete={handleDeleteGoal}
-        onComplete={handleCompleteGoal}
-        onArchive={handleArchiveGoal}
-        onUnarchive={handleUnarchiveGoal}
-        onReactivate={handleReactivateGoal}
-        onCloseModal={closeModal}
-        onSubmitGoal={handleSubmitGoal}
-        onCancelConfirm={() => setConfirmModal(null)}
-        onCloseToast={() => setToast(null)}
-      />
-    </div>
-  
+      <div className="ff-goals-body ff-page-mobile-main-grid">
+        <GoalsPageSections
+          source={source}
+          loading={loading}
+          stats={stats}
+          search={search}
+          statusFilter={statusFilter}
+          goals={enrichedGoals}
+          filteredGoals={filteredGoals}
+          isModalOpen={isModalOpen}
+          modalGoal={modalGoal}
+          exerciseOptions={exerciseOptions}
+          exercises={exercises}
+          confirmModal={confirmModal}
+          toast={toast}
+          onRefresh={() => setRefreshKey((key) => key + 1)}
+          onCreate={openCreateModal}
+          onSearchChange={setSearch}
+          onStatusFilterChange={setStatusFilter}
+          onEdit={openEditModal}
+          onDelete={handleDeleteGoal}
+          onComplete={handleCompleteGoal}
+          onArchive={handleArchiveGoal}
+          onUnarchive={handleUnarchiveGoal}
+          onReactivate={handleReactivateGoal}
+          onCloseModal={closeModal}
+          onSubmitGoal={handleSubmitGoal}
+          onCancelConfirm={() => setConfirmModal(null)}
+          onCloseToast={() => setToast(null)}
+        />
+      </div>
     </div>
   )
 }

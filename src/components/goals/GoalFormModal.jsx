@@ -72,6 +72,17 @@ const GOAL_TYPES = [
     titleExample: 'Atingir 100.000kg de volume mensal',
   },
   {
+    value: 'streak_days',
+    label: 'Manter uma sequência de dias treinando',
+    short: 'Sequência de dias',
+    unit: 'dias',
+    period: 'none',
+    direction: 'increase',
+    placeholder: 'Ex: 7',
+    helper: 'Exemplo: manter 7 dias de sequência. O app conta automaticamente os dias seguidos com treino registrado até hoje.',
+    titleExample: 'Manter 7 dias de sequência',
+  },
+  {
     value: 'progress_photos',
     label: 'Registrar fotos de evolução no mês',
     short: 'Fotos mensais',
@@ -81,6 +92,17 @@ const GOAL_TYPES = [
     placeholder: 'Ex: 1',
     helper: 'Exemplo: registrar 1 foto por mês. Para metas criadas no meio do mês, o app conta apenas as novas fotos feitas depois da criação da meta.',
     titleExample: 'Registrar 1 foto de evolução por mês',
+  },
+  {
+    value: 'nutrition',
+    label: 'Água ou nutrição futura',
+    short: 'Nutrição futura',
+    unit: 'dias',
+    period: 'none',
+    direction: 'increase',
+    placeholder: 'Ex: 5',
+    helper: 'Preparada para a área de nutrição. Por enquanto funciona como meta manual, sem quebrar quando a nutrição real for conectada.',
+    titleExample: 'Bater meta de água 5 dias',
   },
   {
     value: 'custom',
@@ -97,6 +119,10 @@ const GOAL_TYPES = [
 
 function getGoalTypeConfig(type) {
   return GOAL_TYPES.find((item) => item.value === type) || GOAL_TYPES[0]
+}
+
+function isManualGoalType(type) {
+  return ['custom', 'nutrition'].includes(type)
 }
 
 function formatGoalValue(value, unit) {
@@ -359,7 +385,7 @@ function GoalFormModal({
       description: description.trim(),
       type,
       targetValue: parsedTarget,
-      currentValue: type === 'custom' ? Number(currentValue || 0) : 0,
+      currentValue: isManualGoalType(type) ? Number(currentValue || 0) : 0,
       unit,
       exerciseName: type === 'exercise_pr_weight' ? exerciseName.trim() : '',
       exerciseId: type === 'exercise_pr_weight' ? exerciseId : '',
@@ -518,7 +544,7 @@ function GoalFormModal({
                     />
                   </div>
 
-                  {type === 'custom' && (
+                  {isManualGoalType(type) && (
                     <Input
                       label="Onde estou agora"
                       type="number"
@@ -592,8 +618,8 @@ function GoalFormModal({
                       Cálculo
                     </p>
                     <p className="mt-1 leading-relaxed text-[var(--ff-muted)]">
-                      {type === 'custom'
-                        ? 'Manual. Você atualiza o progresso editando a meta.'
+                      {isManualGoalType(type)
+                        ? 'Manual por enquanto. Você atualiza o progresso editando a meta.'
                         : 'Automático, usando os dados salvos no app.'}
                     </p>
                   </div>
@@ -617,7 +643,7 @@ function GoalFormModal({
                   <Dumbbell size={18} className="mt-0.5 shrink-0 text-[var(--ff-accent-text)]" />
 
                   <p className="text-sm leading-relaxed text-[var(--ff-muted)]">
-                    Os campos antigos <strong className="text-[var(--ff-text)]">Valor alvo</strong> e <strong className="text-[var(--ff-text)]">Direção</strong> foram simplificados. Agora você só escolhe o tipo e preenche <strong className="text-[var(--ff-text)]">Quero alcançar</strong>.
+                    Dica: comece com metas simples e fáceis de entender. Depois que criar, o card mostra automaticamente quanto falta e se o prazo está perto.
                   </p>
                 </div>
               </div>

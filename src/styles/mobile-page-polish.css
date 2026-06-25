@@ -18487,3 +18487,1272 @@ body.ff-share-studio-open .mobile-bottom-nav {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
+
+/* ForgeFlow Calendário + Metas premium refactor - rodada 25/06 */
+.ff-calendar-page,
+.ff-goals-page,
+.ff-calendar-page *,
+.ff-goals-page * {
+  box-sizing: border-box;
+}
+
+.ff-calendar-page,
+.ff-goals-page {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.ff-calendar-page :is(.ff-native-card, .ff-calendar-month-card, .ff-calendar-day-card, .ff-calendar-stat-card, .ff-calendar-session-card),
+.ff-goals-page :is(.ff-native-card, .ff-goal-native-card, .ff-goal-summary-card) {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.ff-calendar-stats-grid,
+.ff-goals-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.ff-calendar-stat-card,
+.ff-goal-summary-card {
+  position: relative;
+  min-height: 104px;
+  border-color: color-mix(in srgb, var(--ff-border) 82%, transparent);
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--ff-accent) 12%, transparent), transparent 42%),
+    linear-gradient(145deg, color-mix(in srgb, var(--ff-card) 88%, #000), color-mix(in srgb, var(--ff-surface-2) 70%, #000));
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.2);
+}
+
+.ff-calendar-stat-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.ff-calendar-stat-card span,
+.ff-goal-summary-card__top p {
+  display: block;
+  color: var(--ff-muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+.ff-calendar-stat-card strong,
+.ff-goal-summary-card strong {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ff-text);
+  font-size: clamp(1.35rem, 6vw, 2rem);
+  font-weight: 1000;
+  letter-spacing: -0.055em;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-calendar-stat-card small,
+.ff-goal-summary-card span {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ff-muted);
+  font-size: 0.72rem;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-calendar-stat-card svg,
+.ff-goal-summary-card svg {
+  flex: 0 0 auto;
+  color: var(--ff-accent-text);
+  filter: drop-shadow(0 0 12px var(--ff-accent-shadow));
+}
+
+.ff-calendar-stat-card.is-warning svg,
+.ff-goal-summary-card.is-warning svg {
+  color: var(--ff-warning-text);
+}
+
+.ff-calendar-stat-card.is-success svg,
+.ff-goal-summary-card.is-success svg {
+  color: var(--ff-success-text);
+}
+
+.ff-goal-summary-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-bottom: 0.65rem;
+}
+
+.ff-calendar-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+  gap: 1rem;
+  align-items: start;
+  min-width: 0;
+}
+
+.ff-calendar-month-card,
+.ff-calendar-day-card,
+.ff-goals-filter-card,
+.ff-goals-motivation-card,
+.ff-goal-native-card {
+  border-color: color-mix(in srgb, var(--ff-border) 76%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--ff-card) 94%, transparent), color-mix(in srgb, var(--ff-surface-2) 52%, #000)),
+    var(--ff-card);
+  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.22);
+}
+
+.ff-calendar-month-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 124px) minmax(0, 1fr) minmax(0, 124px);
+  gap: 0.7rem;
+  align-items: center;
+}
+
+.ff-calendar-month-toolbar > div {
+  min-width: 0;
+  text-align: center;
+}
+
+.ff-calendar-month-toolbar p {
+  color: var(--ff-accent-text);
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.ff-calendar-month-toolbar h2 {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ff-text);
+  font-size: clamp(1.25rem, 5vw, 1.85rem);
+  font-weight: 1000;
+  letter-spacing: -0.055em;
+  text-transform: capitalize;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-calendar-month-toolbar button,
+.ff-calendar-today-button {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--ff-surface-2) 82%, transparent);
+  color: var(--ff-text);
+  padding: 0 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 950;
+  line-height: 1;
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+.ff-calendar-month-toolbar button span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.ff-calendar-month-toolbar button:hover,
+.ff-calendar-today-button:hover {
+  border-color: var(--ff-accent-border);
+  background: color-mix(in srgb, var(--ff-accent) 12%, var(--ff-surface-2));
+  transform: translateY(-1px);
+}
+
+.ff-calendar-today-button {
+  width: 100%;
+  margin-top: 0.75rem;
+  color: var(--ff-accent-text);
+}
+
+.ff-calendar-grid {
+  display: grid !important;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: clamp(0.28rem, 1.5vw, 0.55rem);
+  min-width: 0;
+  margin-top: 1rem;
+  text-align: initial;
+}
+
+.ff-calendar-weekday {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ff-muted);
+  font-size: 0.66rem;
+  font-weight: 1000;
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+
+.ff-calendar-day-button {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: clamp(3.35rem, 13vw, 5.6rem);
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  overflow: hidden;
+  border: 1px solid var(--ff-border);
+  border-radius: clamp(14px, 4vw, 22px);
+  background: color-mix(in srgb, var(--ff-surface-2) 84%, transparent);
+  color: var(--ff-text);
+  padding: clamp(0.42rem, 1.7vw, 0.7rem);
+  text-align: left;
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+}
+
+.ff-calendar-day-button:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+.ff-calendar-day-button.is-empty {
+  pointer-events: none;
+  opacity: 0;
+}
+
+.ff-calendar-day-button.has-workout {
+  border-color: color-mix(in srgb, var(--ff-accent) 45%, var(--ff-border));
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--ff-accent) 18%, transparent), transparent 50%),
+    color-mix(in srgb, var(--ff-card) 82%, var(--ff-surface-2));
+}
+
+.ff-calendar-day-button.has-pr {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ff-warning-text) 24%, transparent);
+}
+
+.ff-calendar-day-button.is-rest {
+  border-style: dashed;
+  background: color-mix(in srgb, var(--ff-card) 72%, transparent);
+}
+
+.ff-calendar-day-button.is-planned {
+  border-color: color-mix(in srgb, var(--ff-muted) 45%, var(--ff-border));
+}
+
+.ff-calendar-day-button.is-selected {
+  border-color: var(--ff-accent-border);
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--ff-accent) 30%, transparent), transparent 46%),
+    color-mix(in srgb, var(--ff-accent) 16%, var(--ff-card));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ff-accent) 16%, transparent), 0 18px 34px rgba(0, 0, 0, 0.24);
+}
+
+.ff-calendar-day-number {
+  display: inline-flex;
+  width: 1.55rem;
+  height: 1.55rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: var(--ff-text);
+  font-size: 0.82rem;
+  font-weight: 1000;
+}
+
+.ff-calendar-day-button.is-today .ff-calendar-day-number {
+  background: var(--ff-accent);
+  color: #fff;
+  box-shadow: 0 0 18px var(--ff-accent-shadow);
+}
+
+.ff-calendar-day-markers {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  display: flex;
+  max-width: calc(100% - 2.1rem);
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.22rem;
+}
+
+.ff-calendar-day-markers i {
+  display: inline-flex;
+  min-width: 0.48rem;
+  height: 0.48rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-style: normal;
+}
+
+.ff-calendar-day-markers .is-workout {
+  width: 0.48rem;
+  background: var(--ff-accent);
+  box-shadow: 0 0 10px var(--ff-accent-shadow);
+}
+
+.ff-calendar-day-markers .is-pr {
+  min-width: 1.2rem;
+  height: 1rem;
+  background: color-mix(in srgb, var(--ff-warning-text) 20%, transparent);
+  color: var(--ff-warning-text);
+  padding: 0 0.28rem;
+  font-size: 0.52rem;
+  font-weight: 1000;
+}
+
+.ff-calendar-day-markers .is-rest,
+.ff-calendar-day-markers .is-planned {
+  width: 1rem;
+  height: 1rem;
+  background: color-mix(in srgb, var(--ff-surface-3) 80%, transparent);
+  color: var(--ff-muted);
+}
+
+.ff-calendar-day-button strong {
+  display: inline-flex;
+  min-width: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--ff-accent);
+  color: #fff;
+  padding: 0.12rem 0.44rem;
+  font-size: 0.62rem;
+  font-weight: 1000;
+}
+
+.ff-calendar-day-button small {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ff-muted);
+  font-size: 0.64rem;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-calendar-loading-state,
+.ff-calendar-month-empty {
+  margin-top: 1rem;
+}
+
+.ff-calendar-loading-state {
+  display: grid;
+  min-height: 12rem;
+  place-items: center;
+  border: 1px dashed var(--ff-border);
+  border-radius: 26px;
+  color: var(--ff-muted);
+  font-size: 0.9rem;
+  font-weight: 850;
+  text-align: center;
+}
+
+.ff-calendar-side-panel {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.ff-calendar-day-card__head {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+
+.ff-calendar-day-card__head > div {
+  min-width: 0;
+}
+
+.ff-calendar-day-card__head p {
+  color: var(--ff-accent-text);
+  font-size: 0.68rem;
+  font-weight: 1000;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.ff-calendar-day-card__head h2 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--ff-text);
+  font-size: 1.35rem;
+  font-weight: 1000;
+  letter-spacing: -0.05em;
+  line-height: 1.05;
+  text-transform: capitalize;
+}
+
+.ff-calendar-plan-card,
+.ff-calendar-day-kpis,
+.ff-calendar-session-card,
+.ff-calendar-alert-message {
+  min-width: 0;
+  border: 1px solid var(--ff-border);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--ff-surface-2) 78%, transparent);
+}
+
+.ff-calendar-plan-card {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 1rem;
+  padding: 0.85rem;
+}
+
+.ff-calendar-plan-card > svg {
+  flex: 0 0 auto;
+  color: var(--ff-accent-text);
+}
+
+.ff-calendar-plan-card.is-rest > svg {
+  color: var(--ff-muted);
+}
+
+.ff-calendar-plan-card strong,
+.ff-calendar-plan-card span {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ff-calendar-plan-card strong {
+  color: var(--ff-text);
+  font-size: 0.9rem;
+  font-weight: 950;
+}
+
+.ff-calendar-plan-card span {
+  margin-top: 0.1rem;
+  color: var(--ff-muted);
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
+.ff-calendar-day-kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-top: 1rem;
+  padding: 0.65rem;
+}
+
+.ff-calendar-day-kpis span {
+  min-width: 0;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--ff-card) 65%, transparent);
+  padding: 0.65rem;
+}
+
+.ff-calendar-day-kpis strong,
+.ff-calendar-day-kpis small {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-calendar-day-kpis strong {
+  color: var(--ff-text);
+  font-size: 0.92rem;
+  font-weight: 1000;
+}
+
+.ff-calendar-day-kpis small {
+  margin-top: 0.12rem;
+  color: var(--ff-muted);
+  font-size: 0.64rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.ff-calendar-day-sessions {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.ff-calendar-session-card {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.85rem;
+}
+
+.ff-calendar-session-card__top {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+.ff-calendar-session-card__top > div {
+  min-width: 0;
+}
+
+.ff-calendar-session-card__top p,
+.ff-calendar-session-card__top span,
+.ff-calendar-session-card__stats span,
+.ff-calendar-location-link {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-calendar-session-card__top p {
+  color: var(--ff-text);
+  font-size: 0.95rem;
+  font-weight: 1000;
+}
+
+.ff-calendar-session-card__top span,
+.ff-calendar-session-card__stats span,
+.ff-calendar-location-link {
+  color: var(--ff-muted);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.ff-calendar-session-card__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.ff-calendar-session-card__stats span {
+  width: fit-content;
+  max-width: 100%;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ff-accent) 10%, transparent);
+  color: var(--ff-accent-text);
+  padding: 0.38rem 0.62rem;
+}
+
+.ff-calendar-location-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  max-width: 100%;
+  color: var(--ff-muted);
+  text-decoration: none;
+}
+
+.ff-calendar-day-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.ff-calendar-day-actions a,
+.ff-goals-motivation-card button,
+.ff-goal-card-actions button,
+.ff-goal-card-expand,
+.ff-goal-card-more,
+.ff-goals-filter-chips button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ff-calendar-day-actions a {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 2.7rem;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--ff-accent-border);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--ff-accent) 12%, transparent);
+  color: var(--ff-accent-text);
+  padding: 0 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 950;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-calendar-alert-card {
+  margin-bottom: 1rem;
+}
+
+.ff-calendar-alert-message {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.85rem;
+  color: var(--ff-warning-text);
+  font-size: 0.84rem;
+  font-weight: 850;
+}
+
+.ff-calendar-alert-message span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ff-goals-header-actions {
+  display: flex;
+  max-width: min(100%, 460px);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.ff-goals-filter-card {
+  margin-top: 1rem;
+}
+
+.ff-goals-filter-card__top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.7rem;
+  align-items: center;
+}
+
+.ff-goals-search-field {
+  display: flex;
+  min-width: 0;
+  min-height: 3rem;
+  align-items: center;
+  gap: 0.65rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--ff-surface-2) 80%, transparent);
+  color: var(--ff-muted);
+  padding: 0 0.85rem;
+}
+
+.ff-goals-search-field input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ff-text);
+  font-size: 0.86rem;
+  outline: none;
+}
+
+.ff-goals-search-field input::placeholder {
+  color: var(--ff-muted);
+}
+
+.ff-goals-search-field button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  color: var(--ff-muted);
+}
+
+.ff-goals-filter-chips {
+  display: flex;
+  min-width: 0;
+  gap: 0.45rem;
+  margin-top: 0.8rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding-bottom: 0.15rem;
+}
+
+.ff-goals-filter-chips button {
+  flex: 0 0 auto;
+  min-height: 2.3rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ff-surface-2) 80%, transparent);
+  color: var(--ff-muted);
+  padding: 0 0.8rem;
+  font-size: 0.76rem;
+  font-weight: 950;
+}
+
+.ff-goals-filter-chips button.is-active {
+  border-color: var(--ff-accent-border);
+  background: color-mix(in srgb, var(--ff-accent) 16%, transparent);
+  color: var(--ff-accent-text);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--ff-accent-shadow) 70%, transparent);
+}
+
+.ff-goals-motivation-card {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  gap: 0.85rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.ff-goals-motivation-card__icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--ff-accent) 13%, transparent);
+  color: var(--ff-accent-text);
+}
+
+.ff-goals-motivation-card p,
+.ff-goals-motivation-card span {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ff-goals-motivation-card p {
+  color: var(--ff-text);
+  font-size: 0.95rem;
+  font-weight: 1000;
+}
+
+.ff-goals-motivation-card span {
+  margin-top: 0.14rem;
+  color: var(--ff-muted);
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.ff-goals-motivation-card button {
+  min-height: 2.45rem;
+  border: 1px solid var(--ff-accent-border);
+  border-radius: 999px;
+  background: var(--ff-accent);
+  color: #fff;
+  padding: 0 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.ff-goals-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.ff-goals-empty-card {
+  grid-column: 1 / -1;
+}
+
+.ff-goal-native-card {
+  position: relative;
+  display: grid;
+  gap: 1rem;
+}
+
+.ff-goal-native-card.is-overdue {
+  border-color: color-mix(in srgb, var(--ff-warning-text) 38%, var(--ff-border));
+}
+
+.ff-goal-native-card.is-completed {
+  border-color: color-mix(in srgb, var(--ff-success-text) 34%, var(--ff-border));
+}
+
+.ff-goal-native-card.is-archived {
+  opacity: 0.78;
+}
+
+.ff-goal-native-card.is-near {
+  border-color: color-mix(in srgb, var(--ff-accent) 42%, var(--ff-border));
+}
+
+.ff-goal-card-hero {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 40px;
+  gap: 0.75rem;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.ff-goal-card-hero__icon,
+.ff-goal-card-more {
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--ff-border);
+  background: color-mix(in srgb, var(--ff-surface-2) 80%, transparent);
+}
+
+.ff-goal-card-hero__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 18px;
+  color: var(--ff-accent-text);
+}
+
+.ff-goal-card-more {
+  width: 40px;
+  height: 40px;
+  border-radius: 16px;
+  color: var(--ff-muted);
+}
+
+.ff-goal-card-hero__content,
+.ff-goal-card-badges {
+  min-width: 0;
+}
+
+.ff-goal-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.ff-goal-card-title,
+.ff-goal-card-description {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ff-goal-card-title {
+  margin-top: 0.65rem;
+  color: var(--ff-text);
+  font-size: clamp(1.05rem, 4vw, 1.35rem);
+  font-weight: 1000;
+  letter-spacing: -0.045em;
+  line-height: 1.08;
+  overflow-wrap: anywhere;
+}
+
+.ff-goal-card-description {
+  display: -webkit-box;
+  margin-top: 0.42rem;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  color: var(--ff-muted);
+  font-size: 0.82rem;
+  font-weight: 750;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.ff-goal-card-progress-ring {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: center;
+  min-width: 0;
+}
+
+.ff-goal-card-progress-ring__circle {
+  display: grid;
+  width: 74px;
+  height: 74px;
+  place-items: center;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, var(--ff-card) 0 56%, transparent 58%),
+    conic-gradient(var(--ff-accent) var(--goal-progress, 0deg), color-mix(in srgb, var(--ff-surface-3) 80%, #000) 0deg);
+  box-shadow: inset 0 0 0 1px var(--ff-border);
+}
+
+.ff-goal-card-progress-ring__circle strong,
+.ff-goal-card-progress-ring__circle span {
+  grid-area: 1 / 1;
+}
+
+.ff-goal-card-progress-ring__circle strong {
+  margin-top: -0.35rem;
+  color: var(--ff-text);
+  font-size: 1.02rem;
+  font-weight: 1000;
+}
+
+.ff-goal-card-progress-ring__circle span {
+  margin-top: 1.45rem;
+  color: var(--ff-muted);
+  font-size: 0.56rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.ff-goal-card-progress-ring__meta {
+  min-width: 0;
+}
+
+.ff-goal-card-progress-ring__meta p,
+.ff-goal-card-progress-ring__meta span {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-goal-card-progress-ring__meta p {
+  color: var(--ff-text);
+  font-size: 1rem;
+  font-weight: 1000;
+}
+
+.ff-goal-card-progress-ring__meta span {
+  margin-top: 0.2rem;
+  color: var(--ff-accent-text);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.ff-goal-card-footer {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.ff-goal-card-footer span {
+  display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
+  align-items: center;
+  gap: 0.32rem;
+  overflow: hidden;
+  border: 1px solid var(--ff-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ff-surface-2) 75%, transparent);
+  color: var(--ff-muted);
+  padding: 0.42rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-goal-card-footer span.is-danger {
+  border-color: color-mix(in srgb, var(--ff-warning-text) 34%, var(--ff-border));
+  color: var(--ff-warning-text);
+}
+
+.ff-goal-card-details {
+  display: grid;
+  gap: 0.85rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--ff-surface-2) 78%, transparent);
+  padding: 0.85rem;
+}
+
+.ff-goal-card-details p,
+.ff-goal-card-details span {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ff-goal-card-details p {
+  color: var(--ff-text);
+  font-size: 0.86rem;
+  font-weight: 1000;
+}
+
+.ff-goal-card-details span {
+  margin-top: 0.16rem;
+  color: var(--ff-muted);
+  font-size: 0.78rem;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.ff-goal-card-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.ff-goal-card-actions button,
+.ff-goal-card-expand {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 2.45rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  overflow: hidden;
+  border: 1px solid var(--ff-border);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--ff-card) 68%, transparent);
+  color: var(--ff-text);
+  padding: 0 0.7rem;
+  font-size: 0.76rem;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-goal-card-actions button.is-success {
+  border-color: color-mix(in srgb, var(--ff-success-text) 34%, var(--ff-border));
+  color: var(--ff-success-text);
+}
+
+.ff-goal-card-actions button.is-danger {
+  border-color: color-mix(in srgb, var(--ff-danger-text) 34%, var(--ff-border));
+  color: var(--ff-danger-text);
+}
+
+.ff-goal-card-expand {
+  width: 100%;
+  color: var(--ff-accent-text);
+}
+
+.ff-goal-card-expand svg {
+  transition: transform 0.16s ease;
+}
+
+.ff-goal-modal__panel,
+.ff-goal-exercise-library__panel {
+  max-width: min(100%, 980px) !important;
+}
+
+.ff-goal-modal__header,
+.ff-goal-exercise-library__panel {
+  min-width: 0;
+}
+
+.ff-goal-modal__header h2,
+.ff-goal-modal__header p,
+.ff-goal-exercise-library__panel h3,
+.ff-goal-exercise-library__panel p {
+  overflow-wrap: anywhere;
+}
+
+.ff-goal-modal__form,
+.ff-goal-modal__form * {
+  min-width: 0;
+}
+
+.ff-goal-modal__form .rounded-3xl,
+.ff-goal-modal__footer {
+  max-width: 100%;
+}
+
+.ff-goal-modal__form aside .rounded-3xl:last-child p {
+  color: var(--ff-muted);
+}
+
+@media (max-width: 1100px) {
+  .ff-calendar-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ff-goals-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .ff-calendar-stats-grid,
+  .ff-goals-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+
+  .ff-calendar-stat-card,
+  .ff-goal-summary-card {
+    min-height: 94px;
+    padding: 0.82rem !important;
+  }
+
+  .ff-calendar-month-toolbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ff-calendar-month-toolbar > div {
+    order: -1;
+  }
+
+  .ff-calendar-month-toolbar button {
+    width: 100%;
+  }
+
+  .ff-calendar-grid {
+    gap: 0.3rem;
+  }
+
+  .ff-goals-header-actions {
+    justify-content: flex-start;
+  }
+
+  .ff-goals-filter-card__top {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ff-goals-inline-create {
+    width: 100%;
+  }
+
+  .ff-goals-motivation-card {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+
+  .ff-goals-motivation-card button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+}
+
+@media (max-width: 520px) {
+  .ff-calendar-page > .ff-native-page-header .flex,
+  .ff-goals-page > .ff-native-page-header .flex,
+  .ff-goals-body > .ff-native-page-header .flex {
+    align-items: flex-start;
+  }
+
+  .ff-calendar-page > .ff-native-page-header .shrink-0,
+  .ff-goals-page > .ff-native-page-header .shrink-0,
+  .ff-goals-body > .ff-native-page-header .shrink-0 {
+    flex-shrink: 1;
+    min-width: 0;
+  }
+
+  .ff-calendar-day-button {
+    min-height: 3.1rem;
+    border-radius: 14px;
+    padding: 0.38rem;
+  }
+
+  .ff-calendar-day-number {
+    width: 1.36rem;
+    height: 1.36rem;
+    font-size: 0.72rem;
+  }
+
+  .ff-calendar-day-button small {
+    display: none;
+  }
+
+  .ff-calendar-day-button strong {
+    min-width: 1.18rem;
+    padding-inline: 0.32rem;
+    font-size: 0.55rem;
+  }
+
+  .ff-calendar-day-kpis {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ff-calendar-day-actions,
+  .ff-goal-card-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ff-goal-card-hero {
+    grid-template-columns: 40px minmax(0, 1fr) 38px;
+    gap: 0.6rem;
+  }
+
+  .ff-goal-card-hero__icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 16px;
+  }
+
+  .ff-goal-card-progress-ring {
+    grid-template-columns: 64px minmax(0, 1fr);
+  }
+
+  .ff-goal-card-progress-ring__circle {
+    width: 64px;
+    height: 64px;
+  }
+
+  .ff-goal-card-progress-ring__circle strong {
+    font-size: 0.9rem;
+  }
+
+  .ff-goal-modal__panel {
+    border-radius: 1.35rem 1.35rem 0 0 !important;
+  }
+
+  .ff-goal-modal__header,
+  .ff-goal-modal__form {
+    padding: 1rem !important;
+  }
+
+  .ff-goal-modal__form .grid.grid-cols-1.gap-3.sm\:grid-cols-2 {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+.ff-goal-progress-bar {
+  min-width: 0;
+}
+
+.ff-goal-progress-bar__head,
+.ff-goal-progress-bar__values {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.ff-goal-progress-bar__head p,
+.ff-goal-progress-bar__head strong,
+.ff-goal-progress-bar__values span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-goal-progress-bar__head p {
+  color: var(--ff-muted);
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ff-goal-progress-bar__head strong {
+  color: var(--ff-accent-text);
+  font-size: 0.9rem;
+  font-weight: 1000;
+}
+
+.ff-goal-progress-bar__track {
+  height: 0.72rem;
+  overflow: hidden;
+  border: 1px solid var(--ff-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ff-surface-2) 86%, #000);
+  margin-top: 0.5rem;
+}
+
+.ff-goal-progress-bar__track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ff-accent);
+  box-shadow: 0 0 18px var(--ff-accent-shadow);
+  transition: width 0.28s ease;
+}
+
+.ff-goal-progress-bar__values {
+  margin-top: 0.45rem;
+}
+
+.ff-goal-progress-bar__values span {
+  color: var(--ff-muted);
+  font-size: 0.7rem;
+  font-weight: 850;
+}

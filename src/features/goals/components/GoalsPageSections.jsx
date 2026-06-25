@@ -1,11 +1,14 @@
 import {
-  Archive,
+  AlertTriangle,
   CheckCircle2,
+  Flame,
   Flag,
   Plus,
   RefreshCcw,
   Search,
+  Sparkles,
   Target,
+  TrendingUp,
   X,
 } from 'lucide-react'
 
@@ -19,23 +22,23 @@ import Toast from '../../../components/ui/Toast'
 import GoalCard from '../../../components/goals/GoalCard'
 import GoalFormModal from '../../../components/goals/GoalFormModal'
 
-function GoalsHeader({ source, loading, onRefresh, onCreate }) {
+function GoalsHeader({ source, loading, stats, onRefresh, onCreate }) {
   return (
     <PageHeader
       title="Metas"
-      description="Crie objetivos claros e acompanhe automaticamente com base nos seus treinos, peso, fotos e PRs."
+      description={`${stats.active} metas ativas • ${stats.completedThisWeek} concluída${stats.completedThisWeek === 1 ? '' : 's'} esta semana • ${stats.averageProgress}% de progresso médio.`}
       action={
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="ff-goals-header-actions">
           <Badge variant={source === 'database' ? 'purple' : 'default'}>
             {loading ? 'Carregando...' : source === 'database' ? 'Sincronizado' : 'Local'}
           </Badge>
 
-          <Button type="button" variant="secondary" onClick={onRefresh}>
+          <Button type="button" variant="secondary" onClick={onRefresh} className="ff-goals-refresh-button">
             <RefreshCcw size={16} />
             Atualizar
           </Button>
 
-          <Button type="button" onClick={onCreate}>
+          <Button type="button" onClick={onCreate} className="ff-goals-create-button">
             <Plus size={16} />
             Nova meta
           </Button>
@@ -48,52 +51,48 @@ function GoalsHeader({ source, loading, onRefresh, onCreate }) {
 function GoalsStats({ stats }) {
   const cards = [
     {
-      label: 'Metas ativas',
+      label: 'Ativas',
       value: stats.active,
-      description: 'em andamento',
+      description: stats.overdue > 0 ? `${stats.overdue} atrasada${stats.overdue === 1 ? '' : 's'}` : 'em andamento',
       icon: Flag,
-      valueClass: 'text-[var(--ff-text)]',
-      iconClass: 'text-[var(--ff-accent-text)]',
-    },
-    {
-      label: 'Progresso médio',
-      value: `${stats.averageProgress}%`,
-      description: 'das metas ativas',
-      icon: Target,
-      valueClass: 'text-[var(--ff-accent-text)]',
-      iconClass: 'text-[var(--ff-accent-text)]',
+      tone: 'accent',
     },
     {
       label: 'Concluídas',
       value: stats.completed,
-      description: 'metas finalizadas',
+      description: `${stats.completedThisWeek} esta semana`,
       icon: CheckCircle2,
-      valueClass: 'text-[var(--ff-text)]',
-      iconClass: 'text-[var(--ff-success-text)]',
+      tone: 'success',
     },
     {
-      label: 'Arquivadas',
-      value: stats.archived,
-      description: 'guardadas para depois',
-      icon: Archive,
-      valueClass: 'text-[var(--ff-text)]',
-      iconClass: 'text-[var(--ff-muted)]',
+      label: 'Sequência',
+      value: `${stats.streak} dia${stats.streak === 1 ? '' : 's'}`,
+      description: stats.streak > 0 ? 'treinando sem parar' : 'comece hoje',
+      icon: Flame,
+      tone: 'warning',
+    },
+    {
+      label: 'Progresso',
+      value: `${stats.averageProgress}%`,
+      description: stats.almostDone > 0 ? `${stats.almostDone} quase lá` : 'média ativa',
+      icon: TrendingUp,
+      tone: 'accent',
     },
   ]
 
   return (
-    <section className="ff-goals-stats-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <section className="ff-goals-stats-grid" aria-label="Resumo das metas">
       {cards.map((card) => {
         const Icon = card.icon
 
         return (
-          <Card key={card.label} className="ff-compact-stat-card p-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-[var(--ff-muted)]">{card.label}</p>
-              <Icon size={20} className={card.iconClass} />
+          <Card key={card.label} className={`ff-goal-summary-card is-${card.tone}`}>
+            <div className="ff-goal-summary-card__top">
+              <p>{card.label}</p>
+              <Icon size={19} />
             </div>
-            <h2 className={`mt-2 text-3xl font-black ${card.valueClass}`}>{card.value}</h2>
-            <p className="mt-2 text-xs text-[var(--ff-muted)]">{card.description}</p>
+            <strong>{card.value}</strong>
+            <span>{card.description}</span>
           </Card>
         )
       })}
@@ -101,68 +100,107 @@ function GoalsStats({ stats }) {
   )
 }
 
+const FILTERS = [
+  { value: 'active', label: 'Ativas' },
+  { value: 'completed', label: 'Concluídas' },
+  { value: 'overdue', label: 'Atrasadas' },
+  { value: 'archived', label: 'Arquivadas' },
+  { value: 'all', label: 'Todas' },
+]
+
 function GoalsFilters({ search, statusFilter, onSearchChange, onStatusFilterChange, onCreate }) {
   return (
-    <Card className="mt-6">
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_220px_auto]">
-        <div className="flex h-12 items-center gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-[var(--ff-muted)]">
+    <Card className="ff-goals-filter-card">
+      <div className="ff-goals-filter-card__top">
+        <label className="ff-goals-search-field">
           <Search size={18} />
           <input
-            type="text"
+            type="search"
             value={search}
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder="Buscar meta, exercício ou descrição..."
-            className="w-full bg-transparent text-sm text-[var(--ff-text)] outline-none placeholder:text-[var(--ff-muted)]"
           />
           {search && (
-            <button type="button" onClick={() => onSearchChange('')}>
+            <button type="button" onClick={() => onSearchChange('')} aria-label="Limpar busca">
               <X size={16} />
             </button>
           )}
-        </div>
+        </label>
 
-        <select
-          value={statusFilter}
-          onChange={(event) => onStatusFilterChange(event.target.value)}
-          className="h-12 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-sm font-bold text-[var(--ff-text)] outline-none"
-        >
-          <option value="active">Ativas</option>
-          <option value="completed">Concluídas</option>
-          <option value="archived">Arquivadas</option>
-          <option value="all">Todas</option>
-        </select>
-
-        <Button type="button" onClick={onCreate}>
+        <Button type="button" onClick={onCreate} className="ff-goals-inline-create">
           <Plus size={16} />
-          Criar meta
+          Nova meta
         </Button>
+      </div>
+
+      <div className="ff-goals-filter-chips" role="tablist" aria-label="Filtrar metas">
+        {FILTERS.map((filter) => (
+          <button
+            key={filter.value}
+            type="button"
+            aria-pressed={statusFilter === filter.value}
+            className={statusFilter === filter.value ? 'is-active' : ''}
+            onClick={() => onStatusFilterChange(filter.value)}
+          >
+            {filter.label}
+          </button>
+        ))}
       </div>
     </Card>
   )
 }
 
-function GoalsList({ goals, filteredGoals, onCreate, onEdit, onDelete, onComplete, onArchive, onUnarchive, onReactivate }) {
+function GoalsMotivation({ stats, onCreate }) {
+  const hasOverdue = stats.overdue > 0
+  const hasAlmostDone = stats.almostDone > 0
+
   return (
-    <section className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2 xl:gap-5">
-      {filteredGoals.length === 0 ? (
-        <div className="xl:col-span-2">
-          <Card>
-            <EmptyState
-              title={goals.length === 0 ? 'Nenhuma meta criada' : 'Nenhuma meta encontrada'}
-              description={
-                goals.length === 0
-                  ? 'Crie metas como treinar 4x na semana, bater PR, chegar em certo peso ou registrar fotos no mês.'
-                  : 'Tente mudar o filtro ou buscar por outro termo.'
-              }
-              action={
-                <Button type="button" onClick={onCreate}>
-                  <Plus size={16} />
-                  Criar primeira meta
-                </Button>
-              }
-            />
-          </Card>
-        </div>
+    <Card className="ff-goals-motivation-card">
+      <div className="ff-goals-motivation-card__icon">
+        {hasOverdue ? <AlertTriangle size={20} /> : hasAlmostDone ? <Sparkles size={20} /> : <Target size={20} />}
+      </div>
+      <div className="min-w-0">
+        <p>{hasOverdue ? 'Atenção nas metas atrasadas' : hasAlmostDone ? 'Você está perto de concluir' : 'Escolha um alvo simples'}</p>
+        <span>
+          {hasOverdue
+            ? 'Revise prazos ou conclua o que já evoluiu para manter sua lista limpa.'
+            : hasAlmostDone
+              ? 'Priorize as metas acima de 75% e transforme progresso em vitória.'
+              : 'Uma boa meta para começar é treinar 3 ou 4 vezes na semana.'}
+        </span>
+      </div>
+      <button type="button" onClick={onCreate}>Criar</button>
+    </Card>
+  )
+}
+
+function GoalsList({ goals, filteredGoals, loading, onCreate, onEdit, onDelete, onComplete, onArchive, onUnarchive, onReactivate }) {
+  return (
+    <section className="ff-goals-list" aria-label="Lista de metas">
+      {loading && filteredGoals.length === 0 ? (
+        <Card className="ff-goals-empty-card">
+          <EmptyState
+            title="Carregando metas"
+            description="Buscando suas metas salvas e calculando o progresso com os treinos registrados."
+          />
+        </Card>
+      ) : filteredGoals.length === 0 ? (
+        <Card className="ff-goals-empty-card">
+          <EmptyState
+            title={goals.length === 0 ? 'Nenhuma meta criada' : 'Nenhuma meta encontrada'}
+            description={
+              goals.length === 0
+                ? 'Crie uma meta simples, como treinar 4x na semana, bater um PR ou aumentar o volume mensal.'
+                : 'Tente mudar o filtro ou buscar por outro termo.'
+            }
+            action={
+              <Button type="button" onClick={onCreate}>
+                <Plus size={16} />
+                Criar primeira meta
+              </Button>
+            }
+          />
+        </Card>
       ) : (
         filteredGoals.map((goal) => (
           <GoalCard
@@ -212,7 +250,7 @@ export default function GoalsPageSections({
 }) {
   return (
     <>
-      <GoalsHeader source={source} loading={loading} onRefresh={onRefresh} onCreate={onCreate} />
+      <GoalsHeader source={source} loading={loading} stats={stats} onRefresh={onRefresh} onCreate={onCreate} />
       <GoalsStats stats={stats} />
       <GoalsFilters
         search={search}
@@ -221,9 +259,11 @@ export default function GoalsPageSections({
         onStatusFilterChange={onStatusFilterChange}
         onCreate={onCreate}
       />
+      <GoalsMotivation stats={stats} onCreate={onCreate} />
       <GoalsList
         goals={goals}
         filteredGoals={filteredGoals}
+        loading={loading}
         onCreate={onCreate}
         onEdit={onEdit}
         onDelete={onDelete}

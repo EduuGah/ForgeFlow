@@ -1,36 +1,47 @@
+import { useMemo, useState } from 'react'
 import {
   Archive,
+  AlertTriangle,
   CheckCircle2,
+  ChevronDown,
+  Clock3,
+  Dumbbell,
   Edit3,
+  MoreHorizontal,
   RotateCcw,
   Target,
   Trash2,
+  Trophy,
 } from 'lucide-react'
 
 import Badge from '../ui/Badge'
 import Card from '../ui/Card'
 import GoalProgressBar from './GoalProgressBar'
+import { formatGoalValue, getGoalDeadlineState, parseLocalDate } from '../../features/goals/goalUtils'
 
 const GOAL_TYPE_LABELS = {
-  weekly_workouts: 'Treinos na semana',
-  monthly_workouts: 'Treinos no mês',
+  weekly_workouts: 'Treinos por semana',
+  monthly_workouts: 'Frequência mensal',
   body_weight: 'Peso corporal',
-  exercise_pr_weight: 'PR de exercício',
-  monthly_volume: 'Volume mensal',
-  progress_photos: 'Fotos no mês',
+  exercise_pr_weight: 'PR em exercício',
+  monthly_volume: 'Volume total',
+  streak_days: 'Sequência de dias',
+  progress_photos: 'Fotos de progresso',
+  nutrition: 'Água/nutrição futura',
   custom: 'Personalizada',
 }
 
 const STATUS_LABELS = {
-  active: 'Ativa',
+  active: 'Em andamento',
   completed: 'Concluída',
   archived: 'Arquivada',
 }
 
 function formatDate(dateString) {
-  if (!dateString) return ''
+  const date = parseLocalDate(dateString)
+  if (!date) return ''
 
-  return new Date(`${String(dateString).slice(0, 10)}T12:00:00`).toLocaleDateString('pt-BR', {
+  return date.toLocaleDateString('pt-BR', {
     day: '2-digit',
     month: '2-digit',
     year: '2-digit',
@@ -41,39 +52,56 @@ function getGoalTypeLabel(type) {
   return GOAL_TYPE_LABELS[type] || 'Meta'
 }
 
-function getStatusVariant(status) {
-  if (status === 'completed') return 'green'
-  if (status === 'archived') return 'default'
+function getStatusVariant(goal, deadlineState) {
+  if (goal.status === 'completed' || goal.isCompleted) return 'green'
+  if (goal.status === 'archived') return 'default'
+  if (deadlineState === 'overdue') return 'yellow'
 
   return 'purple'
 }
 
 function getGoalExplanation(goal) {
-  if (goal.type === 'weekly_workouts') {
-    return `O app conta automaticamente quantos treinos você finalizou nesta semana.`
+  if (goal.type === 'weekly_workouts') return 'Conta os treinos finalizados na semana atual.'
+  if (goal.type === 'monthly_workouts') return 'Conta os treinos finalizados no mês atual.'
+  if (goal.type === 'body_weight') return 'Usa o último peso corporal registrado no perfil.'
+  if (goal.type === 'exercise_pr_weight') return `Procura sua maior carga registrada em ${goal.exerciseName || 'um exercício'}.`
+  if (goal.type === 'monthly_volume') return 'Soma o volume dos treinos finalizados no mês.'
+  if (goal.type === 'streak_days') return 'Conta quantos dias seguidos você treinou até hoje.'
+  if (goal.type === 'progress_photos') return 'Conta as fotos de evolução registradas no mês.'
+
+  return 'Meta manual. Atualize o valor atual ao editar.'
+}
+
+function getRemainingText(goal) {
+  const target = Number(goal.targetValue || 0)
+  const current = Number(goal.currentValue || 0)
+  const remaining = Math.max(0, target - current)
+
+  if (goal.status === 'completed' || goal.isCompleted || Number(goal.progressPercent || 0) >= 100) {
+    return 'Meta concluída'
   }
 
-  if (goal.type === 'monthly_workouts') {
-    return `O app conta automaticamente quantos treinos você finalizou neste mês.`
-  }
+  if (remaining <= 0) return 'Pronto para concluir'
 
-  if (goal.type === 'body_weight') {
-    return `O app usa seu último peso registrado.`
-  }
+  return `Faltam ${formatGoalValue(remaining, goal.unit)}`
+}
 
-  if (goal.type === 'exercise_pr_weight') {
-    return `O app procura sua maior carga registrada em ${goal.exerciseName || 'um exercício'}.`
-  }
+function getDeadlineText(goal, deadlineState) {
+  if (!goal.deadline) return 'Sem prazo definido'
+  if (deadlineState === 'overdue') return `Atrasada desde ${formatDate(goal.deadline)}`
+  if (deadlineState === 'soon') return `Prazo próximo: ${formatDate(goal.deadline)}`
+  if (deadlineState === 'completed') return `Concluída até ${formatDate(goal.deadline)}`
 
-  if (goal.type === 'monthly_volume') {
-    return `O app soma o volume dos treinos finalizados neste mês.`
-  }
+  return `Prazo: ${formatDate(goal.deadline)}`
+}
 
-  if (goal.type === 'progress_photos') {
-    return `O app conta quantas fotos de evolução você registrou neste mês.`
-  }
+function getCardTone(goal, deadlineState) {
+  if (goal.status === 'archived') return 'is-archived'
+  if (goal.status === 'completed' || goal.isCompleted) return 'is-completed'
+  if (deadlineState === 'overdue') return 'is-overdue'
+  if (Number(goal.progressPercent || 0) >= 75) return 'is-near'
 
-  return `Você atualiza o valor atual manualmente ao editar a meta.`
+  return 'is-active'
 }
 
 function GoalCard({
@@ -85,136 +113,142 @@ function GoalCard({
   onUnarchive,
   onReactivate,
 }) {
+  const [expanded, setExpanded] = useState(false)
+  const deadlineState = getGoalDeadlineState(goal)
   const isCompleted = goal.status === 'completed' || goal.isCompleted
   const isArchived = goal.status === 'archived'
   const canComplete = !isCompleted && !isArchived
+  const percent = Math.max(0, Math.min(100, Number(goal.progressPercent || 0)))
+  const statusLabel = deadlineState === 'overdue' && !isCompleted ? 'Atrasada' : STATUS_LABELS[goal.status] || 'Em andamento'
+
+  const primaryIcon = useMemo(() => {
+    if (isCompleted) return Trophy
+    if (deadlineState === 'overdue') return AlertTriangle
+    if (goal.type === 'exercise_pr_weight') return Dumbbell
+    return Target
+  }, [deadlineState, goal.type, isCompleted])
+
+  const PrimaryIcon = primaryIcon
 
   return (
-    <Card className={isArchived ? 'ff-goal-native-card opacity-75' : 'ff-goal-native-card'}>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="purple">
-              {getGoalTypeLabel(goal.type)}
-            </Badge>
+    <Card className={`ff-goal-native-card ${getCardTone(goal, deadlineState)}`}>
+      <div className="ff-goal-card-hero">
+        <div className="ff-goal-card-hero__icon">
+          <PrimaryIcon size={20} />
+        </div>
 
-            <Badge variant={getStatusVariant(goal.status)}>
-              {STATUS_LABELS[goal.status] || 'Ativa'}
-            </Badge>
-
-            {goal.deadline && (
-              <Badge>
-                Prazo: {formatDate(goal.deadline)}
-              </Badge>
-            )}
+        <div className="ff-goal-card-hero__content">
+          <div className="ff-goal-card-badges">
+            <Badge variant="purple">{getGoalTypeLabel(goal.type)}</Badge>
+            <Badge variant={getStatusVariant(goal, deadlineState)}>{statusLabel}</Badge>
+            {goal.period && goal.period !== 'none' && <Badge>{goal.period === 'weekly' ? 'Semanal' : 'Mensal'}</Badge>}
           </div>
 
-          <h2 className="mt-3 text-xl font-black text-[var(--ff-text)]">
-            {goal.title}
-          </h2>
+          <h2 className="ff-goal-card-title">{goal.title}</h2>
 
           {goal.description && (
-            <p className="mt-2 text-sm leading-relaxed text-[var(--ff-muted)]">
-              {goal.description}
-            </p>
-          )}
-
-          {goal.exerciseName && (
-            <p className="mt-2 text-sm font-bold text-[var(--ff-accent-text)]">
-              Exercício: {goal.exerciseName}
-            </p>
+            <p className="ff-goal-card-description">{goal.description}</p>
           )}
         </div>
 
-        <div className="flex shrink-0 flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => onEdit(goal)}
-            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-muted)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)]"
-            title="Editar meta"
-          >
-            <Edit3 size={17} />
-          </button>
+        <button
+          type="button"
+          onClick={() => setExpanded((current) => !current)}
+          className="ff-goal-card-more"
+          aria-label={expanded ? 'Ocultar detalhes da meta' : 'Mostrar detalhes da meta'}
+          aria-expanded={expanded}
+        >
+          <MoreHorizontal size={18} />
+        </button>
+      </div>
 
-          {canComplete && (
-            <button
-              type="button"
-              onClick={() => onComplete(goal)}
-              className="flex h-10 w-10 items-center justify-center rounded-2xl border border-emerald-500/25 bg-emerald-500/10 text-[var(--ff-success-text)] transition hover:bg-emerald-500/15"
-              title="Concluir meta"
-            >
-              <CheckCircle2 size={17} />
-            </button>
-          )}
-
-          {isCompleted && (
-            <button
-              type="button"
-              onClick={() => onReactivate(goal)}
-              className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)] transition hover:bg-[var(--ff-accent-soft)]/80"
-              title="Reativar meta"
-            >
-              <RotateCcw size={17} />
-            </button>
-          )}
-
-          {isArchived ? (
-            <button
-              type="button"
-              onClick={() => onUnarchive(goal)}
-              className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)] transition hover:bg-[var(--ff-accent-soft)]/80"
-              title="Desarquivar meta"
-            >
-              <RotateCcw size={17} />
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => onArchive(goal)}
-              className="flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-muted)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)]"
-              title="Arquivar meta"
-            >
-              <Archive size={17} />
-            </button>
-          )}
-
-          <button
-            type="button"
-            onClick={() => onDelete(goal)}
-            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-red-500/25 bg-red-500/10 text-[var(--ff-danger-text)] transition hover:bg-red-500/15"
-            title="Excluir meta"
-          >
-            <Trash2 size={17} />
-          </button>
+      <div className="ff-goal-card-progress-ring" aria-label={`Progresso ${percent}%`}>
+        <div className="ff-goal-card-progress-ring__circle" style={{ '--goal-progress': `${percent * 3.6}deg` }}>
+          <strong>{percent}%</strong>
+          <span>feito</span>
+        </div>
+        <div className="ff-goal-card-progress-ring__meta">
+          <p>{formatGoalValue(goal.currentValue, goal.unit)} / {formatGoalValue(goal.targetValue, goal.unit)}</p>
+          <span>{getRemainingText(goal)}</span>
         </div>
       </div>
 
-      <div className="mt-5">
-        <GoalProgressBar
-          currentValue={goal.currentValue}
-          targetValue={goal.targetValue}
-          unit={goal.unit}
-          progressPercent={goal.progressPercent}
-        />
+      <GoalProgressBar
+        currentValue={goal.currentValue}
+        targetValue={goal.targetValue}
+        unit={goal.unit}
+        progressPercent={goal.progressPercent}
+      />
+
+      <div className="ff-goal-card-footer">
+        <span className={deadlineState === 'overdue' ? 'is-danger' : ''}>
+          <Clock3 size={15} />
+          {getDeadlineText(goal, deadlineState)}
+        </span>
+
+        {goal.exerciseName && (
+          <span>
+            <Dumbbell size={15} />
+            {goal.exerciseName}
+          </span>
+        )}
       </div>
 
-      <div className="mt-5 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">
-            <Target size={18} />
-          </div>
-
+      {expanded && (
+        <div className="ff-goal-card-details">
           <div>
-            <p className="text-sm font-black text-[var(--ff-text)]">
-              Como essa meta é calculada?
-            </p>
+            <p>Como calcula</p>
+            <span>{getGoalExplanation(goal)}</span>
+          </div>
 
-            <p className="mt-1 text-sm leading-relaxed text-[var(--ff-muted)]">
-              {getGoalExplanation(goal)}
-            </p>
+          <div className="ff-goal-card-actions">
+            <button type="button" onClick={() => onEdit(goal)}>
+              <Edit3 size={16} />
+              Editar
+            </button>
+
+            {canComplete && (
+              <button type="button" className="is-success" onClick={() => onComplete(goal)}>
+                <CheckCircle2 size={16} />
+                Concluir
+              </button>
+            )}
+
+            {isCompleted && (
+              <button type="button" onClick={() => onReactivate(goal)}>
+                <RotateCcw size={16} />
+                Reativar
+              </button>
+            )}
+
+            {isArchived ? (
+              <button type="button" onClick={() => onUnarchive(goal)}>
+                <RotateCcw size={16} />
+                Desarquivar
+              </button>
+            ) : (
+              <button type="button" onClick={() => onArchive(goal)}>
+                <Archive size={16} />
+                Arquivar
+              </button>
+            )}
+
+            <button type="button" className="is-danger" onClick={() => onDelete(goal)}>
+              <Trash2 size={16} />
+              Excluir
+            </button>
           </div>
         </div>
-      </div>
+      )}
+
+      <button
+        type="button"
+        className="ff-goal-card-expand"
+        onClick={() => setExpanded((current) => !current)}
+      >
+        {expanded ? 'Menos detalhes' : 'Detalhes e ações'}
+        <ChevronDown size={16} className={expanded ? 'rotate-180' : ''} />
+      </button>
     </Card>
   )
 }
