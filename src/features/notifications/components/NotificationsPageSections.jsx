@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   Archive,
   Bell,
@@ -10,99 +12,118 @@ import {
   Plus,
   RefreshCcw,
   Search,
+  Settings2,
+  ShieldAlert,
+  ShieldCheck,
   Trash2,
   X,
 } from 'lucide-react'
 
-import PageHeader from '../../../components/ui/PageHeader'
-import Card from '../../../components/ui/Card'
 import Badge from '../../../components/ui/Badge'
 import Button from '../../../components/ui/Button'
-import EmptyState from '../../../components/ui/EmptyState'
+import Card from '../../../components/ui/Card'
 import ConfirmModal from '../../../components/ui/ConfirmModal'
+import EmptyState from '../../../components/ui/EmptyState'
 import Toast from '../../../components/ui/Toast'
-import { formatDateTime, getNotificationMeta } from '../notificationUtils'
-import {
-  NotificationDetailModal,
-  NotificationStatusPill,
-} from './NotificationComponents'
 import { WEEK_DAYS } from '../../../utils/workoutScheduleUtils'
+import {
+  NOTIFICATION_PREFERENCE_OPTIONS,
+  formatDateTime,
+  getNotificationMeta,
+  getPermissionDescription,
+  getPermissionLabel,
+  getPermissionTone,
+} from '../notificationUtils'
+import { NotificationDetailModal, NotificationStatusPill } from './NotificationComponents'
 
-function NotificationsHeader({ source, loading, onRefresh, onGenerate }) {
+function ToggleSwitch({ checked, onChange, label }) {
   return (
-    <PageHeader
-      title="Notificações"
-      description="Acompanhe alertas inteligentes sobre treino, metas, peso e evolução."
-      action={
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant={source === 'database' ? 'purple' : 'default'}>
-            {loading ? 'Carregando...' : source === 'database' ? 'Sincronizado' : 'Local'}
-          </Badge>
-
-          <Button type="button" variant="secondary" onClick={onRefresh}>
-            <RefreshCcw size={16} />
-            Atualizar
-          </Button>
-
-          <Button type="button" onClick={onGenerate}>
-            <BellRing size={16} />
-            Verificar agora
-          </Button>
-        </div>
-      }
-    />
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={onChange}
+      className={checked ? 'ff-premium-switch is-on' : 'ff-premium-switch'}
+    >
+      <span />
+    </button>
   )
 }
 
-function NotificationsStats({ stats }) {
+function PermissionBanner({ permission, onRequestPermission, onTestNotification, testingNotification }) {
+  const tone = getPermissionTone(permission)
+  const granted = tone === 'success'
+  const Icon = granted ? ShieldCheck : ShieldAlert
+
+  return (
+    <Card className={`ff-notifications-permission-card is-${tone}`}>
+      <div className="ff-notifications-permission-card__icon">
+        <Icon size={22} />
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <span>{granted ? 'Permissão ativada' : 'Permissão necessária'}</span>
+        <strong>{getPermissionLabel(permission)}</strong>
+        <p>{getPermissionDescription(permission)}</p>
+      </div>
+
+      <div className="ff-notifications-permission-card__actions">
+        {!granted && (
+          <Button type="button" variant="secondary" onClick={onRequestPermission}>
+            Verificar novamente
+          </Button>
+        )}
+        <Button type="button" onClick={onTestNotification} disabled={testingNotification}>
+          <BellRing size={16} />
+          {testingNotification ? 'Enviando...' : 'Testar notificação'}
+        </Button>
+      </div>
+    </Card>
+  )
+}
+
+function StatsGrid({ summary }) {
   const cards = [
     {
       label: 'Não lidas',
-      value: stats.unread,
-      description: 'precisam da sua atenção',
+      value: summary.unread,
+      detail: 'pedem atenção',
       icon: BellRing,
-      valueClass: 'text-[var(--ff-accent-text)]',
-      iconClass: 'text-[var(--ff-accent-text)]',
     },
     {
-      label: 'Lidas',
-      value: stats.read,
-      description: 'já foram abertas',
-      icon: Eye,
-      valueClass: 'text-[var(--ff-text)]',
-      iconClass: 'text-[var(--ff-success-text)]',
-    },
-    {
-      label: 'Arquivadas',
-      value: stats.archived,
-      description: 'guardadas',
-      icon: Archive,
-      valueClass: 'text-[var(--ff-text)]',
-      iconClass: 'text-[var(--ff-muted)]',
-    },
-    {
-      label: 'Total exibido',
-      value: stats.total,
-      description: 'no filtro atual',
+      label: 'Lembretes ativos',
+      value: summary.activeAlerts,
+      detail: `${summary.activeReminders} personalizados`,
       icon: Bell,
-      valueClass: 'text-[var(--ff-text)]',
-      iconClass: 'text-[var(--ff-accent-text)]',
+    },
+    {
+      label: 'Próximo alerta',
+      value: summary.nextAlert,
+      detail: 'baseado nos lembretes',
+      icon: Clock3,
+    },
+    {
+      label: 'Permissão',
+      value: summary.permissionLabel,
+      detail: summary.permissionGranted ? 'pronta para usar' : 'requer atenção',
+      icon: summary.permissionGranted ? ShieldCheck : ShieldAlert,
     },
   ]
 
   return (
-    <section className="ff-notifications-stats-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <section className="ff-notifications-premium-stats">
       {cards.map((card) => {
         const Icon = card.icon
 
         return (
-          <Card key={card.label} className="ff-compact-stat-card p-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-[var(--ff-muted)]">{card.label}</p>
-              <Icon size={20} className={card.iconClass} />
+          <Card key={card.label} className="ff-premium-stat-card">
+            <div>
+              <span>{card.label}</span>
+              <strong>{card.value}</strong>
+              <small>{card.detail}</small>
             </div>
-            <h2 className={`mt-2 text-3xl font-black ${card.valueClass}`}>{card.value}</h2>
-            <p className="mt-2 text-xs text-[var(--ff-muted)]">{card.description}</p>
+            <Icon size={18} />
           </Card>
         )
       })}
@@ -110,130 +131,44 @@ function NotificationsStats({ stats }) {
   )
 }
 
-function NotificationsFilters({ search, statusFilter, onSearchChange, onStatusFilterChange, onMarkAllAsRead }) {
+function Filters({ search, statusFilter, onSearchChange, onStatusFilterChange, onMarkAllAsRead, onOpenSettings }) {
   return (
-    <Card className="mt-6">
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_220px_auto]">
-        <div className="flex h-12 items-center gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-[var(--ff-muted)]">
-          <Search size={18} />
-          <input
-            type="text"
-            value={search}
-            onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Buscar por título, mensagem, tipo ou status..."
-            className="w-full bg-transparent text-sm text-[var(--ff-text)] outline-none placeholder:text-[var(--ff-muted)]"
-          />
-          {search && (
-            <button type="button" onClick={() => onSearchChange('')}>
-              <X size={16} />
-            </button>
-          )}
-        </div>
-
-        <select
-          value={statusFilter}
-          onChange={(event) => onStatusFilterChange(event.target.value)}
-          className="h-12 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-sm font-bold text-[var(--ff-text)] outline-none"
-        >
-          <option value="">Todas</option>
-          <option value="unread">Não lidas</option>
-          <option value="read">Lidas</option>
-          <option value="archived">Arquivadas</option>
-        </select>
-
-        <Button type="button" variant="secondary" onClick={onMarkAllAsRead}>
-          <CheckCheck size={16} />
-          Marcar todas como lidas
-        </Button>
-      </div>
-    </Card>
-  )
-}
-
-function NotificationsReminders({
-  reminders,
-  draft,
-  onDraftChange,
-  onDayToggle,
-  onCreateReminder,
-  onToggleReminder,
-  onDeleteReminder,
-}) {
-  return (
-    <Card className="ff-notification-reminders mt-6">
-      <div className="ff-notification-reminders__header">
-        <div>
-          <p>Lembretes</p>
-          <h2>Manter o app vivo</h2>
-        </div>
-        <span>{reminders.length} lembrete(s)</span>
-      </div>
-
-      <form className="ff-notification-reminders__form" onSubmit={onCreateReminder}>
+    <Card className="ff-notifications-toolbar">
+      <div className="ff-notifications-search">
+        <Search size={18} />
         <input
           type="text"
-          value={draft.title}
-          onChange={(event) => onDraftChange('title', event.target.value)}
-          placeholder="Titulo do lembrete"
+          value={search}
+          onChange={(event) => onSearchChange(event.target.value)}
+          placeholder="Buscar notificação..."
         />
-        <input
-          type="time"
-          value={draft.time}
-          onChange={(event) => onDraftChange('time', event.target.value)}
-          aria-label="Horario do lembrete"
-        />
-        <input
-          type="text"
-          value={draft.body}
-          onChange={(event) => onDraftChange('body', event.target.value)}
-          placeholder="Mensagem opcional"
-        />
-
-        <div className="ff-notification-reminders__days">
-          {WEEK_DAYS.map((day) => (
-            <button
-              key={day.key}
-              type="button"
-              className={draft.days?.includes(day.key) ? 'is-active' : ''}
-              onClick={() => onDayToggle(day.key)}
-            >
-              {day.short}
-            </button>
-          ))}
-        </div>
-
-        <Button type="submit">
-          <Plus size={16} />
-          Criar lembrete
-        </Button>
-      </form>
-
-      <div className="ff-notification-reminders__list">
-        {reminders.map((reminder) => (
-          <article key={reminder.id} className={reminder.enabled ? 'is-enabled' : ''}>
-            <button
-              type="button"
-              onClick={() => onToggleReminder(reminder.id)}
-              aria-label={reminder.enabled ? 'Desativar lembrete' : 'Ativar lembrete'}
-            >
-              <Bell size={17} />
-            </button>
-            <div>
-              <strong>{reminder.title}</strong>
-              <span>
-                {reminder.time} - {(reminder.days || []).length === WEEK_DAYS.length ? 'Todos os dias' : `${(reminder.days || []).length} dia(s)`}
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => onDeleteReminder(reminder.id)}
-              aria-label="Excluir lembrete"
-            >
-              <Trash2 size={16} />
-            </button>
-          </article>
-        ))}
+        {search && (
+          <button type="button" onClick={() => onSearchChange('')} aria-label="Limpar busca">
+            <X size={16} />
+          </button>
+        )}
       </div>
+
+      <select
+        value={statusFilter}
+        onChange={(event) => onStatusFilterChange(event.target.value)}
+        aria-label="Filtrar notificações"
+      >
+        <option value="">Todas</option>
+        <option value="unread">Não lidas</option>
+        <option value="read">Lidas</option>
+        <option value="archived">Arquivadas</option>
+      </select>
+
+      <Button type="button" variant="secondary" onClick={onMarkAllAsRead}>
+        <CheckCheck size={16} />
+        Marcar lidas
+      </Button>
+
+      <Button type="button" onClick={onOpenSettings}>
+        <Settings2 size={16} />
+        Configurar lembretes
+      </Button>
     </Card>
   )
 }
@@ -244,90 +179,51 @@ function NotificationCard({ notification, onOpen, onMarkAsRead, onMarkAsUnread, 
   const isUnread = notification.status === 'unread'
 
   return (
-    <article
-      className={
-        isUnread
-          ? 'group relative flex h-full flex-col overflow-hidden rounded-3xl border border-[var(--ff-accent-border)] bg-[var(--ff-card)] p-4 shadow-[0_0_28px_var(--ff-accent-shadow)]/10 transition hover:-translate-y-0.5 hover:bg-[var(--ff-card-hover)]'
-          : 'group relative flex h-full flex-col overflow-hidden rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 opacity-85 transition hover:-translate-y-0.5 hover:opacity-100 hover:bg-[var(--ff-card-hover)]'
-      }
-    >
-      {isUnread && <div className="absolute left-0 top-0 h-full w-1.5 bg-[var(--ff-accent)]" />}
-
-      <button
-        type="button"
-        onClick={() => onOpen(notification)}
-        className="flex w-full flex-col gap-4 text-left sm:flex-row sm:items-start"
-      >
-        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${meta.border} ${meta.bg} ${meta.tone}`}>
-          <Icon size={23} />
+    <article className={isUnread ? 'ff-notification-premium-card is-unread' : 'ff-notification-premium-card'}>
+      <button type="button" className="ff-notification-premium-card__main" onClick={() => onOpen(notification)}>
+        <div className={`ff-notification-premium-card__icon ${meta.border} ${meta.bg} ${meta.tone}`}>
+          <Icon size={21} />
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="ff-notification-premium-card__meta">
             <NotificationStatusPill status={notification.status} />
             <Badge>{meta.label}</Badge>
-
-            {isUnread && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--ff-accent-soft)] px-2.5 py-1 text-[11px] font-black text-[var(--ff-accent-text)]">
-                <EyeOff size={12} />
-                Clique para abrir
-              </span>
-            )}
+            <span>{formatDateTime(notification.createdAt)}</span>
           </div>
 
-          <h2 className={isUnread ? 'mt-3 text-lg font-black text-[var(--ff-text)]' : 'mt-3 text-lg font-bold text-[var(--ff-text)]'}>
-            {notification.title}
-          </h2>
-
-          <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-[var(--ff-muted)]">
-            {notification.message || 'Sem mensagem detalhada.'}
-          </p>
-
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-[var(--ff-muted)]">
-            <span className="inline-flex items-center gap-1">
-              <Clock3 size={13} />
-              {formatDateTime(notification.createdAt)}
-            </span>
-
-            {notification.readAt && (
-              <span className="inline-flex items-center gap-1">
-                <Eye size={13} />
-                Lida em {formatDateTime(notification.readAt)}
-              </span>
-            )}
-          </div>
+          <h2>{notification.title}</h2>
+          <p>{notification.message || 'Sem mensagem detalhada.'}</p>
         </div>
       </button>
 
-      <div className="mt-4 flex flex-wrap justify-end gap-2 border-t border-[var(--ff-border)] pt-4">
-        {notification.status === 'unread' && (
+      <div className="ff-notification-premium-card__actions">
+        {notification.status === 'unread' ? (
           <Button type="button" variant="secondary" onClick={() => onMarkAsRead(notification.id)}>
-            <Eye size={16} />
-            Marcar como lida
+            <Eye size={15} />
+            Lida
           </Button>
-        )}
-
-        {notification.status !== 'unread' && notification.status !== 'archived' && (
+        ) : notification.status !== 'archived' ? (
           <Button type="button" variant="secondary" onClick={() => onMarkAsUnread(notification.id)}>
-            <EyeOff size={16} />
-            Nao lida
+            <EyeOff size={15} />
+            Não lida
           </Button>
-        )}
+        ) : null}
 
         <Button type="button" variant="secondary" onClick={() => onOpen(notification)}>
-          <Info size={16} />
+          <Info size={15} />
           Detalhes
         </Button>
 
         {notification.status !== 'archived' && (
           <Button type="button" variant="secondary" onClick={() => onArchive(notification.id)}>
-            <Archive size={16} />
+            <Archive size={15} />
             Arquivar
           </Button>
         )}
 
         <Button type="button" variant="danger" onClick={() => onDelete(notification.id)}>
-          <Trash2 size={16} />
+          <Trash2 size={15} />
           Excluir
         </Button>
       </div>
@@ -348,47 +244,249 @@ function NotificationsList({
   onDelete,
 }) {
   return (
-    <section className="mt-6 grid grid-cols-1 gap-4 xl:grid-cols-2">
+    <Card className="ff-notifications-list-card">
+      <div className="ff-section-title-row">
+        <div>
+          <span>Recentes</span>
+          <h2>Central de avisos</h2>
+        </div>
+        <Button type="button" variant="secondary" onClick={onGenerate}>
+          <RefreshCcw size={15} />
+          Verificar
+        </Button>
+      </div>
+
       {filteredNotifications.length === 0 ? (
-        <Card>
-          <EmptyState
-            title="Nenhuma notificação encontrada"
-            description="Clique em verificar agora ou altere o filtro para ver outros alertas."
-            action={
-              <Button type="button" onClick={onGenerate}>
-                <BellRing size={16} />
-                Verificar agora
-              </Button>
-            }
-          />
-        </Card>
+        <EmptyState
+          icon={Bell}
+          title="Nenhuma notificação por enquanto"
+          description="Seus lembretes e avisos importantes aparecerão aqui."
+          action={
+            <Button type="button" onClick={onGenerate}>
+              <BellRing size={16} />
+              Verificar agora
+            </Button>
+          }
+        />
       ) : (
-        visibleNotifications.map((notification) => (
-          <NotificationCard
-            key={notification.id}
-            notification={notification}
-            onOpen={onOpen}
-            onMarkAsRead={onMarkAsRead}
-            onMarkAsUnread={onMarkAsUnread}
-            onArchive={onArchive}
-            onDelete={onDelete}
-          />
-        ))
+        <div className="ff-notifications-feed">
+          {visibleNotifications.map((notification) => (
+            <NotificationCard
+              key={notification.id}
+              notification={notification}
+              onOpen={onOpen}
+              onMarkAsRead={onMarkAsRead}
+              onMarkAsUnread={onMarkAsUnread}
+              onArchive={onArchive}
+              onDelete={onDelete}
+            />
+          ))}
+        </div>
       )}
 
       {visibleCount < filteredNotifications.length && (
-        <Button type="button" variant="secondary" onClick={onLoadMore} className="w-full">
-          Carregar mais notificações
+        <Button type="button" variant="secondary" onClick={onLoadMore} className="mt-4 w-full">
+          Ver mais notificações
         </Button>
       )}
-    </section>
+    </Card>
   )
+}
+
+function ReminderForm({ draft, onDraftChange, onDayToggle, onCreateReminder }) {
+  return (
+    <form className="ff-reminder-form-premium" onSubmit={onCreateReminder}>
+      <label>
+        <span>Título</span>
+        <input
+          type="text"
+          value={draft.title || ''}
+          onChange={(event) => onDraftChange('title', event.target.value)}
+          placeholder="Ex: Beber água"
+        />
+      </label>
+
+      <label>
+        <span>Horário</span>
+        <input
+          type="time"
+          value={draft.time || '18:00'}
+          onChange={(event) => onDraftChange('time', event.target.value)}
+        />
+      </label>
+
+      <label className="ff-reminder-form-premium__wide">
+        <span>Mensagem opcional</span>
+        <input
+          type="text"
+          value={draft.body || ''}
+          onChange={(event) => onDraftChange('body', event.target.value)}
+          placeholder="Mensagem curta para aparecer no alerta"
+        />
+      </label>
+
+      <div className="ff-reminder-days ff-reminder-form-premium__wide" aria-label="Dias do lembrete">
+        {WEEK_DAYS.map((day) => (
+          <button
+            key={day.key}
+            type="button"
+            className={draft.days?.includes(day.key) ? 'is-active' : ''}
+            onClick={() => onDayToggle(day.key)}
+          >
+            {day.short}
+          </button>
+        ))}
+      </div>
+
+      <Button type="submit" className="ff-reminder-form-premium__wide">
+        <Plus size={16} />
+        Criar lembrete
+      </Button>
+    </form>
+  )
+}
+
+function ReminderList({ reminders, onToggleReminder, onDeleteReminder }) {
+  if (!reminders.length) {
+    return (
+      <div className="ff-mini-empty">
+        <Bell size={18} />
+        <span>Nenhum lembrete personalizado ainda.</span>
+      </div>
+    )
+  }
+
+  return (
+    <div className="ff-reminder-list-premium">
+      {reminders.map((reminder) => (
+        <article key={reminder.id} className={reminder.enabled ? 'is-enabled' : ''}>
+          <div className="min-w-0">
+            <strong>{reminder.title}</strong>
+            <span>
+              {reminder.time} · {(reminder.days || []).length === WEEK_DAYS.length
+                ? 'Todos os dias'
+                : `${(reminder.days || []).length || 0} dia(s)`}
+            </span>
+          </div>
+
+          <div className="ff-reminder-list-premium__actions">
+            <ToggleSwitch
+              checked={reminder.enabled !== false}
+              onChange={() => onToggleReminder(reminder.id)}
+              label={reminder.enabled !== false ? 'Desativar lembrete' : 'Ativar lembrete'}
+            />
+            <button type="button" onClick={() => onDeleteReminder(reminder.id)} aria-label="Excluir lembrete">
+              <Trash2 size={16} />
+            </button>
+          </div>
+        </article>
+      ))}
+    </div>
+  )
+}
+
+function PreferencesSheet({
+  open,
+  onClose,
+  preferences,
+  reminders,
+  draft,
+  onTogglePreference,
+  onDraftChange,
+  onDayToggle,
+  onCreateReminder,
+  onToggleReminder,
+  onDeleteReminder,
+}) {
+  useEffect(() => {
+    if (!open || typeof document === 'undefined') return undefined
+
+    document.body.classList.add('ff-modal-open')
+
+    return () => {
+      document.body.classList.remove('ff-modal-open')
+    }
+  }, [open])
+
+  if (!open || typeof document === 'undefined') return null
+
+  const sheet = (
+    <div className="ff-premium-sheet" role="dialog" aria-modal="true">
+      <button type="button" className="ff-premium-sheet__backdrop" aria-label="Fechar preferências" onClick={onClose} />
+
+      <section className="ff-premium-sheet__panel">
+        <header className="ff-premium-sheet__header">
+          <div>
+            <span>Preferências</span>
+            <h2>Notificações e lembretes</h2>
+            <p>Escolha quais alertas aparecem e crie lembretes com horário.</p>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Fechar preferências">
+            <X size={20} />
+          </button>
+        </header>
+
+        <div className="ff-premium-sheet__body">
+          <div className="ff-preference-grid">
+            {NOTIFICATION_PREFERENCE_OPTIONS.map((option) => {
+              const Icon = option.icon
+              const checked = Boolean(preferences?.[option.key])
+
+              return (
+                <article key={option.key} className={checked ? 'is-on' : ''}>
+                  <div className="ff-preference-grid__icon">
+                    <Icon size={18} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <strong>{option.label}</strong>
+                    <span>{option.description}</span>
+                  </div>
+                  <ToggleSwitch
+                    checked={checked}
+                    onChange={() => onTogglePreference(option.key)}
+                    label={`${checked ? 'Desativar' : 'Ativar'} ${option.label}`}
+                  />
+                </article>
+              )
+            })}
+          </div>
+
+          <div className="ff-sheet-section">
+            <div className="ff-section-title-row">
+              <div>
+                <span>Horários</span>
+                <h2>Lembretes personalizados</h2>
+              </div>
+            </div>
+
+            <ReminderForm
+              draft={draft}
+              onDraftChange={onDraftChange}
+              onDayToggle={onDayToggle}
+              onCreateReminder={onCreateReminder}
+            />
+
+            <ReminderList
+              reminders={reminders}
+              onToggleReminder={onToggleReminder}
+              onDeleteReminder={onDeleteReminder}
+            />
+          </div>
+        </div>
+      </section>
+    </div>
+  )
+
+  return createPortal(sheet, document.body)
 }
 
 export default function NotificationsPageSections({
   source,
   loading,
-  stats,
+  summary,
+  permission,
+  testingNotification,
+  preferences,
   search,
   statusFilter,
   filteredNotifications,
@@ -401,6 +499,9 @@ export default function NotificationsPageSections({
   toast,
   onRefresh,
   onGenerate,
+  onRequestPermission,
+  onTestNotification,
+  onTogglePreference,
   onSearchChange,
   onStatusFilterChange,
   onMarkAllAsRead,
@@ -420,26 +521,38 @@ export default function NotificationsPageSections({
   onCancelConfirm,
   onCloseToast,
 }) {
+  const [settingsOpen, setSettingsOpen] = useState(false)
+
   return (
     <>
-      <NotificationsHeader source={source} loading={loading} onRefresh={onRefresh} onGenerate={onGenerate} />
-      <NotificationsStats stats={stats} />
-      <NotificationsFilters
+      <div className="ff-notifications-source-row">
+        <Badge variant={source === 'database' ? 'purple' : 'default'}>
+          {loading ? 'Carregando...' : source === 'database' ? 'Sincronizado' : 'Dados locais'}
+        </Badge>
+        <Button type="button" variant="secondary" onClick={onRefresh}>
+          <RefreshCcw size={15} />
+          Atualizar
+        </Button>
+      </div>
+
+      <PermissionBanner
+        permission={permission}
+        onRequestPermission={onRequestPermission}
+        onTestNotification={onTestNotification}
+        testingNotification={testingNotification}
+      />
+
+      <StatsGrid summary={summary} />
+
+      <Filters
         search={search}
         statusFilter={statusFilter}
         onSearchChange={onSearchChange}
         onStatusFilterChange={onStatusFilterChange}
         onMarkAllAsRead={onMarkAllAsRead}
+        onOpenSettings={() => setSettingsOpen(true)}
       />
-      <NotificationsReminders
-        reminders={customReminders || []}
-        draft={reminderDraft || {}}
-        onDraftChange={onReminderDraftChange}
-        onDayToggle={onReminderDayToggle}
-        onCreateReminder={onCreateReminder}
-        onToggleReminder={onToggleReminder}
-        onDeleteReminder={onDeleteReminder}
-      />
+
       <NotificationsList
         filteredNotifications={filteredNotifications}
         visibleNotifications={visibleNotifications}
@@ -451,6 +564,20 @@ export default function NotificationsPageSections({
         onMarkAsUnread={onMarkAsUnread}
         onArchive={onArchiveNotification}
         onDelete={onDeleteNotification}
+      />
+
+      <PreferencesSheet
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        preferences={preferences}
+        reminders={customReminders || []}
+        draft={reminderDraft || {}}
+        onTogglePreference={onTogglePreference}
+        onDraftChange={onReminderDraftChange}
+        onDayToggle={onReminderDayToggle}
+        onCreateReminder={onCreateReminder}
+        onToggleReminder={onToggleReminder}
+        onDeleteReminder={onDeleteReminder}
       />
 
       <NotificationDetailModal
