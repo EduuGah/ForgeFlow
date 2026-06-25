@@ -278,7 +278,12 @@ function Notifications() {
     const term = deferredSearch.toLowerCase().trim()
 
     return notifications.filter((notification) => {
-      if (statusFilter && notification.status !== statusFilter) return false
+      if (statusFilter) {
+        if (notification.status !== statusFilter) return false
+      } else if (notification.status === 'archived') {
+        return false
+      }
+
       if (!term) return true
 
       return `${notification.title} ${notification.message} ${notification.type} ${notification.status}`
@@ -358,8 +363,38 @@ function Notifications() {
     )
 
     persistNotifications(updated)
-    setSelectedNotification((current) => (String(current?.id) === String(notificationId) ? updatedNotification : current))
-    showToast('success', 'Notificação arquivada', 'A notificação foi arquivada.')
+    setSelectedNotification((current) => (String(current?.id) === String(notificationId) ? null : current))
+    showToast('success', 'Notificação arquivada', 'Ela saiu da lista principal e pode ser vista no filtro Arquivadas.')
+  }
+
+  async function handleUnarchiveNotification(notificationId) {
+    const notification = notifications.find((item) => String(item.id) === String(notificationId))
+    if (!notification || notification.status !== 'archived') return
+
+    let updatedNotification = {
+      ...notification,
+      status: 'read',
+      archivedAt: null,
+      readAt: notification.readAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+
+    try {
+      const updatedFromApi = await apiFetch(`/notifications/${notificationId}/unarchive`, {
+        method: 'PATCH',
+      })
+      updatedNotification = normalizeNotificationFromApi(updatedFromApi)
+    } catch {
+      // Mantém fallback local quando o endpoint remoto não existir.
+    }
+
+    const updated = notifications.map((item) =>
+      String(item.id) === String(notificationId) ? updatedNotification : item,
+    )
+
+    persistNotifications(updated)
+    setSelectedNotification((current) => (String(current?.id) === String(notificationId) ? null : current))
+    showToast('success', 'Notificação desarquivada', 'Ela voltou para a lista principal.')
   }
 
   function handleDeleteNotification(notificationId) {
@@ -616,6 +651,7 @@ function Notifications() {
           onMarkAsRead={handleMarkAsRead}
           onMarkAsUnread={handleMarkAsUnread}
           onArchiveNotification={handleArchiveNotification}
+          onUnarchiveNotification={handleUnarchiveNotification}
           onDeleteNotification={handleDeleteNotification}
           onOpenAction={handleOpenAction}
           onReminderDraftChange={handleReminderDraftChange}

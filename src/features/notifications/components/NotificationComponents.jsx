@@ -37,6 +37,7 @@ export function NotificationDetailModal({
   notification,
   onClose,
   onArchive,
+  onUnarchive,
   onMarkAsUnread,
   onDelete,
   onOpenAction,
@@ -160,7 +161,16 @@ export function NotificationDetailModal({
               </Button>
             )}
 
-            {notification.status !== 'archived' && (
+            {notification.status === 'archived' ? (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => onUnarchive(notification.id)}
+              >
+                <Archive size={16} />
+                Desarquivar
+              </Button>
+            ) : (
               <Button
                 type="button"
                 variant="secondary"
@@ -178,7 +188,7 @@ export function NotificationDetailModal({
                 onClick={() => onMarkAsUnread(notification.id)}
               >
                 <EyeOff size={16} />
-                Marcar nao lida
+                Marcar não lida
               </Button>
             )}
 

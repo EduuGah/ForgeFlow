@@ -23006,3 +23006,92 @@ body.ff-fullscreen-modal-open .ff-active-workout-mini-floating {
     width: 100%;
   }
 }
+
+
+/* ForgeFlow 25/06 - ajuste fino: arquivadas, modal de notificação e texto de preferências */
+.ff-notification-detail-modal {
+  z-index: 2147483647 !important;
+  isolation: isolate !important;
+}
+
+.ff-notification-detail-modal__panel {
+  position: relative !important;
+  z-index: 2 !important;
+  max-height: calc(100dvh - max(12px, env(safe-area-inset-top)) - max(12px, env(safe-area-inset-bottom))) !important;
+}
+
+.ff-notification-detail-modal__backdrop {
+  z-index: 1 !important;
+}
+
+.ff-notification-detail-modal__header,
+.ff-notification-detail-modal__body {
+  min-width: 0 !important;
+}
+
+.ff-notification-detail-modal__actions {
+  padding-bottom: max(6px, env(safe-area-inset-bottom)) !important;
+}
+
+.ff-profile-preference-row > .min-w-0,
+.ff-profile-preference-row > .flex-1 {
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+}
+
+.ff-profile-preference-row strong,
+.ff-profile-preference-row span,
+.ff-section-title-row h2 {
+  writing-mode: horizontal-tb !important;
+  text-orientation: mixed !important;
+  word-break: normal !important;
+}
+
+.ff-profile-preference-row strong {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.ff-profile-preference-row select {
+  flex: 0 0 auto;
+  max-width: min(190px, 44vw);
+}
+
+@media (max-width: 560px) {
+  .ff-profile-preference-row {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .ff-profile-preference-row > .min-w-0,
+  .ff-profile-preference-row > .flex-1 {
+    grid-column: 2 / -1;
+  }
+
+  .ff-profile-preference-row select {
+    grid-column: 1 / -1;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .ff-profile-preference-row .ff-premium-switch,
+  .ff-profile-preference-row__value {
+    grid-column: 2 / -1;
+    justify-self: end;
+  }
+
+  .ff-notification-detail-modal {
+    align-items: flex-end !important;
+    padding: max(8px, env(safe-area-inset-top)) 0 0 !important;
+  }
+
+  .ff-notification-detail-modal__panel {
+    width: 100% !important;
+    max-height: calc(96dvh - env(safe-area-inset-top)) !important;
+    border-right: 0 !important;
+    border-bottom: 0 !important;
+    border-left: 0 !important;
+    border-radius: 28px 28px 0 0 !important;
+  }
+}

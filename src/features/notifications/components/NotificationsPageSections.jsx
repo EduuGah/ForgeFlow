@@ -173,7 +173,7 @@ function Filters({ search, statusFilter, onSearchChange, onStatusFilterChange, o
   )
 }
 
-function NotificationCard({ notification, onOpen, onMarkAsRead, onMarkAsUnread, onArchive, onDelete }) {
+function NotificationCard({ notification, onOpen, onMarkAsRead, onMarkAsUnread, onArchive, onUnarchive, onDelete }) {
   const meta = getNotificationMeta(notification.type)
   const Icon = meta.icon
   const isUnread = notification.status === 'unread'
@@ -215,7 +215,12 @@ function NotificationCard({ notification, onOpen, onMarkAsRead, onMarkAsUnread, 
           Detalhes
         </Button>
 
-        {notification.status !== 'archived' && (
+        {notification.status === 'archived' ? (
+          <Button type="button" variant="secondary" onClick={() => onUnarchive(notification.id)}>
+            <Archive size={15} />
+            Desarquivar
+          </Button>
+        ) : (
           <Button type="button" variant="secondary" onClick={() => onArchive(notification.id)}>
             <Archive size={15} />
             Arquivar
@@ -241,6 +246,7 @@ function NotificationsList({
   onMarkAsRead,
   onMarkAsUnread,
   onArchive,
+  onUnarchive,
   onDelete,
 }) {
   return (
@@ -278,6 +284,7 @@ function NotificationsList({
               onMarkAsRead={onMarkAsRead}
               onMarkAsUnread={onMarkAsUnread}
               onArchive={onArchive}
+              onUnarchive={onUnarchive}
               onDelete={onDelete}
             />
           ))}
@@ -510,6 +517,7 @@ export default function NotificationsPageSections({
   onMarkAsRead,
   onMarkAsUnread,
   onArchiveNotification,
+  onUnarchiveNotification,
   onDeleteNotification,
   onOpenAction,
   onReminderDraftChange,
@@ -563,6 +571,7 @@ export default function NotificationsPageSections({
         onMarkAsRead={onMarkAsRead}
         onMarkAsUnread={onMarkAsUnread}
         onArchive={onArchiveNotification}
+        onUnarchive={onUnarchiveNotification}
         onDelete={onDeleteNotification}
       />
 
@@ -584,6 +593,7 @@ export default function NotificationsPageSections({
         notification={selectedNotification}
         onClose={onCloseDetail}
         onArchive={onArchiveNotification}
+        onUnarchive={onUnarchiveNotification}
         onMarkAsUnread={onMarkAsUnread}
         onDelete={onDeleteNotification}
         onOpenAction={onOpenAction}
