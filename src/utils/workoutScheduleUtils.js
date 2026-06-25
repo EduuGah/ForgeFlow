@@ -13,6 +13,57 @@ export const emptyWeeklySchedule = WEEK_DAYS.reduce((schedule, day) => {
   return schedule
 }, {})
 
+export const DEFAULT_WORKOUT_SCHEDULE_TIME = '18:00'
+
+export function isValidScheduleTime(time) {
+  return /^\d{2}:\d{2}$/.test(String(time || ''))
+}
+
+export function normalizeScheduleTime(time, fallback = DEFAULT_WORKOUT_SCHEDULE_TIME) {
+  if (!isValidScheduleTime(time)) return fallback
+
+  const [hour, minute] = String(time).split(':').map(Number)
+  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return fallback
+
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
+}
+
+export function getScheduleEntryTime(entry = {}, fallback = DEFAULT_WORKOUT_SCHEDULE_TIME) {
+  return normalizeScheduleTime(entry?.time || entry?.workoutTime || entry?.reminderTime, fallback)
+}
+
+export function getShiftedWeekday(weekday, dayOffset = 0) {
+  const weekdays = [1, 2, 3, 4, 5, 6, 7]
+  const currentIndex = weekdays.indexOf(Number(weekday))
+  const safeIndex = currentIndex >= 0 ? currentIndex : 0
+  const nextIndex = (safeIndex + Number(dayOffset || 0) + 700) % 7
+
+  return weekdays[nextIndex]
+}
+
+export function subtractMinutesFromTime(time, minutes = 0) {
+  const normalizedTime = normalizeScheduleTime(time)
+  const [hour, minute] = normalizedTime.split(':').map(Number)
+  const leadMinutes = Math.max(0, Number(minutes) || 0)
+  let totalMinutes = (hour * 60) + minute - leadMinutes
+  let dayOffset = 0
+
+  while (totalMinutes < 0) {
+    totalMinutes += 24 * 60
+    dayOffset -= 1
+  }
+
+  while (totalMinutes >= 24 * 60) {
+    totalMinutes -= 24 * 60
+    dayOffset += 1
+  }
+
+  return {
+    time: `${String(Math.floor(totalMinutes / 60)).padStart(2, '0')}:${String(totalMinutes % 60).padStart(2, '0')}`,
+    dayOffset,
+  }
+}
+
 export function getWorkoutId(workout) {
   return String(workout?.id || workout?._id || '')
 }
@@ -29,6 +80,7 @@ export function normalizeScheduleEntry(entry = {}) {
       type: 'workout',
       workoutId: String(entry.workoutId || entry.id),
       workoutName: entry.workoutName || entry.name || 'Treino agendado',
+      time: getScheduleEntryTime(entry),
     }
   }
 
@@ -115,6 +167,7 @@ export function withWorkoutName(entry, workouts = []) {
     type: 'workout',
     workoutId: String(entry.workoutId),
     workoutName: workout ? getWorkoutName(workout) : entry.workoutName || 'Treino removido',
+    time: getScheduleEntryTime(entry),
   }
 }
 

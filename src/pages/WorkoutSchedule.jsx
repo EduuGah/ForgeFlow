@@ -1,37 +1,102 @@
 import { useEffect, useMemo, useState } from 'react'
-import { BellRing, CalendarCheck, Dumbbell, Moon, Save } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
-import PageHeader from '../components/ui/PageHeader'
-import Card from '../components/ui/Card'
-import Button from '../components/ui/Button'
-import Select from '../components/ui/Select'
-import Input from '../components/ui/Input'
-import Badge from '../components/ui/Badge'
 import Toast from '../components/ui/Toast'
+import ScheduleHeader from '../components/schedule/ScheduleHeader'
+import WeeklySummaryCards from '../components/schedule/WeeklySummaryCards'
+import WeekDayCard from '../components/schedule/WeekDayCard'
+import DayDetailsPanel from '../components/schedule/DayDetailsPanel'
+import NotificationSettingsCard from '../components/schedule/NotificationSettingsCard'
 import { useAuth } from '../context/AuthContext'
 import { useWorkoutSession } from '../context/useWorkoutSession'
 import { apiFetch } from '../services/api'
 import { loadScheduleSettings, saveScheduleSettings } from '../services/workoutScheduleService'
-import { rescheduleConfiguredNotifications, scheduleWeeklyWorkoutReminders } from '../services/nativeNotificationService'
+import {
+  WORKOUT_REMINDER_BASE_ID,
+  checkNotificationPermission,
+  getPendingNotifications,
+  requestNotificationPermission,
+  rescheduleConfiguredNotifications,
+  scheduleTestNotification,
+  scheduleWeeklyWorkoutReminders,
+} from '../services/nativeNotificationService'
 import { getUserStorageData, migrateLegacyUserStorageData } from '../utils/userStorage'
 import { normalizeWorkoutFromApi } from '../utils/workoutNormalizers'
 import {
   WEEK_DAYS,
   findWorkoutByScheduleEntry,
+  getDayInfo,
+  getNextScheduledWorkout,
+  getScheduleEntryTime,
   getScheduleSummary,
+  getTodayScheduleKey,
   getTodayScheduledWorkout,
   getWorkoutId,
   getWorkoutName,
   hydrateWeeklyScheduleWithWorkoutNames,
+  normalizeScheduleTime,
   normalizeWeeklySchedule,
 } from '../utils/workoutScheduleUtils'
 import { defaultSettings } from '../utils/settingsUtils'
 
-import AppPageIntro from '../components/app/AppPageIntro'
-
 function normalizeWorkouts(workouts = []) {
   return workouts.map((workout) => normalizeWorkoutFromApi(workout))
+}
+
+function getStartOfWeek(date = new Date()) {
+  const start = new Date(date)
+  start.setHours(0, 0, 0, 0)
+  const day = start.getDay() || 7
+  start.setDate(start.getDate() - day + 1)
+  return start
+}
+
+function formatShortDate(date) {
+  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+}
+
+function getWeekLabel(date = new Date()) {
+  const start = getStartOfWeek(date)
+  const end = new Date(start)
+  end.setDate(start.getDate() + 6)
+
+  return `${formatShortDate(start)} - ${formatShortDate(end)}`
+}
+
+function getWeekDateLabels(date = new Date()) {
+  const start = getStartOfWeek(date)
+
+  return WEEK_DAYS.reduce((labels, day, index) => {
+    const current = new Date(start)
+    current.setDate(start.getDate() + index)
+    labels[day.key] = String(current.getDate()).padStart(2, '0')
+    return labels
+  }, {})
+}
+
+function formatNextWorkoutLabel(nextWorkout, fallbackTime) {
+  if (!nextWorkout?.workout) return 'Nada planejado'
+
+  const time = getScheduleEntryTime(nextWorkout.entry, fallbackTime)
+  const workoutName = getWorkoutName(nextWorkout.workout)
+
+  if (nextWorkout.isToday) return `${workoutName} • Hoje ${time}`
+  if (nextWorkout.isTomorrow) return `${workoutName} • Amanhã ${time}`
+
+  return `${workoutName} • ${nextWorkout.day.short} ${time}`
+}
+
+function countPendingWorkoutNotifications(pending = []) {
+  const maxId = WORKOUT_REMINDER_BASE_ID + WEEK_DAYS.length
+
+  return pending.filter((notification) => {
+    const id = Number(notification?.id)
+    return id >= WORKOUT_REMINDER_BASE_ID && id < maxId
+  }).length
+}
+
+function getScheduleSaveFingerprint(schedule) {
+  return JSON.stringify(normalizeWeeklySchedule(schedule))
 }
 
 function WorkoutSchedule() {
@@ -42,23 +107,61 @@ function WorkoutSchedule() {
   const [workouts, setWorkouts] = useState([])
   const [settings, setSettings] = useState(defaultSettings)
   const [weeklySchedule, setWeeklySchedule] = useState(defaultSettings.weeklySchedule)
+  const [selectedDayKey, setSelectedDayKey] = useState(getTodayScheduleKey())
+  const [notificationPermission, setNotificationPermission] = useState(null)
+  const [pendingWorkoutNotifications, setPendingWorkoutNotifications] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [isNotificationBusy, setIsNotificationBusy] = useState(false)
+  const [isTestingNotification, setIsTestingNotification] = useState(false)
   const [toast, setToast] = useState(null)
+
+  const normalizedSchedule = useMemo(
+    () => normalizeWeeklySchedule(weeklySchedule),
+    [weeklySchedule]
+  )
+
+  const selectedDay = useMemo(() => getDayInfo(selectedDayKey), [selectedDayKey])
+  const selectedEntry = normalizedSchedule[selectedDayKey] || { type: 'empty' }
+  const selectedWorkout = findWorkoutByScheduleEntry(workouts, selectedEntry)
+  const summary = useMemo(() => getScheduleSummary(weeklySchedule), [weeklySchedule])
+  const weekLabel = useMemo(() => getWeekLabel(), [])
+  const weekDateLabels = useMemo(() => getWeekDateLabels(), [])
+  const defaultWorkoutTime = settings.workoutReminderTime || '18:00'
+  const alertCount = settings.workoutReminderEnabled ? summary.workoutDays : 0
 
   const today = useMemo(
     () => getTodayScheduledWorkout({ schedule: weeklySchedule, workouts }),
     [weeklySchedule, workouts]
   )
 
-  const summary = useMemo(() => getScheduleSummary(weeklySchedule), [weeklySchedule])
+  const nextWorkout = useMemo(() => {
+    if (today.workout) return { ...today, isToday: true, offset: 0 }
+    return getNextScheduledWorkout({ schedule: weeklySchedule, workouts })
+  }, [today, weeklySchedule, workouts])
+
   const hasUnsavedChanges = useMemo(() => {
-    return JSON.stringify(normalizeWeeklySchedule(weeklySchedule)) !== JSON.stringify(normalizeWeeklySchedule(settings.weeklySchedule))
+    return getScheduleSaveFingerprint(weeklySchedule) !== getScheduleSaveFingerprint(settings.weeklySchedule)
   }, [settings.weeklySchedule, weeklySchedule])
 
   function showToast(type, title, message = '') {
     setToast({ type, title, message })
-    window.setTimeout(() => setToast(null), 3200)
+    window.setTimeout(() => setToast(null), 3400)
+  }
+
+  async function refreshNotificationStatus() {
+    try {
+      const [permission, pending] = await Promise.all([
+        checkNotificationPermission(),
+        getPendingNotifications(),
+      ])
+
+      setNotificationPermission(permission)
+      setPendingWorkoutNotifications(countPendingWorkoutNotifications(pending?.notifications || []))
+    } catch {
+      setNotificationPermission({ display: 'unknown' })
+      setPendingWorkoutNotifications(0)
+    }
   }
 
   useEffect(() => {
@@ -84,73 +187,98 @@ function WorkoutSchedule() {
         loadedSettings.weeklySchedule,
         loadedWorkouts
       )
+      const hydratedSettings = { ...loadedSettings, weeklySchedule: hydratedSchedule }
 
       if (!isMounted) return
 
       setWorkouts(loadedWorkouts)
-      setSettings({ ...loadedSettings, weeklySchedule: hydratedSchedule })
+      setSettings(hydratedSettings)
       setWeeklySchedule(hydratedSchedule)
+      setSelectedDayKey(getTodayScheduleKey())
       setIsLoading(false)
     }
 
     loadData()
+    refreshNotificationStatus()
 
     return () => {
       isMounted = false
     }
   }, [user])
 
-  function handleDayChange(dayKey, value) {
-    setWeeklySchedule((current) => {
-      const normalized = normalizeWeeklySchedule(current)
+  function updateSelectedDay(nextEntry) {
+    setWeeklySchedule((current) => ({
+      ...normalizeWeeklySchedule(current),
+      [selectedDayKey]: nextEntry,
+    }))
+  }
 
-      if (value === 'rest') {
-        return {
-          ...normalized,
-          [dayKey]: { type: 'rest' },
-        }
-      }
+  function handleSelectedWorkoutChange(value) {
+    if (value === 'rest') {
+      updateSelectedDay({ type: 'rest' })
+      return
+    }
 
-      if (value === 'empty') {
-        return {
-          ...normalized,
-          [dayKey]: { type: 'empty' },
-        }
-      }
+    if (value === 'empty') {
+      updateSelectedDay({ type: 'empty' })
+      return
+    }
 
-      const workout = workouts.find((item) => getWorkoutId(item) === value)
+    const workout = workouts.find((item) => getWorkoutId(item) === String(value))
 
-      return {
-        ...normalized,
-        [dayKey]: {
-          type: 'workout',
-          workoutId: value,
-          workoutName: workout ? getWorkoutName(workout) : 'Treino agendado',
-        },
-      }
+    updateSelectedDay({
+      type: 'workout',
+      workoutId: String(value),
+      workoutName: workout ? getWorkoutName(workout) : 'Treino agendado',
+      time: getScheduleEntryTime(selectedEntry, defaultWorkoutTime),
     })
+  }
+
+  function handleSelectedTimeChange(value) {
+    if (selectedEntry?.type !== 'workout') return
+
+    updateSelectedDay({
+      ...selectedEntry,
+      time: normalizeScheduleTime(value, defaultWorkoutTime),
+    })
+  }
+
+  function handleMarkSelectedRest() {
+    updateSelectedDay({ type: 'rest' })
+  }
+
+  function handleClearSelectedDay() {
+    updateSelectedDay({ type: 'empty' })
   }
 
   async function handleSaveSchedule(nextSettings = settings) {
     setIsSaving(true)
 
     const hydratedSchedule = hydrateWeeklyScheduleWithWorkoutNames(weeklySchedule, workouts)
+    const scheduleSummary = getScheduleSummary(hydratedSchedule)
     const payload = {
       ...nextSettings,
+      workoutReminderEnabled: nextSettings.workoutReminderEnabled && scheduleSummary.workoutDays > 0,
       weeklySchedule: hydratedSchedule,
     }
 
     try {
       const savedSettings = await saveScheduleSettings(user, payload)
-      setSettings(savedSettings)
-      setWeeklySchedule(savedSettings.weeklySchedule)
+      const savedHydratedSettings = {
+        ...savedSettings,
+        weeklySchedule: hydrateWeeklyScheduleWithWorkoutNames(savedSettings.weeklySchedule, workouts),
+      }
+
+      setSettings(savedHydratedSettings)
+      setWeeklySchedule(savedHydratedSettings.weeklySchedule)
 
       await rescheduleConfiguredNotifications({
-        settings: savedSettings,
+        settings: savedHydratedSettings,
         workouts,
       })
 
-      showToast('success', 'Agenda salva', 'Sua rotina semanal foi atualizada.')
+      await refreshNotificationStatus()
+      showToast('success', 'Agenda salva', 'Rotina semanal e alertas foram atualizados.')
     } catch (error) {
       console.error(error)
       showToast('error', 'Erro ao salvar', error.message || 'Não foi possível salvar a agenda.')
@@ -160,52 +288,100 @@ function WorkoutSchedule() {
   }
 
   async function handleReminderChange(key, value) {
+    const hydratedSchedule = hydrateWeeklyScheduleWithWorkoutNames(weeklySchedule, workouts)
     const nextSettings = {
       ...settings,
       [key]: value,
-      weeklySchedule,
+      weeklySchedule: hydratedSchedule,
     }
 
+    if (key === 'workoutReminderEnabled' && value && getScheduleSummary(hydratedSchedule).workoutDays === 0) {
+      showToast('error', 'Agenda vazia', 'Selecione pelo menos um treino na semana antes de ativar alertas.')
+      return
+    }
+
+    setIsNotificationBusy(true)
     setSettings(nextSettings)
 
     try {
       const savedSettings = await saveScheduleSettings(user, nextSettings)
-      setSettings(savedSettings)
+      const savedHydratedSettings = {
+        ...savedSettings,
+        weeklySchedule: hydrateWeeklyScheduleWithWorkoutNames(savedSettings.weeklySchedule, workouts),
+      }
+      setSettings(savedHydratedSettings)
+      setWeeklySchedule(savedHydratedSettings.weeklySchedule)
 
-      if (key === 'workoutReminderEnabled' || key === 'workoutReminderTime') {
-        if (savedSettings.workoutReminderEnabled) {
-          if (getScheduleSummary(weeklySchedule).workoutDays === 0) {
-            const disabledSettings = await saveScheduleSettings(user, {
-              ...savedSettings,
-              workoutReminderEnabled: false,
-              weeklySchedule,
-            })
-            setSettings(disabledSettings)
-            showToast('error', 'Agenda vazia', 'Selecione pelo menos um treino na semana antes de ativar lembrete.')
-            return
-          }
+      if (savedHydratedSettings.workoutReminderEnabled) {
+        const result = await scheduleWeeklyWorkoutReminders({
+          schedule: savedHydratedSettings.weeklySchedule,
+          workouts,
+          time: savedHydratedSettings.workoutReminderTime,
+          leadMinutes: savedHydratedSettings.workoutReminderLeadMinutes,
+        })
 
-          const result = await scheduleWeeklyWorkoutReminders({
-            schedule: weeklySchedule,
-            workouts,
-            time: savedSettings.workoutReminderTime,
-          })
-
-          if (result?.reason === 'not-native') {
-            showToast('success', 'Preferência salva', 'No navegador, a notificação real só será agendada no APK.')
-          } else if (result?.reason === 'empty-schedule') {
-            showToast('error', 'Agenda vazia', 'Selecione pelo menos um treino na semana.')
-          } else {
-            showToast('success', 'Lembretes atualizados', `${result?.count || 0} lembrete(s) configurado(s).`)
-          }
+        if (result?.reason === 'not-native') {
+          showToast('success', 'Preferência salva', 'No navegador, o alerta real será agendado no APK Android.')
+        } else if (result?.reason === 'permission-denied') {
+          showToast('error', 'Notificações bloqueadas', 'Permita as notificações do ForgeFlow nas configurações do aparelho.')
         } else {
-          await rescheduleConfiguredNotifications({ settings: savedSettings, workouts })
-          showToast('success', 'Lembretes desativados', 'As notificações de treino foram canceladas.')
+          showToast('success', 'Alertas atualizados', `${result?.count || 0} lembrete(s) configurado(s).`)
         }
+      } else {
+        await rescheduleConfiguredNotifications({ settings: savedHydratedSettings, workouts })
+        showToast('success', 'Alertas desativados', 'As notificações da agenda foram canceladas.')
+      }
+
+      await refreshNotificationStatus()
+    } catch (error) {
+      console.error(error)
+      showToast('error', 'Erro ao atualizar', 'Não foi possível atualizar os alertas.')
+    } finally {
+      setIsNotificationBusy(false)
+    }
+  }
+
+  async function handleRequestNotificationPermission() {
+    setIsNotificationBusy(true)
+
+    try {
+      const permission = await requestNotificationPermission()
+      setNotificationPermission(permission)
+
+      if (permission?.display === 'granted') {
+        showToast('success', 'Permissão ativa', 'Agora o ForgeFlow pode enviar alertas no APK.')
+      } else {
+        showToast('error', 'Permissão não liberada', 'As notificações continuam bloqueadas no aparelho.')
       }
     } catch (error) {
       console.error(error)
-      showToast('error', 'Erro ao atualizar', 'Não foi possível atualizar essa configuração.')
+      showToast('error', 'Erro de permissão', 'Não foi possível pedir permissão agora.')
+    } finally {
+      setIsNotificationBusy(false)
+      refreshNotificationStatus()
+    }
+  }
+
+  async function handleTestNotification() {
+    setIsTestingNotification(true)
+
+    try {
+      const result = await scheduleTestNotification(8)
+
+      if (result?.reason === 'not-native') {
+        showToast('success', 'Teste salvo', 'No navegador não há notificação local; teste no APK Android.')
+      } else if (result?.reason === 'permission-denied') {
+        showToast('error', 'Notificações bloqueadas', 'Permita as notificações do app para testar.')
+      } else {
+        showToast('success', 'Teste enviado', 'A notificação deve aparecer em alguns segundos.')
+      }
+
+      await refreshNotificationStatus()
+    } catch (error) {
+      console.error(error)
+      showToast('error', 'Teste falhou', 'Não foi possível criar a notificação de teste.')
+    } finally {
+      setIsTestingNotification(false)
     }
   }
 
@@ -225,195 +401,97 @@ function WorkoutSchedule() {
   }
 
   return (
-    <div className="ff-hevy-page ff-hevy-page-workoutschedule">
-
-      <AppPageIntro
-        eyebrow="Agenda"
-        title="Semana de treino"
-        description="Organize sua rotina por dia e inicie o treino certo rapidamente."
-        metrics={[
-          { label: 'Rotinas', value: workouts.length },
-          { label: 'Dias', value: summary.workoutDays },
-          { label: 'Descanso', value: summary.restDays },
-        ]}
-      />
-      <PageHeader
-        title="Agenda semanal"
-        description="Defina qual treino você faz em cada dia e use isso para lembretes no APK."
-        action={<Badge>{hasUnsavedChanges ? 'Alterações pendentes' : `${summary.workoutDays} dia(s) com treino`}</Badge>}
+    <div className="ff-hevy-page ff-hevy-page-workoutschedule ff-schedule-v2">
+      <ScheduleHeader
+        weekLabel={weekLabel}
+        plannedCount={summary.workoutDays}
+        alertCount={alertCount}
+        nextWorkoutLabel={formatNextWorkoutLabel(nextWorkout, defaultWorkoutTime)}
+        todayWorkoutName={today.workout ? getWorkoutName(today.workout) : ''}
+        hasUnsavedChanges={hasUnsavedChanges}
+        isSaving={isSaving}
+        isLoading={isLoading}
+        onSave={() => handleSaveSchedule()}
+        onStartTodayWorkout={handleStartTodayWorkout}
       />
 
-      <section className="ff-page-mobile-main-grid grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="ff-schedule-primary-flow space-y-5">
-          <Card className="ff-schedule-today-card overflow-hidden">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <WeeklySummaryCards summary={summary} alertCount={alertCount} />
+
+      {workouts.length === 0 && !isLoading && (
+        <section className="ff-schedule-v2-empty-state">
+          <strong>Nenhum treino criado ainda.</strong>
+          <span>Crie uma rotina em Treinos para montar sua agenda semanal.</span>
+        </section>
+      )}
+
+      <section className="ff-schedule-v2-layout">
+        <div className="ff-schedule-v2-main-flow">
+          <section className="ff-schedule-v2-week" aria-label="Calendário semanal de treinos">
+            <div className="ff-schedule-v2-section-title">
               <div>
-                <div className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.16em] text-[var(--ff-accent-text)]">
-                  <CalendarCheck size={18} /> Treino de hoje
-                </div>
-
-                {today.workout && (
-                  <>
-                    <h2 className="mt-3 text-3xl font-black text-[var(--ff-text)]">
-                      {getWorkoutName(today.workout)}
-                    </h2>
-                    <p className="mt-1 text-sm text-[var(--ff-muted)]">
-                      {today.day.label} · {Array.isArray(today.workout.exercises) ? today.workout.exercises.length : 0} exercício(s)
-                    </p>
-                  </>
-                )}
-
-                {today.entry?.type === 'rest' && (
-                  <div className="mt-3 flex items-center gap-2 text-sm font-bold text-emerald-300">
-                    <Moon size={18} /> Hoje é descanso.
-                  </div>
-                )}
-
-                {today.entry?.type === 'empty' && (
-                  <p className="mt-3 text-sm leading-relaxed text-[var(--ff-muted)]">
-                    Nenhum treino configurado para hoje.
-                  </p>
-                )}
-
-                {today.isMissingWorkout && (
-                  <p className="mt-3 text-sm leading-relaxed text-yellow-300">
-                    O treino salvo para hoje foi removido. Escolha outro treino para esse dia.
-                  </p>
-                )}
+                <span>Planner semanal</span>
+                <h2>Dias da semana</h2>
               </div>
-
-              {today.workout && (
-                <Button type="button" onClick={handleStartTodayWorkout} className="w-full sm:w-auto">
-                  <Dumbbell size={18} />
-                  Iniciar treino de hoje
-                </Button>
-              )}
-            </div>
-          </Card>
-
-          {hasUnsavedChanges && (
-            <div className="ff-schedule-pending-banner rounded-3xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] p-4 text-sm font-bold text-[var(--ff-accent-text)]">
-              Você alterou a agenda. Toque em “Salvar alterações” para atualizar os lembretes do APK.
-            </div>
-          )}
-
-          <Card className="ff-schedule-week-card">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-xl font-black text-[var(--ff-text)]">Rotina da semana</h2>
-                <p className="mt-1 text-sm text-[var(--ff-muted)]">
-                  Escolha um treino existente, marque descanso ou deixe o dia sem configuração.
-                </p>
-              </div>
-
-              <Button type="button" onClick={() => handleSaveSchedule()} disabled={isSaving || isLoading}>
-                <Save size={18} />
-                {isSaving ? 'Salvando...' : hasUnsavedChanges ? 'Salvar alterações' : 'Salvar agenda'}
-              </Button>
+              {hasUnsavedChanges && <b>Alterações pendentes</b>}
             </div>
 
-            <div className="ff-schedule-week-grid mt-6 grid grid-cols-1 gap-3 lg:grid-cols-2">
+            <div className="ff-schedule-v2-week__grid">
               {WEEK_DAYS.map((day) => {
-                const entry = normalizeWeeklySchedule(weeklySchedule)[day.key]
-                const selectedValue = entry.type === 'workout' ? entry.workoutId : entry.type
-                const workoutMissing = entry.type === 'workout' && !findWorkoutByScheduleEntry(workouts, entry)
+                const entry = normalizedSchedule[day.key]
+                const workout = findWorkoutByScheduleEntry(workouts, entry)
 
                 return (
-                  <div
+                  <WeekDayCard
                     key={day.key}
-                    className="ff-schedule-day-card rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4"
-                  >
-                    <div className="mb-3 flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-black text-[var(--ff-text)]">{day.label}</p>
-                        <p className="text-xs font-bold text-[var(--ff-muted)]">{day.short}</p>
-                      </div>
-
-                      {today.dayKey === day.key && <Badge>Hoje</Badge>}
-                    </div>
-
-                    <Select
-                      value={selectedValue || 'empty'}
-                      onChange={(event) => handleDayChange(day.key, event.target.value)}
-                      disabled={isLoading}
-                    >
-                      <option value="empty">Sem configuração</option>
-                      <option value="rest">Descanso</option>
-                      {workouts.map((workout) => (
-                        <option key={getWorkoutId(workout)} value={getWorkoutId(workout)}>
-                          {getWorkoutName(workout)}
-                        </option>
-                      ))}
-                    </Select>
-
-                    {workoutMissing && (
-                      <p className="mt-2 text-xs font-bold text-yellow-300">
-                        Treino removido ou indisponível. Escolha outro.
-                      </p>
-                    )}
-                  </div>
+                    day={day}
+                    entry={entry}
+                    workout={workout}
+                    dateLabel={weekDateLabels[day.key]}
+                    fallbackTime={defaultWorkoutTime}
+                    isToday={today.dayKey === day.key}
+                    isSelected={selectedDayKey === day.key}
+                    isMissingWorkout={entry?.type === 'workout' && !workout}
+                    alertsEnabled={Boolean(settings.workoutReminderEnabled)}
+                    onSelect={() => setSelectedDayKey(day.key)}
+                  />
                 )
               })}
             </div>
-
-            {workouts.length === 0 && !isLoading && (
-              <div className="mt-5 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-4 text-sm leading-relaxed text-yellow-100/80">
-                Você ainda não tem treinos criados. Crie um treino em “Treinos” para montar sua agenda.
-              </div>
-            )}
-          </Card>
+          </section>
         </div>
 
-        <aside className="ff-schedule-side-panel space-y-5">
-          <Card className="ff-schedule-reminder-card">
-            <div className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.16em] text-[var(--ff-accent-text)]">
-              <BellRing size={18} /> Lembretes
-            </div>
+        <aside className="ff-schedule-v2-side-flow">
+          <DayDetailsPanel
+            day={selectedDay}
+            entry={selectedEntry}
+            workout={selectedWorkout}
+            workouts={workouts}
+            fallbackTime={defaultWorkoutTime}
+            alertsEnabled={Boolean(settings.workoutReminderEnabled)}
+            hasUnsavedChanges={hasUnsavedChanges}
+            isSaving={isSaving}
+            isToday={selectedDayKey === today.dayKey}
+            onWorkoutChange={handleSelectedWorkoutChange}
+            onTimeChange={handleSelectedTimeChange}
+            onMarkRest={handleMarkSelectedRest}
+            onClearDay={handleClearSelectedDay}
+            onSave={() => handleSaveSchedule()}
+            onStartWorkout={handleStartTodayWorkout}
+          />
 
-            <p className="mt-2 text-sm leading-relaxed text-[var(--ff-muted)]">
-              Os lembretes de treino usam a agenda acima. No navegador eles ficam salvos; no APK viram notificações locais.
-            </p>
-
-            <div className="mt-5 space-y-4">
-              <label className="ff-schedule-reminder-toggle flex items-center justify-between gap-4 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
-                <span>
-                  <span className="block text-sm font-black text-[var(--ff-text)]">Lembrete de treino</span>
-                  <span className="block text-xs text-[var(--ff-muted)]">Avisar nos dias com treino</span>
-                </span>
-                <input
-                  type="checkbox"
-                  checked={Boolean(settings.workoutReminderEnabled)}
-                  onChange={(event) => handleReminderChange('workoutReminderEnabled', event.target.checked)}
-                  className="h-5 w-5 accent-[var(--ff-accent)]"
-                />
-              </label>
-
-              <Input
-                label="Horário do lembrete"
-                type="time"
-                value={settings.workoutReminderTime}
-                onChange={(event) => handleReminderChange('workoutReminderTime', event.target.value)}
-              />
-            </div>
-          </Card>
-
-          <Card className="ff-schedule-summary-card">
-            <h3 className="text-lg font-black text-[var(--ff-text)]">Resumo</h3>
-            <div className="ff-schedule-summary-grid mt-4 grid grid-cols-3 gap-2 text-center">
-              <div>
-                <p>{summary.workoutDays}</p>
-                <span>Treinos</span>
-              </div>
-              <div>
-                <p>{summary.restDays}</p>
-                <span>Descanso</span>
-              </div>
-              <div>
-                <p>{summary.emptyDays}</p>
-                <span>Vazios</span>
-              </div>
-            </div>
-          </Card>
+          <NotificationSettingsCard
+            settings={settings}
+            summary={summary}
+            permission={notificationPermission}
+            pendingWorkoutNotifications={pendingWorkoutNotifications}
+            isBusy={isNotificationBusy}
+            isTesting={isTestingNotification}
+            onToggleEnabled={(enabled) => handleReminderChange('workoutReminderEnabled', enabled)}
+            onDefaultTimeChange={(value) => handleReminderChange('workoutReminderTime', value)}
+            onLeadChange={(value) => handleReminderChange('workoutReminderLeadMinutes', value)}
+            onRequestPermission={handleRequestNotificationPermission}
+            onTestNotification={handleTestNotification}
+          />
         </aside>
       </section>
 

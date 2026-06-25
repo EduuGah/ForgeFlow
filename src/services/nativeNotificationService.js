@@ -1,7 +1,15 @@
 import { registerPlugin } from '@capacitor/core'
 
 import { isNativeApp } from '../utils/platformUtils'
-import { WEEK_DAYS, findWorkoutByScheduleEntry, getWorkoutName, normalizeWeeklySchedule } from '../utils/workoutScheduleUtils'
+import {
+  WEEK_DAYS,
+  findWorkoutByScheduleEntry,
+  getScheduleEntryTime,
+  getShiftedWeekday,
+  getWorkoutName,
+  normalizeWeeklySchedule,
+  subtractMinutesFromTime,
+} from '../utils/workoutScheduleUtils'
 
 const LocalNotifications = registerPlugin('LocalNotifications')
 const ActiveWorkoutForeground = registerPlugin('ActiveWorkoutForeground')
@@ -228,7 +236,12 @@ export async function scheduleDailyWeightReminder(time = DEFAULT_WEIGHT_TIME) {
   return { scheduled: true }
 }
 
-export async function scheduleWeeklyWorkoutReminders({ schedule, workouts, time = DEFAULT_WORKOUT_TIME }) {
+export async function scheduleWeeklyWorkoutReminders({
+  schedule,
+  workouts,
+  time = DEFAULT_WORKOUT_TIME,
+  leadMinutes = 0,
+}) {
   if (!canUseNativeNotifications()) return { scheduled: false, reason: 'not-native' }
 
   const permission = await requestNotificationPermission()
@@ -245,13 +258,22 @@ export async function scheduleWeeklyWorkoutReminders({ schedule, workouts, time 
     if (entry?.type !== 'workout' || !workout) return []
 
     const workoutName = getWorkoutName(workout)
+    const plannedTime = getScheduleEntryTime(entry, time)
+    const reminderSchedule = subtractMinutesFromTime(plannedTime, leadMinutes)
+    const reminderWeekday = getShiftedWeekday(day.weekday, reminderSchedule.dayOffset)
+    const leadLabel = Number(leadMinutes) > 0 ? `${leadMinutes} min antes` : 'na hora do treino'
 
     return [
       buildNotification({
         id: WORKOUT_REMINDER_BASE_ID + index,
         title: `Treino de hoje: ${workoutName}`,
-        body: `Seu treino ${workoutName} está programado para hoje. Bora manter a consistência.`,
-        schedule: buildScheduleOn(time, day.weekday),
+        body: `Seu treino ${workoutName} está planejado para ${plannedTime}. Lembrete ${leadLabel}.`,
+        schedule: buildScheduleOn(reminderSchedule.time, reminderWeekday),
+        extra: {
+          forgeflowRoute: '/schedule',
+          dayKey: day.key,
+          workoutId: entry.workoutId,
+        },
       }),
     ]
   })
@@ -584,6 +606,7 @@ export async function rescheduleConfiguredNotifications({ settings, workouts }) 
       schedule: settings.weeklySchedule,
       workouts,
       time: settings.workoutReminderTime || DEFAULT_WORKOUT_TIME,
+      leadMinutes: settings.workoutReminderLeadMinutes || 0,
     })
   } else {
     await cancelWorkoutReminders()

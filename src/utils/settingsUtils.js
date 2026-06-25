@@ -31,6 +31,7 @@ export const defaultSettings = {
   weightReminderTime: '08:00',
   workoutReminderEnabled: false,
   workoutReminderTime: '18:00',
+  workoutReminderLeadMinutes: 30,
   hydrationReminderEnabled: false,
   hydrationReminderTime: '10:00',
   preWorkoutMealReminderEnabled: false,
@@ -311,6 +312,11 @@ export function normalizeSettings(settings = {}) {
       ? normalized[timeKey]
       : defaultSettings[timeKey]
   })
+
+  const safeLeadMinutes = Number(normalized.workoutReminderLeadMinutes)
+  normalized.workoutReminderLeadMinutes = [0, 5, 10, 15, 30, 45, 60, 90, 120].includes(safeLeadMinutes)
+    ? safeLeadMinutes
+    : defaultSettings.workoutReminderLeadMinutes
 
   return normalized
 }
