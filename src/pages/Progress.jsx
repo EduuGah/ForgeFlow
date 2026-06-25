@@ -281,9 +281,6 @@ function ConsistencySection({ summary, period }) {
           ))}
         </div>
 
-        <p className="mt-3 text-xs leading-relaxed text-[var(--ff-muted)]">
-          Cada ponto representa um dia. Vermelho indica treino registrado; cinza indica descanso ou ausência de registro.
-        </p>
       </div>
     </Card>
   )
