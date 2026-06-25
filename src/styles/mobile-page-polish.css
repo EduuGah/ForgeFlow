@@ -20489,3 +20489,97 @@ body.ff-fullscreen-modal-open .ff-active-workout-mini-floating {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ForgeFlow Evolution v2: safety polish for mobile charts, cards and filters */
+.ff-progress-page-v2,
+.ff-exercise-progress-page-v2,
+.ff-progress-page-v2 *,
+.ff-exercise-progress-page-v2 * {
+  box-sizing: border-box;
+}
+
+.ff-progress-page-v2,
+.ff-exercise-progress-page-v2,
+.ff-progress-body,
+.ff-exercise-progress-body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.ff-progress-page-v2 :is(.ff-native-card, article, section),
+.ff-exercise-progress-page-v2 :is(.ff-native-card, article, section) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.ff-progress-page-v2 :is(h1, h2, h3, p, span, strong, small),
+.ff-exercise-progress-page-v2 :is(h1, h2, h3, p, span, strong, small) {
+  min-width: 0;
+}
+
+.ff-progress-page-v2 :is(.ff-native-card, .ff-progress-v2-card),
+.ff-exercise-progress-page-v2 .ff-native-card {
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--ff-accent) 12%, transparent), transparent 36%),
+    var(--ff-card);
+}
+
+.ff-progress-periods,
+.ff-exercise-progress-toolbar {
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ff-progress-periods::-webkit-scrollbar,
+.ff-exercise-progress-toolbar::-webkit-scrollbar {
+  display: none;
+}
+
+.ff-progress-page-v2 [data-chart-container='true'],
+.ff-exercise-progress-page-v2 [data-chart-container='true'] {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  border-radius: 24px;
+}
+
+.ff-progress-page-v2 :is(.recharts-wrapper, .recharts-surface, .recharts-responsive-container),
+.ff-exercise-progress-page-v2 :is(.recharts-wrapper, .recharts-surface, .recharts-responsive-container) {
+  max-width: 100% !important;
+  overflow: visible;
+}
+
+.ff-progress-page-v2 :is(button, a),
+.ff-exercise-progress-page-v2 :is(button, a) {
+  min-width: 0;
+}
+
+.ff-progress-page-v2 :is(.truncate, .line-clamp-1, .line-clamp-2),
+.ff-exercise-progress-page-v2 :is(.truncate, .line-clamp-1, .line-clamp-2) {
+  min-width: 0;
+}
+
+.ff-progress-page-v2 :is(.ff-native-card p, .ff-native-card span),
+.ff-exercise-progress-page-v2 :is(.ff-native-card p, .ff-native-card span) {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .ff-progress-page-v2,
+  .ff-exercise-progress-page-v2 {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  }
+
+  .ff-progress-page-v2 .ff-native-page-intro__metrics,
+  .ff-exercise-progress-page-v2 .ff-native-page-intro__metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .ff-progress-page-v2 .ff-native-page-intro__metric strong,
+  .ff-exercise-progress-page-v2 .ff-native-page-intro__metric strong {
+    font-size: clamp(0.84rem, 3vw, 1rem);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

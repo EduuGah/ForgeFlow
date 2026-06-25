@@ -1,523 +1,848 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   Activity,
+  ArrowUpRight,
   BarChart3,
   CalendarDays,
-  Search,
-  TrendingUp,
-  Weight,
-  Trophy,
+  ChevronDown,
+  Dumbbell,
+  Flame,
+  Info,
+  LineChart,
   Medal,
+  RefreshCcw,
+  Search,
+  Sparkles,
+  Target,
+  Trophy,
+  Weight,
+  X,
 } from 'lucide-react'
 import {
+  Bar,
   CartesianGrid,
+  ComposedChart,
   Line,
-  LineChart,
+  LineChart as RechartsLineChart,
   Tooltip,
   XAxis,
-  YAxis
+  YAxis,
 } from 'recharts'
-import SafeResponsiveContainer from '../components/ui/SafeResponsiveContainer'
 
-import PageHeader from '../components/ui/PageHeader'
-import Card from '../components/ui/Card'
+import AppPageIntro from '../components/app/AppPageIntro'
 import Badge from '../components/ui/Badge'
+import Button from '../components/ui/Button'
+import Card from '../components/ui/Card'
 import EmptyState from '../components/ui/EmptyState'
+import SafeResponsiveContainer from '../components/ui/SafeResponsiveContainer'
 import { useAuth } from '../context/AuthContext'
 import { apiFetch } from '../services/api'
-import { getUserStorageData, saveUserStorageData } from '../utils/userStorage'
-import { getCompletedSets } from '../utils/analyticsUtils'
-import { chartItemStyle, chartLabelStyle, getChartTooltipStyle } from '../utils/chartUtils'
 import defaultExercises from '../data/defaultExercises'
-import { getExerciseMedia } from '../utils/exerciseMediaUtils'
-
+import { getUserStorageData, saveUserStorageData } from '../utils/userStorage'
 import {
+  PROGRESS_PERIODS,
+  formatNumber,
+  getTooltipStyle,
+  normalizeHistory,
+} from '../features/progress/progressUtils'
+import {
+  buildExerciseOptions,
+  calculateExerciseProgress,
+  filterExerciseOptions,
   formatDate,
   formatLongDate,
   formatVolume,
   formatWeight,
-  normalizeExerciseName,
+  getDaysSinceLastEntry,
+  getPrTone,
+  resolveExerciseFromQuery,
 } from '../features/exerciseProgress/exerciseProgressUtils'
 
+const DEFAULT_PERIOD = 'all'
 
-import AppPageIntro from '../components/app/AppPageIntro'
+function normalizeHistoryResponse(data) {
+  if (Array.isArray(data)) return data
+  if (Array.isArray(data?.history)) return data.history
+  if (Array.isArray(data?.items)) return data.items
+  return []
+}
 
-function getExerciseFallback(name = '') {
-  const normalized = normalizeExerciseName(name)
-  return defaultExercises.find((exercise) => {
-    return [exercise.name, exercise.originalName, exercise.title]
-      .filter(Boolean)
-      .some((item) => normalizeExerciseName(item) === normalized)
-  }) || null
+function getStatusLabel(loading, syncing, source) {
+  if (loading || syncing) return 'Sincronizando'
+  if (source === 'database') return 'Sincronizado'
+  if (source === 'local') return 'Offline'
+  return 'Sem dados'
+}
+
+function formatSignedWeight(value) {
+  const number = Number(value) || 0
+  if (number > 0) return `+${formatWeight(number)}`
+  return formatWeight(number)
+}
+
+function formatSignedVolume(value) {
+  const number = Number(value) || 0
+  if (number > 0) return `+${formatVolume(number)}`
+  return formatVolume(number)
+}
+
+function formatSignedReps(value) {
+  const number = Number(value) || 0
+  if (number > 0) return `+${formatNumber(number, { maximumFractionDigits: 0 })} reps`
+  if (number < 0) return `${formatNumber(number, { maximumFractionDigits: 0 })} reps`
+  return '0 reps'
+}
+
+function formatBestSet(set = null) {
+  if (!set) return '—'
+  return `${formatWeight(set.weight)} x ${set.reps}`
+}
+
+function PeriodFilters({ selectedPeriod, onChange }) {
+  return (
+    <div className="ff-exercise-progress-toolbar -mx-1 flex max-w-full gap-2 overflow-x-auto px-1 pb-1" role="tablist" aria-label="Filtrar evolução do exercício">
+      {PROGRESS_PERIODS.map((period) => {
+        const isActive = selectedPeriod === period.key
+        return (
+          <button
+            key={period.key}
+            type="button"
+            onClick={() => onChange(period.key)}
+            className={[
+              'min-h-10 shrink-0 rounded-full border px-4 text-sm font-black transition active:scale-[0.98]',
+              isActive
+                ? 'border-[var(--ff-accent-border)] bg-[var(--ff-accent)] text-white shadow-[0_0_18px_var(--ff-accent-shadow)]'
+                : 'border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-muted)] hover:border-[var(--ff-border-strong)] hover:text-[var(--ff-text)]',
+            ].join(' ')}
+            aria-selected={isActive}
+            role="tab"
+          >
+            {period.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+function SectionHeader({ icon: Icon, eyebrow, title, description, action }) {
+  return (
+    <div className="mb-4 flex min-w-0 items-start justify-between gap-3">
+      <div className="min-w-0">
+        {eyebrow && <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--ff-accent-text)]">{eyebrow}</p>}
+        <h2 className="mt-1 text-xl font-black text-[var(--ff-text)]">{title}</h2>
+        {description && <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[var(--ff-muted)]">{description}</p>}
+      </div>
+      {action || (Icon && (
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-accent-text)]">
+          <Icon size={21} />
+        </span>
+      ))}
+    </div>
+  )
+}
+
+function ExerciseOptionButton({ exercise, selected, onSelect }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(exercise)}
+      className={[
+        'flex w-full min-w-0 items-center gap-3 rounded-2xl border p-2.5 text-left transition active:scale-[0.99]',
+        selected
+          ? 'border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] shadow-[0_0_18px_var(--ff-accent-shadow)]/20'
+          : 'border-[var(--ff-border)] bg-[var(--ff-surface-2)] hover:border-[var(--ff-border-strong)] hover:bg-[var(--ff-card-hover)]',
+      ].join(' ')}
+    >
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-border)] bg-white">
+        {exercise.mediaUrl ? (
+          <img src={exercise.mediaUrl} alt={exercise.name} className="h-full w-full object-contain" loading="lazy" decoding="async" />
+        ) : (
+          <Dumbbell size={20} className="text-zinc-500" />
+        )}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-black text-[var(--ff-text)]">{exercise.name}</span>
+        <span className="mt-1 block truncate text-xs text-[var(--ff-muted)]">{exercise.muscleGroup || 'Sem grupo'} • {exercise.timesTrained}x</span>
+      </span>
+      <ChevronDown size={16} className="shrink-0 -rotate-90 text-[var(--ff-muted)]" />
+    </button>
+  )
+}
+
+function ExerciseSelector({ options, selectedExercise, selectedName, search, onSearchChange, onSelect, onClear }) {
+  const [open, setOpen] = useState(false)
+  const filteredOptions = useMemo(() => filterExerciseOptions(options, search).slice(0, 8), [options, search])
+
+  useEffect(() => {
+    if (!selectedName) setOpen(true)
+  }, [selectedName])
+
+  return (
+    <Card className="min-w-0 overflow-visible">
+      <SectionHeader
+        icon={Search}
+        eyebrow="Escolha um exercício"
+        title={selectedExercise ? selectedExercise.name : 'Buscar exercício'}
+        description={selectedExercise ? `${selectedExercise.muscleGroup || 'Sem grupo'} • ${selectedExercise.equipment || 'Sem equipamento'}` : 'Veja cargas, séries, volume, PRs e tendência de evolução.'}
+        action={selectedExercise && (
+          <Button type="button" variant="ghost" onClick={onClear} className="shrink-0 px-3">
+            <X size={17} />
+            Limpar
+          </Button>
+        )}
+      />
+
+      <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-2">
+        <div className="flex h-12 min-w-0 items-center gap-3 rounded-2xl bg-[var(--ff-card)] px-3 text-[var(--ff-muted)]">
+          <Search size={18} className="shrink-0" />
+          <input
+            type="search"
+            value={search}
+            onFocus={() => setOpen(true)}
+            onChange={(event) => {
+              onSearchChange(event.target.value)
+              setOpen(true)
+            }}
+            placeholder="Buscar exercício..."
+            className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-[var(--ff-text)] outline-none placeholder:text-[var(--ff-muted)]"
+          />
+          <button type="button" onClick={() => setOpen((current) => !current)} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl hover:bg-[var(--ff-surface-2)]">
+            <ChevronDown size={18} className={open ? 'rotate-180 transition' : 'transition'} />
+          </button>
+        </div>
+
+        {open && (
+          <div className="mt-2 max-h-[330px] space-y-2 overflow-y-auto overscroll-contain pr-1">
+            {filteredOptions.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-[var(--ff-border)] bg-[var(--ff-card)] p-4 text-center">
+                <p className="text-sm font-black text-[var(--ff-text)]">Nenhum exercício encontrado</p>
+                <p className="mt-1 text-xs text-[var(--ff-muted)]">Finalize treinos com séries válidas para aparecer aqui.</p>
+              </div>
+            ) : (
+              filteredOptions.map((exercise) => (
+                <ExerciseOptionButton
+                  key={exercise.normalizedName}
+                  exercise={exercise}
+                  selected={exercise.normalizedName === selectedName}
+                  onSelect={(nextExercise) => {
+                    onSelect(nextExercise)
+                    setOpen(false)
+                  }}
+                />
+              ))
+            )}
+            {options.length > 8 && !search && (
+              <p className="px-2 pb-1 text-center text-xs text-[var(--ff-muted)]">Digite para filtrar sem abrir uma lista enorme.</p>
+            )}
+          </div>
+        )}
+      </div>
+    </Card>
+  )
+}
+
+function StatCard({ icon: Icon, label, value, description, accent = false }) {
+  return (
+    <Card className="min-w-0 overflow-hidden p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-xs font-black uppercase tracking-[0.16em] text-[var(--ff-muted)]">{label}</p>
+          <h3 className={accent ? 'mt-2 truncate text-2xl font-black text-[var(--ff-accent-text)]' : 'mt-2 truncate text-2xl font-black text-[var(--ff-text)]'}>{value}</h3>
+        </div>
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">
+          <Icon size={19} />
+        </span>
+      </div>
+      {description && <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-[var(--ff-muted)]">{description}</p>}
+    </Card>
+  )
+}
+
+function SelectedExerciseHero({ exercise, stats }) {
+  const daysSinceLast = getDaysSinceLastEntry(stats.lastEntry)
+
+  return (
+    <Card className="min-w-0 overflow-hidden">
+      <div className="flex min-w-0 items-start gap-4">
+        <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-3xl border border-[var(--ff-border)] bg-white sm:h-24 sm:w-24">
+          {exercise.mediaUrl ? (
+            <img src={exercise.mediaUrl} alt={exercise.name} className="h-full w-full object-contain" loading="lazy" decoding="async" />
+          ) : (
+            <Dumbbell size={30} className="text-zinc-500" />
+          )}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--ff-accent-text)]">Exercício selecionado</p>
+          <h2 className="mt-1 truncate text-2xl font-black text-[var(--ff-text)]">{exercise.name}</h2>
+          <p className="mt-1 truncate text-sm text-[var(--ff-muted)]">{exercise.muscleGroup || 'Sem grupo'} • {exercise.equipment || 'Sem equipamento'}</p>
+
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
+              <span className="block text-[11px] font-bold text-[var(--ff-muted)]">Treinado</span>
+              <strong className="mt-1 block text-lg font-black text-[var(--ff-text)]">{stats.trainedTimes}x</strong>
+            </div>
+            <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
+              <span className="block text-[11px] font-bold text-[var(--ff-muted)]">Último treino</span>
+              <strong className="mt-1 block truncate text-sm font-black text-[var(--ff-text)]">{stats.lastEntry ? formatDate(stats.lastEntry.date) : '—'}</strong>
+            </div>
+            <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
+              <span className="block text-[11px] font-bold text-[var(--ff-muted)]">Melhor carga</span>
+              <strong className="mt-1 block text-lg font-black text-[var(--ff-accent-text)]">{formatWeight(stats.bestWeight)}</strong>
+            </div>
+            <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
+              <span className="block text-[11px] font-bold text-[var(--ff-muted)]">Melhor volume</span>
+              <strong className="mt-1 block text-lg font-black text-[var(--ff-text)]">{formatVolume(stats.bestWorkoutVolume)}</strong>
+            </div>
+          </div>
+
+          {daysSinceLast !== null && (
+            <p className="mt-3 text-xs text-[var(--ff-muted)]">Último registro há {daysSinceLast} dia{daysSinceLast === 1 ? '' : 's'}.</p>
+          )}
+        </div>
+      </div>
+    </Card>
+  )
+}
+
+function WeightChart({ data = [] }) {
+  return (
+    <Card className="min-w-0 overflow-hidden">
+      <SectionHeader
+        icon={LineChart}
+        eyebrow="Carga"
+        title="Evolução de carga"
+        description="Mostra a maior carga usada em cada treino deste exercício."
+      />
+      <div className="h-[300px] min-h-[300px] min-w-0" data-chart-container="true">
+        {data.length < 2 ? (
+          <EmptyState icon={LineChart} title="Poucos registros" description="Com pelo menos dois treinos, o gráfico de carga fica mais útil." />
+        ) : (
+          <SafeResponsiveContainer height={300}>
+            {({ width, height }) => (
+              <RechartsLineChart width={width} height={height} data={data} margin={{ top: 16, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
+                <XAxis dataKey="dateLabel" interval="preserveStartEnd" tick={{ fontSize: 11, fill: 'var(--ff-muted)' }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: 'var(--ff-muted)' }} tickLine={false} axisLine={false} width={42} />
+                <Tooltip
+                  formatter={(value) => [formatWeight(value), 'Maior carga']}
+                  labelFormatter={(_, payload) => payload?.[0]?.payload ? `${payload[0].payload.longDate} • ${payload[0].payload.workoutName}` : 'Data'}
+                  contentStyle={getTooltipStyle()}
+                />
+                <Line type="monotone" dataKey="maxWeight" stroke="var(--ff-accent)" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: 'var(--ff-card)' }} />
+              </RechartsLineChart>
+            )}
+          </SafeResponsiveContainer>
+        )}
+      </div>
+    </Card>
+  )
+}
+
+function VolumeChart({ data = [] }) {
+  return (
+    <Card className="min-w-0 overflow-hidden">
+      <SectionHeader
+        icon={BarChart3}
+        eyebrow="Volume"
+        title="Volume por treino"
+        description="Soma de peso × repetições apenas deste exercício no treino."
+      />
+      <div className="h-[300px] min-h-[300px] min-w-0" data-chart-container="true">
+        {data.length === 0 ? (
+          <EmptyState icon={BarChart3} title="Sem volume" description="Nenhuma série válida encontrada para montar o gráfico." />
+        ) : (
+          <SafeResponsiveContainer height={300}>
+            {({ width, height }) => (
+              <ComposedChart width={width} height={height} data={data} margin={{ top: 16, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
+                <XAxis dataKey="dateLabel" interval="preserveStartEnd" tick={{ fontSize: 11, fill: 'var(--ff-muted)' }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: 'var(--ff-muted)' }} tickLine={false} axisLine={false} width={42} />
+                <Tooltip
+                  formatter={(value, name) => [name === 'totalVolume' ? formatVolume(value) : value, name === 'totalVolume' ? 'Volume' : 'Reps']}
+                  labelFormatter={(_, payload) => payload?.[0]?.payload ? `${payload[0].payload.longDate} • ${payload[0].payload.workoutName}` : 'Data'}
+                  contentStyle={getTooltipStyle()}
+                />
+                <Bar dataKey="totalVolume" radius={[10, 10, 0, 0]} fill="var(--ff-accent)" maxBarSize={38} />
+                <Line type="monotone" dataKey="totalReps" stroke="var(--ff-warning-text)" strokeWidth={3} dot={{ r: 3 }} />
+              </ComposedChart>
+            )}
+          </SafeResponsiveContainer>
+        )}
+      </div>
+    </Card>
+  )
+}
+
+function BestSetTimeline({ entries = [] }) {
+  const visibleEntries = entries.slice(-8)
+
+  return (
+    <Card className="min-w-0 overflow-hidden">
+      <SectionHeader
+        icon={Target}
+        eyebrow="Séries"
+        title="Melhor série por treino"
+        description="Resumo compacto para enxergar a progressão sem abrir cada treino."
+      />
+
+      {visibleEntries.length === 0 ? (
+        <EmptyState title="Sem séries" description="As melhores séries aparecem após finalizar treinos com este exercício." />
+      ) : (
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {visibleEntries.map((entry) => (
+            <div key={entry.id} className="min-w-0 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
+              <p className="truncate text-[11px] font-bold text-[var(--ff-muted)]">{formatDate(entry.date)}</p>
+              <strong className="mt-1 block truncate text-sm font-black text-[var(--ff-text)]">{entry.bestSetLabel || formatBestSet(entry.bestSet)}</strong>
+              <span className="mt-1 block truncate text-[11px] text-[var(--ff-muted)]">{formatVolume(entry.totalVolume)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+  )
+}
+
+function RecordsSection({ records }) {
+  const prs = records?.prs || []
+
+  return (
+    <Card className="min-w-0 overflow-hidden">
+      <SectionHeader
+        icon={Trophy}
+        eyebrow="Recordes"
+        title="PRs do exercício"
+        description="Melhores marcas encontradas nas séries e no volume total do exercício."
+      />
+
+      {prs.length === 0 ? (
+        <EmptyState icon={Trophy} title="Nenhum recorde detectado ainda" description="Registre mais treinos para acompanhar sua evolução." />
+      ) : (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {prs.map((record) => (
+            <article key={record.id} className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-black text-[var(--ff-text)]">{record.label}</p>
+                  <p className="mt-1 text-xs text-[var(--ff-muted)]">{record.detail}</p>
+                </div>
+                <Badge variant={getPrTone(record)}>{record.value}</Badge>
+              </div>
+              <p className="mt-3 text-xs font-bold text-[var(--ff-muted)]">{formatLongDate(record.date)}</p>
+            </article>
+          ))}
+        </div>
+      )}
+    </Card>
+  )
+}
+
+function ComparisonSection({ comparison }) {
+  if (!comparison) {
+    return (
+      <Card className="min-w-0 overflow-hidden">
+        <SectionHeader icon={Activity} eyebrow="Comparação" title="Comparado ao último treino" description="A comparação aparece quando houver pelo menos dois registros deste exercício." />
+        <EmptyState icon={Info} title="Ainda não há comparação" description="Finalize este exercício novamente para comparar carga, volume e repetições." />
+      </Card>
+    )
+  }
+
+  const volumeLower = comparison.volume < 0
+
+  return (
+    <Card className="min-w-0 overflow-hidden">
+      <SectionHeader icon={Activity} eyebrow="Comparação" title="Comparado ao último treino" description="Diferença entre os dois registros mais recentes do exercício." />
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+          <p className="text-xs font-bold text-[var(--ff-muted)]">Carga máxima</p>
+          <strong className="mt-2 block text-2xl font-black text-[var(--ff-text)]">{formatSignedWeight(comparison.maxWeight)}</strong>
+        </div>
+        <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+          <p className="text-xs font-bold text-[var(--ff-muted)]">Volume</p>
+          <strong className="mt-2 block text-2xl font-black text-[var(--ff-accent-text)]">{formatSignedVolume(comparison.volume)}</strong>
+        </div>
+        <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+          <p className="text-xs font-bold text-[var(--ff-muted)]">Repetições</p>
+          <strong className="mt-2 block text-2xl font-black text-[var(--ff-text)]">{formatSignedReps(comparison.reps)}</strong>
+        </div>
+      </div>
+
+      {volumeLower && (
+        <p className="mt-4 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-3 text-sm leading-relaxed text-[var(--ff-warning-text)]">
+          Volume menor que o último registro. Isso pode acontecer por variação de treino, descanso ou foco do dia.
+        </p>
+      )}
+    </Card>
+  )
+}
+
+function InsightsSection({ insights = [], trend }) {
+  return (
+    <Card className="min-w-0 overflow-hidden">
+      <SectionHeader
+        icon={Sparkles}
+        eyebrow="Insights"
+        title="Insights do exercício"
+        description="Leituras simples baseadas no histórico registrado."
+        action={trend && <Badge variant={trend.direction === 'up' ? 'green' : trend.direction === 'down' ? 'yellow' : 'default'}>{trend.label}</Badge>}
+      />
+
+      {insights.length === 0 ? (
+        <EmptyState icon={Sparkles} title="Ainda não há registros suficientes" description="Registre mais treinos com este exercício para gerar insights." />
+      ) : (
+        <div className="space-y-3">
+          {insights.map((insight) => (
+            <div key={insight} className="flex gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">
+                <Sparkles size={16} />
+              </span>
+              <p className="min-w-0 text-sm leading-relaxed text-[var(--ff-text)]">{insight}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+  )
+}
+
+function ExerciseHistorySection({ entries = [] }) {
+  const [visibleCount, setVisibleCount] = useState(4)
+  const visibleEntries = entries.slice().reverse().slice(0, visibleCount)
+  const hasMore = visibleCount < entries.length
+
+  useEffect(() => {
+    setVisibleCount(4)
+  }, [entries])
+
+  return (
+    <Card className="min-w-0 overflow-hidden">
+      <SectionHeader
+        icon={CalendarDays}
+        eyebrow="Histórico"
+        title="Últimos treinos"
+        description="Cada card mostra as séries válidas deste exercício no treino."
+        action={(
+          <Link to="/history" className="shrink-0">
+            <Button variant="secondary" className="px-3">
+              Histórico
+              <ArrowUpRight size={16} />
+            </Button>
+          </Link>
+        )}
+      />
+
+      {entries.length === 0 ? (
+        <EmptyState title="Este exercício ainda não tem registros" description="Quando você finalizar treinos com ele, a evolução aparecerá aqui." />
+      ) : (
+        <div className="space-y-3">
+          {visibleEntries.map((entry) => (
+            <article key={entry.id} className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+              <div className="flex min-w-0 items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-base font-black text-[var(--ff-text)]">{formatLongDate(entry.date)}</p>
+                  <p className="mt-1 truncate text-xs text-[var(--ff-muted)]">{entry.workoutName} • {entry.totalSets} séries • {formatVolume(entry.totalVolume)}</p>
+                </div>
+                <Badge variant="purple">{formatBestSet(entry.bestSet)}</Badge>
+              </div>
+
+              <div className="mt-4 space-y-2">
+                {entry.sets.map((set) => (
+                  <div key={set.id} className="grid grid-cols-[1fr_auto] gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold text-[var(--ff-text)]">Série {set.setNumber}</p>
+                      <p className="mt-1 text-xs text-[var(--ff-muted)]">{formatWeight(set.weight)} x {set.reps} reps</p>
+                    </div>
+                    <span className="self-center text-sm font-black text-[var(--ff-accent-text)]">{formatVolume(set.volume)}</span>
+                  </div>
+                ))}
+              </div>
+            </article>
+          ))}
+
+          {hasMore && (
+            <Button type="button" variant="secondary" className="w-full" onClick={() => setVisibleCount((count) => count + 4)}>
+              Ver mais registros
+            </Button>
+          )}
+        </div>
+      )}
+    </Card>
+  )
+}
+
+function RankingCard({ title, description, options, selectedName, onSelect, mode }) {
+  const sortedOptions = options
+    .slice()
+    .sort((a, b) => {
+      if (mode === 'weight') return b.maxWeight - a.maxWeight
+      if (mode === 'volume') return b.maxVolume - a.maxVolume
+      return b.timesTrained - a.timesTrained
+    })
+    .slice(0, 5)
+
+  return (
+    <Card className="min-w-0 overflow-hidden">
+      <SectionHeader icon={mode === 'weight' ? Trophy : Flame} eyebrow="Atalho" title={title} description={description} />
+      {sortedOptions.length === 0 ? (
+        <EmptyState title="Sem ranking" description="Finalize treinos para montar este ranking." />
+      ) : (
+        <div className="space-y-2">
+          {sortedOptions.map((exercise, index) => (
+            <ExerciseOptionButton
+              key={exercise.normalizedName}
+              exercise={{
+                ...exercise,
+                name: `#${index + 1} ${exercise.name}`,
+                timesTrained: mode === 'weight' ? formatWeight(exercise.maxWeight) : mode === 'volume' ? formatVolume(exercise.maxVolume) : `${exercise.timesTrained}x`,
+              }}
+              selected={exercise.normalizedName === selectedName}
+              onSelect={() => onSelect(exercise)}
+            />
+          ))}
+        </div>
+      )}
+    </Card>
+  )
 }
 
 function ExerciseProgress() {
   const { user } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [history, setHistory] = useState([])
-  const [source, setSource] = useState('local')
+  const [source, setSource] = useState('empty')
   const [loading, setLoading] = useState(true)
+  const [syncing, setSyncing] = useState(false)
   const [search, setSearch] = useState('')
   const [selectedExerciseName, setSelectedExerciseName] = useState('')
-  const [rangeFilter, setRangeFilter] = useState('all')
+  const [selectedPeriod, setSelectedPeriod] = useState(DEFAULT_PERIOD)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     if (!user) return undefined
+
     let isMounted = true
 
     async function loadHistory() {
-      const cachedHistory = getUserStorageData(user, 'history', [])
+      const cachedHistory = getUserStorageData(
+        user,
+        'history',
+        getUserStorageData(user, 'workoutHistory', [])
+      )
+
       if (isMounted) {
         setHistory(Array.isArray(cachedHistory) ? cachedHistory : [])
-        setSource('local')
-        setLoading(true)
+        setSource(cachedHistory?.length ? 'local' : 'empty')
+        setLoading(false)
+        setSyncing(true)
       }
+
       try {
         const data = await apiFetch('/workout-history')
         if (!isMounted) return
-        const normalizedHistory = Array.isArray(data) ? data : data?.history || []
+
+        const normalizedHistory = normalizeHistoryResponse(data)
         setHistory(normalizedHistory)
         saveUserStorageData(user, 'history', normalizedHistory)
-        setSource('database')
+        setSource(normalizedHistory.length > 0 ? 'database' : 'empty')
       } catch (error) {
         console.error(error)
+        if (isMounted) setSource(cachedHistory?.length ? 'local' : 'empty')
       } finally {
-        if (isMounted) setLoading(false)
+        if (isMounted) {
+          setLoading(false)
+          setSyncing(false)
+        }
       }
     }
+
     loadHistory()
-    return () => { isMounted = false }
-  }, [user])
 
-  const completedSets = useMemo(() => getCompletedSets(history).map((set, index) => ({
-    ...set,
-    normalizedExerciseName: normalizeExerciseName(set.exerciseName),
-    chartIndex: index + 1,
-  })).sort((a, b) => new Date(a.date) - new Date(b.date)), [history])
+    return () => {
+      isMounted = false
+    }
+  }, [user, refreshKey])
 
-  const exerciseOptions = useMemo(() => {
-    const map = new Map()
-    completedSets.forEach((set) => {
-      const key = set.normalizedExerciseName
-      if (!key) return
-      const fallbackExercise = getExerciseFallback(set.exerciseName)
-      const current = map.get(key) || { name: set.exerciseName, normalizedName: key, muscleGroup: set.muscleGroup || fallbackExercise?.muscleGroup, mediaUrl: set.mediaUrl || set.imageUrl || (fallbackExercise ? getExerciseMedia(fallbackExercise) : ''), count: 0, maxWeight: 0, maxVolume: 0, lastDate: set.date }
-      current.count += 1
-      current.maxWeight = Math.max(current.maxWeight, set.weight)
-      current.maxVolume = Math.max(current.maxVolume, set.volume)
-      current.lastDate = set.date
-      map.set(key, current)
-    })
-    return Array.from(map.values()).sort((a, b) => b.count - a.count)
-  }, [completedSets])
+  const normalizedHistory = useMemo(() => normalizeHistory(history), [history])
+  const exerciseOptions = useMemo(() => buildExerciseOptions(normalizedHistory, defaultExercises), [normalizedHistory])
 
   useEffect(() => {
-    if (!selectedExerciseName && exerciseOptions.length > 0) {
-      queueMicrotask(() => setSelectedExerciseName(exerciseOptions[0].normalizedName))
-    }
+    const queryExercise = searchParams.get('exercise') || ''
+    const resolved = resolveExerciseFromQuery(exerciseOptions, queryExercise)
+    if (resolved && !selectedExerciseName) setSelectedExerciseName(resolved)
+  }, [exerciseOptions, searchParams, selectedExerciseName])
+
+  const selectedExercise = useMemo(() => {
+    return exerciseOptions.find((exercise) => exercise.normalizedName === selectedExerciseName) || null
   }, [exerciseOptions, selectedExerciseName])
 
-  const filteredExerciseOptions = useMemo(() => {
-    const term = normalizeExerciseName(search)
-    if (!term) return exerciseOptions
-    return exerciseOptions.filter((exercise) => normalizeExerciseName(exercise.name).includes(term))
-  }, [exerciseOptions, search])
-
-  const selectedSets = useMemo(() => {
-    const exerciseSets = completedSets.filter((set) => set.normalizedExerciseName === selectedExerciseName)
-    if (rangeFilter === 'all') return exerciseSets
-
-    const days = Number(rangeFilter)
-    const since = new Date()
-    since.setDate(since.getDate() - days)
-
-    return exerciseSets.filter((set) => new Date(set.date) >= since)
-  }, [completedSets, rangeFilter, selectedExerciseName])
-
-  const stats = useMemo(() => {
-    if (selectedSets.length === 0) return { maxWeight: 0, maxVolume: 0, totalVolume: 0, totalSets: 0, lastSet: null }
-    return {
-      maxWeight: Math.max(...selectedSets.map((set) => set.weight)),
-      maxVolume: Math.max(...selectedSets.map((set) => set.volume)),
-      totalVolume: selectedSets.reduce((total, set) => total + set.volume, 0),
-      totalSets: selectedSets.length,
-      lastSet: selectedSets[selectedSets.length - 1],
-    }
-  }, [selectedSets])
-
-  const dateChartData = useMemo(() => {
-    const map = new Map()
-
-    selectedSets.forEach((set) => {
-      const dateKey = new Date(set.date).toISOString().slice(0, 10)
-      const current = map.get(dateKey) || {
-        dateKey,
-        dateLabel: formatDate(set.date),
-        longDate: formatLongDate(set.date),
-        maxWeight: 0,
-        totalVolume: 0,
-        sets: 0,
+  const exerciseProgress = useMemo(() => {
+    if (!selectedExerciseName) {
+      return {
+        entries: [],
+        stats: {},
+        chartData: [],
+        insights: [],
+        hasData: false,
       }
+    }
 
-      current.maxWeight = Math.max(current.maxWeight, Number(set.weight || 0))
-      current.totalVolume += Number(set.volume || 0)
-      current.sets += 1
+    return calculateExerciseProgress(normalizedHistory, selectedExerciseName, selectedPeriod)
+  }, [normalizedHistory, selectedExerciseName, selectedPeriod])
 
-      map.set(dateKey, current)
-    })
+  const stats = exerciseProgress.stats || {}
+  const statusLabel = getStatusLabel(loading, syncing, source)
 
-    return Array.from(map.values()).sort((a, b) => a.dateKey.localeCompare(b.dateKey))
-  }, [selectedSets])
+  function handleSelectExercise(exercise) {
+    setSelectedExerciseName(exercise.normalizedName)
+    setSearch('')
+    setSearchParams({ exercise: exercise.name })
+  }
 
-  const prRanking = useMemo(() => {
-    return exerciseOptions
-      .slice()
-      .sort((a, b) => b.maxWeight - a.maxWeight)
-      .slice(0, 5)
-  }, [exerciseOptions])
-
-  const volumeRanking = useMemo(() => {
-    return exerciseOptions
-      .slice()
-      .sort((a, b) => b.maxVolume - a.maxVolume)
-      .slice(0, 5)
-  }, [exerciseOptions])
-
-  const selectedExercise = exerciseOptions.find((exercise) => exercise.normalizedName === selectedExerciseName)
+  function handleClearSelection() {
+    setSelectedExerciseName('')
+    setSearch('')
+    setSearchParams({})
+  }
 
   return (
-    <div className="ff-hevy-page ff-hevy-page-exerciseprogress">
-
+    <div className="ff-hevy-page ff-hevy-page-exerciseprogress ff-exercise-progress-page-v2 max-w-full overflow-x-hidden">
       <AppPageIntro
         eyebrow="Exercício"
-        title="Progresso por exercício"
-        description="Escolha um exercício e veja PRs, séries e gráficos em uma tela mais limpa."
+        title="Evolução por exercício"
+        description="Escolha um exercício e veja carga, volume, séries, PRs e tendência de evolução."
+        action={(
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setRefreshKey((key) => key + 1)}
+            disabled={loading || syncing}
+            className="w-full sm:w-auto"
+          >
+            <RefreshCcw size={16} />
+            Atualizar
+          </Button>
+        )}
         metrics={[
           { label: 'Exercícios', value: exerciseOptions.length },
-          { label: 'Treinos', value: history.length },
-          { label: 'Status', value: source === 'database' ? 'Sincronizado' : 'Offline' },
+          { label: 'Treinos', value: normalizedHistory.length },
+          { label: 'Status', value: statusLabel },
         ]}
       />
 
-    <div className="ff-exercise-progress-body ff-page-mobile-main-grid">
-      <PageHeader
-        title="Progresso por exercício"
-        description="Escolha um exercício e veja séries registradas, evolução de carga e volume."
-        action={<Badge variant={source === 'database' ? 'purple' : 'default'}>{loading ? 'Carregando' : source === 'database' ? 'Sincronizado' : 'Offline'}</Badge>}
-      />
+      <div className="ff-exercise-progress-body ff-page-mobile-main-grid space-y-5 pb-8">
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(320px,0.85fr)_minmax(0,1.15fr)]">
+          <div className="space-y-5">
+            <ExerciseSelector
+              options={exerciseOptions}
+              selectedExercise={selectedExercise}
+              selectedName={selectedExerciseName}
+              search={search}
+              onSearchChange={setSearch}
+              onSelect={handleSelectExercise}
+              onClear={handleClearSelection}
+            />
 
-      <section className="ff-exercise-progress-rankings grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-yellow-400/30 bg-yellow-500/10 text-yellow-200">
-              <Trophy size={20} />
-            </div>
-            <div>
-              <h2 className="text-base font-black text-[var(--ff-text)]">Ranking de carga</h2>
-              <p className="text-xs text-[var(--ff-muted)]">Maiores pesos registrados por exercício</p>
-            </div>
+            <Card className="min-w-0 overflow-hidden">
+              <SectionHeader
+                icon={CalendarDays}
+                eyebrow="Período"
+                title="Filtro de análise"
+                description="Recalcula estatísticas e gráficos sem alterar seus dados antigos."
+                action={<Badge variant={source === 'database' ? 'purple' : source === 'local' ? 'default' : 'yellow'}>{statusLabel}</Badge>}
+              />
+              <PeriodFilters selectedPeriod={selectedPeriod} onChange={setSelectedPeriod} />
+            </Card>
           </div>
 
-          <div className="mt-4 space-y-2">
-            {prRanking.length > 0 ? prRanking.map((exercise, index) => (
-              <button
-                key={exercise.normalizedName}
-                type="button"
-                onClick={() => setSelectedExerciseName(exercise.normalizedName)}
-                className="flex w-full items-center justify-between gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-2 text-left"
-              >
-                <span className="flex min-w-0 items-center gap-3">
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[var(--ff-border)] bg-white">
-                    {exercise.mediaUrl ? (
-                      <img src={exercise.mediaUrl} alt={exercise.name} className="h-full w-full object-contain" loading="lazy" decoding="async" />
-                    ) : (
-                      <BarChart3 size={20} className="text-zinc-500" />
-                    )}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-black text-[var(--ff-text)]">#{index + 1} {exercise.name}</span>
-                    <span className="block truncate text-xs text-[var(--ff-muted)]">{exercise.muscleGroup || 'Sem grupo'}</span>
-                  </span>
-                </span>
-                <span className="shrink-0 text-sm font-black text-yellow-200">
-                  {formatWeight(exercise.maxWeight)}
-                </span>
-              </button>
-            )) : (
-              <p className="text-sm text-[var(--ff-muted)]">Registre séries para montar o ranking.</p>
+          <div className="space-y-5">
+            {!selectedExerciseName ? (
+              <Card>
+                <EmptyState
+                  icon={Search}
+                  title="Escolha um exercício para analisar"
+                  description="Veja cargas, séries, volume, PRs e tendência de evolução em uma tela detalhada."
+                />
+              </Card>
+            ) : !exerciseProgress.hasData || !selectedExercise ? (
+              <Card>
+                <EmptyState
+                  icon={Dumbbell}
+                  title="Este exercício ainda não tem registros"
+                  description="Quando você finalizar treinos com ele, a evolução aparecerá aqui."
+                />
+              </Card>
+            ) : (
+              <SelectedExerciseHero exercise={selectedExercise} stats={stats} />
             )}
           </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">
-              <Medal size={20} />
-            </div>
-            <div>
-              <h2 className="text-base font-black text-[var(--ff-text)]">Ranking de volume</h2>
-              <p className="text-xs text-[var(--ff-muted)]">Melhores séries por peso × reps</p>
-            </div>
-          </div>
-
-          <div className="mt-4 space-y-2">
-            {volumeRanking.length > 0 ? volumeRanking.map((exercise, index) => (
-              <button
-                key={exercise.normalizedName}
-                type="button"
-                onClick={() => setSelectedExerciseName(exercise.normalizedName)}
-                className="flex w-full items-center justify-between gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-2 text-left"
-              >
-                <span className="flex min-w-0 items-center gap-3">
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[var(--ff-border)] bg-white">
-                    {exercise.mediaUrl ? (
-                      <img src={exercise.mediaUrl} alt={exercise.name} className="h-full w-full object-contain" loading="lazy" decoding="async" />
-                    ) : (
-                      <BarChart3 size={20} className="text-zinc-500" />
-                    )}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-black text-[var(--ff-text)]">#{index + 1} {exercise.name}</span>
-                    <span className="block truncate text-xs text-[var(--ff-muted)]">{exercise.muscleGroup || 'Sem grupo'}</span>
-                  </span>
-                </span>
-                <span className="shrink-0 text-sm font-black text-[var(--ff-accent-text)]">
-                  {formatVolume(exercise.maxVolume)}
-                </span>
-              </button>
-            )) : (
-              <p className="text-sm text-[var(--ff-muted)]">Registre séries para montar o ranking.</p>
-            )}
-          </div>
-        </Card>
-      </section>
-
-
-      <section className="ff-page-mobile-main-grid grid grid-cols-1 gap-5 xl:grid-cols-[340px_minmax(0,1fr)]">
-        <aside className="space-y-5">
-          <Card>
-            <div className="flex h-12 items-center gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] px-4 text-[var(--ff-muted)]">
-              <Search size={18} />
-              <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar exercício..." className="w-full bg-transparent text-sm text-[var(--ff-text)] outline-none placeholder:text-[var(--ff-muted)]" />
-            </div>
-            <div className="mt-4 max-h-[560px] space-y-2 overflow-y-auto pr-1">
-              {filteredExerciseOptions.length === 0 ? <EmptyState title="Nenhum exercício" description="Finalize treinos com séries válidas para aparecerem aqui." /> : filteredExerciseOptions.map((exercise) => (
-                <button key={exercise.normalizedName} type="button" onClick={() => setSelectedExerciseName(exercise.normalizedName)} className={['flex w-full items-center gap-3 rounded-2xl border p-2.5 text-left transition', selectedExerciseName === exercise.normalizedName ? 'border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)]' : 'border-[var(--ff-border)] bg-[var(--ff-surface-2)] hover:bg-[var(--ff-card-hover)]'].join(' ')}>
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-border)] bg-white">
-                    {exercise.mediaUrl ? (
-                      <img src={exercise.mediaUrl} alt={exercise.name} className="h-full w-full object-contain" loading="lazy" decoding="async" />
-                    ) : (
-                      <BarChart3 size={22} className="text-zinc-500" />
-                    )}
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <p className="line-clamp-1 font-black text-[var(--ff-text)]">{exercise.name}</p>
-                    <p className="mt-1 text-xs text-[var(--ff-muted)]">{exercise.count} série(s) • {exercise.muscleGroup}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </Card>
-        </aside>
-
-        <div className="ff-hevy-exercise-progress space-y-5">
-          {!selectedExercise ? (
-            <Card><EmptyState title="Selecione um exercício" description="Escolha um exercício na lista para ver a evolução." /></Card>
-          ) : (
-            <>
-              <div className="ff-exercise-progress-toolbar">
-                <span>Periodo</span>
-                {[
-                  ['90', '90 dias'],
-                  ['180', '6 meses'],
-                  ['365', '1 ano'],
-                  ['all', 'Tudo'],
-                ].map(([value, label]) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setRangeFilter(value)}
-                    className={rangeFilter === value ? 'is-active' : ''}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-
-              <Card>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="flex min-w-0 items-center gap-4">
-                    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-3xl border border-[var(--ff-border)] bg-white">
-                      {selectedExercise.mediaUrl ? (
-                        <img src={selectedExercise.mediaUrl} alt={selectedExercise.name} className="h-full w-full object-contain" loading="lazy" decoding="async" />
-                      ) : (
-                        <BarChart3 size={30} className="text-zinc-500" />
-                      )}
-                    </div>
-
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--ff-accent-text)]">Exercício selecionado</p>
-                      <h2 className="mt-1 line-clamp-2 text-2xl font-black text-[var(--ff-text)]">{selectedExercise.name}</h2>
-                      <p className="mt-1 text-sm text-[var(--ff-muted)]">{selectedExercise.muscleGroup}</p>
-                    </div>
-                  </div>
-                  <Badge>{stats.totalSets} séries</Badge>
-                </div>
-                <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-                  <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3"><Weight size={18} className="text-[var(--ff-accent-text)]" /><p className="mt-2 text-lg font-black text-[var(--ff-text)]">{formatWeight(stats.maxWeight)}</p><p className="text-xs text-[var(--ff-muted)]">maior carga</p></div>
-                  <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3"><BarChart3 size={18} className="text-orange-300" /><p className="mt-2 text-lg font-black text-[var(--ff-text)]">{formatVolume(stats.maxVolume)}</p><p className="text-xs text-[var(--ff-muted)]">maior volume</p></div>
-                  <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3"><Activity size={18} className="text-emerald-300" /><p className="mt-2 text-lg font-black text-[var(--ff-text)]">{formatVolume(stats.totalVolume)}</p><p className="text-xs text-[var(--ff-muted)]">volume total</p></div>
-                  <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3"><CalendarDays size={18} className="text-[var(--ff-accent-text)]" /><p className="mt-2 text-lg font-black text-[var(--ff-text)]">{stats.lastSet ? formatDate(stats.lastSet.date) : '—'}</p><p className="text-xs text-[var(--ff-muted)]">última série</p></div>
-                </div>
-              </Card>
-
-              <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-                <Card>
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <h2 className="text-xl font-black text-[var(--ff-text)]">Evolução de carga</h2>
-                      <p className="mt-1 text-sm text-[var(--ff-muted)]">
-                        Maior peso usado por data nesse exercício.
-                      </p>
-                    </div>
-
-                    <TrendingUp size={22} className="text-[var(--ff-accent-text)]" />
-                  </div>
-
-                  <div className="mt-5 h-[320px] min-h-[320px] min-w-0" data-chart-container="true">
-                    {dateChartData.length === 0 ? (
-                      <EmptyState title="Sem séries" description="Nenhuma série válida foi encontrada para esse exercício." />
-                    ) : (
-                      <SafeResponsiveContainer height={320}>
-                        {({ width, height }) => (
-                          <LineChart
-                            width={width}
-                            height={height}
-                            data={dateChartData}
-                            margin={{ top: 16, right: 14, left: 0, bottom: 0 }}
-                          >
-                            <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
-                            <XAxis
-                              dataKey="dateLabel"
-                              stroke="var(--ff-muted)"
-                              tick={{ fontSize: 11, fill: 'var(--ff-muted)' }}
-                              tickLine={false}
-                              axisLine={false}
-                            />
-                            <YAxis
-                              stroke="var(--ff-muted)"
-                              tick={{ fontSize: 11, fill: 'var(--ff-muted)' }}
-                              tickLine={false}
-                              axisLine={false}
-                            />
-                            <Tooltip
-                              formatter={(value) => [formatWeight(value), 'Peso usado']}
-                              labelFormatter={(_, payload) =>
-                                payload?.[0]?.payload
-                                  ? `${payload[0].payload.longDate} • ${payload[0].payload.sets} série(s)`
-                                  : 'Data'
-                              }
-                              contentStyle={getChartTooltipStyle()}
-                              labelStyle={chartLabelStyle}
-                              itemStyle={chartItemStyle}
-                            />
-                            <Line
-                              type="monotone"
-                              name="Peso usado"
-                              dataKey="maxWeight"
-                              stroke="var(--ff-accent)"
-                              strokeWidth={3}
-                              dot={{ r: 4, strokeWidth: 2, fill: 'var(--ff-card)' }}
-                            />
-                          </LineChart>
-                        )}
-                      </SafeResponsiveContainer>
-                    )}
-                  </div>
-                </Card>
-
-                <Card>
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <h2 className="text-xl font-black text-[var(--ff-text)]">Evolução de volume</h2>
-                      <p className="mt-1 text-sm text-[var(--ff-muted)]">
-                        Volume total acumulado por data nesse exercício.
-                      </p>
-                    </div>
-
-                    <BarChart3 size={22} className="text-orange-300" />
-                  </div>
-
-                  <div className="mt-5 h-[320px] min-h-[320px] min-w-0" data-chart-container="true">
-                    {dateChartData.length === 0 ? (
-                      <EmptyState title="Sem séries" description="Nenhuma série válida foi encontrada para esse exercício." />
-                    ) : (
-                      <SafeResponsiveContainer height={320}>
-                        {({ width, height }) => (
-                          <LineChart
-                            width={width}
-                            height={height}
-                            data={dateChartData}
-                            margin={{ top: 16, right: 14, left: 0, bottom: 0 }}
-                          >
-                            <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
-                            <XAxis
-                              dataKey="dateLabel"
-                              stroke="var(--ff-muted)"
-                              tick={{ fontSize: 11, fill: 'var(--ff-muted)' }}
-                              tickLine={false}
-                              axisLine={false}
-                            />
-                            <YAxis
-                              stroke="var(--ff-muted)"
-                              tick={{ fontSize: 11, fill: 'var(--ff-muted)' }}
-                              tickLine={false}
-                              axisLine={false}
-                            />
-                            <Tooltip
-                              formatter={(value) => [formatVolume(value), 'Volume total']}
-                              labelFormatter={(_, payload) =>
-                                payload?.[0]?.payload
-                                  ? `${payload[0].payload.longDate} • ${payload[0].payload.sets} série(s)`
-                                  : 'Data'
-                              }
-                              contentStyle={getChartTooltipStyle()}
-                              labelStyle={chartLabelStyle}
-                              itemStyle={chartItemStyle}
-                            />
-                            <Line
-                              type="monotone"
-                              name="Volume total"
-                              dataKey="totalVolume"
-                              stroke="#f59e0b"
-                              strokeWidth={3}
-                              dot={{ r: 4, strokeWidth: 2, fill: 'var(--ff-card)' }}
-                            />
-                          </LineChart>
-                        )}
-                      </SafeResponsiveContainer>
-                    )}
-                  </div>
-                </Card>
-              </div>
-
-              <Card>
-                <h2 className="text-xl font-black text-[var(--ff-text)]">Séries registradas</h2><p className="mt-1 text-sm text-[var(--ff-muted)]">Todas as séries válidas encontradas no histórico.</p>
-                <div className="mt-5 max-h-[560px] space-y-3 overflow-y-auto pr-1">
-                  {selectedSets.length === 0 ? <EmptyState title="Nenhuma série encontrada" description="Esse exercício ainda não tem séries válidas no histórico." /> : selectedSets.slice().reverse().map((set) => (
-                    <div key={set.id} className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
-                      <div className="flex items-start justify-between gap-3"><div><p className="font-black text-[var(--ff-text)]">{formatLongDate(set.date)}</p><p className="mt-1 text-xs text-[var(--ff-muted)]">{set.workoutName} • Série {set.setNumber}</p></div><Badge>{formatVolume(set.volume)}</Badge></div>
-                      <div className="mt-3 grid grid-cols-2 gap-2"><div className="rounded-xl bg-[var(--ff-card)] p-3"><p className="text-xs text-[var(--ff-muted)]">Peso</p><p className="font-black text-[var(--ff-accent-text)]">{formatWeight(set.weight)}</p></div><div className="rounded-xl bg-[var(--ff-card)] p-3"><p className="text-xs text-[var(--ff-muted)]">Reps</p><p className="font-black text-[var(--ff-text)]">{set.reps}</p></div></div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            </>
-          )}
         </div>
-      </section>
-    </div>
-  
+
+        {!selectedExerciseName ? (
+          <section className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+            <RankingCard
+              title="Mais treinados"
+              description="Exercícios com mais registros no seu histórico."
+              options={exerciseOptions}
+              selectedName={selectedExerciseName}
+              onSelect={handleSelectExercise}
+              mode="frequency"
+            />
+            <RankingCard
+              title="Ranking de carga"
+              description="Atalho para os exercícios com maiores cargas registradas."
+              options={exerciseOptions}
+              selectedName={selectedExerciseName}
+              onSelect={handleSelectExercise}
+              mode="weight"
+            />
+          </section>
+        ) : !exerciseProgress.hasData ? null : (
+          <div className="space-y-5 sm:space-y-6">
+            <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+              <StatCard icon={Weight} label="Melhor carga" value={formatWeight(stats.bestWeight)} description="maior peso registrado" accent />
+              <StatCard icon={Medal} label="Melhor série" value={formatBestSet(stats.bestSet)} description="melhor peso com reps" />
+              <StatCard icon={Flame} label="Melhor volume" value={formatVolume(stats.bestWorkoutVolume)} description="maior volume em um treino" />
+              <StatCard icon={Dumbbell} label="Vezes treinado" value={stats.trainedTimes} description="treinos com este exercício" />
+            </section>
+
+            <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+              <StatCard icon={Activity} label="Última carga" value={formatWeight(stats.lastWeight)} description="maior carga do último registro" />
+              <StatCard icon={Target} label="Média de carga" value={formatWeight(stats.averageWeight)} description="média das séries válidas" />
+              <StatCard icon={BarChart3} label="Total de séries" value={stats.totalSets} description="séries válidas registradas" />
+              <StatCard icon={Sparkles} label="Total de reps" value={stats.totalReps} description="repetições somadas" />
+            </section>
+
+            <section className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+              <WeightChart data={exerciseProgress.chartData} />
+              <VolumeChart data={exerciseProgress.chartData} />
+            </section>
+
+            <BestSetTimeline entries={exerciseProgress.entries} />
+
+            <section className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.8fr)]">
+              <RecordsSection records={stats.records} />
+              <ComparisonSection comparison={stats.comparison} />
+            </section>
+
+            <section className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.8fr)]">
+              <ExerciseHistorySection entries={exerciseProgress.entries} />
+              <InsightsSection insights={exerciseProgress.insights} trend={stats.trend} />
+            </section>
+
+            <Card className="min-w-0 overflow-hidden">
+              <div className="flex gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+                <Info size={20} className="mt-0.5 shrink-0 text-[var(--ff-accent-text)]" />
+                <p className="min-w-0 text-sm leading-relaxed text-[var(--ff-muted)]">
+                  Séries com peso ou repetições vazias são ignoradas. Isso evita falsos PRs, datas inválidas e valores como NaN na interface.
+                </p>
+              </div>
+            </Card>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
