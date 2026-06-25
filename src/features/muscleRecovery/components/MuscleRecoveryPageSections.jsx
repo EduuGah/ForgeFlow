@@ -231,8 +231,10 @@ export function RecoveryGrid({ filteredRecovery, loading }) {
           description="Finalize alguns treinos para o ForgeFlow estimar o descanso dos grupos musculares."
         />
       ) : (
-        <div className="ff-recovery-card-grid">
-          {filteredRecovery.map((item) => <MuscleRecoveryCard key={item.muscleGroup} item={item} />)}
+        <div className="ff-recovery-card-scroll" role="region" aria-label="Lista de grupos musculares">
+          <div className="ff-recovery-card-grid">
+            {filteredRecovery.map((item) => <MuscleRecoveryCard key={item.muscleGroup} item={item} />)}
+          </div>
         </div>
       )}
     </Card>
