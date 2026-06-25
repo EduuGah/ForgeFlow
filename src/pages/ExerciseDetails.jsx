@@ -32,6 +32,7 @@ import { getUserStorageData } from '../utils/userStorage'
 import defaultExercises from '../data/defaultExercises'
 
 import { getExerciseMedia, normalizeList } from '../features/exerciseDetails/exerciseDetailsUtils'
+import { isUserCreatedExercise } from '../features/exercises/exerciseLibraryUtils'
 import { InfoList, SummaryItem } from '../features/exerciseDetails/components/ExerciseDetailsUi'
 
 const TABS = [
@@ -291,6 +292,7 @@ function ExerciseDetails() {
   }
 
   const media = getExerciseMedia(exercise)
+  const userCreated = isUserCreatedExercise(exercise)
   const instructionsList = normalizeList(exercise.instructions || exercise.execution)
   const tipsList = normalizeList(exercise.tips || exercise.variations)
   const mistakesList = normalizeList(exercise.commonMistakes)
@@ -335,6 +337,7 @@ function ExerciseDetails() {
             <Badge variant="purple">{exercise.muscleGroup || 'Grupo'}</Badge>
             <Badge>{exercise.equipment || 'Equipamento'}</Badge>
             {media ? <Badge variant="green">Com mídia</Badge> : <Badge>Sem mídia</Badge>}
+            {userCreated && <Badge variant="green">Criado por você</Badge>}
           </div>
 
           <h1>{exercise.name}</h1>
@@ -400,6 +403,7 @@ function ExerciseDetails() {
                   <SummaryItem label="Equipamento" value={exercise.equipment} icon={Layers3} />
                   <SummaryItem label="Dificuldade" value={exercise.difficulty} icon={Gauge} />
                   <SummaryItem label="Padrão de movimento" value={exercise.movementPattern} icon={Repeat} />
+                  {userCreated && <SummaryItem label="Origem" value="Criado por você" icon={UsersRound} />}
                   <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
                     <p className="text-xs text-[var(--ff-muted)]">Mídia</p>
                     <div className="mt-1 flex items-center gap-2 font-black">

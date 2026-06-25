@@ -27,6 +27,7 @@ import {
   normalizeEquipment,
   normalizeExerciseForList,
   normalizeExerciseFromApi,
+  isUserCreatedExercise,
   normalizeList,
   normalizeMuscleGroup,
   normalizeText,
@@ -271,6 +272,9 @@ function Exercises() {
         ${normalized.subgroup || ''}
         ${normalized.normalizedEquipment || ''}
         ${normalized.description || ''}
+        ${normalizeList(normalized.instructions || normalized.execution).join(' ')}
+        ${normalizeList(normalized.commonMistakes).join(' ')}
+        ${normalizeList(normalized.tips || normalized.variations).join(' ')}
         ${secondaryMuscles.join(' ')}
       `)
 
@@ -520,12 +524,21 @@ function Exercises() {
       return
     }
 
+    const localId = crypto.randomUUID()
     const newExercise = normalizeExerciseForList({
-      id: crypto.randomUUID(),
-      source: 'ForgeFlow',
+      id: localId,
+      localId,
+      originalLocalId: localId,
+      source: 'user',
+      originLabel: 'Criado por você',
+      isCustom: true,
+      isUserCreated: true,
+      createdByUser: true,
+      localOnly: true,
       originalName: name.trim(),
       ...normalizedPayload,
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     })
 
     setExercises([newExercise, ...exercises])
@@ -562,58 +575,31 @@ function Exercises() {
     }
   }
 
-  function isMongoId(value) {
-    return typeof value === 'string' && /^[a-f\d]{24}$/i.test(value)
-  }
-
-  async function handleToggleFavorite(exercise, event) {
+  function handleToggleFavorite(exercise, event) {
     event?.stopPropagation()
 
-    try {
-      if (isMongoId(exercise.id)) {
-        const updatedExerciseFromApi = await apiFetch(`/exercises/${exercise.id}/favorite`, {
-          method: 'PATCH',
-        })
+    const updatedExercises = exercises.map((item) => {
+      const sameExercise = [
+        item.id,
+        item._id,
+        item.localId,
+        item.originalLocalId,
+      ]
+        .filter(Boolean)
+        .map(String)
+        .includes(String(exercise.id || exercise._id || exercise.localId || exercise.originalLocalId))
 
-        const updatedExercise = normalizeExerciseFromApi(updatedExerciseFromApi)
+      if (!sameExercise) return item
 
-        const updatedExercises = exercises.map((item) =>
-          item.id === exercise.id ? updatedExercise : item
-        )
-
-        setExercises(updatedExercises)
-        saveUserStorageData(user, 'exercises', updatedExercises)
-        return
-      }
-
-      const createdExerciseFromApi = await apiFetch('/exercises', {
-        method: 'POST',
-        body: JSON.stringify({
-          ...exercise,
-          localId: exercise.id,
-          originalLocalId: exercise.id,
-          isFavorite: true,
-          source: exercise.source || 'ForgeFlow',
-          originalName: exercise.originalName || exercise.name,
-        }),
+      return normalizeExerciseForList({
+        ...item,
+        isFavorite: !item.isFavorite,
+        updatedAt: new Date().toISOString(),
       })
+    })
 
-      const createdExercise = normalizeExerciseFromApi(createdExerciseFromApi)
-
-      const updatedExercises = exercises.map((item) =>
-        item.id === exercise.id ? createdExercise : item
-      )
-
-      setExercises(updatedExercises)
-      saveUserStorageData(user, 'exercises', updatedExercises)
-    } catch (error) {
-      console.error(error)
-
-      alert(
-        error.message ||
-        'Não foi possível salvar o favorito agora.'
-      )
-    }
+    setExercises(updatedExercises)
+    saveUserStorageData(user, 'exercises', updatedExercises)
   }
 
   function handleToggleExercise(id) {
@@ -683,6 +669,7 @@ function Exercises() {
           handleToggleFavorite={handleToggleFavorite}
           handleEdit={handleEdit}
           handleDelete={handleDelete}
+          isUserCreatedExercise={isUserCreatedExercise}
           getExerciseMedia={getExerciseMedia}
           exerciseStatsMap={exerciseStatsMap}
           stats={stats}

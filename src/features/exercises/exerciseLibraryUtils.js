@@ -136,6 +136,10 @@ function getExerciseIdentityKey(exercise = {}) {
     return `local:${String(possibleId)}`
   }
 
+  if (isUserCreatedExercise(exercise) && exercise.id) {
+    return `local:${String(exercise.id)}`
+  }
+
   const name = normalizeText(exercise.originalName || exercise.name)
   const group = normalizeText(exercise.muscleGroup || exercise.normalizedGroup)
   const equipment = normalizeText(exercise.equipment || exercise.normalizedEquipment)
@@ -149,6 +153,20 @@ function getExerciseIdentityKey(exercise = {}) {
 
 function isApiExercise(exercise = {}) {
   return typeof (exercise._id || exercise.id) === 'string' && /^[a-f\d]{24}$/i.test(exercise._id || exercise.id)
+}
+
+function isUserCreatedExercise(exercise = {}) {
+  const source = normalizeText(exercise.source || exercise.origin || exercise.createdBy)
+
+  return Boolean(
+    exercise.isCustom ||
+    exercise.isUserCreated ||
+    exercise.createdByUser ||
+    exercise.localOnly ||
+    source === 'user' ||
+    source === 'usuario' ||
+    source === 'criado por voce'
+  )
 }
 
 function normalizeExerciseFromApi(exercise) {
@@ -177,6 +195,8 @@ function normalizeExerciseForList(exercise) {
     muscleGroup: normalizedGroup,
   })
 
+  const userCreated = isUserCreatedExercise(exercise)
+
   return {
     ...exercise,
     id: exercise._id || exercise.id || crypto.randomUUID(),
@@ -184,6 +204,15 @@ function normalizeExerciseForList(exercise) {
     normalizedEquipment,
     subgroup,
     isFavorite: Boolean(exercise.isFavorite),
+    ...(userCreated
+      ? {
+        isCustom: true,
+        isUserCreated: true,
+        createdByUser: true,
+        localOnly: true,
+        source: exercise.source || 'user',
+      }
+      : {}),
   }
 }
 
@@ -200,8 +229,12 @@ function mergeExercisesWithoutDuplicates(...lists) {
       return
     }
 
+    const currentIsUserCreated = isUserCreatedExercise(current)
+    const normalizedIsUserCreated = isUserCreatedExercise(normalized)
+
     const shouldReplace =
-      isApiExercise(normalized) ||
+      normalizedIsUserCreated ||
+      (!currentIsUserCreated && isApiExercise(normalized)) ||
       (!isApiExercise(current) && new Date(normalized.updatedAt || 0) > new Date(current.updatedAt || 0)) ||
       (normalized.isFavorite && !current.isFavorite)
 
@@ -296,6 +329,7 @@ export {
   getStatsFromMap,
   getSubgroup,
   isApiExercise,
+  isUserCreatedExercise,
   listToText,
   mergeExercisesWithoutDuplicates,
   muscleGroupOrder,

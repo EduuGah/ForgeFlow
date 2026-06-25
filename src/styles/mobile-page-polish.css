@@ -18262,3 +18262,228 @@ body.ff-share-studio-open .mobile-bottom-nav {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* Exercises polish v3: local user-created exercises, safer creation modal and clearer actions. */
+.ff-exercise-catalog-card__titleline .is-user-created {
+  flex: 0 1 auto;
+  max-width: 8.5rem;
+  overflow: hidden;
+  border: 1px solid rgba(34, 197, 94, 0.24);
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.1);
+  padding: 3px 7px;
+  color: #86efac;
+  font-size: 0.62rem;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-exercise-catalog-card__chips .is-user-created-chip {
+  border: 1px solid rgba(34, 197, 94, 0.22);
+  background: rgba(34, 197, 94, 0.1);
+  color: #86efac;
+}
+
+.ff-exercise-catalog-expanded-actions {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+.ff-exercise-catalog-expanded-actions .is-favorite-action {
+  border-color: rgba(245, 158, 11, 0.3) !important;
+  background: rgba(245, 158, 11, 0.12) !important;
+  color: #fbbf24 !important;
+}
+
+.ff-exercise-form-modal__panel {
+  max-width: min(100%, 48rem) !important;
+}
+
+.ff-exercise-form-modal__header,
+.ff-exercise-form-modal__footer {
+  position: relative !important;
+  inset: auto !important;
+}
+
+.ff-exercise-form-modal__scroll {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ff-exercise-form-modal__privacy-note {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.75rem;
+  border: 1px solid rgba(34, 197, 94, 0.22);
+  border-radius: 1rem;
+  background: rgba(34, 197, 94, 0.08);
+  padding: 0.65rem 0.75rem;
+  color: #bbf7d0;
+}
+
+.ff-exercise-form-modal__privacy-note strong {
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.12);
+  padding: 0.25rem 0.5rem;
+  color: #86efac;
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-exercise-form-modal__privacy-note span {
+  min-width: 0;
+  color: #d1fae5;
+  font-size: 0.74rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.ff-exercise-form-section {
+  overflow: hidden;
+  border: 1px solid var(--ff-mobile-border, rgba(255,255,255,0.1));
+  border-radius: 1.35rem;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02)),
+    rgba(9, 11, 13, 0.9);
+}
+
+.ff-exercise-form-section__head {
+  border-bottom: 1px solid var(--ff-mobile-border, rgba(255,255,255,0.1));
+  padding: 0.9rem;
+}
+
+.ff-exercise-form-section__head span {
+  color: var(--ff-accent-text);
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.14em;
+}
+
+.ff-exercise-form-section__head h3 {
+  margin-top: 0.2rem;
+  color: var(--ff-text);
+  font-size: 1rem;
+  font-weight: 950;
+  line-height: 1.1;
+}
+
+.ff-exercise-form-section__head p {
+  margin-top: 0.3rem;
+  color: var(--ff-muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.ff-exercise-form-section__body {
+  padding: 0.9rem;
+}
+
+.ff-exercise-form-modal .ff-exercise-form-section input,
+.ff-exercise-form-modal .ff-exercise-form-section select,
+.ff-exercise-form-modal .ff-exercise-form-section textarea {
+  min-height: 44px !important;
+  border-radius: 0.95rem !important;
+}
+
+.ff-exercise-form-modal .ff-exercise-form-section textarea {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 767px) {
+  .ff-exercise-catalog-card__actions button:first-child {
+    display: flex !important;
+  }
+
+  .ff-exercise-catalog-card__main {
+    grid-template-columns: 58px minmax(0, 1fr) 36px !important;
+    align-items: start !important;
+  }
+
+  .ff-exercise-catalog-card__actions {
+    gap: 5px !important;
+  }
+
+  .ff-exercise-catalog-card__actions button {
+    width: 36px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    border-radius: 12px !important;
+  }
+
+  .ff-exercise-catalog-expanded-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .ff-exercise-catalog-expanded-actions :is(a, button) {
+    min-height: 42px !important;
+  }
+
+  .ff-exercise-catalog-card__titleline {
+    flex-wrap: wrap;
+  }
+
+  .ff-exercise-catalog-card__titleline .is-user-created {
+    max-width: 7.5rem !important;
+  }
+
+  .ff-exercise-form-modal {
+    padding-inline: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+
+  .ff-exercise-form-modal__panel {
+    height: 94dvh !important;
+    max-height: 94dvh !important;
+    border-radius: 1.35rem 1.35rem 0 0 !important;
+  }
+
+  .ff-exercise-form-modal__header {
+    padding: 0.85rem !important;
+  }
+
+  .ff-exercise-form-modal__header h2 {
+    font-size: 1.08rem !important;
+  }
+
+  .ff-exercise-form-modal__header p {
+    font-size: 0.76rem !important;
+  }
+
+  .ff-exercise-form-modal__privacy-note {
+    grid-template-columns: 1fr !important;
+    gap: 0.35rem !important;
+    padding: 0.55rem !important;
+  }
+
+  .ff-exercise-form-modal__scroll {
+    padding: 0.75rem !important;
+  }
+
+  .ff-exercise-form-section {
+    border-radius: 1rem !important;
+  }
+
+  .ff-exercise-form-section__head,
+  .ff-exercise-form-section__body {
+    padding: 0.7rem !important;
+  }
+
+  .ff-exercise-form-modal .md\:grid-cols-2,
+  .ff-exercise-form-modal .md\:grid-cols-\[160px_minmax\(0\,1fr\)\] {
+    grid-template-columns: 1fr !important;
+  }
+
+  .ff-exercise-form-modal .grid.grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .ff-exercise-form-modal__footer .grid.grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}

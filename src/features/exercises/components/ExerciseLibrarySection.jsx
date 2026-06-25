@@ -39,11 +39,15 @@ function ExerciseListRow({
   handleToggleFavorite,
   handleEdit,
   handleDelete,
+  isUserCreatedExercise,
 }) {
   const lastLabel = stats?.lastPerformedAt || 'Nunca'
   const lastSetLabel = stats?.lastSetLabel || 'Sem carga'
   const prCount = stats?.prCount || 0
   const bestWeight = stats?.bestWeight ? `${stats.bestWeight}kg` : '--'
+  const userCreated = typeof isUserCreatedExercise === 'function'
+    ? isUserCreatedExercise(exercise)
+    : Boolean(exercise.isCustom || exercise.isUserCreated || exercise.createdByUser || exercise.localOnly)
 
   return (
     <article className={isExpanded ? 'ff-exercise-catalog-card is-open' : 'ff-exercise-catalog-card'}>
@@ -71,6 +75,7 @@ function ExerciseListRow({
               <h3>{exercise.name}</h3>
             </Link>
             {exercise.isFavorite && <span className="is-favorite">Favorito</span>}
+            {userCreated && <span className="is-user-created">Criado por você</span>}
           </div>
 
           {exercise.originalName && exercise.originalName !== exercise.name && (
@@ -85,6 +90,7 @@ function ExerciseListRow({
             <span>{exercise.normalizedGroup}</span>
             <span>{exercise.normalizedEquipment}</span>
             {media && <span><ImageIcon size={12} /> Mídia</span>}
+            {userCreated && <span className="is-user-created-chip">Seu exercício</span>}
           </div>
         </div>
 
@@ -101,7 +107,7 @@ function ExerciseListRow({
           <button
             type="button"
             onClick={() => handleToggleExercise(exercise.id)}
-            aria-label="Mais opções"
+            aria-label={isExpanded ? 'Fechar ações do exercício' : 'Abrir ações do exercício'}
           >
             <MoreHorizontal size={20} />
           </button>
@@ -142,6 +148,14 @@ function ExerciseListRow({
           )}
 
           <div className="ff-exercise-catalog-expanded-actions">
+            <button
+              type="button"
+              className={exercise.isFavorite ? 'is-favorite-action' : ''}
+              onClick={(event) => handleToggleFavorite(exercise, event)}
+            >
+              <Star size={16} fill={exercise.isFavorite ? 'currentColor' : 'none'} />
+              {exercise.isFavorite ? 'Favorito' : 'Favoritar'}
+            </button>
             <Link to={`/exercises/${exercise.id}`}>
               <ExternalLink size={16} />
               Detalhes
@@ -170,6 +184,7 @@ function ExerciseLibrarySection({
   handleToggleFavorite,
   handleEdit,
   handleDelete,
+  isUserCreatedExercise,
   getExerciseMedia,
   exerciseStatsMap,
   stats,
@@ -279,6 +294,7 @@ function ExerciseLibrarySection({
                   handleToggleFavorite={handleToggleFavorite}
                   handleEdit={handleEdit}
                   handleDelete={handleDelete}
+                  isUserCreatedExercise={isUserCreatedExercise}
                 />
               )
             })}
