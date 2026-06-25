@@ -999,13 +999,72 @@ const progressPhotoSchema = new mongoose.Schema(
 
         angle: {
             type: String,
-            enum: ['front', 'side', 'back', 'other'],
+            enum: ['front', 'side', 'back', 'flexed', 'free', 'other'],
             default: 'front',
         },
 
         weight: {
             type: Number,
             default: null,
+        },
+
+        bodyWeight: {
+            type: Number,
+            default: null,
+        },
+
+        measurements: {
+            waist: { type: Number, default: null },
+            chest: { type: Number, default: null },
+            arm: { type: Number, default: null },
+            hip: { type: Number, default: null },
+            thigh: { type: Number, default: null },
+        },
+
+        privacyMode: {
+            type: String,
+            enum: ['private', 'hidden'],
+            default: 'private',
+        },
+
+        note: {
+            type: String,
+            default: '',
+        },
+    },
+    {
+        timestamps: true,
+    }
+)
+
+
+
+const muscleSorenessLogSchema = new mongoose.Schema(
+    {
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+            index: true,
+        },
+
+        date: {
+            type: Date,
+            default: Date.now,
+            index: true,
+        },
+
+        muscleGroup: {
+            type: String,
+            required: true,
+            trim: true,
+            index: true,
+        },
+
+        level: {
+            type: String,
+            enum: ['light', 'moderate', 'high'],
+            default: 'light',
         },
 
         note: {
@@ -1528,6 +1587,7 @@ const WorkoutTemplate = mongoose.model('WorkoutTemplate', workoutTemplateSchema)
 const WorkoutHistory = mongoose.model('WorkoutHistory', workoutHistorySchema)
 const BodyWeight = mongoose.model('BodyWeight', bodyWeightSchema)
 const ProgressPhoto = mongoose.model('ProgressPhoto', progressPhotoSchema)
+const MuscleSorenessLog = mongoose.model('MuscleSorenessLog', muscleSorenessLogSchema)
 const NutritionDay = mongoose.model('NutritionDay', nutritionDaySchema)
 const Goal = mongoose.model('Goal', goalSchema)
 const Notification = mongoose.model('Notification', notificationSchema)
@@ -1547,6 +1607,8 @@ async function ensureMongoIndexes() {
             LoginEvent.collection.createIndex({ userId: 1, createdAt: -1 }),
             Workout.collection.createIndex({ userId: 1, updatedAt: -1 }),
             ActiveWorkoutSession.collection.createIndex({ userId: 1, updatedAt: -1 }),
+            ProgressPhoto.collection.createIndex({ userId: 1, date: -1 }),
+            MuscleSorenessLog.collection.createIndex({ userId: 1, date: -1 }),
             User.collection.createIndex({ role: 1, createdAt: -1 }),
             User.collection.createIndex({ isBlocked: 1 }),
             User.collection.createIndex({ lastLoginAt: -1 }),
@@ -2121,6 +2183,75 @@ function parseDecimal(value) {
     const number = Number(normalized)
 
     return Number.isFinite(number) ? number : null
+}
+
+function parseMeasurements(value) {
+    if (!value) return {}
+
+    let parsed = value
+
+    if (typeof value === 'string') {
+        try {
+            parsed = JSON.parse(value)
+        } catch {
+            parsed = {}
+        }
+    }
+
+    const allowedFields = ['waist', 'chest', 'arm', 'hip', 'thigh']
+
+    return allowedFields.reduce((result, field) => {
+        const number = parseDecimal(parsed?.[field])
+
+        if (number !== null && number >= 0) {
+            result[field] = number
+        }
+
+        return result
+    }, {})
+}
+
+function normalizeSorenessMuscleGroup(group) {
+    const raw = String(group || '').trim()
+
+    if (!raw) return 'Grupo não identificado'
+
+    const normalized = raw
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+
+    const aliases = {
+        peito: 'Peito',
+        peitoral: 'Peito',
+        chest: 'Peito',
+        costas: 'Costas',
+        dorsal: 'Costas',
+        back: 'Costas',
+        pernas: 'Pernas',
+        quadriceps: 'Quadríceps',
+        quads: 'Quadríceps',
+        posterior: 'Posterior',
+        posteriores: 'Posterior',
+        hamstrings: 'Posterior',
+        gluteos: 'Glúteos',
+        ombro: 'Ombros',
+        ombros: 'Ombros',
+        biceps: 'Bíceps',
+        triceps: 'Tríceps',
+        abdomen: 'Abdômen',
+        abdominal: 'Abdômen',
+        abs: 'Abdômen',
+        core: 'Abdômen',
+        panturrilha: 'Panturrilha',
+        panturrilhas: 'Panturrilha',
+        calves: 'Panturrilha',
+        'corpo inteiro': 'Corpo inteiro',
+        fullbody: 'Corpo inteiro',
+        'full body': 'Corpo inteiro',
+    }
+
+    return aliases[normalized] || raw
 }
 
 
@@ -6753,14 +6884,31 @@ function normalizeRecoveryMuscleGroup(group) {
     return aliases[normalized] || normalized
 }
 
-function getExerciseMainMuscleGroup(item) {
+function getExerciseMuscleGroups(item) {
     const exercise = item.exercise || {}
+    const rawGroups = [
+        exercise.muscleGroup,
+        exercise.normalizedGroup,
+        exercise.group,
+        exercise.targetMuscle,
+        item.muscleGroup,
+        item.targetMuscle,
+        ...(Array.isArray(exercise.targetMuscles) ? exercise.targetMuscles : []),
+        ...(Array.isArray(exercise.secondaryMuscles) ? exercise.secondaryMuscles : []),
+        ...(Array.isArray(exercise.muscles) ? exercise.muscles : []),
+        ...(Array.isArray(item.targetMuscles) ? item.targetMuscles : []),
+        ...(Array.isArray(item.secondaryMuscles) ? item.secondaryMuscles : []),
+    ]
 
-    return normalizeRecoveryMuscleGroup(
-        exercise.muscleGroup ||
-        exercise.normalizedGroup ||
-        exercise.group
-    )
+    const normalizedGroups = rawGroups
+        .map(normalizeRecoveryMuscleGroup)
+        .filter(Boolean)
+
+    return Array.from(new Set(normalizedGroups))
+}
+
+function getExerciseMainMuscleGroup(item) {
+    return getExerciseMuscleGroups(item)[0] || null
 }
 
 function getMuscleRecoveryStatus(lastTrainedAt) {
@@ -7336,21 +7484,9 @@ app.get('/stats/muscle-recovery', authMiddleware, async (req, res) => {
             const groupsInThisSession = new Set()
 
             session.exercises?.forEach((item) => {
-                const group = getExerciseMainMuscleGroup(item)
+                const groups = getExerciseMuscleGroups(item)
 
-                if (!group) return
-
-                if (!muscleMap.has(group)) {
-                    muscleMap.set(group, {
-                        muscleGroup: group,
-                        lastTrainedAt: null,
-                        totalSessions: 0,
-                        totalSets: 0,
-                        totalVolume: 0,
-                    })
-                }
-
-                const current = muscleMap.get(group)
+                if (groups.length === 0) return
 
                 const sets = Array.isArray(item.sets) ? item.sets : []
 
@@ -7375,21 +7511,35 @@ app.get('/stats/muscle-recovery', authMiddleware, async (req, res) => {
                     return total + weight * reps
                 }, 0)
 
-                const currentDate = current.lastTrainedAt
-                    ? new Date(current.lastTrainedAt)
-                    : null
+                groups.forEach((group, index) => {
+                    if (!muscleMap.has(group)) {
+                        muscleMap.set(group, {
+                            muscleGroup: group,
+                            lastTrainedAt: null,
+                            totalSessions: 0,
+                            totalSets: 0,
+                            totalVolume: 0,
+                        })
+                    }
 
-                muscleMap.set(group, {
-                    ...current,
-                    lastTrainedAt:
-                        !currentDate || sessionDate > currentDate
-                            ? trainedAt
-                            : current.lastTrainedAt,
-                    totalSets: current.totalSets + fallbackSets.length,
-                    totalVolume: current.totalVolume + volume,
+                    const current = muscleMap.get(group)
+                    const currentDate = current.lastTrainedAt
+                        ? new Date(current.lastTrainedAt)
+                        : null
+                    const loadFactor = index === 0 ? 1 : 0.5
+
+                    muscleMap.set(group, {
+                        ...current,
+                        lastTrainedAt:
+                            !currentDate || sessionDate > currentDate
+                                ? trainedAt
+                                : current.lastTrainedAt,
+                        totalSets: current.totalSets + Math.round(fallbackSets.length * loadFactor),
+                        totalVolume: current.totalVolume + Math.round(volume * loadFactor),
+                    })
+
+                    groupsInThisSession.add(group)
                 })
-
-                groupsInThisSession.add(group)
             })
 
             groupsInThisSession.forEach((group) => {
@@ -8355,11 +8505,15 @@ app.post(
                 date,
                 angle = 'front',
                 weight,
+                bodyWeight,
                 note = '',
+                measurements,
+                privacyMode = 'private',
             } = req.body
 
-            const allowedAngles = ['front', 'side', 'back', 'other']
+            const allowedAngles = ['front', 'side', 'back', 'flexed', 'free', 'other']
             const safeAngle = allowedAngles.includes(angle) ? angle : 'front'
+            const parsedBodyWeight = parseDecimal(bodyWeight ?? weight)
 
             const uploadResult = await uploadBufferToCloudinary(req.file.buffer, {
                 folder: `forgeflow/progress-photos/${req.user.userId}`,
@@ -8381,7 +8535,10 @@ app.post(
                 publicId: uploadResult.public_id,
                 date: date || new Date(),
                 angle: safeAngle,
-                weight: parseDecimal(weight),
+                weight: parsedBodyWeight,
+                bodyWeight: parsedBodyWeight,
+                measurements: parseMeasurements(measurements),
+                privacyMode: privacyMode === 'hidden' ? 'hidden' : 'private',
                 note: String(note || '').trim().slice(0, 500),
             })
 
@@ -8402,10 +8559,13 @@ app.put('/progress-photos/:id', authMiddleware, async (req, res) => {
             date,
             angle,
             weight,
+            bodyWeight,
+            measurements,
+            privacyMode,
             note,
         } = req.body
 
-        const allowedAngles = ['front', 'side', 'back', 'other']
+        const allowedAngles = ['front', 'side', 'back', 'flexed', 'free', 'other']
         const updateData = {}
 
         if (date !== undefined) updateData.date = date
@@ -8414,7 +8574,14 @@ app.put('/progress-photos/:id', authMiddleware, async (req, res) => {
             updateData.angle = allowedAngles.includes(angle) ? angle : 'front'
         }
 
-        if (weight !== undefined) updateData.weight = parseDecimal(weight)
+        if (weight !== undefined || bodyWeight !== undefined) {
+            const parsedBodyWeight = parseDecimal(bodyWeight ?? weight)
+            updateData.weight = parsedBodyWeight
+            updateData.bodyWeight = parsedBodyWeight
+        }
+
+        if (measurements !== undefined) updateData.measurements = parseMeasurements(measurements)
+        if (privacyMode !== undefined) updateData.privacyMode = privacyMode === 'hidden' ? 'hidden' : 'private'
         if (note !== undefined) updateData.note = String(note || '').trim().slice(0, 500)
 
         const photo = await ProgressPhoto.findOneAndUpdate(
@@ -8470,6 +8637,110 @@ app.delete('/progress-photos/:id', authMiddleware, async (req, res) => {
 
         res.status(500).json({
             message: 'Erro ao remover foto de evolução.',
+        })
+    }
+})
+
+
+app.get('/muscle-soreness-logs', authMiddleware, async (req, res) => {
+    try {
+        const logs = await MuscleSorenessLog.find({
+            userId: req.user.userId,
+        })
+            .sort({ date: -1, createdAt: -1 })
+            .limit(120)
+
+        res.json(logs)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao buscar registros de fadiga.',
+        })
+    }
+})
+
+app.post('/muscle-soreness-logs', authMiddleware, async (req, res) => {
+    try {
+        const allowedLevels = ['light', 'moderate', 'high']
+        const level = allowedLevels.includes(req.body.level) ? req.body.level : 'light'
+        const muscleGroup = normalizeSorenessMuscleGroup(req.body.muscleGroup)
+
+        const log = await MuscleSorenessLog.create({
+            userId: req.user.userId,
+            date: req.body.date || new Date(),
+            muscleGroup,
+            level,
+            note: String(req.body.note || '').trim().slice(0, 300),
+        })
+
+        res.status(201).json(log)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao salvar registro de fadiga.',
+        })
+    }
+})
+
+app.put('/muscle-soreness-logs/:id', authMiddleware, async (req, res) => {
+    try {
+        const allowedLevels = ['light', 'moderate', 'high']
+        const updateData = {}
+
+        if (req.body.date !== undefined) updateData.date = req.body.date
+        if (req.body.muscleGroup !== undefined) updateData.muscleGroup = normalizeSorenessMuscleGroup(req.body.muscleGroup)
+        if (req.body.level !== undefined) updateData.level = allowedLevels.includes(req.body.level) ? req.body.level : 'light'
+        if (req.body.note !== undefined) updateData.note = String(req.body.note || '').trim().slice(0, 300)
+
+        const log = await MuscleSorenessLog.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                userId: req.user.userId,
+            },
+            updateData,
+            { new: true }
+        )
+
+        if (!log) {
+            return res.status(404).json({
+                message: 'Registro não encontrado.',
+            })
+        }
+
+        res.json(log)
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao atualizar registro de fadiga.',
+        })
+    }
+})
+
+app.delete('/muscle-soreness-logs/:id', authMiddleware, async (req, res) => {
+    try {
+        const log = await MuscleSorenessLog.findOneAndDelete({
+            _id: req.params.id,
+            userId: req.user.userId,
+        })
+
+        if (!log) {
+            return res.status(404).json({
+                message: 'Registro não encontrado.',
+            })
+        }
+
+        res.json({
+            ok: true,
+            message: 'Registro removido com sucesso.',
+        })
+    } catch (error) {
+        console.error(error)
+
+        res.status(500).json({
+            message: 'Erro ao remover registro de fadiga.',
         })
     }
 })

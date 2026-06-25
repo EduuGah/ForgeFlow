@@ -174,16 +174,33 @@ export async function apiFormData(path, formData, options = {}) {
   const csrfToken = shouldAttachCsrf(method) ? await ensureCsrfToken() : "";
 
   async function makeRequest(nextCsrfToken = csrfToken) {
-    return fetch(`${API_URL}${path}`, {
-      method,
-      credentials: "include",
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...(nextCsrfToken ? { "X-CSRF-Token": nextCsrfToken } : {}),
-        ...(options.headers || {}),
-      },
-      body: formData,
-    });
+    const timeout = createTimeoutSignal(options.timeoutMs);
+
+    try {
+      return await fetch(`${API_URL}${path}`, {
+        method,
+        credentials: "include",
+        signal: options.signal || timeout.signal,
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(nextCsrfToken ? { "X-CSRF-Token": nextCsrfToken } : {}),
+          ...(options.headers || {}),
+        },
+        body: formData,
+      });
+    } catch (error) {
+      if (error?.name === "AbortError") {
+        const timeoutError = new Error(
+          "O envio demorou demais. Verifique sua internet e tente novamente.",
+        );
+        timeoutError.status = 408;
+        throw timeoutError;
+      }
+
+      throw error;
+    } finally {
+      timeout.clear();
+    }
   }
 
   let response = await makeRequest();

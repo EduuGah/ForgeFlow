@@ -1,240 +1,329 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
-import PageHeader from '../components/ui/PageHeader'
-import Badge from '../components/ui/Badge'
-import Toast from '../components/ui/Toast'
+import AppPageIntro from '../components/app/AppPageIntro'
 import ConfirmModal from '../components/ui/ConfirmModal'
-
+import Toast from '../components/ui/Toast'
 import { useAuth } from '../context/AuthContext'
 import { apiFetch, apiFormData } from '../services/api'
 import { generateSmartNotifications } from '../utils/notificationUtils'
+import { getUserStorageData, saveUserStorageData } from '../utils/userStorage'
 import {
-  getUserStorageData,
-  saveUserStorageData,
-} from '../utils/userStorage'
-import {
-  formatDate,
-  getAngleLabel,
-  getDateGroupTitle,
-  getDateKey,
+  buildPhotoInsights,
+  calculateMeasurementDiff,
+  compressProgressImage,
+  createEmptyMeasurements,
   getDaysBetween,
+  getPhotoStats,
+  groupPhotosByDate,
+  mergeRemoteAndLocalPhotos,
+  normalizeMeasurements,
+  normalizeProgressPhoto,
   normalizeProgressPhotoFromApi,
   sortPhotosByDateDesc,
 } from '../features/progressPhotos/progressPhotosUtils'
 import {
+  ProgressMeasurementsOverview,
+  ProgressPhotoAddSheet,
+  ProgressPhotoEditSheet,
   ProgressPhotoLightbox,
-  ProgressPhotosGallery,
-  ProgressPhotosSidebar,
+  ProgressPhotosCompare,
+  ProgressPhotosInsights,
+  ProgressPhotosPrivacyCard,
   ProgressPhotosStats,
+  ProgressPhotosTimeline,
 } from '../features/progressPhotos/components/ProgressPhotosSections'
 
-import AppPageIntro from '../components/app/AppPageIntro'
+const STORAGE_KEY = 'progress-photos'
+
+function createInitialDraft() {
+  return {
+    date: new Date().toISOString().slice(0, 10),
+    angle: 'front',
+    note: '',
+    bodyWeight: '',
+    measurements: createEmptyMeasurements(),
+  }
+}
+
+function buildFormData(imageState, draft) {
+  const formData = new FormData()
+  const measurements = normalizeMeasurements(draft.measurements)
+
+  formData.append('photo', imageState.file)
+  formData.append('date', draft.date)
+  formData.append('angle', draft.angle)
+  formData.append('weight', draft.bodyWeight)
+  formData.append('bodyWeight', draft.bodyWeight)
+  formData.append('note', draft.note)
+  formData.append('measurements', JSON.stringify(measurements))
+  formData.append('privacyMode', 'private')
+
+  return formData
+}
+
+function createLocalPhoto(imageState, draft) {
+  const bodyWeight = draft.bodyWeight === '' ? '' : Number(String(draft.bodyWeight).replace(',', '.'))
+
+  return normalizeProgressPhoto({
+    id: `local-${Date.now()}`,
+    imageUrl: imageState.dataUrl,
+    imageData: imageState.dataUrl,
+    date: draft.date,
+    angle: draft.angle,
+    note: draft.note,
+    weight: Number.isFinite(bodyWeight) ? bodyWeight : '',
+    bodyWeight: Number.isFinite(bodyWeight) ? bodyWeight : '',
+    measurements: normalizeMeasurements(draft.measurements),
+    storage: 'local',
+    isPrivate: true,
+    privacyMode: 'private',
+    createdAt: new Date().toISOString(),
+  })
+}
+
+function buildPhotoPayload(draft) {
+  const bodyWeight = draft.bodyWeight === '' ? null : Number(String(draft.bodyWeight).replace(',', '.'))
+
+  return {
+    date: draft.date,
+    angle: draft.angle,
+    weight: Number.isFinite(bodyWeight) ? bodyWeight : null,
+    bodyWeight: Number.isFinite(bodyWeight) ? bodyWeight : null,
+    note: draft.note,
+    measurements: normalizeMeasurements(draft.measurements),
+    privacyMode: 'private',
+  }
+}
 
 function ProgressPhotos() {
   const { user } = useAuth()
+  const cameraInputRef = useRef(null)
+  const galleryInputRef = useRef(null)
 
   const [photos, setPhotos] = useState([])
   const [loading, setLoading] = useState(true)
   const [source, setSource] = useState('local')
-
-  const [file, setFile] = useState(null)
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10))
-  const [angle, setAngle] = useState('front')
-  const [weight, setWeight] = useState('')
-  const [note, setNote] = useState('')
-
-  const [search, setSearch] = useState('')
-  const [angleFilter, setAngleFilter] = useState('')
-  const [compareMode, setCompareMode] = useState(false)
-  const [selectedCompareIds, setSelectedCompareIds] = useState([])
+  const [addSheetOpen, setAddSheetOpen] = useState(false)
+  const [editSheetOpen, setEditSheetOpen] = useState(false)
+  const [draft, setDraft] = useState(createInitialDraft)
+  const [editDraft, setEditDraft] = useState(createInitialDraft)
+  const [editingPhoto, setEditingPhoto] = useState(null)
+  const [imageState, setImageState] = useState(null)
+  const [processing, setProcessing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [imageError, setImageError] = useState('')
   const [selectedPhoto, setSelectedPhoto] = useState(null)
-
+  const [beforeId, setBeforeId] = useState('')
+  const [afterId, setAfterId] = useState('')
   const [toast, setToast] = useState(null)
   const [confirmModal, setConfirmModal] = useState(null)
-  const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
-    if (!user) return
+    if (!user) return undefined
+
+    let isMounted = true
 
     async function loadPhotos() {
       setLoading(true)
-
-      const cachedPhotos = getUserStorageData(user, 'progress-photos', [])
+      const cachedPhotos = getUserStorageData(user, STORAGE_KEY, [])
 
       try {
         const photosFromApi = await apiFetch('/progress-photos')
-
-        const normalizedPhotos = Array.isArray(photosFromApi)
-          ? photosFromApi.map(normalizeProgressPhotoFromApi).sort(sortPhotosByDateDesc)
+        const normalizedRemotePhotos = Array.isArray(photosFromApi)
+          ? photosFromApi.map(normalizeProgressPhotoFromApi)
           : []
+        const mergedPhotos = mergeRemoteAndLocalPhotos(normalizedRemotePhotos, cachedPhotos)
 
-        setPhotos(normalizedPhotos)
-        saveUserStorageData(user, 'progress-photos', normalizedPhotos)
+        if (!isMounted) return
+
+        setPhotos(mergedPhotos)
+        saveUserStorageData(user, STORAGE_KEY, mergedPhotos)
         setSource('database')
       } catch (error) {
         console.error(error)
 
-        setPhotos(Array.isArray(cachedPhotos) ? cachedPhotos.sort(sortPhotosByDateDesc) : [])
+        if (!isMounted) return
+
+        setPhotos(Array.isArray(cachedPhotos) ? cachedPhotos.map(normalizeProgressPhoto).sort(sortPhotosByDateDesc) : [])
         setSource('local')
       } finally {
-        setLoading(false)
+        if (isMounted) setLoading(false)
       }
     }
 
     loadPhotos()
+
+    return () => {
+      isMounted = false
+    }
   }, [user])
 
   useEffect(() => {
-    if (!selectedPhoto) return undefined
+    const hasOverlay = addSheetOpen || editSheetOpen || selectedPhoto
 
-    const previousOverflow = document.body.style.overflow
-    const previousOverscroll = document.body.style.overscrollBehavior
+    if (!hasOverlay || typeof document === 'undefined') return undefined
 
-    document.body.style.overflow = 'hidden'
-    document.body.style.overscrollBehavior = 'contain'
+    document.body.classList.add('ff-modal-open')
 
     return () => {
-      document.body.style.overflow = previousOverflow
-      document.body.style.overscrollBehavior = previousOverscroll
+      document.body.classList.remove('ff-modal-open')
     }
-  }, [selectedPhoto])
+  }, [addSheetOpen, editSheetOpen, selectedPhoto])
 
-  function showToast(type, title, message = '') {
-    setToast({ type, title, message })
-
-    setTimeout(() => {
-      setToast(null)
-    }, 3000)
-  }
-
-  const filteredPhotos = useMemo(() => {
-    const term = search.toLowerCase().trim()
-
-    return photos
-      .filter((photo) => {
-        const matchesSearch = term
-          ? `${photo.note || ''} ${getAngleLabel(photo.angle)} ${photo.date} ${formatDate(photo.date)} ${photo.weight || ''}`
-              .toLowerCase()
-              .includes(term)
-          : true
-
-        const matchesAngle = angleFilter ? photo.angle === angleFilter : true
-
-        return matchesSearch && matchesAngle
-      })
-      .sort(sortPhotosByDateDesc)
-  }, [photos, search, angleFilter])
-
-  const photosGroupedByDate = useMemo(() => {
-    const groups = new Map()
-
-    filteredPhotos.forEach((photo) => {
-      const key = getDateKey(photo.date)
-
-      if (!groups.has(key)) {
-        groups.set(key, [])
-      }
-
-      groups.get(key).push(photo)
-    })
-
-    return Array.from(groups.entries()).map(([dateKey, items]) => ({
-      dateKey,
-      title: getDateGroupTitle(dateKey),
-      photos: items,
-    }))
-  }, [filteredPhotos])
-
-  const comparePhotos = useMemo(() => {
-    return selectedCompareIds
-      .map((id) => photos.find((photo) => photo.id === id))
-      .filter(Boolean)
-      .sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0))
-  }, [photos, selectedCompareIds])
+  const sortedPhotos = useMemo(() => photos.slice().sort(sortPhotosByDateDesc), [photos])
+  const stats = useMemo(() => getPhotoStats(sortedPhotos), [sortedPhotos])
+  const groupedPhotos = useMemo(() => groupPhotosByDate(sortedPhotos), [sortedPhotos])
+  const insights = useMemo(() => buildPhotoInsights(sortedPhotos), [sortedPhotos])
 
   const comparisonSummary = useMemo(() => {
-    if (comparePhotos.length !== 2) return null
+    const before = sortedPhotos.find((photo) => photo.id === beforeId) || null
+    const after = sortedPhotos.find((photo) => photo.id === afterId) || null
 
-    const [before, after] = comparePhotos
-    const days = getDaysBetween(before.date, after.date)
+    if (!before || !after || before.id === after.id) return null
 
-    const beforeWeight = Number(before.weight)
-    const afterWeight = Number(after.weight)
+    const beforeWeight = Number(before.bodyWeight ?? before.weight)
+    const afterWeight = Number(after.bodyWeight ?? after.weight)
     const hasWeights = Number.isFinite(beforeWeight) && Number.isFinite(afterWeight)
-    const weightDiff = hasWeights ? afterWeight - beforeWeight : null
 
     return {
       before,
       after,
-      days,
-      weightDiff,
-      hasWeights,
+      days: getDaysBetween(before.date, after.date),
+      weightDiff: hasWeights ? afterWeight - beforeWeight : null,
+      measurementDiffs: calculateMeasurementDiff(before, after),
     }
-  }, [comparePhotos])
+  }, [beforeId, afterId, sortedPhotos])
 
-  const stats = useMemo(() => {
-    const angles = new Set(photos.map((photo) => photo.angle))
-    const lastPhoto = photos[0]
+  const latestPhotoWithMeasurements = useMemo(() => {
+    return sortedPhotos.find((photo) => {
+      const hasWeight = photo.bodyWeight !== '' && photo.bodyWeight !== null && photo.bodyWeight !== undefined
+      return hasWeight || Object.keys(photo.measurements || {}).length > 0
+    }) || null
+  }, [sortedPhotos])
 
-    return {
-      total: photos.length,
-      angles: angles.size,
-      lastDate: lastPhoto?.date || '',
+  function showToast(type, title, message = '') {
+    setToast({ type, title, message })
+    window.setTimeout(() => setToast(null), 3200)
+  }
+
+  function updateDraft(key, value) {
+    setDraft((currentDraft) => ({ ...currentDraft, [key]: value }))
+  }
+
+  function updateEditDraft(key, value) {
+    setEditDraft((currentDraft) => ({ ...currentDraft, [key]: value }))
+  }
+
+  function updateDraftMeasurement(key, value) {
+    setDraft((currentDraft) => ({
+      ...currentDraft,
+      measurements: {
+        ...currentDraft.measurements,
+        [key]: value,
+      },
+    }))
+  }
+
+  function updateEditDraftMeasurement(key, value) {
+    setEditDraft((currentDraft) => ({
+      ...currentDraft,
+      measurements: {
+        ...currentDraft.measurements,
+        [key]: value,
+      },
+    }))
+  }
+
+  function resetAddFlow() {
+    setDraft(createInitialDraft())
+    setImageState(null)
+    setImageError('')
+    if (cameraInputRef.current) cameraInputRef.current.value = ''
+    if (galleryInputRef.current) galleryInputRef.current.value = ''
+  }
+
+  function closeAddSheet() {
+    setAddSheetOpen(false)
+    setProcessing(false)
+    setSaving(false)
+    setImageError('')
+  }
+
+  async function handleFileSelected(file) {
+    if (!file) return
+
+    setProcessing(true)
+    setImageError('')
+
+    try {
+      const compressedImage = await compressProgressImage(file)
+      setImageState(compressedImage)
+    } catch (error) {
+      console.error(error)
+      setImageState(null)
+      setImageError(error.message || 'Não foi possível carregar a imagem escolhida.')
+    } finally {
+      setProcessing(false)
     }
-  }, [photos])
+  }
 
-  async function handleSubmit(event) {
+  function persistPhotos(nextPhotos) {
+    const normalizedPhotos = nextPhotos.map(normalizeProgressPhoto).sort(sortPhotosByDateDesc)
+
+    setPhotos(normalizedPhotos)
+    saveUserStorageData(user, STORAGE_KEY, normalizedPhotos)
+
+    return normalizedPhotos
+  }
+
+  async function handleAddPhoto(event) {
     event.preventDefault()
 
-    if (!file) {
-      showToast('error', 'Imagem obrigatória', 'Selecione uma foto para enviar.')
+    if (!imageState?.file) {
+      showToast('error', 'Imagem obrigatória', 'Escolha uma foto da câmera ou galeria.')
       return
     }
 
-    const formData = new FormData()
-
-    formData.append('photo', file)
-    formData.append('date', date)
-    formData.append('angle', angle)
-    formData.append('weight', weight)
-    formData.append('note', note)
-
-    setUploading(true)
+    setSaving(true)
 
     try {
-      const createdPhotoFromApi = await apiFormData('/progress-photos', formData)
+      const createdPhotoFromApi = await apiFormData('/progress-photos', buildFormData(imageState, draft), {
+        timeoutMs: 20000,
+      })
       const createdPhoto = normalizeProgressPhotoFromApi(createdPhotoFromApi)
-      const updatedPhotos = [createdPhoto, ...photos].sort(sortPhotosByDateDesc)
+      const updatedPhotos = persistPhotos([createdPhoto, ...photos])
 
-      setPhotos(updatedPhotos)
-      saveUserStorageData(user, 'progress-photos', updatedPhotos)
+      setSource('database')
+      setBeforeId((current) => current || updatedPhotos.at(-1)?.id || '')
+      setAfterId(createdPhoto.id)
+      resetAddFlow()
+      closeAddSheet()
+      showToast('success', 'Foto salva', 'Sua foto de progresso foi sincronizada.')
 
       generateSmartNotifications({
         user,
         reason: 'progress-photo-created',
         force: true,
-      }).catch((error) => {
-        console.error(error)
-      })
-
-      setFile(null)
-      setDate(new Date().toISOString().slice(0, 10))
-      setAngle('front')
-      setWeight('')
-      setNote('')
-      event.target.reset()
-
-      showToast('success', 'Foto enviada', 'Sua foto de evolução foi salva.')
+      }).catch((error) => console.error(error))
     } catch (error) {
       console.error(error)
 
-      showToast(
-        'error',
-        'Erro ao enviar',
-        error.message || 'Não foi possível enviar a foto.'
-      )
+      try {
+        const localPhoto = createLocalPhoto(imageState, draft)
+        const updatedPhotos = persistPhotos([localPhoto, ...photos])
+
+        setSource('local')
+        setBeforeId((current) => current || updatedPhotos.at(-1)?.id || '')
+        setAfterId(localPhoto.id)
+        resetAddFlow()
+        closeAddSheet()
+        showToast('success', 'Foto salva localmente', 'A sincronização falhou, então a foto ficou salva neste dispositivo/app.')
+      } catch (storageError) {
+        console.error(storageError)
+        showToast('error', 'Não foi possível salvar a foto', 'Tente novamente ou escolha uma imagem menor.')
+      }
     } finally {
-      setUploading(false)
+      setSaving(false)
     }
   }
 
@@ -243,172 +332,229 @@ function ProgressPhotos() {
 
     setConfirmModal({
       title: 'Excluir foto?',
-      description: `A foto de ${getAngleLabel(photo?.angle)} será removida permanentemente.`,
+      description: 'Essa ação remove a foto do histórico de progresso.',
       confirmText: 'Excluir',
       variant: 'danger',
       onConfirm: async () => {
         try {
-          await apiFetch(`/progress-photos/${photoId}`, {
-            method: 'DELETE',
-          })
-
-          const updatedPhotos = photos.filter((item) => item.id !== photoId)
-
-          setPhotos(updatedPhotos)
-          saveUserStorageData(user, 'progress-photos', updatedPhotos)
-          setSelectedCompareIds((ids) => ids.filter((id) => id !== photoId))
-
-          if (selectedPhoto?.id === photoId) {
-            setSelectedPhoto(null)
+          if (photo && photo.storage !== 'local' && !String(photo.id).startsWith('local-')) {
+            await apiFetch(`/progress-photos/${photoId}`, { method: 'DELETE' })
           }
-
-          setConfirmModal(null)
-
-          showToast('success', 'Foto excluída', 'A foto foi removida.')
         } catch (error) {
           console.error(error)
+          showToast('error', 'Erro ao excluir no servidor', 'A foto foi removida do app local, mas pode sincronizar novamente.')
+        } finally {
+          const updatedPhotos = persistPhotos(photos.filter((item) => item.id !== photoId))
 
-          showToast(
-            'error',
-            'Erro ao excluir',
-            error.message || 'Não foi possível excluir a foto.'
-          )
+          setBeforeId((current) => (current === photoId ? updatedPhotos[0]?.id || '' : current))
+          setAfterId((current) => (current === photoId ? updatedPhotos[1]?.id || '' : current))
+
+          if (selectedPhoto?.id === photoId) setSelectedPhoto(null)
+          setConfirmModal(null)
+          showToast('success', 'Foto excluída', 'A foto foi removida do histórico.')
         }
       },
     })
   }
 
-  function clearFilters() {
-    setSearch('')
-    setAngleFilter('')
+  function startCompareFromPhoto(photo) {
+    const sameAngle = sortedPhotos.find((item) => item.id !== photo.id && item.angle === photo.angle)
+    const fallback = sortedPhotos.find((item) => item.id !== photo.id)
+    const pair = sameAngle || fallback
+
+    if (!pair) {
+      showToast('error', 'Comparação indisponível', 'Adicione pelo menos duas fotos para comparar.')
+      return
+    }
+
+    const first = new Date(pair.date) < new Date(photo.date) ? pair : photo
+    const second = first.id === photo.id ? pair : photo
+
+    setBeforeId(first.id)
+    setAfterId(second.id)
+    setSelectedPhoto(null)
   }
 
-  function toggleComparePhoto(photoId) {
-    setSelectedCompareIds((currentIds) => {
-      if (currentIds.includes(photoId)) {
-        return currentIds.filter((id) => id !== photoId)
-      }
-
-      if (currentIds.length >= 2) {
-        return [currentIds[1], photoId]
-      }
-
-      return [...currentIds, photoId]
+  function openEditPhoto(photo) {
+    setEditingPhoto(photo)
+    setEditDraft({
+      date: photo.date || new Date().toISOString().slice(0, 10),
+      angle: photo.angle || 'front',
+      note: photo.note || '',
+      bodyWeight: photo.bodyWeight ?? photo.weight ?? '',
+      measurements: {
+        ...createEmptyMeasurements(),
+        ...(photo.measurements || {}),
+      },
     })
+    setEditSheetOpen(true)
+  }
+
+  async function handleEditPhoto(event) {
+    event.preventDefault()
+
+    if (!editingPhoto) return
+
+    const payload = buildPhotoPayload(editDraft)
+    const localUpdatedPhoto = normalizeProgressPhoto({
+      ...editingPhoto,
+      ...payload,
+      weight: payload.weight,
+      updatedAt: new Date().toISOString(),
+    })
+
+    try {
+      if (editingPhoto.storage !== 'local' && !String(editingPhoto.id).startsWith('local-')) {
+        const updatedFromApi = await apiFetch(`/progress-photos/${editingPhoto.id}`, {
+          method: 'PUT',
+          body: JSON.stringify(payload),
+        })
+        const updatedPhoto = normalizeProgressPhotoFromApi(updatedFromApi)
+        persistPhotos(photos.map((photo) => (photo.id === editingPhoto.id ? updatedPhoto : photo)))
+      } else {
+        persistPhotos(photos.map((photo) => (photo.id === editingPhoto.id ? localUpdatedPhoto : photo)))
+      }
+
+      setEditSheetOpen(false)
+      setEditingPhoto(null)
+      showToast('success', 'Foto atualizada', 'As informações foram salvas.')
+    } catch (error) {
+      console.error(error)
+      persistPhotos(photos.map((photo) => (photo.id === editingPhoto.id ? localUpdatedPhoto : photo)))
+      setEditSheetOpen(false)
+      setEditingPhoto(null)
+      showToast('success', 'Alterações salvas localmente', 'Não foi possível sincronizar agora, mas o app preservou a edição.')
+    }
   }
 
   function openPreviousPhoto() {
-    if (!selectedPhoto) return
+    if (!selectedPhoto || sortedPhotos.length < 2) return
 
-    const index = filteredPhotos.findIndex((photo) => photo.id === selectedPhoto.id)
-
-    if (index === -1) return
-
-    const previousPhoto = filteredPhotos[index - 1] || filteredPhotos[filteredPhotos.length - 1]
+    const index = sortedPhotos.findIndex((photo) => photo.id === selectedPhoto.id)
+    const previousPhoto = sortedPhotos[index - 1] || sortedPhotos[sortedPhotos.length - 1]
 
     setSelectedPhoto(previousPhoto)
   }
 
   function openNextPhoto() {
-    if (!selectedPhoto) return
+    if (!selectedPhoto || sortedPhotos.length < 2) return
 
-    const index = filteredPhotos.findIndex((photo) => photo.id === selectedPhoto.id)
-
-    if (index === -1) return
-
-    const nextPhoto = filteredPhotos[index + 1] || filteredPhotos[0]
+    const index = sortedPhotos.findIndex((photo) => photo.id === selectedPhoto.id)
+    const nextPhoto = sortedPhotos[index + 1] || sortedPhotos[0]
 
     setSelectedPhoto(nextPhoto)
   }
 
   return (
-    <div className="ff-hevy-page ff-hevy-page-progressphotos">
-
+    <div className="ff-hevy-page ff-hevy-page-progressphotos photos-page">
       <AppPageIntro
         eyebrow="Fotos"
         title="Evolução visual"
-        description="Galeria e comparação corporal em cards próprios para celular."
+        description="Acompanhe sua evolução com fotos privadas, comparação antes/depois e medidas opcionais."
         metrics={[
-          { label: 'Fotos', value: photos.length },
+          { label: 'Fotos', value: stats.total },
+          { label: 'Última', value: stats.lastDate ? stats.lastDate.slice(5).split('-').reverse().join('/') : '--' },
           { label: 'Ângulos', value: stats.angles },
-          { label: 'Status', value: source === 'database' ? 'Sincronizado' : 'Offline' },
         ]}
       />
 
-    <div className="ff-progress-photos-body ff-page-mobile-main-grid">
-      <PageHeader
-        title="Fotos de evolução"
-        description="Registre sua evolução corporal com fotos, peso, data e observações."
-        action={
-          <Badge variant={source === 'database' ? 'purple' : 'default'}>
-            {loading ? 'Carregando...' : source === 'database' ? 'Sincronizado' : 'Offline'}
-          </Badge>
-        }
+      <div className="ff-progress-photos-body ff-page-mobile-main-grid">
+        <ProgressPhotosStats
+          stats={stats}
+          source={source}
+          loading={loading}
+          onAddPhoto={() => setAddSheetOpen(true)}
+        />
+
+        <div className="ff-progress-main-layout">
+          <div className="ff-progress-main-layout__content">
+            <ProgressPhotosCompare
+              photos={sortedPhotos}
+              beforeId={beforeId}
+              afterId={afterId}
+              comparisonSummary={comparisonSummary}
+              onBeforeChange={setBeforeId}
+              onAfterChange={setAfterId}
+              onSelectPhoto={setSelectedPhoto}
+            />
+
+            <ProgressPhotosTimeline
+              groupedPhotos={groupedPhotos}
+              loading={loading}
+              hasPhotos={sortedPhotos.length > 0}
+              onSelectPhoto={setSelectedPhoto}
+              onStartCompare={startCompareFromPhoto}
+              onEditPhoto={openEditPhoto}
+              onDeletePhoto={handleDeletePhoto}
+              onAddPhoto={() => setAddSheetOpen(true)}
+            />
+          </div>
+
+          <aside className="ff-progress-main-layout__side">
+            <ProgressPhotosInsights insights={insights} />
+            <ProgressMeasurementsOverview latestPhoto={latestPhotoWithMeasurements} />
+            <ProgressPhotosPrivacyCard source={source} />
+          </aside>
+        </div>
+      </div>
+
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={(event) => {
+          handleFileSelected(event.target.files?.[0])
+          event.target.value = ''
+        }}
+      />
+      <input
+        ref={galleryInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/*"
+        className="hidden"
+        onChange={(event) => {
+          handleFileSelected(event.target.files?.[0])
+          event.target.value = ''
+        }}
       />
 
-      <ProgressPhotosStats stats={stats} />
+      <ProgressPhotoAddSheet
+        open={addSheetOpen}
+        draft={draft}
+        imageState={imageState}
+        processing={processing}
+        saving={saving}
+        error={imageError}
+        onClose={closeAddSheet}
+        onPickCamera={() => cameraInputRef.current?.click()}
+        onPickGallery={() => galleryInputRef.current?.click()}
+        onDraftChange={updateDraft}
+        onMeasurementChange={updateDraftMeasurement}
+        onSubmit={handleAddPhoto}
+      />
 
-      <section className="ff-page-mobile-main-grid mt-5 grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
-        <ProgressPhotosSidebar
-          file={file}
-          date={date}
-          angle={angle}
-          weight={weight}
-          note={note}
-          uploading={uploading}
-          compareMode={compareMode}
-          selectedCompareIds={selectedCompareIds}
-          onSubmit={handleSubmit}
-          onFileChange={setFile}
-          onDateChange={setDate}
-          onAngleChange={setAngle}
-          onWeightChange={setWeight}
-          onNoteChange={setNote}
-          onToggleCompareMode={() => {
-            setCompareMode((current) => {
-              if (current) {
-                setSelectedCompareIds([])
-              }
-
-              return !current
-            })
-          }}
-        />
-
-        <ProgressPhotosGallery
-          photos={photos}
-          filteredPhotos={filteredPhotos}
-          photosGroupedByDate={photosGroupedByDate}
-          search={search}
-          angleFilter={angleFilter}
-          compareMode={compareMode}
-          selectedCompareIds={selectedCompareIds}
-          comparisonSummary={comparisonSummary}
-          onSearchChange={setSearch}
-          onAngleFilterChange={setAngleFilter}
-          onClearFilters={clearFilters}
-          onClearCompareSelection={() => setSelectedCompareIds([])}
-          onToggleComparePhoto={toggleComparePhoto}
-          onSelectPhoto={setSelectedPhoto}
-          onDeletePhoto={handleDeletePhoto}
-        />
-      </section>
+      <ProgressPhotoEditSheet
+        open={editSheetOpen}
+        draft={editDraft}
+        onClose={() => {
+          setEditSheetOpen(false)
+          setEditingPhoto(null)
+        }}
+        onDraftChange={updateEditDraft}
+        onMeasurementChange={updateEditDraftMeasurement}
+        onSubmit={handleEditPhoto}
+      />
 
       <ProgressPhotoLightbox
-        selectedPhoto={selectedPhoto}
-        filteredPhotosCount={filteredPhotos.length}
+        photo={selectedPhoto}
+        photosCount={sortedPhotos.length}
         onClose={() => setSelectedPhoto(null)}
         onPrevious={openPreviousPhoto}
         onNext={openNextPhoto}
-        onCompare={() => {
-          setCompareMode(true)
-          toggleComparePhoto(selectedPhoto.id)
-          setSelectedPhoto(null)
-        }}
-        onDelete={() => {
-          handleDeletePhoto(selectedPhoto.id)
-          setSelectedPhoto(null)
-        }}
+        onStartCompare={startCompareFromPhoto}
+        onDeletePhoto={handleDeletePhoto}
       />
 
       <ConfirmModal
@@ -428,8 +574,6 @@ function ProgressPhotos() {
         message={toast?.message}
         onClose={() => setToast(null)}
       />
-    </div>
-  
     </div>
   )
 }

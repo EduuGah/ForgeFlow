@@ -20756,3 +20756,1151 @@ body.ff-fullscreen-modal-open .ff-active-workout-mini-floating {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ForgeFlow — Fotos de Progresso + Recuperação Muscular premium mobile polish */
+.photos-page,
+.recovery-page,
+.photos-page *,
+.recovery-page * {
+  box-sizing: border-box;
+}
+
+.photos-page,
+.recovery-page {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.photos-page img,
+.recovery-page img {
+  max-width: 100%;
+}
+
+.photo-card,
+.recovery-card,
+.ff-progress-main-layout,
+.ff-recovery-main-layout,
+.ff-progress-photo-card,
+.ff-recovery-native-card {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.photo-card__title,
+.recovery-card__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.photo-card__description,
+.recovery-card__description,
+.recovery-insight,
+.photo-insight {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.ff-progress-hero-card,
+.ff-recovery-hero-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+  overflow: hidden;
+  border: 1px solid var(--ff-border);
+  border-radius: 1.75rem;
+  background:
+    radial-gradient(circle at 12% 0%, var(--ff-accent-soft), transparent 34%),
+    linear-gradient(135deg, color-mix(in srgb, var(--ff-card) 88%, transparent), color-mix(in srgb, var(--ff-surface-2) 86%, transparent));
+  box-shadow: 0 18px 55px rgba(0, 0, 0, 0.22);
+  padding: 1rem;
+}
+
+.ff-progress-hero-card__copy,
+.ff-recovery-hero-card__copy,
+.ff-section-heading-inline > div {
+  min-width: 0;
+}
+
+.ff-progress-hero-card__copy h2,
+.ff-recovery-hero-card__copy h2 {
+  margin-top: .65rem;
+  color: var(--ff-text);
+  font-size: clamp(1.4rem, 5vw, 2.1rem);
+  font-weight: 950;
+  letter-spacing: -.04em;
+}
+
+.ff-progress-hero-card__copy p,
+.ff-recovery-hero-card__copy p,
+.ff-section-heading-inline p {
+  margin-top: .35rem;
+  color: var(--ff-muted);
+  font-size: .9rem;
+  line-height: 1.55;
+}
+
+.ff-progress-hero-card__metrics,
+.ff-recovery-hero-card__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .55rem;
+}
+
+.ff-progress-hero-card__metrics span,
+.ff-recovery-hero-card__metrics span,
+.ff-recovery-stat-card,
+.ff-progress-muted-box,
+.ff-progress-processing,
+.ff-progress-photo-error,
+.ff-progress-privacy-note,
+.ff-recovery-soreness-chip {
+  min-width: 0;
+  border: 1px solid var(--ff-border);
+  border-radius: 1.15rem;
+  background: color-mix(in srgb, var(--ff-surface-2) 82%, transparent);
+  padding: .75rem;
+}
+
+.ff-progress-hero-card__metrics strong,
+.ff-recovery-hero-card__metrics strong {
+  display: block;
+  overflow: hidden;
+  color: var(--ff-text);
+  font-size: 1rem;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-progress-hero-card__metrics small,
+.ff-recovery-hero-card__metrics small,
+.ff-recovery-stat-card span,
+.ff-recovery-stat-card p {
+  display: block;
+  color: var(--ff-muted);
+  font-size: .72rem;
+  font-weight: 800;
+}
+
+.ff-progress-main-layout,
+.ff-recovery-main-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.ff-progress-main-layout__content,
+.ff-recovery-main-layout__content,
+.ff-progress-main-layout__side,
+.ff-recovery-main-layout__side {
+  display: grid;
+  min-width: 0;
+  gap: 1rem;
+  align-content: start;
+}
+
+.ff-section-heading-inline {
+  display: flex;
+  align-items: flex-start;
+  gap: .75rem;
+  min-width: 0;
+}
+
+.ff-section-heading-inline > span {
+  display: grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 1rem;
+  background: var(--ff-accent-soft);
+  color: var(--ff-accent-text);
+}
+
+.ff-section-heading-inline h2,
+.ff-recovery-info-card h2 {
+  color: var(--ff-text);
+  font-size: 1.05rem;
+  font-weight: 950;
+}
+
+.ff-progress-compare-selects,
+.ff-progress-form-grid,
+.ff-recovery-soreness-form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: .75rem;
+  margin-top: 1rem;
+}
+
+.ff-progress-compare-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+  margin-top: 1rem;
+}
+
+.ff-progress-compare-summary span {
+  border: 1px solid var(--ff-accent-border);
+  border-radius: 999px;
+  background: var(--ff-accent-soft);
+  color: var(--ff-accent-text);
+  padding: .45rem .7rem;
+  font-size: .75rem;
+  font-weight: 900;
+}
+
+.ff-progress-compare-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .75rem;
+  margin-top: 1rem;
+}
+
+.ff-progress-compare-grid button {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--ff-border);
+  border-radius: 1.25rem;
+  background: var(--ff-surface-2);
+  color: var(--ff-text);
+  text-align: left;
+}
+
+.ff-progress-compare-grid span,
+.ff-progress-compare-grid strong {
+  display: block;
+  padding: .7rem .75rem;
+  font-size: .78rem;
+  font-weight: 950;
+}
+
+.ff-progress-compare-grid img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+}
+
+.ff-progress-timeline {
+  min-width: 0;
+}
+
+.ff-progress-timeline__groups,
+.ff-progress-timeline__group {
+  display: grid;
+  gap: .9rem;
+}
+
+.ff-progress-timeline__group h3 {
+  margin-top: .35rem;
+  color: var(--ff-text);
+  font-size: .95rem;
+  font-weight: 950;
+}
+
+.ff-progress-photo-grid,
+.ff-recovery-card-grid,
+.ff-recovery-stats-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: .85rem;
+}
+
+.ff-progress-photo-card__image {
+  position: relative;
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  border: 0;
+  background: var(--ff-surface-2);
+}
+
+.ff-progress-photo-card__image img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+}
+
+.ff-progress-photo-card__image > .inline-flex {
+  position: absolute;
+  top: .65rem;
+  left: .65rem;
+  z-index: 2;
+}
+
+.ff-progress-photo-card__image > span:last-child {
+  position: absolute;
+  right: .65rem;
+  bottom: .65rem;
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 999px;
+  background: rgba(0,0,0,.55);
+  color: #fff;
+  padding: .45rem .65rem;
+  font-size: .72rem;
+  font-weight: 900;
+  backdrop-filter: blur(10px);
+}
+
+.ff-progress-photo-card__body {
+  display: grid;
+  gap: .65rem;
+  padding: .85rem;
+}
+
+.ff-progress-photo-card__topline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .75rem;
+  min-width: 0;
+}
+
+.ff-progress-photo-card__topline p {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  color: var(--ff-muted);
+  font-size: .78rem;
+  font-weight: 800;
+}
+
+.ff-photo-options {
+  position: relative;
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--ff-border);
+  border-radius: .85rem;
+  background: var(--ff-surface-2);
+  color: var(--ff-muted);
+}
+
+.ff-photo-options > div {
+  position: absolute;
+  top: calc(100% + .35rem);
+  right: 0;
+  z-index: 15;
+  display: none;
+  min-width: 13rem;
+  overflow: hidden;
+  border: 1px solid var(--ff-border);
+  border-radius: 1rem;
+  background: var(--ff-card);
+  box-shadow: 0 18px 50px rgba(0,0,0,.28);
+}
+
+.ff-photo-options:focus-within > div,
+.ff-photo-options:hover > div {
+  display: block;
+}
+
+.ff-photo-options button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: .5rem;
+  border: 0;
+  background: transparent;
+  color: var(--ff-text);
+  padding: .7rem .8rem;
+  text-align: left;
+  font-size: .8rem;
+  font-weight: 850;
+}
+
+.ff-photo-options button:hover {
+  background: var(--ff-surface-2);
+}
+
+.ff-photo-measurements {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+}
+
+.ff-photo-measurements span {
+  min-width: 0;
+  border: 1px solid var(--ff-border);
+  border-radius: 999px;
+  background: var(--ff-surface-2);
+  color: var(--ff-muted);
+  padding: .42rem .62rem;
+  font-size: .72rem;
+  font-weight: 850;
+}
+
+.ff-photo-measurements strong {
+  margin-right: .3rem;
+  color: var(--ff-text);
+}
+
+.ff-progress-local-badge,
+.ff-recovery-soreness-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  color: var(--ff-muted);
+  font-size: .72rem;
+  font-weight: 800;
+}
+
+.ff-progress-insights-list,
+.ff-recovery-suggestions-list,
+.ff-recovery-insight-list {
+  display: grid;
+  gap: .55rem;
+  margin-top: 1rem;
+}
+
+.ff-progress-insights-list p,
+.ff-recovery-suggestions-list p,
+.ff-recovery-insight-list span {
+  border: 1px solid var(--ff-border);
+  border-radius: 1rem;
+  background: var(--ff-surface-2);
+  color: var(--ff-muted);
+  padding: .75rem;
+  font-size: .84rem;
+  line-height: 1.45;
+}
+
+.ff-progress-photo-modal,
+.ff-progress-lightbox,
+.ff-recovery-soreness-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483645;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: .75rem;
+}
+
+.ff-progress-photo-modal__backdrop,
+.ff-progress-lightbox__backdrop,
+.ff-recovery-soreness-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  border: 0;
+  background: rgba(0,0,0,.72);
+  backdrop-filter: blur(10px);
+}
+
+.ff-progress-photo-modal__panel,
+.ff-recovery-soreness-modal__panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 44rem);
+  max-height: min(92dvh, 760px);
+  overflow-y: auto;
+  border: 1px solid var(--ff-border);
+  border-radius: 1.65rem 1.65rem 1.25rem 1.25rem;
+  background: var(--ff-card);
+  color: var(--ff-text);
+  padding: 1rem;
+  box-shadow: 0 24px 80px rgba(0,0,0,.38);
+  overscroll-behavior: contain;
+}
+
+.ff-progress-photo-modal__panel--compact {
+  width: min(100%, 38rem);
+}
+
+.ff-progress-photo-modal__header,
+.ff-recovery-soreness-modal__panel header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.ff-progress-photo-modal__header span,
+.ff-recovery-soreness-modal__panel header span {
+  color: var(--ff-accent-text);
+  font-size: .72rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.ff-progress-photo-modal__header h2,
+.ff-recovery-soreness-modal__panel header h2 {
+  margin-top: .25rem;
+  color: var(--ff-text);
+  font-size: 1.25rem;
+  font-weight: 950;
+}
+
+.ff-progress-photo-modal__header p,
+.ff-recovery-soreness-modal__panel header p {
+  margin-top: .25rem;
+  color: var(--ff-muted);
+  font-size: .84rem;
+}
+
+.ff-progress-photo-modal__header button,
+.ff-recovery-soreness-modal__panel header button,
+.ff-progress-lightbox__close {
+  display: grid;
+  width: 2.4rem;
+  height: 2.4rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--ff-border);
+  border-radius: .9rem;
+  background: var(--ff-surface-2);
+  color: var(--ff-muted);
+}
+
+.ff-progress-source-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .75rem;
+  margin-top: 1rem;
+}
+
+.ff-progress-source-grid button {
+  display: grid;
+  min-width: 0;
+  gap: .3rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 1.2rem;
+  background: var(--ff-surface-2);
+  color: var(--ff-text);
+  padding: .9rem;
+  text-align: left;
+}
+
+.ff-progress-source-grid svg {
+  color: var(--ff-accent-text);
+}
+
+.ff-progress-source-grid small,
+.ff-progress-photo-preview span {
+  color: var(--ff-muted);
+  font-size: .74rem;
+  font-weight: 800;
+}
+
+.ff-progress-processing,
+.ff-progress-photo-error,
+.ff-progress-privacy-note {
+  display: flex;
+  align-items: flex-start;
+  gap: .55rem;
+  margin-top: .85rem;
+  color: var(--ff-muted);
+  font-size: .84rem;
+  line-height: 1.35;
+}
+
+.ff-progress-photo-error {
+  border-color: rgba(239,68,68,.28);
+  background: rgba(239,68,68,.1);
+  color: var(--ff-danger-text);
+  flex-direction: column;
+}
+
+.ff-progress-photo-preview {
+  display: grid;
+  grid-template-columns: 5rem minmax(0, 1fr);
+  align-items: center;
+  gap: .8rem;
+  margin-top: .85rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 1.2rem;
+  background: var(--ff-surface-2);
+  padding: .55rem;
+}
+
+.ff-progress-photo-preview img {
+  width: 5rem;
+  aspect-ratio: 1;
+  border-radius: .9rem;
+  object-fit: cover;
+}
+
+.ff-progress-photo-preview strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-progress-measurements-details {
+  margin-top: .85rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 1.2rem;
+  background: var(--ff-surface-2);
+  padding: .75rem;
+}
+
+.ff-progress-measurements-details summary {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  color: var(--ff-text);
+  font-size: .88rem;
+  font-weight: 950;
+  list-style: none;
+}
+
+.ff-progress-measurements-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.ff-progress-measurements-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: .7rem;
+  margin-top: .8rem;
+}
+
+.ff-progress-photo-modal textarea,
+.ff-recovery-soreness-modal textarea {
+  margin-top: 0;
+}
+
+.ff-progress-photo-modal__actions,
+.ff-recovery-soreness-modal__actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: .65rem;
+  margin-top: 1rem;
+  padding-bottom: max(.3rem, env(safe-area-inset-bottom));
+}
+
+.ff-progress-lightbox {
+  align-items: center;
+}
+
+.ff-progress-lightbox__panel {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: min(100%, 68rem);
+  max-height: 94dvh;
+  overflow: hidden;
+  border: 1px solid var(--ff-border);
+  border-radius: 1.5rem;
+  background: var(--ff-card);
+  box-shadow: 0 24px 90px rgba(0,0,0,.45);
+}
+
+.ff-progress-lightbox__image-wrap {
+  position: relative;
+  display: grid;
+  min-height: 48dvh;
+  place-items: center;
+  background: #000;
+}
+
+.ff-progress-lightbox__image-wrap img {
+  width: 100%;
+  max-height: 68dvh;
+  object-fit: contain;
+}
+
+.ff-progress-lightbox__details {
+  position: relative;
+  display: grid;
+  gap: .8rem;
+  align-content: start;
+  max-height: 42dvh;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.ff-progress-lightbox__details h2 {
+  padding-right: 3rem;
+  color: var(--ff-text);
+  font-size: 1.25rem;
+  font-weight: 950;
+}
+
+.ff-progress-lightbox__details p,
+.ff-progress-lightbox__note {
+  color: var(--ff-muted);
+  font-size: .88rem;
+  line-height: 1.45;
+}
+
+.ff-progress-lightbox__note {
+  border: 1px solid var(--ff-border);
+  border-radius: 1rem;
+  background: var(--ff-surface-2);
+  padding: .75rem;
+}
+
+.ff-progress-lightbox__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
+
+.ff-progress-lightbox__nav {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  width: 2.6rem;
+  height: 2.6rem;
+  transform: translateY(-50%);
+  place-items: center;
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 999px;
+  background: rgba(0,0,0,.56);
+  color: #fff;
+  backdrop-filter: blur(10px);
+}
+
+.ff-progress-lightbox__nav--left { left: .75rem; }
+.ff-progress-lightbox__nav--right { right: .75rem; }
+
+.ff-progress-lightbox__actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: .6rem;
+}
+
+.ff-loading-row {
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  color: var(--ff-muted);
+  font-size: .9rem;
+  font-weight: 850;
+}
+
+.ff-recovery-stats-grid {
+  margin-top: 1rem;
+}
+
+.ff-recovery-stat-card {
+  padding: .9rem !important;
+}
+
+.ff-recovery-stat-card > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+}
+
+.ff-recovery-stat-card strong {
+  display: block;
+  margin-top: .35rem;
+  color: var(--ff-text);
+  font-size: 1.8rem;
+  font-weight: 950;
+}
+
+.ff-recovery-filter-card {
+  display: grid;
+  gap: .8rem;
+}
+
+.ff-recovery-search-box {
+  display: flex;
+  height: 3rem;
+  align-items: center;
+  gap: .55rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 1rem;
+  background: var(--ff-surface-2);
+  padding: 0 .8rem;
+  color: var(--ff-muted);
+}
+
+.ff-recovery-search-box input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ff-text);
+  outline: none;
+}
+
+.ff-recovery-chip-row {
+  display: flex;
+  gap: .45rem;
+  overflow-x: auto;
+  padding-bottom: .1rem;
+  scrollbar-width: none;
+}
+
+.ff-recovery-chip-row::-webkit-scrollbar { display: none; }
+
+.ff-recovery-chip-row button {
+  flex: 0 0 auto;
+  border: 1px solid var(--ff-border);
+  border-radius: 999px;
+  background: var(--ff-surface-2);
+  color: var(--ff-muted);
+  padding: .55rem .75rem;
+  font-size: .75rem;
+  font-weight: 900;
+}
+
+.ff-recovery-chip-row button.is-active {
+  border-color: var(--ff-accent-border);
+  background: var(--ff-accent-soft);
+  color: var(--ff-accent-text);
+}
+
+.ff-recovery-native-card {
+  border: 1px solid;
+  border-radius: 1.35rem;
+  padding: .95rem;
+}
+
+.ff-recovery-native-card__header,
+.ff-recovery-native-card__header > div {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .75rem;
+  min-width: 0;
+}
+
+.ff-recovery-native-card__header > div > span {
+  display: grid;
+  width: 2.45rem;
+  height: 2.45rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: .95rem;
+  background: rgba(0,0,0,.2);
+}
+
+.ff-recovery-native-card__header h3 {
+  color: var(--ff-text);
+  font-size: 1.05rem;
+  font-weight: 950;
+}
+
+.ff-recovery-native-card__header p {
+  margin-top: .2rem;
+  font-size: .8rem;
+  font-weight: 900;
+}
+
+.ff-recovery-native-card__header > strong {
+  flex: 0 0 auto;
+  font-size: 1.45rem;
+  font-weight: 950;
+}
+
+.ff-recovery-native-card__bar,
+.ff-recovery-bar-track {
+  overflow: hidden;
+  height: .6rem;
+  border-radius: 999px;
+  background: rgba(0,0,0,.24);
+}
+
+.ff-recovery-native-card__bar {
+  margin-top: .95rem;
+}
+
+.ff-recovery-native-card__bar i,
+.ff-recovery-bar-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.ff-recovery-native-card > p {
+  margin-top: .85rem;
+  color: var(--ff-muted);
+  font-size: .84rem;
+  line-height: 1.45;
+}
+
+.ff-recovery-native-card__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .55rem;
+  margin-top: .85rem;
+}
+
+.ff-recovery-native-card__stats span {
+  min-width: 0;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: .95rem;
+  background: rgba(0,0,0,.16);
+  padding: .65rem;
+}
+
+.ff-recovery-native-card__stats small {
+  display: block;
+  color: var(--ff-muted);
+  font-size: .68rem;
+  font-weight: 850;
+}
+
+.ff-recovery-native-card__stats strong {
+  display: block;
+  overflow: hidden;
+  color: var(--ff-text);
+  font-size: .82rem;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-recovery-map-regions {
+  display: grid;
+  gap: .85rem;
+  margin-top: 1rem;
+}
+
+.ff-recovery-map-regions > div {
+  border: 1px solid var(--ff-border);
+  border-radius: 1.2rem;
+  background: var(--ff-surface-2);
+  padding: .85rem;
+}
+
+.ff-recovery-map-regions h3 {
+  color: var(--ff-text);
+  font-size: .9rem;
+  font-weight: 950;
+}
+
+.ff-recovery-map-regions h3 + div {
+  display: grid;
+  gap: .65rem;
+  margin-top: .7rem;
+}
+
+.ff-recovery-bar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: .4rem .8rem;
+  align-items: center;
+}
+
+.ff-recovery-bar-row strong,
+.ff-recovery-bar-row b {
+  color: var(--ff-text);
+  font-size: .84rem;
+  font-weight: 950;
+}
+
+.ff-recovery-bar-row span {
+  display: block;
+  color: var(--ff-muted);
+  font-size: .72rem;
+  font-weight: 750;
+}
+
+.ff-recovery-bar-track {
+  grid-column: 1 / -1;
+  height: .45rem;
+}
+
+.ff-recovery-workout-link {
+  display: inline-flex;
+  width: 100%;
+  min-height: 2.8rem;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  margin-top: 1rem;
+  border-radius: 1rem;
+  background: var(--ff-accent);
+  color: #fff;
+  font-size: .85rem;
+  font-weight: 950;
+  text-decoration: none;
+}
+
+.ff-recovery-info-card p {
+  margin-top: .45rem;
+  color: var(--ff-muted);
+  font-size: .84rem;
+  line-height: 1.45;
+}
+
+.ff-recovery-info-card > div {
+  display: grid;
+  gap: .55rem;
+  margin-top: .85rem;
+}
+
+.ff-recovery-info-card > div span {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: .2rem .55rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 1rem;
+  background: var(--ff-surface-2);
+  padding: .75rem;
+}
+
+.ff-recovery-info-card svg {
+  grid-row: span 2;
+  color: var(--ff-accent-text);
+}
+
+.ff-recovery-info-card strong {
+  color: var(--ff-text);
+  font-size: .82rem;
+  font-weight: 950;
+}
+
+.ff-recovery-info-card small {
+  color: var(--ff-muted);
+  font-size: .74rem;
+}
+
+.ff-soreness-history-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .75rem;
+  border-bottom: 1px solid var(--ff-border);
+  padding: .8rem 0;
+}
+
+.ff-soreness-history-row:last-child { border-bottom: 0; }
+
+.ff-soreness-history-row div {
+  min-width: 0;
+}
+
+.ff-soreness-history-row strong,
+.ff-soreness-history-row span,
+.ff-soreness-history-row small {
+  display: block;
+}
+
+.ff-soreness-history-row strong {
+  color: var(--ff-text);
+  font-size: .84rem;
+  font-weight: 950;
+}
+
+.ff-soreness-history-row span,
+.ff-soreness-history-row small {
+  color: var(--ff-muted);
+  font-size: .78rem;
+  line-height: 1.4;
+}
+
+.ff-soreness-history-row button {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgba(239,68,68,.25);
+  border-radius: .75rem;
+  background: rgba(239,68,68,.1);
+  color: var(--ff-danger-text);
+}
+
+@media (min-width: 700px) {
+  .ff-progress-hero-card,
+  .ff-recovery-hero-card {
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, .72fr) auto;
+    align-items: center;
+    padding: 1.2rem;
+  }
+
+  .ff-progress-form-grid,
+  .ff-recovery-soreness-form-grid,
+  .ff-progress-compare-selects,
+  .ff-progress-measurements-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ff-progress-photo-modal__actions,
+  .ff-recovery-soreness-modal__actions,
+  .ff-progress-lightbox__actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ff-progress-photo-grid,
+  .ff-recovery-card-grid,
+  .ff-recovery-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ff-progress-lightbox__panel {
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
+  }
+
+  .ff-progress-lightbox__details {
+    max-height: 94dvh;
+  }
+}
+
+@media (min-width: 1080px) {
+  .ff-progress-main-layout,
+  .ff-recovery-main-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
+    gap: 1.2rem;
+  }
+
+  .ff-progress-photo-grid,
+  .ff-recovery-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .ff-progress-photos-body,
+  .ff-recovery-body {
+    padding-inline: .25rem;
+  }
+
+  .ff-progress-hero-card__metrics,
+  .ff-recovery-hero-card__metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .ff-progress-hero-card__metrics span,
+  .ff-recovery-hero-card__metrics span {
+    padding: .65rem .5rem;
+  }
+
+  .ff-progress-hero-card__metrics strong,
+  .ff-recovery-hero-card__metrics strong {
+    font-size: .84rem;
+  }
+
+  .ff-progress-hero-card__metrics small,
+  .ff-recovery-hero-card__metrics small {
+    font-size: .62rem;
+  }
+
+  .ff-progress-photo-modal,
+  .ff-recovery-soreness-modal {
+    padding: .4rem;
+  }
+
+  .ff-progress-photo-modal__panel,
+  .ff-recovery-soreness-modal__panel {
+    border-radius: 1.35rem 1.35rem 1rem 1rem;
+  }
+
+  .ff-progress-compare-grid {
+    gap: .55rem;
+  }
+
+  .ff-recovery-native-card__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

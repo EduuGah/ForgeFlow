@@ -1,96 +1,90 @@
 import { Link } from 'react-router-dom'
 import {
+  Activity,
+  CalendarDays,
   Dumbbell,
-  Flame,
   HeartPulse,
+  Loader2,
+  Plus,
   Search,
   ShieldCheck,
+  Trash2,
   X,
 } from 'lucide-react'
 
-import PageHeader from '../../../components/ui/PageHeader'
-import Card from '../../../components/ui/Card'
 import Badge from '../../../components/ui/Badge'
-import EmptyState from '../../../components/ui/EmptyState'
 import Button from '../../../components/ui/Button'
+import Card from '../../../components/ui/Card'
+import EmptyState from '../../../components/ui/EmptyState'
+import Input from '../../../components/ui/Input'
+import Select from '../../../components/ui/Select'
+import Textarea from '../../../components/ui/Textarea'
 import {
+  MUSCLE_GROUPS,
+  RECOVERY_INFO_STEPS,
+  SORENESS_LEVELS,
+  buildRecoveryRegions,
   formatDate,
   formatRelativeDate,
   formatVolume,
   getRecoveryStyle,
+  getSorenessLevelLabel,
 } from '../muscleRecoveryUtils'
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Todos' },
-  { value: 'low', label: 'Recuperando' },
-  { value: 'medium', label: 'Parcial' },
+  { value: 'attention', label: 'Atenção' },
+  { value: 'low', label: 'Em recuperação' },
+  { value: 'medium', label: 'Quase pronto' },
   { value: 'good', label: 'Quase pronto' },
   { value: 'ready', label: 'Recuperado' },
 ]
 
-function RecoveryHeader({ source, loading }) {
+export function RecoveryHero({ source, loading, summary, onOpenSoreness }) {
   return (
-    <PageHeader
-      title="Recuperação muscular"
-      description="Acompanhe quais grupos musculares foram treinados recentemente e quais já estão mais recuperados."
-      action={
+    <section className="ff-recovery-hero-card">
+      <div className="ff-recovery-hero-card__copy">
         <Badge variant={source === 'database' ? 'purple' : 'default'}>
           {loading ? 'Carregando...' : source === 'database' ? 'Sincronizado' : 'Local'}
         </Badge>
-      }
-    />
+        <h2>Recuperação Muscular</h2>
+        <p>Veja quais grupos estão prontos para treinar com base nos treinos registrados, volume e sensação manual.</p>
+      </div>
+
+      <div className="ff-recovery-hero-card__metrics">
+        <span><small>Mais recuperado</small><strong>{summary.mostReady?.muscleGroup || '--'}</strong></span>
+        <span><small>Atenção</small><strong>{summary.mostTired?.muscleGroup || '--'}</strong></span>
+        <span><small>Último treino</small><strong>{summary.lastWorkout ? formatRelativeDate(summary.lastWorkout.lastTrainedAt) : '--'}</strong></span>
+      </div>
+
+      <Button type="button" onClick={onOpenSoreness} className="w-full sm:w-auto">
+        <Plus size={17} />
+        Registrar sensação
+      </Button>
+    </section>
   )
 }
 
-function RecoveryStats({ recovery, averageRecovery, readyMuscles, recoveringMuscles }) {
+export function RecoveryStats({ summary }) {
   const cards = [
-    {
-      label: 'Grupos analisados',
-      value: recovery.length,
-      description: 'com histórico recente',
-      icon: Dumbbell,
-      valueClass: '',
-      iconClass: 'text-[var(--ff-accent-text)]',
-    },
-    {
-      label: 'Recuperação média',
-      value: `${averageRecovery}%`,
-      description: 'estimativa geral',
-      icon: HeartPulse,
-      valueClass: 'text-[var(--ff-accent-text)]',
-      iconClass: 'text-[var(--ff-accent-text)]',
-    },
-    {
-      label: 'Prontos',
-      value: readyMuscles.length,
-      description: 'grupos recuperados',
-      icon: ShieldCheck,
-      valueClass: 'text-emerald-300',
-      iconClass: 'text-emerald-400',
-    },
-    {
-      label: 'Atenção',
-      value: recoveringMuscles.length,
-      description: 'ainda recuperando',
-      icon: Flame,
-      valueClass: 'text-yellow-300',
-      iconClass: 'text-yellow-400',
-    },
+    { label: 'Média', value: `${summary.average}%`, description: 'estimativa geral', icon: HeartPulse, variant: 'accent' },
+    { label: 'Prontos', value: summary.readyCount, description: 'bons para planejar', icon: ShieldCheck, variant: 'success' },
+    { label: 'Atenção', value: summary.attentionCount, description: 'cautela hoje', icon: Activity, variant: 'warning' },
+    { label: 'Analisados', value: summary.available, description: 'com dados úteis', icon: Dumbbell, variant: 'default' },
   ]
 
   return (
-    <section className="ff-recovery-stats-grid grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <section className="ff-recovery-stats-grid">
       {cards.map((card) => {
         const Icon = card.icon
-
         return (
-          <Card key={card.label} className="ff-compact-stat-card p-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-zinc-500">{card.label}</p>
-              <Icon size={20} className={card.iconClass} />
+          <Card key={card.label} className={`ff-recovery-stat-card ff-recovery-stat-card--${card.variant}`}>
+            <div>
+              <p>{card.label}</p>
+              <Icon size={19} />
             </div>
-            <h2 className={`mt-2 text-3xl font-black ${card.valueClass}`}>{card.value}</h2>
-            <p className="mt-2 text-xs text-zinc-500">{card.description}</p>
+            <strong>{card.value}</strong>
+            <span>{card.description}</span>
           </Card>
         )
       })}
@@ -98,162 +92,78 @@ function RecoveryStats({ recovery, averageRecovery, readyMuscles, recoveringMusc
   )
 }
 
-function MobileRecoveryFilters({
-  search,
-  statusFilter,
-  onSearchChange,
-  onStatusFilterChange,
-  onClearFilters,
-}) {
+export function RecoveryFilters({ search, statusFilter, onSearchChange, onStatusFilterChange, onClearFilters }) {
   return (
-    <section className="ff-recovery-mobile-filters mt-5 xl:hidden">
-      <label className="ff-recovery-mobile-search">
+    <Card className="ff-recovery-filter-card">
+      <div className="ff-recovery-search-box">
         <Search size={17} />
         <input
           type="search"
-          placeholder="Buscar grupo muscular"
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
+          placeholder="Buscar grupo muscular"
         />
-        {search && (
-          <button type="button" onClick={() => onSearchChange('')} aria-label="Limpar busca">
-            <X size={16} />
-          </button>
-        )}
-      </label>
+        {search && <button type="button" onClick={() => onSearchChange('')} aria-label="Limpar busca"><X size={16} /></button>}
+      </div>
 
-      <div className="ff-recovery-mobile-chip-row">
+      <div className="ff-recovery-chip-row">
         {STATUS_OPTIONS.map((option) => (
           <button
             key={option.value || 'all'}
             type="button"
             onClick={() => onStatusFilterChange(option.value)}
-            className={
-              statusFilter === option.value
-                ? 'shrink-0 rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-4 py-2 text-xs font-black text-[var(--ff-accent-text)]'
-                : 'shrink-0 rounded-full border border-zinc-800 bg-zinc-950 px-4 py-2 text-xs font-bold text-zinc-400'
-            }
+            className={statusFilter === option.value ? 'is-active' : ''}
           >
             {option.label}
           </button>
         ))}
-        {(search || statusFilter) && (
-          <button type="button" onClick={onClearFilters}>
-            Limpar
-          </button>
-        )}
+        {(search || statusFilter) && <button type="button" onClick={onClearFilters}>Limpar</button>}
       </div>
-    </section>
+    </Card>
   )
 }
 
-function RecoveryFiltersCard({ search, statusFilter, onSearchChange, onStatusFilterChange, onClearFilters }) {
-  return (
-    <Card>
-      <div className="flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
-          <Search size={22} />
-        </div>
+function RecoveryBar({ item }) {
+  const style = getRecoveryStyle(item.level)
 
+  return (
+    <div className="ff-recovery-bar-row">
+      <div>
+        <strong>{item.muscleGroup}</strong>
+        <span>{item.status} • Último treino: {formatRelativeDate(item.lastTrainedAt)}</span>
+      </div>
+      <b className={style.text}>{item.recoveryPercent}%</b>
+      <div className="ff-recovery-bar-track">
+        <i className={style.bar} style={{ width: `${item.recoveryPercent}%` }} />
+      </div>
+    </div>
+  )
+}
+
+export function RecoveryMuscleMap({ recovery }) {
+  const regions = buildRecoveryRegions(recovery)
+
+  if (regions.length === 0) return null
+
+  return (
+    <Card className="ff-recovery-map-card">
+      <div className="ff-section-heading-inline">
+        <span><Activity size={18} /></span>
         <div>
-          <h2 className="text-lg font-black">Filtros</h2>
-          <p className="text-sm text-zinc-500">Refine por grupo ou status.</p>
+          <h2>Mapa muscular</h2>
+          <p>Visual simples por região, sem desenho complexo.</p>
         </div>
       </div>
 
-      <div className="mt-5 space-y-3">
-        <div className="flex h-12 items-center gap-3 rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-zinc-400">
-          <Search size={19} />
-          <input
-            type="search"
-            placeholder="Buscar grupo..."
-            value={search}
-            onChange={(event) => onSearchChange(event.target.value)}
-            className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-500"
-          />
-
-          {search && (
-            <button type="button" onClick={() => onSearchChange('')} className="text-zinc-500 transition hover:text-white">
-              <X size={17} />
-            </button>
-          )}
-        </div>
-
-        <select
-          value={statusFilter}
-          onChange={(event) => onStatusFilterChange(event.target.value)}
-          className="h-12 w-full rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-[var(--ff-accent-border)]"
-        >
-          <option value="">Todos os status</option>
-          <option value="low">Recuperando</option>
-          <option value="medium">Parcial</option>
-          <option value="good">Quase pronto</option>
-          <option value="ready">Recuperado</option>
-        </select>
-
-        {(search || statusFilter) && (
-          <Button type="button" variant="secondary" onClick={onClearFilters} className="w-full">
-            Limpar filtros
-          </Button>
-        )}
-      </div>
-    </Card>
-  )
-}
-
-function SuggestedMusclesCard({ nextSuggestedMuscles }) {
-  return (
-    <Card>
-      <h2 className="text-lg font-black">Sugestão para hoje</h2>
-      <p className="mt-1 text-sm text-zinc-500">Grupos com maior recuperação.</p>
-
-      <div className="mt-5 space-y-2">
-        {nextSuggestedMuscles.length === 0 ? (
-          <p className="text-sm text-zinc-500">Ainda não há dados suficientes para sugerir.</p>
-        ) : (
-          nextSuggestedMuscles.map((item) => {
-            const style = getRecoveryStyle(item.level)
-
-            return (
-              <div key={item.muscleGroup} className={`rounded-2xl border ${style.border} ${style.bg} p-3`}>
-                <div className="flex items-center justify-between gap-3">
-                  <p className="font-bold text-white">{item.muscleGroup}</p>
-                  <span className={`text-sm font-black ${style.text}`}>{item.recoveryPercent}%</span>
-                </div>
-                <p className="mt-1 text-xs text-zinc-500">{item.status}</p>
-              </div>
-            )
-          })
-        )}
-      </div>
-
-      <Link to="/workouts">
-        <button
-          type="button"
-          className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] text-sm font-bold text-white transition hover:bg-[var(--ff-accent-hover)]"
-        >
-          <Dumbbell size={18} />
-          Montar treino
-        </button>
-      </Link>
-    </Card>
-  )
-}
-
-function RecoveryInfoCard() {
-  return (
-    <Card>
-      <h2 className="text-lg font-black">Como funciona?</h2>
-      <p className="mt-3 text-sm leading-relaxed text-zinc-500">
-        A recuperação é estimada pelo tempo desde o último treino de cada grupo muscular.
-        O cálculo foi ajustado para considerar a virada do dia: mudou o dia, já conta como +1 dia de recuperação.
-      </p>
-
-      <div className="mt-4 space-y-2 text-sm">
-        <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-3 text-red-200">Mesmo dia: recuperando</div>
-        <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/10 p-3 text-yellow-200">Dia seguinte: parcial</div>
-        <div className="rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] p-3 text-[var(--ff-accent-text)]">2 dias depois: quase pronto</div>
-        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-emerald-200">3 dias ou mais: recuperado</div>
+      <div className="ff-recovery-map-regions">
+        {regions.map((region) => (
+          <div key={region.title}>
+            <h3>{region.title}</h3>
+            <div>
+              {region.items.map((item) => <RecoveryBar key={item.muscleGroup} item={item} />)}
+            </div>
+          </div>
+        ))}
       </div>
     </Card>
   )
@@ -264,78 +174,189 @@ function MuscleRecoveryCard({ item }) {
   const Icon = style.icon
 
   return (
-    <div className={`ff-recovery-native-card rounded-3xl border ${style.border} ${style.bg} p-5`}>
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-3">
-          <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${style.bg} ${style.text}`}>
-            <Icon size={22} />
-          </div>
+    <div className={`recovery-card ff-recovery-native-card ${style.bg} ${style.border}`}>
+      <div className="ff-recovery-native-card__header">
+        <div>
+          <span className={style.text}><Icon size={22} /></span>
           <div>
-            <h3 className="text-xl font-black text-white">{item.muscleGroup}</h3>
-            <p className={`mt-1 text-sm font-bold ${style.text}`}>{item.status}</p>
+            <h3 className="recovery-card__title">{item.muscleGroup}</h3>
+            <p className={style.text}>{item.status}</p>
           </div>
         </div>
-
-        <span className={`text-2xl font-black ${style.text}`}>{item.recoveryPercent}%</span>
+        <strong className={style.text}>{item.recoveryPercent}%</strong>
       </div>
 
-      <div className="mt-5 h-3 overflow-hidden rounded-full bg-black/30">
-        <div className={`h-full rounded-full ${style.bar}`} style={{ width: `${item.recoveryPercent}%` }} />
-      </div>
+      <div className="ff-recovery-native-card__bar"><i className={style.bar} style={{ width: `${item.recoveryPercent}%` }} /></div>
+      <p className="recovery-card__description">{item.message}</p>
 
-      <p className="mt-4 text-sm leading-relaxed text-zinc-400">{item.message}</p>
+      {item.soreness && (
+        <div className="ff-recovery-soreness-chip">
+          Sensação: {getSorenessLevelLabel(item.soreness.level)}
+          {item.soreness.note ? ` • ${item.soreness.note}` : ''}
+        </div>
+      )}
 
-      <div className="mt-5 grid grid-cols-2 gap-3">
-        <div className="rounded-2xl border border-black/20 bg-black/20 p-4">
-          <p className="text-xs text-zinc-500">Último treino</p>
-          <p className="mt-1 text-sm font-bold text-white">{formatRelativeDate(item.lastTrainedAt)}</p>
-          <p className="mt-1 text-xs text-zinc-500">{formatDate(item.lastTrainedAt)}</p>
-        </div>
-        <div className="rounded-2xl border border-black/20 bg-black/20 p-4">
-          <p className="text-xs text-zinc-500">Séries recentes</p>
-          <p className="mt-1 text-lg font-black text-white">{item.totalSets}</p>
-        </div>
-        <div className="rounded-2xl border border-black/20 bg-black/20 p-4">
-          <p className="text-xs text-zinc-500">Sessões</p>
-          <p className="mt-1 text-lg font-black text-white">{item.totalSessions}</p>
-        </div>
-        <div className="rounded-2xl border border-black/20 bg-black/20 p-4">
-          <p className="text-xs text-zinc-500">Volume</p>
-          <p className="mt-1 text-sm font-black text-[var(--ff-accent-text)]">{formatVolume(item.totalVolume)}</p>
-        </div>
+      <div className="ff-recovery-native-card__stats">
+        <span><small>Último treino</small><strong>{formatRelativeDate(item.lastTrainedAt)}</strong></span>
+        <span><small>Séries</small><strong>{item.totalSets || 0}</strong></span>
+        <span><small>Sessões</small><strong>{item.totalSessions || 0}</strong></span>
+        <span><small>Volume</small><strong>{formatVolume(item.totalVolume)}</strong></span>
       </div>
     </div>
   )
 }
 
-function RecoveryGrid({ filteredRecovery }) {
-  return (
-    <main>
+export function RecoveryGrid({ filteredRecovery, loading }) {
+  if (loading) {
+    return (
       <Card>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="ff-loading-row"><Loader2 size={18} className="animate-spin" /> Calculando recuperação...</div>
+      </Card>
+    )
+  }
+
+  return (
+    <Card className="ff-recovery-grid-card">
+      <div className="ff-section-heading-inline ff-section-heading-inline--split">
+        <span><Dumbbell size={18} /></span>
+        <div>
+          <h2>Status por músculo</h2>
+          <p>{filteredRecovery.length} grupo(s) encontrados.</p>
+        </div>
+      </div>
+
+      {filteredRecovery.length === 0 ? (
+        <EmptyState
+          title="Ainda não há dados de recuperação"
+          description="Finalize alguns treinos para o ForgeFlow estimar o descanso dos grupos musculares."
+        />
+      ) : (
+        <div className="ff-recovery-card-grid">
+          {filteredRecovery.map((item) => <MuscleRecoveryCard key={item.muscleGroup} item={item} />)}
+        </div>
+      )}
+    </Card>
+  )
+}
+
+export function RecoverySuggestions({ suggestions, insights }) {
+  return (
+    <Card className="ff-recovery-suggestions-card">
+      <div className="ff-section-heading-inline">
+        <span><HeartPulse size={18} /></span>
+        <div>
+          <h2>Sugestões para hoje</h2>
+          <p>Linguagem simples e segura, sem diagnóstico.</p>
+        </div>
+      </div>
+
+      <div className="ff-recovery-suggestions-list">
+        {suggestions.map((suggestion) => <p key={suggestion}>{suggestion}</p>)}
+      </div>
+
+      <div className="ff-recovery-insight-list">
+        {insights.map((insight) => <span key={insight} className="recovery-insight">{insight}</span>)}
+      </div>
+
+      <Link to="/workouts" className="ff-recovery-workout-link">
+        <Dumbbell size={17} />
+        Ver treinos
+      </Link>
+    </Card>
+  )
+}
+
+export function RecoveryInfoCard() {
+  return (
+    <Card className="ff-recovery-info-card">
+      <h2>Como funciona?</h2>
+      <p>A recuperação é uma estimativa baseada nos seus registros, não uma avaliação médica.</p>
+      <div>
+        {RECOVERY_INFO_STEPS.map((step) => {
+          const Icon = step.icon
+          return (
+            <span key={step.title}>
+              <Icon size={17} />
+              <strong>{step.title}</strong>
+              <small>{step.description}</small>
+            </span>
+          )
+        })}
+      </div>
+    </Card>
+  )
+}
+
+export function SorenessSheet({ open, draft, saving, onClose, onDraftChange, onSubmit }) {
+  if (!open) return null
+
+  return (
+    <div className="ff-recovery-soreness-modal" role="dialog" aria-modal="true" aria-label="Registrar sensação">
+      <button type="button" className="ff-recovery-soreness-modal__backdrop" onClick={onClose} aria-label="Fechar" />
+      <form className="ff-recovery-soreness-modal__panel" onSubmit={onSubmit}>
+        <header>
           <div>
-            <h2 className="text-2xl font-black">Grupos musculares</h2>
-            <p className="mt-1 text-sm text-zinc-500">{filteredRecovery.length} grupo(s) encontrados.</p>
+            <span>Recuperação</span>
+            <h2>Como está se sentindo hoje?</h2>
+            <p>Registre dor/fadiga por grupo muscular para ajustar a estimativa.</p>
           </div>
-          <Badge>Recuperação</Badge>
+          <button type="button" onClick={onClose} aria-label="Fechar"><X size={20} /></button>
+        </header>
+
+        <div className="ff-recovery-soreness-form-grid">
+          <Input label="Data" type="date" value={draft.date} onChange={(event) => onDraftChange('date', event.target.value)} />
+          <Select label="Grupo muscular" value={draft.muscleGroup} onChange={(event) => onDraftChange('muscleGroup', event.target.value)}>
+            {MUSCLE_GROUPS.map((group) => <option key={group} value={group}>{group}</option>)}
+          </Select>
+          <Select label="Dor/fadiga" value={draft.level} onChange={(event) => onDraftChange('level', event.target.value)}>
+            {SORENESS_LEVELS.map((level) => <option key={level.value} value={level.value}>{level.label}</option>)}
+          </Select>
         </div>
 
-        <div className="mt-5">
-          {filteredRecovery.length === 0 ? (
-            <EmptyState
-              title="Nenhum grupo encontrado"
-              description="Finalize alguns treinos ou ajuste os filtros para ver a recuperação muscular."
-            />
-          ) : (
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-              {filteredRecovery.map((item) => (
-                <MuscleRecoveryCard key={item.muscleGroup} item={item} />
-              ))}
-            </div>
-          )}
+        <Textarea label="Observação opcional" rows={3} value={draft.note} onChange={(event) => onDraftChange('note', event.target.value)} placeholder="Ex: pernas pesadas, ombro sensível..." />
+
+        <div className="ff-recovery-soreness-modal__actions">
+          <Button type="button" variant="secondary" onClick={onClose} className="w-full">Cancelar</Button>
+          <Button type="submit" disabled={saving} className="w-full">
+            {saving ? <Loader2 size={17} className="animate-spin" /> : <Plus size={17} />}
+            {saving ? 'Salvando...' : 'Salvar sensação'}
+          </Button>
         </div>
-      </Card>
-    </main>
+      </form>
+    </div>
+  )
+}
+
+export function SorenessHistory({ logs, onDeleteLog }) {
+  return (
+    <Card className="ff-recovery-soreness-history">
+      <div className="ff-section-heading-inline">
+        <span><CalendarDays size={18} /></span>
+        <div>
+          <h2>Histórico de sensação</h2>
+          <p>Últimos registros manuais de dor/fadiga.</p>
+        </div>
+      </div>
+
+      {logs.length === 0 ? (
+        <p className="ff-progress-muted-box">Nenhum registro manual ainda.</p>
+      ) : (
+        <div>
+          {logs.slice(0, 8).map((log) => (
+            <div key={log.id} className="ff-soreness-history-row">
+              <div>
+                <strong>{formatDate(log.date)}</strong>
+                <span>{log.muscleGroup} — dor/fadiga {getSorenessLevelLabel(log.level).toLowerCase()}</span>
+                {log.note && <small>{log.note}</small>}
+              </div>
+              <button type="button" onClick={() => onDeleteLog(log.id)} aria-label="Excluir registro">
+                <Trash2 size={15} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
   )
 }
 
@@ -343,47 +364,42 @@ export default function MuscleRecoveryPageSections({
   source,
   loading,
   recovery,
-  averageRecovery,
-  readyMuscles,
-  recoveringMuscles,
-  nextSuggestedMuscles,
   filteredRecovery,
+  summary,
+  suggestions,
+  insights,
+  sorenessLogs,
   search,
   statusFilter,
   onSearchChange,
   onStatusFilterChange,
   onClearFilters,
+  onOpenSoreness,
+  onDeleteSorenessLog,
 }) {
   return (
     <>
-      <RecoveryHeader source={source} loading={loading} />
-      <RecoveryStats
-        recovery={recovery}
-        averageRecovery={averageRecovery}
-        readyMuscles={readyMuscles}
-        recoveringMuscles={recoveringMuscles}
-      />
-      <MobileRecoveryFilters
-        search={search}
-        statusFilter={statusFilter}
-        onSearchChange={onSearchChange}
-        onStatusFilterChange={onStatusFilterChange}
-        onClearFilters={onClearFilters}
-      />
+      <RecoveryHero source={source} loading={loading} summary={summary} onOpenSoreness={onOpenSoreness} />
+      <RecoveryStats summary={summary} />
 
-      <section className="mt-6 grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-[330px_minmax(0,1fr)]">
-        <aside className="space-y-6">
-          <RecoveryFiltersCard
+      <section className="ff-recovery-main-layout">
+        <div className="ff-recovery-main-layout__content">
+          <RecoveryFilters
             search={search}
             statusFilter={statusFilter}
             onSearchChange={onSearchChange}
             onStatusFilterChange={onStatusFilterChange}
             onClearFilters={onClearFilters}
           />
-          <SuggestedMusclesCard nextSuggestedMuscles={nextSuggestedMuscles} />
+          <RecoveryGrid filteredRecovery={filteredRecovery} loading={loading} />
+          <RecoveryMuscleMap recovery={recovery} />
+        </div>
+
+        <aside className="ff-recovery-main-layout__side">
+          <RecoverySuggestions suggestions={suggestions} insights={insights} />
+          <SorenessHistory logs={sorenessLogs} onDeleteLog={onDeleteSorenessLog} />
           <RecoveryInfoCard />
         </aside>
-        <RecoveryGrid filteredRecovery={filteredRecovery} />
       </section>
     </>
   )
