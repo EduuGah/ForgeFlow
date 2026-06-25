@@ -265,23 +265,25 @@ function ConsistencySection({ summary, period }) {
       </div>
 
       <div className="mt-4 rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
-        <div className="grid grid-cols-7 gap-1.5">
+        <div className="mb-3 flex items-center justify-between gap-3 text-[11px] font-bold text-[var(--ff-muted)]">
+          <span>Menos recente</span>
+          <span>Hoje</span>
+        </div>
+
+        <div className="ff-progress-consistency-map" aria-label="Mapa compacto de dias com treino">
           {cells.map((cell) => (
-            <div
+            <span
               key={cell.key}
-              title={cell.label}
-              className={[
-                'aspect-square min-w-0 rounded-xl border text-[10px] font-black transition',
-                'flex items-center justify-center',
-                cell.active
-                  ? 'border-[var(--ff-accent-border)] bg-[var(--ff-accent)] text-white shadow-[0_0_12px_var(--ff-accent-shadow)]'
-                  : 'border-[var(--ff-border)] bg-[var(--ff-card)] text-[var(--ff-muted)]',
-              ].join(' ')}
-            >
-              {cell.day}
-            </div>
+              title={`${cell.label}${cell.active ? ' • treino registrado' : ' • sem treino'}`}
+              className={cell.active ? 'ff-progress-consistency-dot is-active' : 'ff-progress-consistency-dot'}
+              aria-label={`${cell.label}: ${cell.active ? 'treino registrado' : 'sem treino'}`}
+            />
           ))}
         </div>
+
+        <p className="mt-3 text-xs leading-relaxed text-[var(--ff-muted)]">
+          Cada ponto representa um dia. Vermelho indica treino registrado; cinza indica descanso ou ausência de registro.
+        </p>
       </div>
     </Card>
   )

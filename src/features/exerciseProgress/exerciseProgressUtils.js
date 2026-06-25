@@ -26,6 +26,292 @@ export {
   normalizeExerciseName,
 }
 
+const COMMON_STRENGTH_BENCHMARKS = [
+  {
+    key: 'bench-press',
+    label: 'Supino reto',
+    aliases: ['supino reto', 'supino barra', 'supino livre', 'bench press', 'barbell bench press'],
+    sourceLabel: 'Strength Level / StrengthLog',
+    sourceNote: 'Referências gerais de 1RM para supino reto com barra.',
+    standards: {
+      male: { beginner: 47, intermediate: 98, advanced: 140 },
+      female: { beginner: 17, intermediate: 51, advanced: 75 },
+    },
+    ratios: { beginner: 0.6, intermediate: 1, advanced: 1.5 },
+  },
+  {
+    key: 'squat',
+    label: 'Agachamento livre',
+    aliases: ['agachamento', 'agachamento livre', 'agachamento barra', 'squat', 'back squat'],
+    sourceLabel: 'Strength Level',
+    sourceNote: 'Referências gerais de 1RM para agachamento com barra.',
+    standards: {
+      male: { beginner: 64, intermediate: 130, advanced: 173 },
+      female: { beginner: 29, intermediate: 73, advanced: 105 },
+    },
+    ratios: { beginner: 0.75, intermediate: 1.5, advanced: 2.25 },
+  },
+  {
+    key: 'deadlift',
+    label: 'Levantamento terra',
+    aliases: ['levantamento terra', 'terra', 'deadlift', 'peso morto'],
+    sourceLabel: 'Strength Level / StrengthLog',
+    sourceNote: 'Referências gerais de 1RM para levantamento terra.',
+    standards: {
+      male: { beginner: 78, intermediate: 152, advanced: 210 },
+      female: { beginner: 38, intermediate: 87, advanced: 125 },
+    },
+    ratios: { beginner: 1, intermediate: 1.8, advanced: 2.5 },
+  },
+  {
+    key: 'shoulder-press',
+    label: 'Desenvolvimento',
+    aliases: ['desenvolvimento', 'desenvolvimento militar', 'desenvolvimento ombro', 'shoulder press', 'overhead press', 'military press'],
+    sourceLabel: 'Strength Level / StrengthLog',
+    sourceNote: 'Referências gerais de 1RM para desenvolvimento/shoulder press com barra.',
+    standards: {
+      male: { beginner: 30, intermediate: 64, advanced: 87 },
+      female: { beginner: 13, intermediate: 34, advanced: 48 },
+    },
+    ratios: { beginner: 0.35, intermediate: 0.7, advanced: 1 },
+  },
+  {
+    key: 'bent-over-row',
+    label: 'Remada curvada',
+    aliases: ['remada curvada', 'remada barra', 'barbell row', 'bent over row', 'bent-over row'],
+    sourceLabel: 'Strength Level',
+    sourceNote: 'Referências gerais de 1RM para remada curvada com barra.',
+    standards: {
+      male: { beginner: 41, intermediate: 85, advanced: 120 },
+      female: { beginner: 15, intermediate: 41, advanced: 59 },
+    },
+    ratios: { beginner: 0.5, intermediate: 0.9, advanced: 1.2 },
+  },
+  {
+    key: 'dumbbell-bench-press',
+    label: 'Supino halteres',
+    aliases: ['supino halter', 'supino halteres', 'supino com halteres', 'dumbbell bench press'],
+    sourceLabel: 'Strength Level',
+    sourceNote: 'Referências gerais de 1RM por halter para supino com halteres.',
+    standards: {
+      male: { beginner: 16, intermediate: 41, advanced: 59 },
+      female: { beginner: 6, intermediate: 21, advanced: 31 },
+    },
+    ratios: { beginner: 0.25, intermediate: 0.55, advanced: 0.8 },
+    perSide: true,
+  },
+]
+
+const AGE_REFERENCE_FACTORS = [
+  { label: '18–39', factor: 1, note: 'base geral' },
+  { label: '40–49', factor: 0.9, note: 'referência conservadora' },
+  { label: '50+', factor: 0.75, note: 'referência conservadora' },
+]
+
+
+const STRENGTH_PERCENTILE_ANCHORS = [
+  { key: 'starter', label: 'Base', percentile: 5, ratio: 0 },
+  { key: 'beginner', label: 'Iniciante', percentile: 25 },
+  { key: 'intermediate', label: 'Intermediário', percentile: 50 },
+  { key: 'advanced', label: 'Avançado', percentile: 80 },
+  { key: 'elite', label: 'Elite', percentile: 95, advancedMultiplier: 1.28 },
+]
+
+function clampNumber(value, min = 0, max = 100) {
+  const number = Number(value)
+  if (!Number.isFinite(number)) return min
+  return Math.min(max, Math.max(min, number))
+}
+
+function interpolate(value, startValue, endValue, startPercentile, endPercentile) {
+  if (endValue <= startValue) return startPercentile
+
+  const progress = clampNumber((value - startValue) / (endValue - startValue), 0, 1)
+  return startPercentile + ((endPercentile - startPercentile) * progress)
+}
+
+function getStandardsWithElite(standards = {}) {
+  const beginner = toNumber(standards.beginner)
+  const intermediate = toNumber(standards.intermediate)
+  const advanced = toNumber(standards.advanced)
+
+  return {
+    starter: 0,
+    beginner,
+    intermediate,
+    advanced,
+    elite: advanced > 0 ? advanced * STRENGTH_PERCENTILE_ANCHORS.find((item) => item.key === 'elite').advancedMultiplier : 0,
+  }
+}
+
+export function estimateStrengthPercentile(oneRepMax = 0, standards = {}) {
+  const value = toNumber(oneRepMax)
+  const safeStandards = getStandardsWithElite(standards)
+
+  if (value <= 0 || !safeStandards.beginner || !safeStandards.intermediate || !safeStandards.advanced) {
+    return 0
+  }
+
+  if (value < safeStandards.beginner) {
+    return Math.round(interpolate(value, 0, safeStandards.beginner, 5, 25))
+  }
+
+  if (value < safeStandards.intermediate) {
+    return Math.round(interpolate(value, safeStandards.beginner, safeStandards.intermediate, 25, 50))
+  }
+
+  if (value < safeStandards.advanced) {
+    return Math.round(interpolate(value, safeStandards.intermediate, safeStandards.advanced, 50, 80))
+  }
+
+  if (value < safeStandards.elite) {
+    return Math.round(interpolate(value, safeStandards.advanced, safeStandards.elite, 80, 95))
+  }
+
+  return 95
+}
+
+function getPercentileLabel(percentile = 0) {
+  const value = clampNumber(percentile, 0, 99)
+
+  if (value >= 80) return 'muito acima da média'
+  if (value >= 50) return 'acima da média'
+  if (value >= 25) return 'em evolução'
+  return 'base inicial'
+}
+
+function getBenchmarkLevelRows(standards = {}) {
+  const withElite = getStandardsWithElite(standards)
+
+  return STRENGTH_PERCENTILE_ANCHORS
+    .filter((anchor) => anchor.key !== 'starter')
+    .map((anchor) => ({
+      key: anchor.key,
+      label: anchor.label,
+      percentile: anchor.percentile,
+      weight: withElite[anchor.key],
+    }))
+}
+
+function buildPercentileComparison(estimatedOneRepMax = 0, standards = {}, label = '') {
+  const percentile = estimateStrengthPercentile(estimatedOneRepMax, standards)
+
+  return {
+    label,
+    percentile,
+    status: getPercentileLabel(percentile),
+    levelRows: getBenchmarkLevelRows(standards),
+  }
+}
+
+function buildBodyweightRatioBar(ratio = 0, bodyweightTargets = []) {
+  if (!ratio || bodyweightTargets.length === 0) return null
+
+  const maxTarget = Math.max(...bodyweightTargets.map((target) => target.multiplier), ratio, 1)
+  const scaleMax = Math.max(maxTarget * 1.1, 1.2)
+
+  return {
+    value: ratio,
+    percent: clampNumber((ratio / scaleMax) * 100, 0, 100),
+    scaleMax,
+    markers: bodyweightTargets.map((target) => ({
+      ...target,
+      percent: clampNumber((target.multiplier / scaleMax) * 100, 0, 100),
+    })),
+  }
+}
+
+function buildAgeComparisonRows(ageRows = [], estimatedOneRepMax = 0) {
+  return ageRows.map((row) => {
+    const neutralIntermediate = (row.maleIntermediate + row.femaleIntermediate) / 2
+    const target = neutralIntermediate > 0 ? neutralIntermediate : row.maleIntermediate || row.femaleIntermediate || 0
+
+    return {
+      ...row,
+      target,
+      percentOfTarget: target > 0 ? clampNumber((estimatedOneRepMax / target) * 100, 0, 160) : 0,
+    }
+  })
+}
+
+function buildBenchmarkAliasSet(benchmark) {
+  return new Set([benchmark.label, benchmark.key, ...benchmark.aliases].map(normalizeExerciseName))
+}
+
+export function getExerciseBenchmark(exerciseName = '') {
+  const normalized = normalizeExerciseName(exerciseName)
+  if (!normalized) return null
+
+  return COMMON_STRENGTH_BENCHMARKS.find((benchmark) => {
+    const aliases = buildBenchmarkAliasSet(benchmark)
+    if (aliases.has(normalized)) return true
+
+    return Array.from(aliases).some((alias) => {
+      return alias && (normalized.includes(alias) || alias.includes(normalized))
+    })
+  }) || null
+}
+
+export function estimateOneRepMaxFromSet(set = null) {
+  const weight = toNumber(set?.weight)
+  const reps = toNumber(set?.reps)
+
+  if (weight <= 0 || reps <= 0) return 0
+  if (reps === 1) return weight
+
+  const safeReps = Math.min(reps, 12)
+  return weight * (1 + safeReps / 30)
+}
+
+export function buildBenchmarkSummary(exerciseName = '', bestSet = null, bodyWeightKg = 0, profileContext = {}) {
+  const benchmark = getExerciseBenchmark(exerciseName)
+  if (!benchmark) return null
+
+  const estimatedOneRepMax = estimateOneRepMaxFromSet(bestSet)
+  const ratio = bodyWeightKg > 0 && estimatedOneRepMax > 0
+    ? estimatedOneRepMax / bodyWeightKg
+    : 0
+
+  const bodyweightTargets = bodyWeightKg > 0
+    ? Object.entries(benchmark.ratios).map(([level, multiplier]) => ({
+        level,
+        multiplier,
+        weight: bodyWeightKg * multiplier,
+      }))
+    : []
+
+  const ageRows = AGE_REFERENCE_FACTORS.map((age) => ({
+    ...age,
+    maleIntermediate: benchmark.standards.male.intermediate * age.factor,
+    femaleIntermediate: benchmark.standards.female.intermediate * age.factor,
+  }))
+
+  const maleComparison = buildPercentileComparison(estimatedOneRepMax, benchmark.standards.male, 'Masculino')
+  const femaleComparison = buildPercentileComparison(estimatedOneRepMax, benchmark.standards.female, 'Feminino')
+  const gender = profileContext.gender || ''
+  const primaryComparison = gender === 'female'
+    ? femaleComparison
+    : gender === 'male'
+      ? maleComparison
+      : null
+
+  return {
+    benchmark,
+    estimatedOneRepMax,
+    ratio,
+    bodyweightTargets,
+    ageRows,
+    hasBodyWeight: bodyWeightKg > 0,
+    bodyweightRatioBar: buildBodyweightRatioBar(ratio, bodyweightTargets),
+    ageComparisonRows: buildAgeComparisonRows(ageRows, estimatedOneRepMax),
+    maleComparison,
+    femaleComparison,
+    primaryComparison,
+    profileContext,
+  }
+}
+
+
 export function getFallbackExercise(name = '', defaultExercises = []) {
   const normalized = normalizeExerciseName(name)
 

@@ -47,6 +47,7 @@ import {
   normalizeHistory,
 } from '../features/progress/progressUtils'
 import {
+  buildBenchmarkSummary,
   buildExerciseOptions,
   calculateExerciseProgress,
   filterExerciseOptions,
@@ -97,6 +98,179 @@ function formatSignedReps(value) {
 function formatBestSet(set = null) {
   if (!set) return '—'
   return `${formatWeight(set.weight)} x ${set.reps}`
+}
+
+function parseKgValue(value) {
+  if (value === null || value === undefined || value === '') return 0
+  const number = Number(String(value).replace(',', '.'))
+  return Number.isFinite(number) && number > 0 ? number : 0
+}
+
+function getCurrentBodyWeightFromStorage(user) {
+  const bodyWeightHistory = getUserStorageData(user, 'bodyweight', [])
+  const lastRecord = Array.isArray(bodyWeightHistory) ? bodyWeightHistory.at(-1) : null
+  const latestWeight = parseKgValue(lastRecord?.weight)
+  const profileWeight = parseKgValue(user?.profile?.currentWeight)
+
+  return latestWeight || profileWeight || 0
+}
+
+function formatBodyweightRatio(value) {
+  const number = Number(value) || 0
+  if (number <= 0) return '—'
+  return `${formatNumber(number, { maximumFractionDigits: 2 })}x`
+}
+
+function getBenchmarkLevelLabel(level) {
+  const labels = {
+    beginner: 'Iniciante',
+    intermediate: 'Intermediário',
+    advanced: 'Avançado',
+  }
+
+  return labels[level] || level
+}
+
+
+function getProfileStrengthContext(user) {
+  const profile = user?.profile || {}
+  const rawGender = String(profile.gender || profile.sex || profile.biologicalSex || '').toLowerCase()
+  const rawAge = profile.age || profile.idade
+  const birthDate = profile.birthDate || profile.birth_date || profile.birthday || profile.dataNascimento
+  let age = Number(rawAge) || 0
+
+  if (!age && birthDate) {
+    const parsedBirthDate = new Date(birthDate)
+    if (!Number.isNaN(parsedBirthDate.getTime())) {
+      const today = new Date()
+      age = today.getFullYear() - parsedBirthDate.getFullYear()
+      const monthDiff = today.getMonth() - parsedBirthDate.getMonth()
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < parsedBirthDate.getDate())) age -= 1
+    }
+  }
+
+  let gender = ''
+  if (['male', 'masculino', 'homem', 'm'].includes(rawGender)) gender = 'male'
+  if (['female', 'feminino', 'mulher', 'f'].includes(rawGender)) gender = 'female'
+
+  return {
+    gender,
+    age: age > 0 ? age : 0,
+  }
+}
+
+function getGenderLabel(gender = '') {
+  if (gender === 'male') return 'masculina'
+  if (gender === 'female') return 'feminina'
+  return 'geral'
+}
+
+function formatPercent(value) {
+  const number = Number(value) || 0
+  return `${formatNumber(Math.round(number), { maximumFractionDigits: 0 })}%`
+}
+
+function StrengthPercentileBar({ comparison, compact = false }) {
+  if (!comparison) return null
+
+  return (
+    <div className={compact ? 'ff-strength-percentile-card is-compact' : 'ff-strength-percentile-card'}>
+      <div className="flex min-w-0 items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-xs font-black uppercase tracking-[0.16em] text-[var(--ff-muted)]">{comparison.label}</p>
+          <strong className="mt-1 block text-lg font-black text-[var(--ff-text)]">Mais forte que ~{formatPercent(comparison.percentile)}</strong>
+        </div>
+        <Badge variant={comparison.percentile >= 50 ? 'green' : 'yellow'}>{comparison.status}</Badge>
+      </div>
+
+      <div className="ff-strength-bar mt-3" aria-label={`Percentil estimado ${comparison.percentile}%`}>
+        <span className="ff-strength-bar__fill" style={{ width: `${Math.min(100, Math.max(0, comparison.percentile))}%` }} />
+        <span className="ff-strength-bar__marker" style={{ left: `${Math.min(100, Math.max(0, comparison.percentile))}%` }} />
+      </div>
+
+      {!compact && (
+        <div className="mt-3 grid grid-cols-4 gap-1.5 text-[10px] font-bold text-[var(--ff-muted)]">
+          <span>Base</span>
+          <span>25%</span>
+          <span>50%</span>
+          <span className="text-right">80%+</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function StrengthScaleRows({ rows = [] }) {
+  return (
+    <div className="mt-3 space-y-2">
+      {rows.map((row) => (
+        <div key={row.key} className="ff-strength-scale-row">
+          <div className="flex min-w-0 items-center justify-between gap-2 text-xs">
+            <span className="min-w-0 truncate font-bold text-[var(--ff-muted)]">{row.label}</span>
+            <strong className="shrink-0 text-[var(--ff-text)]">{formatWeight(row.weight)}</strong>
+          </div>
+          <div className="ff-strength-scale-row__track">
+            <span style={{ width: `${Math.min(100, Math.max(0, row.percentile))}%` }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function BodyweightRatioBar({ ratioBar }) {
+  if (!ratioBar) return null
+
+  return (
+    <div className="ff-strength-bodyweight-bar">
+      <div className="flex min-w-0 items-center justify-between gap-3">
+        <p className="min-w-0 truncate text-sm font-black text-[var(--ff-text)]">Comparação por peso corporal</p>
+        <strong className="shrink-0 text-sm font-black text-[var(--ff-accent-text)]">{formatBodyweightRatio(ratioBar.value)}</strong>
+      </div>
+      <div className="ff-strength-ratio-track mt-4">
+        <span className="ff-strength-ratio-track__fill" style={{ width: `${ratioBar.percent}%` }} />
+        <span className="ff-strength-ratio-track__marker" style={{ left: `${ratioBar.percent}%` }} />
+        {ratioBar.markers.map((marker) => (
+          <span
+            key={marker.level}
+            className="ff-strength-ratio-track__tick"
+            style={{ left: `${marker.percent}%` }}
+            title={`${getBenchmarkLevelLabel(marker.level)} • ${formatWeight(marker.weight)}`}
+          />
+        ))}
+      </div>
+      <div className="mt-3 grid grid-cols-3 gap-2">
+        {ratioBar.markers.map((marker) => (
+          <div key={marker.level} className="rounded-2xl bg-[var(--ff-card)] px-3 py-2 text-xs">
+            <span className="block truncate font-bold text-[var(--ff-muted)]">{getBenchmarkLevelLabel(marker.level)}</span>
+            <strong className="mt-1 block text-[var(--ff-text)]">{formatBodyweightRatio(marker.multiplier)}</strong>
+            <span className="mt-0.5 block text-[11px] text-[var(--ff-accent-text)]">{formatWeight(marker.weight)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function AgeReferenceBars({ rows = [] }) {
+  if (rows.length === 0) return null
+
+  return (
+    <div className="mt-3 space-y-2">
+      {rows.map((row) => (
+        <div key={row.label} className="ff-strength-age-row">
+          <div className="flex min-w-0 items-center justify-between gap-3">
+            <span className="min-w-0 truncate text-xs font-black text-[var(--ff-muted)]">{row.label}</span>
+            <strong className="shrink-0 text-xs font-black text-[var(--ff-text)]">Meta média {formatWeight(row.target)}</strong>
+          </div>
+          <div className="ff-strength-age-row__track mt-2">
+            <span style={{ width: `${Math.min(100, row.percentOfTarget)}%` }} />
+          </div>
+          <p className="mt-1 text-[11px] leading-relaxed text-[var(--ff-muted)]">Seu 1RM estimado bate {formatPercent(row.percentOfTarget)} dessa referência.</p>
+        </div>
+      ))}
+    </div>
+  )
 }
 
 function PeriodFilters({ selectedPeriod, onChange }) {
@@ -479,6 +653,131 @@ function ComparisonSection({ comparison }) {
   )
 }
 
+
+function StrengthBenchmarkSection({ summary }) {
+  if (!summary) return null
+
+  const {
+    benchmark,
+    estimatedOneRepMax,
+    ratio,
+    bodyweightTargets,
+    ageComparisonRows,
+    hasBodyWeight,
+    bodyweightRatioBar,
+    maleComparison,
+    femaleComparison,
+    primaryComparison,
+    profileContext,
+  } = summary
+  const male = benchmark.standards.male
+  const female = benchmark.standards.female
+  const comparisonRows = primaryComparison ? [primaryComparison] : [maleComparison, femaleComparison]
+  const headline = primaryComparison
+    ? `Mais forte que ~${formatPercent(primaryComparison.percentile)}`
+    : `M ~${formatPercent(maleComparison.percentile)} • F ~${formatPercent(femaleComparison.percentile)}`
+  const contextLabel = primaryComparison
+    ? `referência ${getGenderLabel(profileContext?.gender)}`
+    : 'referências masculina e feminina'
+
+  return (
+    <Card className="min-w-0 overflow-hidden">
+      <SectionHeader
+        icon={Medal}
+        eyebrow="Referência externa"
+        title="Comparativo de força"
+        description="Mostra sua posição estimada em uma barrinha horizontal. É educativo e usa 1RM estimado, não substitui contexto de técnica, equipamento e treino."
+        action={<Badge variant="purple">{benchmark.label}</Badge>}
+      />
+
+      <div className="ff-strength-score-card rounded-3xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] p-4">
+        <div className="flex min-w-0 items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--ff-accent-text)]">Sua posição estimada</p>
+            <h3 className="mt-1 text-2xl font-black tracking-[-0.04em] text-[var(--ff-text)]">
+              {headline}
+            </h3>
+            <p className="mt-1 text-xs leading-relaxed text-[var(--ff-muted)]">
+              Percentual aproximado considerando {contextLabel}. Quanto mais completo o perfil, melhor fica a leitura.
+            </p>
+          </div>
+          <div className="shrink-0 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] px-3 py-2 text-right">
+            <span className="block text-[10px] font-black uppercase text-[var(--ff-muted)]">1RM</span>
+            <strong className="block text-lg font-black text-[var(--ff-accent-text)]">{estimatedOneRepMax > 0 ? formatWeight(estimatedOneRepMax) : '—'}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
+        {comparisonRows.map((comparison) => (
+          <StrengthPercentileBar key={comparison.label} comparison={comparison} compact={Boolean(primaryComparison)} />
+        ))}
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+          <p className="text-xs font-bold text-[var(--ff-muted)]">Seu 1RM estimado</p>
+          <strong className="mt-2 block text-2xl font-black text-[var(--ff-accent-text)]">{estimatedOneRepMax > 0 ? formatWeight(estimatedOneRepMax) : '—'}</strong>
+          <span className="mt-1 block text-[11px] text-[var(--ff-muted)]">calculado pela melhor série</span>
+        </div>
+
+        <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+          <p className="text-xs font-bold text-[var(--ff-muted)]">Peso corporal</p>
+          <strong className="mt-2 block text-2xl font-black text-[var(--ff-text)]">{formatBodyweightRatio(ratio)}</strong>
+          <span className="mt-1 block text-[11px] text-[var(--ff-muted)]">
+            {hasBodyWeight ? 'carga estimada ÷ seu peso' : 'registre peso no perfil para comparar'}
+          </span>
+        </div>
+
+        <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+          <p className="text-xs font-bold text-[var(--ff-muted)]">Média intermediária</p>
+          <strong className="mt-2 block text-lg font-black text-[var(--ff-text)]">M {formatWeight(male.intermediate)} • F {formatWeight(female.intermediate)}</strong>
+          <span className="mt-1 block text-[11px] text-[var(--ff-muted)]">1RM geral da comunidade</span>
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+          <p className="text-sm font-black text-[var(--ff-text)]">Escala de força</p>
+          <p className="mt-1 text-xs leading-relaxed text-[var(--ff-muted)]">Pontos de referência usados para estimar a barrinha de percentil.</p>
+          <StrengthScaleRows rows={(primaryComparison || maleComparison).levelRows} />
+        </div>
+
+        <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+          <p className="text-sm font-black text-[var(--ff-text)]">Por faixa de peso</p>
+          {bodyweightTargets.length === 0 ? (
+            <p className="mt-3 rounded-2xl bg-[var(--ff-card)] p-3 text-xs leading-relaxed text-[var(--ff-muted)]">
+              Registre seu peso no Perfil para ver a barrinha por peso corporal, com metas aproximadas como 1x, 1.5x ou 2x seu peso.
+            </p>
+          ) : (
+            <BodyweightRatioBar ratioBar={bodyweightRatioBar} />
+          )}
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-sm font-black text-[var(--ff-text)]">Por idade</p>
+            <p className="mt-1 text-xs leading-relaxed text-[var(--ff-muted)]">
+              Referência intermediária por faixa etária. {profileContext?.age ? `Perfil detectado: ${profileContext.age} anos.` : 'Adicione idade no perfil para personalizar mais.'}
+            </p>
+          </div>
+          <Badge variant="default">estimado</Badge>
+        </div>
+        <AgeReferenceBars rows={ageComparisonRows} />
+      </div>
+
+      <div className="mt-4 flex gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3">
+        <Info size={17} className="mt-0.5 shrink-0 text-[var(--ff-accent-text)]" />
+        <p className="min-w-0 text-xs leading-relaxed text-[var(--ff-muted)]">
+          {benchmark.sourceNote} A porcentagem é uma estimativa interpolada entre padrões públicos de força e pode variar muito por sexo, idade, peso corporal, técnica, amplitude e equipamento.
+        </p>
+      </div>
+    </Card>
+  )
+}
+
 function InsightsSection({ insights = [], trend }) {
   return (
     <Card className="min-w-0 overflow-hidden">
@@ -618,6 +917,7 @@ function ExerciseProgress() {
   const [search, setSearch] = useState('')
   const [selectedExerciseName, setSelectedExerciseName] = useState('')
   const [selectedPeriod, setSelectedPeriod] = useState(DEFAULT_PERIOD)
+  const [bodyWeightKg, setBodyWeightKg] = useState(0)
   const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
@@ -631,9 +931,11 @@ function ExerciseProgress() {
         'history',
         getUserStorageData(user, 'workoutHistory', [])
       )
+      const cachedBodyWeightKg = getCurrentBodyWeightFromStorage(user)
 
       if (isMounted) {
         setHistory(Array.isArray(cachedHistory) ? cachedHistory : [])
+        setBodyWeightKg(cachedBodyWeightKg)
         setSource(cachedHistory?.length ? 'local' : 'empty')
         setLoading(false)
         setSyncing(true)
@@ -693,6 +995,12 @@ function ExerciseProgress() {
   }, [normalizedHistory, selectedExerciseName, selectedPeriod])
 
   const stats = exerciseProgress.stats || {}
+  const profileStrengthContext = useMemo(() => getProfileStrengthContext(user), [user])
+
+  const benchmarkSummary = useMemo(() => {
+    if (!selectedExercise || !stats.bestSet) return null
+    return buildBenchmarkSummary(selectedExercise.name, stats.bestSet, bodyWeightKg, profileStrengthContext)
+  }, [bodyWeightKg, profileStrengthContext, selectedExercise, stats.bestSet])
   const statusLabel = getStatusLabel(loading, syncing, source)
 
   function handleSelectExercise(exercise) {
@@ -821,6 +1129,8 @@ function ExerciseProgress() {
             </section>
 
             <BestSetTimeline entries={exerciseProgress.entries} />
+
+            <StrengthBenchmarkSection summary={benchmarkSummary} />
 
             <section className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.8fr)]">
               <RecordsSection records={stats.records} />

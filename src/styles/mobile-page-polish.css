@@ -20583,3 +20583,156 @@ body.ff-fullscreen-modal-open .ff-active-workout-mini-floating {
     white-space: nowrap;
   }
 }
+
+/* ForgeFlow evolução v2.1: mapa de consistência compacto e robusto no APK */
+.ff-progress-consistency-map {
+  display: grid !important;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  gap: 6px;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.ff-progress-consistency-dot {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 10px;
+  border-radius: 999px;
+  border: 1px solid var(--ff-border);
+  background: var(--ff-card);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
+}
+
+.ff-progress-consistency-dot.is-active {
+  border-color: var(--ff-accent-border);
+  background: linear-gradient(135deg, var(--ff-accent), color-mix(in srgb, var(--ff-accent) 72%, #ff9f43));
+  box-shadow: 0 0 12px var(--ff-accent-shadow);
+}
+
+@media (min-width: 640px) {
+  .ff-progress-consistency-dot {
+    height: 12px;
+  }
+}
+
+/* ForgeFlow evolução v3: barras de comparativo de força */
+.ff-strength-score-card,
+.ff-strength-percentile-card,
+.ff-strength-scale-row,
+.ff-strength-bodyweight-bar,
+.ff-strength-age-row {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.ff-strength-percentile-card {
+  border: 1px solid var(--ff-border);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top left, color-mix(in srgb, var(--ff-accent) 10%, transparent), transparent 42%),
+    var(--ff-surface-2);
+  padding: 1rem;
+}
+
+.ff-strength-percentile-card.is-compact {
+  grid-column: 1 / -1;
+}
+
+.ff-strength-bar,
+.ff-strength-ratio-track,
+.ff-strength-age-row__track,
+.ff-strength-scale-row__track {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--ff-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ff-card) 88%, black);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
+}
+
+.ff-strength-bar {
+  height: 15px;
+}
+
+.ff-strength-bar__fill,
+.ff-strength-ratio-track__fill,
+.ff-strength-age-row__track > span,
+.ff-strength-scale-row__track > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--ff-accent), color-mix(in srgb, var(--ff-accent) 70%, #ffb45a));
+  box-shadow: 0 0 16px var(--ff-accent-shadow);
+}
+
+.ff-strength-bar__marker,
+.ff-strength-ratio-track__marker {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  width: 18px;
+  height: 18px;
+  border: 3px solid var(--ff-text);
+  border-radius: 999px;
+  background: var(--ff-accent);
+  box-shadow: 0 0 0 4px rgb(0 0 0 / 0.22), 0 0 18px var(--ff-accent-shadow);
+  transform: translate(-50%, -50%);
+}
+
+.ff-strength-ratio-track {
+  height: 18px;
+  overflow: visible;
+}
+
+.ff-strength-ratio-track__tick {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  z-index: 1;
+  width: 2px;
+  border-radius: 99px;
+  background: rgb(255 255 255 / 0.45);
+  transform: translateX(-50%);
+}
+
+.ff-strength-scale-row {
+  border-radius: 18px;
+  background: var(--ff-card);
+  padding: 0.65rem 0.75rem;
+}
+
+.ff-strength-scale-row__track {
+  height: 8px;
+  margin-top: 0.45rem;
+}
+
+.ff-strength-age-row {
+  border: 1px solid var(--ff-border);
+  border-radius: 20px;
+  background: var(--ff-card);
+  padding: 0.8rem;
+}
+
+.ff-strength-age-row__track {
+  height: 10px;
+}
+
+@media (max-width: 420px) {
+  .ff-strength-score-card > .flex {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .ff-strength-score-card .text-right {
+    text-align: left;
+  }
+
+  .ff-strength-bodyweight-bar .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
