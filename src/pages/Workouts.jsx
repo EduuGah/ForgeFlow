@@ -259,7 +259,7 @@ function Workouts() {
                 showToast(
                     'error',
                     'Usando dados locais',
-                    'Não foi possível carregar seus treinos do servidor.'
+                    'Não foi possível carregar seus treinos agora.'
                 )
             }
         }
@@ -275,7 +275,7 @@ function Workouts() {
             showToast(
                 'error',
                 'Usando dados locais',
-                'Não foi possível carregar seus treinos do servidor.'
+                'Não foi possível carregar seus treinos agora.'
             )
         })
 
@@ -813,7 +813,7 @@ function Workouts() {
 
                 resetForm()
                 setIsBuilderOpen(false)
-                showToast('success', 'Treino atualizado', 'As alterações foram salvas no banco.')
+                showToast('success', 'Treino atualizado', 'As alterações foram salvas.')
                 return
             }
 
@@ -827,14 +827,14 @@ function Workouts() {
             setWorkouts([createdWorkout, ...workouts])
             resetForm()
             setIsBuilderOpen(false)
-            showToast('success', 'Treino criado', 'Sua nova rotina foi salva no banco.')
+            showToast('success', 'Treino criado', 'Sua nova rotina foi salva.')
         } catch (error) {
             console.error(error)
 
             showToast(
                 'error',
                 'Erro ao salvar treino',
-                error.message || 'Não foi possível salvar o treino no servidor.'
+                error.message || 'Não foi possível salvar o treino agora.'
             )
         }
     }
@@ -872,7 +872,7 @@ function Workouts() {
                     }
 
                     setConfirmModal(null)
-                    showToast('success', 'Treino excluído', 'A rotina foi removida do banco.')
+                    showToast('success', 'Treino excluído', 'A rotina foi removida.')
                 } catch (error) {
                     console.error(error)
 
@@ -937,7 +937,7 @@ function Workouts() {
             const duplicatedWorkout = normalizeWorkoutFromApi(duplicatedWorkoutFromApi)
 
             setWorkouts([duplicatedWorkout, ...workouts])
-            showToast('success', 'Treino duplicado', 'Uma cópia foi salva no banco.')
+            showToast('success', 'Treino duplicado', 'Uma cópia foi salva.')
         } catch (error) {
             console.error(error)
 

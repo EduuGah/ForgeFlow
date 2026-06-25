@@ -38,8 +38,8 @@ function ExerciseFormModal({
   setVariations,
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/75 px-4 pb-4 backdrop-blur-sm sm:items-center sm:pb-0">
-      <div className="max-h-[92vh] w-full max-w-3xl overflow-hidden rounded-3xl border border-zinc-800 bg-[#121212] shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)]">
+    <div className="ff-exercise-form-modal fixed inset-0 z-50 flex items-end justify-center bg-black/75 px-4 pb-4 backdrop-blur-sm sm:items-center sm:pb-0">
+      <div className="ff-exercise-form-modal__panel max-h-[92vh] w-full max-w-3xl overflow-hidden rounded-3xl border border-zinc-800 bg-[#121212] shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)]">
         <div className="sticky top-0 z-10 border-b border-zinc-800 bg-[#121212]/95 p-5 backdrop-blur-xl sm:p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -52,7 +52,7 @@ function ExerciseFormModal({
               </h2>
 
               <p className="mt-2 text-sm text-zinc-500">
-                Adicione grupo, subgrupo, músculos secundários, mídia e instruções.
+                Organize nome, grupo, mídia e dicas para encontrar o exercício com facilidade.
               </p>
             </div>
 
@@ -133,7 +133,7 @@ Core`}
               value={secondaryMusclesText}
               onChange={(event) => setSecondaryMusclesText(event.target.value)}
               rows={4}
-              helper="Escreva um item em cada linha. Cada linha vira um item separado na tela de detalhes."
+              helper="Escreva um item em cada linha para organizar melhor os músculos envolvidos."
               examples={['Tríceps', 'Ombros', 'Core']}
             />
 
@@ -155,7 +155,7 @@ Empurre a barra para cima sem tirar o quadril do banco.`}
               value={execution}
               onChange={(event) => setExecution(event.target.value)}
               rows={5}
-              helper="Escreva o passo a passo da execução. Separe cada etapa em uma nova linha para o app organizar em lista."
+              helper="Escreva o passo a passo da execução. Separe cada etapa em uma nova linha."
               examples={['1 etapa por linha', 'passo a passo', 'execução guiada']}
             />
 

@@ -8,7 +8,7 @@ function StatCard({ title, value, description, icon: Icon }) {
   return (
     <Card className="group overflow-hidden border border-zinc-800 bg-gradient-to-br from-[#17171b] to-[#101014] p-4 transition hover:border-[var(--ff-accent-border)]/30 hover:shadow-[0_0_24px_var(--ff-accent-shadow)]/10">
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <p className="text-sm font-medium text-zinc-500">
             {title}
           </p>
@@ -180,7 +180,7 @@ function MediaUploader({
               </span>
 
               <span className="mt-1 text-xs leading-relaxed text-zinc-500">
-                Funciona no computador e no celular. Use PNG, JPG, WEBP ou GIF.
+                Use PNG, JPG, WEBP ou GIF para deixar o card mais visual.
               </span>
 
               <input
@@ -210,7 +210,7 @@ function MediaUploader({
               </div>
 
               <Input
-                placeholder="/exercise-media/chest/exemplo.gif ou https://..."
+                placeholder="Cole o link da imagem ou GIF"
                 value={mediaUrl}
                 onChange={onUrlChange}
               />
@@ -228,7 +228,7 @@ function MediaUploader({
             )}
 
             <p className="text-xs leading-relaxed text-zinc-500">
-              Para melhor performance no app, prefira URLs externas ou imagens leves. Base64 grande pesa no LocalStorage e deixa a biblioteca mais lenta.
+              Dica: prefira imagens leves para manter a biblioteca rápida e fluida.
             </p>
           </div>
         </div>

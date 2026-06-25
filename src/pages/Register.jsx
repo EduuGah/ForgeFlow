@@ -105,7 +105,7 @@ function Register() {
                     </h1>
 
                     <p className="mt-3 text-sm leading-relaxed text-[var(--ff-muted)]">
-                        Crie sua conta para salvar exercícios, treinos e histórico no banco de dados.
+                        Crie sua conta para salvar exercícios, treinos e histórico com segurança.
                     </p>
                 </div>
 

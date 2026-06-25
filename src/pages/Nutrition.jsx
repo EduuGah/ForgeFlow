@@ -393,10 +393,10 @@ function Nutrition() {
             {syncStatus === 'syncing'
               ? 'Sincronizando...'
               : syncStatus === 'synced'
-                ? 'Salvo no banco'
+                ? 'Sincronizado'
                 : syncStatus === 'offline'
                   ? 'Offline/local'
-                  : 'Local'}
+                  : 'Salvo'}
           </Badge>
         }
       />
@@ -406,7 +406,7 @@ function Nutrition() {
           <div className="min-w-0">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--ff-accent-text)]">Resumo do dia</p>
             <h2>Energia para evoluir</h2>
-            <p>Registre por foto, macros ou atalhos rápidos, agora sincronizando no banco quando a API estiver online.</p>
+            <p>Registre por foto, macros ou atalhos rápidos com salvamento automático quando houver conexão.</p>
           </div>
 
           <div className="ff-nutrition-dashboard__score">
@@ -651,7 +651,7 @@ function Nutrition() {
           <Card className="p-4 sm:p-5">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--ff-accent-text)]">Metas do dia</p>
             <h2 className="mt-1 text-xl font-black">Ajuste rápido</h2>
-            <p className="mt-1 text-sm text-[var(--ff-muted)]">As metas são salvas no banco quando você estiver online, com localStorage apenas como fallback offline.</p>
+            <p className="mt-1 text-sm text-[var(--ff-muted)]">As metas ficam salvas na sua conta quando houver conexão e continuam disponíveis offline.</p>
 
             <form onSubmit={handleSaveGoals} className="mt-4 space-y-3">
               <Input label="Meta de água (ml)" type="number" min="500" inputMode="numeric" value={goals.waterGoalMl} onChange={(event) => setGoals((current) => ({ ...current, waterGoalMl: event.target.value }))} />
@@ -664,10 +664,10 @@ function Nutrition() {
               <h3 className="font-black">Status da sincronização</h3>
               <p className="mt-2 text-sm leading-relaxed text-[var(--ff-muted)]">
                 {syncStatus === 'synced'
-                  ? 'Nutrição salva no MongoDB e mantida em cache local para abrir rápido.'
+                  ? 'Nutrição salva e pronta para abrir rápido.'
                   : syncStatus === 'syncing'
-                    ? 'Enviando alterações para a API...'
-                    : 'Sem API agora: os dados ficam locais e voltam a sincronizar quando o backend responder.'}
+                    ? 'Salvando alterações...'
+                    : 'Sem conexão agora: os dados ficam salvos no aparelho e sincronizam depois.'}
               </p>
             </div>
           </Card>

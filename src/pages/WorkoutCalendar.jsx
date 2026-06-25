@@ -151,13 +151,13 @@ function WorkoutCalendar() {
         metrics={[
           { label: 'Treinos', value: history.length },
           { label: 'Mês', value: monthLabel },
-          { label: 'Fonte', value: source === 'database' ? 'API' : 'Local' },
+          { label: 'Status', value: source === 'database' ? 'Sincronizado' : 'Offline' },
         ]}
       />
       <PageHeader
         title="Calendário"
         description="Veja seus dias treinados e os treinos feitos em cada data."
-        action={<Badge variant={source === 'database' ? 'purple' : 'default'}>{loading ? 'Carregando' : source === 'database' ? 'Sincronizado' : 'Local'}</Badge>}
+        action={<Badge variant={source === 'database' ? 'purple' : 'default'}>{loading ? 'Carregando' : source === 'database' ? 'Sincronizado' : 'Offline'}</Badge>}
       />
 
       <section className="ff-page-mobile-main-grid grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">

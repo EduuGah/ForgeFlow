@@ -331,7 +331,7 @@ function ProgressPhotos() {
         metrics={[
           { label: 'Fotos', value: photos.length },
           { label: 'Ângulos', value: stats.angles },
-          { label: 'Fonte', value: source === 'database' ? 'API' : 'Local' },
+          { label: 'Status', value: source === 'database' ? 'Sincronizado' : 'Offline' },
         ]}
       />
 
@@ -341,7 +341,7 @@ function ProgressPhotos() {
         description="Registre sua evolução corporal com fotos, peso, data e observações."
         action={
           <Badge variant={source === 'database' ? 'purple' : 'default'}>
-            {loading ? 'Carregando...' : source === 'database' ? 'Sincronizado' : 'Local'}
+            {loading ? 'Carregando...' : source === 'database' ? 'Sincronizado' : 'Offline'}
           </Badge>
         }
       />

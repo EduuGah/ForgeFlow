@@ -34,7 +34,7 @@ export function canUseNativeMediaBridge() {
 
 export async function normalizeImageToJpegNative({ dataUrl, filename, mimeType = 'image/jpeg', maxSide = 2600, quality = 90 }) {
   if (!isNativeRuntime()) return null
-  if (!isForgeFlowMediaAvailable()) throw new Error('Plugin nativo ForgeFlowMedia não está registrado no APK.')
+  if (!isForgeFlowMediaAvailable()) throw new Error('O recurso de mídia não está disponível neste aparelho.')
 
   const base64 = dataUrlToBase64(dataUrl)
   if (!base64) throw new Error('Imagem sem conteúdo base64.')
@@ -50,7 +50,7 @@ export async function normalizeImageToJpegNative({ dataUrl, filename, mimeType =
 
 export async function saveImageToGalleryNative({ dataUrl, filename, mimeType = 'image/png' }) {
   if (!isNativeRuntime()) return null
-  if (!isForgeFlowMediaAvailable()) throw new Error('Plugin nativo ForgeFlowMedia não está registrado no APK.')
+  if (!isForgeFlowMediaAvailable()) throw new Error('O recurso de mídia não está disponível neste aparelho.')
 
   const base64 = dataUrlToBase64(dataUrl)
   if (!base64) throw new Error('Imagem sem conteúdo base64.')
@@ -65,7 +65,7 @@ export async function saveImageToGalleryNative({ dataUrl, filename, mimeType = '
 
 export async function shareImageToInstagramStoryNative({ dataUrl, filename, mimeType = 'image/png', shareText }) {
   if (!isNativeRuntime()) return null
-  if (!isForgeFlowMediaAvailable()) throw new Error('Plugin nativo ForgeFlowMedia não está registrado no APK.')
+  if (!isForgeFlowMediaAvailable()) throw new Error('O recurso de mídia não está disponível neste aparelho.')
 
   const base64 = dataUrlToBase64(dataUrl)
   if (!base64) throw new Error('Imagem sem conteúdo base64.')

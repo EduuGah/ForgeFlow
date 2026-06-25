@@ -321,7 +321,7 @@ function WorkoutSchedule() {
         })
 
         if (result?.reason === 'not-native') {
-          showToast('success', 'Preferência salva', 'No navegador, o alerta real será agendado no APK Android.')
+          showToast('success', 'Preferência salva', 'Os alertas serão enviados quando estiverem disponíveis no aparelho.')
         } else if (result?.reason === 'permission-denied') {
           showToast('error', 'Notificações bloqueadas', 'Permita as notificações do ForgeFlow nas configurações do aparelho.')
         } else {
@@ -349,7 +349,7 @@ function WorkoutSchedule() {
       setNotificationPermission(permission)
 
       if (permission?.display === 'granted') {
-        showToast('success', 'Permissão ativa', 'Agora o ForgeFlow pode enviar alertas no APK.')
+        showToast('success', 'Permissão ativa', 'Agora o ForgeFlow pode enviar alertas de treino.')
       } else {
         showToast('error', 'Permissão não liberada', 'As notificações continuam bloqueadas no aparelho.')
       }
@@ -369,7 +369,7 @@ function WorkoutSchedule() {
       const result = await scheduleTestNotification(8)
 
       if (result?.reason === 'not-native') {
-        showToast('success', 'Teste salvo', 'No navegador não há notificação local; teste no APK Android.')
+        showToast('success', 'Teste salvo', 'O lembrete de teste foi registrado.')
       } else if (result?.reason === 'permission-denied') {
         showToast('error', 'Notificações bloqueadas', 'Permita as notificações do app para testar.')
       } else {

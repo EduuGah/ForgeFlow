@@ -237,7 +237,7 @@ function Progress() {
         description="Cards, gráficos e detalhes organizados para consultar rápido no celular."
         metrics={[
           { label: 'Status', value: loading || syncing ? 'Sync' : 'OK' },
-          { label: 'Fonte', value: source === 'database' ? 'API' : 'Local' },
+          { label: 'Status', value: source === 'database' ? 'Sincronizado' : 'Offline' },
           { label: 'Séries', value: recentSetRows.length },
         ]}
       />
@@ -253,7 +253,7 @@ function Progress() {
                 ? 'Sincronizando...'
                 : source === 'database'
                   ? 'Sincronizado'
-                  : 'Local'}
+                  : 'Offline'}
             </Badge>
 
             <Button

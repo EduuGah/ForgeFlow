@@ -131,7 +131,7 @@ function MuscleRecovery() {
         description="Veja rapidamente o que está pronto para treinar e o que ainda precisa recuperar."
         metrics={[
           { label: 'Status', value: loading ? 'Carregando' : 'OK' },
-          { label: 'Fonte', value: source === 'database' ? 'API' : 'Local' },
+          { label: 'Status', value: source === 'database' ? 'Sincronizado' : 'Offline' },
           { label: 'Hoje', value: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) },
         ]}
       />

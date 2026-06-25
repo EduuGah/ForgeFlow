@@ -101,7 +101,7 @@ function NotificationSettingsSection({ settings, workouts = [], onUpdateSetting,
       }
 
       if (!nativeApp) {
-        onShowToast?.('success', 'Preferência web', 'No navegador as preferências ficam salvas, mas a notificação real depende do APK.')
+        onShowToast?.('success', 'Preferência salva', 'Suas preferências de lembrete foram atualizadas.')
         return
       }
 
@@ -140,7 +140,7 @@ function NotificationSettingsSection({ settings, workouts = [], onUpdateSetting,
 
         const result = await scheduleDailyWeightReminder(settings.weightReminderTime)
         if (result?.reason === 'not-native') {
-          onShowToast?.('success', 'Preferência salva', 'No navegador o lembrete fica salvo; no APK ele vira notificação real.')
+          onShowToast?.('success', 'Preferência salva', 'Seu lembrete foi salvo.')
         } else {
           onShowToast?.('success', 'Lembrete ativado', `Peso: todo dia às ${settings.weightReminderTime}.`)
         }
@@ -179,7 +179,7 @@ function NotificationSettingsSection({ settings, workouts = [], onUpdateSetting,
         })
 
         if (result?.reason === 'not-native') {
-          onShowToast?.('success', 'Preferência salva', 'No navegador o lembrete fica salvo; no APK ele vira notificação real.')
+          onShowToast?.('success', 'Preferência salva', 'Seu lembrete foi salvo.')
         } else {
           onShowToast?.('success', 'Lembretes ativados', `${result?.count || scheduledWorkoutDays} treino(s) serão lembrados semanalmente.`)
         }
@@ -227,7 +227,7 @@ function NotificationSettingsSection({ settings, workouts = [], onUpdateSetting,
 
         const result = await scheduleSmartReminder(key, nextSettings)
         if (result?.reason === 'not-native') {
-          onShowToast?.('success', 'Preferência salva', 'No navegador fica salvo; no APK vira notificação real.')
+          onShowToast?.('success', 'Preferência salva', 'Seu lembrete foi salvo.')
         } else {
           onShowToast?.('success', 'Lembrete ativado', 'Esse lembrete inteligente foi configurado.')
         }
@@ -296,14 +296,14 @@ function NotificationSettingsSection({ settings, workouts = [], onUpdateSetting,
       <SectionTitle
         icon={Bell}
         title="Lembretes no celular"
-        description="Configure avisos de peso e treino com uma interface melhor para APK Android."
+        description="Configure avisos de peso, treino e rotina com clareza."
       />
 
       <div className="ff-reminder-status-grid mt-5">
         <NativeStatusPill
           icon={Smartphone}
           label="Ambiente"
-          value={nativeApp ? 'APK Android' : 'Navegador'}
+          value={nativeApp ? 'App instalado' : 'Preferência salva'}
           tone={nativeApp ? 'success' : 'neutral'}
         />
         <NativeStatusPill
@@ -315,7 +315,7 @@ function NotificationSettingsSection({ settings, workouts = [], onUpdateSetting,
         <NativeStatusPill
           icon={Activity}
           label="Alarme exato"
-          value={nativeApp ? (exactAlarm === 'granted' ? 'Permitido' : exactAlarm === 'denied' ? 'Bloqueado' : 'Verificar') : 'Modo web'}
+          value={nativeApp ? (exactAlarm === 'granted' ? 'Permitido' : exactAlarm === 'denied' ? 'Bloqueado' : 'Verificar') : 'Não necessário'}
           tone={!nativeApp ? 'neutral' : exactAlarm === 'granted' ? 'success' : exactAlarm === 'denied' ? 'warning' : 'neutral'}
         />
         <NativeStatusPill
@@ -334,11 +334,11 @@ function NotificationSettingsSection({ settings, workouts = [], onUpdateSetting,
 
       <div className="ff-reminder-permission-panel mt-5">
         <div className="min-w-0">
-          <Badge>{nativeApp ? 'APK' : 'Web'}</Badge>
+          <Badge>{nativeApp ? 'Celular' : 'Alertas'}</Badge>
           <p className="mt-2 text-sm leading-relaxed text-[var(--ff-muted)]">
             {nativeApp
-              ? 'Toque em solicitar permissão se o Android ainda não liberou notificações para o ForgeFlow.'
-              : 'No navegador as preferências ficam salvas, mas a notificação real só dispara no APK instalado.'}
+              ? 'Toque em solicitar permissão se as notificações ainda não estiverem liberadas para o ForgeFlow.'
+              : 'Suas preferências ficam salvas e podem ser usadas quando os alertas estiverem disponíveis.'}
           </p>
         </div>
 

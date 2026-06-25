@@ -773,7 +773,7 @@ function Notifications() {
         metrics={[
           { label: "Total", value: stats.total },
           { label: "Não lidas", value: stats.unread },
-          { label: "Fonte", value: source === "database" ? "API" : "Local" },
+          { label: "Status", value: source === "database" ? "Sincronizado" : "Offline" },
         ]}
       />
 

@@ -66,7 +66,7 @@ function ScheduleHeader({
 
       {hasUnsavedChanges && (
         <div className="ff-schedule-v2-hero__notice">
-          <BellRing size={16} /> Salve para atualizar os alertas do APK.
+          <BellRing size={16} /> Salve para atualizar os alertas.
         </div>
       )}
     </section>

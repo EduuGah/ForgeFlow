@@ -444,7 +444,7 @@ function Exercises() {
 
     if (file.size > maxSizeInBytes) {
       alert(
-        `Esse arquivo tem ${(file.size / 1024 / 1024).toFixed(2)}MB. Para salvar no navegador, use uma imagem/GIF de até ${maxSizeInMB}MB.`
+        `Esse arquivo tem ${(file.size / 1024 / 1024).toFixed(2)}MB. Use uma imagem/GIF de até ${maxSizeInMB}MB.`
       )
 
       event.target.value = ''
@@ -611,7 +611,7 @@ function Exercises() {
 
       alert(
         error.message ||
-        'Não foi possível salvar o favorito no servidor.'
+        'Não foi possível salvar o favorito agora.'
       )
     }
   }
@@ -641,15 +641,15 @@ function Exercises() {
       <AppPageIntro
         eyebrow="Biblioteca"
         title="Exercícios"
-        description="Busque rápido, filtre por músculo ou equipamento e abra detalhes sem perder espaço no celular."
+        description="Sua biblioteca de movimentos organizada por músculo, equipamento, favoritos e histórico de uso."
         metrics={[
           { label: 'Total', value: indexedExercises.length },
-          { label: 'Visíveis', value: filteredExercises.length },
+          { label: 'Encontrados', value: filteredExercises.length },
           { label: 'Favoritos', value: stats.favoriteExercisesCount },
         ]}
       />
 
-      <section className="ff-page-mobile-main-grid grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
+      <section className="ff-page-mobile-main-grid ff-exercises-layout-grid grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-[300px_minmax(0,1fr)]">
         <div className="hidden xl:block">
           <ExerciseFiltersSidebar
             groupSearch={groupSearch}
@@ -695,7 +695,7 @@ function Exercises() {
           search={search}
           setSearch={setSearch}
           openCreateModal={openCreateModal}
-          syncLabel={isSyncing ? 'sincronizando' : dataSource === 'database' ? 'API' : 'local'}
+          syncLabel={isSyncing ? 'Atualizando' : dataSource === 'database' ? 'Sincronizado' : 'Disponível offline'}
           visibleCount={visibleCount}
           filterKey={filterKey}
           setVisibleState={setVisibleState}

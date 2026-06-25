@@ -204,7 +204,7 @@ export async function scheduleTestNotification(secondsFromNow = 10) {
       buildNotification({
         id: TEST_REMINDER_ID,
         title: 'Teste de lembrete ForgeFlow',
-        body: 'Se você recebeu esta notificação, os lembretes estão funcionando no APK.',
+        body: 'Se você recebeu esta notificação, os lembretes estão funcionando.',
         schedule: buildOneShotSchedule(secondsFromNow),
       }),
     ],

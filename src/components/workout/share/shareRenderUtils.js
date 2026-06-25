@@ -966,7 +966,7 @@ async function createUserPhotoFromFile(file) {
       } catch (secondError) {
         console.warn('Falha ao carregar foto por ObjectURL:', secondError)
         const heicMessage = isHeic
-          ? 'O arquivo parece HEIC/HEIF. No APK atualizado o ForgeFlow tenta converter pelo Android antes de desenhar; no navegador alguns HEIC ainda não abrem. Gere o APK de novo e teste pela galeria do celular.'
+          ? 'O arquivo parece HEIC/HEIF. Tente escolher uma imagem em JPG, PNG ou WEBP para garantir compatibilidade.'
           : 'Tente outra foto JPG, PNG ou WEBP.'
         throw new Error(`Não foi possível carregar a imagem escolhida. ${heicMessage}`, { cause: secondError })
       } finally {

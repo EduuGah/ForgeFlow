@@ -7,6 +7,7 @@ import {
   ImageIcon,
   MoreHorizontal,
   Plus,
+  SlidersHorizontal,
   Search,
   Star,
   Trophy,
@@ -23,7 +24,7 @@ function ExerciseMetricPill({ label, value, icon: Icon, accent = false }) {
     <span className={accent ? 'ff-exercise-catalog-metric is-accent' : 'ff-exercise-catalog-metric'}>
       {Icon && <Icon size={13} />}
       <span>{label}</span>
-      <strong>{value}</strong>
+      <strong title={String(value)}>{value}</strong>
     </span>
   )
 }
@@ -77,7 +78,7 @@ function ExerciseListRow({
           )}
 
           <p className="ff-exercise-catalog-card__subtitle">
-            {exercise.normalizedGroup} - {exercise.subgroup} - {exercise.normalizedEquipment}
+            {exercise.normalizedGroup} • {exercise.subgroup} • {exercise.normalizedEquipment}
           </p>
 
           <div className="ff-exercise-catalog-card__chips">
@@ -190,10 +191,10 @@ function ExerciseLibrarySection({
     <main className="ff-exercise-catalog-main order-1 xl:order-2">
       <section className="ff-exercise-catalog-shell">
         <div className="ff-exercise-catalog-head">
-          <div>
+          <div className="ff-exercise-catalog-head__copy">
             <span>{syncLabel}</span>
-            <h2>Catálogo</h2>
-            <p>{filteredExercises.length} encontrados - {displayedExercises.length} visíveis</p>
+            <h2>Biblioteca de exercícios</h2>
+            <p>{filteredExercises.length} encontrados • {displayedExercises.length} na tela</p>
           </div>
 
           <button
@@ -220,6 +221,10 @@ function ExerciseLibrarySection({
             </button>
           )}
         </label>
+
+        <div className="ff-exercise-catalog-toolbar" aria-label="Filtros rápidos da biblioteca">
+          <span><SlidersHorizontal size={14} /> Filtros rápidos</span>
+        </div>
 
         <div className="ff-exercise-catalog-chips">
           <button
@@ -251,7 +256,7 @@ function ExerciseLibrarySection({
         {!isLoaded && <EmptyState title="Carregando biblioteca" description="Preparando seus exercícios." />}
 
         {isLoaded && filteredExercises.length === 0 && (
-          <EmptyState title="Nenhum exercício encontrado" description="Tente limpar os filtros ou buscar por outro termo." />
+          <EmptyState title="Nenhum exercício encontrado" description="Limpe os filtros ou tente buscar por músculo, equipamento ou nome do exercício." />
         )}
 
         {displayedExercises.length > 0 && (

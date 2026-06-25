@@ -194,7 +194,7 @@ function ExerciseProgress() {
         metrics={[
           { label: 'Exercícios', value: exerciseOptions.length },
           { label: 'Treinos', value: history.length },
-          { label: 'Fonte', value: source === 'database' ? 'API' : 'Local' },
+          { label: 'Status', value: source === 'database' ? 'Sincronizado' : 'Offline' },
         ]}
       />
 
@@ -202,7 +202,7 @@ function ExerciseProgress() {
       <PageHeader
         title="Progresso por exercício"
         description="Escolha um exercício e veja séries registradas, evolução de carga e volume."
-        action={<Badge variant={source === 'database' ? 'purple' : 'default'}>{loading ? 'Carregando' : source === 'database' ? 'Sincronizado' : 'Local'}</Badge>}
+        action={<Badge variant={source === 'database' ? 'purple' : 'default'}>{loading ? 'Carregando' : source === 'database' ? 'Sincronizado' : 'Offline'}</Badge>}
       />
 
       <section className="ff-exercise-progress-rankings grid grid-cols-1 gap-4 lg:grid-cols-2">

@@ -20,8 +20,8 @@ function getPermissionCopy(permission) {
       tone: 'ok',
       title: permission?.source === 'web-fallback' ? 'Preferência salva' : 'Notificações permitidas',
       message: permission?.source === 'web-fallback'
-        ? 'No navegador, o ForgeFlow salva a preferência. No APK Android, ele agenda notificações locais.'
-        : 'O ForgeFlow pode enviar lembretes de treino no APK.',
+        ? 'Sua preferência de alerta foi salva.'
+        : 'O ForgeFlow pode enviar lembretes antes dos treinos.',
     }
   }
 
@@ -79,7 +79,7 @@ function NotificationSettingsCard({
           <strong>{lead} min</strong>
         </div>
         <div>
-          <span>No APK</span>
+          <span>Agendados</span>
           <strong>{pendingWorkoutNotifications}</strong>
         </div>
       </div>

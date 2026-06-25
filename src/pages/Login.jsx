@@ -121,7 +121,7 @@ function Login() {
                     </h1>
 
                     <p className="mt-3 text-sm leading-relaxed text-[var(--ff-muted)]">
-                        Entre para salvar seus exercícios, treinos e histórico no banco de dados.
+                        Entre para salvar seus exercícios, treinos e histórico na sua conta.
                     </p>
                 </div>
 
