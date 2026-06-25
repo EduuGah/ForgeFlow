@@ -157,15 +157,21 @@ function getPointerDistance(points) {
   return Math.max(1, Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY))
 }
 
-function Accordion({ title, subtitle, icon, defaultOpen = false, children }) {
+function Accordion({ id, title, icon, openPanel, onToggle, children }) {
+  const isOpen = openPanel === id
+
   return (
-    <details className="ff-share-next__accordion" open={defaultOpen}>
-      <summary>
+    <details className="ff-share-next__accordion" open={isOpen}>
+      <summary
+        onClick={(event) => {
+          event.preventDefault()
+          onToggle(id)
+        }}
+      >
         <span className="ff-share-next__accordion-title">
           {icon}
           <strong>{title}</strong>
         </span>
-        {subtitle && <small>{subtitle}</small>}
       </summary>
       <div className="ff-share-next__accordion-body">{children}</div>
     </details>
@@ -316,6 +322,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   const [selectedStickerId, setSelectedStickerId] = useState('summary')
   const [activeSheet, setActiveSheet] = useState(null)
   const [activeEditLayer, setActiveEditLayer] = useState('stickers')
+  const [openPanel, setOpenPanel] = useState(null)
   const [phraseId, setPhraseId] = useState(0)
   const [customCaption, setCustomCaption] = useState('')
   const [infoLevel, setInfoLevel] = useState('medium')
@@ -355,6 +362,11 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   ].join(':'))).join('|'), [visibleStickers])
   const shareText = useMemo(() => stats ? buildShareText(stats, caption) : '', [caption, stats])
   const hasPhoto = backgroundMode === 'photo' && Boolean(userPhoto?.src)
+  const previewRatio = selectedFormat.width / selectedFormat.height
+
+  function togglePanel(panelId) {
+    setOpenPanel((current) => current === panelId ? null : panelId)
+  }
 
   useEffect(() => {
     formatRef.current = format
@@ -504,8 +516,17 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   function handleFormatChange(nextFormat) {
     if (nextFormat === format) return
     const previousFormat = format
+    const nextFormatMeta = getFormat(nextFormat)
     setFormat(nextFormat)
     setStickers((current) => migrateStickerStateForFormat(current, previousFormat, nextFormat))
+    if (userPhoto?.src) {
+      setPhotoTransform(clampPhotoTransform(
+        photoTransform?.fit === 'contain' ? PHOTO_FIT_TRANSFORM : { ...photoTransform },
+        userPhoto,
+        nextFormatMeta.width,
+        nextFormatMeta.height,
+      ))
+    }
     setActiveSheet(null)
   }
 
@@ -977,10 +998,11 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       setUserPhoto(nextPhoto)
       setBackgroundMode('photo')
       setActiveEditLayer('photo')
+      setOpenPanel('photo')
       setPhotoTransform(PHOTO_FIT_TRANSFORM)
       setStatus(isLikelyHeicFile(file)
         ? 'Foto HEIC/HEIF convertida e aplicada como fundo.'
-        : 'Foto aplicada como fundo. Use dois dedos para ajustar zoom e posição.'
+        : 'Foto aplicada como fundo. Esta prévia segue o mesmo enquadramento da imagem salva.'
       )
     } catch (error) {
       console.error(error)
@@ -1003,6 +1025,17 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
     setBackgroundMode('theme')
     setActiveEditLayer('stickers')
     setPhotoTransform(DEFAULT_PHOTO_TRANSFORM)
+  }
+
+  function activatePhotoBackground() {
+    if (!userPhoto?.src) {
+      setOpenPanel('photo')
+      fileInputRef.current?.click()
+      return
+    }
+    setBackgroundMode('photo')
+    setActiveEditLayer('photo')
+    setOpenPanel('photo')
   }
 
   async function renderExportCanvas() {
@@ -1168,10 +1201,20 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
               ))}
             </div>
 
-            <div
-              ref={previewRef}
-              className={`ff-share-next__preview${activeEditLayer === 'photo' && hasPhoto ? ' is-photo-editing' : ''}`}
-              style={{ aspectRatio: `${selectedFormat.width} / ${selectedFormat.height}` }}
+            <div className="ff-share-next__preview-card">
+              <div className="ff-share-next__preview-meta">
+                <strong>Preview {format === 'story' ? 'Story 9:16' : 'Feed 1:1'}</strong>
+                <span>{selectedFormat.width} × {selectedFormat.height}px · igual ao arquivo salvo</span>
+              </div>
+
+              <div
+                ref={previewRef}
+                className={`ff-share-next__preview${format === 'story' ? ' is-story' : ' is-feed'}${activeEditLayer === 'photo' && hasPhoto ? ' is-photo-editing' : ''}`}
+                style={{
+                  aspectRatio: `${selectedFormat.width} / ${selectedFormat.height}`,
+                  '--ff-preview-ratio': previewRatio,
+                  '--ff-preview-aspect': `${selectedFormat.width} / ${selectedFormat.height}`,
+                }}
               onPointerDownCapture={handlePreviewStickerPointerDownCapture}
               onPointerMoveCapture={handlePreviewStickerPointerMoveCapture}
               onPointerUpCapture={handlePreviewStickerPointerUpCapture}
@@ -1215,9 +1258,19 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
               <div ref={horizontalGuideRef} className="ff-share-next__guide ff-share-next__guide--horizontal" />
 
               {activeEditLayer === 'photo' && hasPhoto && (
-                <div className="ff-share-next__photo-hint">Arraste ou use dois dedos na foto</div>
+                <div className="ff-share-next__photo-hint">Prévia fiel ao arquivo salvo • arraste ou use dois dedos na foto</div>
               )}
+              </div>
             </div>
+
+            {userPhoto?.src && (
+              <div className="ff-share-next__photo-inline-tools">
+                <span>Foto de fundo ativa</span>
+                <button type="button" onClick={() => fileInputRef.current?.click()}>Trocar</button>
+                <button type="button" onClick={resetPhoto}>Mostrar inteira</button>
+                <button type="button" onClick={fillPhoto}>Preencher</button>
+              </div>
+            )}
 
             <CompactStickerBar
               selectedStickerMeta={selectedStickerMeta}
@@ -1343,7 +1396,14 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
           </section>
 
           <aside className="ff-share-next__controls" aria-label="Controles do editor">
-            <Accordion title="Visual do card" subtitle="Formato, template e fundo" icon={<Layers3 size={16} />} defaultOpen>
+            <div className="ff-share-next__quick-topics" aria-label="Ações rápidas">
+              <button type="button" onClick={() => togglePanel('visual')}>Visual</button>
+              <button type="button" onClick={activatePhotoBackground}>{userPhoto?.src ? 'Foto ativa' : 'Usar foto'}</button>
+              <button type="button" onClick={() => togglePanel('stickers')}>Figurinhas</button>
+              <button type="button" onClick={() => togglePanel('message')}>Mensagem</button>
+            </div>
+
+            <Accordion id="visual" title="Visual do card" icon={<Layers3 size={16} />} openPanel={openPanel} onToggle={togglePanel}>
               <div className="ff-share-next__template-row">
                 {TEMPLATE_PRESETS.map((item) => (
                   <button
@@ -1358,22 +1418,18 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
                 ))}
               </div>
 
-              <SegmentedControl
-                label="Fundo"
-                value={backgroundMode}
-                onChange={(value) => {
-                  if (value === 'photo' && !userPhoto?.src) {
-                    fileInputRef.current?.click()
-                    return
-                  }
-                  setBackgroundMode(value)
-                  setActiveEditLayer(value === 'photo' ? 'photo' : 'stickers')
-                }}
-                options={[
-                  { id: 'theme', label: 'Premium' },
-                  { id: 'photo', label: 'Foto' },
-                ]}
-              />
+              <div className="ff-share-next__topic-card">
+                <span className="ff-share-next__field-label">Fundo</span>
+                <div className="ff-share-next__simple-status">
+                  <strong>{backgroundMode === 'photo' && userPhoto?.src ? 'Minha foto como fundo' : 'Tema Forge como fundo'}</strong>
+                  <small>{backgroundMode === 'photo' && userPhoto?.src ? 'Toque em “Trocar foto” para escolher outra imagem.' : 'Você também pode usar uma foto da galeria.'}</small>
+                </div>
+                <div className="ff-share-next__topic-actions">
+                  <button type="button" className={backgroundMode === 'theme' ? 'is-active' : ''} onClick={() => { setBackgroundMode('theme'); setActiveEditLayer('stickers') }}>Usar tema</button>
+                  <button type="button" className={backgroundMode === 'photo' ? 'is-active' : ''} onClick={activatePhotoBackground}>{userPhoto?.src ? 'Usar minha foto' : 'Escolher foto'}</button>
+                  {userPhoto?.src && <button type="button" onClick={() => fileInputRef.current?.click()}>Trocar foto</button>}
+                </div>
+              </div>
 
               {backgroundMode === 'theme' && (
                 <div className="ff-share-next__background-row">
@@ -1399,16 +1455,10 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
               />
             </Accordion>
 
-            <Accordion title="Figurinhas" subtitle="Mostrar, resetar e organizar" icon={<Move size={16} />} defaultOpen>
+            <Accordion id="stickers" title="Figurinhas" icon={<Move size={16} />} openPanel={openPanel} onToggle={togglePanel}>
               <div className="ff-share-next__edit-mode">
                 <button type="button" className={activeEditLayer === 'stickers' ? 'is-active' : ''} onClick={() => setActiveEditLayer('stickers')}>Figurinhas</button>
-                <button type="button" className={activeEditLayer === 'photo' ? 'is-active' : ''} onClick={() => {
-                  if (!userPhoto?.src) fileInputRef.current?.click()
-                  else {
-                    setBackgroundMode('photo')
-                    setActiveEditLayer('photo')
-                  }
-                }}>Foto</button>
+                <button type="button" className={activeEditLayer === 'photo' ? 'is-active' : ''} onClick={activatePhotoBackground}>Foto</button>
               </div>
 
               <div className="ff-share-next__layout-row">
@@ -1433,7 +1483,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
               </div>
             </Accordion>
 
-            <Accordion title="Foto" subtitle="Galeria e ajuste" icon={<ImagePlus size={16} />} defaultOpen={backgroundMode === 'photo'}>
+            <Accordion id="photo" title="Foto" icon={<ImagePlus size={16} />} openPanel={openPanel} onToggle={togglePanel}>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -1445,21 +1495,24 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
               <button type="button" className="ff-share-next__photo-card" onClick={() => fileInputRef.current?.click()}>
                 <ImagePlus size={20} />
                 <span>
-                  <strong>{userPhoto ? userPhoto.name : 'Selecionar foto da galeria'}</strong>
-                  <small>{userPhoto ? 'Toque para trocar a foto.' : 'JPG, PNG, WEBP e HEIC/HEIF no APK com bridge nativa.'}</small>
+                  <strong>{userPhoto ? userPhoto.name : 'Escolher foto da galeria'}</strong>
+                  <small>{userPhoto ? 'Sua foto aparece igual no preview e na imagem salva.' : 'Use uma imagem sua como fundo do card. JPG, PNG, WEBP e HEIC/HEIF.'}</small>
                 </span>
               </button>
 
               {userPhoto && (
-                <div className="ff-share-next__photo-tools">
-                  <button type="button" onClick={fillPhoto}>Preencher</button>
-                  <button type="button" onClick={resetPhoto}>Ajustar</button>
-                  <button type="button" onClick={removePhoto}>Remover</button>
-                </div>
+                <>
+                  <div className="ff-share-next__helper-note">Se a foto parecer cortada, use “Mostrar inteira”. Se quiser ocupar toda a arte, use “Preencher tela”.</div>
+                  <div className="ff-share-next__photo-tools">
+                    <button type="button" onClick={resetPhoto}>Mostrar inteira</button>
+                    <button type="button" onClick={fillPhoto}>Preencher tela</button>
+                    <button type="button" onClick={removePhoto}>Remover foto</button>
+                  </div>
+                </>
               )}
             </Accordion>
 
-            <Accordion title="Mensagem" subtitle="Legenda do card e post" icon={<MessageCircle size={16} />}>
+            <Accordion id="message" title="Mensagem" icon={<MessageCircle size={16} />} openPanel={openPanel} onToggle={togglePanel}>
               <label className="ff-share-next__caption-field">
                 <span>Mensagem opcional</span>
                 <textarea
