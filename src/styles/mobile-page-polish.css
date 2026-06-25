@@ -15999,15 +15999,16 @@ body.ff-share-studio-open .mobile-bottom-nav {
 
 .ff-share-next__swatch-row {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(6, 36px);
   gap: 8px;
+  justify-content: flex-start;
 }
 
 .ff-share-next__swatch-row button {
-  width: 100%;
-  aspect-ratio: 1;
+  width: 36px;
+  height: 36px;
   border: 2px solid rgba(255, 255, 255, 0.1);
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--ff-swatch);
   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
 }
@@ -16607,12 +16608,21 @@ body.ff-share-studio-open .mobile-bottom-nav {
   .ff-share-next__layout-row,
   .ff-share-next__photo-tools,
   .ff-share-next__mini-action-row,
-  .ff-share-next__swatch-row,
   .ff-share-next__topic-actions {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .ff-share-next__swatch-row {
+    grid-template-columns: repeat(4, 36px);
   }
 
   .ff-share-next__footer {
     grid-template-columns: 1fr;
   }
+}
+
+.ff-share-next__photo-inline-tools button.is-active,
+.ff-share-next__photo-tools button.is-active {
+  border-color: rgba(239, 68, 68, 0.42);
+  background: rgba(239, 68, 68, 0.14);
 }

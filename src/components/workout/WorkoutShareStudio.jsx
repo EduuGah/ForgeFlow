@@ -798,13 +798,13 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
   }
 
   function handlePreviewStickerPointerDownCapture(event) {
-    if (activeEditLayer !== 'stickers') return
     if (event.button !== undefined && event.button !== 0) return
 
     const stickerNode = event.target?.closest?.('[data-sticker-id]')
     const directStickerId = stickerNode?.dataset?.stickerId || null
     const activeStickerId = stickerGestureRef.current?.stickerId || selectedStickerId
 
+    if (!directStickerId && activeEditLayer !== 'stickers') return
     if (!directStickerId && (!activeStickerId || !stickerPointersRef.current.size)) return
 
     const stickerId = directStickerId || activeStickerId
@@ -921,6 +921,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
 
   function handlePreviewPointerDown(event) {
     if (activeEditLayer !== 'photo' || !hasPhoto) return
+    if (event.target?.closest?.('[data-sticker-id]')) return
 
     event.preventDefault()
     photoPointersRef.current.set(event.pointerId, { clientX: event.clientX, clientY: event.clientY })
@@ -997,12 +998,12 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       const nextPhoto = await createUserPhotoFromFile(file)
       setUserPhoto(nextPhoto)
       setBackgroundMode('photo')
-      setActiveEditLayer('photo')
+      setActiveEditLayer('stickers')
       setOpenPanel('photo')
       setPhotoTransform(PHOTO_FIT_TRANSFORM)
       setStatus(isLikelyHeicFile(file)
         ? 'Foto HEIC/HEIF convertida e aplicada como fundo.'
-        : 'Foto aplicada como fundo. Esta prévia segue o mesmo enquadramento da imagem salva.'
+        : 'Foto aplicada como fundo. Você ainda pode mover as figurinhas normalmente ou tocar em “Editar foto”.'
       )
     } catch (error) {
       console.error(error)
@@ -1034,8 +1035,21 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
       return
     }
     setBackgroundMode('photo')
+    setActiveEditLayer('stickers')
+    setOpenPanel('photo')
+  }
+
+  function enablePhotoEditing() {
+    if (!userPhoto?.src) {
+      fileInputRef.current?.click()
+      return
+    }
+    setBackgroundMode('photo')
     setActiveEditLayer('photo')
     setOpenPanel('photo')
+    setSelectedStickerId(null)
+    setActiveSheet(null)
+    setStatus('Modo de foto ativo. Arraste ou use dois dedos para ajustar o fundo.')
   }
 
   async function renderExportCanvas() {
@@ -1266,6 +1280,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
             {userPhoto?.src && (
               <div className="ff-share-next__photo-inline-tools">
                 <span>Foto de fundo ativa</span>
+                <button type="button" className={activeEditLayer === 'photo' ? 'is-active' : ''} onClick={enablePhotoEditing}>{activeEditLayer === 'photo' ? 'Editando foto' : 'Editar foto'}</button>
                 <button type="button" onClick={() => fileInputRef.current?.click()}>Trocar</button>
                 <button type="button" onClick={resetPhoto}>Mostrar inteira</button>
                 <button type="button" onClick={fillPhoto}>Preencher</button>
@@ -1458,7 +1473,7 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
             <Accordion id="stickers" title="Figurinhas" icon={<Move size={16} />} openPanel={openPanel} onToggle={togglePanel}>
               <div className="ff-share-next__edit-mode">
                 <button type="button" className={activeEditLayer === 'stickers' ? 'is-active' : ''} onClick={() => setActiveEditLayer('stickers')}>Figurinhas</button>
-                <button type="button" className={activeEditLayer === 'photo' ? 'is-active' : ''} onClick={activatePhotoBackground}>Foto</button>
+                <button type="button" className={activeEditLayer === 'photo' ? 'is-active' : ''} onClick={enablePhotoEditing}>Foto</button>
               </div>
 
               <div className="ff-share-next__layout-row">
@@ -1502,8 +1517,9 @@ function WorkoutShareStudio({ open, session, meta, onClose }) {
 
               {userPhoto && (
                 <>
-                  <div className="ff-share-next__helper-note">Se a foto parecer cortada, use “Mostrar inteira”. Se quiser ocupar toda a arte, use “Preencher tela”.</div>
+                  <div className="ff-share-next__helper-note">Se a foto parecer cortada, use “Mostrar inteira”. Se quiser ocupar toda a arte, use “Preencher tela”. Para dar zoom e arrastar no preview, toque em “Editar foto”.</div>
                   <div className="ff-share-next__photo-tools">
+                    <button type="button" className={activeEditLayer === 'photo' ? 'is-active' : ''} onClick={enablePhotoEditing}>Editar foto</button>
                     <button type="button" onClick={resetPhoto}>Mostrar inteira</button>
                     <button type="button" onClick={fillPhoto}>Preencher tela</button>
                     <button type="button" onClick={removePhoto}>Remover foto</button>
