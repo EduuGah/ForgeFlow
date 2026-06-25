@@ -1,17 +1,20 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   Archive,
   AlertTriangle,
   CheckCircle2,
-  ChevronDown,
   Clock3,
   Dumbbell,
   Edit3,
+  Info,
   MoreHorizontal,
+  Repeat2,
   RotateCcw,
   Target,
   Trash2,
   Trophy,
+  X,
 } from 'lucide-react'
 
 import Badge from '../ui/Badge'
@@ -20,6 +23,7 @@ import GoalProgressBar from './GoalProgressBar'
 import { formatGoalValue, getGoalDeadlineState, parseLocalDate } from '../../features/goals/goalUtils'
 
 const GOAL_TYPE_LABELS = {
+  daily_workouts: 'Treinos por dia',
   weekly_workouts: 'Treinos por semana',
   monthly_workouts: 'Frequência mensal',
   body_weight: 'Peso corporal',
@@ -37,6 +41,13 @@ const STATUS_LABELS = {
   archived: 'Arquivada',
 }
 
+const PERIOD_LABELS = {
+  daily: 'Diária',
+  weekly: 'Semanal',
+  monthly: 'Mensal',
+  none: 'Única',
+}
+
 function formatDate(dateString) {
   const date = parseLocalDate(dateString)
   if (!date) return ''
@@ -52,6 +63,10 @@ function getGoalTypeLabel(type) {
   return GOAL_TYPE_LABELS[type] || 'Meta'
 }
 
+function getPeriodLabel(period) {
+  return PERIOD_LABELS[period] || 'Única'
+}
+
 function getStatusVariant(goal, deadlineState) {
   if (goal.status === 'completed' || goal.isCompleted) return 'green'
   if (goal.status === 'archived') return 'default'
@@ -61,15 +76,20 @@ function getStatusVariant(goal, deadlineState) {
 }
 
 function getGoalExplanation(goal) {
-  if (goal.type === 'weekly_workouts') return 'Conta os treinos finalizados na semana atual.'
-  if (goal.type === 'monthly_workouts') return 'Conta os treinos finalizados no mês atual.'
+  const period = getPeriodLabel(goal.period).toLowerCase()
+
+  if (goal.type === 'daily_workouts') return 'Conta os treinos finalizados hoje e reinicia amanhã.'
+  if (goal.type === 'weekly_workouts') return `Conta os treinos finalizados no período ${period}.`
+  if (goal.type === 'monthly_workouts') return `Conta os treinos finalizados no período ${period}.`
   if (goal.type === 'body_weight') return 'Usa o último peso corporal registrado no perfil.'
   if (goal.type === 'exercise_pr_weight') return `Procura sua maior carga registrada em ${goal.exerciseName || 'um exercício'}.`
-  if (goal.type === 'monthly_volume') return 'Soma o volume dos treinos finalizados no mês.'
+  if (goal.type === 'monthly_volume') return `Soma o volume dos treinos no período ${period}.`
   if (goal.type === 'streak_days') return 'Conta quantos dias seguidos você treinou até hoje.'
-  if (goal.type === 'progress_photos') return 'Conta as fotos de evolução registradas no mês.'
+  if (goal.type === 'progress_photos') return `Conta as fotos de evolução registradas no período ${period}.`
 
-  return 'Meta manual. Atualize o valor atual ao editar.'
+  return goal.period && goal.period !== 'none'
+    ? `Meta manual. O valor volta para 0 quando o ciclo ${period} muda.`
+    : 'Meta manual. Atualize o valor atual ao editar.'
 }
 
 function getRemainingText(goal) {
@@ -104,6 +124,140 @@ function getCardTone(goal, deadlineState) {
   return 'is-active'
 }
 
+function GoalDetailsSheet({ goal, open, deadlineState, percent, statusLabel, canComplete, isCompleted, isArchived, onClose, onEdit, onDelete, onComplete, onArchive, onUnarchive, onReactivate }) {
+  useEffect(() => {
+    if (!open || typeof document === 'undefined') return undefined
+
+    document.body.classList.add('ff-modal-open', 'ff-fullscreen-modal-open')
+    document.documentElement.classList.add('ff-modal-open', 'ff-fullscreen-modal-open')
+
+    return () => {
+      document.body.classList.remove('ff-modal-open', 'ff-fullscreen-modal-open')
+      document.documentElement.classList.remove('ff-modal-open', 'ff-fullscreen-modal-open')
+    }
+  }, [open])
+
+  if (!open) return null
+
+  function runAction(action) {
+    onClose()
+    action(goal)
+  }
+
+  const sheet = (
+    <div className="ff-goal-details-sheet" role="dialog" aria-modal="true" aria-label={`Detalhes da meta ${goal.title}`}>
+      <button type="button" className="ff-goal-details-sheet__backdrop" onClick={onClose} aria-label="Fechar detalhes" />
+
+      <div className="ff-goal-details-sheet__panel">
+        <div className="ff-goal-details-sheet__handle" />
+
+        <header className="ff-goal-details-sheet__header">
+          <div className="ff-goal-details-sheet__icon">
+            <Target size={20} />
+          </div>
+
+          <div className="min-w-0">
+            <p>Detalhes da meta</p>
+            <h2>{goal.title}</h2>
+          </div>
+
+          <button type="button" onClick={onClose} aria-label="Fechar detalhes">
+            <X size={18} />
+          </button>
+        </header>
+
+        <div className="ff-goal-details-sheet__content">
+          <div className="ff-goal-details-sheet__badges">
+            <Badge variant={getStatusVariant(goal, deadlineState)}>{statusLabel}</Badge>
+            <Badge variant="purple">{getGoalTypeLabel(goal.type)}</Badge>
+            <Badge>{getPeriodLabel(goal.period)}</Badge>
+          </div>
+
+          <section className="ff-goal-details-sheet__progress">
+            <div className="ff-goal-details-sheet__ring" style={{ '--goal-progress': `${percent * 3.6}deg` }}>
+              <strong>{percent}%</strong>
+              <span>feito</span>
+            </div>
+
+            <div className="min-w-0">
+              <p>{formatGoalValue(goal.currentValue, goal.unit)} / {formatGoalValue(goal.targetValue, goal.unit)}</p>
+              <span>{getRemainingText(goal)}</span>
+            </div>
+          </section>
+
+          <section className="ff-goal-details-sheet__grid">
+            <div>
+              <Clock3 size={16} />
+              <p>Prazo</p>
+              <strong>{getDeadlineText(goal, deadlineState)}</strong>
+            </div>
+
+            <div>
+              <Repeat2 size={16} />
+              <p>Reset</p>
+              <strong>{getPeriodLabel(goal.period)}</strong>
+            </div>
+          </section>
+
+          {goal.exerciseName && (
+            <section className="ff-goal-details-sheet__note">
+              <Dumbbell size={17} />
+              <span>{goal.exerciseName}</span>
+            </section>
+          )}
+
+          <section className="ff-goal-details-sheet__note">
+            <Info size={17} />
+            <span>{getGoalExplanation(goal)}</span>
+          </section>
+
+          <section className="ff-goal-details-sheet__actions">
+            <button type="button" onClick={() => runAction(onEdit)}>
+              <Edit3 size={16} />
+              Editar
+            </button>
+
+            {canComplete && (
+              <button type="button" className="is-success" onClick={() => runAction(onComplete)}>
+                <CheckCircle2 size={16} />
+                Concluir
+              </button>
+            )}
+
+            {isCompleted && (
+              <button type="button" onClick={() => runAction(onReactivate)}>
+                <RotateCcw size={16} />
+                Reativar
+              </button>
+            )}
+
+            {isArchived ? (
+              <button type="button" onClick={() => runAction(onUnarchive)}>
+                <RotateCcw size={16} />
+                Desarquivar
+              </button>
+            ) : (
+              <button type="button" onClick={() => runAction(onArchive)}>
+                <Archive size={16} />
+                Arquivar
+              </button>
+            )}
+
+            <button type="button" className="is-danger" onClick={() => runAction(onDelete)}>
+              <Trash2 size={16} />
+              Excluir
+            </button>
+          </section>
+        </div>
+      </div>
+    </div>
+  )
+
+  if (typeof document === 'undefined') return sheet
+
+  return createPortal(sheet, document.body)
+}
+
 function GoalCard({
   goal,
   onEdit,
@@ -113,7 +267,7 @@ function GoalCard({
   onUnarchive,
   onReactivate,
 }) {
-  const [expanded, setExpanded] = useState(false)
+  const [detailsOpen, setDetailsOpen] = useState(false)
   const deadlineState = getGoalDeadlineState(goal)
   const isCompleted = goal.status === 'completed' || goal.isCompleted
   const isArchived = goal.status === 'archived'
@@ -131,125 +285,97 @@ function GoalCard({
   const PrimaryIcon = primaryIcon
 
   return (
-    <Card className={`ff-goal-native-card ${getCardTone(goal, deadlineState)}`}>
-      <div className="ff-goal-card-hero">
-        <div className="ff-goal-card-hero__icon">
-          <PrimaryIcon size={20} />
-        </div>
-
-        <div className="ff-goal-card-hero__content">
-          <div className="ff-goal-card-badges">
-            <Badge variant="purple">{getGoalTypeLabel(goal.type)}</Badge>
-            <Badge variant={getStatusVariant(goal, deadlineState)}>{statusLabel}</Badge>
-            {goal.period && goal.period !== 'none' && <Badge>{goal.period === 'weekly' ? 'Semanal' : 'Mensal'}</Badge>}
+    <>
+      <Card className={`ff-goal-native-card ${getCardTone(goal, deadlineState)}`}>
+        <div className="ff-goal-card-hero">
+          <div className="ff-goal-card-hero__icon">
+            <PrimaryIcon size={20} />
           </div>
 
-          <h2 className="ff-goal-card-title">{goal.title}</h2>
+          <div className="ff-goal-card-hero__content">
+            <div className="ff-goal-card-badges">
+              <Badge variant="purple">{getGoalTypeLabel(goal.type)}</Badge>
+              <Badge variant={getStatusVariant(goal, deadlineState)}>{statusLabel}</Badge>
+              {goal.period && goal.period !== 'none' && <Badge>{getPeriodLabel(goal.period)}</Badge>}
+            </div>
 
-          {goal.description && (
-            <p className="ff-goal-card-description">{goal.description}</p>
+            <h2 className="ff-goal-card-title">{goal.title}</h2>
+
+            {goal.description && (
+              <p className="ff-goal-card-description">{goal.description}</p>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setDetailsOpen(true)}
+            className="ff-goal-card-more"
+            aria-label="Abrir detalhes da meta"
+          >
+            <MoreHorizontal size={18} />
+          </button>
+        </div>
+
+        <div className="ff-goal-card-progress-ring" aria-label={`Progresso ${percent}%`}>
+          <div className="ff-goal-card-progress-ring__circle" style={{ '--goal-progress': `${percent * 3.6}deg` }}>
+            <strong>{percent}%</strong>
+            <span>feito</span>
+          </div>
+          <div className="ff-goal-card-progress-ring__meta">
+            <p>{formatGoalValue(goal.currentValue, goal.unit)} / {formatGoalValue(goal.targetValue, goal.unit)}</p>
+            <span>{getRemainingText(goal)}</span>
+          </div>
+        </div>
+
+        <GoalProgressBar
+          currentValue={goal.currentValue}
+          targetValue={goal.targetValue}
+          unit={goal.unit}
+          progressPercent={goal.progressPercent}
+        />
+
+        <div className="ff-goal-card-footer">
+          <span className={deadlineState === 'overdue' ? 'is-danger' : ''}>
+            <Clock3 size={15} />
+            {getDeadlineText(goal, deadlineState)}
+          </span>
+
+          {goal.exerciseName && (
+            <span>
+              <Dumbbell size={15} />
+              {goal.exerciseName}
+            </span>
           )}
         </div>
 
         <button
           type="button"
-          onClick={() => setExpanded((current) => !current)}
-          className="ff-goal-card-more"
-          aria-label={expanded ? 'Ocultar detalhes da meta' : 'Mostrar detalhes da meta'}
-          aria-expanded={expanded}
+          className="ff-goal-card-expand"
+          onClick={() => setDetailsOpen(true)}
         >
-          <MoreHorizontal size={18} />
+          Detalhes e ações
+          <MoreHorizontal size={16} />
         </button>
-      </div>
+      </Card>
 
-      <div className="ff-goal-card-progress-ring" aria-label={`Progresso ${percent}%`}>
-        <div className="ff-goal-card-progress-ring__circle" style={{ '--goal-progress': `${percent * 3.6}deg` }}>
-          <strong>{percent}%</strong>
-          <span>feito</span>
-        </div>
-        <div className="ff-goal-card-progress-ring__meta">
-          <p>{formatGoalValue(goal.currentValue, goal.unit)} / {formatGoalValue(goal.targetValue, goal.unit)}</p>
-          <span>{getRemainingText(goal)}</span>
-        </div>
-      </div>
-
-      <GoalProgressBar
-        currentValue={goal.currentValue}
-        targetValue={goal.targetValue}
-        unit={goal.unit}
-        progressPercent={goal.progressPercent}
+      <GoalDetailsSheet
+        goal={goal}
+        open={detailsOpen}
+        deadlineState={deadlineState}
+        percent={percent}
+        statusLabel={statusLabel}
+        canComplete={canComplete}
+        isCompleted={isCompleted}
+        isArchived={isArchived}
+        onClose={() => setDetailsOpen(false)}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onComplete={onComplete}
+        onArchive={onArchive}
+        onUnarchive={onUnarchive}
+        onReactivate={onReactivate}
       />
-
-      <div className="ff-goal-card-footer">
-        <span className={deadlineState === 'overdue' ? 'is-danger' : ''}>
-          <Clock3 size={15} />
-          {getDeadlineText(goal, deadlineState)}
-        </span>
-
-        {goal.exerciseName && (
-          <span>
-            <Dumbbell size={15} />
-            {goal.exerciseName}
-          </span>
-        )}
-      </div>
-
-      {expanded && (
-        <div className="ff-goal-card-details">
-          <div>
-            <p>Como calcula</p>
-            <span>{getGoalExplanation(goal)}</span>
-          </div>
-
-          <div className="ff-goal-card-actions">
-            <button type="button" onClick={() => onEdit(goal)}>
-              <Edit3 size={16} />
-              Editar
-            </button>
-
-            {canComplete && (
-              <button type="button" className="is-success" onClick={() => onComplete(goal)}>
-                <CheckCircle2 size={16} />
-                Concluir
-              </button>
-            )}
-
-            {isCompleted && (
-              <button type="button" onClick={() => onReactivate(goal)}>
-                <RotateCcw size={16} />
-                Reativar
-              </button>
-            )}
-
-            {isArchived ? (
-              <button type="button" onClick={() => onUnarchive(goal)}>
-                <RotateCcw size={16} />
-                Desarquivar
-              </button>
-            ) : (
-              <button type="button" onClick={() => onArchive(goal)}>
-                <Archive size={16} />
-                Arquivar
-              </button>
-            )}
-
-            <button type="button" className="is-danger" onClick={() => onDelete(goal)}>
-              <Trash2 size={16} />
-              Excluir
-            </button>
-          </div>
-        </div>
-      )}
-
-      <button
-        type="button"
-        className="ff-goal-card-expand"
-        onClick={() => setExpanded((current) => !current)}
-      >
-        {expanded ? 'Menos detalhes' : 'Detalhes e ações'}
-        <ChevronDown size={16} className={expanded ? 'rotate-180' : ''} />
-      </button>
-    </Card>
+    </>
   )
 }
 

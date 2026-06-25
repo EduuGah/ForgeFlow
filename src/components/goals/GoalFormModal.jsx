@@ -2,9 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
   CalendarDays,
+  ChevronDown,
   Dumbbell,
   Flag,
   Info,
+  Repeat2,
   Search,
   Target,
   Trophy,
@@ -17,6 +19,17 @@ import Textarea from '../ui/Textarea'
 import { getExerciseMedia } from '../../utils/exerciseMediaUtils'
 
 const GOAL_TYPES = [
+  {
+    value: 'daily_workouts',
+    label: 'Treinar X vezes no dia',
+    short: 'Treinos diários',
+    unit: 'treinos',
+    period: 'daily',
+    direction: 'increase',
+    placeholder: 'Ex: 1',
+    helper: 'Exemplo: treinar 1 vez hoje. O app conta apenas os treinos finalizados no dia atual e zera automaticamente amanhã.',
+    titleExample: 'Treinar hoje',
+  },
   {
     value: 'weekly_workouts',
     label: 'Treinar X vezes na semana',
@@ -118,6 +131,33 @@ const GOAL_TYPES = [
   },
 ]
 
+const PERIOD_OPTIONS = [
+  {
+    value: 'daily',
+    label: 'Diária',
+    helper: 'Zera todos os dias.',
+  },
+  {
+    value: 'weekly',
+    label: 'Semanal',
+    helper: 'Zera toda semana.',
+  },
+  {
+    value: 'monthly',
+    label: 'Mensal',
+    helper: 'Zera todo mês.',
+  },
+  {
+    value: 'none',
+    label: 'Não repete',
+    helper: 'Meta única, sem reset automático.',
+  },
+]
+
+function getPeriodLabel(period) {
+  return PERIOD_OPTIONS.find((item) => item.value === period)?.label || 'Não repete'
+}
+
 function getGoalTypeConfig(type) {
   return GOAL_TYPES.find((item) => item.value === type) || GOAL_TYPES[0]
 }
@@ -134,35 +174,81 @@ function formatGoalValue(value, unit) {
   return `${number.toLocaleString('pt-BR')} ${unit}`
 }
 
-function GoalTypeCard({ item, selected, onClick }) {
+
+function GoalTypeSelector({ selectedConfig, type, open, onToggle, onSelect }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={
-        selected
-          ? 'rounded-3xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] p-4 text-left shadow-[0_0_24px_var(--ff-accent-shadow)]'
-          : 'rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4 text-left transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-card-hover)]'
-      }
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-black text-[var(--ff-text)]">
-            {item.short}
-          </p>
+    <div className="ff-goal-type-picker">
+      <button
+        type="button"
+        className="ff-goal-type-picker__current"
+        onClick={onToggle}
+        aria-expanded={open}
+      >
+        <span className="ff-goal-type-picker__icon">
+          <Flag size={18} />
+        </span>
 
-          <p className="mt-1 text-xs leading-relaxed text-[var(--ff-muted)]">
-            {item.label}
-          </p>
+        <span className="ff-goal-type-picker__copy">
+          <strong>{selectedConfig.short}</strong>
+          <small>{selectedConfig.label}</small>
+        </span>
+
+        <span className="ff-goal-type-picker__meta">
+          Atual
+          <ChevronDown size={16} className={open ? 'rotate-180' : ''} />
+        </span>
+      </button>
+
+      {open && (
+        <div className="ff-goal-type-picker__menu" role="listbox" aria-label="Tipos de meta">
+          {GOAL_TYPES.map((item) => (
+            <button
+              key={item.value}
+              type="button"
+              className={type === item.value ? 'is-selected' : ''}
+              onClick={() => onSelect(item.value)}
+              role="option"
+              aria-selected={type === item.value}
+            >
+              <span>
+                <strong>{item.short}</strong>
+                <small>{item.label}</small>
+              </span>
+              {type === item.value && <em>Selecionada</em>}
+            </button>
+          ))}
         </div>
+      )}
+    </div>
+  )
+}
 
-        {selected && (
-          <span className="rounded-full bg-[var(--ff-accent)] px-2 py-1 text-[10px] font-black text-white">
-            Atual
-          </span>
-        )}
+function GoalPeriodPicker({ period, onChange }) {
+  return (
+    <div className="ff-goal-period-picker">
+      <div className="ff-goal-period-picker__head">
+        <Repeat2 size={18} />
+        <div>
+          <p>Reset da meta</p>
+          <span>Escolha quando o progresso deve começar de novo.</span>
+        </div>
       </div>
-    </button>
+
+      <div className="ff-goal-period-picker__options" role="radiogroup" aria-label="Reset da meta">
+        {PERIOD_OPTIONS.map((item) => (
+          <button
+            key={item.value}
+            type="button"
+            className={period === item.value ? 'is-active' : ''}
+            onClick={() => onChange(item.value)}
+            aria-pressed={period === item.value}
+          >
+            <strong>{item.label}</strong>
+            <small>{item.helper}</small>
+          </button>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -278,6 +364,8 @@ function GoalFormModal({
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [type, setType] = useState('weekly_workouts')
+  const [period, setPeriod] = useState('weekly')
+  const [isTypeMenuOpen, setIsTypeMenuOpen] = useState(false)
   const [targetValue, setTargetValue] = useState('')
   const [currentValue, setCurrentValue] = useState('')
   const [unit, setUnit] = useState('treinos')
@@ -318,6 +406,8 @@ function GoalFormModal({
       setTitle(goal.title || '')
       setDescription(goal.description || '')
       setType(goal.type || 'custom')
+      setPeriod(goal.period || getGoalTypeConfig(goal.type || 'custom').period || 'none')
+      setIsTypeMenuOpen(false)
       setTargetValue(goal.targetValue ? String(goal.targetValue) : '')
       setCurrentValue(goal.currentValue ? String(goal.currentValue) : '')
       setUnit(goal.unit || getGoalTypeConfig(goal.type).unit || '')
@@ -335,6 +425,8 @@ function GoalFormModal({
     setTitle(config.titleExample)
     setDescription('')
     setType(defaultType)
+    setPeriod(config.period)
+    setIsTypeMenuOpen(false)
     setTargetValue('')
     setCurrentValue('')
     setUnit(config.unit)
@@ -351,6 +443,8 @@ function GoalFormModal({
     const config = getGoalTypeConfig(nextType)
 
     setType(nextType)
+    setPeriod(config.period)
+    setIsTypeMenuOpen(false)
     setUnit(config.unit)
     setCurrentValue('')
     setExerciseName('')
@@ -404,7 +498,7 @@ function GoalFormModal({
       exerciseName: type === 'exercise_pr_weight' ? exerciseName.trim() : '',
       exerciseId: type === 'exercise_pr_weight' ? exerciseId : '',
       direction: selectedConfig.direction,
-      period: selectedConfig.period,
+      period,
       deadline: deadline || null,
       status: goal?.status || 'active',
       resetProgressBaseline: !goal,
@@ -450,17 +544,16 @@ function GoalFormModal({
                   </h3>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {GOAL_TYPES.map((item) => (
-                    <GoalTypeCard
-                      key={item.value}
-                      item={item}
-                      selected={type === item.value}
-                      onClick={() => handleTypeChange(item.value)}
-                    />
-                  ))}
-                </div>
+                <GoalTypeSelector
+                  selectedConfig={selectedConfig}
+                  type={type}
+                  open={isTypeMenuOpen}
+                  onToggle={() => setIsTypeMenuOpen((current) => !current)}
+                  onSelect={handleTypeChange}
+                />
               </div>
+
+              <GoalPeriodPicker period={period} onChange={setPeriod} />
 
               <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
                 <div className="mb-4 flex items-center gap-2">
@@ -633,8 +726,8 @@ function GoalFormModal({
                     </p>
                     <p className="mt-1 leading-relaxed text-[var(--ff-muted)]">
                       {isManualGoalType(type)
-                        ? 'Manual por enquanto. Você atualiza o progresso editando a meta.'
-                        : 'Automático, usando os dados salvos no app.'}
+                        ? `Manual. A renovação ${getPeriodLabel(period).toLowerCase()} zera o valor quando virar o período.`
+                        : `Automático, usando os dados salvos no app. Reset: ${getPeriodLabel(period).toLowerCase()}.`}
                     </p>
                   </div>
 

@@ -16,6 +16,7 @@ import {
 import {
   enrichGoalWithLocalProgress,
   getGoalDeadlineState,
+  getGoalPeriodKey,
   getLocalDateKey,
   normalizeGoal,
   parseLocalDate,
@@ -34,6 +35,18 @@ function createLocalGoal(data, existingGoal = null) {
     createdAt: existingGoal?.createdAt || now,
     updatedAt: now,
   })
+}
+
+function prepareGoalPayload(data, existingGoal = null) {
+  const period = data.period || 'none'
+  const periodKey = period !== 'none' ? getGoalPeriodKey({ period }, new Date()) : ''
+
+  return {
+    ...data,
+    manualPeriodKey: periodKey,
+    baselinePeriodKey: existingGoal?.baselinePeriodKey || '',
+    completedAt: data.status === 'completed' ? (existingGoal?.completedAt || new Date().toISOString()) : null,
+  }
 }
 
 function getWeekStart(date = new Date()) {
@@ -285,13 +298,15 @@ function Goals() {
   }
 
   async function handleSubmitGoal(data) {
+    const payloadData = prepareGoalPayload(data, modalGoal)
+
     try {
       const path = modalGoal ? `/goals/${modalGoal.id}` : '/goals'
       const method = modalGoal ? 'PUT' : 'POST'
 
       const goalFromApi = await apiFetch(path, {
         method,
-        body: JSON.stringify(data),
+        body: JSON.stringify(payloadData),
       })
 
       const normalizedGoal = normalizeGoal(goalFromApi)
@@ -318,7 +333,7 @@ function Goals() {
     } catch (error) {
       console.error(error)
 
-      const localGoal = createLocalGoal(data, modalGoal)
+      const localGoal = createLocalGoal(payloadData, modalGoal)
       const updatedGoals = modalGoal
         ? goals.map((goal) => (goal.id === localGoal.id ? localGoal : goal))
         : [localGoal, ...goals]
@@ -373,7 +388,7 @@ function Goals() {
         } catch (error) {
           console.error(error)
           const updatedGoals = goals.map((item) => item.id === goal.id
-            ? normalizeGoal({ ...item, status: 'completed', completedAt: new Date().toISOString(), progressPercent: 100, isCompleted: true })
+            ? normalizeGoal({ ...item, status: 'completed', completedAt: new Date().toISOString(), manualPeriodKey: item.period && item.period !== 'none' ? getGoalPeriodKey(item, new Date()) : item.manualPeriodKey, progressPercent: 100, isCompleted: true })
             : item)
 
           persistGoals(updatedGoals)

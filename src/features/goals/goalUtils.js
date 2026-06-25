@@ -1,6 +1,7 @@
 import { getCompletedSets, getTotalVolume } from '../../utils/analyticsUtils'
 
 const AUTOMATIC_GOAL_TYPES = new Set([
+  'daily_workouts',
   'weekly_workouts',
   'monthly_workouts',
   'body_weight',
@@ -11,6 +12,7 @@ const AUTOMATIC_GOAL_TYPES = new Set([
 ])
 
 const BASELINE_GOAL_TYPES = new Set([
+  'daily_workouts',
   'weekly_workouts',
   'monthly_workouts',
   'monthly_volume',
@@ -97,12 +99,18 @@ export function normalizeGoal(goal = {}) {
     baselineValue: toNumber(goal.baselineValue),
     baselineAt: goal.baselineAt || null,
     baselinePeriodKey: goal.baselinePeriodKey || '',
+    manualPeriodKey: goal.manualPeriodKey || '',
     isCompleted: Boolean(goal.isCompleted || status === 'completed' || progressPercent >= 100),
   }
 }
 
 function getSessionDate(session = {}) {
   return session.finishedAt || session.completedAt || session.date || session.createdAt || session.startedAt || null
+}
+
+function getStartOfDay(date = new Date()) {
+  const copy = parseLocalDate(date) || new Date()
+  return new Date(copy.getFullYear(), copy.getMonth(), copy.getDate(), 12, 0, 0, 0)
 }
 
 function getStartOfWeek(date = new Date()) {
@@ -117,9 +125,23 @@ function getStartOfMonth(date = new Date()) {
   return new Date(copy.getFullYear(), copy.getMonth(), 1, 12, 0, 0, 0)
 }
 
+function getPeriodStart(period = 'none', date = new Date()) {
+  if (period === 'daily') return getStartOfDay(date)
+  if (period === 'weekly') return getStartOfWeek(date)
+  if (period === 'monthly') return getStartOfMonth(date)
+  return null
+}
+
+function getWorkoutCountPeriod(goal = {}) {
+  if (goal.period && goal.period !== 'none') return goal.period
+  if (goal.type === 'daily_workouts') return 'daily'
+  if (goal.type === 'monthly_workouts') return 'monthly'
+  return 'weekly'
+}
+
 function isOnOrAfter(value, startDate) {
   const date = parseLocalDate(value)
-  if (!date) return false
+  if (!date || !startDate) return false
   return date >= startDate
 }
 
@@ -144,6 +166,10 @@ function calculateGoalPercent(currentValue, targetValue, direction = 'increase')
 export function getGoalPeriodKey(goal = {}, date = new Date()) {
   const localDate = parseLocalDate(date) || new Date()
 
+  if (goal.period === 'daily') {
+    return getLocalDateKey(localDate)
+  }
+
   if (goal.period === 'monthly') {
     return `${localDate.getFullYear()}-${String(localDate.getMonth() + 1).padStart(2, '0')}`
   }
@@ -161,14 +187,11 @@ export function shouldUseGoalBaseline(goal = {}) {
   return BASELINE_GOAL_TYPES.has(goal.type)
 }
 
-function getWeeklyWorkoutCount(history = []) {
-  const startOfWeek = getStartOfWeek(new Date())
-  return history.filter((session) => isOnOrAfter(getSessionDate(session), startOfWeek)).length
-}
+function getWorkoutCountForPeriod(history = [], period = 'weekly') {
+  const periodStart = getPeriodStart(period, new Date())
+  if (!periodStart) return history.length
 
-function getMonthlyWorkoutCount(history = []) {
-  const startOfMonth = getStartOfMonth(new Date())
-  return history.filter((session) => isOnOrAfter(getSessionDate(session), startOfMonth)).length
+  return history.filter((session) => isOnOrAfter(getSessionDate(session), periodStart)).length
 }
 
 function getActiveWorkoutStreak(history = []) {
@@ -186,15 +209,17 @@ function getActiveWorkoutStreak(history = []) {
   return streak
 }
 
-function getMonthlyVolume(history = []) {
-  const startOfMonth = getStartOfMonth(new Date())
-  const monthHistory = history.filter((session) => isOnOrAfter(getSessionDate(session), startOfMonth))
-  const completedSets = getCompletedSets(monthHistory)
+function getVolumeForPeriod(history = [], period = 'monthly') {
+  const periodStart = getPeriodStart(period, new Date())
+  const periodHistory = periodStart
+    ? history.filter((session) => isOnOrAfter(getSessionDate(session), periodStart))
+    : history
+  const completedSets = getCompletedSets(periodHistory)
   const calculatedVolume = getTotalVolume(completedSets)
 
   if (calculatedVolume > 0) return calculatedVolume
 
-  return monthHistory.reduce((total, session) => total + toNumber(session.totalVolume), 0)
+  return periodHistory.reduce((total, session) => total + toNumber(session.totalVolume), 0)
 }
 
 function getLatestBodyWeight(bodyWeight = []) {
@@ -211,9 +236,11 @@ function getLatestBodyWeight(bodyWeight = []) {
   return toNumber(latest?.weight)
 }
 
-function getMonthlyProgressPhotoCount(progressPhotos = []) {
-  const startOfMonth = getStartOfMonth(new Date())
-  return progressPhotos.filter((photo) => isOnOrAfter(photo.date || photo.createdAt, startOfMonth)).length
+function getProgressPhotoCountForPeriod(progressPhotos = [], period = 'monthly') {
+  const periodStart = getPeriodStart(period, new Date())
+  if (!periodStart) return progressPhotos.length
+
+  return progressPhotos.filter((photo) => isOnOrAfter(photo.date || photo.createdAt, periodStart)).length
 }
 
 function getExerciseBestWeight(history = [], exerciseName = '', exerciseId = '') {
@@ -239,13 +266,14 @@ function calculateGoalRawValue(goal, context = {}) {
   const bodyWeight = Array.isArray(context.bodyWeight) ? context.bodyWeight : []
   const progressPhotos = Array.isArray(context.progressPhotos) ? context.progressPhotos : []
 
-  if (goal.type === 'weekly_workouts') return getWeeklyWorkoutCount(history)
-  if (goal.type === 'monthly_workouts') return getMonthlyWorkoutCount(history)
+  if (['daily_workouts', 'weekly_workouts', 'monthly_workouts'].includes(goal.type)) {
+    return getWorkoutCountForPeriod(history, getWorkoutCountPeriod(goal))
+  }
   if (goal.type === 'body_weight') return getLatestBodyWeight(bodyWeight)
   if (goal.type === 'exercise_pr_weight') return getExerciseBestWeight(history, goal.exerciseName, goal.exerciseId)
-  if (goal.type === 'monthly_volume') return getMonthlyVolume(history)
+  if (goal.type === 'monthly_volume') return getVolumeForPeriod(history, goal.period && goal.period !== 'none' ? goal.period : 'monthly')
   if (goal.type === 'streak_days') return getActiveWorkoutStreak(history)
-  if (goal.type === 'progress_photos') return getMonthlyProgressPhotoCount(progressPhotos)
+  if (goal.type === 'progress_photos') return getProgressPhotoCountForPeriod(progressPhotos, goal.period && goal.period !== 'none' ? goal.period : 'monthly')
 
   return toNumber(goal.currentValue)
 }
@@ -264,20 +292,49 @@ function calculateGoalCurrentValue(goal, context = {}) {
   return Math.max(0, rawValue - baselineValue)
 }
 
+function getEffectiveGoalStatus(goal = {}) {
+  if (goal.status !== 'completed') return goal.status
+  if (!['daily', 'weekly', 'monthly'].includes(goal.period)) return goal.status
+
+  const completedAt = goal.completedAt || goal.updatedAt
+  if (!completedAt) return 'active'
+
+  const completedPeriodKey = getGoalPeriodKey(goal, completedAt)
+  const currentPeriodKey = getGoalPeriodKey(goal, new Date())
+
+  return completedPeriodKey === currentPeriodKey ? 'completed' : 'active'
+}
+
+function getManualCurrentValueForPeriod(goal = {}) {
+  if (!['daily', 'weekly', 'monthly'].includes(goal.period)) return goal.currentValue
+
+  const currentPeriodKey = getGoalPeriodKey(goal, new Date())
+  const savedPeriodKey = goal.manualPeriodKey || goal.baselinePeriodKey || getGoalPeriodKey(goal, goal.updatedAt || goal.createdAt || new Date())
+
+  if (savedPeriodKey && savedPeriodKey !== currentPeriodKey) return 0
+
+  return goal.currentValue
+}
+
 export function enrichGoalWithLocalProgress(goal, context = {}) {
   const normalizedGoal = normalizeGoal(goal)
 
+  const effectiveStatus = getEffectiveGoalStatus(normalizedGoal)
+
   if (!AUTOMATIC_GOAL_TYPES.has(normalizedGoal.type)) {
+    const currentValue = getManualCurrentValueForPeriod(normalizedGoal)
     const progressPercent = calculateGoalPercent(
-      normalizedGoal.currentValue,
+      currentValue,
       normalizedGoal.targetValue,
       normalizedGoal.direction
     )
 
     return {
       ...normalizedGoal,
+      status: effectiveStatus,
+      currentValue,
       progressPercent,
-      isCompleted: normalizedGoal.status === 'completed' || progressPercent >= 100,
+      isCompleted: effectiveStatus === 'completed' || progressPercent >= 100,
     }
   }
 
@@ -290,9 +347,10 @@ export function enrichGoalWithLocalProgress(goal, context = {}) {
 
   return {
     ...normalizedGoal,
+    status: effectiveStatus,
     currentValue,
     progressPercent,
-    isCompleted: normalizedGoal.status === 'completed' || progressPercent >= 100,
+    isCompleted: effectiveStatus === 'completed' || progressPercent >= 100,
   }
 }
 
