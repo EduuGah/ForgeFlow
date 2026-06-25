@@ -1176,7 +1176,7 @@ const nutritionDaySchema = new mongoose.Schema(
         calorieGoal: {
             type: Number,
             default: 2600,
-            min: 500,
+            min: 0,
         },
         proteinG: {
             type: Number,
@@ -1186,7 +1186,17 @@ const nutritionDaySchema = new mongoose.Schema(
         proteinGoalG: {
             type: Number,
             default: 160,
-            min: 20,
+            min: 0,
+        },
+        carbsGoalG: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+        fatGoalG: {
+            type: Number,
+            default: 0,
+            min: 0,
         },
         carbsG: {
             type: Number,
@@ -3808,6 +3818,21 @@ const allowedSettingsKeys = [
     'defaultSetModel',
     'defaultRestTimer',
     'workoutsVisibleLimit',
+    'weightUnit',
+    'visualDensity',
+    'showPRs',
+    'keepActiveWorkoutVisible',
+    'hapticFeedback',
+    'hideProgressPhotos',
+    'confirmBeforeOpeningPhotos',
+    'hideSensitiveShareData',
+    'hideBodyWeightOnShare',
+    'dailyWaterGoalMl',
+    'dailyCaloriesGoal',
+    'proteinGoal',
+    'carbsGoal',
+    'fatGoal',
+    'waterReminderCadence',
     'collapseSeriesByDefault',
     'collapseWorkoutsByDefault',
     'autoSaveWorkout',
@@ -5835,7 +5860,12 @@ function normalizeNutritionMeal(input = {}) {
                 size: clampNutritionNumber(input.photo.size, 0, 0, 8 * 1024 * 1024),
                 capturedAt: input.photo.capturedAt || null,
             }
-            : null,
+            : {
+                dataUrl: '',
+                mimeType: '',
+                size: 0,
+                capturedAt: null,
+            },
         createdAt: input.createdAt || new Date(),
     }
 }
@@ -5863,8 +5893,10 @@ function normalizeNutritionDayPayload(input = {}, date = getBrazilDateKey()) {
         date,
         waterMl: clampNutritionNumber(input.waterMl, 0, 0, 30000),
         waterGoalMl: clampNutritionNumber(input.waterGoalMl, 2500, 500, 30000),
-        calorieGoal: clampNutritionNumber(input.calorieGoal, 2600, 500, 30000),
-        proteinGoalG: clampNutritionNumber(input.proteinGoalG, 160, 20, 1000),
+        calorieGoal: clampNutritionNumber(input.calorieGoal, 2600, 0, 30000),
+        proteinGoalG: clampNutritionNumber(input.proteinGoalG, 160, 0, 1000),
+        carbsGoalG: clampNutritionNumber(input.carbsGoalG, 0, 0, 2000),
+        fatGoalG: clampNutritionNumber(input.fatGoalG, 0, 0, 1000),
         meals,
         ...totals,
     }

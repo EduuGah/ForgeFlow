@@ -10,6 +10,24 @@ export const defaultSettings = {
   defaultSetModel: 'hypertrophy',
   defaultRestTimer: 'Desligado',
   weightUnit: 'kg',
+  visualDensity: 'comfortable',
+  showPRs: true,
+  keepActiveWorkoutVisible: true,
+  hapticFeedback: false,
+
+  // Privacidade e compartilhamento
+  hideProgressPhotos: false,
+  confirmBeforeOpeningPhotos: false,
+  hideSensitiveShareData: true,
+  hideBodyWeightOnShare: true,
+
+  // Nutrição
+  dailyWaterGoalMl: 2500,
+  dailyCaloriesGoal: '',
+  proteinGoal: '',
+  carbsGoal: '',
+  fatGoal: '',
+  waterReminderCadence: '2h',
   collapseSeriesByDefault: false,
   collapseWorkoutsByDefault: false,
   workoutsVisibleLimit: 5,
@@ -295,7 +313,32 @@ export function normalizeSettings(settings = {}) {
 
   normalized.themeMode = normalizeThemeMode(normalized.themeMode)
   normalized.accentColor = normalizeAccentColor(normalized.accentColor)
-  normalized.workoutsVisibleLimit = Number(normalized.workoutsVisibleLimit) || defaultSettings.workoutsVisibleLimit
+  normalized.workoutsVisibleLimit = Math.min(20, Math.max(1, Number(normalized.workoutsVisibleLimit) || defaultSettings.workoutsVisibleLimit))
+  normalized.weightUnit = normalized.weightUnit === 'lb' ? 'lb' : 'kg'
+  normalized.visualDensity = normalized.visualDensity === 'compact' ? 'compact' : 'comfortable'
+  normalized.showPRs = normalized.showPRs !== false
+  normalized.keepActiveWorkoutVisible = normalized.keepActiveWorkoutVisible !== false
+  normalized.hapticFeedback = Boolean(normalized.hapticFeedback)
+  normalized.hideProgressPhotos = Boolean(normalized.hideProgressPhotos)
+  normalized.confirmBeforeOpeningPhotos = Boolean(normalized.confirmBeforeOpeningPhotos)
+  normalized.hideSensitiveShareData = normalized.hideSensitiveShareData !== false
+  normalized.hideBodyWeightOnShare = normalized.hideBodyWeightOnShare !== false
+  normalized.dailyWaterGoalMl = Math.min(30000, Math.max(500, Number(normalized.dailyWaterGoalMl) || defaultSettings.dailyWaterGoalMl))
+
+  ;['dailyCaloriesGoal', 'proteinGoal', 'carbsGoal', 'fatGoal'].forEach((goalKey) => {
+    if (normalized[goalKey] === '' || normalized[goalKey] === null || normalized[goalKey] === undefined) {
+      normalized[goalKey] = ''
+      return
+    }
+
+    const parsedGoal = Number(normalized[goalKey])
+    normalized[goalKey] = Number.isFinite(parsedGoal) && parsedGoal > 0 ? parsedGoal : ''
+  })
+
+  normalized.waterReminderCadence = ['1h', '2h', '3h', '4h', 'off'].includes(normalized.waterReminderCadence)
+    ? normalized.waterReminderCadence
+    : defaultSettings.waterReminderCadence
+
   const reminderSettings = [
     ['weightReminderEnabled', 'weightReminderTime'],
     ['workoutReminderEnabled', 'workoutReminderTime'],

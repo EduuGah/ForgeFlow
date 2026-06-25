@@ -229,7 +229,7 @@ export function SettingsAppearanceSection({
             </h3>
 
             <p className="mt-1 text-sm text-[var(--ff-muted)]">
-              As cores agora ficam organizadas por grupos para a lista não virar gigante.
+              Escolha uma cor de destaque para botões, cards e detalhes importantes.
             </p>
           </div>
 
@@ -296,12 +296,11 @@ export function SettingsAppearanceSection({
 
         <div className="mt-4 rounded-3xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)] p-4">
           <p className="text-sm font-black text-[var(--ff-text)]">
-            Próximo passo visual
+            Visual do ForgeFlow
           </p>
 
           <p className="mt-1 text-sm leading-relaxed text-[var(--ff-muted)]">
-            A estrutura já fica preparada para futuramente a logo acompanhar a cor principal do app.
-            Para isso, o ideal é usar uma versão SVG/editável da logo.
+            A cor escolhida é aplicada nos destaques para manter o app com sua identidade.
           </p>
         </div>
       </div>
@@ -314,7 +313,7 @@ export function SettingsAppearanceSection({
             </p>
 
             <p className="mt-1 text-sm text-[var(--ff-muted)]">
-              Este card usa as mesmas variáveis globais aplicadas no app.
+              Veja como botões e detalhes ficam com sua cor atual.
             </p>
           </div>
 
