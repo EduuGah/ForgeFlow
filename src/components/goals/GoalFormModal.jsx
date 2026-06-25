@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   CalendarDays,
   Dumbbell,
@@ -297,6 +298,19 @@ function GoalFormModal({
     }) || null
   }, [exerciseId, exerciseName, exercises])
 
+
+  useEffect(() => {
+    if (!open || typeof document === 'undefined') return undefined
+
+    document.body.classList.add('ff-modal-open', 'ff-fullscreen-modal-open')
+    document.documentElement.classList.add('ff-modal-open', 'ff-fullscreen-modal-open')
+
+    return () => {
+      document.body.classList.remove('ff-modal-open', 'ff-fullscreen-modal-open')
+      document.documentElement.classList.remove('ff-modal-open', 'ff-fullscreen-modal-open')
+    }
+  }, [open])
+
   useEffect(() => {
     if (!open) return
 
@@ -397,8 +411,8 @@ function GoalFormModal({
     })
   }
 
-  return (
-    <div className="ff-goal-modal fixed inset-0 z-[80] flex items-end justify-center bg-black/70 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+  const modal = (
+    <div className="ff-goal-modal fixed inset-0 z-[2147483600] flex items-end justify-center bg-black/70 p-0 backdrop-blur-sm sm:items-center sm:p-4">
       <div className="ff-goal-modal__panel flex max-h-[100dvh] w-full max-w-4xl flex-col overflow-hidden rounded-t-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] shadow-2xl sm:max-h-[92vh] sm:rounded-[2rem]">
         <div className="ff-goal-modal__header sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[var(--ff-border)] bg-[var(--ff-card)] p-5">
           <div>
@@ -678,6 +692,10 @@ function GoalFormModal({
       />
     </div>
   )
+
+  if (typeof document === 'undefined') return modal
+
+  return createPortal(modal, document.body)
 }
 
 export default GoalFormModal

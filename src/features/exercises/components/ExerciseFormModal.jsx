@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 
 import Button from '../../../components/ui/Button'
@@ -53,8 +55,20 @@ function ExerciseFormModal({
   variations,
   setVariations,
 }) {
-  return (
-    <div className="ff-exercise-form-modal fixed inset-0 z-50 flex items-end justify-center bg-black/75 px-3 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] backdrop-blur-sm sm:items-center sm:p-6">
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined
+
+    document.body.classList.add('ff-modal-open', 'ff-fullscreen-modal-open')
+    document.documentElement.classList.add('ff-modal-open', 'ff-fullscreen-modal-open')
+
+    return () => {
+      document.body.classList.remove('ff-modal-open', 'ff-fullscreen-modal-open')
+      document.documentElement.classList.remove('ff-modal-open', 'ff-fullscreen-modal-open')
+    }
+  }, [])
+
+  const modal = (
+    <div className="ff-exercise-form-modal fixed inset-0 z-[2147483600] flex items-end justify-center bg-black/75 px-3 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] backdrop-blur-sm sm:items-center sm:p-6">
       <div className="ff-exercise-form-modal__panel flex h-[94dvh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-zinc-800 bg-[#121212] shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)] sm:h-auto sm:max-h-[92vh]">
         <div className="ff-exercise-form-modal__header shrink-0 border-b border-zinc-800 bg-[#121212]/95 p-4 backdrop-blur-xl sm:p-6">
           <div className="flex items-start justify-between gap-4">
@@ -249,6 +263,10 @@ function ExerciseFormModal({
       </div>
     </div>
   )
+
+  if (typeof document === 'undefined') return modal
+
+  return createPortal(modal, document.body)
 }
 
 export default ExerciseFormModal

@@ -19756,3 +19756,125 @@ body.ff-share-studio-open .mobile-bottom-nav {
   font-size: 0.7rem;
   font-weight: 850;
 }
+
+
+/* ForgeFlow hotfix 25/06: calendário sem ícones sobre a data + modais acima do header/bottom nav. */
+.ff-calendar-day-button {
+  isolation: isolate;
+}
+
+.ff-calendar-day-number {
+  position: relative;
+  z-index: 2;
+}
+
+.ff-calendar-day-markers {
+  top: auto !important;
+  right: 0.42rem !important;
+  bottom: 0.42rem !important;
+  z-index: 1;
+  max-width: calc(100% - 0.84rem) !important;
+  pointer-events: none;
+}
+
+.ff-calendar-day-markers .is-workout {
+  width: 0.5rem !important;
+  min-width: 0.5rem !important;
+  height: 0.5rem !important;
+}
+
+.ff-calendar-day-markers .is-rest,
+.ff-calendar-day-markers .is-planned {
+  width: 0.78rem !important;
+  min-width: 0.78rem !important;
+  height: 0.78rem !important;
+  opacity: 0.78;
+}
+
+.ff-calendar-day-markers .is-rest svg,
+.ff-calendar-day-markers .is-planned svg {
+  width: 0.48rem !important;
+  height: 0.48rem !important;
+}
+
+.ff-calendar-day-button strong {
+  position: relative;
+  z-index: 2;
+  margin-top: auto;
+}
+
+.ff-calendar-day-button.has-workout .ff-calendar-day-markers {
+  bottom: 0.48rem !important;
+  right: 0.48rem !important;
+}
+
+body.ff-fullscreen-modal-open #app-header,
+body.ff-fullscreen-modal-open .mobile-bottom-nav,
+body.ff-fullscreen-modal-open .ff-active-workout-mini-floating {
+  display: none !important;
+}
+
+.ff-goal-modal,
+.ff-exercise-form-modal,
+.ff-goal-exercise-library {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483600 !important;
+}
+
+.ff-goal-exercise-library {
+  z-index: 2147483610 !important;
+}
+
+.ff-goal-modal__panel,
+.ff-exercise-form-modal__panel {
+  max-height: calc(100dvh - env(safe-area-inset-top)) !important;
+}
+
+@media (max-width: 767px) {
+  .ff-goal-modal,
+  .ff-exercise-form-modal {
+    align-items: stretch !important;
+    padding: 0 !important;
+  }
+
+  .ff-goal-modal__panel,
+  .ff-exercise-form-modal__panel {
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+  }
+
+  .ff-goal-modal__header,
+  .ff-exercise-form-modal__header {
+    padding-top: calc(0.9rem + env(safe-area-inset-top)) !important;
+  }
+
+  .ff-exercise-form-modal__scroll {
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom)) !important;
+  }
+
+  .ff-calendar-day-markers {
+    right: 0.34rem !important;
+    bottom: 0.34rem !important;
+    gap: 0.12rem !important;
+  }
+
+  .ff-calendar-day-markers .is-rest,
+  .ff-calendar-day-markers .is-planned {
+    width: 0.66rem !important;
+    min-width: 0.66rem !important;
+    height: 0.66rem !important;
+  }
+
+  .ff-calendar-day-markers .is-pr {
+    min-width: 1rem !important;
+    height: 0.82rem !important;
+    padding-inline: 0.18rem !important;
+    font-size: 0.44rem !important;
+  }
+}
