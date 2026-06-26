@@ -24126,3 +24126,319 @@ body.ff-fullscreen-modal-open .ff-active-workout-mini-floating {
   border-color: var(--ff-border) !important;
   color: var(--ff-text) !important;
 }
+
+/* =========================================================
+   ForgeFlow — Light mode Android hard fix v3
+   Corrige o APK onde a camada nativa antiga forçava cards, header,
+   inputs e bottom nav escuros com seletores mais fortes.
+   ========================================================= */
+html[data-theme='light'],
+html[data-theme='light'].is-native-app {
+  --ff-apk-bg: #f7f7fb;
+  --ff-bg: #f7f7fb;
+  --ff-bg-soft: #ffffff;
+  --ff-card: #ffffff;
+  --ff-card-hover: #f3f4f8;
+  --ff-surface: #ffffff;
+  --ff-surface-2: #f3f4f8;
+  --ff-surface-3: #e5e7ef;
+  --ff-input: #ffffff;
+  --ff-header: rgba(255, 255, 255, 0.96);
+  --ff-sidebar: #ffffff;
+  --ff-border: rgba(15, 23, 42, 0.13);
+  --ff-border-soft: rgba(15, 23, 42, 0.08);
+  --ff-border-strong: rgba(15, 23, 42, 0.22);
+  --ff-text: #111827;
+  --ff-text-soft: #1f2937;
+  --ff-muted: #4b5563;
+  --ff-muted-2: #6b7280;
+  --ff-scroll-track: rgba(226, 232, 240, 0.95);
+  --ff-light-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+  --ff-light-shadow-soft: 0 8px 22px rgba(15, 23, 42, 0.055);
+  color-scheme: light;
+  background: #f7f7fb !important;
+  color: var(--ff-text) !important;
+}
+
+html[data-theme='light'] body,
+html[data-theme='light'] body.is-native-app,
+html[data-theme='light'] body.is-native-app #root,
+html[data-theme='light'] body.is-native-app .ff-app-layout.ff-shell-native,
+html[data-theme='light'] body.is-native-app .ff-page-scroll-shell,
+html[data-theme='light'] body.is-native-app .ff-mobile-app-shell,
+html[data-theme='light'] body.is-native-app .ff-hevy-shell,
+html[data-theme='light'] body.is-native-app .ff-hevy-page {
+  background:
+    radial-gradient(circle at 50% -10%, color-mix(in srgb, var(--ff-accent) 9%, transparent), transparent 23rem),
+    #f7f7fb !important;
+  color: var(--ff-text) !important;
+}
+
+html[data-theme='light'] body.is-native-app .ff-page-scroll-shell {
+  scrollbar-color: var(--ff-accent) rgba(226, 232, 240, 0.95) !important;
+}
+
+html[data-theme='light'] body.is-native-app #app-header {
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08) !important;
+  background: rgba(255, 255, 255, 0.97) !important;
+  color: var(--ff-text) !important;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07) !important;
+  backdrop-filter: blur(18px) saturate(1.05) !important;
+}
+
+html[data-theme='light'] body.is-native-app #app-header .safe-top > div {
+  background: transparent !important;
+}
+
+html[data-theme='light'] body.is-native-app #app-header button,
+html[data-theme='light'] body.is-native-app #app-header [role='button'] {
+  border: 1px solid rgba(15, 23, 42, 0.1) !important;
+  background: #ffffff !important;
+  color: #111827 !important;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08) !important;
+}
+
+html[data-theme='light'] body.is-native-app #app-header button svg,
+html[data-theme='light'] body.is-native-app #app-header [role='button'] svg {
+  color: #111827 !important;
+  stroke: #111827 !important;
+  opacity: 0.9 !important;
+}
+
+html[data-theme='light'] body.is-native-app #app-header h1,
+html[data-theme='light'] body.is-native-app #app-header h2,
+html[data-theme='light'] body.is-native-app #app-header p,
+html[data-theme='light'] body.is-native-app #app-header span:not([class*='text-']) {
+  color: var(--ff-text) !important;
+}
+
+html[data-theme='light'] body.is-native-app .ff-app-sidebar,
+html[data-theme='light'] body.is-native-app .ff-sidebar,
+html[data-theme='light'] body.is-native-app aside[aria-label*='Naveg'] {
+  border-color: rgba(15, 23, 42, 0.1) !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  color: var(--ff-text) !important;
+  box-shadow: 18px 0 38px rgba(15, 23, 42, 0.12) !important;
+}
+
+html[data-theme='light'] body.is-native-app .ff-native-card,
+html[data-theme='light'] body.is-native-app .ff-hevy-page :is(article, section, aside, .ff-card, [class*='rounded-3xl'][class*='border'], [class*='rounded-[2rem]'][class*='border']) {
+  border-color: rgba(15, 23, 42, 0.11) !important;
+  background: #ffffff !important;
+  color: var(--ff-text) !important;
+  box-shadow: var(--ff-light-shadow-soft) !important;
+}
+
+html[data-theme='light'] body.is-native-app .ff-hevy-page :is(input, select, textarea),
+html[data-theme='light'] body.is-native-app input,
+html[data-theme='light'] body.is-native-app select,
+html[data-theme='light'] body.is-native-app textarea {
+  border: 1px solid rgba(15, 23, 42, 0.12) !important;
+  background: #ffffff !important;
+  color: var(--ff-text) !important;
+  box-shadow: inset 0 1px 0 rgba(15, 23, 42, 0.02) !important;
+}
+
+html[data-theme='light'] body.is-native-app :is(input, select, textarea)::placeholder {
+  color: #9ca3af !important;
+}
+
+html[data-theme='light'] body.is-native-app .mobile-bottom-nav,
+html[data-theme='light'] body.is-native-app nav[aria-label='Navegacao inferior'],
+html[data-theme='light'] body.is-native-app nav[aria-label='Navegação inferior'] {
+  background: #f7f7fb !important;
+  color: var(--ff-muted) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme='light'] body.is-native-app .mobile-bottom-nav > div,
+html[data-theme='light'] body.is-native-app nav[aria-label='Navegacao inferior'] > div,
+html[data-theme='light'] body.is-native-app nav[aria-label='Navegação inferior'] > div {
+  border: 1px solid rgba(15, 23, 42, 0.1) !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.11) !important;
+  backdrop-filter: blur(18px) saturate(1.05) !important;
+}
+
+html[data-theme='light'] body.is-native-app .mobile-bottom-nav a,
+html[data-theme='light'] body.is-native-app nav[aria-label='Navegacao inferior'] a,
+html[data-theme='light'] body.is-native-app nav[aria-label='Navegação inferior'] a {
+  color: #6b7280 !important;
+}
+
+html[data-theme='light'] body.is-native-app .mobile-bottom-nav a svg,
+html[data-theme='light'] body.is-native-app nav[aria-label='Navegacao inferior'] a svg,
+html[data-theme='light'] body.is-native-app nav[aria-label='Navegação inferior'] a svg {
+  color: currentColor !important;
+  stroke: currentColor !important;
+}
+
+html[data-theme='light'] body.is-native-app .mobile-bottom-nav a[aria-current='page'],
+html[data-theme='light'] body.is-native-app nav[aria-label='Navegacao inferior'] a[aria-current='page'],
+html[data-theme='light'] body.is-native-app nav[aria-label='Navegação inferior'] a[aria-current='page'] {
+  background: color-mix(in srgb, var(--ff-accent) 14%, #eef2ff) !important;
+  color: var(--ff-accent) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ff-accent) 16%, transparent) !important;
+}
+
+html[data-theme='light'] body.is-native-app .mobile-bottom-nav a[aria-current='page'] span,
+html[data-theme='light'] body.is-native-app nav[aria-label='Navegacao inferior'] a[aria-current='page'] span,
+html[data-theme='light'] body.is-native-app nav[aria-label='Navegação inferior'] a[aria-current='page'] span {
+  color: var(--ff-accent) !important;
+}
+
+html[data-theme='light'] .ff-dashboard-v2 {
+  color: var(--ff-text) !important;
+}
+
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-hero,
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-panel,
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-metric,
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-actions a,
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-bottom-note,
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-advanced {
+  border: 1px solid rgba(15, 23, 42, 0.1) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(248, 250, 252, 0.96)) !important;
+  color: var(--ff-text) !important;
+  box-shadow: var(--ff-light-shadow-soft) !important;
+}
+
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-hero::before {
+  background: radial-gradient(circle, color-mix(in srgb, var(--ff-accent) 18%, transparent), transparent 70%) !important;
+}
+
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-hero__stats div,
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-next,
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-summary__grid a,
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-routines__rail button,
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-routine-empty,
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-recent__list a,
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-week__grid div div,
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-focus__list a,
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-goal-card {
+  border-color: rgba(15, 23, 42, 0.08) !important;
+  background: #f3f4f8 !important;
+  color: var(--ff-text) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-routines__rail button,
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-routine-empty,
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-summary__grid a,
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-recent__list a,
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-focus__list a,
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-goal-card,
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-next-action,
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-active {
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+}
+
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-active,
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-next-action {
+  background:
+    radial-gradient(circle at 92% 0, color-mix(in srgb, var(--ff-accent) 13%, transparent), transparent 46%),
+    #ffffff !important;
+  color: var(--ff-text) !important;
+  box-shadow: var(--ff-light-shadow) !important;
+}
+
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-week__grid i {
+  background: rgba(15, 23, 42, 0.08) !important;
+}
+
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-week__grid .is-trained i,
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-chart__bars i,
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-active__bar i {
+  background: var(--ff-accent) !important;
+}
+
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-week__grid .is-rest i {
+  background: repeating-linear-gradient(
+    135deg,
+    rgba(15, 23, 42, 0.08) 0 5px,
+    rgba(15, 23, 42, 0.035) 5px 10px
+  ) !important;
+}
+
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-ring {
+  background:
+    radial-gradient(circle at center, #ffffff 0 55%, transparent 56%),
+    conic-gradient(var(--ff-accent) var(--ff-dashboard-ring-value), rgba(15, 23, 42, 0.09) 0) !important;
+}
+
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2-active__bar {
+  background: rgba(15, 23, 42, 0.08) !important;
+}
+
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2 :is(h1, h2, h3, strong),
+html[data-theme='light'] body.is-native-app .ff-hevy-page :is(h1, h2, h3, h4, strong, b),
+html[data-theme='light'] body.is-native-app .ff-native-card :is(h1, h2, h3, h4, strong, b) {
+  color: var(--ff-text) !important;
+}
+
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2 :is(p, small, em, span),
+html[data-theme='light'] body.is-native-app .ff-hevy-page :is(p, small, em, label) {
+  color: inherit;
+}
+
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2 :is(.ff-dashboard-v2-hero__copy p, .ff-dashboard-v2-metric small, .ff-dashboard-v2-metric span, .ff-dashboard-v2-bottom-note small, .ff-dashboard-v2-bottom-note span, .ff-dashboard-v2-recent__list small, .ff-dashboard-v2-routines__rail button span, .ff-dashboard-v2-goal-card span, .ff-dashboard-v2-next small, .ff-dashboard-v2-next span, .ff-dashboard-v2-summary__grid span, .ff-dashboard-v2-active__content small, .ff-dashboard-v2-active__content em, .ff-dashboard-v2-next-action em) {
+  color: var(--ff-muted) !important;
+}
+
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2 :is(.ff-dashboard-v2-eyebrow, .ff-dashboard-v2-section-title span, .ff-dashboard-v2-pill, .ff-dashboard-v2-hero__footer a, .ff-dashboard-v2-section-title > a, .ff-dashboard-v2-summary__grid svg, .ff-dashboard-v2-routines__rail button svg, .ff-dashboard-v2-routine-empty svg, .ff-dashboard-v2-actions svg, .ff-dashboard-v2-next-action small, .ff-dashboard-v2-active__side small) {
+  color: var(--ff-accent) !important;
+}
+
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2 :is(.ff-dashboard-v2-start, .ff-dashboard-v2-active__icon, .ff-dashboard-v2-next-action > span),
+html[data-theme='light'] body.is-native-app .ff-dashboard-v2 :is(.ff-dashboard-v2-start, .ff-dashboard-v2-active__icon, .ff-dashboard-v2-next-action > span) svg {
+  color: #ffffff !important;
+}
+
+html[data-theme='light'] body.is-native-app .ff-active-workout-mini-card-v3.ff-active-workout-mini-floating,
+html[data-theme='light'] body.is-native-app .ff-page-start-workout .ff-mobile-workout-action-bar,
+html[data-theme='light'] body.is-native-app .ff-mobile-workout-action-bar {
+  border: 1px solid rgba(15, 23, 42, 0.1) !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  color: var(--ff-text) !important;
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.12) !important;
+}
+
+html[data-theme='light'] body.is-native-app .bg-black,
+html[data-theme='light'] body.is-native-app .bg-zinc-950,
+html[data-theme='light'] body.is-native-app .bg-zinc-900,
+html[data-theme='light'] body.is-native-app .bg-zinc-800,
+html[data-theme='light'] body.is-native-app .bg-\[\#000\],
+html[data-theme='light'] body.is-native-app .bg-\[\#050506\],
+html[data-theme='light'] body.is-native-app .bg-\[\#09090b\],
+html[data-theme='light'] body.is-native-app .bg-\[\#101014\],
+html[data-theme='light'] body.is-native-app .bg-\[\#121212\],
+html[data-theme='light'] body.is-native-app .bg-\[\#18181b\],
+html[data-theme='light'] body.is-native-app .bg-\[\#1f1f23\] {
+  background-color: #ffffff !important;
+  color: var(--ff-text) !important;
+}
+
+html[data-theme='light'] body.is-native-app .text-white,
+html[data-theme='light'] body.is-native-app .text-zinc-50,
+html[data-theme='light'] body.is-native-app .text-zinc-100,
+html[data-theme='light'] body.is-native-app .text-zinc-200,
+html[data-theme='light'] body.is-native-app .text-zinc-300,
+html[data-theme='light'] body.is-native-app .text-zinc-400 {
+  color: var(--ff-text) !important;
+}
+
+html[data-theme='light'] body.is-native-app .text-zinc-500,
+html[data-theme='light'] body.is-native-app .text-zinc-600,
+html[data-theme='light'] body.is-native-app .text-zinc-700 {
+  color: var(--ff-muted) !important;
+}
+
+html[data-theme='light'] body.is-native-app .border-white\/5,
+html[data-theme='light'] body.is-native-app .border-white\/10,
+html[data-theme='light'] body.is-native-app .border-white\/15,
+html[data-theme='light'] body.is-native-app .border-zinc-900,
+html[data-theme='light'] body.is-native-app .border-zinc-800,
+html[data-theme='light'] body.is-native-app .border-zinc-700 {
+  border-color: rgba(15, 23, 42, 0.11) !important;
+}

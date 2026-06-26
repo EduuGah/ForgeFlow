@@ -464,6 +464,7 @@ export function applyAppSettingsToDocument(settings = getAppSettings()) {
   const accent = getAccentColor(normalizedSettings)
   const effectiveTheme = getEffectiveTheme(normalizedSettings)
   const root = document.documentElement
+  const body = document.body
 
   const accentText = effectiveTheme === 'light' ? accent.primary : accent.text
 
@@ -475,6 +476,7 @@ export function applyAppSettingsToDocument(settings = getAppSettings()) {
   root.style.setProperty('--ff-accent-shadow', accent.shadow)
 
   if (effectiveTheme === 'light') {
+    root.style.setProperty('--ff-apk-bg', '#f7f7fb')
     root.style.setProperty('--ff-bg', '#f7f7fb')
     root.style.setProperty('--ff-bg-soft', '#ffffff')
     root.style.setProperty('--ff-card', '#ffffff')
@@ -499,6 +501,7 @@ export function applyAppSettingsToDocument(settings = getAppSettings()) {
     root.style.setProperty('--ff-warning-text', '#92400e')
     root.style.setProperty('--ff-warning-muted', 'rgba(120, 53, 15, 0.78)')
   } else {
+    root.style.setProperty('--ff-apk-bg', '#000000')
     root.style.setProperty('--ff-bg', '#000000')
     root.style.setProperty('--ff-bg-soft', '#09090b')
     root.style.setProperty('--ff-card', '#18181b')
@@ -528,6 +531,16 @@ export function applyAppSettingsToDocument(settings = getAppSettings()) {
   root.dataset.theme = effectiveTheme
   root.dataset.accent = normalizedSettings.accentColor
   root.style.colorScheme = effectiveTheme
+
+  root.classList.toggle('ff-theme-light', effectiveTheme === 'light')
+  root.classList.toggle('ff-theme-dark', effectiveTheme !== 'light')
+
+  if (body) {
+    body.dataset.theme = effectiveTheme
+    body.classList.toggle('ff-theme-light', effectiveTheme === 'light')
+    body.classList.toggle('ff-theme-dark', effectiveTheme !== 'light')
+    body.style.colorScheme = effectiveTheme
+  }
 
   let themeColorMeta = document.querySelector('meta[name=\"theme-color\"]')
   if (!themeColorMeta) {
