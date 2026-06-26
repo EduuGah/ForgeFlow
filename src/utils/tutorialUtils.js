@@ -11,6 +11,12 @@ export const tutorialRouteFlows = {
   '/progress': 'progress',
   '/exercise-progress': 'progress',
   '/settings': 'settings',
+  '/nutrition': 'nutrition',
+  '/notifications': 'notifications',
+  '/profile': 'profile',
+  '/goals': 'goals',
+  '/history': 'history',
+  '/schedule': 'schedule',
 }
 
 export const tutorialFlows = {
@@ -236,17 +242,140 @@ export const tutorialFlows = {
         title: 'Configurações',
         eyebrow: 'Configurações',
         description:
-          'Aqui você muda tema, cor principal, preferências de treino, exportações e tutoriais.',
+          'Aqui você muda tema, cor principal, modo simples, preferências de treino e privacidade.',
         route: '/settings',
-        selector: 'main',
+        selector: '#settings-experience, main',
+        placement: 'center',
+      },
+      {
+        title: 'Modo simples',
+        eyebrow: 'Configurações',
+        description:
+          'Ative o modo simples para reduzir o menu e esconder opções avançadas sem apagar nenhuma função.',
+        route: '/settings',
+        selector: '#settings-experience, main',
         placement: 'center',
       },
       {
         title: 'Tutorial guiado',
         eyebrow: 'Configurações',
         description:
-          'Sempre que quiser rever o guia, use os botões da seção Tutorial guiado.',
+          'Sempre que quiser rever o guia, use os botões da seção Tutorial guiado ou o botão de ajuda flutuante.',
         route: '/settings',
+        selector: 'main',
+        placement: 'center',
+      },
+    ],
+  },
+  nutrition: {
+    id: 'nutrition',
+    title: 'Tutorial de nutrição',
+    description: 'Aprenda água, refeições, metas e histórico.',
+    steps: [
+      {
+        title: 'Resumo do dia',
+        eyebrow: 'Nutrição',
+        description:
+          'Acompanhe água, refeições e calorias do dia em cards simples. Use os botões principais para registrar rápido.',
+        route: '/nutrition',
+        selector: 'main',
+        placement: 'center',
+      },
+      {
+        title: 'Hidratação',
+        eyebrow: 'Nutrição',
+        description:
+          'Use os botões rápidos para somar água ou abra a quantidade personalizada. A água nunca fica negativa.',
+        route: '/nutrition',
+        selector: 'main',
+        placement: 'center',
+      },
+      {
+        title: 'Refeições e histórico',
+        eyebrow: 'Nutrição',
+        description:
+          'Registre refeições reais do dia e consulte os dias anteriores no histórico sem misturar datas.',
+        route: '/nutrition',
+        selector: 'main',
+        placement: 'center',
+      },
+    ],
+  },
+  notifications: {
+    id: 'notifications',
+    title: 'Tutorial de notificações',
+    description: 'Entenda alertas, arquivadas e preferências.',
+    steps: [
+      {
+        title: 'Central de notificações',
+        eyebrow: 'Notificações',
+        description:
+          'Aqui ficam lembretes de treino, água, metas e avisos importantes do app.',
+        route: '/notifications',
+        selector: 'main',
+        placement: 'center',
+      },
+    ],
+  },
+  profile: {
+    id: 'profile',
+    title: 'Tutorial do perfil',
+    description: 'Veja e edite seus dados principais.',
+    steps: [
+      {
+        title: 'Perfil',
+        eyebrow: 'Perfil',
+        description:
+          'Atualize suas informações pessoais, preferências e dados usados nos resumos do app.',
+        route: '/profile',
+        selector: 'main',
+        placement: 'center',
+      },
+    ],
+  },
+  goals: {
+    id: 'goals',
+    title: 'Tutorial de metas',
+    description: 'Crie metas diárias, semanais ou de treino.',
+    steps: [
+      {
+        title: 'Metas',
+        eyebrow: 'Metas',
+        description:
+          'Use metas para acompanhar consistência, volume, carga, peso ou hábitos. Escolha um tipo por vez para não se perder.',
+        route: '/goals',
+        selector: 'main',
+        placement: 'center',
+      },
+    ],
+  },
+  history: {
+    id: 'history',
+    title: 'Tutorial do histórico',
+    description: 'Revise seus treinos anteriores.',
+    steps: [
+      {
+        title: 'Histórico',
+        eyebrow: 'Histórico',
+        description:
+          'Veja treinos finalizados, PRs, local do treino e detalhes de cada sessão registrada.',
+        route: '/history',
+        selector: 'main',
+        placement: 'center',
+      },
+    ],
+  },
+  schedule: {
+    id: 'schedule',
+    title: 'Tutorial da agenda',
+    description: 'Organize sua semana de treinos.',
+    steps: [
+      {
+        title: 'Agenda',
+        eyebrow: 'Agenda',
+        description:
+          'Planeje quais treinos aparecem em cada dia e ajuste lembretes sem precisar abrir várias telas.',
+        route: '/schedule',
         selector: 'main',
         placement: 'center',
       },
@@ -289,7 +418,7 @@ export function getTutorialState(user) {
     return {
       hasSeenWelcome: Boolean(parsed.hasSeenWelcome || globalDismissed),
       dismissedWelcome: Boolean(parsed.dismissedWelcome || globalDismissed),
-      contextualTipsEnabled: parsed.contextualTipsEnabled === true,
+      contextualTipsEnabled: parsed.contextualTipsEnabled !== false,
       completedFlows: parsed.completedFlows || {},
       updatedAt: parsed.updatedAt || '',
     }
@@ -297,7 +426,7 @@ export function getTutorialState(user) {
     return {
       hasSeenWelcome: false,
       dismissedWelcome: false,
-      contextualTipsEnabled: false,
+      contextualTipsEnabled: true,
       completedFlows: {},
       updatedAt: '',
     }
@@ -350,10 +479,6 @@ export function hasWelcomeTutorialPending(user) {
 export function shouldShowWelcomeTutorial(user, state = null) {
   if (!user || !user.profileCompleted) return false
   if (!hasWelcomeTutorialPending(user)) return false
-
-  // Não abre mais o card automaticamente a cada sessão.
-  // O tutorial continua disponível manualmente em Configurações ou pelo botão de ajuda.
-  if (!user || !user.profileCompleted) return false
 
   const tutorialState = state || getTutorialState(user)
 

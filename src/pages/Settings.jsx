@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Bell,
   ChevronRight,
-  Droplets,
   Dumbbell,
   Info,
   Lock,
@@ -11,6 +10,7 @@ import {
   Moon,
   Shield,
   SlidersHorizontal,
+  Sparkles,
   UserRound,
   Utensils,
 } from 'lucide-react'
@@ -42,6 +42,7 @@ import {
   SettingsBackupSection,
   SettingsPasswordSection,
   SettingsTrainingPreferencesSection,
+  SettingsTutorialSection,
 } from '../features/settings/components/SettingsSections'
 import { SettingToggleCard } from '../features/settings/components/SettingsBaseControls'
 
@@ -248,6 +249,44 @@ function SettingsPrivacySection({ settings, onUpdateSetting }) {
   )
 }
 
+function SettingsExperienceSection({ settings, onUpdateSetting, onNavigate }) {
+  return (
+    <Card className="settings-card p-4 sm:p-5" id="settings-experience" data-settings-panel="experience">
+      <SettingsSectionHeader
+        icon={Sparkles}
+        eyebrow="Experiência"
+        title="Deixe o app mais fácil"
+        description="O modo simples mantém as funções principais em destaque e deixa recursos avançados guardados sem remover nada."
+      />
+
+      <div className="mt-5">
+        <SettingToggleCard
+          title="Modo simples"
+          description="Ideal para quem está começando: menu mais curto, configurações menos poluídas e tutorial sempre acessível."
+          active={settings.simpleMode}
+          onChange={(value) => onUpdateSetting('simpleMode', value)}
+        />
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <Button
+          type="button"
+          onClick={() => window.dispatchEvent(new CustomEvent('forgeflow:start-tutorial', { detail: { flowId: 'welcome' } }))}
+          className="w-full"
+        >
+          Ver tutorial
+        </Button>
+        <Button type="button" variant="secondary" onClick={() => onNavigate('/workouts')} className="w-full">
+          Criar treino
+        </Button>
+        <Button type="button" variant="secondary" onClick={() => onNavigate('/nutrition')} className="w-full">
+          Nutrição
+        </Button>
+      </div>
+    </Card>
+  )
+}
+
 function SettingsWorkoutPolishSection({ settings, onUpdateSetting }) {
   return (
     <Card className="settings-card p-4 sm:p-5">
@@ -378,6 +417,7 @@ function Settings() {
   const [exportPassword, setExportPassword] = useState('')
   const [deleteAccountForm, setDeleteAccountForm] = useState({ password: '', confirmText: '' })
   const [deletingAccount, setDeletingAccount] = useState(false)
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false)
 
   const currentAccent = useMemo(() => {
     return accentColors[settings.accentColor] || accentColors.blue || Object.values(accentColors)[0]
@@ -404,6 +444,10 @@ function Settings() {
 
   const syncBadgeText = useMemo(() => getSyncBadgeText(syncStatus), [syncStatus])
   const reminderSummary = useMemo(() => getReminderSummary(settings), [settings])
+
+  useEffect(() => {
+    setShowAdvancedSettings(!settings.simpleMode)
+  }, [settings.simpleMode])
 
   const showToast = useCallback((type, title, message = '') => {
     setToast({ type, title, message })
@@ -678,6 +722,7 @@ function Settings() {
     { icon: Moon, label: 'Aparência', value: getThemeLabel(settings.themeMode), helper: currentAccent?.name || summaryFallback },
     { icon: Dumbbell, label: 'Unidade', value: settings.weightUnit || 'kg', helper: settings.visualDensity === 'compact' ? 'Compacta' : 'Confortável' },
     { icon: Shield, label: 'Privacidade', value: settings.hideSensitiveShareData ? 'Protegida' : 'Padrão', helper: settings.hideBodyWeightOnShare ? 'Peso oculto' : 'Compartilhamento completo' },
+    { icon: Sparkles, label: 'Modo', value: settings.simpleMode ? 'Simples' : 'Completo', helper: settings.simpleMode ? 'Mais guiado' : 'Avançado' },
     { icon: Bell, label: 'Notificações', value: reminderSummary, helper: settings.hydrationReminderEnabled ? 'Água ativa' : 'Ajustável' },
   ]
 
@@ -720,8 +765,10 @@ function Settings() {
           <ShortcutCard icon={UserRound} title="Perfil" description="Editar informações pessoais" onClick={() => navigate('/profile')} />
           <ShortcutCard icon={Bell} title="Notificações" description="Lembretes e permissões" onClick={() => navigate('/notifications')} />
           <ShortcutCard icon={Utensils} title="Nutrição" description="Água, refeições e metas" onClick={() => navigate('/nutrition')} />
-          <ShortcutCard icon={Lock} title="Senha e acesso" description="Segurança da conta" onClick={() => document.getElementById('settings-security')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} />
+          <ShortcutCard icon={Lock} title="Senha e acesso" description="Segurança da conta" onClick={() => { setShowAdvancedSettings(true); window.setTimeout(() => document.getElementById('settings-security')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80) }} />
         </section>
+
+        <SettingsExperienceSection settings={settings} onUpdateSetting={handleUpdateSetting} onNavigate={navigate} />
 
         <GooglePasswordNotice user={user} />
 
@@ -762,55 +809,76 @@ function Settings() {
           <aside className="space-y-5">
             <SettingsAccountSection user={user} syncBadgeText={syncBadgeText} onProfile={() => navigate('/profile')} onLogout={handleLogoutRequest} />
 
-            <SettingsBackupSection
-              exportPassword={exportPassword}
-              exportingType={exportingType}
-              onExportPasswordChange={setExportPassword}
-              onExportJson={handleExportJson}
-              onExportCsv={handleExportCsv}
-              onExportPdf={handleExportPdf}
-              onImportJson={handleImportJson}
-            />
-
-            <div id="settings-security" data-settings-panel="security" className="scroll-mt-24">
-              <SettingsPasswordSection
-                user={user}
-                passwordForm={passwordForm}
-                savingPassword={savingPassword}
-                onPasswordFormChange={setPasswordForm}
-                onSubmit={handleSetPassword}
-              />
-            </div>
+            <SettingsTutorialSection />
 
             <SettingsAboutSection onClearPwaCache={handleClearPwaCache} />
 
-            <Card className="settings-card border-red-500/20 p-4 sm:p-5">
-              <SettingsSectionHeader
-                icon={Shield}
-                eyebrow="Área sensível"
-                title="Excluir conta"
-                description="A exclusão é permanente e exige confirmação forte."
-              />
-              <div className="mt-5 space-y-3">
-                {user?.hasPassword && (
-                  <Input
-                    type="password"
-                    label="Senha atual"
-                    value={deleteAccountForm.password}
-                    onChange={(event) => setDeleteAccountForm((current) => ({ ...current, password: event.target.value }))}
-                    placeholder="Digite sua senha"
+            <Card className="settings-card p-4 sm:p-5" id="settings-security" data-settings-panel="security">
+              <button
+                type="button"
+                onClick={() => setShowAdvancedSettings((current) => !current)}
+                className="flex w-full items-center justify-between gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4 text-left transition hover:border-[var(--ff-accent-border)]"
+                aria-expanded={showAdvancedSettings}
+              >
+                <span className="min-w-0">
+                  <span className="block text-sm font-black text-[var(--ff-text)]">Avançado e segurança</span>
+                  <span className="mt-1 block text-xs leading-relaxed text-[var(--ff-muted)]">
+                    Backup, senha, importação/exportação e exclusão ficam aqui para não poluir o uso diário.
+                  </span>
+                </span>
+                <ChevronRight className={showAdvancedSettings ? 'shrink-0 rotate-90 transition' : 'shrink-0 transition'} size={18} />
+              </button>
+
+              {showAdvancedSettings && (
+                <div className="mt-5 space-y-5">
+                  <SettingsBackupSection
+                    exportPassword={exportPassword}
+                    exportingType={exportingType}
+                    onExportPasswordChange={setExportPassword}
+                    onExportJson={handleExportJson}
+                    onExportCsv={handleExportCsv}
+                    onExportPdf={handleExportPdf}
+                    onImportJson={handleImportJson}
                   />
-                )}
-                <Input
-                  label="Confirmação"
-                  value={deleteAccountForm.confirmText}
-                  onChange={(event) => setDeleteAccountForm((current) => ({ ...current, confirmText: event.target.value }))}
-                  placeholder="Digite EXCLUIR"
-                />
-                <Button type="button" variant="danger" onClick={handleDeleteAccount} disabled={deletingAccount} className="w-full">
-                  {deletingAccount ? 'Excluindo...' : 'Excluir conta permanentemente'}
-                </Button>
-              </div>
+
+                  <SettingsPasswordSection
+                    user={user}
+                    passwordForm={passwordForm}
+                    savingPassword={savingPassword}
+                    onPasswordFormChange={setPasswordForm}
+                    onSubmit={handleSetPassword}
+                  />
+
+                  <Card className="settings-card border-red-500/20 p-4 sm:p-5">
+                    <SettingsSectionHeader
+                      icon={Shield}
+                      eyebrow="Área sensível"
+                      title="Excluir conta"
+                      description="A exclusão é permanente e exige confirmação forte."
+                    />
+                    <div className="mt-5 space-y-3">
+                      {user?.hasPassword && (
+                        <Input
+                          type="password"
+                          label="Senha atual"
+                          value={deleteAccountForm.password}
+                          onChange={(event) => setDeleteAccountForm((current) => ({ ...current, password: event.target.value }))}
+                          placeholder="Digite sua senha"
+                        />
+                      )}
+                      <Input
+                        label="Confirmação"
+                        value={deleteAccountForm.confirmText}
+                        onChange={(event) => setDeleteAccountForm((current) => ({ ...current, confirmText: event.target.value }))}
+                        placeholder="Digite EXCLUIR"
+                      />
+                      <Button type="button" variant="danger" onClick={handleDeleteAccount} disabled={deletingAccount} className="w-full">
+                        {deletingAccount ? 'Excluindo...' : 'Excluir conta permanentemente'}
+                      </Button>
+                    </div>
+                  </Card>
+                </div>
+              )}
             </Card>
           </aside>
         </section>

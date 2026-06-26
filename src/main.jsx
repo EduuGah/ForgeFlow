@@ -6,7 +6,23 @@ import './index.css'
 import './styles/apk-mobile-polish.css'
 import './styles/mobile-page-polish.css'
 import { isNativeApp } from './utils/platformUtils.js'
+import { applyAppSettingsToDocument, getAppSettings, watchSystemThemeChanges } from './utils/settingsUtils.js'
 
+
+
+function bootstrapSavedAppearance() {
+  if (typeof window === 'undefined') return
+
+  try {
+    applyAppSettingsToDocument(getAppSettings())
+    const stopWatchingSystemTheme = watchSystemThemeChanges()
+    window.addEventListener('beforeunload', stopWatchingSystemTheme, { once: true })
+  } catch (error) {
+    console.warn('Não foi possível aplicar a aparência salva antes do carregamento.', error)
+  }
+}
+
+bootstrapSavedAppearance()
 
 function ensurePwaHeadTags() {
   if (typeof document === 'undefined') return

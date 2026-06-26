@@ -7,6 +7,7 @@ import {
   clearWelcomeTutorialPending,
   getFlowForPath,
   getTutorialState,
+  markWelcomeTutorialPending,
   resetTutorialState,
   saveTutorialState,
   shouldShowWelcomeTutorial,
@@ -52,7 +53,7 @@ export function TutorialProvider({ children }) {
 
   useEffect(() => {
     setState(getTutorialState(user))
-  }, [user])
+  }, [activeSession, location.pathname, user])
 
   useEffect(() => {
     if (!user || !user.profileCompleted) {
@@ -97,7 +98,7 @@ export function TutorialProvider({ children }) {
       window.removeEventListener('forgeflow:reset-tutorial', handleResetTutorial)
     }
      
-  }, [user])
+  }, [activeSession, location.pathname, user])
 
   useEffect(() => {
     if (!isRunning || !activeStep?.route) return
@@ -222,7 +223,7 @@ export function TutorialProvider({ children }) {
     setActiveStepIndex(0)
   }
 
-  function closeWelcomePrompt({ dontShowAgain = true } = {}) {
+  function closeWelcomePrompt({ dontShowAgain = false } = {}) {
     setWelcomePromptVisible(false)
 
     if (dontShowAgain) {
@@ -279,18 +280,19 @@ export function TutorialProvider({ children }) {
 
   function resetAllTutorials() {
     resetTutorialState(user)
+    markWelcomeTutorialPending(user)
     const nextState = getTutorialState(user)
     setState(nextState)
     setActiveFlowId('')
     setActiveStepIndex(0)
-    setWelcomePromptVisible(false)
+    setWelcomePromptVisible(Boolean(user?.profileCompleted) && canShowTutorialOnPath(location.pathname))
     unlockGlobalScroll()
   }
 
   function toggleContextualTips() {
     updateState((current) => ({
       ...current,
-      contextualTipsEnabled: current.contextualTipsEnabled === false,
+      contextualTipsEnabled: !Boolean(current.contextualTipsEnabled),
     }))
   }
 

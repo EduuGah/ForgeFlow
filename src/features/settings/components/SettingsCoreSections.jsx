@@ -117,6 +117,9 @@ export function SettingsTutorialSection() {
           ['dashboard', 'Dashboard'],
           ['workouts', 'Treinos'],
           ['progress', 'Evolução'],
+          ['nutrition', 'Nutrição'],
+          ['notifications', 'Notificações'],
+          ['profile', 'Perfil'],
           ['settings', 'Configurações'],
         ].map(([flowId, label]) => (
           <button
@@ -136,7 +139,7 @@ export function SettingsTutorialSection() {
         className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-sm font-bold text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:text-[var(--ff-text)] sm:w-auto sm:px-4"
       >
         <RotateCcwIcon size={16} />
-        Resetar tutorial inicial
+        Reiniciar tutorial inicial
       </button>
     </Card>
   )

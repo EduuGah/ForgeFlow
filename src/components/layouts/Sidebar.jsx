@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from 'react'
 import {
   AlertCircle,
   Bell,
@@ -12,6 +13,7 @@ import {
   LineChart,
   LogOut,
   Settings,
+  Sparkles,
   TrendingUp,
   UserRound,
   X,
@@ -22,6 +24,7 @@ import { Link, NavLink } from 'react-router-dom'
 
 import forgeflowIcon from '../../assets/forgeflow-icon.png'
 import { useAuth } from '../../context/AuthContext'
+import { getUserAppSettings } from '../../utils/settingsUtils'
 
 function getInitials(name = '') {
   const parts = name.trim().split(' ').filter(Boolean)
@@ -67,8 +70,54 @@ const linkGroups = [
   },
 ]
 
+
+const simpleLinkGroups = [
+  {
+    title: 'Comece aqui',
+    links: [
+      { name: 'Dashboard', path: '/', icon: Home },
+      { name: 'Treinos', path: '/workouts', icon: ClipboardList },
+      { name: 'Exercícios', path: '/exercises', icon: Dumbbell },
+    ],
+  },
+  {
+    title: 'Acompanhar',
+    links: [
+      { name: 'Histórico', path: '/history', icon: History },
+      { name: 'Evolução', path: '/progress', icon: TrendingUp },
+      { name: 'Metas', path: '/goals', icon: Flag },
+    ],
+  },
+  {
+    title: 'Minha conta',
+    links: [
+      { name: 'Nutrição', path: '/nutrition', icon: Utensils },
+      { name: 'Perfil', path: '/profile', icon: UserRound },
+      { name: 'Definições', path: '/settings', icon: Settings },
+    ],
+  },
+]
+
 function Sidebar({ isOpen = false, onClose }) {
   const { user, logout } = useAuth()
+  const [settings, setSettings] = useState(() => getUserAppSettings(user))
+  const [showAllLinks, setShowAllLinks] = useState(false)
+
+  useEffect(() => {
+    setSettings(getUserAppSettings(user))
+
+    function handleSettingsChanged(event) {
+      setSettings(getUserAppSettings(user))
+      if (event.detail?.simpleMode !== false) setShowAllLinks(false)
+    }
+
+    window.addEventListener('forgeflow:settings-changed', handleSettingsChanged)
+    return () => window.removeEventListener('forgeflow:settings-changed', handleSettingsChanged)
+  }, [user])
+
+  const visibleLinkGroups = useMemo(() => {
+    return settings.simpleMode && !showAllLinks ? simpleLinkGroups : linkGroups
+  }, [settings.simpleMode, showAllLinks])
 
   function handleLogout() {
     logout()
@@ -138,7 +187,7 @@ function Sidebar({ isOpen = false, onClose }) {
           </div>
 
           <nav className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-4 pb-4">
-            {linkGroups.map((group) => (
+            {visibleLinkGroups.map((group) => (
               <div key={group.title}>
                 <p className="mb-2 px-2 text-[11px] font-black uppercase tracking-[0.18em] text-[var(--ff-muted-2)]">
                   {group.title}
@@ -173,6 +222,26 @@ function Sidebar({ isOpen = false, onClose }) {
                 </div>
               </div>
             ))}
+
+            {settings.simpleMode && (
+              <button
+                type="button"
+                onClick={() => setShowAllLinks((current) => !current)}
+                className="flex w-full items-center gap-3 rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-4 py-3 text-left text-[var(--ff-accent-text)] transition hover:bg-[var(--ff-card-hover)]"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--ff-card)]">
+                  <Sparkles size={20} />
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-black">
+                    {showAllLinks ? 'Voltar ao modo simples' : 'Mostrar todas as áreas'}
+                  </span>
+                  <span className="block truncate text-xs font-bold text-[var(--ff-muted)]">
+                    {showAllLinks ? 'Menu curto para não se perder' : 'Fotos, recuperação, calendário e mais'}
+                  </span>
+                </span>
+              </button>
+            )}
 
             {user?.role === 'admin' && (
               <div>

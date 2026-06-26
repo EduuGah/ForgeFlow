@@ -3815,6 +3815,7 @@ const allowedSettingsKeys = [
     'themeMode',
     'accentColor',
     'compactMobile',
+    'simpleMode',
     'defaultSetModel',
     'defaultRestTimer',
     'workoutsVisibleLimit',

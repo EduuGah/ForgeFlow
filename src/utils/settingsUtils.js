@@ -5,6 +5,7 @@ export const defaultSettings = {
   themeMode: 'dark',
   accentColor: 'blue',
   compactMobile: false,
+  simpleMode: true,
 
   // Treino
   defaultSetModel: 'hypertrophy',
@@ -316,6 +317,7 @@ export function normalizeSettings(settings = {}) {
   normalized.workoutsVisibleLimit = Math.min(20, Math.max(1, Number(normalized.workoutsVisibleLimit) || defaultSettings.workoutsVisibleLimit))
   normalized.weightUnit = normalized.weightUnit === 'lb' ? 'lb' : 'kg'
   normalized.visualDensity = normalized.visualDensity === 'compact' ? 'compact' : 'comfortable'
+  normalized.simpleMode = normalized.simpleMode !== false
   normalized.showPRs = normalized.showPRs !== false
   normalized.keepActiveWorkoutVisible = normalized.keepActiveWorkoutVisible !== false
   normalized.hapticFeedback = Boolean(normalized.hapticFeedback)
@@ -526,12 +528,27 @@ export function applyAppSettingsToDocument(settings = getAppSettings()) {
   root.dataset.accent = normalizedSettings.accentColor
   root.style.colorScheme = effectiveTheme
 
+  let themeColorMeta = document.querySelector('meta[name=\"theme-color\"]')
+  if (!themeColorMeta) {
+    themeColorMeta = document.createElement('meta')
+    themeColorMeta.name = 'theme-color'
+    document.head.appendChild(themeColorMeta)
+  }
+  themeColorMeta.content = effectiveTheme === 'light' ? '#f7f7fb' : '#000000'
+
   if (normalizedSettings.compactMobile) {
     root.classList.add('ff-compact-mobile')
   } else {
     root.classList.remove('ff-compact-mobile')
   }
+
+  if (normalizedSettings.simpleMode) {
+    root.classList.add('ff-simple-mode')
+  } else {
+    root.classList.remove('ff-simple-mode')
+  }
 }
+
 
 export function watchSystemThemeChanges() {
   if (typeof window === 'undefined') return () => {}

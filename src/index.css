@@ -14910,3 +14910,29 @@ body.ff-scroll-locked-by-workout-modal .ff-mobile-workout-action-bar,
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
+
+/* Light mode recovery — keeps accent buttons readable after global legacy dark-class fixes. */
+:root[data-theme='light'] [class*="bg-[var(--ff-accent)]"],
+:root[data-theme='light'] [class*="bg-[var(--ff-accent)]"] *,
+:root[data-theme='light'] .ff-accent-button,
+:root[data-theme='light'] .ff-accent-button * {
+  color: #fff !important;
+}
+
+:root[data-theme='light'] .ff-app-layout,
+:root[data-theme='light'] .ff-page-scroll-shell,
+:root[data-theme='light'] .ff-mobile-app-shell {
+  background: var(--ff-bg) !important;
+  color: var(--ff-text) !important;
+}
+
+:root[data-theme='light'] .ff-app-sidebar,
+:root[data-theme='light'] .mobile-bottom-nav,
+:root[data-theme='light'] #app-header,
+:root[data-theme='light'] .safe-top {
+  color: var(--ff-text) !important;
+}
+
+:root.ff-simple-mode .ff-settings-summary-grid {
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+}
