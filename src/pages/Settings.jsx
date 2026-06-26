@@ -249,38 +249,37 @@ function SettingsPrivacySection({ settings, onUpdateSetting }) {
   )
 }
 
-function SettingsExperienceSection({ settings, onUpdateSetting, onNavigate }) {
+function SettingsExperienceSection({ onNavigate }) {
   return (
     <Card className="settings-card p-4 sm:p-5" id="settings-experience" data-settings-panel="experience">
       <SettingsSectionHeader
         icon={Sparkles}
-        eyebrow="Experiência"
-        title="Deixe o app mais fácil"
-        description="O modo simples mantém as funções principais em destaque e deixa recursos avançados guardados sem remover nada."
+        eyebrow="Ajuda"
+        title="Primeiros passos"
+        description="O menu fica completo, mas o usuário pode aprender pelo tutorial guiado e pelo treino de teste."
       />
 
-      <div className="mt-5">
-        <SettingToggleCard
-          title="Modo simples"
-          description="Ideal para quem está começando: menu mais curto, configurações menos poluídas e tutorial sempre acessível."
-          active={settings.simpleMode}
-          onChange={(value) => onUpdateSetting('simpleMode', value)}
-        />
-      </div>
-
-      <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+      <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
         <Button
           type="button"
           onClick={() => window.dispatchEvent(new CustomEvent('forgeflow:start-tutorial', { detail: { flowId: 'welcome' } }))}
           className="w-full"
         >
-          Ver tutorial
+          Ver tutorial completo
         </Button>
-        <Button type="button" variant="secondary" onClick={() => onNavigate('/workouts')} className="w-full">
-          Criar treino
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => window.dispatchEvent(new CustomEvent('forgeflow:start-tutorial', { detail: { flowId: 'workout' } }))}
+          className="w-full"
+        >
+          Abrir treino teste
         </Button>
-        <Button type="button" variant="secondary" onClick={() => onNavigate('/nutrition')} className="w-full">
-          Nutrição
+        <Button type="button" variant="ghost" onClick={() => onNavigate('/workouts')} className="w-full">
+          Ir para treinos
+        </Button>
+        <Button type="button" variant="ghost" onClick={() => onNavigate('/nutrition')} className="w-full">
+          Ir para nutrição
         </Button>
       </div>
     </Card>
@@ -445,9 +444,6 @@ function Settings() {
   const syncBadgeText = useMemo(() => getSyncBadgeText(syncStatus), [syncStatus])
   const reminderSummary = useMemo(() => getReminderSummary(settings), [settings])
 
-  useEffect(() => {
-    setShowAdvancedSettings(!settings.simpleMode)
-  }, [settings.simpleMode])
 
   const showToast = useCallback((type, title, message = '') => {
     setToast({ type, title, message })
@@ -722,7 +718,7 @@ function Settings() {
     { icon: Moon, label: 'Aparência', value: getThemeLabel(settings.themeMode), helper: currentAccent?.name || summaryFallback },
     { icon: Dumbbell, label: 'Unidade', value: settings.weightUnit || 'kg', helper: settings.visualDensity === 'compact' ? 'Compacta' : 'Confortável' },
     { icon: Shield, label: 'Privacidade', value: settings.hideSensitiveShareData ? 'Protegida' : 'Padrão', helper: settings.hideBodyWeightOnShare ? 'Peso oculto' : 'Compartilhamento completo' },
-    { icon: Sparkles, label: 'Modo', value: settings.simpleMode ? 'Simples' : 'Completo', helper: settings.simpleMode ? 'Mais guiado' : 'Avançado' },
+    { icon: Sparkles, label: 'Ajuda', value: 'Tutorial', helper: 'Treino teste disponível' },
     { icon: Bell, label: 'Notificações', value: reminderSummary, helper: settings.hydrationReminderEnabled ? 'Água ativa' : 'Ajustável' },
   ]
 

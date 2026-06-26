@@ -166,6 +166,7 @@ export function WorkoutSessionProvider({ children }) {
 
   async function saveActiveSessionToApi(session) {
     if (!session || isFinishingRef.current) return false
+    if (session.isTutorial || session.tutorialOnly) return true
 
     const nextHash = getSessionSyncHash(session)
 

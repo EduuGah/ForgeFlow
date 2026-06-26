@@ -29,7 +29,7 @@ export const tutorialFlows = {
         title: 'Bem-vindo ao ForgeFlow',
         eyebrow: 'Passo 1 de 8',
         description:
-          'Este tour mostra o básico para você criar treinos, iniciar sessões e acompanhar sua evolução sem se perder no app.',
+          'Este tour mostra o básico e abre um treino teste para você entender como registrar séries sem mexer em um treino real.',
         route: '/',
         selector: '',
         placement: 'center',
@@ -65,7 +65,7 @@ export const tutorialFlows = {
         title: 'Treino ativo',
         eyebrow: 'Passo 5 de 8',
         description:
-          'Durante o treino, você registra carga e repetições, marca séries concluídas, usa descanso e acompanha a progressão.',
+          'Agora o ForgeFlow abre um treino teste. Nele você aprende onde colocar carga/reps, concluir séries, navegar entre exercícios e finalizar sem salvar no histórico real.',
         route: '/start-workout',
         selector: '.ff-exercise-jump-nav, main',
         placement: 'center',
@@ -92,7 +92,7 @@ export const tutorialFlows = {
         title: 'Pronto para treinar',
         eyebrow: 'Passo 8 de 8',
         description:
-          'Você pode rever este tutorial quando quiser em Configurações ou no botão de ajuda flutuante. Agora é só criar um treino e começar.',
+          'Você pode rever este tutorial quando quiser em Configurações ou no botão de ajuda. Para praticar de novo, use “Abrir treino teste”.',
         route: '/',
         selector: '',
         placement: 'center',
@@ -152,13 +152,13 @@ export const tutorialFlows = {
   workout: {
     id: 'workout',
     title: 'Tutorial do treino ativo',
-    description: 'Aprenda como registrar séries, descanso e progressão.',
+    description: 'Abre um treino teste e mostra como registrar séries, descanso e progressão.',
     steps: [
       {
         title: 'Treino ativo',
         eyebrow: 'Treino ativo',
         description:
-          'Cada exercício tem seu próprio card. Clique em um exercício na barra “Ir para exercício” para rolar direto até ele.',
+          'Este é um treino teste criado só para o tutorial. Cada exercício tem seu card e a barra “Ir para exercício” rola direto para o ponto certo.',
         route: '/start-workout',
         selector: '.ff-exercise-jump-nav, main',
         placement: 'bottom',
@@ -167,7 +167,7 @@ export const tutorialFlows = {
         title: 'Séries',
         eyebrow: 'Treino ativo',
         description:
-          'Dentro do card você adiciona série normal, aquecimento, remove séries e marca carga/reps.',
+          'Dentro do card você preenche kg/reps, adiciona aquecimento ou série normal e marca a série como concluída.',
         route: '/start-workout',
         selector: '.ff-active-exercise-card, main',
         placement: 'center',
@@ -176,7 +176,7 @@ export const tutorialFlows = {
         title: 'Progressão',
         eyebrow: 'Treino ativo',
         description:
-          'Quando houver histórico, os campos mostram referência do último treino e a progressão ajuda a decidir se aumenta ou mantém a carga.',
+          'Quando houver histórico real, os campos mostram referência do último treino. No teste, use valores fictícios só para aprender o fluxo.',
         route: '/start-workout',
         selector: '.ff-progression-glow, main',
         placement: 'center',

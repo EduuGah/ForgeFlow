@@ -5,7 +5,7 @@ export const defaultSettings = {
   themeMode: 'dark',
   accentColor: 'blue',
   compactMobile: false,
-  simpleMode: true,
+  simpleMode: false,
 
   // Treino
   defaultSetModel: 'hypertrophy',
@@ -317,7 +317,8 @@ export function normalizeSettings(settings = {}) {
   normalized.workoutsVisibleLimit = Math.min(20, Math.max(1, Number(normalized.workoutsVisibleLimit) || defaultSettings.workoutsVisibleLimit))
   normalized.weightUnit = normalized.weightUnit === 'lb' ? 'lb' : 'kg'
   normalized.visualDensity = normalized.visualDensity === 'compact' ? 'compact' : 'comfortable'
-  normalized.simpleMode = normalized.simpleMode !== false
+  // Modo simples foi desativado como padrão de produto para não esconder funções.
+  normalized.simpleMode = false
   normalized.showPRs = normalized.showPRs !== false
   normalized.keepActiveWorkoutVisible = normalized.keepActiveWorkoutVisible !== false
   normalized.hapticFeedback = Boolean(normalized.hapticFeedback)

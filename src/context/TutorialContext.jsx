@@ -116,6 +116,12 @@ export function TutorialProvider({ children }) {
     }
   }, [activeStep?.route, isRunning, location.pathname, navigate, user])
 
+  useEffect(() => {
+    if (!isRunning || activeStep?.route !== '/start-workout') return
+
+    startTutorialWorkoutSession()
+  }, [activeStep?.route, activeSession, isRunning])
+
   const updateState = useCallback(
     (updater) => {
       setState((current) => {
@@ -129,7 +135,7 @@ export function TutorialProvider({ children }) {
   function createTutorialWorkout() {
     return {
       id: 'tutorial-workout',
-      name: 'Tutorial ForgeFlow',
+      name: 'Treino Teste — Tutorial',
       isTutorial: true,
       tutorialOnly: true,
       exercises: [
@@ -140,10 +146,10 @@ export function TutorialProvider({ children }) {
             name: 'Supino reto — Teste',
             muscleGroup: 'Peito',
             equipment: 'Barra',
-            instructions: 'Exercício de exemplo para aprender a registrar séries.',
-            tips: 'Use valores fictícios. Este treino é apenas para teste.',
+            instructions: 'Exercício de exemplo para aprender a preencher carga, repetições e concluir séries.',
+            tips: 'Use valores fictícios. Nada deste treino de teste entra no histórico real.',
           },
-          note: 'Exercício de teste para aprender carga, reps e aquecimento.',
+          note: 'Teste: preencha kg/reps, marque a série como concluída e veja o descanso.',
           restTimer: '60s',
           sets: [
             {
@@ -173,7 +179,7 @@ export function TutorialProvider({ children }) {
             instructions: 'Exercício de exemplo para praticar troca de exercício.',
             tips: 'Clique na barra “Ir para exercício” para chegar até aqui.',
           },
-          note: 'Use este exercício para testar navegação por exercício.',
+          note: 'Teste: use a navegação para trocar de exercício sem se perder.',
           restTimer: '60s',
           sets: [
             {
@@ -193,7 +199,8 @@ export function TutorialProvider({ children }) {
   }
 
   function startTutorialWorkoutSession() {
-    if (activeSession) return
+    if (activeSession && !activeSession.isTutorial && !activeSession.tutorialOnly) return
+    if (activeSession?.isTutorial || activeSession?.tutorialOnly) return
 
     const tutorialWorkout = createTutorialWorkout()
     startSession(tutorialWorkout)
