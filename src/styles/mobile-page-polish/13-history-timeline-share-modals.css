@@ -1,0 +1,548 @@
+/* Rodada Histórico - timeline e refazer treino */
+.ff-history-hero-v2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  padding: clamp(1rem, 2.8vw, 1.45rem);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 2rem;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(239, 68, 68, 0.24), transparent 34%),
+    linear-gradient(135deg, rgba(24, 24, 27, 0.98), rgba(9, 9, 11, 0.96));
+  box-shadow: var(--ff-shadow-floating);
+}
+
+.ff-history-hero-v2::after {
+  content: '';
+  position: absolute;
+  inset: auto -4rem -8rem auto;
+  width: 16rem;
+  height: 16rem;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.1);
+  filter: blur(18px);
+  pointer-events: none;
+}
+
+.ff-history-hero-v2__main,
+.ff-history-hero-v2__score,
+.ff-history-hero-v2__chips,
+.ff-history-hero-v2__last {
+  position: relative;
+  z-index: 1;
+}
+
+.ff-history-hero-v2__eyebrow {
+  margin: 0 0 0.35rem;
+  color: var(--ff-accent-text, #ef4444);
+  font-size: 0.72rem;
+  font-weight: 1000;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.ff-history-hero-v2 h1 {
+  margin: 0;
+  color: var(--ff-text, #fff);
+  font-size: clamp(2rem, 7vw, 3.15rem);
+  font-weight: 1000;
+  letter-spacing: -0.07em;
+  line-height: 0.95;
+}
+
+.ff-history-hero-v2__main > p:not(.ff-history-hero-v2__eyebrow) {
+  max-width: 44rem;
+  margin: 0.75rem 0 0;
+  color: var(--ff-muted, #a1a1aa);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.ff-history-hero-v2__score {
+  align-self: start;
+  min-width: 7rem;
+  padding: 0.85rem;
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  border-radius: 1.5rem;
+  background: rgba(239, 68, 68, 0.1);
+  text-align: center;
+}
+
+.ff-history-hero-v2__score span,
+.ff-history-hero-v2__score small,
+.ff-history-hero-v2__chips small,
+.ff-history-hero-v2__last small {
+  display: block;
+  color: rgba(244, 244, 245, 0.62);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.ff-history-hero-v2__score strong {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--ff-text);
+  font-size: 2.35rem;
+  font-weight: 1000;
+  letter-spacing: -0.08em;
+  line-height: 1;
+}
+
+.ff-history-hero-v2__chips {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.ff-history-hero-v2__chips span,
+.ff-history-hero-v2__last {
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 1.25rem;
+  background: rgba(10, 10, 12, 0.62);
+}
+
+.ff-history-hero-v2__chips strong,
+.ff-history-hero-v2__last strong {
+  display: block;
+  margin-top: 0.2rem;
+  overflow: hidden;
+  color: var(--ff-text);
+  font-size: 0.86rem;
+  font-weight: 1000;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-history-hero-v2__last {
+  grid-column: 1 / -1;
+}
+
+.ff-history-hero-v2__last span {
+  display: block;
+  margin-top: 0.12rem;
+  color: rgba(244, 244, 245, 0.68);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.ff-history-filters-v2 {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.ff-history-timeline-switch {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.15rem;
+  scrollbar-width: none;
+}
+
+.ff-history-timeline-switch::-webkit-scrollbar {
+  display: none;
+}
+
+.ff-history-timeline-switch button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 2.75rem;
+  padding: 0 0.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 999px;
+  background: rgba(15, 15, 18, 0.9);
+  color: rgba(244, 244, 245, 0.72);
+  font-size: 0.8rem;
+  font-weight: 1000;
+  white-space: nowrap;
+}
+
+.ff-history-timeline-switch button.is-active,
+.ff-history-filter-field--pr button.is-active {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.16);
+  color: var(--ff-text);
+}
+
+.ff-history-filter-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(10rem, 0.75fr) minmax(9rem, 0.7fr) minmax(9rem, 0.7fr) minmax(9rem, 0.7fr) minmax(7rem, 0.55fr) auto;
+  gap: 0.65rem;
+  align-items: end;
+}
+
+.ff-history-filter-field--pr button {
+  display: inline-flex;
+  width: 100%;
+  height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 1rem;
+  background: var(--ff-input);
+  color: rgba(244, 244, 245, 0.78);
+  font-size: 0.82rem;
+  font-weight: 1000;
+}
+
+.ff-history-filter-clean-state {
+  display: inline-flex;
+  width: 100%;
+  height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: 1px dashed rgba(148, 163, 184, 0.16);
+  border-radius: 1rem;
+  color: rgba(244, 244, 245, 0.54);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.ff-history-timeline-group {
+  position: relative;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.ff-history-timeline-group + .ff-history-timeline-group {
+  margin-top: 1.2rem;
+}
+
+.ff-history-timeline-group__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 1.2rem;
+  background: rgba(12, 12, 14, 0.82);
+}
+
+.ff-history-timeline-group__header p {
+  margin: 0;
+  color: var(--ff-accent-text, #ef4444);
+  font-size: 0.65rem;
+  font-weight: 1000;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.ff-history-timeline-group__header h3 {
+  margin: 0.15rem 0 0;
+  color: var(--ff-text);
+  font-size: 1rem;
+  font-weight: 1000;
+  letter-spacing: -0.03em;
+  text-transform: capitalize;
+}
+
+.ff-history-timeline-group__stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.35rem;
+}
+
+.ff-history-timeline-group__stats span {
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(244, 244, 245, 0.06);
+  color: rgba(244, 244, 245, 0.72);
+  font-size: 0.68rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.ff-history-timeline-group__list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.ff-history-repeat-trigger {
+  border-color: rgba(239, 68, 68, 0.28) !important;
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: white !important;
+}
+
+.ff-history-detail-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+@media (max-width: 900px) {
+  .ff-history-hero-v2 {
+    grid-template-columns: 1fr;
+    border-radius: 1.65rem;
+  }
+
+  .ff-history-hero-v2__score {
+    width: 100%;
+    text-align: left;
+  }
+
+  .ff-history-hero-v2__score strong {
+    font-size: 2.1rem;
+  }
+
+  .ff-history-hero-v2__chips {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ff-history-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ff-history-filter-field label {
+    margin-bottom: 0.35rem !important;
+  }
+
+  .ff-history-timeline-group__header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .ff-history-timeline-group__stats {
+    justify-content: flex-start;
+  }
+
+  .ff-history-detail-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .ff-history-hero-v2 {
+    padding: 1rem;
+  }
+
+  .ff-history-hero-v2 h1 {
+    font-size: 2.05rem;
+  }
+
+  .ff-history-hero-v2__chips {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .ff-history-hero-v2__chips span,
+  .ff-history-hero-v2__last {
+    padding: 0.65rem;
+    border-radius: 1rem;
+  }
+
+  .ff-history-timeline-switch button {
+    min-height: 2.45rem;
+    padding-inline: 0.75rem;
+    font-size: 0.74rem;
+  }
+}
+
+/* ForgeFlow 16/06 - fix definitivo de modais sobre bottom nav e Share Studio mobile */
+body.ff-modal-open .mobile-bottom-nav,
+body.ff-share-studio-open .mobile-bottom-nav {
+  display: none !important;
+}
+
+.ff-confirm-modal-overlay,
+.ff-share-studio {
+  z-index: 2147483645 !important;
+}
+
+.ff-confirm-modal-panel {
+  overscroll-behavior: contain;
+}
+
+.ff-share-studio,
+.ff-share-studio * {
+  box-sizing: border-box;
+}
+
+.ff-share-studio__panel {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.ff-share-studio__body {
+  min-height: 0;
+}
+
+.ff-share-studio__template-grid button {
+  display: flex !important;
+  min-width: 0 !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  overflow: hidden !important;
+  white-space: normal !important;
+}
+
+.ff-share-studio__template-grid strong,
+.ff-share-studio__template-grid small {
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  overflow-wrap: anywhere !important;
+  text-overflow: ellipsis !important;
+  white-space: normal !important;
+}
+
+@media (max-width: 767px) {
+  .ff-confirm-modal-overlay {
+    align-items: center !important;
+    padding:
+      calc(14px + env(safe-area-inset-top))
+      12px
+      calc(14px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .ff-confirm-modal-panel {
+    max-height: calc(100dvh - 28px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+    border-radius: 26px !important;
+    padding-bottom: calc(18px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .ff-share-studio {
+    inset: 0 !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    padding: 0 !important;
+    background: var(--ff-bg) !important;
+  }
+
+  .ff-share-studio__panel {
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr) auto !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    max-width: none !important;
+    max-height: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+    background: var(--ff-card) !important;
+  }
+
+  .ff-share-studio__header {
+    padding: calc(12px + env(safe-area-inset-top)) 14px 12px !important;
+  }
+
+  .ff-share-studio__header h2 {
+    margin-top: 2px !important;
+    font-size: 1.08rem !important;
+  }
+
+  .ff-share-studio__header p {
+    max-width: 230px !important;
+  }
+
+  .ff-share-studio__body {
+    display: block !important;
+    max-height: none !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    padding: 12px 12px 16px !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ff-share-studio__preview {
+    min-height: 0 !important;
+    max-height: 36dvh !important;
+    border-radius: 20px !important;
+    padding: 10px !important;
+  }
+
+  .ff-share-studio__canvas {
+    width: auto !important;
+    max-width: 100% !important;
+    max-height: 33dvh !important;
+    border-radius: 16px !important;
+  }
+
+  .ff-share-studio__controls {
+    display: grid !important;
+    gap: 12px !important;
+    margin-top: 12px !important;
+    min-width: 0 !important;
+  }
+
+  .ff-share-studio__template-grid {
+    display: grid !important;
+    grid-auto-flow: row !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  .ff-share-studio__template-grid button {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 86px !important;
+    gap: 5px !important;
+    border-radius: 18px !important;
+    padding: 12px !important;
+  }
+
+  .ff-share-studio__template-grid strong {
+    font-size: 0.9rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .ff-share-studio__template-grid small {
+    display: -webkit-box !important;
+    font-size: 0.72rem !important;
+    line-height: 1.22 !important;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
+
+  .ff-share-studio__phrase-row {
+    margin-inline: -12px !important;
+    padding-inline: 12px !important;
+  }
+
+  .ff-share-studio__caption input {
+    min-height: 48px !important;
+  }
+
+  .ff-share-studio__stats {
+    gap: 8px !important;
+  }
+
+  .ff-share-studio__footer {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom)) !important;
+    background: rgba(5, 5, 7, 0.98) !important;
+  }
+
+  .ff-share-studio__footer button {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 46px !important;
+    border-radius: 16px !important;
+    padding-inline: 10px !important;
+    font-size: 0.78rem !important;
+  }
+
+  .ff-share-studio__footer .ff-share-studio__primary {
+    grid-column: 1 / -1 !important;
+  }
+}
+

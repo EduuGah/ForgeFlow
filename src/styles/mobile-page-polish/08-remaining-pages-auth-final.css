@@ -1,0 +1,1369 @@
+/* Mobile page polish v2: compact the remaining screens without changing page logic. */
+@media (max-width: 767px) {
+  .ff-hevy-page:not(.ff-hevy-page-dashboard) {
+    gap: 10px !important;
+  }
+
+  .ff-hevy-page > .ff-native-page-intro + .ff-native-page-header {
+    display: none !important;
+  }
+
+  .ff-hevy-page :is(.ff-hevy-settings, .ff-hevy-admin, .ff-hevy-progress, .ff-hevy-exercise-progress, .ff-nutrition-page) {
+    gap: 10px !important;
+  }
+
+  .ff-hevy-page :is(.ff-native-page-header, header.mb-5, header.mb-6) {
+    margin-bottom: 8px !important;
+  }
+
+  .ff-hevy-page :is(.ff-native-page-header p, header p) {
+    font-size: 0.8rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .ff-hevy-page :is(.ff-filter-chips, .ff-mobile-chip-scroll, [class*='overflow-x-auto']) {
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+
+  .ff-hevy-page :is(.ff-filter-chips, .ff-mobile-chip-scroll, [class*='overflow-x-auto'])::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ff-hevy-page :is(.ff-filter-chips, .ff-mobile-chip-scroll) > * {
+    scroll-snap-align: start;
+  }
+
+  .ff-hevy-page :is(input[type='search'], input[type='text'], input[type='number'], select, textarea) {
+    min-height: 44px !important;
+  }
+
+  .ff-hevy-page :is(button, a) {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ff-hevy-page-workouts > section[class~="sm:grid-cols-3"] {
+    display: none !important;
+  }
+
+  .ff-hevy-page-workouts > div.mt-5,
+  .ff-hevy-page-workouts [class*='rounded-3xl'].bg-\[var\(--ff-card\)\] {
+    margin-top: 0 !important;
+    padding: 10px !important;
+    border-radius: 16px !important;
+  }
+
+  .ff-hevy-page-workouts .ff-mobile-chip-scroll {
+    margin-top: 8px !important;
+    padding-bottom: 0 !important;
+  }
+
+  .ff-hevy-page-workouts .ff-mobile-chip-scroll :is(button, div) {
+    min-height: 34px !important;
+    border-radius: 999px !important;
+    padding: 7px 12px !important;
+    font-size: 0.78rem !important;
+  }
+
+  .ff-hevy-page-workouts section[class~="2xl:grid-cols-3"] {
+    margin-top: 10px !important;
+  }
+
+  .ff-hevy-page-workouts .fixed[aria-label='Criar novo treino'] {
+    width: 50px !important;
+    height: 50px !important;
+    border-radius: 18px !important;
+  }
+
+  .ff-hevy-page-exercises > section:first-child {
+    gap: 10px !important;
+  }
+
+  .ff-exercise-list-shell {
+    padding: 10px !important;
+    border-radius: 18px !important;
+  }
+
+  .ff-exercise-library-head {
+    gap: 10px !important;
+  }
+
+  .ff-exercise-search {
+    height: 44px !important;
+    margin-top: 10px !important;
+    border-radius: 14px !important;
+    padding-inline: 12px !important;
+  }
+
+  .ff-exercise-list-row-v2 {
+    border-radius: 16px !important;
+    padding: 8px !important;
+  }
+
+  .ff-exercise-row-main {
+    gap: 9px !important;
+  }
+
+  .ff-exercise-row-media {
+    width: 58px !important;
+    height: 58px !important;
+    border-radius: 14px !important;
+  }
+
+  .ff-exercise-row-titleline {
+    gap: 6px !important;
+  }
+
+  .ff-exercise-row-titleline strong,
+  .ff-exercise-row-content strong {
+    font-size: 0.92rem !important;
+    line-height: 1.14 !important;
+  }
+
+  .ff-exercise-row-subtitle,
+  .ff-exercise-row-original {
+    font-size: 0.72rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .ff-exercise-row-tags,
+  .ff-exercise-row-metrics {
+    gap: 5px !important;
+  }
+
+  .ff-exercise-row-tags > :nth-child(n + 4),
+  .ff-exercise-row-metrics > :nth-child(n + 4) {
+    display: none !important;
+  }
+
+  .ff-hevy-page-history > section:first-child {
+    margin-bottom: 0 !important;
+    padding: 12px !important;
+    border-radius: 18px !important;
+  }
+
+  .ff-hevy-page-history > section.mt-4 {
+    margin-top: 0 !important;
+    gap: 10px !important;
+  }
+
+  .ff-hevy-page-history :is(article, .ff-native-card) {
+    border-radius: 16px !important;
+  }
+
+  .ff-hevy-page-workoutcalendar [data-calendar] {
+    display: grid !important;
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    gap: 4px !important;
+    margin-top: 10px !important;
+  }
+
+  .ff-hevy-page-workoutcalendar [data-calendar] > * {
+    min-width: 0 !important;
+  }
+
+  .ff-hevy-page-workoutcalendar [data-calendar] button,
+  .ff-hevy-page-workoutcalendar [data-calendar] div {
+    border-radius: 10px !important;
+  }
+
+  .ff-hevy-page-workoutcalendar [data-calendar] button {
+    min-height: 48px !important;
+    padding: 5px !important;
+  }
+
+  .ff-hevy-page-workoutcalendar aside {
+    display: grid !important;
+    gap: 10px !important;
+  }
+
+  .ff-hevy-page-workoutcalendar aside .grid.grid-cols-2,
+  .ff-hevy-page-profile .grid.grid-cols-3,
+  .ff-hevy-page-nutrition .grid.grid-cols-3,
+  .ff-hevy-page-nutrition .grid.grid-cols-2,
+  .ff-hevy-page-exerciseprogress .grid.grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .ff-hevy-page-profile .ff-profile-hevy-hero {
+    margin-bottom: 10px !important;
+    padding: 12px !important;
+    border-radius: 20px !important;
+  }
+
+  .ff-hevy-page-profile .ff-profile-hevy-hero .h-24,
+  .ff-hevy-page-profile .ff-profile-hevy-hero .w-24 {
+    width: 76px !important;
+    height: 76px !important;
+  }
+
+  .ff-profile-summary-card {
+    padding: 12px !important;
+    border-radius: 18px !important;
+  }
+
+  .ff-hevy-page-progress :is(.ff-hevy-progress, section),
+  .ff-hevy-page-exerciseprogress :is(.ff-hevy-exercise-progress, section),
+  .ff-hevy-page-progressphotos section,
+  .ff-hevy-page-musclerecovery section,
+  .ff-hevy-page-goals section,
+  .ff-hevy-page-notifications section,
+  .ff-hevy-page-nutrition section,
+  .ff-hevy-page-admin section {
+    gap: 10px !important;
+  }
+
+  .ff-hevy-page-progressphotos img,
+  .ff-hevy-page-nutrition img {
+    border-radius: 14px !important;
+  }
+
+  .ff-hevy-page-exerciseprogress aside {
+    max-height: none !important;
+  }
+
+  .ff-hevy-page-exerciseprogress aside .max-h-\[560px\],
+  .ff-hevy-page-exerciseprogress .max-h-\[560px\] {
+    max-height: 320px !important;
+  }
+
+  .ff-hevy-page-exerciseprogress .h-20,
+  .ff-hevy-page-exerciseprogress .w-20 {
+    width: 64px !important;
+    height: 64px !important;
+  }
+
+  .ff-hevy-page-nutrition .ff-nutrition-page {
+    gap: 10px !important;
+  }
+
+  .ff-hevy-page-nutrition form {
+    gap: 10px !important;
+  }
+
+  .ff-hevy-page-nutrition label.min-h-\[112px\] {
+    min-height: 84px !important;
+    border-radius: 18px !important;
+  }
+
+  .ff-hevy-page-nutrition .h-20,
+  .ff-hevy-page-nutrition .w-20 {
+    width: 62px !important;
+    height: 62px !important;
+  }
+
+  .ff-settings-native {
+    margin-bottom: 10px !important;
+  }
+
+  .ff-settings-native-hero,
+  .ff-settings-native-group,
+  .ff-settings-native-list,
+  .ff-settings-native-row {
+    border-radius: 18px !important;
+  }
+
+  .ff-settings-native-hero {
+    padding: 12px !important;
+  }
+
+  .ff-settings-native-title {
+    margin-bottom: 7px !important;
+    font-size: 0.76rem !important;
+  }
+
+  .ff-settings-native-row {
+    min-height: 54px !important;
+    padding: 10px 12px !important;
+  }
+
+  .ff-settings-layout {
+    gap: 10px !important;
+  }
+
+  .ff-hevy-page-settings [data-settings-panel] {
+    scroll-margin-top: 12px !important;
+  }
+
+  .ff-hevy-page-settings [data-settings-panel] :is(section, article, .ff-native-card) {
+    padding: 12px !important;
+    border-radius: 18px !important;
+  }
+
+  .ff-hevy-page-admin .ff-hevy-admin {
+    gap: 10px !important;
+  }
+
+  .ff-hevy-page-admin .admin-filter-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .ff-hevy-page-admin :is(table, th, td) {
+    font-size: 0.78rem !important;
+  }
+
+  .ff-hevy-page-admin :is(th, td) {
+    padding: 8px !important;
+  }
+}
+
+.ff-page-legacy-intro {
+  display: none !important;
+}
+
+@media (max-width: 767px) {
+  .ff-page-mobile-main-grid {
+    margin-top: 0 !important;
+    gap: 10px !important;
+  }
+
+  .ff-hevy-page-login,
+  .ff-hevy-page-register,
+  .ff-hevy-page-completeprofile,
+  .ff-hevy-page-authcallback,
+  .ff-hevy-page-forgotpassword,
+  .ff-hevy-page-resetpassword {
+    background:
+      radial-gradient(circle at top, rgba(14, 165, 233, 0.16), transparent 34%),
+      var(--ff-mobile-bg) !important;
+  }
+
+  .ff-hevy-page-login :is(.w-full, form),
+  .ff-hevy-page-register :is(.w-full, form),
+  .ff-hevy-page-completeprofile :is(.w-full, form),
+  .ff-hevy-page-forgotpassword :is(main, form),
+  .ff-hevy-page-resetpassword :is(main, form),
+  .ff-hevy-page-authcallback :is(.w-full, main) {
+    max-width: 420px !important;
+  }
+
+  .ff-hevy-page-login :is(h1, h2),
+  .ff-hevy-page-register :is(h1, h2),
+  .ff-hevy-page-completeprofile :is(h1, h2),
+  .ff-hevy-page-forgotpassword :is(h1, h2),
+  .ff-hevy-page-resetpassword :is(h1, h2),
+  .ff-hevy-page-authcallback :is(h1, h2) {
+    font-size: 1.42rem !important;
+    line-height: 1.08 !important;
+  }
+
+  .ff-hevy-page-login :is(p, label, a),
+  .ff-hevy-page-register :is(p, label, a),
+  .ff-hevy-page-completeprofile :is(p, label, a),
+  .ff-hevy-page-forgotpassword :is(p, label, a),
+  .ff-hevy-page-resetpassword :is(p, label, a),
+  .ff-hevy-page-authcallback :is(p, label, a) {
+    line-height: 1.38 !important;
+  }
+
+  .ff-hevy-page-privacypolicy,
+  .ff-hevy-page-deleteaccount,
+  .ff-hevy-page-datasafety {
+    padding: 14px !important;
+  }
+
+  .ff-hevy-page-privacypolicy main,
+  .ff-hevy-page-deleteaccount main,
+  .ff-hevy-page-datasafety main {
+    max-width: 760px !important;
+    padding: 14px !important;
+    border-radius: 18px !important;
+    background: var(--ff-mobile-surface) !important;
+  }
+
+  .ff-hevy-page-privacypolicy :is(h1, h2),
+  .ff-hevy-page-deleteaccount :is(h1, h2),
+  .ff-hevy-page-datasafety :is(h1, h2) {
+    font-size: 1.25rem !important;
+    line-height: 1.14 !important;
+  }
+
+  .ff-hevy-page-privacypolicy :is(p, li),
+  .ff-hevy-page-deleteaccount :is(p, li),
+  .ff-hevy-page-datasafety :is(p, li) {
+    font-size: 0.86rem !important;
+    line-height: 1.45 !important;
+  }
+
+  .ff-hevy-page-startworkout .ff-native-page-intro,
+  .ff-hevy-page-startworkout .ff-native-page-header {
+    display: none !important;
+  }
+}
+
+/* Mobile page polish v3: direct page wrappers added in src/pages. */
+.ff-page-intro-action-stack,
+.ff-profile-intro-actions {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.ff-page-intro-status-pill {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ff-mobile-border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0 10px;
+  color: var(--ff-accent-text);
+  font-size: 0.74rem;
+  font-weight: 900;
+}
+
+.ff-profile-intro-actions :is(button, a) {
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ff-mobile-border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ff-text);
+}
+
+@media (max-width: 767px) {
+  .ff-hevy-admin > .ff-native-page-header,
+  .ff-exercise-progress-body > .ff-native-page-header,
+  .ff-progress-body > .ff-native-page-header,
+  .ff-progress-photos-body > .ff-native-page-header,
+  .ff-nutrition-page > .ff-native-page-header,
+  .ff-hevy-page-workoutcalendar > .ff-native-page-header,
+  .ff-hevy-page-workoutschedule > .ff-native-page-header {
+    display: none !important;
+  }
+
+  .ff-page-intro-action-stack {
+    align-items: stretch;
+    justify-content: stretch;
+  }
+
+  .ff-page-intro-action-stack .ff-page-intro-primary-action {
+    flex: 1;
+  }
+
+  .ff-profile-intro-actions {
+    justify-content: stretch;
+  }
+
+  .ff-profile-intro-actions :is(button, a) {
+    flex: 1 1 0;
+  }
+
+  .ff-profile-body {
+    display: grid;
+    gap: 10px;
+  }
+
+  .ff-profile-body .ff-profile-hevy-hero > .flex:first-child {
+    display: none !important;
+  }
+
+  .ff-auth-flow {
+    min-height: auto !important;
+    padding: 0 !important;
+  }
+
+  .ff-legal-main {
+    min-height: auto !important;
+    padding: 0 !important;
+  }
+
+  .ff-goals-body,
+  .ff-recovery-body,
+  .ff-notifications-body,
+  .ff-progress-body,
+  .ff-progress-photos-body,
+  .ff-exercise-progress-body,
+  .ff-start-workout-main-grid,
+  .ff-active-workout-exercise-flow,
+  .ff-schedule-primary-flow,
+  .ff-nutrition-primary-flow {
+    display: grid;
+    gap: 10px !important;
+  }
+}
+
+/* App polish v9: final screenshot fixes, loaded after every legacy mobile rule. */
+@media (max-width: 767px) {
+  .ff-hevy-page :is(.ff-native-card, article, section, aside) {
+    box-sizing: border-box !important;
+    max-width: 100% !important;
+  }
+
+  .ff-goals-stats-grid,
+  .ff-notifications-stats-grid,
+  .ff-recovery-stats-grid,
+  .ff-history-summary-grid,
+  .ff-progress-summary-grid,
+  .ff-progress-insight-grid,
+  .ff-dashboard-metrics-primary,
+  .ff-progress-photos-stats-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  .ff-progress-photos-stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .ff-goals-stats-grid > .ff-native-card,
+  .ff-notifications-stats-grid > .ff-native-card,
+  .ff-recovery-stats-grid > .ff-native-card,
+  .ff-history-summary-grid > .ff-native-card,
+  .ff-progress-summary-grid > .ff-native-card,
+  .ff-progress-insight-grid > .ff-native-card,
+  .ff-dashboard-metrics-primary > .ff-native-card,
+  .ff-progress-photos-stats-grid > .ff-native-card {
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 74px !important;
+    border-radius: 15px !important;
+    padding: 9px !important;
+  }
+
+  .ff-goals-stats-grid > .ff-native-card h2,
+  .ff-notifications-stats-grid > .ff-native-card h2,
+  .ff-recovery-stats-grid > .ff-native-card h2,
+  .ff-history-summary-grid > .ff-native-card h2,
+  .ff-progress-summary-grid > .ff-native-card h2,
+  .ff-progress-insight-grid > .ff-native-card h2,
+  .ff-progress-insight-grid > .ff-native-card h3,
+  .ff-dashboard-metrics-primary > .ff-native-card h2,
+  .ff-progress-photos-stats-grid > .ff-native-card h2 {
+    margin-top: 4px !important;
+    overflow: hidden !important;
+    font-size: 17px !important;
+    line-height: 1.05 !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .ff-goals-stats-grid > .ff-native-card p,
+  .ff-notifications-stats-grid > .ff-native-card p,
+  .ff-recovery-stats-grid > .ff-native-card p,
+  .ff-history-summary-grid > .ff-native-card p,
+  .ff-progress-summary-grid > .ff-native-card p,
+  .ff-progress-insight-grid > .ff-native-card p,
+  .ff-dashboard-metrics-primary > .ff-native-card p,
+  .ff-progress-photos-stats-grid > .ff-native-card p {
+    margin: 2px 0 0 !important;
+    font-size: 11px !important;
+    line-height: 1.15 !important;
+  }
+
+  .ff-goals-stats-grid svg,
+  .ff-notifications-stats-grid svg,
+  .ff-recovery-stats-grid svg,
+  .ff-history-summary-grid svg,
+  .ff-progress-summary-grid svg,
+  .ff-progress-insight-grid svg,
+  .ff-dashboard-metrics-primary svg,
+  .ff-progress-photos-stats-grid svg {
+    width: 17px !important;
+    height: 17px !important;
+  }
+
+  .ff-goals-body > .ff-native-card,
+  .ff-notifications-body > .ff-native-card,
+  .ff-progress-body > .ff-native-card,
+  .ff-progress-photos-body > .ff-native-card {
+    border-radius: 16px !important;
+    padding: 10px !important;
+  }
+
+  .ff-goals-body .ff-native-card .flex.h-12,
+  .ff-notifications-body .ff-native-card .flex.h-12,
+  .ff-history-filter-field--search > .flex {
+    display: grid !important;
+    grid-template-columns: 20px minmax(0, 1fr) auto !important;
+    min-height: 42px !important;
+    border-radius: 14px !important;
+    padding: 0 11px !important;
+  }
+
+  .ff-goals-body .ff-native-card .flex.h-12 input,
+  .ff-notifications-body .ff-native-card .flex.h-12 input,
+  .ff-history-filter-field--search input {
+    min-height: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .ff-history-filters {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    margin-top: 10px !important;
+  }
+
+  .ff-history-filter-field--search,
+  .ff-history-filter-field:nth-child(2),
+  .ff-history-filter-field--clear {
+    grid-column: 1 / -1 !important;
+  }
+
+  .ff-history-filter-field label {
+    display: none !important;
+  }
+
+  .ff-history-filter-field--date label {
+    display: block !important;
+    margin: 0 0 4px !important;
+    color: var(--ff-muted) !important;
+    font-size: 10px !important;
+    font-weight: 950 !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+  }
+
+  .ff-history-filter-field > select,
+  .ff-history-filter-field > input {
+    width: 100% !important;
+    min-height: 42px !important;
+    border: 1px solid var(--ff-mobile-border) !important;
+    border-radius: 14px !important;
+    background: var(--ff-surface) !important;
+    padding: 0 11px !important;
+    color: var(--ff-text) !important;
+    font-size: 13px !important;
+  }
+
+  .ff-history-session-card {
+    border-radius: 16px !important;
+    padding: 11px !important;
+  }
+
+  .ff-history-session-card__meta {
+    display: flex !important;
+    max-width: 100% !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  .ff-history-session-card__meta > * {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+  }
+
+  .ff-hevy-page-exercises > .ff-page-mobile-main-grid,
+  .ff-exercises-native-page > .ff-page-mobile-main-grid,
+  .ff-exercise-catalog-main,
+  .ff-exercise-catalog-shell {
+    display: block !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    padding: 0 !important;
+  }
+
+  .ff-exercise-catalog-head,
+  .ff-exercise-catalog-search,
+  .ff-exercise-catalog-chips {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .ff-exercise-catalog-head {
+    border: 1px solid var(--ff-mobile-border) !important;
+    border-radius: 16px !important;
+    background: var(--ff-surface) !important;
+    padding: 10px !important;
+  }
+
+  .ff-exercise-catalog-head h2 {
+    font-size: 18px !important;
+    line-height: 1.05 !important;
+  }
+
+  .ff-exercise-catalog-list {
+    margin-top: 9px !important;
+    gap: 9px !important;
+  }
+
+  .ff-exercise-catalog-card {
+    border-radius: 16px !important;
+    padding: 10px !important;
+  }
+
+  .ff-exercise-catalog-card__media {
+    width: 62px !important;
+    height: 62px !important;
+    border-radius: 15px !important;
+  }
+
+  .ff-exercise-catalog-card__metrics {
+    gap: 7px !important;
+  }
+
+  .ff-exercise-catalog-metric {
+    min-height: 36px !important;
+    border-radius: 12px !important;
+    padding: 6px !important;
+  }
+
+  .ff-schedule-week-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  .ff-schedule-day-card {
+    min-width: 0 !important;
+    border-radius: 15px !important;
+    padding: 9px !important;
+  }
+
+  .ff-schedule-day-card > .mb-3 {
+    margin-bottom: 7px !important;
+  }
+
+  .ff-schedule-day-card select {
+    min-height: 38px !important;
+    border-radius: 12px !important;
+    padding: 0 8px !important;
+    font-size: 12px !important;
+  }
+
+  .ff-recovery-body > section.mt-6,
+  .ff-recovery-body section.mt-6,
+  .ff-recovery-body main > .ff-native-card {
+    display: block !important;
+    min-height: 0 !important;
+    margin-top: 10px !important;
+    border: 0 !important;
+    background: transparent !important;
+    padding: 0 !important;
+  }
+
+  .ff-recovery-body main > .ff-native-card > .flex:first-child {
+    margin: 0 0 9px !important;
+    border: 1px solid var(--ff-mobile-border) !important;
+    border-radius: 16px !important;
+    background: var(--ff-surface) !important;
+    padding: 10px !important;
+  }
+
+  .ff-recovery-body main .grid.grid-cols-1.gap-4 {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .ff-recovery-native-card {
+    min-height: 72px !important;
+    border-radius: 15px !important;
+    padding: 9px !important;
+  }
+
+  .ff-recovery-native-card > .flex:first-child {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 7px !important;
+  }
+
+  .ff-recovery-native-card h3 {
+    overflow: hidden !important;
+    font-size: 14px !important;
+    line-height: 1.05 !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .ff-recovery-native-card > p,
+  .ff-recovery-native-card > .mt-5.grid {
+    display: none !important;
+  }
+
+  .ff-recovery-native-card .mt-5.h-3 {
+    height: 6px !important;
+    margin-top: 7px !important;
+  }
+
+  .ff-exercise-progress-body > section.ff-exercise-progress-rankings {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 9px !important;
+    overflow: visible !important;
+  }
+
+  .ff-exercise-progress-rankings > .ff-native-card {
+    min-width: 0 !important;
+    padding: 10px !important;
+  }
+
+  .ff-exercise-progress-rankings > .ff-native-card .mt-4 {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+  }
+
+  .ff-exercise-progress-rankings button {
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) !important;
+    min-height: 64px !important;
+    align-items: center !important;
+    gap: 7px !important;
+    padding: 7px !important;
+  }
+
+  .ff-exercise-progress-rankings button > span:first-child {
+    display: contents !important;
+  }
+
+  .ff-exercise-progress-rankings button > span:last-child {
+    grid-column: 2 !important;
+    justify-self: start !important;
+    font-size: 12px !important;
+  }
+
+  .ff-hevy-exercise-progress > .ff-native-card .mt-5.grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .ff-hevy-exercise-progress > .ff-native-card .mt-5.grid > div {
+    min-height: 70px !important;
+    border-radius: 15px !important;
+    padding: 9px !important;
+  }
+
+  .ff-progress-photo-launcher,
+  .ff-progress-photo-compare-card {
+    border-radius: 16px !important;
+    padding: 11px !important;
+  }
+
+  .ff-progress-photo-launcher__copy {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 11px;
+  }
+
+  .ff-progress-photo-launcher__copy > span {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    border-radius: 15px;
+    background: var(--ff-accent-soft);
+    color: var(--ff-accent-text);
+  }
+
+  .ff-progress-photo-launcher__copy h2 {
+    color: var(--ff-text);
+    font-size: 16px;
+    font-weight: 950;
+    line-height: 1.05;
+  }
+
+  .ff-progress-photo-launcher__copy p {
+    margin-top: 3px;
+    color: var(--ff-muted);
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+  .ff-progress-photo-sheet {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483600;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    background: var(--ff-overlay);
+    backdrop-filter: blur(12px);
+  }
+
+  .ff-progress-photo-sheet__backdrop {
+    position: absolute;
+    inset: 0;
+  }
+
+  .ff-progress-photo-sheet__panel {
+    position: relative;
+    display: flex;
+    width: 100%;
+    max-height: calc(92dvh - env(safe-area-inset-top));
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--ff-mobile-border);
+    border-radius: 22px 22px 0 0;
+    background: var(--ff-input);
+    box-shadow: var(--ff-shadow-floating);
+  }
+
+  .ff-progress-photo-sheet__panel header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    border-bottom: 1px solid var(--ff-mobile-border);
+    padding: 14px 14px 12px;
+  }
+
+  .ff-progress-photo-sheet__panel header span {
+    color: var(--ff-accent-text);
+    font-size: 11px;
+    font-weight: 950;
+    text-transform: uppercase;
+  }
+
+  .ff-progress-photo-sheet__panel header h2 {
+    margin-top: 2px;
+    color: var(--ff-text);
+    font-size: 20px;
+    font-weight: 950;
+  }
+
+  .ff-progress-photo-sheet__panel header p {
+    margin-top: 3px;
+    color: var(--ff-muted);
+    font-size: 12px;
+  }
+
+  .ff-progress-photo-sheet__panel header button {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 auto;
+    place-items: center;
+    border: 1px solid var(--ff-mobile-border);
+    border-radius: 14px;
+    background: var(--ff-surface-2);
+    color: var(--ff-text);
+  }
+
+  .ff-progress-photo-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    overflow-y: auto;
+    padding: 14px 14px calc(14px + env(safe-area-inset-bottom));
+  }
+
+  .ff-progress-photo-picker,
+  .ff-progress-photo-form textarea,
+  .ff-progress-photo-form button[type='submit'] {
+    grid-column: 1 / -1;
+  }
+
+  .ff-progress-photo-picker {
+    display: grid;
+    min-height: 112px;
+    cursor: pointer;
+    place-items: center;
+    border: 1px dashed var(--ff-accent-border);
+    border-radius: 16px;
+    background: var(--ff-accent-soft);
+    padding: 14px;
+    text-align: center;
+    color: var(--ff-accent-text);
+  }
+
+  .ff-progress-photo-picker span {
+    color: var(--ff-text);
+    font-size: 14px;
+    font-weight: 950;
+  }
+
+  .ff-progress-photo-picker small {
+    color: var(--ff-muted);
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  .ff-goal-modal {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 2147483600 !important;
+    align-items: stretch !important;
+    padding: 0 !important;
+  }
+
+  .ff-goal-modal__panel {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+  }
+
+  .ff-goal-modal__header {
+    position: relative !important;
+    top: auto !important;
+    flex: 0 0 auto !important;
+    padding: calc(14px + env(safe-area-inset-top)) 14px 12px !important;
+  }
+
+  .ff-goal-modal__form {
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    padding: 12px 14px calc(98px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .ff-goal-modal__form .grid.grid-cols-1.gap-3.sm\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .ff-goal-modal__form .rounded-3xl {
+    border-radius: 16px !important;
+    padding: 11px !important;
+  }
+
+  .ff-goal-modal__footer {
+    position: fixed !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    z-index: 2147483601 !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    margin: 0 !important;
+    border-top: 1px solid var(--ff-mobile-border) !important;
+    background: rgba(12, 12, 14, 0.96) !important;
+    padding: 11px 14px calc(11px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .ff-share-studio {
+    z-index: 2147483600 !important;
+    padding: 0 !important;
+  }
+
+  .ff-share-studio__panel {
+    width: 100% !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    background: var(--ff-input) !important;
+  }
+
+  .ff-share-studio__header {
+    padding: calc(12px + env(safe-area-inset-top)) 13px 10px !important;
+  }
+
+  .ff-share-studio__header h2 {
+    font-size: 18px !important;
+  }
+
+  .ff-share-studio__header p {
+    font-size: 11px !important;
+  }
+
+  .ff-share-studio__body {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    padding: 10px 13px calc(90px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .ff-share-studio__preview {
+    min-height: 0 !important;
+    border-radius: 16px !important;
+    padding: 9px !important;
+  }
+
+  .ff-share-studio__canvas {
+    width: auto !important;
+    max-width: min(72vw, 288px) !important;
+    max-height: 36dvh !important;
+    border-radius: 16px !important;
+  }
+
+  .ff-share-studio__controls {
+    gap: 10px !important;
+    border-radius: 16px !important;
+    padding: 10px !important;
+  }
+
+  .ff-share-studio__template-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    overflow: visible !important;
+  }
+
+  .ff-share-studio__template-grid button {
+    min-width: 0 !important;
+    min-height: 66px !important;
+    border-radius: 15px !important;
+    padding: 9px !important;
+  }
+
+  .ff-share-studio__template-grid button.is-active,
+  .ff-share-studio__phrase-row button.is-active {
+    border-color: var(--ff-accent-border) !important;
+    background: var(--ff-accent-soft) !important;
+    color: var(--ff-accent-text) !important;
+  }
+
+  .ff-share-studio__template-grid small {
+    font-size: 10px !important;
+    line-height: 1.15 !important;
+  }
+
+  .ff-share-studio__phrase-row {
+    gap: 7px !important;
+  }
+
+  .ff-share-studio__phrase-row button {
+    min-height: 35px !important;
+    border-radius: 14px !important;
+    padding: 0 12px !important;
+    font-size: 12px !important;
+  }
+
+  .ff-share-studio__photo-button,
+  .ff-share-studio__caption input {
+    min-height: 41px !important;
+    border-radius: 14px !important;
+  }
+
+  .ff-share-studio__footer {
+    position: fixed !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    z-index: 2147483601 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    border-top: 1px solid var(--ff-mobile-border) !important;
+    background: rgba(12, 12, 14, 0.96) !important;
+    padding: 10px 13px calc(10px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .ff-share-studio__footer .ff-share-studio__primary {
+    grid-column: 1 / -1 !important;
+  }
+
+  .ff-share-studio__footer button {
+    min-height: 39px !important;
+    border-radius: 14px !important;
+    font-size: 12px !important;
+  }
+
+  .ff-goals-stats-grid > .ff-native-card h3,
+  .ff-notifications-stats-grid > .ff-native-card h3,
+  .ff-recovery-stats-grid > .ff-native-card h3,
+  .ff-history-summary-grid > .ff-native-card h3,
+  .ff-progress-summary-grid > .ff-native-card h3,
+  .ff-progress-insight-grid > .ff-native-card h3,
+  .ff-dashboard-metrics-primary > .ff-native-card h3,
+  .ff-progress-photos-stats-grid > .ff-native-card h3 {
+    margin-top: 4px !important;
+    overflow: hidden !important;
+    font-size: 17px !important;
+    line-height: 1.05 !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .ff-dashboard-metrics-secondary,
+  .ff-dashboard-metrics-detail {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .ff-dashboard-metrics-detail {
+    grid-template-columns: 1fr !important;
+  }
+
+  .ff-dashboard-metrics-secondary > .ff-native-card {
+    min-width: 0 !important;
+    min-height: 74px !important;
+    border-radius: 15px !important;
+    padding: 9px !important;
+  }
+
+  .ff-dashboard-metrics-secondary h2,
+  .ff-dashboard-metrics-secondary h3 {
+    margin-top: 4px !important;
+    overflow: hidden !important;
+    font-size: 17px !important;
+    line-height: 1.05 !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .ff-dashboard-metrics-secondary p {
+    margin-top: 2px !important;
+    font-size: 11px !important;
+    line-height: 1.15 !important;
+  }
+
+  .ff-dashboard-metrics-secondary svg {
+    width: 17px !important;
+    height: 17px !important;
+  }
+
+  .ff-history-feed-card {
+    overflow: hidden !important;
+    border-radius: 16px !important;
+    padding: 10px !important;
+  }
+
+  .ff-history-feed-card__summary {
+    display: grid !important;
+    grid-template-columns: 42px minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 9px !important;
+    padding: 0 !important;
+  }
+
+  .ff-history-feed-card__avatar {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 14px !important;
+  }
+
+  .ff-history-feed-card__content {
+    min-width: 0 !important;
+  }
+
+  .ff-history-feed-card__meta {
+    display: flex !important;
+    max-width: 100% !important;
+    flex-wrap: nowrap !important;
+    gap: 5px !important;
+    overflow-x: auto !important;
+    padding-bottom: 2px !important;
+  }
+
+  .ff-history-feed-card__meta span {
+    max-width: 128px !important;
+    flex: 0 0 auto !important;
+    overflow: hidden !important;
+    border-radius: 999px !important;
+    padding: 5px 8px !important;
+    font-size: 10px !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .ff-history-feed-card h3 {
+    margin-top: 5px !important;
+    overflow: hidden !important;
+    font-size: 17px !important;
+    line-height: 1.05 !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .ff-history-feed-card__stats {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    margin-top: 8px !important;
+  }
+
+  .ff-history-feed-card__stats span {
+    min-width: 0 !important;
+    min-height: 38px !important;
+    border-radius: 12px !important;
+    padding: 6px 7px !important;
+  }
+
+  .ff-history-open-label {
+    width: auto !important;
+    min-width: 44px !important;
+    height: 38px !important;
+    border-radius: 14px !important;
+    padding: 0 10px !important;
+    font-size: 12px !important;
+  }
+
+  .ff-history-feed-card__actions {
+    margin-top: 8px !important;
+  }
+
+  .ff-history-share-trigger {
+    min-height: 38px !important;
+    border-radius: 14px !important;
+    font-size: 12px !important;
+  }
+
+  .ff-recovery-body > .mt-6.grid,
+  .ff-recovery-body > section.mt-6.grid {
+    display: block !important;
+    min-height: 0 !important;
+    margin-top: 10px !important;
+    border: 0 !important;
+    background: transparent !important;
+    padding: 0 !important;
+  }
+
+  .ff-recovery-body > .mt-6.grid > aside {
+    display: none !important;
+  }
+
+  .ff-recovery-body > .mt-6.grid > main,
+  .ff-recovery-body > section.mt-6.grid > main {
+    min-height: 0 !important;
+    margin: 0 !important;
+  }
+
+  .ff-recovery-body main > .ff-native-card > .mt-5 {
+    margin-top: 9px !important;
+  }
+
+  .ff-recovery-body main > .ff-native-card h2 {
+    font-size: 18px !important;
+    line-height: 1.05 !important;
+  }
+
+  .ff-progress-photos-body > section.ff-page-mobile-main-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    margin-top: 10px !important;
+  }
+
+  .ff-progress-photo-form :is(input, select, textarea) {
+    min-height: 42px !important;
+    border-radius: 14px !important;
+    font-size: 13px !important;
+  }
+
+  .ff-progress-photo-form textarea {
+    min-height: 86px !important;
+  }
+}
+
+/* Final auth/onboarding override: older page-polish rules target forms broadly. */
+.ff-auth-route :is(form, .ff-auth-card) {
+  max-width: none !important;
+}
+
+.ff-auth-route form {
+  padding: 0 !important;
+}
+
+.ff-auth-route .ff-auth-card {
+  background: linear-gradient(180deg, var(--ff-card), var(--ff-surface-2)) !important;
+}
+

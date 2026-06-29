@@ -1,0 +1,143 @@
+/* =========================================================
+   ForgeFlow — fallback mínimo tema-aware para utilitários antigos
+   ========================================================= */
+html[data-theme='light'],
+html[data-theme='light'].is-native-app {
+  --ff-apk-bg: var(--ff-bg);
+  --ff-light-shadow: var(--ff-shadow-card);
+  --ff-light-shadow-soft: 0 8px 22px rgba(15, 23, 42, 0.055);
+  color-scheme: light;
+  background: var(--ff-bg) !important;
+  color: var(--ff-text) !important;
+}
+
+html[data-theme='light'] body,
+html[data-theme='light'] #root,
+html[data-theme='light'] body.is-native-app,
+html[data-theme='light'] body.is-native-app #root,
+html[data-theme='light'] .ff-app-layout,
+html[data-theme='light'] .ff-page-scroll-shell,
+html[data-theme='light'] .ff-mobile-app-shell,
+html[data-theme='light'] .ff-hevy-page,
+html[data-theme='light'] .ff-auth-route {
+  background:
+    radial-gradient(circle at 50% -10%, color-mix(in srgb, var(--ff-accent) 8%, transparent), transparent 24rem),
+    var(--ff-bg) !important;
+  color: var(--ff-text) !important;
+}
+
+html[data-theme='light'] #app-header,
+html[data-theme='light'] #app-header .safe-top,
+html[data-theme='light'] .ff-app-sidebar,
+html[data-theme='light'] .mobile-bottom-nav,
+html[data-theme='light'] .ff-mobile-bottom-nav,
+html[data-theme='light'] .ff-bottom-nav {
+  background: color-mix(in srgb, var(--ff-card) 92%, transparent) !important;
+  border-color: var(--ff-border) !important;
+  color: var(--ff-text) !important;
+  box-shadow: var(--ff-shadow-card) !important;
+}
+
+html[data-theme='light'] .ff-native-card,
+html[data-theme='light'] .ff-hevy-page :is(article, section, aside, .ff-card, [class*='rounded-3xl'][class*='border'], [class*='rounded-[2rem]'][class*='border']),
+html[data-theme='light'] .ff-hevy-workout-header,
+html[data-theme='light'] .ff-hevy-active-exercise,
+html[data-theme='light'] .ff-hevy-workout-metrics,
+html[data-theme='light'] .ff-hevy-workout-metrics > *,
+html[data-theme='light'] .ff-hevy-workout-topbar,
+html[data-theme='light'] .ff-active-workout-mini-card-v3.ff-active-workout-mini-floating,
+html[data-theme='light'] .ff-page-start-workout .ff-mobile-workout-action-bar,
+html[data-theme='light'] .ff-mobile-workout-action-bar {
+  background: var(--ff-card) !important;
+  border-color: var(--ff-border) !important;
+  color: var(--ff-text) !important;
+  box-shadow: var(--ff-shadow-card) !important;
+}
+
+html[data-theme='light'] .bg-black,
+html[data-theme='light'] .bg-zinc-950,
+html[data-theme='light'] .bg-zinc-900,
+html[data-theme='light'] .bg-zinc-800,
+html[data-theme='light'] .bg-zinc-950\/80,
+html[data-theme='light'] .bg-zinc-950\/90,
+html[data-theme='light'] .bg-zinc-900\/80,
+html[data-theme='light'] .bg-zinc-900\/90,
+html[data-theme='light'] .bg-\[\#000\],
+html[data-theme='light'] .bg-\[\#050506\],
+html[data-theme='light'] .bg-\[\#050507\],
+html[data-theme='light'] .bg-\[\#09090b\],
+html[data-theme='light'] .bg-\[\#101014\],
+html[data-theme='light'] .bg-\[\#111113\],
+html[data-theme='light'] .bg-\[\#121212\],
+html[data-theme='light'] .bg-\[\#121216\],
+html[data-theme='light'] .bg-\[\#141416\],
+html[data-theme='light'] .bg-\[\#18181b\],
+html[data-theme='light'] .bg-\[\#1f1f23\] {
+  background-color: var(--ff-card) !important;
+  color: var(--ff-text) !important;
+}
+
+html[data-theme='light'] .text-zinc-50,
+html[data-theme='light'] .text-zinc-100,
+html[data-theme='light'] .text-zinc-200,
+html[data-theme='light'] .text-zinc-300,
+html[data-theme='light'] .text-zinc-400 {
+  color: var(--ff-text-soft) !important;
+}
+
+html[data-theme='light'] .text-zinc-500,
+html[data-theme='light'] .text-zinc-600,
+html[data-theme='light'] .text-zinc-700,
+html[data-theme='light'] .text-black\/40,
+html[data-theme='light'] .text-black\/50,
+html[data-theme='light'] .text-black\/60,
+html[data-theme='light'] .text-black\/70 {
+  color: var(--ff-muted) !important;
+}
+
+html[data-theme='light'] .border-zinc-950,
+html[data-theme='light'] .border-zinc-900,
+html[data-theme='light'] .border-zinc-800,
+html[data-theme='light'] .border-zinc-700,
+html[data-theme='light'] .border-white\/5,
+html[data-theme='light'] .border-white\/10,
+html[data-theme='light'] .border-white\/15 {
+  border-color: var(--ff-border) !important;
+}
+
+html[data-theme='light'] input,
+html[data-theme='light'] select,
+html[data-theme='light'] textarea {
+  background: var(--ff-input) !important;
+  border-color: var(--ff-border) !important;
+  color: var(--ff-text) !important;
+}
+
+html[data-theme='light'] .mobile-bottom-nav > div,
+html[data-theme='light'] nav[aria-label='Navegacao inferior'] > div,
+html[data-theme='light'] nav[aria-label='Navegação inferior'] > div {
+  background: var(--ff-card) !important;
+  border-color: var(--ff-border) !important;
+}
+
+html[data-theme='light'] .mobile-bottom-nav a,
+html[data-theme='light'] nav[aria-label='Navegacao inferior'] a,
+html[data-theme='light'] nav[aria-label='Navegação inferior'] a {
+  color: var(--ff-muted) !important;
+}
+
+html[data-theme='light'] .mobile-bottom-nav a[aria-current='page'],
+html[data-theme='light'] nav[aria-label='Navegacao inferior'] a[aria-current='page'],
+html[data-theme='light'] nav[aria-label='Navegação inferior'] a[aria-current='page'] {
+  background: var(--ff-accent-soft) !important;
+  color: var(--ff-accent-text) !important;
+}
+
+html[data-theme='light'] [class*='bg-[var(--ff-accent)]'],
+html[data-theme='light'] [class*='bg-[var(--ff-accent)]'] *,
+html[data-theme='light'] .ff-accent-button,
+html[data-theme='light'] .ff-accent-button *,
+html[data-theme='light'] .ff-dashboard-v2 :is(.ff-dashboard-v2-start, .ff-dashboard-v2-active__icon, .ff-dashboard-v2-next-action > span),
+html[data-theme='light'] .ff-dashboard-v2 :is(.ff-dashboard-v2-start, .ff-dashboard-v2-active__icon, .ff-dashboard-v2-next-action > span) svg {
+  color: #ffffff !important;
+}

@@ -1,0 +1,874 @@
+/* ForgeFlow settings + nutrition production polish */
+.settings-page,
+.nutrition-page,
+.settings-page *,
+.nutrition-page * {
+  box-sizing: border-box;
+}
+
+.settings-page,
+.nutrition-page,
+.ff-settings-page,
+.ff-nutrition-page {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.settings-card,
+.nutrition-card,
+.ff-settings-summary-card,
+.ff-nutrition-stat-card {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.settings-card__title,
+.nutrition-card__title,
+.settings-option-title,
+.nutrition-meal-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-card__description,
+.nutrition-card__description,
+.settings-insight,
+.nutrition-insight,
+.ff-settings-row p,
+.ff-insight-list p,
+.ff-safe-hint {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.settings-row,
+.nutrition-row,
+.settings-row-content,
+.nutrition-row-content {
+  min-width: 0;
+}
+
+.ff-section-eyebrow {
+  margin: 0 0 0.25rem;
+  color: var(--ff-accent-text);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.ff-settings-hero-card,
+.ff-nutrition-hero-card {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: clamp(1rem, 3.5vw, 1.5rem);
+  border: 1px solid var(--ff-accent-border);
+  border-radius: 1.75rem;
+  color: var(--ff-text);
+  background:
+    radial-gradient(circle at top right, var(--ff-accent-soft), transparent 46%),
+    linear-gradient(145deg, color-mix(in srgb, var(--ff-card) 92%, transparent), color-mix(in srgb, var(--ff-surface-2) 92%, transparent));
+  box-shadow: var(--ff-shadow-floating);
+  overflow: hidden;
+}
+
+.ff-settings-hero-card p,
+.ff-nutrition-hero-card p {
+  margin: 0;
+  color: var(--ff-accent-text);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.ff-settings-hero-card h1,
+.ff-nutrition-hero-card h1 {
+  margin: 0.25rem 0;
+  font-size: clamp(1.75rem, 8vw, 3rem);
+  font-weight: 950;
+  letter-spacing: -0.055em;
+  line-height: 0.95;
+}
+
+.ff-settings-hero-card span,
+.ff-nutrition-hero-card span,
+.ff-nutrition-hero-card .ff-nutrition-hero-grid > div > p:last-child {
+  display: block;
+  color: var(--ff-muted);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.ff-settings-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 0.625rem;
+  min-width: min(100%, 260px);
+}
+
+.ff-settings-summary-grid,
+.ff-nutrition-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.ff-settings-shortcut-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.ff-settings-shortcut {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  min-height: 4.25rem;
+  padding: 0.85rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 1.35rem;
+  color: var(--ff-text);
+  text-align: left;
+  background: color-mix(in srgb, var(--ff-card) 88%, transparent);
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.ff-settings-shortcut:hover,
+.ff-settings-shortcut:focus-visible {
+  border-color: var(--ff-accent-border);
+  background: var(--ff-accent-soft);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.ff-settings-shortcut > span {
+  display: flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1rem;
+  background: var(--ff-accent-soft);
+  color: var(--ff-accent-text);
+}
+
+.ff-settings-shortcut strong,
+.ff-routine-toggle strong {
+  display: block;
+  overflow: hidden;
+  color: var(--ff-text);
+  font-size: 0.92rem;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-settings-shortcut small,
+.ff-routine-toggle small {
+  display: block;
+  overflow: hidden;
+  color: var(--ff-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-settings-section-header,
+.ff-card-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.ff-settings-section-header h2,
+.ff-card-section-head h2 {
+  margin: 0;
+  color: var(--ff-text);
+  font-size: clamp(1.15rem, 5vw, 1.45rem);
+  font-weight: 950;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+
+.ff-settings-section-header p,
+.ff-card-section-head span {
+  margin: 0.3rem 0 0;
+  color: var(--ff-muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.ff-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  min-height: 4rem;
+  padding: 0.9rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 1.25rem;
+  background: var(--ff-surface-2);
+}
+
+.ff-settings-row strong {
+  display: block;
+  color: var(--ff-text);
+  font-size: 0.95rem;
+  font-weight: 900;
+}
+
+.ff-settings-row p {
+  margin: 0.2rem 0 0;
+  color: var(--ff-muted);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.ff-logout-button {
+  display: flex;
+  width: 100%;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  border-radius: 1rem;
+  color: var(--ff-danger-text);
+  font-size: 0.9rem;
+  font-weight: 900;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.ff-nutrition-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  width: 100%;
+  align-items: center;
+}
+
+.ff-water-ring {
+  width: 9rem;
+  height: 9rem;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 0.5rem;
+  background: conic-gradient(var(--ff-accent) var(--water-progress, 0%), var(--ff-surface-3) 0);
+  box-shadow: 0 0 28px color-mix(in srgb, var(--ff-accent-shadow) 24%, transparent);
+}
+
+.ff-water-ring > div {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: inherit;
+  background: var(--ff-card);
+}
+
+.ff-water-ring span {
+  color: var(--ff-text);
+  font-size: 2rem;
+  font-weight: 950;
+  letter-spacing: -0.055em;
+}
+
+.ff-water-ring small {
+  max-width: 6.5rem;
+  color: var(--ff-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.ff-water-progress-track {
+  height: 0.75rem;
+  margin-top: 1rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--ff-surface-3);
+}
+
+.ff-water-progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--ff-accent), var(--ff-accent-hover));
+  transition: width 0.24s ease;
+}
+
+.ff-water-button-grid,
+.ff-water-custom-grid,
+.ff-meal-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.625rem;
+  margin-top: 1rem;
+}
+
+.ff-water-button-grid button,
+.ff-water-custom-grid button,
+.ff-meal-preset-grid button {
+  min-width: 0;
+  min-height: 3rem;
+  border: 1px solid var(--ff-accent-border);
+  border-radius: 1rem;
+  color: var(--ff-text);
+  font-size: 0.86rem;
+  font-weight: 900;
+  background: var(--ff-accent-soft);
+  transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+}
+
+.ff-water-button-grid button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.ff-water-button-grid button.is-soft,
+.ff-water-button-grid button.is-muted {
+  border-color: var(--ff-border);
+  color: var(--ff-text-soft);
+  background: var(--ff-surface-2);
+}
+
+.ff-water-button-grid button:not(:disabled):active,
+.ff-water-custom-grid button:active,
+.ff-meal-preset-grid button:active {
+  transform: scale(0.98);
+}
+
+.ff-safe-hint {
+  margin: 0.75rem 0 0;
+  color: var(--ff-muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.ff-meal-preset-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ff-meal-preset-grid button {
+  min-height: 4rem;
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.ff-meal-preset-grid strong,
+.ff-meal-preset-grid small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-meal-preset-grid small {
+  margin-top: 0.2rem;
+  color: var(--ff-muted);
+  font-size: 0.74rem;
+}
+
+.ff-icon-soft-button {
+  display: flex;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ff-border);
+  border-radius: 1rem;
+  color: var(--ff-text-soft);
+  background: var(--ff-surface-2);
+}
+
+.ff-meal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.ff-meal-list-item {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 1.25rem;
+  background: var(--ff-surface-2);
+}
+
+.ff-meal-list-item img,
+.ff-meal-placeholder {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 1rem;
+  object-fit: cover;
+}
+
+.ff-meal-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ff-muted);
+  background: var(--ff-surface-3);
+}
+
+.ff-meal-list-item strong {
+  color: var(--ff-text);
+  font-size: 0.95rem;
+  font-weight: 950;
+}
+
+.ff-meal-list-item p,
+.ff-meal-list-item small {
+  display: -webkit-box;
+  margin: 0.25rem 0 0;
+  overflow: hidden;
+  color: var(--ff-muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.ff-meal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.ff-meal-actions button {
+  min-height: 2.25rem;
+  min-width: 2.5rem;
+  padding: 0 0.55rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 0.85rem;
+  color: var(--ff-text-soft);
+  font-size: 0.75rem;
+  font-weight: 900;
+  background: var(--ff-card);
+}
+
+.ff-empty-nutrition-state {
+  display: flex;
+  min-height: 13rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 1.25rem;
+  border: 1px dashed var(--ff-border);
+  border-radius: 1.5rem;
+  color: var(--ff-muted);
+  text-align: center;
+  background: var(--ff-surface-2);
+}
+
+.ff-empty-nutrition-state strong {
+  color: var(--ff-text);
+  font-size: 1rem;
+  font-weight: 950;
+}
+
+.ff-empty-nutrition-state p {
+  max-width: 20rem;
+  margin: 0;
+  color: var(--ff-muted);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.ff-goal-mini-list,
+.ff-history-compact-list,
+.ff-insight-list,
+.ff-routine-list,
+.ff-history-sheet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-top: 1rem;
+}
+
+.ff-goal-mini-list div,
+.ff-history-compact-list div,
+.ff-history-sheet-list article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.8rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 1rem;
+  background: var(--ff-surface-2);
+}
+
+.ff-goal-mini-list span,
+.ff-history-compact-list span,
+.ff-history-sheet-list span {
+  display: block;
+  overflow: hidden;
+  color: var(--ff-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-goal-mini-list strong,
+.ff-history-compact-list strong,
+.ff-history-sheet-list strong {
+  display: block;
+  color: var(--ff-text);
+  font-size: 0.9rem;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.ff-macro-bar {
+  display: flex;
+  height: 0.75rem;
+  margin-top: 1rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--ff-surface-3);
+}
+
+.ff-macro-bar i,
+.ff-macro-bar b,
+.ff-macro-bar em {
+  display: block;
+  min-width: 0;
+  height: 100%;
+}
+
+.ff-macro-bar i { background: var(--ff-accent); }
+.ff-macro-bar b { background: color-mix(in srgb, var(--ff-accent-hover) 60%, var(--ff-text)); }
+.ff-macro-bar em { background: color-mix(in srgb, var(--ff-accent) 45%, var(--ff-surface-3)); }
+
+.ff-insight-list p {
+  margin: 0;
+  padding: 0.85rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 1rem;
+  color: var(--ff-text-soft);
+  font-size: 0.86rem;
+  font-weight: 800;
+  line-height: 1.45;
+  background: var(--ff-surface-2);
+}
+
+.ff-routine-toggle {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-width: 0;
+  text-align: left;
+  color: var(--ff-text);
+}
+
+.ff-routine-list button {
+  display: grid;
+  grid-template-columns: 4rem minmax(0, 1fr);
+  gap: 0.6rem;
+  align-items: center;
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 1rem;
+  color: var(--ff-text);
+  text-align: left;
+  background: var(--ff-surface-2);
+}
+
+.ff-routine-list button span {
+  color: var(--ff-accent-text);
+  font-size: 0.85rem;
+  font-weight: 950;
+}
+
+.ff-routine-list button strong,
+.ff-routine-list button small {
+  grid-column: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-routine-list button small {
+  color: var(--ff-muted);
+  font-size: 0.74rem;
+}
+
+.ff-bottom-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483644;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0.75rem;
+  background: color-mix(in srgb, var(--ff-overlay) 82%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.ff-bottom-sheet-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: transparent;
+}
+
+.ff-bottom-sheet-panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 720px);
+  max-height: min(88vh, 780px);
+  padding: 0.75rem 1rem max(1rem, env(safe-area-inset-bottom));
+  overflow: hidden;
+  border: 1px solid var(--ff-border);
+  border-radius: 1.75rem 1.75rem 1.25rem 1.25rem;
+  color: var(--ff-text);
+  background: color-mix(in srgb, var(--ff-card) 96%, transparent);
+  box-shadow: var(--ff-shadow-floating);
+}
+
+.ff-bottom-sheet-handle {
+  width: 3rem;
+  height: 0.28rem;
+  margin: 0 auto 0.75rem;
+  border-radius: 999px;
+  background: var(--ff-border-strong);
+}
+
+.ff-bottom-sheet-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--ff-border);
+}
+
+.ff-bottom-sheet-header h2 {
+  margin: 0;
+  color: var(--ff-text);
+  font-size: 1.25rem;
+  font-weight: 950;
+  letter-spacing: -0.035em;
+}
+
+.ff-bottom-sheet-header p {
+  margin: 0.25rem 0 0;
+  color: var(--ff-muted);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.ff-bottom-sheet-close {
+  display: flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ff-border);
+  border-radius: 1rem;
+  color: var(--ff-text-soft);
+  background: var(--ff-surface-2);
+}
+
+.ff-bottom-sheet-content {
+  max-height: calc(min(88vh, 780px) - 5.5rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1rem 0 0.25rem;
+}
+
+.ff-sheet-action-row {
+  position: sticky;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  background: linear-gradient(180deg, transparent, var(--ff-card) 28%);
+}
+
+.ff-meal-photo-button {
+  display: flex;
+  min-height: 7rem;
+  flex: 1 1 auto;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px dashed var(--ff-border);
+  border-radius: 1.25rem;
+  background: var(--ff-surface-2);
+}
+
+.ff-meal-photo-button img {
+  width: 100%;
+  height: 8rem;
+  object-fit: cover;
+}
+
+.ff-meal-photo-button span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--ff-muted);
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+@supports not (background: color-mix(in srgb, red, blue)) {
+  .ff-settings-hero-card,
+  .ff-nutrition-hero-card,
+  .ff-bottom-sheet-overlay,
+  .ff-bottom-sheet-panel {
+    background: var(--ff-card);
+  }
+}
+
+@media (max-width: 1024px) {
+  .ff-settings-summary-grid,
+  .ff-nutrition-stats-grid,
+  .ff-settings-shortcut-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .settings-page,
+  .nutrition-page {
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  }
+
+  .ff-settings-hero-card,
+  .ff-nutrition-hero-card,
+  .ff-nutrition-hero-grid,
+  .ff-settings-section-header,
+  .ff-card-section-head {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ff-settings-hero-actions {
+    justify-content: stretch;
+  }
+
+  .ff-settings-hero-actions > * {
+    width: 100%;
+  }
+
+  .ff-settings-summary-grid,
+  .ff-nutrition-stats-grid,
+  .ff-settings-shortcut-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+  }
+
+  .ff-settings-shortcut {
+    min-height: 4.5rem;
+    padding: 0.75rem;
+  }
+
+  .ff-settings-shortcut > span {
+    width: 2.2rem;
+    height: 2.2rem;
+  }
+
+  .ff-nutrition-hero-grid {
+    display: flex;
+  }
+
+  .ff-water-ring {
+    width: min(100%, 11rem);
+    height: 11rem;
+    margin: 0 auto;
+  }
+
+  .ff-water-button-grid,
+  .ff-water-custom-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ff-meal-preset-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ff-meal-list-item {
+    grid-template-columns: 3.75rem minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .ff-meal-list-item img,
+  .ff-meal-placeholder {
+    width: 3.75rem;
+    height: 3.75rem;
+  }
+
+  .ff-meal-actions {
+    grid-column: 1 / -1;
+    flex-direction: row;
+  }
+
+  .ff-meal-actions button {
+    flex: 1 1 0;
+  }
+
+  .ff-bottom-sheet-overlay {
+    padding: 0;
+  }
+
+  .ff-bottom-sheet-panel {
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 1.5rem 1.5rem 0 0;
+  }
+
+  .ff-bottom-sheet-content {
+    max-height: calc(92vh - 5.5rem);
+  }
+
+  .ff-sheet-action-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 380px) {
+  .ff-settings-summary-grid,
+  .ff-nutrition-stats-grid,
+  .ff-settings-shortcut-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

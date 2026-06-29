@@ -1,0 +1,3802 @@
+/* ForgeFlow 16/06 - Share Studio V2: foto propria, mensagem clara e salvamento mobile */
+.ff-share-studio__tip-card {
+  display: grid;
+  gap: 0.28rem;
+  padding: 0.9rem;
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  border-radius: 1.15rem;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(239, 68, 68, 0.22), transparent 38%),
+    rgba(255, 255, 255, 0.055);
+}
+
+.ff-share-studio__tip-card strong {
+  color: var(--ff-text);
+  font-size: 0.9rem;
+  line-height: 1.15;
+}
+
+.ff-share-studio__tip-card small {
+  color: var(--ff-muted);
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
+.ff-share-studio__photo-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 4.75rem;
+  padding: 0.85rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 1.15rem;
+  background: var(--ff-surface-2);
+  color: var(--ff-text);
+  text-align: left;
+}
+
+.ff-share-studio__photo-card.has-photo {
+  border-color: rgba(239, 68, 68, 0.48);
+  background:
+    linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(255, 255, 255, 0.06)),
+    rgba(255, 255, 255, 0.06);
+}
+
+.ff-share-studio__photo-icon {
+  display: grid;
+  width: 2.8rem;
+  height: 2.8rem;
+  place-items: center;
+  border-radius: 1rem;
+  background: rgba(239, 68, 68, 0.18);
+  color: var(--ff-accent, #ef4444);
+}
+
+.ff-share-studio__photo-card span:last-child {
+  display: grid;
+  min-width: 0;
+  gap: 0.16rem;
+}
+
+.ff-share-studio__photo-card strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ff-text);
+  font-size: 0.91rem;
+  line-height: 1.12;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-share-studio__photo-card small {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--ff-muted);
+  font-size: 0.74rem;
+  line-height: 1.25;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.ff-share-studio__clear-photo {
+  width: 100%;
+  min-height: 2.7rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 0.95rem;
+  background: var(--ff-surface-2);
+  color: var(--ff-text-soft);
+  font-weight: 800;
+}
+
+.ff-share-studio__caption textarea {
+  width: 100%;
+  min-height: 5.2rem;
+  resize: vertical;
+  border: 1px solid var(--ff-border);
+  border-radius: 1rem;
+  outline: none;
+  background: var(--ff-input);
+  color: var(--ff-text);
+  font: inherit;
+  font-size: 0.92rem;
+  line-height: 1.35;
+  padding: 0.85rem 0.9rem;
+}
+
+.ff-share-studio__caption textarea:focus {
+  border-color: rgba(239, 68, 68, 0.55);
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12);
+}
+
+.ff-share-studio__caption > small {
+  color: var(--ff-muted);
+  font-size: 0.72rem;
+  line-height: 1.28;
+}
+
+@media (max-width: 767px) {
+  .ff-share-studio__panel {
+    grid-template-rows: auto minmax(0, 1fr) auto auto !important;
+  }
+
+  .ff-share-studio__body {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    padding: 12px 12px calc(20px + env(safe-area-inset-bottom)) !important;
+    scroll-padding-bottom: 9rem !important;
+  }
+
+  .ff-share-studio__preview {
+    flex: 0 0 auto !important;
+    max-height: none !important;
+  }
+
+  .ff-share-studio__canvas {
+    max-height: 34dvh !important;
+  }
+
+  .ff-share-studio__controls {
+    padding-bottom: 0.5rem !important;
+  }
+
+  .ff-share-studio__tip-card,
+  .ff-share-studio__photo-card {
+    border-radius: 18px !important;
+  }
+
+  .ff-share-studio__caption textarea {
+    min-height: 84px !important;
+  }
+
+  .ff-share-studio__status {
+    margin: 0 12px 10px !important;
+  }
+
+  .ff-share-studio__footer {
+    position: static !important;
+    flex: 0 0 auto !important;
+    border-top: 1px solid var(--ff-border) !important;
+    box-shadow: var(--ff-shadow-floating);
+  }
+}
+
+/* ForgeFlow 22/06 - Histórico premium + Share Studio V3 */
+.ff-history-quick-periods {
+  display: flex;
+  gap: 0.55rem;
+  overflow-x: auto;
+  padding: 0.15rem 0 0.35rem;
+  scrollbar-width: none;
+}
+
+.ff-history-quick-periods::-webkit-scrollbar {
+  display: none;
+}
+
+.ff-history-quick-periods button {
+  display: inline-flex;
+  min-height: 2.35rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 999px;
+  background: var(--ff-surface-2);
+  padding: 0 0.85rem;
+  color: var(--ff-muted);
+  font-size: 0.76rem;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.ff-history-quick-periods button.is-active,
+.ff-history-quick-periods button:hover {
+  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(239, 68, 68, 0.14);
+  color: var(--ff-text);
+}
+
+.ff-history-feed-card.has-pr {
+  border-color: rgba(250, 204, 21, 0.22) !important;
+  box-shadow: var(--ff-shadow-floating);
+}
+
+.ff-history-feed-card__meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+  max-width: 100%;
+}
+
+.ff-history-feed-card__pr-strip {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.65rem;
+  border: 1px solid rgba(250, 204, 21, 0.18);
+  border-radius: 999px;
+  background: rgba(250, 204, 21, 0.08);
+  padding: 0.42rem 0.65rem;
+  color: #fde68a;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.ff-history-feed-card__pr-strip span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-history-pr-detail-list {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0.75rem 0;
+}
+
+.ff-history-pr-detail-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: start;
+  border: 1px solid rgba(250, 204, 21, 0.18);
+  border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.1), rgba(255, 255, 255, 0.035));
+  padding: 0.7rem;
+}
+
+.ff-history-pr-detail-item > span {
+  display: grid;
+  width: 1.95rem;
+  height: 1.95rem;
+  place-items: center;
+  border-radius: 0.8rem;
+  background: rgba(250, 204, 21, 0.13);
+  color: #facc15;
+}
+
+.ff-history-pr-detail-item strong {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ff-text);
+  font-size: 0.82rem;
+  font-weight: 950;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-history-pr-detail-item p {
+  margin-top: 0.2rem;
+  color: var(--ff-muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1.28;
+}
+
+.ff-history-pr-detail-item b {
+  color: var(--ff-text);
+  font-weight: 950;
+}
+
+.ff-history-pr-detail-item small {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--ff-muted);
+  font-size: 0.68rem;
+}
+
+.ff-history-set-row__note {
+  grid-column: 1 / -1;
+  margin-top: 0.35rem;
+  border-left: 2px solid rgba(239, 68, 68, 0.45);
+  padding-left: 0.55rem;
+  color: var(--ff-muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.ff-share-studio__info-levels {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.ff-share-studio__info-levels button {
+  min-width: 0;
+  min-height: 4.25rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 1rem;
+  background: var(--ff-surface-2);
+  padding: 0.68rem;
+  text-align: left;
+  color: var(--ff-muted);
+}
+
+.ff-share-studio__info-levels button.is-active {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.14);
+  color: var(--ff-text);
+}
+
+.ff-share-studio__info-levels strong {
+  display: block;
+  font-size: 0.84rem;
+  font-weight: 950;
+  line-height: 1.1;
+}
+
+.ff-share-studio__info-levels small {
+  display: -webkit-box;
+  margin-top: 0.24rem;
+  overflow: hidden;
+  color: var(--ff-muted);
+  font-size: 0.68rem;
+  font-weight: 750;
+  line-height: 1.2;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.ff-share-studio__phrase-row button {
+  max-width: 15rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ff-share-studio__caption textarea {
+  min-height: 5.4rem !important;
+  max-height: 11rem;
+  overflow-y: auto;
+}
+
+.ff-share-studio__canvas.is-feed,
+.ff-share-studio__canvas.is-minimal,
+.ff-share-studio__canvas.is-pr,
+.ff-share-studio__canvas.is-volume,
+.ff-share-studio__canvas.is-quote {
+  background: var(--ff-card);
+}
+
+@media (max-width: 767px) {
+  .ff-history-quick-periods {
+    margin-inline: -0.25rem;
+    padding-inline: 0.25rem;
+  }
+
+  .ff-history-feed-card__meta {
+    overflow-x: auto;
+    padding-bottom: 0.1rem;
+    scrollbar-width: none;
+  }
+
+  .ff-history-feed-card__meta::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ff-history-feed-card__meta span {
+    flex: 0 0 auto;
+  }
+
+  .ff-history-pr-detail-item {
+    border-radius: 0.9rem;
+    padding: 0.6rem;
+  }
+
+  .ff-history-pr-detail-item strong {
+    white-space: normal;
+  }
+
+  .ff-share-studio__info-levels {
+    grid-template-columns: repeat(3, minmax(7.4rem, 1fr));
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
+  }
+
+  .ff-share-studio__info-levels button {
+    min-height: 4rem;
+  }
+
+  .ff-share-studio__phrase-row button {
+    max-width: 13rem;
+  }
+
+  .ff-share-studio__canvas.is-feed {
+    max-width: min(78vw, 310px) !important;
+  }
+}
+
+/* ForgeFlow 22/06 - Share Studio V4: fundos variados + salvamento nativo */
+.ff-share-studio__background-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.ff-share-studio__background-grid button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.62rem;
+  min-width: 0;
+  min-height: 4.4rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 1rem;
+  background: var(--ff-surface-2);
+  padding: 0.62rem;
+  color: var(--ff-muted);
+  text-align: left;
+}
+
+.ff-share-studio__background-grid button.is-active {
+  border-color: rgba(239, 68, 68, 0.52);
+  background: rgba(239, 68, 68, 0.14);
+  color: var(--ff-text);
+  box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.12);
+}
+
+.ff-share-studio__background-grid button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.ff-share-studio__background-grid span {
+  display: grid;
+  min-width: 0;
+  gap: 0.16rem;
+}
+
+.ff-share-studio__background-grid strong {
+  overflow: hidden;
+  color: inherit;
+  font-size: 0.82rem;
+  font-weight: 950;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-share-studio__background-grid small {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--ff-muted);
+  font-size: 0.66rem;
+  font-weight: 750;
+  line-height: 1.18;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.ff-share-studio__bg-swatch {
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: 0 0 auto;
+  border: 1px solid var(--ff-border);
+  border-radius: 0.78rem;
+  box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.05);
+}
+
+.ff-share-studio__bg-swatch.is-forge {
+  background: radial-gradient(circle at 70% 20%, rgba(239, 68, 68, 0.75), transparent 42%), linear-gradient(135deg, #05070b, #171717 56%, #050505);
+}
+
+.ff-share-studio__bg-swatch.is-obsidian {
+  background: linear-gradient(135deg, #05070b, #111827 54%, #020203);
+}
+
+.ff-share-studio__bg-swatch.is-carbon {
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.1) 0 1px, transparent 1px 8px), linear-gradient(135deg, #07090d, #171a1f);
+}
+
+.ff-share-studio__bg-swatch.is-ember {
+  background: radial-gradient(circle at 25% 70%, rgba(249, 115, 22, 0.82), transparent 42%), linear-gradient(135deg, #190805, #070404);
+}
+
+.ff-share-studio__bg-swatch.is-neon {
+  background: linear-gradient(135deg, rgba(14, 165, 255, 0.6), transparent 28%), linear-gradient(315deg, rgba(239, 68, 68, 0.62), transparent 35%), #030712;
+}
+
+.ff-share-studio__bg-swatch.is-purple {
+  background: radial-gradient(circle at 72% 22%, rgba(168, 85, 247, 0.8), transparent 45%), linear-gradient(135deg, #10081f, #050408);
+}
+
+.ff-share-studio__bg-swatch.is-topo {
+  background: repeating-radial-gradient(circle at 20% 25%, rgba(255, 255, 255, 0.18) 0 1px, transparent 1px 7px), linear-gradient(135deg, #061012, #121719);
+}
+
+.ff-share-studio__bg-swatch.is-photo {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.04)), linear-gradient(315deg, #111827, #ef4444);
+}
+
+@media (max-width: 767px) {
+  .ff-share-studio__background-grid {
+    grid-template-columns: repeat(4, minmax(8.6rem, 1fr));
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
+  }
+
+  .ff-share-studio__background-grid button {
+    min-height: 4.15rem;
+  }
+}
+
+/* ForgeFlow 22/06 - Share Studio V6: foto própria real, gestos pointer/pinch e templates premium */
+.ff-share-studio__format-grid,
+.ff-share-studio__background-mode {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.ff-share-studio__format-grid button,
+.ff-share-studio__background-mode button,
+.ff-share-studio__photo-tools button {
+  min-width: 0;
+  border: 1px solid var(--ff-border);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.048);
+  color: var(--ff-muted);
+  text-align: left;
+  font-weight: 900;
+}
+
+.ff-share-studio__format-grid button {
+  min-height: 4.35rem;
+  padding: 0.72rem;
+}
+
+.ff-share-studio__background-mode button,
+.ff-share-studio__photo-tools button {
+  min-height: 2.75rem;
+  padding: 0 0.82rem;
+  text-align: center;
+}
+
+.ff-share-studio__format-grid button.is-active,
+.ff-share-studio__background-mode button.is-active,
+.ff-share-studio__photo-tools button:hover {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.14);
+  color: var(--ff-text);
+}
+
+.ff-share-studio__format-grid strong {
+  display: block;
+  color: inherit;
+  font-size: 0.9rem;
+  line-height: 1.12;
+}
+
+.ff-share-studio__format-grid small {
+  display: -webkit-box;
+  margin-top: 0.25rem;
+  overflow: hidden;
+  color: var(--ff-muted);
+  font-size: 0.69rem;
+  line-height: 1.18;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.ff-share-studio__canvas.is-editing-photo {
+  cursor: grab;
+  touch-action: pan-y pinch-zoom;
+  user-select: none;
+  overscroll-behavior: contain;
+}
+
+.ff-share-studio__canvas.is-editing-photo:active {
+  cursor: grabbing;
+}
+
+.ff-share-studio__gesture-hint {
+  position: absolute;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  display: grid;
+  gap: 0.12rem;
+  max-width: min(16rem, calc(100% - 2.5rem));
+  pointer-events: none;
+  border: 1px solid var(--ff-border);
+  border-radius: 1rem;
+  background: var(--ff-surface-2);
+  padding: 0.62rem 0.76rem;
+  color: var(--ff-text);
+  box-shadow: var(--ff-shadow-floating);
+  backdrop-filter: blur(14px);
+}
+
+.ff-share-studio__gesture-hint strong {
+  font-size: 0.78rem;
+  font-weight: 950;
+  line-height: 1.1;
+}
+
+.ff-share-studio__gesture-hint span {
+  color: var(--ff-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.ff-share-studio__photo-tools {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.ff-share-studio__photo-tools button {
+  border-radius: 0.85rem;
+  padding: 0 0.5rem;
+  font-size: 0.73rem;
+  white-space: nowrap;
+}
+
+.ff-share-studio__background-grid button {
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.ff-share-studio__background-grid button:hover,
+.ff-share-studio__template-grid button:hover,
+.ff-share-studio__format-grid button:hover,
+.ff-share-studio__info-levels button:hover {
+  transform: translateY(-1px);
+}
+
+.ff-share-studio__bg-swatch.is-forgeRed {
+  background: radial-gradient(circle at 70% 18%, rgba(239, 68, 68, 0.85), transparent 44%), linear-gradient(135deg, #05070b, #171717 56%, #050505);
+}
+
+.ff-share-studio__bg-swatch.is-obsidian {
+  background: linear-gradient(135deg, #05070b, #12151c 54%, #020203);
+}
+
+.ff-share-studio__bg-swatch.is-carbonGrid {
+  background: repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.1) 0 1px, transparent 1px 8px), linear-gradient(135deg, #07090d, #171a1f);
+}
+
+.ff-share-studio__bg-swatch.is-ember {
+  background: radial-gradient(circle at 25% 70%, rgba(249, 115, 22, 0.82), transparent 42%), linear-gradient(135deg, #190805, #070404);
+}
+
+.ff-share-studio__bg-swatch.is-neonFlow {
+  background: linear-gradient(135deg, rgba(14, 165, 255, 0.6), transparent 28%), linear-gradient(315deg, rgba(239, 68, 68, 0.62), transparent 35%), #030712;
+}
+
+.ff-share-studio__bg-swatch.is-nightPr {
+  background: radial-gradient(circle at 72% 22%, rgba(168, 85, 247, 0.8), transparent 45%), linear-gradient(135deg, #10081f, #050408);
+}
+
+.ff-share-studio__bg-swatch.is-topoLines {
+  background: repeating-radial-gradient(circle at 20% 25%, rgba(255, 255, 255, 0.18) 0 1px, transparent 1px 7px), linear-gradient(135deg, #061012, #121719);
+}
+
+.ff-share-studio__bg-swatch.is-steel {
+  background: linear-gradient(135deg, #151922, #3f4652 55%, #05070a);
+}
+
+.ff-share-studio__bg-swatch.is-aurora {
+  background: radial-gradient(circle at 24% 70%, rgba(74, 222, 128, 0.58), transparent 42%), radial-gradient(circle at 74% 18%, rgba(34, 211, 238, 0.6), transparent 44%), #07111f;
+}
+
+.ff-share-studio__bg-swatch.is-blackMarble {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0 1px, transparent 1px 48%), linear-gradient(135deg, #070707, #171717, #020202);
+}
+
+.ff-share-studio__bg-swatch.is-redSmoke {
+  background: radial-gradient(circle at 40% 60%, rgba(239, 68, 68, 0.62), transparent 42%), linear-gradient(135deg, #140506, #121113, #040404);
+}
+
+.ff-share-studio__bg-swatch.is-gymLight {
+  background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.4), transparent 32%), linear-gradient(135deg, #18100d, #111827, #050505);
+}
+
+.ff-share-studio__caption span {
+  letter-spacing: 0.01em;
+}
+
+.ff-share-studio__caption textarea::placeholder {
+  color: var(--ff-muted);
+}
+
+.ff-share-studio__photo-card.has-photo strong {
+  white-space: normal;
+  word-break: break-word;
+}
+
+@media (max-width: 767px) {
+  .ff-share-studio__format-grid {
+    grid-template-columns: repeat(2, minmax(8.6rem, 1fr));
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
+  }
+
+  .ff-share-studio__format-grid button {
+    min-height: 4rem;
+  }
+
+  .ff-share-studio__template-grid {
+    grid-template-columns: repeat(5, minmax(9.25rem, 1fr)) !important;
+    overflow-x: auto !important;
+    padding-bottom: 0.2rem;
+  }
+
+  .ff-share-studio__template-grid button {
+    min-height: 4.65rem !important;
+  }
+
+  .ff-share-studio__photo-tools {
+    grid-template-columns: repeat(4, minmax(5rem, 1fr));
+    overflow-x: auto;
+    padding-bottom: 0.1rem;
+  }
+
+  .ff-share-studio__photo-tools button {
+    min-height: 2.45rem;
+  }
+
+  .ff-share-studio__gesture-hint {
+    right: 0.85rem;
+    bottom: 0.85rem;
+    padding: 0.5rem 0.62rem;
+  }
+
+  .ff-share-studio__canvas.is-story {
+    max-width: min(72vw, 300px) !important;
+    max-height: 38dvh !important;
+  }
+
+  .ff-share-studio__canvas.is-feed {
+    max-width: min(82vw, 330px) !important;
+    max-height: 38dvh !important;
+  }
+}
+
+/* ForgeFlow 22/06 - Share Studio V7: figurinhas editáveis sobre foto */
+.ff-share-studio__overlay-mode,
+.ff-share-studio__edit-layer,
+.ff-share-studio__overlay-tools {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.ff-share-studio__overlay-mode {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ff-share-studio__overlay-mode button,
+.ff-share-studio__edit-layer button,
+.ff-share-studio__overlay-tools button {
+  min-width: 0;
+  border: 1px solid var(--ff-border);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.048);
+  color: var(--ff-muted);
+  font-weight: 900;
+}
+
+.ff-share-studio__overlay-mode button {
+  min-height: 4.55rem;
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.ff-share-studio__overlay-mode button.is-active,
+.ff-share-studio__edit-layer button.is-active,
+.ff-share-studio__overlay-tools button:hover {
+  border-color: rgba(239, 68, 68, 0.52);
+  background: rgba(239, 68, 68, 0.14);
+  color: var(--ff-text);
+}
+
+.ff-share-studio__overlay-mode strong {
+  display: block;
+  font-size: 0.88rem;
+  line-height: 1.12;
+}
+
+.ff-share-studio__overlay-mode small {
+  display: -webkit-box;
+  margin-top: 0.24rem;
+  overflow: hidden;
+  color: var(--ff-muted);
+  font-size: 0.68rem;
+  line-height: 1.18;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.ff-share-studio__edit-layer {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border: 1px solid var(--ff-border);
+  border-radius: 1rem;
+  background: var(--ff-surface-2);
+  padding: 0.35rem;
+}
+
+.ff-share-studio__edit-layer button {
+  min-height: 2.45rem;
+  border-radius: 0.78rem;
+  text-align: center;
+}
+
+.ff-share-studio__overlay-tools {
+  grid-template-columns: 1.3fr 0.8fr 0.8fr;
+}
+
+.ff-share-studio__overlay-tools button {
+  min-height: 2.55rem;
+  border-radius: 0.85rem;
+  padding: 0 0.55rem;
+  text-align: center;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.ff-share-studio__canvas.editing-overlay {
+  outline: 2px solid rgba(239, 68, 68, 0.28);
+  outline-offset: 4px;
+}
+
+.ff-share-studio__canvas.editing-photo {
+  outline: 2px solid rgba(14, 165, 255, 0.28);
+  outline-offset: 4px;
+}
+
+.ff-share-studio__gesture-hint {
+  left: 1.25rem;
+  right: auto;
+  bottom: 1.25rem;
+}
+
+@media (max-width: 767px) {
+  .ff-share-studio__overlay-mode {
+    grid-template-columns: repeat(2, minmax(9.25rem, 1fr));
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
+  }
+
+  .ff-share-studio__overlay-mode button {
+    min-height: 4.25rem;
+  }
+
+  .ff-share-studio__overlay-tools {
+    grid-template-columns: repeat(3, minmax(6.2rem, 1fr));
+    overflow-x: auto;
+    padding-bottom: 0.1rem;
+  }
+
+  .ff-share-studio__gesture-hint {
+    left: 0.85rem;
+    right: auto;
+    bottom: 0.85rem;
+  }
+}
+
+/* ForgeFlow 22/06 - Share Studio V8: HEIC, snap center e stickers premium */
+.ff-share-studio__gesture-hint {
+  display: none !important;
+}
+
+.ff-share-studio__preview {
+  isolation: isolate;
+}
+
+.ff-share-studio__snap-line {
+  position: absolute;
+  z-index: 4;
+  pointer-events: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow:
+    0 0 0 1px rgba(239, 68, 68, 0.45),
+    0 0 22px rgba(239, 68, 68, 0.5);
+}
+
+.ff-share-studio__snap-line.is-vertical {
+  top: 0.9rem;
+  bottom: 0.9rem;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+}
+
+.ff-share-studio__snap-line.is-horizontal {
+  right: 0.9rem;
+  left: 0.9rem;
+  top: 50%;
+  height: 2px;
+  transform: translateY(-50%);
+}
+
+.ff-share-studio__canvas.editing-overlay {
+  outline: 2px solid rgba(239, 68, 68, 0.18);
+  outline-offset: 4px;
+}
+
+.ff-share-studio__canvas.editing-photo {
+  outline: 2px solid rgba(14, 165, 255, 0.18);
+  outline-offset: 4px;
+}
+
+.ff-share-studio__overlay-tools button,
+.ff-share-studio__photo-tools button {
+  touch-action: manipulation;
+}
+
+@media (max-width: 767px) {
+  .ff-share-studio__preview {
+    max-height: none !important;
+    padding: 8px !important;
+  }
+
+  .ff-share-studio__canvas.is-story {
+    max-width: min(88vw, 390px, calc(54dvh * 9 / 16)) !important;
+    max-height: 54dvh !important;
+  }
+
+  .ff-share-studio__canvas.is-feed {
+    max-width: min(88vw, 390px, 48dvh) !important;
+    max-height: 48dvh !important;
+  }
+
+  .ff-share-studio__canvas {
+    max-height: 54dvh !important;
+  }
+}
+
+/* ForgeFlow 22/06 - Share Studio V9: snap pela caixa real da figurinha + base */
+.ff-share-studio__snap-line.is-bottom {
+  right: 0.9rem;
+  left: 0.9rem;
+  top: var(--ff-share-snap-bottom, 86%);
+  height: 2px;
+  transform: translateY(-50%);
+  background: rgba(250, 204, 21, 0.92);
+  box-shadow:
+    0 0 0 1px rgba(15, 23, 42, 0.35),
+    0 0 24px rgba(250, 204, 21, 0.48);
+}
+
+.ff-share-studio__snap-line.is-bottom::after {
+  content: 'base';
+  position: absolute;
+  right: 0.35rem;
+  bottom: 0.45rem;
+  padding: 0.18rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  color: var(--ff-text-soft);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ForgeFlow 22/06 - Share Studio V10: figurinhas DOM ultra-leves e separáveis */
+.ff-share-studio__preview {
+  display: grid !important;
+  place-items: center !important;
+}
+
+.ff-share-studio__canvas,
+.ff-share-studio__sticker-layer {
+  grid-area: 1 / 1;
+}
+
+.ff-share-studio__canvas.has-dom-stickers {
+  pointer-events: none;
+}
+
+.ff-share-studio__canvas.has-dom-stickers.editing-photo {
+  pointer-events: auto;
+}
+
+.ff-share-studio__sticker-layer {
+  position: relative;
+  z-index: 3;
+  overflow: visible;
+  border-radius: 20px;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  overscroll-behavior: contain;
+}
+
+.ff-share-studio__sticker-layer.is-passive {
+  pointer-events: none;
+}
+
+.ff-share-studio__sticker-layer.is-editing-stickers {
+  pointer-events: auto;
+}
+
+.ff-share-studio__sticker-layer.is-story {
+  width: min(100%, calc(min(62dvh, 700px) * 9 / 16));
+  aspect-ratio: 9 / 16;
+}
+
+.ff-share-studio__sticker-layer.is-feed {
+  width: min(100%, min(62dvh, 700px));
+  aspect-ratio: 1 / 1;
+}
+
+.ff-share-sticker {
+  position: absolute;
+  z-index: 5;
+  display: grid;
+  gap: 0.22rem;
+  min-width: 5rem;
+  border: var(--ff-sticker-border-width, 1px) solid var(--ff-sticker-border, var(--ff-border));
+  border-radius: clamp(0.8rem, 4vw, 1.2rem);
+  background: var(--ff-sticker-bg, rgba(5, 7, 10, 0.72));
+  box-shadow: var(--ff-shadow-floating);
+  color: var(--ff-text);
+  padding: clamp(0.48rem, 2.4vw, 0.85rem);
+  transform-origin: top left;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  will-change: transform, left, top;
+  contain: layout paint style;
+  cursor: grab;
+}
+
+.ff-share-sticker:active {
+  cursor: grabbing;
+}
+
+.ff-share-sticker.is-selected {
+  border-color: rgba(239, 68, 68, 0.66);
+  box-shadow:
+    0 0 0 2px rgba(239, 68, 68, 0.22),
+    0 1rem 2.8rem rgba(0, 0, 0, 0.45);
+}
+
+.ff-share-sticker.is-rendered {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  gap: 0;
+  min-width: 0;
+}
+
+.ff-share-sticker.is-rendered.is-selected {
+  border-radius: 1.1rem;
+  box-shadow:
+    0 0 0 2px rgba(239, 68, 68, 0.28),
+    0 0.8rem 2rem rgba(0, 0, 0, 0.34);
+}
+
+.ff-share-sticker__image {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.ff-share-sticker strong,
+.ff-share-sticker small,
+.ff-share-sticker em,
+.ff-share-sticker span {
+  min-width: 0;
+}
+
+.ff-share-sticker > strong {
+  display: block;
+  color: var(--ff-sticker-title, currentColor);
+  overflow: hidden;
+  font-size: clamp(0.74rem, 3.8vw, 1.08rem);
+  font-weight: 950;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-share-sticker > small,
+.ff-share-sticker__rows small,
+.ff-share-sticker__mini-brand,
+.ff-share-sticker__label {
+  display: block;
+  overflow: hidden;
+  color: var(--ff-muted);
+  font-size: clamp(0.48rem, 2.2vw, 0.68rem);
+  font-weight: 850;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-share-sticker__mini-brand,
+.ff-share-sticker__label {
+  color: var(--ff-sticker-accent, var(--ff-accent, #ef4444));
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ff-share-sticker__hero-value {
+  font-size: clamp(1.45rem, 8vw, 2.15rem) !important;
+  letter-spacing: -0.06em !important;
+}
+
+.ff-share-sticker__quote {
+  display: -webkit-box !important;
+  white-space: normal !important;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.ff-share-sticker.is-caption {
+  background: var(--ff-sticker-bg, rgba(255, 255, 255, 0.92));
+  color: var(--ff-sticker-title, #111827);
+}
+
+.ff-share-sticker.is-caption small,
+.ff-share-sticker.is-caption .ff-share-sticker__label {
+  color: rgba(15, 23, 42, 0.56);
+}
+
+.ff-share-sticker.is-prs {
+  border-color: rgba(250, 204, 21, 0.32);
+  background: var(--ff-sticker-bg, rgba(22, 14, 4, 0.78));
+}
+
+.ff-share-sticker.is-prs .ff-share-sticker__label {
+  color: #fde68a;
+}
+
+.ff-share-sticker.is-topSet {
+  border-color: rgba(96, 165, 250, 0.28);
+  background: var(--ff-sticker-bg, linear-gradient(180deg, rgba(9, 17, 32, 0.88), rgba(7, 10, 16, 0.82)));
+}
+
+.ff-share-sticker.is-topSet .ff-share-sticker__label {
+  color: #93c5fd;
+}
+
+.ff-share-sticker.is-repTotal {
+  border-color: rgba(52, 211, 153, 0.26);
+  background: var(--ff-sticker-bg, linear-gradient(180deg, rgba(6, 20, 14, 0.82), rgba(6, 10, 12, 0.8)));
+}
+
+.ff-share-sticker.is-repTotal .ff-share-sticker__label {
+  color: #6ee7b7;
+}
+
+.ff-share-sticker.is-location {
+  background: var(--ff-sticker-bg, rgba(5, 7, 10, 0.68));
+}
+
+.ff-share-sticker.is-location strong {
+  white-space: normal;
+  line-height: 1.08;
+}
+
+.ff-share-sticker.is-metrics {
+  gap: 0.42rem;
+}
+
+.ff-share-sticker__metric-grid {
+  margin-top: 0.12rem;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: clamp(0.2rem, 1.6vw, 0.42rem);
+}
+
+.ff-share-sticker__metric-grid span {
+  display: grid;
+  min-width: 0;
+  border-radius: 0.7rem;
+  background: var(--ff-sticker-chip, rgba(255, 255, 255, 0.075));
+  padding: clamp(0.3rem, 1.8vw, 0.55rem);
+}
+
+.ff-share-sticker__metric-grid strong {
+  overflow: hidden;
+  font-size: clamp(0.62rem, 3.1vw, 0.95rem);
+  font-weight: 950;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-share-sticker__metric-grid small {
+  overflow: hidden;
+  color: var(--ff-sticker-accent, var(--ff-accent, #ef4444));
+  font-size: clamp(0.42rem, 1.9vw, 0.58rem);
+  font-weight: 950;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ff-share-sticker__rows {
+  display: grid;
+  gap: clamp(0.22rem, 1.7vw, 0.42rem);
+  min-width: 0;
+}
+
+.ff-share-sticker__rows span {
+  display: grid;
+  min-width: 0;
+  padding-left: 0.6rem;
+  border-left: 2px solid var(--ff-sticker-accent, var(--ff-accent, #ef4444));
+}
+
+.ff-share-sticker__rows strong {
+  overflow: hidden;
+  color: var(--ff-sticker-title, currentColor);
+  font-size: clamp(0.58rem, 2.7vw, 0.82rem);
+  font-weight: 920;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-share-sticker__rows em {
+  color: var(--ff-muted);
+  font-size: clamp(0.48rem, 2vw, 0.64rem);
+  font-style: normal;
+  font-weight: 850;
+}
+
+.ff-share-studio__sticker-picker {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.ff-share-studio__sticker-picker button {
+  min-width: 0;
+  min-height: 4.05rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 1rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.03));
+  color: var(--ff-muted);
+  padding: 0.72rem;
+  text-align: left;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.ff-share-studio__sticker-picker button:active {
+  transform: scale(0.985);
+}
+
+.ff-share-studio__sticker-picker button.is-active {
+  border-color: rgba(239, 68, 68, 0.42);
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--ff-text);
+}
+
+.ff-share-studio__sticker-picker button.is-selected {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.ff-share-studio__sticker-picker strong,
+.ff-share-studio__sticker-picker small {
+  display: block;
+}
+
+.ff-share-studio__sticker-picker strong {
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.ff-share-studio__sticker-picker small {
+  display: -webkit-box;
+  margin-top: 0.18rem;
+  overflow: hidden;
+  color: var(--ff-muted);
+  font-size: 0.62rem;
+  line-height: 1.16;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+
+.ff-share-studio__layout-presets {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.ff-share-studio__layout-presets button {
+  min-width: 0;
+  padding: 0.72rem;
+  border-radius: 1rem;
+  border: 1px solid var(--ff-border);
+  background: var(--ff-surface-2);
+  color: var(--ff-muted);
+  text-align: left;
+}
+
+.ff-share-studio__layout-presets button.is-active {
+  border-color: rgba(239, 68, 68, 0.38);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.ff-share-studio__layout-presets strong,
+.ff-share-studio__layout-presets small {
+  display: block;
+}
+
+.ff-share-studio__layout-presets strong {
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.ff-share-studio__layout-presets small {
+  margin-top: 0.16rem;
+  color: var(--ff-muted);
+  font-size: 0.62rem;
+  line-height: 1.14;
+}
+
+.ff-share-studio__sticker-style-panel {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 1.15rem;
+  background: var(--ff-surface-2);
+}
+
+.ff-share-studio__sticker-style-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.ff-share-studio__sticker-style-head strong {
+  font-size: 0.84rem;
+  font-weight: 950;
+}
+
+.ff-share-studio__sticker-style-head button {
+  padding: 0.46rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--ff-border);
+  background: var(--ff-surface-2);
+  color: var(--ff-muted);
+}
+
+.ff-share-studio__sticker-style-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.ff-share-studio__sticker-style-grid label,
+.ff-share-studio__range-field {
+  display: grid;
+  gap: 0.38rem;
+}
+
+.ff-share-studio__sticker-style-grid span,
+.ff-share-studio__range-field span {
+  font-size: 0.66rem;
+  font-weight: 850;
+  color: var(--ff-muted);
+}
+
+.ff-share-studio__sticker-style-grid input[type='color'] {
+  width: 100%;
+  height: 2.6rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 0.9rem;
+  background: var(--ff-surface-2);
+  padding: 0.2rem;
+}
+
+.ff-share-studio__range-field {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.ff-share-studio__range-field input[type='range'] {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.ff-share-studio__range-field strong {
+  font-size: 0.72rem;
+  font-weight: 950;
+}
+
+.ff-share-studio__sticker-customize {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 0.75rem;
+  padding: 0.9rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 1rem;
+  background: var(--ff-surface-2);
+}
+
+.ff-share-studio__sticker-customize-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.ff-share-studio__sticker-customize-grid label {
+  display: grid;
+  gap: 0.42rem;
+  min-width: 0;
+}
+
+.ff-share-studio__sticker-customize-grid span {
+  color: var(--ff-text-soft);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.ff-share-studio__sticker-customize-grid input[type='color'] {
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.18rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 0.8rem;
+  background: var(--ff-surface-2);
+}
+
+.ff-share-studio__sticker-customize-grid input[type='range'] {
+  width: 100%;
+}
+
+.ff-share-studio__sticker-customize-grid small {
+  color: var(--ff-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.ff-share-studio__sticker-dropdown {
+  margin-top: 0.8rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 1rem;
+  background: var(--ff-surface-2);
+  overflow: hidden;
+}
+
+.ff-share-studio__sticker-dropdown summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.95rem 1rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.ff-share-studio__sticker-dropdown summary::-webkit-details-marker {
+  display: none;
+}
+
+.ff-share-studio__sticker-dropdown summary span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--ff-text-soft);
+  font-weight: 900;
+}
+
+.ff-share-studio__sticker-dropdown summary small {
+  color: var(--ff-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.ff-share-studio__sticker-customize-grid.is-tight {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ff-share-studio__align-panel {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.65rem;
+  padding: 0.85rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 1rem;
+  background: var(--ff-surface-2);
+}
+
+.ff-share-studio__align-panel > strong {
+  color: var(--ff-text-soft);
+  font-size: 0.76rem;
+  font-weight: 950;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.ff-share-studio__align-tools,
+.ff-share-studio__theme-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.ff-share-studio__align-tools button,
+.ff-share-studio__theme-presets button,
+.ff-share-studio__overlay-tools button {
+  min-height: 2.35rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.055);
+  color: var(--ff-text-soft);
+  padding: 0.48rem 0.72rem;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.ff-share-studio__align-tools button:active,
+.ff-share-studio__theme-presets button:active,
+.ff-share-studio__overlay-tools button:active {
+  transform: scale(0.985);
+}
+
+.ff-share-studio__theme-presets {
+  padding-bottom: 0.15rem;
+}
+
+.ff-share-studio__sticker-customize-grid select {
+  width: 100%;
+  min-height: 2.6rem;
+  padding: 0.72rem 0.9rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 0.8rem;
+  background: var(--ff-surface-2);
+  color: var(--ff-text-soft);
+}
+
+.ff-share-studio__color-editor {
+  display: grid;
+  grid-template-columns: 4.2rem minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: stretch;
+}
+
+.ff-share-studio__color-preview {
+  border-radius: 0.95rem;
+  border: 1px solid var(--ff-border);
+  min-height: 100%;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.14);
+}
+
+.ff-share-studio__hsl-grid {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.ff-share-studio__hsl-grid label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.ff-share-studio__hsl-grid span {
+  color: var(--ff-text-soft);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.ff-share-studio__ghost-button {
+  min-height: 2.6rem;
+  border: 1px dashed var(--ff-border);
+  border-radius: 0.9rem;
+  background: rgba(255,255,255,0.04);
+  color: var(--ff-text-soft);
+  font-weight: 800;
+}
+
+@media (max-width: 767px) {
+  .ff-share-studio__sticker-layer.is-story {
+    width: min(88vw, 390px, calc(54dvh * 9 / 16)) !important;
+    max-height: 54dvh !important;
+  }
+
+  .ff-share-studio__sticker-layer.is-feed {
+    width: min(88vw, 390px, 48dvh) !important;
+    max-height: 48dvh !important;
+  }
+
+  .ff-share-sticker {
+    border-radius: 0.86rem;
+    padding: 0.52rem;
+  }
+
+  .ff-share-studio__sticker-picker {
+    grid-template-columns: repeat(4, minmax(7.6rem, 1fr));
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
+  }
+
+  .ff-share-studio__sticker-customize-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ff-share-studio__sticker-customize-grid.is-tight,
+  .ff-share-studio__color-editor {
+    grid-template-columns: 1fr;
+  }
+
+  .ff-share-studio__color-preview {
+    min-height: 3rem;
+  }
+
+  .ff-share-studio__align-tools,
+  .ff-share-studio__theme-presets {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 0.15rem;
+  }
+
+  .ff-share-studio__align-tools button,
+  .ff-share-studio__theme-presets button {
+    flex: 0 0 auto;
+  }
+
+  .ff-share-studio__sticker-picker button {
+    min-height: 3.85rem;
+  }
+}
+
+
+/* ForgeFlow 22/06 - Share Studio V16: controles em menus suspensos + preview fixo */
+.ff-share-studio__controls {
+  display: grid;
+  gap: 0.9rem;
+  align-content: start;
+}
+
+.ff-share-studio__quick-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.ff-share-studio__quick-summary span {
+  display: grid;
+  gap: 0.12rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 0.95rem;
+  background: rgba(255,255,255,0.04);
+}
+
+.ff-share-studio__quick-summary strong {
+  color: var(--ff-text-soft);
+  font-size: 0.85rem;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.ff-share-studio__quick-summary small {
+  color: var(--ff-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.ff-share-studio__panel,
+.ff-share-studio__subpanel {
+  border: 1px solid var(--ff-border);
+  border-radius: 1.05rem;
+  background: var(--ff-surface-2);
+  overflow: hidden;
+}
+
+.ff-share-studio__panel > summary,
+.ff-share-studio__subpanel > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1rem 0.95rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.ff-share-studio__panel > summary::-webkit-details-marker,
+.ff-share-studio__subpanel > summary::-webkit-details-marker {
+  display: none;
+}
+
+.ff-share-studio__panel > summary span,
+.ff-share-studio__subpanel > summary span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--ff-text-soft);
+  font-size: 0.85rem;
+  font-weight: 900;
+}
+
+.ff-share-studio__panel > summary small,
+.ff-share-studio__subpanel > summary small {
+  color: var(--ff-muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-align: right;
+}
+
+.ff-share-studio__panel-body {
+  display: grid;
+  gap: 0.95rem;
+  padding: 0 1rem 1rem;
+}
+
+.ff-share-studio__subpanel > .ff-share-studio__align-panel,
+.ff-share-studio__subpanel > .ff-share-studio__panel-body {
+  padding: 0 0.8rem 0.8rem;
+}
+
+.ff-share-studio__panel .ff-share-studio__section-title:first-child {
+  margin-top: 0;
+}
+
+.ff-share-studio__sticker-dropdown {
+  margin-top: 0.15rem;
+}
+
+.ff-share-studio__preview {
+  position: sticky;
+  top: 0.7rem;
+  z-index: 6;
+}
+
+.ff-share-studio__footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 7;
+  margin-top: 0.8rem;
+  padding-top: 0.8rem;
+  background: linear-gradient(180deg, rgba(7,10,16,0), rgba(7,10,16,0.96) 30%, rgba(7,10,16,0.98));
+  backdrop-filter: blur(14px);
+}
+
+@media (max-width: 767px) {
+  .ff-share-studio__preview {
+    top: 0.25rem;
+  }
+
+  .ff-share-studio__panel > summary,
+  .ff-share-studio__subpanel > summary {
+    padding: 0.9rem;
+  }
+
+  .ff-share-studio__panel-body {
+    padding: 0 0.9rem 0.9rem;
+  }
+}
+
+
+/* ForgeFlow 22/06 - Share Studio V17: corrigir preview sticky sobrepondo tudo no mobile */
+@media (max-width: 767px) {
+  .ff-share-studio__preview {
+    position: relative !important;
+    top: auto !important;
+    z-index: 1 !important;
+  }
+
+  .ff-share-studio__controls {
+    position: relative;
+    z-index: 2;
+  }
+
+  .ff-share-studio__footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 4;
+  }
+}
+
+
+/* ForgeFlow 22/06 - Share Studio V18: edição contextual da figurinha */
+.ff-share-studio__editing-badge {
+  position: absolute;
+  top: 0.8rem;
+  left: 0.8rem;
+  z-index: 5;
+  display: inline-grid;
+  gap: 0.08rem;
+  padding: 0.55rem 0.72rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 0.9rem;
+  background: rgba(7,10,16,0.74);
+  backdrop-filter: blur(16px);
+}
+
+.ff-share-studio__editing-badge strong {
+  color: var(--ff-text-soft);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.ff-share-studio__editing-badge span {
+  color: var(--ff-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.ff-share-studio__sticker-popover {
+  position: fixed;
+  z-index: 40;
+  display: grid;
+  gap: 0.62rem;
+  padding: 0.7rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 0.95rem;
+  background: rgba(7,10,16,0.94);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--ff-shadow-floating);
+}
+
+.ff-share-studio__sticker-popover::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  border-right: 1px solid var(--ff-border);
+  border-bottom: 1px solid var(--ff-border);
+  background: rgba(7,10,16,0.94);
+}
+
+.ff-share-studio__sticker-popover.is-top::after {
+  bottom: -6px;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.ff-share-studio__sticker-popover.is-bottom::after {
+  top: -6px;
+  transform: translateX(-50%) rotate(225deg);
+}
+
+.ff-share-studio__sticker-popover-head {
+  display: grid;
+  gap: 0.48rem;
+}
+
+.ff-share-studio__sticker-popover-head strong {
+  display: block;
+  color: var(--ff-text-soft);
+  font-size: 0.79rem;
+  font-weight: 900;
+  line-height: 1.05;
+}
+
+.ff-share-studio__sticker-popover-head small {
+  color: var(--ff-muted);
+  font-size: 0.64rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.ff-share-studio__sticker-popover-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.ff-share-studio__sticker-popover-tabs button,
+.ff-share-studio__popover-row button,
+.ff-share-studio__context-note {
+  border-radius: 0.75rem;
+}
+
+.ff-share-studio__sticker-popover-tabs button,
+.ff-share-studio__popover-row button {
+  min-height: 1.95rem;
+  padding: 0.2rem 0.42rem;
+  border: 1px solid var(--ff-border);
+  background: rgba(255,255,255,0.05);
+  color: var(--ff-text-soft);
+  font-size: 0.69rem;
+  font-weight: 800;
+  line-height: 1.05;
+}
+
+.ff-share-studio__sticker-popover-tabs button.is-active {
+  border-color: rgba(239,68,68,0.38);
+  background: rgba(239,68,68,0.18);
+  color: var(--ff-text);
+}
+
+.ff-share-studio__sticker-popover-body,
+.ff-share-studio__popover-hsl {
+  display: grid;
+  gap: 0.56rem;
+}
+
+.ff-share-studio__popover-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.42rem;
+}
+
+.ff-share-studio__popover-row.is-actions,
+.ff-share-studio__popover-row.is-actions.is-grid,
+.ff-share-studio__popover-row.is-actions.is-compact-four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.ff-share-studio__popover-row.is-actions.is-compact-three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.ff-share-studio__popover-row.is-sliders.is-two-up {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ff-share-studio__popover-row label,
+.ff-share-studio__popover-hsl label {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.ff-share-studio__popover-row span,
+.ff-share-studio__popover-hsl span {
+  color: var(--ff-text-soft);
+  font-size: 0.63rem;
+  font-weight: 800;
+}
+
+.ff-share-studio__popover-row select,
+.ff-share-studio__popover-row input[type='color'] {
+  width: 100%;
+  min-height: 2.1rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 0.7rem;
+  background: var(--ff-surface-2);
+  color: var(--ff-text-soft);
+}
+
+.ff-share-studio__popover-row input[type='color'] {
+  padding: 0.12rem;
+}
+
+.ff-share-studio__context-note {
+  display: grid;
+  gap: 0.22rem;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid var(--ff-border);
+  background: var(--ff-surface-2);
+}
+
+.ff-share-studio__context-note strong {
+  color: var(--ff-text-soft);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.ff-share-studio__context-note small {
+  color: var(--ff-muted);
+  font-size: 0.7rem;
+  line-height: 1.3;
+}
+
+@media (max-width: 767px) {
+  .ff-share-studio__sticker-popover {
+    width: min(calc(100vw - 16px), 252px) !important;
+    padding: 0.62rem;
+  }
+
+  .ff-share-studio__popover-row.is-actions,
+  .ff-share-studio__popover-row.is-actions.is-grid,
+  .ff-share-studio__popover-row.is-actions.is-compact-four,
+  .ff-share-studio__popover-row.is-actions.is-compact-three,
+  .ff-share-studio__popover-row.is-sliders.is-two-up {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ff-share-studio__editing-badge {
+    top: 0.55rem;
+    left: 0.55rem;
+  }
+}
+
+/* ForgeFlow 22/06 - Share Studio V21: mini inspector premium + toolbar flutuante */
+.ff-share-studio__sticker-popover {
+  gap: 0.5rem !important;
+  padding: 0.58rem !important;
+  border-radius: 0.9rem !important;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(239,68,68,0.16), transparent 34%),
+    rgba(7,10,16,0.94) !important;
+  box-shadow:
+    0 1.1rem 2.8rem rgba(0,0,0,0.38),
+    inset 0 1px 0 rgba(255,255,255,0.08) !important;
+}
+
+.ff-share-studio__sticker-popover-title {
+  display: flex;
+  align-items: center;
+  gap: 0.48rem;
+  min-width: 0;
+}
+
+.ff-share-studio__sticker-popover-title i {
+  display: grid;
+  width: 1.55rem;
+  height: 1.55rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 0.55rem;
+  background: rgba(239,68,68,0.18);
+  color: #fecaca;
+  font-style: normal;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.ff-share-studio__sticker-popover-title span {
+  display: grid;
+  min-width: 0;
+  gap: 0.05rem;
+}
+
+.ff-share-studio__sticker-popover-title strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-share-studio__sticker-popover-tabs {
+  padding: 0.14rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 0.78rem;
+  background: var(--ff-surface-2);
+}
+
+.ff-share-studio__sticker-popover-tabs button,
+.ff-share-studio__popover-row button {
+  min-height: 1.82rem !important;
+  padding: 0.2rem 0.34rem !important;
+  border-radius: 0.62rem !important;
+  font-size: 0.65rem !important;
+}
+
+.ff-share-studio__sticker-popover-tabs button.is-active,
+.ff-share-studio__floating-toolbar button.is-active {
+  border-color: rgba(239,68,68,0.48) !important;
+  background: linear-gradient(180deg, rgba(239,68,68,0.28), rgba(239,68,68,0.14)) !important;
+  box-shadow: 0 0 0 1px rgba(239,68,68,0.1) inset;
+}
+
+.ff-share-studio__popover-row {
+  gap: 0.36rem !important;
+}
+
+.ff-share-studio__popover-row select,
+.ff-share-studio__popover-row input[type='color'] {
+  min-height: 2rem !important;
+  border-radius: 0.62rem !important;
+}
+
+.ff-share-studio__popover-hsl {
+  gap: 0.48rem !important;
+}
+
+.ff-share-studio__popover-hsl input[type='range'],
+.ff-share-studio__popover-row input[type='range'] {
+  accent-color: #ef4444;
+}
+
+.ff-share-studio__floating-toolbar {
+  position: fixed;
+  left: 50%;
+  bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  z-index: 39;
+  display: flex;
+  align-items: center;
+  gap: 0.42rem;
+  max-width: min(calc(100vw - 1rem), 25rem);
+  padding: 0.42rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 999px;
+  background: rgba(7,10,16,0.88);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--ff-shadow-floating);
+  transform: translateX(-50%);
+}
+
+.ff-share-studio__floating-toolbar span {
+  display: grid;
+  min-width: 5.2rem;
+  max-width: 8.6rem;
+  padding: 0 0.44rem 0 0.3rem;
+}
+
+.ff-share-studio__floating-toolbar strong,
+.ff-share-studio__floating-toolbar small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-share-studio__floating-toolbar strong {
+  color: var(--ff-text-soft);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.ff-share-studio__floating-toolbar small {
+  color: var(--ff-muted);
+  font-size: 0.58rem;
+  font-weight: 800;
+}
+
+.ff-share-studio__floating-toolbar button {
+  display: grid;
+  width: 2.05rem;
+  height: 2.05rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--ff-border);
+  border-radius: 999px;
+  background: var(--ff-surface-2);
+  color: var(--ff-text);
+  font-size: 0.82rem;
+}
+
+@media (max-width: 767px) {
+  .ff-share-studio__sticker-popover {
+    width: min(calc(100vw - 18px), 238px) !important;
+    padding: 0.52rem !important;
+  }
+
+  .ff-share-studio__sticker-popover-head {
+    gap: 0.38rem !important;
+  }
+
+  .ff-share-studio__sticker-popover-title i {
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+
+  .ff-share-studio__sticker-popover-tabs button,
+  .ff-share-studio__popover-row button {
+    min-height: 1.72rem !important;
+    font-size: 0.61rem !important;
+  }
+
+  .ff-share-studio__floating-toolbar {
+    bottom: calc(0.55rem + env(safe-area-inset-bottom));
+    max-width: min(calc(100vw - 0.75rem), 22rem);
+  }
+
+  .ff-share-studio__floating-toolbar span {
+    min-width: 4.7rem;
+    max-width: 7rem;
+  }
+}
+
+/* ForgeFlow 23/06 - Share Studio V22: popover acima da modal + sem corte lateral */
+.ff-share-studio__sticker-popover,
+.ff-share-studio__floating-toolbar {
+  z-index: 2147483647 !important;
+}
+
+.ff-share-studio,
+.ff-share-studio__panel,
+.ff-share-studio__body,
+.ff-share-studio__controls,
+.ff-share-studio__preview {
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+}
+
+.ff-share-studio__panel,
+.ff-share-studio__body,
+.ff-share-studio__controls,
+.ff-share-studio__panel-body,
+.ff-share-studio__quick-summary,
+.ff-share-studio__format-grid,
+.ff-share-studio__overlay-mode,
+.ff-share-studio__template-grid,
+.ff-share-studio__background-mode,
+.ff-share-studio__background-grid,
+.ff-share-studio__info-levels,
+.ff-share-studio__sticker-picker,
+.ff-share-studio__overlay-tools,
+.ff-share-studio__photo-tools,
+.ff-share-studio__phrase-row,
+.ff-share-studio__stats {
+  min-width: 0 !important;
+}
+
+.ff-share-studio__sticker-popover {
+  max-width: calc(100vw - 16px) !important;
+  box-sizing: border-box !important;
+}
+
+.ff-share-studio__floating-toolbar {
+  max-width: calc(100vw - 12px) !important;
+  box-sizing: border-box !important;
+}
+
+.ff-share-studio__floating-toolbar button,
+.ff-share-studio__sticker-popover button,
+.ff-share-studio__sticker-popover select,
+.ff-share-studio__sticker-popover input {
+  max-width: 100% !important;
+}
+
+@media (max-width: 767px) {
+  html.ff-share-studio-open,
+  body.ff-share-studio-open {
+    overflow-x: hidden !important;
+  }
+
+  .ff-share-studio {
+    overflow-x: hidden !important;
+  }
+
+  .ff-share-studio__body {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+
+  .ff-share-studio__sticker-popover {
+    width: min(244px, calc(100vw - 18px)) !important;
+    max-height: min(56dvh, 320px) !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+  }
+
+  .ff-share-studio__floating-toolbar {
+    left: max(6px, env(safe-area-inset-left)) !important;
+    right: max(6px, env(safe-area-inset-right)) !important;
+    width: auto !important;
+    transform: none !important;
+    justify-content: center !important;
+  }
+}
+
+/* ForgeFlow 23/06 - Share Studio V23: mini-menu simplificado, fechável e sem scroll lateral */
+.ff-share-studio,
+.ff-share-studio__panel,
+.ff-share-studio__body,
+.ff-share-studio__preview,
+.ff-share-studio__controls {
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+}
+
+.ff-share-studio__sticker-popover {
+  position: fixed !important;
+  z-index: 2147483647 !important;
+  display: grid !important;
+  gap: 0.5rem !important;
+  max-width: calc(100vw - 24px) !important;
+  max-height: min(42dvh, 250px) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  padding: 0.6rem !important;
+  border-radius: 0.92rem !important;
+  background: rgba(7, 10, 16, 0.96) !important;
+  transform: none !important;
+  overscroll-behavior: contain !important;
+}
+
+.ff-share-studio__sticker-popover::after {
+  display: none !important;
+}
+
+.ff-share-studio__sticker-popover * {
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.ff-share-studio__sticker-popover-head.is-compact {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 2rem !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+.ff-share-studio__sticker-popover-title {
+  min-width: 0 !important;
+}
+
+.ff-share-studio__sticker-popover-title i {
+  width: 1.65rem !important;
+  height: 1.65rem !important;
+  font-size: 0.82rem !important;
+}
+
+.ff-share-studio__sticker-popover-title strong {
+  overflow: hidden !important;
+  font-size: 0.78rem !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.ff-share-studio__sticker-popover-title small {
+  overflow: hidden !important;
+  font-size: 0.62rem !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.ff-share-studio__popover-close {
+  width: 2rem !important;
+  height: 2rem !important;
+  min-height: 2rem !important;
+  padding: 0 !important;
+  border: 1px solid var(--ff-border) !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  color: var(--ff-text-soft) !important;
+  font-size: 1.1rem !important;
+  font-weight: 900 !important;
+}
+
+.ff-share-studio__sticker-popover-tabs.is-compact,
+.ff-share-studio__sticker-popover-tabs {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0.32rem !important;
+}
+
+.ff-share-studio__sticker-popover-tabs button,
+.ff-share-studio__popover-row button {
+  min-height: 1.82rem !important;
+  padding: 0.24rem 0.34rem !important;
+  overflow: hidden !important;
+  font-size: 0.66rem !important;
+  line-height: 1 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.ff-share-studio__sticker-popover-body.is-simple,
+.ff-share-studio__sticker-popover-body {
+  gap: 0.45rem !important;
+}
+
+.ff-share-studio__popover-row,
+.ff-share-studio__popover-row.is-actions,
+.ff-share-studio__popover-row.is-actions.is-grid,
+.ff-share-studio__popover-row.is-actions.is-compact-four,
+.ff-share-studio__popover-row.is-actions.is-compact-three,
+.ff-share-studio__popover-row.is-actions.is-two-up,
+.ff-share-studio__popover-row.is-color-only,
+.ff-share-studio__popover-row.is-sliders.is-two-up {
+  display: grid !important;
+  gap: 0.34rem !important;
+  overflow: hidden !important;
+}
+
+.ff-share-studio__popover-row.is-actions.is-compact-four {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+.ff-share-studio__popover-row.is-actions.is-compact-three,
+.ff-share-studio__popover-row.is-actions.is-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+.ff-share-studio__popover-row.is-actions.is-two-up,
+.ff-share-studio__popover-row.is-color-only,
+.ff-share-studio__popover-row.is-sliders.is-two-up {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.ff-share-studio__popover-row select,
+.ff-share-studio__popover-row input[type='color'] {
+  min-height: 2rem !important;
+  width: 100% !important;
+  font-size: 0.7rem !important;
+}
+
+.ff-share-studio__mini-slider {
+  display: grid !important;
+  grid-template-columns: 2.8rem minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
+}
+
+.ff-share-studio__mini-slider span {
+  color: var(--ff-muted) !important;
+  font-size: 0.64rem !important;
+  font-weight: 850 !important;
+}
+
+.ff-share-studio__floating-toolbar.is-compact {
+  left: 12px !important;
+  right: 12px !important;
+  bottom: calc(78px + env(safe-area-inset-bottom)) !important;
+  width: auto !important;
+  max-width: none !important;
+  transform: none !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto auto !important;
+  gap: 0.45rem !important;
+  overflow-x: hidden !important;
+  z-index: 2147483647 !important;
+}
+
+.ff-share-studio__floating-toolbar.is-compact button {
+  min-width: 0 !important;
+  white-space: nowrap !important;
+}
+
+@media (max-width: 767px) {
+  .ff-share-studio__sticker-popover {
+    width: min(calc(100vw - 24px), 276px) !important;
+    max-height: min(38dvh, 224px) !important;
+  }
+
+  .ff-share-studio__popover-row.is-actions.is-compact-four {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .ff-share-studio__popover-row.is-actions.is-compact-three,
+  .ff-share-studio__popover-row.is-actions.is-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+/* ForgeFlow Share Studio rebuilt UX: compact toolbar + bottom sheet. */
+html,
+body,
+.ff-share-studio,
+.ff-share-next,
+.ff-share-next__shell,
+.ff-share-next__body,
+.ff-share-next__controls {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body.ff-share-studio-open .mobile-bottom-nav {
+  display: none !important;
+}
+
+.ff-share-next,
+.ff-share-next * {
+  box-sizing: border-box;
+}
+
+.ff-share-next {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+  background:
+    radial-gradient(circle at 18% 0%, rgba(239, 68, 68, 0.18), transparent 34%),
+    rgba(2, 3, 6, 0.88);
+  color: #f8fafc;
+  backdrop-filter: blur(18px);
+}
+
+.ff-share-next__shell {
+  width: min(1180px, 100%);
+  min-width: 0;
+  max-height: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  border: 1px solid var(--ff-border);
+  border-radius: 28px;
+  background: rgba(5, 7, 10, 0.94);
+  box-shadow: var(--ff-shadow-floating);
+  overflow: hidden;
+}
+
+.ff-share-next__header,
+.ff-share-next__footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  border-color: var(--ff-border);
+  background: rgba(7, 9, 13, 0.78);
+}
+
+.ff-share-next__header {
+  justify-content: space-between;
+  border-bottom: 1px solid var(--ff-border);
+}
+
+.ff-share-next__header > div {
+  min-width: 0;
+}
+
+.ff-share-next__header span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #ef4444;
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ff-share-next__header h2 {
+  margin: 3px 0 0;
+  font-size: clamp(1.15rem, 5vw, 1.75rem);
+  font-weight: 950;
+  line-height: 1.05;
+}
+
+.ff-share-next__header p {
+  max-width: 100%;
+  margin: 4px 0 0;
+  overflow: hidden;
+  color: rgba(226, 232, 240, 0.7);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-share-next__header > button,
+.ff-share-next__sheet header > button {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ff-border);
+  border-radius: 999px;
+  background: var(--ff-surface-2);
+  color: var(--ff-text);
+}
+
+.ff-share-next__body {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+  gap: 16px;
+  padding: 14px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.ff-share-next__stage-column,
+.ff-share-next__controls {
+  min-width: 0;
+}
+
+.ff-share-next__stage-column {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+.ff-share-next__format-row,
+.ff-share-next__segmented,
+.ff-share-next__edit-mode {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ff-share-next__format-row button,
+.ff-share-next__segmented button,
+.ff-share-next__edit-mode button,
+.ff-share-next__layout-row button,
+.ff-share-next__photo-tools button,
+.ff-share-next__align-grid button {
+  min-width: 0;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid var(--ff-border);
+  border-radius: 14px;
+  background: var(--ff-surface-2);
+  color: #e5e7eb;
+  font-size: 0.8rem;
+  font-weight: 900;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-share-next__format-row button.is-active,
+.ff-share-next__segmented button.is-active,
+.ff-share-next__edit-mode button.is-active,
+.ff-share-next__template-row button.is-active,
+.ff-share-next__background-row button.is-active,
+.ff-share-next__sticker-list button.is-active,
+.ff-share-next__phrase-row button.is-active {
+  border-color: rgba(239, 68, 68, 0.56);
+  background: rgba(239, 68, 68, 0.16);
+  color: var(--ff-text);
+}
+
+.ff-share-next__preview-card {
+  width: min(100%, 560px);
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--ff-border);
+  border-radius: 28px;
+  background: var(--ff-surface-2);
+}
+
+.ff-share-next__preview-meta {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: rgba(226, 232, 240, 0.68);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.ff-share-next__preview-meta strong,
+.ff-share-next__preview-meta span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-share-next__preview-meta strong {
+  color: var(--ff-text);
+  font-size: 0.8rem;
+  font-weight: 950;
+}
+
+.ff-share-next__preview {
+  position: relative;
+  width: min(100%, 410px);
+  min-width: 0;
+  aspect-ratio: var(--ff-preview-aspect);
+  border: 1px solid var(--ff-border);
+  border-radius: 30px;
+  background: var(--ff-card);
+  box-shadow: var(--ff-shadow-floating);
+  overflow: hidden;
+  touch-action: pan-y pinch-zoom;
+  user-select: none;
+}
+
+.ff-share-next__preview.is-story {
+  width: min(100%, 405px, 37vh);
+}
+
+.ff-share-next__preview.is-feed {
+  width: min(100%, 410px, 66vh);
+}
+
+
+.ff-share-next__preview.is-photo-editing {
+  outline: 2px solid rgba(239, 68, 68, 0.28);
+  outline-offset: 3px;
+  touch-action: none;
+}
+
+.ff-share-next__canvas,
+.ff-share-next__stickers {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.ff-share-next__canvas {
+  display: block;
+  image-rendering: auto;
+}
+
+.ff-share-next__stickers {
+  pointer-events: none;
+}
+
+.ff-share-next__guide {
+  position: absolute;
+  pointer-events: none;
+  z-index: 12;
+  display: none;
+  background: rgba(239, 68, 68, 0.92);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.24), 0 0 24px rgba(239, 68, 68, 0.28);
+}
+
+.ff-share-next__guide.is-visible {
+  display: block;
+}
+
+.ff-share-next__guide--vertical {
+  top: 18px;
+  bottom: 18px;
+  width: 2px;
+  transform: translateX(-50%);
+}
+
+.ff-share-next__guide--horizontal {
+  left: 18px;
+  right: 18px;
+  height: 2px;
+  transform: translateY(-50%);
+}
+
+.ff-share-next__sticker {
+  position: absolute;
+  display: block;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ff-text);
+  transform-origin: top left;
+  cursor: grab;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.ff-share-next__sticker:active {
+  cursor: grabbing;
+}
+
+.ff-share-next__sticker img {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.ff-share-next__sticker.is-selected::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border: 2px solid var(--ff-border);
+  border-radius: 22px;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12), 0 8px 20px rgba(2, 6, 23, 0.28);
+  pointer-events: none;
+}
+
+.ff-share-next__photo-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  max-width: calc(100% - 28px);
+  transform: translateX(-50%);
+  padding: 9px 12px;
+  border: 1px solid var(--ff-border);
+  border-radius: 999px;
+  background: var(--ff-surface-2);
+  color: var(--ff-text);
+  font-size: 0.74rem;
+  font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.ff-share-next__quickbar {
+  width: min(100%, 560px);
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--ff-border);
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(14, 18, 27, 0.96), rgba(8, 11, 18, 0.96));
+  box-shadow: var(--ff-shadow-floating);
+}
+
+.ff-share-next__quickbar-main {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.ff-share-next__quickbar-preview {
+  width: 62px;
+  height: 62px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--ff-border);
+  border-radius: 18px;
+  background:
+    linear-gradient(45deg, var(--ff-surface-2) 25%, transparent 25%, transparent 75%, var(--ff-surface-2) 75%),
+    linear-gradient(45deg, var(--ff-surface-2) 25%, transparent 25%, transparent 75%, var(--ff-surface-2) 75%),
+    rgba(255, 255, 255, 0.03);
+  background-position: 0 0, 10px 10px, 0 0;
+  background-size: 20px 20px;
+}
+
+.ff-share-next__quickbar-preview img {
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+}
+
+.ff-share-next__quickbar-preview span {
+  color: var(--ff-text);
+  font-size: 1rem;
+  font-weight: 950;
+}
+
+.ff-share-next__quickbar-label {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.ff-share-next__quickbar-label span {
+  display: block;
+  color: rgba(148, 163, 184, 0.9);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ff-share-next__quickbar-label strong {
+  display: block;
+  overflow: hidden;
+  color: var(--ff-text);
+  font-size: 1rem;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-share-next__quickbar-label small {
+  color: rgba(226, 232, 240, 0.72);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.ff-share-next__quickbar-actions {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ff-share-next__quickbar-actions button {
+  min-width: 0;
+  min-height: 40px;
+  padding: 10px 12px;
+  border: 1px solid var(--ff-border);
+  border-radius: 14px;
+  background: var(--ff-surface-2);
+  color: var(--ff-text);
+  font-size: 0.78rem;
+  font-weight: 950;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.ff-share-next__quickbar-actions button.is-close {
+  color: #fecaca;
+}
+
+.ff-share-next__sheet {
+  position: relative;
+  z-index: 10;
+  width: min(100%, 560px);
+  max-height: none;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  border: 1px solid var(--ff-border);
+  border-radius: 24px 24px 18px 18px;
+  background: rgba(10, 13, 20, 0.98);
+  box-shadow: var(--ff-shadow-floating);
+  overflow: hidden;
+}
+
+.ff-share-next__sheet-handle {
+  width: 42px;
+  height: 4px;
+  margin: 8px auto 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.ff-share-next__sheet header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--ff-border);
+}
+
+.ff-share-next__sheet header div {
+  min-width: 0;
+}
+
+.ff-share-next__sheet header span {
+  display: block;
+  overflow: hidden;
+  color: rgba(148, 163, 184, 0.95);
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ff-share-next__sheet header strong {
+  display: block;
+  overflow: hidden;
+  color: var(--ff-text);
+  font-size: 1rem;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-share-next__sheet-note {
+  margin: 4px 0 0;
+  color: rgba(226, 232, 240, 0.68);
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.ff-share-next__sheet-body {
+  min-width: 0;
+  min-height: 0;
+  padding: 12px;
+  overflow: visible;
+}
+
+.ff-share-next__sheet-grid {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.ff-share-next__style-preview-wrap {
+  display: grid;
+  gap: 8px;
+}
+
+.ff-share-next__style-preview-checker {
+  padding: 10px;
+  border: 1px solid var(--ff-border);
+  border-radius: 18px;
+  background:
+    linear-gradient(45deg, rgba(255,255,255,0.05) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.05) 75%),
+    linear-gradient(45deg, rgba(255,255,255,0.05) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.05) 75%),
+    var(--ff-surface-2);
+  background-position: 0 0, 12px 12px, 0 0;
+  background-size: 24px 24px;
+}
+
+.ff-share-next__style-preview-card {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border-style: solid;
+  border-radius: 18px;
+}
+
+.ff-share-next__style-preview-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.ff-share-next__style-preview-copy span {
+  font-size: 0.73rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.ff-share-next__style-preview-copy strong {
+  color: var(--ff-text);
+  font-size: 0.96rem;
+  line-height: 1.1;
+}
+
+.ff-share-next__style-preview-copy small {
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
+.ff-share-next__style-preview-meta {
+  min-width: 76px;
+  display: grid;
+  gap: 4px;
+  align-items: center;
+  justify-items: end;
+}
+
+.ff-share-next__style-preview-meta b {
+  font-size: 0.84rem;
+  font-weight: 950;
+}
+
+.ff-share-next__style-preview-meta small {
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.ff-share-next__style-preview-thumb {
+  width: 82px;
+  height: 82px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--ff-surface-2);
+}
+
+.ff-share-next__style-preview-thumb img {
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+}
+
+.ff-share-next__mini-action-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ff-share-next__mini-action-row button {
+  min-height: 40px;
+  padding: 10px 12px;
+  border: 1px solid var(--ff-border);
+  border-radius: 14px;
+  background: var(--ff-surface-2);
+  color: var(--ff-text);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.ff-share-next__field,
+.ff-share-next__color-field,
+.ff-share-next__range-field,
+.ff-share-next__caption-field,
+.ff-share-next__advanced label {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.ff-share-next__field-label,
+.ff-share-next__color-field span,
+.ff-share-next__range-field span,
+.ff-share-next__caption-field span,
+.ff-share-next__advanced label span {
+  color: rgba(226, 232, 240, 0.76);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.ff-share-next__color-field {
+  grid-template-columns: minmax(0, 1fr) 52px auto;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid var(--ff-border);
+  border-radius: 16px;
+  background: var(--ff-surface-2);
+}
+
+.ff-share-next__color-field input[type='color'] {
+  width: 52px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+}
+
+.ff-share-next__color-field code {
+  max-width: 82px;
+  overflow: hidden;
+  color: #cbd5e1;
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-share-next__advanced {
+  min-width: 0;
+  border: 1px solid var(--ff-border);
+  border-radius: 16px;
+  background: var(--ff-surface-2);
+  overflow: hidden;
+}
+
+.ff-share-next__advanced summary {
+  padding: 10px 12px;
+  color: var(--ff-text);
+  font-size: 0.82rem;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.ff-share-next__advanced label {
+  padding: 0 12px 12px;
+}
+
+.ff-share-next__range-field span {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ff-share-next input[type='range'] {
+  width: 100%;
+  min-width: 0;
+  accent-color: #ef4444;
+}
+
+.ff-share-next__swatch-row {
+  display: grid;
+  grid-template-columns: repeat(6, 36px);
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.ff-share-next__swatch-row button {
+  width: 36px;
+  height: 36px;
+  border: 2px solid var(--ff-border);
+  border-radius: 12px;
+  background: var(--ff-swatch);
+  box-shadow: inset 0 0 0 1px var(--ff-surface-2);
+}
+
+.ff-share-next__swatch-row button.is-active {
+  border-color: var(--ff-border);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.16);
+}
+
+.ff-share-next__preset-row,
+.ff-share-next__template-row,
+.ff-share-next__background-row,
+.ff-share-next__phrase-row {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.ff-share-next__preset-row::-webkit-scrollbar,
+.ff-share-next__template-row::-webkit-scrollbar,
+.ff-share-next__background-row::-webkit-scrollbar,
+.ff-share-next__phrase-row::-webkit-scrollbar {
+  display: none;
+}
+
+.ff-share-next__sheet .ff-share-next__preset-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  overflow: visible;
+  padding-bottom: 0;
+}
+
+.ff-share-next__sheet .ff-share-next__preset-row button {
+  width: 100%;
+  max-width: none;
+}
+
+.ff-share-next__preset-row button,
+.ff-share-next__template-row button,
+.ff-share-next__background-row button,
+.ff-share-next__phrase-row button {
+  flex: 0 0 auto;
+  max-width: 180px;
+  min-height: 44px;
+  padding: 9px 11px;
+  border: 1px solid var(--ff-border);
+  border-radius: 15px;
+  background: var(--ff-surface-2);
+  color: var(--ff-text);
+  font-size: 0.77rem;
+  font-weight: 900;
+  line-height: 1.12;
+  text-align: left;
+  overflow: hidden;
+}
+
+.ff-share-next__preset-row button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ff-share-next__preset-row i {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  border: 2px solid var(--ff-border);
+  border-radius: 9px;
+}
+
+.ff-share-next__template-row button strong,
+.ff-share-next__template-row button small {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-share-next__template-row button small {
+  margin-top: 3px;
+  color: rgba(226, 232, 240, 0.62);
+  font-size: 0.68rem;
+}
+
+.ff-share-next__background-row button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ff-share-next__bg-swatch {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  border: 1px solid var(--ff-border);
+  border-radius: 10px;
+  background: linear-gradient(135deg, #05070b, #ef4444);
+}
+
+.ff-share-next__bg-swatch.is-obsidian { background: linear-gradient(135deg, #05070b, #12151c); }
+.ff-share-next__bg-swatch.is-carbonGrid { background: linear-gradient(135deg, #07090d, #3f4652); }
+.ff-share-next__bg-swatch.is-ember { background: linear-gradient(135deg, #190804, #f97316); }
+.ff-share-next__bg-swatch.is-neonFlow { background: linear-gradient(135deg, #020914, #0ea5ff); }
+.ff-share-next__bg-swatch.is-nightPr { background: linear-gradient(135deg, #10081f, #a855f7); }
+.ff-share-next__bg-swatch.is-topoLines { background: linear-gradient(135deg, #061012, #22c55e); }
+.ff-share-next__bg-swatch.is-steel { background: linear-gradient(135deg, #151922, #64748b); }
+
+.ff-share-next__align-grid,
+.ff-share-next__layout-row,
+.ff-share-next__photo-tools {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ff-share-next__photo-inline-tools {
+  width: min(100%, 560px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) repeat(3, auto);
+  gap: 8px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid var(--ff-border);
+  border-radius: 18px;
+  background: var(--ff-surface-2);
+}
+
+.ff-share-next__photo-inline-tools span {
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(226, 232, 240, 0.8);
+  font-size: 0.75rem;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-share-next__photo-inline-tools button {
+  min-height: 34px;
+  padding: 8px 10px;
+  border: 1px solid var(--ff-border);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.055);
+  color: var(--ff-text);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.ff-share-next__quick-topics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ff-share-next__quick-topics button {
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid var(--ff-border);
+  border-radius: 15px;
+  background: rgba(255,255,255,0.05);
+  color: var(--ff-text);
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.ff-share-next__controls {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  overflow: visible;
+}
+
+.ff-share-next__accordion {
+  min-width: 0;
+  border: 1px solid var(--ff-border);
+  border-radius: 20px;
+  background: var(--ff-surface-2);
+  overflow: hidden;
+}
+
+.ff-share-next__accordion summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px 12px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.ff-share-next__accordion summary::after {
+  content: '+';
+  color: rgba(226, 232, 240, 0.74);
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.ff-share-next__accordion[open] summary::after {
+  content: '–';
+}
+
+.ff-share-next__accordion summary::-webkit-details-marker {
+  display: none;
+}
+
+.ff-share-next__accordion-title {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ff-text);
+}
+
+.ff-share-next__accordion-title strong {
+  overflow: hidden;
+  font-size: 0.9rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-share-next__accordion summary small {
+  max-width: 42%;
+  overflow: hidden;
+  color: rgba(148, 163, 184, 0.82);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-share-next__accordion-body {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 0 12px 12px;
+}
+
+
+.ff-share-next__controls .ff-share-next__template-row,
+.ff-share-next__controls .ff-share-next__background-row,
+.ff-share-next__controls .ff-share-next__phrase-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  overflow: visible;
+  padding-bottom: 0;
+}
+
+.ff-share-next__controls .ff-share-next__template-row button,
+.ff-share-next__controls .ff-share-next__background-row button,
+.ff-share-next__controls .ff-share-next__phrase-row button {
+  max-width: none;
+}
+
+.ff-share-next__topic-card {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--ff-border);
+  border-radius: 18px;
+  background: var(--ff-surface-2);
+}
+
+.ff-share-next__simple-status {
+  display: grid;
+  gap: 4px;
+}
+
+.ff-share-next__simple-status strong {
+  color: var(--ff-text);
+  font-size: 0.84rem;
+  font-weight: 950;
+}
+
+.ff-share-next__simple-status small {
+  color: rgba(226, 232, 240, 0.68);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.ff-share-next__topic-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ff-share-next__topic-actions button {
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid var(--ff-border);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.055);
+  color: var(--ff-text);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.ff-share-next__topic-actions button.is-active {
+  border-color: rgba(239,68,68,0.46);
+  background: rgba(239,68,68,0.14);
+}
+
+.ff-share-next__helper-note {
+  padding: 10px 12px;
+  border: 1px solid var(--ff-border);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.04);
+  color: rgba(226, 232, 240, 0.74);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.ff-share-next__sticker-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ff-share-next__sticker-list button {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--ff-border);
+  border-radius: 15px;
+  background: var(--ff-surface-2);
+  color: #e5e7eb;
+  text-align: left;
+}
+
+.ff-share-next__sticker-list button.is-selected {
+  box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.78);
+}
+
+.ff-share-next__sticker-list strong,
+.ff-share-next__sticker-list small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-share-next__sticker-list strong {
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.ff-share-next__sticker-list small {
+  margin-top: 3px;
+  color: rgba(203, 213, 225, 0.62);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.ff-share-next__photo-card {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px dashed rgba(239, 68, 68, 0.42);
+  border-radius: 18px;
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--ff-text);
+  text-align: left;
+}
+
+.ff-share-next__photo-card span {
+  min-width: 0;
+}
+
+.ff-share-next__photo-card strong,
+.ff-share-next__photo-card small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ff-share-next__photo-card strong {
+  font-size: 0.84rem;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.ff-share-next__photo-card small {
+  margin-top: 2px;
+  color: rgba(226, 232, 240, 0.66);
+  font-size: 0.7rem;
+  line-height: 1.25;
+}
+
+.ff-share-next__caption-field textarea {
+  width: 100%;
+  min-width: 0;
+  resize: vertical;
+  padding: 11px 12px;
+  border: 1px solid var(--ff-border);
+  border-radius: 15px;
+  background: rgba(2, 6, 23, 0.58);
+  color: var(--ff-text);
+  font: inherit;
+  font-size: 0.84rem;
+  outline: none;
+}
+
+.ff-share-next__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ff-share-next__stats span {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--ff-border);
+  border-radius: 16px;
+  background: var(--ff-surface-2);
+  text-align: center;
+}
+
+.ff-share-next__stats strong,
+.ff-share-next__stats small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-share-next__stats strong {
+  color: var(--ff-text);
+  font-size: 1rem;
+  font-weight: 950;
+}
+
+.ff-share-next__stats small {
+  color: rgba(148, 163, 184, 0.84);
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.ff-share-next__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 10px 14px;
+  border-top: 1px solid var(--ff-border);
+  color: #dbeafe;
+  font-size: 0.8rem;
+  font-weight: 850;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-share-next__footer {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--ff-border);
+}
+
+.ff-share-next__footer button {
+  min-width: 0;
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+.ff-share-next__primary {
+  background: #ef4444 !important;
+}
+
+@media (max-width: 860px) {
+  .ff-share-next {
+    padding: 0;
+  }
+
+  .ff-share-next__shell {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    border-radius: 0;
+    border-inline: 0;
+  }
+
+  .ff-share-next__body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    padding: 10px;
+  }
+
+  .ff-share-next__stage-column {
+    align-items: stretch;
+  }
+
+  .ff-share-next__preview-card {
+    width: 100%;
+    padding: 8px;
+    border-radius: 22px;
+  }
+
+  .ff-share-next__preview-meta {
+    display: grid;
+    justify-items: start;
+    gap: 2px;
+  }
+
+  .ff-share-next__preview {
+    align-self: center;
+    border-radius: 24px;
+  }
+
+  .ff-share-next__preview.is-story {
+    width: min(100%, 390px, 32dvh);
+  }
+
+  .ff-share-next__preview.is-feed {
+    width: min(100%, 390px, 58dvh);
+  }
+
+  .ff-share-next__photo-inline-tools {
+    width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .ff-share-next__photo-inline-tools span {
+    grid-column: 1 / -1;
+  }
+
+  .ff-share-next__quickbar {
+    width: 100%;
+    gap: 8px;
+    border-radius: 18px;
+  }
+
+  .ff-share-next__quickbar-actions {
+    justify-content: stretch;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ff-share-next__quickbar-actions button {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    padding-inline: 6px;
+  }
+
+  .ff-share-next__sheet {
+    position: relative;
+    width: 100%;
+    max-height: none;
+    border-radius: 22px;
+  }
+
+  .ff-share-next__controls {
+    padding-bottom: 8px;
+  }
+
+  .ff-share-next__footer {
+    display: grid;
+    grid-template-columns: 1fr 0.82fr 0.95fr;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .ff-share-next__footer button {
+    width: 100%;
+    padding-inline: 8px;
+    font-size: 0.74rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .ff-share-next__header,
+  .ff-share-next__footer {
+    padding-inline: 10px;
+  }
+
+  .ff-share-next__preview.is-story {
+    width: min(100%, 360px, 30dvh);
+  }
+
+  .ff-share-next__preview.is-feed {
+    width: min(100%, 360px, 54dvh);
+  }
+
+  .ff-share-next__sticker-list,
+  .ff-share-next__align-grid,
+  .ff-share-next__layout-row,
+  .ff-share-next__photo-tools,
+  .ff-share-next__mini-action-row,
+  .ff-share-next__topic-actions {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .ff-share-next__swatch-row {
+    grid-template-columns: repeat(4, 36px);
+  }
+
+  .ff-share-next__footer {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ff-share-next__photo-inline-tools button.is-active,
+.ff-share-next__photo-tools button.is-active {
+  border-color: rgba(239, 68, 68, 0.42);
+  background: rgba(239, 68, 68, 0.14);
+}
+
