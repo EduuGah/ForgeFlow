@@ -71,7 +71,7 @@ function MeasurementSummary({ photo }) {
 
 export function ProgressPhotosStats({ stats, source, loading, onAddPhoto }) {
   return (
-    <section className="ff-progress-hero-card">
+    <section className="ff-progress-hero-card" data-tutorial="progress-photos">
       <div className="ff-progress-hero-card__copy">
         <Badge variant={source === 'database' ? 'purple' : 'default'}>
           {loading ? 'Carregando...' : source === 'database' ? 'Sincronizado' : 'Salvo localmente'}
@@ -274,7 +274,7 @@ export function ProgressPhotosCompare({
 }) {
   if (photos.length < 2) {
     return (
-      <Card className="ff-progress-compare-card">
+      <Card className="ff-progress-compare-card" data-tutorial="photos-compare">
         <div className="ff-section-heading-inline">
           <span><Columns2 size={18} /></span>
           <div>
@@ -289,7 +289,7 @@ export function ProgressPhotosCompare({
   const selectedPhotos = [comparisonSummary?.before, comparisonSummary?.after].filter(Boolean)
 
   return (
-    <Card className="ff-progress-compare-card">
+    <Card className="ff-progress-compare-card" data-tutorial="photos-compare">
       <div className="ff-section-heading-inline">
         <span><Columns2 size={18} /></span>
         <div>
@@ -343,7 +343,7 @@ export function ProgressPhotosCompare({
 
 function ProgressPhotoCard({ photo, onSelectPhoto, onStartCompare, onEditPhoto, onDeletePhoto }) {
   return (
-    <Card className="photo-card ff-progress-photo-card p-0">
+    <Card className="photo-card ff-progress-photo-card p-0" data-tutorial="photos-gallery">
       <button type="button" className="ff-progress-photo-card__image" onClick={() => onSelectPhoto(photo)}>
         <img src={photo.imageUrl} alt={`Foto de progresso - ${getAngleLabel(photo.angle)}`} />
         <Badge variant="purple">{getAngleLabel(photo.angle)}</Badge>
@@ -411,7 +411,7 @@ export function ProgressPhotosTimeline({ groupedPhotos, loading, hasPhotos, onSe
   }
 
   return (
-    <section className="ff-progress-timeline">
+    <section className="ff-progress-timeline" data-tutorial="photos-gallery">
       <div className="ff-section-heading-inline">
         <span><CalendarDays size={18} /></span>
         <div>

@@ -375,7 +375,7 @@ export default function ActiveExerciseCard({
                 Ver detalhes
               </button>
 
-              <button type="button" onClick={() => {
+              <button type="button" data-tutorial="active-next-exercise" onClick={() => {
                 onSkipExercise(sessionExercise.id)
                 closeExerciseOptions()
               }}>
@@ -481,6 +481,7 @@ export default function ActiveExerciseCard({
   return (
     <article
       ref={(node) => onRegisterCardRef(sessionExercise.id, node)}
+      data-tutorial="active-exercise-card"
       className={`ff-hevy-active-exercise scroll-mt-24 ${isCurrent ? 'is-current' : ''} ${sessionExercise.skipped ? 'is-skipped' : ''}`}
     >
       <header className="ff-hevy-active-exercise__header">
@@ -585,7 +586,7 @@ export default function ActiveExerciseCard({
 
           return (
             <Fragment key={set.id}>
-            <div data-set-row-id={set.id} className={`ff-hevy-set-row ${isCompleted ? 'is-done' : ''} ${isWarmup ? 'is-warmup' : ''}`}>
+            <div data-set-row-id={set.id} data-tutorial="active-set-row" className={`ff-hevy-set-row ${isCompleted ? 'is-done' : ''} ${isWarmup ? 'is-warmup' : ''}`}>
               <button
                 type="button"
                 onClick={() => onToggleSetWarmup(sessionExercise.id, set.id)}
@@ -612,6 +613,7 @@ export default function ActiveExerciseCard({
                 enterKeyHint="done"
                 pattern="[0-9]*[.,]?[0-9]*"
                 data-set-field="weight"
+                data-tutorial="active-set-weight-input"
                 value={set.weight}
                 placeholder={previousSet?.weight ? String(previousSet.weight) : (appSettings.weightUnit || 'kg')}
                 onChange={(event) => handleSetInputChange(set.id, 'weight', event.target.value)}
@@ -636,6 +638,7 @@ export default function ActiveExerciseCard({
                 enterKeyHint="done"
                 pattern="[0-9]*"
                 data-set-field="reps"
+                data-tutorial="active-set-reps-input"
                 value={set.reps}
                 placeholder={previousSet?.reps ? String(previousSet.reps) : 'reps'}
                 onChange={(event) => handleSetInputChange(set.id, 'reps', event.target.value)}
@@ -667,6 +670,7 @@ export default function ActiveExerciseCard({
                   onCompleteSet(sessionExercise, set.id)
                 }}
                 className="ff-hevy-set-check"
+                data-tutorial="active-set-complete-button"
                 aria-label={isCompleted ? 'Desmarcar série' : 'Concluir série'}
               >
                 <Check size={20} />
@@ -679,7 +683,7 @@ export default function ActiveExerciseCard({
       )}
 
       {!isCollapsed && (
-      <div className="ff-hevy-set-actions ff-hevy-set-actions--smart">
+      <div className="ff-hevy-set-actions ff-hevy-set-actions--smart" data-tutorial="active-add-set-button">
         <button type="button" onClick={handleRepeatLastSet} disabled={!canRepeatLastSet} className="ff-hevy-repeat-set-button">
           <Repeat2 size={18} />
           Repetir última

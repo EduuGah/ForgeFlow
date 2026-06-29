@@ -29,6 +29,7 @@ function WeekDayCard({
       className={`ff-schedule-v2-day ${isSelected ? 'is-selected' : ''} ${isToday ? 'is-today' : ''} ${isWorkout ? 'is-workout' : ''} ${isRest ? 'is-rest' : ''}`}
       onClick={onSelect}
       aria-pressed={isSelected}
+      data-tutorial="schedule-day"
     >
       <span className="ff-schedule-v2-day__top">
         <span>

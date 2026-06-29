@@ -349,7 +349,7 @@ function SettingsAccountSection({ user, syncBadgeText, onProfile, onLogout }) {
   const email = user?.email || 'Não informado'
 
   return (
-    <Card className="settings-card p-4 sm:p-5">
+    <Card className="settings-card p-4 sm:p-5" data-tutorial="settings-profile">
       <SettingsSectionHeader
         icon={UserRound}
         eyebrow="Conta"

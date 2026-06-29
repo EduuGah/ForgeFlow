@@ -29,7 +29,7 @@ function DayDetailsPanel({
   const selectedValue = isWorkout ? entry.workoutId : entry?.type || 'empty'
 
   return (
-    <section className="ff-schedule-v2-details" aria-label={`Detalhes de ${day.label}`}>
+    <section className="ff-schedule-v2-details" data-tutorial="schedule-day-details" aria-label={`Detalhes de ${day.label}`}>
       <div className="ff-schedule-v2-section-title">
         <div>
           <span>Dia selecionado</span>
@@ -89,7 +89,7 @@ function DayDetailsPanel({
 
       <div className="ff-schedule-v2-details__actions">
         {isToday && workout && (
-          <Button type="button" onClick={onStartWorkout} className="ff-schedule-v2-details__primary">
+          <Button type="button" onClick={onStartWorkout} data-tutorial="schedule-start-today" className="ff-schedule-v2-details__primary">
             <Dumbbell size={17} /> Iniciar treino
           </Button>
         )}

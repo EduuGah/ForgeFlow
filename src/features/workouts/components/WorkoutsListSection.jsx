@@ -68,7 +68,7 @@ function WorkoutCard({
     )
 
     return (
-        <article className={workout.isFavorite ? 'ff-workout-native-card is-favorite' : 'ff-workout-native-card'}>
+        <article data-tutorial="workout-card" className={workout.isFavorite ? 'ff-workout-native-card is-favorite' : 'ff-workout-native-card'}>
             <button
                 type="button"
                 onClick={() => onToggleWorkout(workoutId)}
@@ -136,7 +136,7 @@ function WorkoutCard({
                     Editar
                 </button>
 
-                <button type="button" className="is-primary" onClick={() => onStartWorkout(workout)}>
+                <button type="button" className="is-primary" data-tutorial="workout-start-button" onClick={() => onStartWorkout(workout)}>
                     <Dumbbell size={17} />
                     Iniciar
                 </button>
@@ -160,7 +160,7 @@ function WorkoutCard({
                     </div>
 
                     <div className="ff-workout-expanded-actions">
-                        <button type="button" className="is-primary" onClick={() => onStartWorkout(workout)}>
+                        <button type="button" className="is-primary" data-tutorial="workout-start-button" onClick={() => onStartWorkout(workout)}>
                             <Dumbbell size={17} />
                             Iniciar
                         </button>
@@ -207,7 +207,7 @@ export default function WorkoutsListSection({
     const visibleLimit = Number(appSettings.workoutsVisibleLimit) || 5
 
     return (
-        <section className="ff-workouts-list-panel xl:col-span-2">
+        <section className="ff-workouts-list-panel xl:col-span-2" data-tutorial="workouts-list">
             <button
                 type="button"
                 onClick={onToggleCollapsed}

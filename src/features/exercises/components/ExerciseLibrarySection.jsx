@@ -50,7 +50,7 @@ function ExerciseListRow({
     : Boolean(exercise.isCustom || exercise.isUserCreated || exercise.createdByUser || exercise.localOnly)
 
   return (
-    <article className={isExpanded ? 'ff-exercise-catalog-card is-open' : 'ff-exercise-catalog-card'}>
+    <article data-tutorial="exercise-card" className={isExpanded ? 'ff-exercise-catalog-card is-open' : 'ff-exercise-catalog-card'}>
       <div className="ff-exercise-catalog-card__main">
         <Link
           to={`/exercises/${exercise.id}`}
@@ -203,7 +203,7 @@ function ExerciseLibrarySection({
   setVisibleState,
 }) {
   return (
-    <main className="ff-exercise-catalog-main order-1 xl:order-2">
+    <main className="ff-exercise-catalog-main order-1 xl:order-2" data-tutorial="exercise-library">
       <section className="ff-exercise-catalog-shell">
         <div className="ff-exercise-catalog-head">
           <div className="ff-exercise-catalog-head__copy">
@@ -222,7 +222,7 @@ function ExerciseLibrarySection({
           </button>
         </div>
 
-        <label className="ff-exercise-catalog-search">
+        <label className="ff-exercise-catalog-search" data-tutorial="exercise-search">
           <Search size={18} />
           <input
             type="search"
@@ -237,7 +237,7 @@ function ExerciseLibrarySection({
           )}
         </label>
 
-        <div className="ff-exercise-catalog-toolbar" aria-label="Filtros rápidos da biblioteca">
+        <div className="ff-exercise-catalog-toolbar" data-tutorial="exercise-filters" aria-label="Filtros rápidos da biblioteca">
           <span><SlidersHorizontal size={14} /> Filtros rápidos</span>
         </div>
 

@@ -104,7 +104,7 @@ export function HistoryHero({
 
 export function HistorySummaryCards({ historyCount, summary }) {
   return (
-    <section className="ff-history-summary-grid grid grid-cols-2 gap-3 xl:grid-cols-4">
+    <section className="ff-history-summary-grid grid grid-cols-2 gap-3 xl:grid-cols-4" data-tutorial="history-volume">
       <HistoryStatCard
         title="Treinos"
         value={historyCount}
@@ -408,7 +408,7 @@ function HistoryPrDetailsList({ prs = [] }) {
   if (!prs.length) return null
 
   return (
-    <div className="ff-history-pr-detail-list">
+    <div className="ff-history-pr-detail-list" data-tutorial="history-pr">
       {prs.slice(0, 6).map((pr, index) => {
         const previousDate = formatPrDetailDate(pr.previousDate)
         const title = `${pr.label || 'PR'}${pr.setNumber ? ` • série ${pr.setNumber}` : ''}`
@@ -553,7 +553,7 @@ function HistoryLocationDetails({ location }) {
   }
 
   return (
-    <section className="ff-history-location-card">
+    <section className="ff-history-location-card" data-tutorial="history-map-preview">
       <div className="ff-history-section-heading ff-history-section-heading--compact">
         <span><MapPin size={18} /></span>
         <div>
@@ -563,7 +563,7 @@ function HistoryLocationDetails({ location }) {
       </div>
 
       <div className="ff-history-location-layout">
-        <div className="ff-history-map-preview" aria-label="Prévia visual do local do treino">
+        <div className="ff-history-map-preview" data-tutorial="history-map-preview" aria-label="Prévia visual do local do treino">
           {mapPreviewUrl && (
             <iframe
               title="Prévia do local do treino"
@@ -621,7 +621,7 @@ function HistorySessionCard({
   const locationLabel = getMapsUrl(session.location) ? formatLocationLabel(session.location) : ''
 
   return (
-    <article className={`ff-history-feed-card ${sessionPRs.length > 0 ? 'has-pr' : ''}`}>
+    <article data-tutorial="history-card" className={`ff-history-feed-card ${sessionPRs.length > 0 ? 'has-pr' : ''}`}>
       <button type="button" onClick={() => onToggle(session.id)} className="ff-history-feed-card__summary">
         <div className="ff-history-feed-card__avatar">
           <Dumbbell size={21} />
@@ -669,6 +669,7 @@ function HistorySessionCard({
           type="button"
           onClick={() => onShareSession(session.id)}
           className="ff-history-share-trigger"
+          data-tutorial="history-share-button"
         >
           <Share2 size={16} />
           Compartilhar
@@ -859,7 +860,7 @@ export function HistoryListSection({
   setVisibleCount,
 }) {
   return (
-    <section className="ff-history-list-panel">
+    <section className="ff-history-list-panel" data-tutorial="history-list">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h2 className="ff-history-list-panel__title">Treinos finalizados</h2>

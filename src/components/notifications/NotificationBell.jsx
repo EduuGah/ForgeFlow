@@ -235,6 +235,7 @@ function NotificationBell() {
 
       <section
         className="ff-notification-menu__panel"
+        data-tutorial="notifications-list"
         role="dialog"
         aria-modal="true"
         aria-labelledby="ff-notification-menu-title"
@@ -310,7 +311,7 @@ function NotificationBell() {
   ) : null
 
   return (
-    <div className="relative">
+    <div className="relative" data-tutorial="notification-bell">
       <button
         type="button"
         onClick={() => setIsMenuOpen((current) => !current)}

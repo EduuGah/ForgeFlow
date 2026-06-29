@@ -594,7 +594,7 @@ function Progress() {
       />
 
       <div className="ff-progress-body ff-page-mobile-main-grid space-y-5 pb-8">
-        <div className="flex flex-col gap-3 rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 sm:flex-row sm:items-center sm:justify-between" data-tutorial="progress-filters">
           <div className="min-w-0">
             <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--ff-accent-text)]">Período</p>
             <p className="mt-1 text-sm text-[var(--ff-muted)]">Filtre os cards, gráficos, PRs e insights sem quebrar o layout mobile.</p>
@@ -619,7 +619,7 @@ function Progress() {
           </Card>
         ) : (
           <div className="space-y-5 sm:space-y-6">
-            <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+            <section className="grid grid-cols-2 gap-3 xl:grid-cols-4" data-tutorial="progress-overview">
               <SummaryCard
                 icon={Dumbbell}
                 label="Treinos"
@@ -674,11 +674,11 @@ function Progress() {
               />
             </section>
 
-            <VolumeTrendChart data={volumeTrend} />
+            <div data-tutorial="progress-chart"><VolumeTrendChart data={volumeTrend} /></div>
 
             <section className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
               <ConsistencySection summary={periodSummary} period={selectedPeriod} />
-              <RecentPrsSection prs={summary.recentPrs} />
+              <div data-tutorial="progress-prs"><RecentPrsSection prs={summary.recentPrs} /></div>
             </section>
 
             <section className="grid grid-cols-1 gap-5 xl:grid-cols-2">

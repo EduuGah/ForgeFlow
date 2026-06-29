@@ -2,17 +2,18 @@ import { NavLink } from 'react-router-dom'
 import { CalendarCheck, Dumbbell, Home, TrendingUp, UserRound } from 'lucide-react'
 
 const links = [
-  { name: 'Início', path: '/', icon: Home },
-  { name: 'Treino', path: '/workouts', icon: Dumbbell },
-  { name: 'Agenda', path: '/schedule', icon: CalendarCheck },
-  { name: 'Evolução', path: '/progress', icon: TrendingUp },
-  { name: 'Perfil', path: '/profile', icon: UserRound },
+  { name: 'Início', path: '/', icon: Home, tutorial: 'bottom-nav-dashboard' },
+  { name: 'Treino', path: '/workouts', icon: Dumbbell, tutorial: 'bottom-nav-workouts' },
+  { name: 'Agenda', path: '/schedule', icon: CalendarCheck, tutorial: 'bottom-nav-schedule' },
+  { name: 'Evolução', path: '/progress', icon: TrendingUp, tutorial: 'bottom-nav-progress' },
+  { name: 'Perfil', path: '/profile', icon: UserRound, tutorial: 'bottom-nav-settings' },
 ]
 
 function MobileBottomNav() {
   return (
     <nav
       aria-label="Navegação inferior"
+      data-tutorial="bottom-nav"
       className="mobile-bottom-nav safe-bottom fixed bottom-0 left-0 right-0 z-40 border-t border-[var(--ff-border)] bg-[var(--ff-header)] px-2 pt-1.5 backdrop-blur-xl lg:hidden"
     >
       <div className="mx-auto grid max-w-[560px] grid-cols-5 gap-1">
@@ -24,6 +25,7 @@ function MobileBottomNav() {
               key={link.path}
               to={link.path}
               end={link.path === '/'}
+              data-tutorial={link.tutorial}
               className={({ isActive }) =>
                 [
                   'flex min-h-[54px] flex-col items-center justify-center gap-1 rounded-xl px-2 py-1.5 transition active:scale-95',

@@ -71,7 +71,7 @@ function ToggleSwitch({ checked, onChange, label }) {
 
 function ProfileHero({ profile, stats, onEdit }) {
   return (
-    <section className="ff-profile-premium-hero">
+    <section className="ff-profile-premium-hero" data-tutorial="profile-overview">
       <div className="ff-profile-premium-hero__avatar">
         {profile.avatarUrl ? (
           <img src={profile.avatarUrl} alt={profile.name || 'Foto de perfil'} loading="lazy" decoding="async" />

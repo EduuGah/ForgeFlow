@@ -165,7 +165,7 @@ function Filters({ search, statusFilter, onSearchChange, onStatusFilterChange, o
         Marcar lidas
       </Button>
 
-      <Button type="button" onClick={onOpenSettings}>
+      <Button type="button" onClick={onOpenSettings} data-tutorial="notification-preferences">
         <Settings2 size={16} />
         Configurar lembretes
       </Button>
@@ -250,7 +250,7 @@ function NotificationsList({
   onDelete,
 }) {
   return (
-    <Card className="ff-notifications-list-card">
+    <Card className="ff-notifications-list-card" data-tutorial="notifications-list">
       <div className="ff-section-title-row">
         <div>
           <span>Recentes</span>
@@ -421,7 +421,7 @@ function PreferencesSheet({
     <div className="ff-premium-sheet" role="dialog" aria-modal="true">
       <button type="button" className="ff-premium-sheet__backdrop" aria-label="Fechar preferências" onClick={onClose} />
 
-      <section className="ff-premium-sheet__panel">
+      <section className="ff-premium-sheet__panel" data-tutorial="notification-preferences">
         <header className="ff-premium-sheet__header">
           <div>
             <span>Preferências</span>

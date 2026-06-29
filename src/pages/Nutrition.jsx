@@ -585,7 +585,7 @@ function Nutrition() {
       />
 
       <div className="ff-nutrition-page ff-page-mobile-main-grid space-y-5">
-        <Card className="ff-nutrition-hero-card p-4 sm:p-5">
+        <Card className="ff-nutrition-hero-card p-4 sm:p-5" data-tutorial="nutrition-overview">
           <div className="ff-nutrition-hero-grid">
             <div className="min-w-0">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--ff-accent-text)]">Resumo de hoje</p>
@@ -604,7 +604,7 @@ function Nutrition() {
               </div>
             </div>
 
-            <div className="ff-water-ring" aria-label={`${waterPercent}% da meta de água`}>
+            <div className="ff-water-ring" data-tutorial="nutrition-water" aria-label={`${waterPercent}% da meta de água`}>
               <div style={{ '--water-progress': `${waterPercent}%` }}>
                 <span>{waterPercent}%</span>
                 <small>{nutrition.waterMl} / {nutrition.waterGoalMl} ml</small>
@@ -622,7 +622,7 @@ function Nutrition() {
 
         <section className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,.85fr)]">
           <div className="space-y-4">
-            <Card className="ff-hydration-card p-4 sm:p-5">
+            <Card className="ff-hydration-card p-4 sm:p-5" data-tutorial="nutrition-water">
               <div className="ff-card-section-head">
                 <div className="min-w-0">
                   <p className="ff-section-eyebrow">Hidratação</p>
@@ -638,7 +638,7 @@ function Nutrition() {
                 <span style={{ width: `${waterPercent}%` }} />
               </div>
 
-              <div className="ff-water-button-grid">
+              <div className="ff-water-button-grid" data-tutorial="nutrition-add-water">
                 {WATER_PRESETS.map((amount) => (
                   <button key={amount} type="button" onClick={() => handleAddWater(amount)}>
                     +{amount} ml
@@ -671,7 +671,7 @@ function Nutrition() {
               </div>
             </Card>
 
-            <Card className="p-4 sm:p-5">
+            <Card className="p-4 sm:p-5" data-tutorial="nutrition-meals">
               <div className="ff-card-section-head">
                 <div className="min-w-0">
                   <p className="ff-section-eyebrow">Refeições de hoje</p>
@@ -719,7 +719,7 @@ function Nutrition() {
           </div>
 
           <aside className="space-y-4">
-            <Card className="p-4 sm:p-5">
+            <Card className="p-4 sm:p-5" data-tutorial="nutrition-goals">
               <div className="ff-card-section-head">
                 <div className="min-w-0">
                   <p className="ff-section-eyebrow">Metas nutricionais</p>
@@ -790,7 +790,7 @@ function Nutrition() {
               )}
             </Card>
 
-            <Card className="p-4 sm:p-5">
+            <Card className="p-4 sm:p-5" data-tutorial="nutrition-history">
               <div className="ff-card-section-head">
                 <div className="min-w-0">
                   <p className="ff-section-eyebrow">Histórico</p>

@@ -28,7 +28,7 @@ function ExerciseFiltersSidebar({
   clearFilters,
 }) {
   return (
-    <aside className="order-2 space-y-6 xl:order-1">
+    <aside className="order-2 space-y-6 xl:order-1" data-tutorial="exercise-filters">
       <Card className="overflow-visible border border-[var(--ff-border)] bg-gradient-to-b from-[#17171b] to-[#121216]">
         <div className="border-b border-[var(--ff-border)] p-5">
           <div className="flex items-center gap-3">

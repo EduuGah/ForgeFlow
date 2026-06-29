@@ -174,7 +174,7 @@ function MuscleRecoveryCard({ item }) {
   const Icon = style.icon
 
   return (
-    <div className={`recovery-card ff-recovery-native-card ${style.bg} ${style.border}`}>
+    <div data-tutorial="recovery-muscle-group" className={`recovery-card ff-recovery-native-card ${style.bg} ${style.border}`}>
       <div className="ff-recovery-native-card__header">
         <div>
           <span className={style.text}><Icon size={22} /></span>
@@ -216,7 +216,7 @@ export function RecoveryGrid({ filteredRecovery, loading }) {
   }
 
   return (
-    <Card className="ff-recovery-grid-card">
+    <Card className="ff-recovery-grid-card" data-tutorial="muscle-recovery">
       <div className="ff-section-heading-inline ff-section-heading-inline--split">
         <span><Dumbbell size={18} /></span>
         <div>
@@ -231,7 +231,7 @@ export function RecoveryGrid({ filteredRecovery, loading }) {
           description="Finalize alguns treinos para o ForgeFlow estimar o descanso dos grupos musculares."
         />
       ) : (
-        <div className="ff-recovery-card-scroll" role="region" aria-label="Lista de grupos musculares">
+        <div className="ff-recovery-card-scroll" data-tutorial="recovery-muscle-list" role="region" aria-label="Lista de grupos musculares">
           <div className="ff-recovery-card-grid">
             {filteredRecovery.map((item) => <MuscleRecoveryCard key={item.muscleGroup} item={item} />)}
           </div>

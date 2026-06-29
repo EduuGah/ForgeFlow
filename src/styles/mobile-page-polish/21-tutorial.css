@@ -1,0 +1,465 @@
+.ff-tutorial-overlay,
+.ff-tutorial-welcome,
+.ff-tutorial-floating-help {
+  color: var(--ff-text);
+  font-family: inherit;
+}
+
+.ff-tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ff-tutorial-scrim {
+  position: fixed;
+  background: var(--ff-overlay, rgba(0, 0, 0, 0.72));
+  backdrop-filter: blur(1.5px);
+  pointer-events: auto;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.ff-tutorial-spotlight {
+  position: fixed;
+  z-index: 1210;
+  border: 2px solid var(--ff-accent);
+  border-radius: 22px;
+  box-shadow:
+    0 0 0 1px var(--ff-accent-border),
+    0 0 30px var(--ff-accent-soft),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+  pointer-events: none;
+  transition: top 180ms ease, left 180ms ease, width 180ms ease, height 180ms ease;
+}
+
+.ff-tutorial-active-target {
+  position: relative !important;
+  z-index: 1211 !important;
+  isolation: isolate;
+}
+
+.ff-tutorial-target-label {
+  position: absolute;
+  left: 12px;
+  top: -14px;
+  max-width: min(260px, calc(100vw - 48px));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 999px;
+  border: 1px solid var(--ff-accent-border);
+  background: color-mix(in srgb, var(--ff-card) 88%, var(--ff-accent) 12%);
+  color: var(--ff-text);
+  padding: 0.28rem 0.62rem;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: var(--ff-shadow-floating);
+}
+
+.ff-tutorial-tooltip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1220;
+  width: min(372px, calc(100vw - 24px));
+  max-height: min(78vh, calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 44px));
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--ff-border);
+  border-radius: 28px;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--ff-accent-soft) 18%, transparent), transparent 46%),
+    var(--ff-card);
+  color: var(--ff-text);
+  box-shadow: var(--ff-shadow-floating), 0 20px 70px rgba(0, 0, 0, 0.34);
+  padding: 1rem;
+  pointer-events: auto;
+  outline: none;
+  animation: ff-tutorial-tooltip-in 180ms ease both;
+}
+
+.ff-tutorial-tooltip__header,
+.ff-tutorial-launcher__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.9rem;
+}
+
+.ff-tutorial-tooltip__eyebrow,
+.ff-tutorial-welcome__badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border: 1px solid var(--ff-accent-border);
+  border-radius: 999px;
+  background: var(--ff-accent-soft);
+  color: var(--ff-accent);
+  padding: 0.25rem 0.58rem;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ff-tutorial-tooltip h2,
+.ff-tutorial-welcome h2,
+.ff-tutorial-launcher h3 {
+  margin: 0.55rem 0 0;
+  color: var(--ff-text);
+  font-size: clamp(1.1rem, 4.4vw, 1.45rem);
+  font-weight: 950;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+}
+
+.ff-tutorial-close {
+  display: inline-grid;
+  min-width: 38px;
+  min-height: 38px;
+  place-items: center;
+  border: 1px solid var(--ff-border);
+  border-radius: 999px;
+  background: var(--ff-surface);
+  color: var(--ff-muted);
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.ff-tutorial-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0.85rem 0 0;
+}
+
+.ff-tutorial-progress__bar,
+.ff-tutorial-launcher__meter {
+  height: 8px;
+  flex: 1;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--ff-surface-2);
+  box-shadow: inset 0 0 0 1px var(--ff-border);
+}
+
+.ff-tutorial-progress__bar span,
+.ff-tutorial-launcher__meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--ff-accent), color-mix(in srgb, var(--ff-accent) 52%, #fff));
+  transition: width 220ms ease;
+}
+
+.ff-tutorial-step-counter,
+.ff-tutorial-launcher__progress {
+  min-width: fit-content;
+  color: var(--ff-muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.ff-tutorial-tooltip__body {
+  margin-top: 0.8rem;
+}
+
+.ff-tutorial-tooltip__body p,
+.ff-tutorial-welcome p,
+.ff-tutorial-launcher p {
+  margin: 0;
+  color: var(--ff-muted);
+  font-size: 0.92rem;
+  line-height: 1.52;
+}
+
+.ff-tutorial-tooltip__example {
+  margin-top: 0.72rem !important;
+  border: 1px solid var(--ff-border);
+  border-radius: 18px;
+  background: var(--ff-surface);
+  padding: 0.78rem 0.85rem;
+  color: var(--ff-text) !important;
+  font-weight: 750;
+}
+
+.ff-tutorial-tooltip__warning {
+  margin-top: 0.72rem !important;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--ff-accent) 45%, var(--ff-border));
+  background: var(--ff-accent-soft);
+  color: var(--ff-text) !important;
+  padding: 0.72rem 0.82rem;
+  font-weight: 800;
+}
+
+.ff-tutorial-tooltip__controls {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.ff-tutorial-tooltip__primary-actions,
+.ff-tutorial-tooltip__secondary-actions,
+.ff-tutorial-section-picker,
+.ff-tutorial-welcome__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.ff-tutorial-tooltip__primary-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+}
+
+.ff-tutorial-btn,
+.ff-tutorial-link-btn {
+  min-height: 42px;
+  border: 0;
+  border-radius: 16px;
+  padding: 0.72rem 0.86rem;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, opacity 160ms ease, border-color 160ms ease;
+}
+
+.ff-tutorial-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.ff-tutorial-btn:not(:disabled):active,
+.ff-tutorial-link-btn:not(:disabled):active,
+.ff-tutorial-close:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+.ff-tutorial-btn--primary {
+  background: linear-gradient(135deg, var(--ff-accent), color-mix(in srgb, var(--ff-accent) 70%, #fff));
+  color: var(--ff-accent-contrast, #fff);
+  box-shadow: 0 12px 30px var(--ff-accent-soft);
+}
+
+.ff-tutorial-btn--ghost,
+.ff-tutorial-btn--soft {
+  border: 1px solid var(--ff-border);
+  background: var(--ff-surface);
+  color: var(--ff-text);
+}
+
+.ff-tutorial-btn--soft {
+  min-height: 38px;
+  border-radius: 14px;
+  padding: 0.62rem 0.76rem;
+  color: var(--ff-muted);
+}
+
+.ff-tutorial-link-btn {
+  min-height: 34px;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ff-muted);
+  padding: 0.42rem 0.52rem;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.ff-tutorial-link-btn--danger {
+  color: var(--ff-danger, #ef4444);
+}
+
+.ff-tutorial-welcome {
+  position: fixed;
+  inset: 0;
+  z-index: 1230;
+  display: grid;
+  place-items: center;
+  padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+}
+
+.ff-tutorial-welcome__backdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--ff-overlay, rgba(0, 0, 0, 0.72));
+  backdrop-filter: blur(8px);
+}
+
+.ff-tutorial-welcome__card,
+.ff-tutorial-launcher {
+  position: relative;
+  width: min(440px, 100%);
+  border: 1px solid var(--ff-border);
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at top left, var(--ff-accent-soft), transparent 44%),
+    var(--ff-card);
+  box-shadow: var(--ff-shadow-floating), 0 28px 70px rgba(0, 0, 0, 0.35);
+  padding: 1.1rem;
+}
+
+.ff-tutorial-welcome__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin: 1rem 0;
+}
+
+.ff-tutorial-welcome__grid span {
+  border: 1px solid var(--ff-border);
+  border-radius: 18px;
+  background: var(--ff-surface);
+  color: var(--ff-text);
+  padding: 0.72rem;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.ff-tutorial-welcome__actions .ff-tutorial-btn {
+  flex: 1 1 145px;
+}
+
+.ff-tutorial-floating-help {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: calc(86px + env(safe-area-inset-bottom));
+  z-index: 900;
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border: 1px solid var(--ff-accent-border);
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--ff-accent), color-mix(in srgb, var(--ff-accent) 68%, #fff));
+  color: var(--ff-accent-contrast, #fff);
+  box-shadow: 0 14px 32px var(--ff-accent-soft);
+  font-size: 1.2rem;
+  font-weight: 950;
+}
+
+.ff-tutorial-launcher {
+  width: 100%;
+  margin-top: 1rem;
+  box-shadow: none;
+}
+
+.ff-tutorial-launcher__meter {
+  margin: 0.9rem 0 1rem;
+}
+
+.ff-tutorial-launcher__progress {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  height: 34px;
+  border: 1px solid var(--ff-border);
+  border-radius: 999px;
+  background: var(--ff-surface);
+  color: var(--ff-text);
+}
+
+.ff-tutorial-section-picker .ff-tutorial-btn {
+  flex: 1 1 148px;
+}
+
+.ff-tutorial-launcher__toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 1rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 18px;
+  background: var(--ff-surface);
+  color: var(--ff-text);
+  padding: 0.82rem;
+  font-size: 0.86rem;
+  font-weight: 850;
+}
+
+.ff-tutorial-launcher__toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--ff-accent);
+}
+
+.ff-tutorial-demo-ribbon {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 0.45rem;
+  border: 1px solid var(--ff-accent-border);
+  border-radius: 999px;
+  background: var(--ff-accent-soft);
+  color: var(--ff-accent);
+  padding: 0.28rem 0.62rem;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+@keyframes ff-tutorial-tooltip-in {
+  from {
+    opacity: 0;
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes ff-tutorial-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px var(--ff-accent-border),
+      0 0 26px var(--ff-accent-soft),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px var(--ff-accent),
+      0 0 44px var(--ff-accent-soft),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.32);
+  }
+}
+
+.ff-tutorial-highlight-pulse {
+  animation: ff-tutorial-pulse 1.8s ease-in-out infinite;
+}
+
+[data-theme='light'] .ff-tutorial-scrim,
+.light .ff-tutorial-scrim,
+:root:not(.dark) .ff-tutorial-scrim {
+  background: rgba(15, 23, 42, 0.46);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ff-tutorial-tooltip,
+  .ff-tutorial-scrim,
+  .ff-tutorial-spotlight,
+  .ff-tutorial-highlight-pulse,
+  .ff-tutorial-progress__bar span,
+  .ff-tutorial-launcher__meter span {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .ff-tutorial-tooltip {
+    border-radius: 24px;
+    padding: 0.9rem;
+  }
+
+  .ff-tutorial-tooltip__primary-actions {
+    grid-template-columns: 1fr;
+  }
+}

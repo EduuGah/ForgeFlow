@@ -31,7 +31,7 @@ export function ActiveWorkoutHero({
   }
 
   return (
-    <header className="ff-forge-active-hero">
+    <header className="ff-forge-active-hero" data-tutorial="active-workout-header">
       <div className="ff-forge-active-hero__top">
         <button type="button" onClick={onBack} className="ff-forge-active-hero__back" aria-label="Voltar para treinos">
           <span>‹</span>
@@ -40,6 +40,9 @@ export function ActiveWorkoutHero({
         <div className="ff-forge-active-hero__title">
           <span>Treino ativo</span>
           <h1>{activeSession.workoutName || 'Treinamento'}</h1>
+          {(activeSession.isTutorial || activeSession.tutorialOnly) && (
+            <small className="ff-tutorial-demo-ribbon">Modo tutorial · não salva histórico real</small>
+          )}
         </div>
 
         <button
@@ -47,6 +50,7 @@ export function ActiveWorkoutHero({
           onClick={handleFinishClick}
           disabled={savingWorkout}
           className="ff-forge-active-hero__finish"
+          data-tutorial="active-finish-workout"
         >
           {savingWorkout ? 'Salvando...' : 'Concluir'}
         </button>
@@ -57,7 +61,7 @@ export function ActiveWorkoutHero({
       </div>
 
       <div className="ff-forge-active-hero__metrics">
-        <div>
+        <div data-tutorial="active-workout-timer">
           <span>Duração</span>
           <strong>{formatTime(elapsedSeconds)}</strong>
         </div>
@@ -100,7 +104,7 @@ export function ExerciseJumpNav({
   onAddExercise,
 }) {
   return (
-    <section className="ff-forge-exercise-strip" aria-label="Lista de exercícios do treino">
+    <section className="ff-forge-exercise-strip" data-tutorial="active-next-exercise" aria-label="Lista de exercícios do treino">
       <div className="ff-forge-exercise-strip__label">
         <ListChecks size={15} />
         <span>Exercícios</span>

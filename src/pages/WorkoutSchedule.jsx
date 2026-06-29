@@ -426,7 +426,7 @@ function WorkoutSchedule() {
 
       <section className="ff-schedule-v2-layout">
         <div className="ff-schedule-v2-main-flow">
-          <section className="ff-schedule-v2-week" aria-label="Calendário semanal de treinos">
+          <section className="ff-schedule-v2-week" data-tutorial="schedule-week" aria-label="Calendário semanal de treinos">
             <div className="ff-schedule-v2-section-title">
               <div>
                 <span>Planner semanal</span>

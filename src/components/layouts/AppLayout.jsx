@@ -413,6 +413,7 @@ function AppLayout() {
 
       <header
         id="app-header"
+        data-tutorial="app-header"
         className={[
           'fixed inset-x-0 top-0 z-40 border-b border-[var(--ff-border)] bg-[var(--ff-header)] backdrop-blur-xl transition-all duration-300 ease-out',
           isRunningNativeApp || isHeaderVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0',
@@ -427,13 +428,14 @@ function AppLayout() {
                 onClick={() => setIsSidebarOpen(true)}
                 className="group flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface)] text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)] active:scale-95"
                 aria-label="Abrir menu"
+                data-tutorial="menu-button"
                 aria-expanded={isSidebarOpen}
               >
                 <Menu size={22} className="transition group-hover:text-[var(--ff-accent-text)]" />
               </button>
 
               <div className="flex min-w-0 items-center gap-3">
-                <div className="ff-header-brand-icon flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] text-[var(--ff-accent)] shadow-[0_0_18px_var(--ff-accent-shadow)]" aria-label="ForgeFlow">
+                <div data-tutorial="theme-brand" className="ff-header-brand-icon flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] text-[var(--ff-accent)] shadow-[0_0_18px_var(--ff-accent-shadow)]" aria-label="ForgeFlow">
                   <span className="ff-header-brand-icon__monogram" aria-hidden="true">F</span>
                   <span className="ff-header-brand-icon__barbell" aria-hidden="true" />
                 </div>
@@ -454,6 +456,7 @@ function AppLayout() {
                 onClick={() => window.dispatchEvent(new CustomEvent('forgeflow:show-install-app'))}
                 className="flex h-11 items-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface)] px-3 text-xs font-black text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)] sm:flex"
                 aria-label="Instalar APP"
+                data-tutorial="app-install-button"
                 title="Instalar APP"
               >
                 <Download size={16} />
@@ -473,7 +476,7 @@ function AppLayout() {
         </Suspense>
       )}
 
-      <main ref={pageScrollRef} className={`ff-page-scroll-shell ff-hevy-shell ff-mobile-app-shell ${getRouteShellClass(location.pathname)} relative z-0 min-h-0 px-4 pb-36 pt-[calc(6.25rem+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[calc(6.25rem+env(safe-area-inset-top))]`}>
+      <main ref={pageScrollRef} data-tutorial="app-main" className={`ff-page-scroll-shell ff-hevy-shell ff-mobile-app-shell ${getRouteShellClass(location.pathname)} relative z-0 min-h-0 px-4 pb-36 pt-[calc(6.25rem+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10 lg:pt-[calc(6.25rem+env(safe-area-inset-top))]`}>
         <div className="mx-auto w-full max-w-[1600px]">
           <Outlet />
         </div>

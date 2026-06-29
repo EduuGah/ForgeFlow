@@ -71,6 +71,7 @@ function ActiveWorkoutMini({ variant = 'floating' }) {
       onClick={handleOpenWorkout}
       className={`ff-active-workout-mini ff-active-workout-mini-card-v3 ${isInline ? 'ff-active-workout-mini-inline' : 'ff-active-workout-mini-floating'}`}
       title="Abrir treino ativo"
+      data-tutorial="active-workout-mini"
     >
       <span className="ff-active-workout-mini-card-v3__icon" aria-hidden="true">
         <Dumbbell size={26} />

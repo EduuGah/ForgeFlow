@@ -63,6 +63,7 @@ export function WorkoutsHeader({ isSyncingData, onCreateWorkout }) {
                     <button
                         type="button"
                         onClick={onCreateWorkout}
+                        data-tutorial="create-workout-button"
                         className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-bold text-white shadow-[0_0_20px_var(--ff-accent-shadow)] transition hover:bg-[var(--ff-accent-hover)] hover:shadow-[0_0_20px_var(--ff-accent-shadow)]"
                     >
                         <Plus size={18} />
@@ -114,7 +115,7 @@ export function WorkoutFolderFilter({
     onDeleteFolder,
 }) {
     return (
-        <div className="ff-workouts-folder-bar">
+        <div className="ff-workouts-folder-bar" data-tutorial="workout-folder">
             <div className="ff-workouts-folder-bar__head">
                 <p>Pastas</p>
 
@@ -186,7 +187,7 @@ export function WorkoutNextActionCard({ workout, workoutListMetaMap, onCreateWor
 
     if (!workout) {
         return (
-            <section className="ff-workouts-next-action-card is-empty">
+            <section className="ff-workouts-next-action-card is-empty" data-tutorial="create-workout-button">
                 <div className="ff-workouts-next-action-card__icon">
                     <Sparkles size={22} />
                 </div>
@@ -206,7 +207,7 @@ export function WorkoutNextActionCard({ workout, workoutListMetaMap, onCreateWor
     }
 
     return (
-        <section className="ff-workouts-next-action-card">
+        <section className="ff-workouts-next-action-card" data-tutorial="workout-start-button">
             <div className="ff-workouts-next-action-card__icon">
                 <Sparkles size={22} />
             </div>

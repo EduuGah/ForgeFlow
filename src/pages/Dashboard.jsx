@@ -216,7 +216,7 @@ function DashboardHero({
     : 'Comece registrando seu primeiro treino.'
 
   return (
-    <section className="ff-dashboard-v2-hero">
+    <section className="ff-dashboard-v2-hero" data-tutorial="dashboard-hero">
       <div className="ff-dashboard-v2-hero__top">
         <div className="ff-dashboard-v2-hero__copy">
           <span className="ff-dashboard-v2-eyebrow">
@@ -277,6 +277,7 @@ function DashboardActiveWorkoutCard({ activeSession, elapsedSeconds, completedSe
       type="button"
       onClick={() => navigate('/start-workout')}
       className="ff-dashboard-v2-active"
+      data-tutorial="dashboard-active-workout"
     >
       <span className="ff-dashboard-v2-active__icon">
         <Dumbbell size={22} />
@@ -320,7 +321,7 @@ function DashboardTodaySummary({
       : 'Livre'
 
   return (
-    <section className="ff-dashboard-v2-panel ff-dashboard-v2-summary">
+    <section className="ff-dashboard-v2-panel ff-dashboard-v2-summary" data-tutorial="dashboard-summary">
       <div className="ff-dashboard-v2-section-title">
         <div>
           <span>Resumo de hoje</span>
@@ -409,7 +410,7 @@ function DashboardNextAction({
   }
 
   return (
-    <Link to={to} className="ff-dashboard-v2-next-action">
+    <Link to={to} className="ff-dashboard-v2-next-action" data-tutorial="dashboard-next-action">
       <span>
         <Icon size={20} />
       </span>
@@ -498,7 +499,7 @@ function DashboardTodayWorkout({ user, workouts, onStartWorkout }) {
   }
 
   return (
-    <section className="ff-dashboard-v2-panel ff-dashboard-v2-today">
+    <section className="ff-dashboard-v2-panel ff-dashboard-v2-today" data-tutorial="dashboard-today-workout">
       <div className="ff-dashboard-v2-section-title">
         <div>
           <span>Plano do dia</span>
@@ -546,7 +547,7 @@ function DashboardWeekStrip({ days }) {
   const max = Math.max(1, ...days.map((day) => day.total))
 
   return (
-    <section className="ff-dashboard-v2-panel ff-dashboard-v2-week">
+    <section className="ff-dashboard-v2-panel ff-dashboard-v2-week" data-tutorial="dashboard-week">
       <div className="ff-dashboard-v2-section-title">
         <div>
           <span>Semana</span>
@@ -583,7 +584,7 @@ function DashboardMiniChart({ volumeByWorkout }) {
   const maxVolume = Math.max(1, ...chartItems.map((item) => toNumber(item.volume)))
 
   return (
-    <section className="ff-dashboard-v2-panel ff-dashboard-v2-chart">
+    <section className="ff-dashboard-v2-panel ff-dashboard-v2-chart" data-tutorial="dashboard-metrics">
       <div className="ff-dashboard-v2-section-title">
         <div>
           <span>Performance</span>
@@ -692,7 +693,7 @@ function DashboardGoalsAlerts({ dashboardGoals, dashboardNotifications, unreadNo
 
 function DashboardRecentSessions({ recentSessions }) {
   return (
-    <section className="ff-dashboard-v2-panel ff-dashboard-v2-recent">
+    <section className="ff-dashboard-v2-panel ff-dashboard-v2-recent" data-tutorial="dashboard-recent-history">
       <div className="ff-dashboard-v2-section-title">
         <div>
           <span>Historico</span>

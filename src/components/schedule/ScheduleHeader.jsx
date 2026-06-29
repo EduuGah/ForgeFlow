@@ -15,7 +15,7 @@ function ScheduleHeader({
   onStartTodayWorkout,
 }) {
   return (
-    <section className="ff-schedule-v2-hero" aria-label="Resumo da agenda">
+    <section className="ff-schedule-v2-hero" data-tutorial="schedule-week" aria-label="Resumo da agenda">
       <div className="ff-schedule-v2-hero__copy">
         <span className="ff-schedule-v2-eyebrow">
           <CalendarCheck size={15} /> Agenda
@@ -47,7 +47,7 @@ function ScheduleHeader({
 
       <div className="ff-schedule-v2-hero__actions">
         {todayWorkoutName && (
-          <Button type="button" onClick={onStartTodayWorkout} className="ff-schedule-v2-start-button">
+          <Button type="button" onClick={onStartTodayWorkout} data-tutorial="schedule-start-today" className="ff-schedule-v2-start-button">
             <Play size={17} /> Iniciar hoje
           </Button>
         )}

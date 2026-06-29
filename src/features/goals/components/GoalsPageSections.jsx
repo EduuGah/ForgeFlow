@@ -81,7 +81,7 @@ function GoalsStats({ stats }) {
   ]
 
   return (
-    <section className="ff-goals-stats-grid" aria-label="Resumo das metas">
+    <section className="ff-goals-stats-grid" aria-label="Resumo das metas" data-tutorial="goals-overview">
       {cards.map((card) => {
         const Icon = card.icon
 

@@ -990,6 +990,7 @@ function Workouts() {
                         <button
                             type="button"
                             onClick={openCreateBuilder}
+                            data-tutorial="create-workout-button"
                             className="ff-page-intro-primary-action"
                         >
                             <Plus size={18} />
@@ -1066,6 +1067,7 @@ function Workouts() {
                     onClick={openCreateBuilder}
                     className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 z-40 flex h-14 w-14 items-center justify-center rounded-3xl bg-[var(--ff-accent)] text-white shadow-[0_0_28px_var(--ff-accent-shadow)] transition active:scale-95 sm:hidden"
                     aria-label="Criar novo treino"
+                    data-tutorial="create-workout-button"
                 >
                     <Plus size={24} />
                 </button>

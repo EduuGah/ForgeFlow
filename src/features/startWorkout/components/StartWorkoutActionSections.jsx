@@ -49,7 +49,7 @@ export function WorkoutSessionSidebar({
   onCancelWorkout,
 }) {
   return (
-    <aside className="space-y-4 xl:col-span-1">
+    <aside className="space-y-4 xl:col-span-1" data-tutorial="active-workout-sidebar">
       <Card className="hidden xl:block">
         <h2 className="text-xl font-bold">
           Treino ativo
@@ -118,7 +118,7 @@ export function WorkoutSessionSidebar({
         </div>
       </Card>
 
-      <Card>
+      <Card data-tutorial="active-workout-notes">
         <div className="mb-3 flex items-center gap-2">
           <StickyNote size={18} className="text-[var(--ff-accent-text)]" />
           <h2 className="text-lg font-black">Observações</h2>
@@ -138,6 +138,7 @@ export function WorkoutSessionSidebar({
           <Button
             type="button"
             onClick={onRequestFinish}
+            data-tutorial="active-finish-workout"
             className="w-full"
           >
             Finalizar treino
@@ -238,6 +239,7 @@ export function MobileWorkoutActionBar({
           type="button"
           onClick={onRequestFinish}
           disabled={savingWorkout}
+          data-tutorial="active-finish-workout"
           className="ff-mobile-workout-action-bar__finish h-12 shrink-0 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-black text-white shadow-[0_0_24px_var(--ff-accent-shadow)] transition active:scale-95 disabled:opacity-60"
         >
           Concluir treino
