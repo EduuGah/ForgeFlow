@@ -8000,11 +8000,11 @@ body {
   gap: 10px;
   overflow: hidden;
   width: 100%;
-  border: 1px solid color-mix(in srgb, var(--ff-accent) 42%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ff-accent) 42%, var(--ff-border));
   border-radius: 20px;
   background:
-    radial-gradient(circle at 92% 0, color-mix(in srgb, var(--ff-accent) 25%, transparent), transparent 44%),
-    linear-gradient(180deg, color-mix(in srgb, var(--ff-card) 96%, white 4%), #090a0d);
+    radial-gradient(circle at 92% 0, color-mix(in srgb, var(--ff-accent) 18%, transparent), transparent 44%),
+    linear-gradient(180deg, color-mix(in srgb, var(--ff-card) 94%, white 6%), var(--ff-surface-2));
   color: var(--ff-text);
   padding: 11px;
   text-align: left;
@@ -8080,7 +8080,7 @@ body {
   overflow: hidden;
   height: 4px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.09);
+  background: color-mix(in srgb, var(--ff-border) 76%, transparent);
 }
 
 .ff-dashboard-v2-active__bar i {
