@@ -88,8 +88,8 @@ export function MetricCard({ label, value, helper, icon: Icon }) {
 export function BottomSheet({ open, title, children, onClose }) {
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-[70] flex items-end bg-black/70 px-3 pb-3" role="dialog" aria-modal="true">
-      <div className="mx-auto max-h-[82dvh] w-full max-w-xl overflow-y-auto rounded-t-[1.7rem] border border-[var(--ff-border)] bg-[var(--ff-card)] shadow-2xl shadow-black/50">
+    <div className="fixed inset-0 z-[70] flex items-end bg-[var(--ff-overlay)] px-3 pb-3" role="dialog" aria-modal="true">
+      <div className="mx-auto max-h-[82dvh] w-full max-w-xl overflow-y-auto rounded-t-[1.7rem] border border-[var(--ff-border)] bg-[var(--ff-card)] shadow-2xl shadow-[var(--ff-shadow-floating)]">
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
           <div>
             <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[var(--ff-border-strong)]" />

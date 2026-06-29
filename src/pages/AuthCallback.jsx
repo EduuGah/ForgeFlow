@@ -60,17 +60,17 @@ function AuthCallback() {
 
       <AppPageIntro eyebrow="Autenticação" title="Conectando" description="Finalizando login com segurança." />
 
-    <div className="ff-auth-flow flex min-h-screen items-center justify-center bg-zinc-950 px-4 text-white">
-      <div className="rounded-3xl border border-zinc-800 bg-[#121216] p-8 text-center">
+    <div className="ff-auth-flow flex min-h-screen items-center justify-center bg-[var(--ff-card)] px-4 text-[var(--ff-text)]">
+      <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-8 text-center">
         {!error ? (
           <>
-            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-zinc-700 border-t-[var(--ff-accent)]" />
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-[var(--ff-border)] border-t-[var(--ff-accent)]" />
 
             <h1 className="mt-5 text-xl font-black">
               Entrando...
             </h1>
 
-            <p className="mt-2 text-sm text-zinc-500">
+            <p className="mt-2 text-sm text-[var(--ff-muted-2)]">
               Verificando seu perfil no ForgeFlow.
             </p>
           </>
@@ -80,7 +80,7 @@ function AuthCallback() {
               Erro no login
             </h1>
 
-            <p className="mt-2 text-sm text-zinc-500">
+            <p className="mt-2 text-sm text-[var(--ff-muted-2)]">
               {error}
             </p>
           </>

@@ -53,7 +53,7 @@ function DashboardPrsSection({
               <button
                 type="button"
                 onClick={() => setPrSearch('')}
-                className="text-zinc-500 transition hover:text-white"
+                className="text-[var(--ff-muted-2)] transition hover:text-[var(--ff-text)]"
               >
                 <X size={18} />
               </button>

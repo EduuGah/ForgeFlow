@@ -4,7 +4,7 @@ function Header() {
       <div>
         <p className="text-sm text-[var(--ff-accent-text)] font-medium">ForgeFlow</p>
         <h1 className="text-3xl font-bold mt-1">Dashboard</h1>
-        <p className="text-zinc-400 mt-2">
+        <p className="text-[var(--ff-muted)] mt-2">
           Acompanhe seus treinos, cargas e evolução.
         </p>
       </div>

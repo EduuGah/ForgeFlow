@@ -115,7 +115,7 @@ function WelcomePrompt() {
   if (!canShowTutorial || !welcomePromptVisible) return null
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/55 px-4 pb-4 backdrop-blur-sm sm:items-center sm:pb-0">
+    <div className="fixed inset-0 z-[90] flex items-end justify-center bg-[var(--ff-overlay)] px-4 pb-4 backdrop-blur-sm sm:items-center sm:pb-0">
       <div className="ff-tutorial-card w-full max-w-lg rounded-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] p-5 text-[var(--ff-text)] shadow-2xl sm:p-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">

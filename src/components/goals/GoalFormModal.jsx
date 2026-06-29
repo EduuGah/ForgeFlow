@@ -288,7 +288,7 @@ function ExercisePickerModal({ open, exercises = [], selectedExerciseId, search,
   if (!open) return null
 
   return (
-    <div className="ff-goal-exercise-library fixed inset-0 z-[95] flex items-end justify-center bg-black/75 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+    <div className="ff-goal-exercise-library fixed inset-0 z-[95] flex items-end justify-center bg-[var(--ff-overlay)] p-0 backdrop-blur-sm sm:items-center sm:p-4">
       <div className="ff-goal-exercise-library__panel flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-t-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] shadow-2xl sm:rounded-[2rem]">
         <div className="border-b border-[var(--ff-border)] p-4 sm:p-5">
           <div className="flex items-start justify-between gap-3">
@@ -506,7 +506,7 @@ function GoalFormModal({
   }
 
   const modal = (
-    <div className="ff-goal-modal fixed inset-0 z-[2147483600] flex items-end justify-center bg-black/70 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+    <div className="ff-goal-modal fixed inset-0 z-[2147483600] flex items-end justify-center bg-[var(--ff-overlay)] p-0 backdrop-blur-sm sm:items-center sm:p-4">
       <div className="ff-goal-modal__panel flex max-h-[100dvh] w-full max-w-4xl flex-col overflow-hidden rounded-t-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] shadow-2xl sm:max-h-[92vh] sm:rounded-[2rem]">
         <div className="ff-goal-modal__header sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[var(--ff-border)] bg-[var(--ff-card)] p-5">
           <div>

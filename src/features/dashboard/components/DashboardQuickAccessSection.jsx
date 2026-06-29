@@ -23,7 +23,7 @@ function DashboardQuickAccessSection({
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2 className="text-2xl font-black">Rotinas rápidas</h2>
-              <p className="mt-1 text-sm text-zinc-500">
+              <p className="mt-1 text-sm text-[var(--ff-muted-2)]">
                 Favoritos aparecem primeiro para você iniciar mais rápido.
               </p>
             </div>
@@ -85,11 +85,11 @@ function DashboardQuickAccessSection({
               return (
                 <div
                   key={workout.id}
-                  className="rounded-3xl border border-zinc-800 bg-[#18181b] p-4 transition hover:border-[var(--ff-accent-border)]/40 hover:bg-[#1f1f23]"
+                  className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 transition hover:border-[var(--ff-accent-border)]/40 hover:bg-[var(--ff-card-hover)]"
                 >
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-zinc-700 bg-white">
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[var(--ff-border)] bg-white">
                         {media ? (
                           <img
                             src={media}
@@ -104,7 +104,7 @@ function DashboardQuickAccessSection({
                       </div>
 
                       <div className="min-w-0">
-                        <h3 className="line-clamp-2 text-lg font-bold leading-snug text-white">
+                        <h3 className="line-clamp-2 text-lg font-bold leading-snug text-[var(--ff-text)]">
                           {workout.name}
                         </h3>
                         {workout.isFavorite && (
@@ -115,7 +115,7 @@ function DashboardQuickAccessSection({
                           </div>
                         )}
 
-                        <p className="mt-1 text-sm text-zinc-500">
+                        <p className="mt-1 text-sm text-[var(--ff-muted-2)]">
                           {lastStartedLabel}
                         </p>
 
@@ -142,7 +142,7 @@ function DashboardQuickAccessSection({
                       <Link to="/workouts">
                         <button
                           type="button"
-                          className="inline-flex h-11 w-full items-center justify-center rounded-2xl border border-zinc-700 bg-zinc-900 px-4 text-sm font-bold text-white transition hover:bg-zinc-800 sm:w-auto"
+                          className="inline-flex h-11 w-full items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface)] px-4 text-sm font-bold text-[var(--ff-text)] transition hover:bg-[var(--ff-surface-2)] sm:w-auto"
                         >
                           Ver
                         </button>
@@ -163,13 +163,13 @@ function DashboardQuickAccessSection({
 
             <div>
               <h2 className="text-xl font-bold">Destaques</h2>
-              <p className="text-sm text-zinc-500">Melhores marcas</p>
+              <p className="text-sm text-[var(--ff-muted-2)]">Melhores marcas</p>
             </div>
           </div>
 
           <div className="mt-5 space-y-3">
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-              <p className="text-xs text-zinc-500">Maior carga</p>
+            <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
+              <p className="text-xs text-[var(--ff-muted-2)]">Maior carga</p>
 
               {heaviestExercise ? (
                 <>
@@ -177,17 +177,17 @@ function DashboardQuickAccessSection({
                     {heaviestExercise.weight}kg
                   </h3>
 
-                  <p className="mt-1 text-sm text-zinc-400">
+                  <p className="mt-1 text-sm text-[var(--ff-muted)]">
                     {heaviestExercise.exerciseName} × {heaviestExercise.reps} reps
                   </p>
                 </>
               ) : (
-                <p className="mt-2 text-sm text-zinc-500">Sem registro ainda.</p>
+                <p className="mt-2 text-sm text-[var(--ff-muted-2)]">Sem registro ainda.</p>
               )}
             </div>
 
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-              <p className="text-xs text-zinc-500">Mais treinado</p>
+            <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
+              <p className="text-xs text-[var(--ff-muted-2)]">Mais treinado</p>
 
               {mostTrainedExercise ? (
                 <>
@@ -195,12 +195,12 @@ function DashboardQuickAccessSection({
                     {mostTrainedExercise.name}
                   </h3>
 
-                  <p className="mt-1 text-sm text-zinc-400">
+                  <p className="mt-1 text-sm text-[var(--ff-muted)]">
                     {mostTrainedExercise.total} séries feitas
                   </p>
                 </>
               ) : (
-                <p className="mt-2 text-sm text-zinc-500">Sem registro ainda.</p>
+                <p className="mt-2 text-sm text-[var(--ff-muted-2)]">Sem registro ainda.</p>
               )}
             </div>
           </div>
@@ -215,7 +215,7 @@ function DashboardQuickAccessSection({
                 Exercícios favoritos
               </h2>
 
-              <p className="mt-1 text-sm text-zinc-500">
+              <p className="mt-1 text-sm text-[var(--ff-muted-2)]">
                 Atalhos para os exercícios que você mais usa na montagem de treino.
               </p>
             </div>
@@ -252,10 +252,10 @@ function DashboardQuickAccessSection({
                     <Link
                       key={exercise.id}
                       to={`/exercises/${exercise.id}`}
-                      className="rounded-3xl border border-zinc-800 bg-[#18181b] p-4 transition hover:-translate-y-0.5 hover:border-yellow-500/30 hover:bg-[#1f1f23]"
+                      className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 transition hover:-translate-y-0.5 hover:border-yellow-500/30 hover:bg-[var(--ff-card-hover)]"
                     >
                       <div className="flex items-center gap-4">
-                        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-zinc-700 bg-white">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-border)] bg-white">
                           {media ? (
                             <img
                               src={media}
@@ -270,11 +270,11 @@ function DashboardQuickAccessSection({
                         </div>
 
                         <div className="min-w-0 flex-1">
-                          <h3 className="line-clamp-2 font-bold leading-snug text-white">
+                          <h3 className="line-clamp-2 font-bold leading-snug text-[var(--ff-text)]">
                             {exercise.name}
                           </h3>
 
-                          <p className="mt-1 text-xs text-zinc-500">
+                          <p className="mt-1 text-xs text-[var(--ff-muted-2)]">
                             {exercise.muscleGroup || 'Sem grupo'} • {exercise.equipment || 'Sem equipamento'}
                           </p>
                         </div>
@@ -296,13 +296,13 @@ function DashboardQuickAccessSection({
             Biblioteca
           </h2>
 
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-[var(--ff-muted-2)]">
             Resumo dos exercícios cadastrados.
           </p>
 
           <div className="mt-5 space-y-3">
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-              <p className="text-xs text-zinc-500">
+            <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
+              <p className="text-xs text-[var(--ff-muted-2)]">
                 Total de exercícios
               </p>
 
@@ -324,7 +324,7 @@ function DashboardQuickAccessSection({
             <Link to="/exercises">
               <button
                 type="button"
-                className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-zinc-800 bg-[#18181b] text-sm font-bold text-white transition hover:border-[var(--ff-accent-border)]/40 hover:bg-zinc-900"
+                className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] text-sm font-bold text-[var(--ff-text)] transition hover:border-[var(--ff-accent-border)]/40 hover:bg-[var(--ff-surface)]"
               >
                 <Dumbbell size={18} />
                 Abrir biblioteca

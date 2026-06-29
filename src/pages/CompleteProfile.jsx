@@ -155,11 +155,11 @@ function CompleteProfile() {
 
     if (loading) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-zinc-950 text-white">
-                <div className="rounded-3xl border border-zinc-800 bg-[#121216] p-8 text-center">
-                    <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-zinc-700 border-t-[var(--ff-accent)]" />
+            <div className="flex min-h-screen items-center justify-center bg-[var(--ff-card)] text-[var(--ff-text)]">
+                <div className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-8 text-center">
+                    <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-[var(--ff-border)] border-t-[var(--ff-accent)]" />
 
-                    <p className="mt-4 text-sm font-semibold text-zinc-400">
+                    <p className="mt-4 text-sm font-semibold text-[var(--ff-muted)]">
                         Carregando perfil...
                     </p>
                 </div>
@@ -168,7 +168,7 @@ function CompleteProfile() {
     }
 
     return (
-    <main className="ff-hevy-page ff-hevy-page-completeprofile ff-auth-route text-white">
+    <main className="ff-hevy-page ff-hevy-page-completeprofile ff-auth-route text-[var(--ff-text)]">
 
         <section className="ff-auth-route__shell">
             <div className="ff-auth-card ff-auth-card--wide">
@@ -188,12 +188,12 @@ function CompleteProfile() {
                     </div>
                 </div>
 
-                <p className="mt-4 text-sm leading-relaxed text-zinc-400">
+                <p className="mt-4 text-sm leading-relaxed text-[var(--ff-muted)]">
                     Essas informações ajudam o ForgeFlow a personalizar seus treinos, metas e evolução.
                 </p>
 
                 <form onSubmit={handleSubmit} className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div className="md:col-span-2 rounded-3xl border border-zinc-800 bg-zinc-950 p-4">
+                    <div className="md:col-span-2 rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                             <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-3xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
                                 {avatarUrl ? (
@@ -208,8 +208,8 @@ function CompleteProfile() {
                             </div>
 
                             <div className="min-w-0 flex-1">
-                                <p className="text-sm font-bold text-zinc-200">Foto de perfil</p>
-                                <p className="mt-1 text-xs leading-relaxed text-zinc-500">
+                                <p className="text-sm font-bold text-[var(--ff-text-soft)]">Foto de perfil</p>
+                                <p className="mt-1 text-xs leading-relaxed text-[var(--ff-muted-2)]">
                                     Opcional, mas ajuda o app a ficar com cara de conta real desde o primeiro acesso.
                                 </p>
 
@@ -241,7 +241,7 @@ function CompleteProfile() {
                     </div>
 
                     <div className="md:col-span-2">
-                        <label className="mb-2 block text-sm font-bold text-zinc-300">
+                        <label className="mb-2 block text-sm font-bold text-[var(--ff-text-soft)]">
                             Nome
                         </label>
 
@@ -249,12 +249,12 @@ function CompleteProfile() {
                             value={name}
                             onChange={(event) => setName(event.target.value)}
                             placeholder="Seu nome"
-                            className="h-12 w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 text-sm outline-none transition focus:border-[var(--ff-accent-border)]"
+                            className="h-12 w-full rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] px-4 text-sm outline-none transition focus:border-[var(--ff-accent-border)]"
                         />
                     </div>
 
                     <div>
-                        <label className="mb-2 block text-sm font-bold text-zinc-300">
+                        <label className="mb-2 block text-sm font-bold text-[var(--ff-text-soft)]">
                             Altura
                         </label>
 
@@ -267,21 +267,21 @@ function CompleteProfile() {
                                 value={height}
                                 onChange={(event) => setHeight(event.target.value)}
                                 placeholder="Ex: 175"
-                                className="h-12 w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 pr-12 text-sm outline-none transition focus:border-[var(--ff-accent-border)]"
+                                className="h-12 w-full rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] px-4 pr-12 text-sm outline-none transition focus:border-[var(--ff-accent-border)]"
                             />
 
-                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-zinc-500">
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[var(--ff-muted-2)]">
                                 cm
                             </span>
                         </div>
 
-                        <p className="mt-2 text-xs leading-relaxed text-zinc-500">
-                            Coloque sua altura completa em centímetros. Exemplo: se você tem 1,75m, digite <span className="font-bold text-zinc-300">175</span>.
+                        <p className="mt-2 text-xs leading-relaxed text-[var(--ff-muted-2)]">
+                            Coloque sua altura completa em centímetros. Exemplo: se você tem 1,75m, digite <span className="font-bold text-[var(--ff-text-soft)]">175</span>.
                         </p>
                     </div>
 
                     <div>
-                        <label className="mb-2 block text-sm font-bold text-zinc-300">
+                        <label className="mb-2 block text-sm font-bold text-[var(--ff-text-soft)]">
                             Peso atual
                         </label>
 
@@ -295,28 +295,28 @@ function CompleteProfile() {
                                     setCurrentWeight(value)
                                 }}
                                 placeholder="Ex: 72,5"
-                                className="h-12 w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 pr-12 text-sm outline-none transition focus:border-[var(--ff-accent-border)]"
+                                className="h-12 w-full rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] px-4 pr-12 text-sm outline-none transition focus:border-[var(--ff-accent-border)]"
                             />
 
-                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-zinc-500">
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-[var(--ff-muted-2)]">
                                 kg
                             </span>
                         </div>
 
-                        <p className="mt-2 text-xs leading-relaxed text-zinc-500">
-                            Pode usar vírgula ou ponto. Exemplo: <span className="font-bold text-zinc-300">72,5</span> ou <span className="font-bold text-zinc-300">72.5</span>.
+                        <p className="mt-2 text-xs leading-relaxed text-[var(--ff-muted-2)]">
+                            Pode usar vírgula ou ponto. Exemplo: <span className="font-bold text-[var(--ff-text-soft)]">72,5</span> ou <span className="font-bold text-[var(--ff-text-soft)]">72.5</span>.
                         </p>
                     </div>
 
                     <div>
-                        <label className="mb-2 block text-sm font-bold text-zinc-300">
+                        <label className="mb-2 block text-sm font-bold text-[var(--ff-text-soft)]">
                             Objetivo principal
                         </label>
 
                         <select
                             value={mainGoal}
                             onChange={(event) => setMainGoal(event.target.value)}
-                            className="h-12 w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 text-sm outline-none transition focus:border-[var(--ff-accent-border)]"
+                            className="h-12 w-full rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] px-4 text-sm outline-none transition focus:border-[var(--ff-accent-border)]"
                         >
                             <option value="">Selecione</option>
                             <option value="Hipertrofia">Hipertrofia</option>
@@ -328,14 +328,14 @@ function CompleteProfile() {
                     </div>
 
                     <div>
-                        <label className="mb-2 block text-sm font-bold text-zinc-300">
+                        <label className="mb-2 block text-sm font-bold text-[var(--ff-text-soft)]">
                             Nível de treino
                         </label>
 
                         <select
                             value={trainingLevel}
                             onChange={(event) => setTrainingLevel(event.target.value)}
-                            className="h-12 w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 text-sm outline-none transition focus:border-[var(--ff-accent-border)]"
+                            className="h-12 w-full rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] px-4 text-sm outline-none transition focus:border-[var(--ff-accent-border)]"
                         >
                             <option value="">Selecione</option>
                             <option value="Iniciante">Iniciante</option>
@@ -345,7 +345,7 @@ function CompleteProfile() {
                     </div>
 
                     <div>
-                        <label className="mb-2 block text-sm font-bold text-zinc-300">
+                        <label className="mb-2 block text-sm font-bold text-[var(--ff-text-soft)]">
                             Treinos por semana
                         </label>
 
@@ -356,12 +356,12 @@ function CompleteProfile() {
                             value={trainingFrequency}
                             onChange={(event) => setTrainingFrequency(event.target.value)}
                             placeholder="Ex: 5"
-                            className="h-12 w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 text-sm outline-none transition focus:border-[var(--ff-accent-border)]"
+                            className="h-12 w-full rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] px-4 text-sm outline-none transition focus:border-[var(--ff-accent-border)]"
                         />
                     </div>
 
                     <div>
-                        <label className="mb-2 block text-sm font-bold text-zinc-300">
+                        <label className="mb-2 block text-sm font-bold text-[var(--ff-text-soft)]">
                             Divisão preferida
                         </label>
 
@@ -369,12 +369,12 @@ function CompleteProfile() {
                             value={preferredSplit}
                             onChange={(event) => setPreferredSplit(event.target.value)}
                             placeholder="Ex: Push Pull Legs"
-                            className="h-12 w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 text-sm outline-none transition focus:border-[var(--ff-accent-border)]"
+                            className="h-12 w-full rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] px-4 text-sm outline-none transition focus:border-[var(--ff-accent-border)]"
                         />
                     </div>
 
                     <div className="md:col-span-2">
-                        <label className="mb-2 block text-sm font-bold text-zinc-300">
+                        <label className="mb-2 block text-sm font-bold text-[var(--ff-text-soft)]">
                             Notas pessoais
                         </label>
 
@@ -383,7 +383,7 @@ function CompleteProfile() {
                             onChange={(event) => setNotes(event.target.value)}
                             placeholder="Ex: foco em hipertrofia, melhorar cardio, evitar dor no ombro..."
                             rows={4}
-                            className="w-full resize-none rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm outline-none transition focus:border-[var(--ff-accent-border)]"
+                            className="w-full resize-none rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] px-4 py-3 text-sm outline-none transition focus:border-[var(--ff-accent-border)]"
                         />
                     </div>
 
@@ -406,7 +406,7 @@ function CompleteProfile() {
                         <div className="flex items-start gap-3">
                             <Target size={18} className="mt-0.5 text-[var(--ff-accent-text)]" />
 
-                            <p className="text-xs leading-relaxed text-zinc-400">
+                            <p className="text-xs leading-relaxed text-[var(--ff-muted)]">
                                 Para considerar seu perfil completo, precisamos pelo menos de altura, peso atual, objetivo principal e nível de treino.
                             </p>
                         </div>

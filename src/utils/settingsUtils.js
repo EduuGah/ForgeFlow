@@ -460,13 +460,32 @@ export function getEffectiveTheme(settings = getAppSettings()) {
 
 
 export function applyAppSettingsToDocument(settings = getAppSettings()) {
+  if (typeof document === 'undefined') return normalizeSettings(settings)
+
   const normalizedSettings = normalizeSettings(settings)
   const accent = getAccentColor(normalizedSettings)
   const effectiveTheme = getEffectiveTheme(normalizedSettings)
   const root = document.documentElement
   const body = document.body
 
-  const accentText = effectiveTheme === 'light' ? accent.primary : accent.text
+  const lightAccentTextOverrides = {
+    lime: '#3f6212',
+    yellow: '#854d0e',
+    amber: '#92400e',
+    orange: '#c2410c',
+    slate: '#475569',
+    zinc: '#52525b',
+  }
+
+  const accentText = effectiveTheme === 'light'
+    ? lightAccentTextOverrides[normalizedSettings.accentColor] || accent.primary
+    : accent.text
+
+  root.dataset.themeMode = normalizedSettings.themeMode
+  root.dataset.theme = effectiveTheme
+  root.dataset.resolvedTheme = effectiveTheme
+  root.dataset.accent = normalizedSettings.accentColor
+  root.style.colorScheme = effectiveTheme
 
   root.style.setProperty('--ff-accent', accent.primary)
   root.style.setProperty('--ff-accent-hover', accent.primaryHover)
@@ -474,75 +493,20 @@ export function applyAppSettingsToDocument(settings = getAppSettings()) {
   root.style.setProperty('--ff-accent-border', accent.border)
   root.style.setProperty('--ff-accent-text', accentText)
   root.style.setProperty('--ff-accent-shadow', accent.shadow)
-
-  if (effectiveTheme === 'light') {
-    root.style.setProperty('--ff-apk-bg', '#f7f7fb')
-    root.style.setProperty('--ff-bg', '#f7f7fb')
-    root.style.setProperty('--ff-bg-soft', '#ffffff')
-    root.style.setProperty('--ff-card', '#ffffff')
-    root.style.setProperty('--ff-card-hover', '#f4f4f7')
-    root.style.setProperty('--ff-surface', '#ffffff')
-    root.style.setProperty('--ff-surface-2', '#f4f4f7')
-    root.style.setProperty('--ff-surface-3', '#e7e7ee')
-    root.style.setProperty('--ff-input', '#ffffff')
-    root.style.setProperty('--ff-header', 'rgba(255, 255, 255, 0.84)')
-    root.style.setProperty('--ff-sidebar', '#ffffff')
-    root.style.setProperty('--ff-border', 'rgba(24, 24, 27, 0.14)')
-    root.style.setProperty('--ff-border-soft', 'rgba(24, 24, 27, 0.1)')
-    root.style.setProperty('--ff-border-strong', 'rgba(24, 24, 27, 0.24)')
-    root.style.setProperty('--ff-text', '#18181b')
-    root.style.setProperty('--ff-text-soft', '#27272a')
-    root.style.setProperty('--ff-muted', '#52525b')
-    root.style.setProperty('--ff-muted-2', '#71717a')
-    root.style.setProperty('--ff-overlay', 'rgba(24, 24, 27, 0.45)')
-    root.style.setProperty('--ff-scroll-track', 'rgba(228, 228, 231, 0.9)')
-    root.style.setProperty('--ff-success-text', '#047857')
-    root.style.setProperty('--ff-danger-text', '#dc2626')
-    root.style.setProperty('--ff-warning-text', '#92400e')
-    root.style.setProperty('--ff-warning-muted', 'rgba(120, 53, 15, 0.78)')
-  } else {
-    root.style.setProperty('--ff-apk-bg', '#000000')
-    root.style.setProperty('--ff-bg', '#000000')
-    root.style.setProperty('--ff-bg-soft', '#09090b')
-    root.style.setProperty('--ff-card', '#18181b')
-    root.style.setProperty('--ff-card-hover', '#1f1f23')
-    root.style.setProperty('--ff-surface', '#18181b')
-    root.style.setProperty('--ff-surface-2', '#101014')
-    root.style.setProperty('--ff-surface-3', '#27272a')
-    root.style.setProperty('--ff-input', '#101014')
-    root.style.setProperty('--ff-header', 'rgba(0, 0, 0, 0.78)')
-    root.style.setProperty('--ff-sidebar', '#121212')
-    root.style.setProperty('--ff-border', 'rgba(63, 63, 70, 0.9)')
-    root.style.setProperty('--ff-border-soft', 'rgba(39, 39, 42, 0.9)')
-    root.style.setProperty('--ff-border-strong', '#52525b')
-    root.style.setProperty('--ff-text', '#ffffff')
-    root.style.setProperty('--ff-text-soft', '#e4e4e7')
-    root.style.setProperty('--ff-muted', '#a1a1aa')
-    root.style.setProperty('--ff-muted-2', '#71717a')
-    root.style.setProperty('--ff-overlay', 'rgba(0, 0, 0, 0.75)')
-    root.style.setProperty('--ff-scroll-track', 'rgba(24, 24, 27, 0.65)')
-    root.style.setProperty('--ff-success-text', '#34d399')
-    root.style.setProperty('--ff-danger-text', '#f87171')
-    root.style.setProperty('--ff-warning-text', '#facc15')
-    root.style.setProperty('--ff-warning-muted', 'rgba(254, 240, 138, 0.82)')
-  }
-
-  root.dataset.themeMode = normalizedSettings.themeMode
-  root.dataset.theme = effectiveTheme
-  root.dataset.accent = normalizedSettings.accentColor
-  root.style.colorScheme = effectiveTheme
+  root.style.setProperty('--ff-apk-bg', effectiveTheme === 'light' ? '#f7f7fb' : '#000000')
 
   root.classList.toggle('ff-theme-light', effectiveTheme === 'light')
   root.classList.toggle('ff-theme-dark', effectiveTheme !== 'light')
 
   if (body) {
     body.dataset.theme = effectiveTheme
+    body.dataset.resolvedTheme = effectiveTheme
     body.classList.toggle('ff-theme-light', effectiveTheme === 'light')
     body.classList.toggle('ff-theme-dark', effectiveTheme !== 'light')
     body.style.colorScheme = effectiveTheme
   }
 
-  let themeColorMeta = document.querySelector('meta[name=\"theme-color\"]')
+  let themeColorMeta = document.querySelector('meta[name="theme-color"]')
   if (!themeColorMeta) {
     themeColorMeta = document.createElement('meta')
     themeColorMeta.name = 'theme-color'
@@ -561,8 +525,9 @@ export function applyAppSettingsToDocument(settings = getAppSettings()) {
   } else {
     root.classList.remove('ff-simple-mode')
   }
-}
 
+  return normalizedSettings
+}
 
 export function watchSystemThemeChanges() {
   if (typeof window === 'undefined') return () => {}

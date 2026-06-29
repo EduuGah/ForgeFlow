@@ -95,7 +95,7 @@ function AccountSecurityCard({ onSuccess }) {
             Segurança da conta
           </h2>
 
-          <p className="mt-1 text-sm leading-relaxed text-zinc-500">
+          <p className="mt-1 text-sm leading-relaxed text-[var(--ff-muted-2)]">
             {alreadyHasPassword
               ? 'Altere sua senha de acesso por e-mail.'
               : 'Crie uma senha para entrar também com e-mail, além do Google.'}
@@ -103,14 +103,14 @@ function AccountSecurityCard({ onSuccess }) {
         </div>
       </div>
 
-      <div className="mt-5 rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-        <div className="flex items-center gap-2 text-sm font-bold text-zinc-300">
+      <div className="mt-5 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
+        <div className="flex items-center gap-2 text-sm font-bold text-[var(--ff-text-soft)]">
           <KeyRound size={17} className="text-[var(--ff-accent-text)]" />
 
           Tipo de acesso
         </div>
 
-        <p className="mt-2 text-sm text-zinc-500">
+        <p className="mt-2 text-sm text-[var(--ff-muted-2)]">
           {user?.provider === 'both'
             ? 'Sua conta pode entrar com Google e e-mail/senha.'
             : user?.provider === 'google'

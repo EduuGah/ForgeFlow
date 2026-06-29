@@ -134,7 +134,7 @@ export function WorkoutFolderFilter({
                     className={
                         selectedFolderId === null
                             ? 'shrink-0 rounded-2xl bg-[var(--ff-accent)] px-4 py-2 text-sm font-bold text-white shadow-[0_0_20px_var(--ff-accent-shadow)]'
-                            : 'shrink-0 rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-[var(--ff-accent-border)]/40 hover:text-white'
+                            : 'shrink-0 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] px-4 py-2 text-sm font-bold text-[var(--ff-muted)] transition hover:border-[var(--ff-accent-border)]/40 hover:text-[var(--ff-text)]'
                     }
                 >
                     Todas
@@ -150,7 +150,7 @@ export function WorkoutFolderFilter({
                             className={
                                 selectedFolderId === folder.id
                                     ? 'group flex shrink-0 items-center gap-2 rounded-2xl bg-[var(--ff-accent)] px-4 py-2 text-sm font-bold text-white shadow-[0_0_20px_var(--ff-accent-shadow)]'
-                                    : 'group flex shrink-0 items-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-2 text-sm font-bold text-zinc-400 transition hover:border-[var(--ff-accent-border)]/40 hover:text-white'
+                                    : 'group flex shrink-0 items-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] px-4 py-2 text-sm font-bold text-[var(--ff-muted)] transition hover:border-[var(--ff-accent-border)]/40 hover:text-[var(--ff-text)]'
                             }
                         >
                             <button
@@ -165,7 +165,7 @@ export function WorkoutFolderFilter({
                             <button
                                 type="button"
                                 onClick={() => onDeleteFolder(folder.id)}
-                                className="rounded-full p-1 text-zinc-400 transition hover:bg-red-500/20 hover:text-red-300 sm:opacity-0 sm:group-hover:opacity-100"
+                                className="rounded-full p-1 text-[var(--ff-muted)] transition hover:bg-red-500/20 hover:text-red-300 sm:opacity-0 sm:group-hover:opacity-100"
                                 title="Excluir pasta"
                             >
                                 ×

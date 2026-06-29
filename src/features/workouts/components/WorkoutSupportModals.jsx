@@ -9,8 +9,8 @@ export function WorkoutFolderModal({
     onCreateFolder,
 }) {
     return (
-        <div className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/80 px-3 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm sm:items-center sm:px-4">
-            <div className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-t-3xl border border-zinc-800 bg-[#121212] p-6 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)] sm:rounded-3xl">
+        <div className="fixed inset-0 z-[10000] flex items-end justify-center bg-[var(--ff-overlay)] px-3 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm sm:items-center sm:px-4">
+            <div className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-t-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-6 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)] sm:rounded-3xl">
                 <div className="flex items-start justify-between gap-4">
                     <div>
                         <p className="text-sm font-bold text-[var(--ff-accent-text)]">
@@ -19,7 +19,7 @@ export function WorkoutFolderModal({
 
                         <h2 className="mt-1 text-2xl font-black">Criar pasta</h2>
 
-                        <p className="mt-2 text-sm text-zinc-500">
+                        <p className="mt-2 text-sm text-[var(--ff-muted-2)]">
                             Organize seus treinos por categoria.
                         </p>
                     </div>
@@ -27,7 +27,7 @@ export function WorkoutFolderModal({
                     <button
                         type="button"
                         onClick={onClose}
-                        className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900 text-zinc-400 transition hover:bg-zinc-800 hover:text-white"
+                        className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--ff-surface)] text-[var(--ff-muted)] transition hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)]"
                     >
                         ×
                     </button>
@@ -68,8 +68,8 @@ export function WorkoutSetModelModal({
     onCreateSetModel,
 }) {
     return (
-        <div className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/80 px-3 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm sm:items-center sm:px-4">
-            <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl border border-zinc-800 bg-[#121212] p-6 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)] sm:rounded-3xl">
+        <div className="fixed inset-0 z-[10000] flex items-end justify-center bg-[var(--ff-overlay)] px-3 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm sm:items-center sm:px-4">
+            <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-6 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)] sm:rounded-3xl">
                 <div className="flex items-start justify-between gap-4">
                     <div>
                         <p className="text-sm font-bold text-[var(--ff-accent-text)]">
@@ -80,7 +80,7 @@ export function WorkoutSetModelModal({
                             Modelo de séries
                         </h2>
 
-                        <p className="mt-2 text-sm text-zinc-500">
+                        <p className="mt-2 text-sm text-[var(--ff-muted-2)]">
                             Crie um padrão para aplicar automaticamente nos exercícios adicionados.
                         </p>
                     </div>
@@ -88,7 +88,7 @@ export function WorkoutSetModelModal({
                     <button
                         type="button"
                         onClick={onClose}
-                        className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900 text-zinc-400 transition hover:bg-zinc-800 hover:text-white"
+                        className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--ff-surface)] text-[var(--ff-muted)] transition hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)]"
                     >
                         ×
                     </button>
@@ -110,10 +110,10 @@ export function WorkoutSetModelModal({
                         onChange={(event) => onChangeSetModelLines(event.target.value)}
                     />
 
-                    <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-                        <p className="text-xs font-bold text-zinc-400">Exemplo</p>
+                    <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
+                        <p className="text-xs font-bold text-[var(--ff-muted)]">Exemplo</p>
 
-                        <p className="mt-2 text-sm leading-relaxed text-zinc-500">
+                        <p className="mt-2 text-sm leading-relaxed text-[var(--ff-muted-2)]">
                             Cada linha vira uma série. Você pode escrever: “12 Rep”, “8-10 Rep”, “Falha”, “Aquecimento”, etc.
                         </p>
                     </div>

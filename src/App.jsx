@@ -44,10 +44,10 @@ const DataSafety = lazy(() => import('./pages/DataSafety'))
 
 function AppLoadingFallback() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#09090b] px-4 text-white">
-      <div className="w-full max-w-sm rounded-3xl border border-zinc-800 bg-zinc-950/80 p-6 text-center shadow-2xl">
+    <div className="flex min-h-screen items-center justify-center bg-[var(--ff-bg)] px-4 text-[var(--ff-text)]">
+      <div className="w-full max-w-sm rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-6 text-center shadow-2xl">
         <div className="mx-auto h-12 w-12 animate-pulse rounded-2xl bg-violet-500/20" />
-        <p className="mt-4 text-sm font-bold text-zinc-300">
+        <p className="mt-4 text-sm font-bold text-[var(--ff-text-soft)]">
           Carregando ForgeFlow...
         </p>
       </div>

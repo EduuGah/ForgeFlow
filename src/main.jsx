@@ -37,7 +37,7 @@ function ensurePwaHeadTags() {
   if (!document.querySelector('meta[name="theme-color"]')) {
     const themeColor = document.createElement('meta')
     themeColor.name = 'theme-color'
-    themeColor.content = '#0ea5e9'
+    themeColor.content = document.documentElement?.dataset?.theme === 'light' ? '#f7f7fb' : '#000000'
     document.head.appendChild(themeColor)
   }
 

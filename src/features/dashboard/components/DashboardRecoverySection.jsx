@@ -22,7 +22,7 @@ function DashboardRecoverySection({
                 Recuperação muscular
               </h2>
 
-              <p className="mt-1 text-sm text-zinc-500">
+              <p className="mt-1 text-sm text-[var(--ff-muted-2)]">
                 Estimativa baseada nos grupos musculares treinados recentemente.
               </p>
             </div>
@@ -53,7 +53,7 @@ function DashboardRecoverySection({
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <h3 className="font-black text-white">
+                            <h3 className="font-black text-[var(--ff-text)]">
                               {item.muscleGroup}
                             </h3>
 
@@ -67,7 +67,7 @@ function DashboardRecoverySection({
                           </span>
                         </div>
 
-                        <div className="mt-4 h-2 overflow-hidden rounded-full bg-black/30">
+                        <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--ff-surface-2)]">
                           <div
                             className={`h-full rounded-full ${style.bar}`}
                             style={{
@@ -77,8 +77,8 @@ function DashboardRecoverySection({
                         </div>
 
                         <div className="mt-4 grid grid-cols-2 gap-2">
-                          <div className="rounded-2xl border border-black/20 bg-black/20 p-3">
-                            <p className="text-xs text-zinc-500">
+                          <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
+                            <p className="text-xs text-[var(--ff-muted-2)]">
                               Último treino
                             </p>
 
@@ -87,8 +87,8 @@ function DashboardRecoverySection({
                             </p>
                           </div>
 
-                          <div className="rounded-2xl border border-black/20 bg-black/20 p-3">
-                            <p className="text-xs text-zinc-500">
+                          <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-3">
+                            <p className="text-xs text-[var(--ff-muted-2)]">
                               Séries
                             </p>
 
@@ -98,7 +98,7 @@ function DashboardRecoverySection({
                           </div>
                         </div>
 
-                        <p className="mt-3 text-xs leading-relaxed text-zinc-400">
+                        <p className="mt-3 text-xs leading-relaxed text-[var(--ff-muted)]">
                           {item.message}
                         </p>
                       </div>
@@ -114,7 +114,7 @@ function DashboardRecoverySection({
             Sugestão rápida
           </h2>
 
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-[var(--ff-muted-2)]">
             Use isso para escolher melhor o próximo treino.
           </p>
 
@@ -132,7 +132,7 @@ function DashboardRecoverySection({
                     </Badge>
                   ))
                 ) : (
-                  <p className="text-sm text-zinc-500">
+                  <p className="text-sm text-[var(--ff-muted-2)]">
                     Sem dados ainda.
                   </p>
                 )}
@@ -152,14 +152,14 @@ function DashboardRecoverySection({
                     </Badge>
                   ))
                 ) : (
-                  <p className="text-sm text-zinc-500">
+                  <p className="text-sm text-[var(--ff-muted-2)]">
                     Nenhum grupo crítico agora.
                   </p>
                 )}
               </div>
             </div>
 
-            <p className="text-xs leading-relaxed text-zinc-500">
+            <p className="text-xs leading-relaxed text-[var(--ff-muted-2)]">
               A recuperação é estimada pelo tempo desde o último treino. Depois podemos melhorar usando volume, séries e intensidade.
             </p>
           </div>

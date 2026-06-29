@@ -16,11 +16,11 @@ export function ProgressPhotoLightbox({
   if (!selectedPhoto) return null
 
   return (
-    <div className="fixed inset-0 z-[80] overflow-y-auto overscroll-contain bg-black/88 p-2 backdrop-blur-sm sm:p-4">
+    <div className="fixed inset-0 z-[80] overflow-y-auto overscroll-contain bg-[var(--ff-overlay)] p-2 backdrop-blur-sm sm:p-4">
       <button type="button" className="fixed inset-0" onClick={onClose} aria-label="Fechar foto" />
 
       <div className="relative mx-auto my-2 grid w-full max-w-6xl overflow-hidden rounded-[1.6rem] border border-white/10 bg-[var(--ff-card)] shadow-2xl sm:my-6 sm:rounded-3xl lg:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="relative flex min-h-[58dvh] items-center justify-center bg-black sm:min-h-[380px]">
+        <div className="relative flex min-h-[58dvh] items-center justify-center bg-[var(--ff-bg)] sm:min-h-[380px]">
           <img
             src={selectedPhoto.imageUrl}
             alt={`Foto de evolução - ${getAngleLabel(selectedPhoto.angle)}`}
@@ -32,7 +32,7 @@ export function ProgressPhotoLightbox({
               <button
                 type="button"
                 onClick={onPrevious}
-                className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white backdrop-blur transition hover:bg-black/75"
+                className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-[var(--ff-overlay)] text-white backdrop-blur transition hover:bg-[var(--ff-overlay)]"
                 aria-label="Foto anterior"
               >
                 <ChevronLeft size={22} />
@@ -41,7 +41,7 @@ export function ProgressPhotoLightbox({
               <button
                 type="button"
                 onClick={onNext}
-                className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/55 text-white backdrop-blur transition hover:bg-black/75"
+                className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-[var(--ff-overlay)] text-white backdrop-blur transition hover:bg-[var(--ff-overlay)]"
                 aria-label="Próxima foto"
               >
                 <ChevronRight size={22} />

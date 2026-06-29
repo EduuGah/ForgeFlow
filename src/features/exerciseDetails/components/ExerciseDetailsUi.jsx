@@ -15,12 +15,12 @@ export function InfoList({
     default: {
       iconBox: 'bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]',
       number: 'bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]',
-      border: 'border-zinc-800',
+      border: 'border-[var(--ff-border)]',
     },
     success: {
       iconBox: 'bg-emerald-500/10 text-emerald-400',
       number: 'bg-emerald-500/10 text-emerald-400',
-      border: 'border-zinc-800',
+      border: 'border-[var(--ff-border)]',
     },
     danger: {
       iconBox: 'bg-red-500/10 text-red-400',
@@ -45,7 +45,7 @@ export function InfoList({
             {title}
           </h2>
 
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-[var(--ff-muted-2)]">
             {description}
           </p>
         </div>
@@ -56,7 +56,7 @@ export function InfoList({
           normalizedItems.map((item, index) => (
             <div
               key={index}
-              className={`flex gap-3 rounded-2xl border ${currentStyle.border} bg-[#18181b] p-4`}
+              className={`flex gap-3 rounded-2xl border ${currentStyle.border} bg-[var(--ff-card)] p-4`}
             >
               <span
                 className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${currentStyle.number}`}
@@ -64,7 +64,7 @@ export function InfoList({
                 {variant === 'danger' ? '!' : index + 1}
               </span>
 
-              <p className="text-sm leading-relaxed text-zinc-300">
+              <p className="text-sm leading-relaxed text-[var(--ff-text-soft)]">
                 {item}
               </p>
             </div>
@@ -82,8 +82,8 @@ export function InfoList({
 
 export function SummaryItem({ label, value, icon: Icon }) {
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-[#18181b] p-4">
-      <div className="flex items-center gap-2 text-zinc-500">
+    <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
+      <div className="flex items-center gap-2 text-[var(--ff-muted-2)]">
         {Icon && <Icon size={16} />}
 
         <p className="text-xs">
@@ -91,7 +91,7 @@ export function SummaryItem({ label, value, icon: Icon }) {
         </p>
       </div>
 
-      <p className="mt-1 font-bold text-white">
+      <p className="mt-1 font-bold text-[var(--ff-text)]">
         {value || 'Não informado'}
       </p>
     </div>

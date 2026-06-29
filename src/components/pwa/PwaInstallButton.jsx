@@ -164,8 +164,8 @@ function PwaInstallButton() {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[11000] flex items-end justify-center bg-black/60 p-3 backdrop-blur-sm sm:items-center sm:p-4">
-      <div className="max-h-[92dvh] w-full max-w-md overflow-hidden rounded-t-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] text-[var(--ff-text)] shadow-2xl shadow-black/35 sm:rounded-[2rem]">
+    <div className="fixed inset-0 z-[11000] flex items-end justify-center bg-[var(--ff-overlay)] p-3 backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="max-h-[92dvh] w-full max-w-md overflow-hidden rounded-t-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] text-[var(--ff-text)] shadow-2xl shadow-[var(--ff-shadow-card)] sm:rounded-[2rem]">
         <div className="max-h-[92dvh] overflow-y-auto p-5 sm:p-6">
           <div className="relative">
             <button

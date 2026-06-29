@@ -204,7 +204,7 @@ export function MobileWorkoutActionBar({
   if (hidden) return null
 
   return (
-    <div className={`ff-mobile-workout-action-bar ff-mobile-workout-action-bar--finish ${isVisible ? 'is-visible' : ''} fixed inset-x-0 bottom-0 z-40 border-t border-[var(--ff-border)] bg-[var(--ff-bg)]/95 px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-16px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl xl:hidden`}>
+    <div className={`ff-mobile-workout-action-bar ff-mobile-workout-action-bar--finish ${isVisible ? 'is-visible' : ''} fixed inset-x-0 bottom-0 z-40 border-t border-[var(--ff-border)] bg-[var(--ff-bg)]/95 px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[var(--ff-shadow-floating)] backdrop-blur-xl xl:hidden`}>
       <div className="mx-auto flex max-w-[1600px] items-center gap-3">
         <button
           type="button"
@@ -215,7 +215,7 @@ export function MobileWorkoutActionBar({
           <X size={20} />
         </button>
 
-        <div className="min-w-0 flex-1 rounded-2xl border border-[var(--ff-border)] bg-[linear-gradient(180deg,var(--ff-card),var(--ff-surface-2))] px-3 py-2 shadow-inner shadow-black/10">
+        <div className="min-w-0 flex-1 rounded-2xl border border-[var(--ff-border)] bg-[linear-gradient(180deg,var(--ff-card),var(--ff-surface-2))] px-3 py-2 shadow-inner shadow-[var(--ff-shadow-card)]">
           <p className="truncate text-xs font-bold text-[var(--ff-muted)]">
             Pré-resumo · {completedSets}/{totalSets} séries · {progressPercent}%
           </p>
@@ -262,7 +262,7 @@ export function RestTimerCard({
     : 0
 
   return (
-    <div className="ff-rest-timer-card fixed left-3 right-3 top-[calc(4.25rem+env(safe-area-inset-top))] z-50 rounded-3xl border border-[var(--ff-accent-border)]/30 bg-[#121212]/95 p-3 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)] backdrop-blur-xl sm:left-auto sm:right-5 sm:w-[min(420px,calc(100vw-32px))] sm:p-4 xl:top-5">
+    <div className="ff-rest-timer-card fixed left-3 right-3 top-[calc(4.25rem+env(safe-area-inset-top))] z-50 rounded-3xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-card)]/95 p-3 shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)] backdrop-blur-xl sm:left-auto sm:right-5 sm:w-[min(420px,calc(100vw-32px))] sm:p-4 xl:top-5">
       <div className="flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)] sm:h-12 sm:w-12">
@@ -288,7 +288,7 @@ export function RestTimerCard({
           <button
             type="button"
             onClick={onTogglePause}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-900 text-zinc-400 transition hover:bg-[var(--ff-surface-3)] hover:text-[var(--ff-text)]"
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--ff-surface)] text-[var(--ff-muted)] transition hover:bg-[var(--ff-surface-3)] hover:text-[var(--ff-text)]"
             aria-label={restTimer.isPaused ? 'Retomar descanso' : 'Pausar descanso'}
           >
             {restTimer.isPaused ? <PlayCircle size={18} /> : <Pause size={18} />}
@@ -297,7 +297,7 @@ export function RestTimerCard({
           <button
             type="button"
             onClick={onRestart}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-900 text-zinc-400 transition hover:bg-[var(--ff-surface-3)] hover:text-[var(--ff-text)]"
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--ff-surface)] text-[var(--ff-muted)] transition hover:bg-[var(--ff-surface-3)] hover:text-[var(--ff-text)]"
             aria-label="Reiniciar descanso"
           >
             <RotateCcw size={17} />
@@ -306,7 +306,7 @@ export function RestTimerCard({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-900 text-zinc-400 transition hover:bg-[var(--ff-surface-3)] hover:text-[var(--ff-text)]"
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--ff-surface)] text-[var(--ff-muted)] transition hover:bg-[var(--ff-surface-3)] hover:text-[var(--ff-text)]"
             aria-label="Fechar descanso"
           >
             <X size={18} />
@@ -406,7 +406,7 @@ export function FinishWorkoutModal({
   }
 
   return (
-    <div className="ff-finish-workout-modal fixed inset-0 z-50 flex items-end justify-center bg-black/70 px-3 pb-3 pt-[calc(1rem+env(safe-area-inset-top))] backdrop-blur-sm sm:items-center sm:p-4">
+    <div className="ff-finish-workout-modal fixed inset-0 z-50 flex items-end justify-center bg-[var(--ff-overlay)] px-3 pb-3 pt-[calc(1rem+env(safe-area-inset-top))] backdrop-blur-sm sm:items-center sm:p-4">
       <div className="ff-finish-workout-panel w-full max-w-lg overflow-hidden rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)]">
         <div className="sticky top-0 z-10 border-b border-[var(--ff-border)] bg-[var(--ff-surface-2)]/95 p-4 backdrop-blur-xl sm:p-5">
           <div className="flex items-start justify-between gap-4">
@@ -419,7 +419,7 @@ export function FinishWorkoutModal({
                 Finalizar treino?
               </h2>
 
-              <p className="mt-1 text-sm text-zinc-400">
+              <p className="mt-1 text-sm text-[var(--ff-muted)]">
                 O treino será salvo no histórico. A localização é opcional.
               </p>
             </div>
@@ -427,7 +427,7 @@ export function FinishWorkoutModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-zinc-900 text-zinc-400 transition hover:bg-[var(--ff-surface-3)] hover:text-[var(--ff-text)]"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--ff-surface)] text-[var(--ff-muted)] transition hover:bg-[var(--ff-surface-3)] hover:text-[var(--ff-text)]"
               aria-label="Fechar finalização"
             >
               ×
@@ -437,33 +437,33 @@ export function FinishWorkoutModal({
 
         <div className="ff-finish-workout-scroll space-y-3 overflow-y-auto p-3 sm:p-4">
           <div className="ff-finish-workout-stats grid grid-cols-2 gap-2">
-            <div className="ff-finish-workout-stat rounded-2xl border border-[var(--ff-border)] bg-zinc-900 p-3">
+            <div className="ff-finish-workout-stat rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface)] p-3">
               <p className="text-xs text-[var(--ff-muted)]">Duração</p>
               <input
                 type="text"
                 inputMode="numeric"
                 value={durationInput}
                 onChange={handleDurationInputChange}
-                className="mt-1 h-9 w-full rounded-xl border border-[var(--ff-accent-border)]/25 bg-black/30 px-2 text-lg font-black text-[var(--ff-accent-text)] outline-none focus:border-[var(--ff-accent-border)] sm:text-xl"
+                className="mt-1 h-9 w-full rounded-xl border border-[var(--ff-accent-border)]/25 bg-[var(--ff-surface-2)] px-2 text-lg font-black text-[var(--ff-accent-text)] outline-none focus:border-[var(--ff-accent-border)] sm:text-xl"
                 aria-label="Editar duracao do treino"
               />
             </div>
 
-            <div className="ff-finish-workout-stat rounded-2xl border border-[var(--ff-border)] bg-zinc-900 p-3">
+            <div className="ff-finish-workout-stat rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface)] p-3">
               <p className="text-xs text-[var(--ff-muted)]">Séries</p>
               <p className="mt-1 text-lg font-black sm:text-xl">
                 {completedSets}/{totalSets}
               </p>
             </div>
 
-            <div className="ff-finish-workout-stat rounded-2xl border border-[var(--ff-border)] bg-zinc-900 p-3">
+            <div className="ff-finish-workout-stat rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface)] p-3">
               <p className="text-xs text-[var(--ff-muted)]">Exercícios</p>
               <p className="mt-1 text-lg font-black sm:text-xl">
                 {workoutSummary.totalExercises}
               </p>
             </div>
 
-            <div className="ff-finish-workout-stat rounded-2xl border border-[var(--ff-border)] bg-zinc-900 p-3">
+            <div className="ff-finish-workout-stat rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface)] p-3">
               <p className="text-xs text-[var(--ff-muted)]">Pulados</p>
               <p className="mt-1 text-lg font-black sm:text-xl">
                 {workoutSummary.skippedExercises}
@@ -481,7 +481,7 @@ export function FinishWorkoutModal({
           )}
 
           {activeSession.notes && (
-            <div className="rounded-2xl border border-[var(--ff-border)] bg-zinc-900 p-4">
+            <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface)] p-4">
               <p className="text-xs text-[var(--ff-muted)]">Observações</p>
               <p className="mt-2 text-sm text-[var(--ff-text-soft)]">
                 {activeSession.notes}

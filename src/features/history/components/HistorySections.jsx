@@ -186,11 +186,11 @@ function HistoryFilters({
 
       <div className="ff-history-filter-grid">
       <div className="ff-history-filter-field ff-history-filter-field--search">
-        <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-zinc-500">
+        <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-[var(--ff-muted-2)]">
           Buscar
         </label>
 
-        <div className="flex h-12 items-center gap-3 rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-zinc-400">
+        <div className="flex h-12 items-center gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-input)] px-4 text-[var(--ff-muted)]">
           <Search size={20} />
 
           <input
@@ -198,14 +198,14 @@ function HistoryFilters({
             placeholder="Treino ou exercício..."
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-500"
+            className="w-full bg-transparent text-sm text-[var(--ff-text)] outline-none placeholder:text-[var(--ff-muted-2)]"
           />
 
           {search && (
             <button
               type="button"
               onClick={() => setSearch('')}
-              className="text-zinc-500 transition hover:text-white"
+              className="text-[var(--ff-muted-2)] transition hover:text-[var(--ff-text)]"
               aria-label="Limpar busca"
             >
               <X size={18} />
@@ -215,14 +215,14 @@ function HistoryFilters({
       </div>
 
       <div className="ff-history-filter-field">
-        <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-zinc-500">
+        <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-[var(--ff-muted-2)]">
           Treino
         </label>
 
         <select
           value={workoutFilter}
           onChange={(event) => setWorkoutFilter(event.target.value)}
-          className="h-12 w-full cursor-pointer rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-violet-500/10"
+          className="h-12 w-full cursor-pointer rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-input)] px-4 text-sm font-bold text-[var(--ff-text)] outline-none transition hover:border-[var(--ff-border)] focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-violet-500/10"
         >
           <option value="">Todos os treinos</option>
           {workoutFilterOptions.map((option) => (
@@ -234,7 +234,7 @@ function HistoryFilters({
       </div>
 
       <div className="ff-history-filter-field ff-history-filter-field--date">
-        <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-zinc-500">
+        <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-[var(--ff-muted-2)]">
           Data inicial
         </label>
 
@@ -243,12 +243,12 @@ function HistoryFilters({
           type="date"
           value={startDate}
           onChange={(event) => setStartDate(event.target.value)}
-          className="h-12 w-full cursor-pointer rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-violet-500/10"
+          className="h-12 w-full cursor-pointer rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-input)] px-4 text-sm font-bold text-[var(--ff-text)] outline-none transition hover:border-[var(--ff-border)] focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-violet-500/10"
         />
       </div>
 
       <div className="ff-history-filter-field ff-history-filter-field--date">
-        <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-zinc-500">
+        <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-[var(--ff-muted-2)]">
           Data final
         </label>
 
@@ -257,19 +257,19 @@ function HistoryFilters({
           type="date"
           value={endDate}
           onChange={(event) => setEndDate(event.target.value)}
-          className="h-12 w-full cursor-pointer rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-violet-500/10"
+          className="h-12 w-full cursor-pointer rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-input)] px-4 text-sm font-bold text-[var(--ff-text)] outline-none transition hover:border-[var(--ff-border)] focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-violet-500/10"
         />
       </div>
 
       <div className="ff-history-filter-field">
-        <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-zinc-500">
+        <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-[var(--ff-muted-2)]">
           Músculo
         </label>
 
         <select
           value={muscleFilter}
           onChange={(event) => setMuscleFilter(event.target.value)}
-          className="h-12 w-full cursor-pointer rounded-2xl border border-zinc-800 bg-[#101014] px-4 text-sm font-bold text-white outline-none transition hover:border-zinc-700 focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-violet-500/10"
+          className="h-12 w-full cursor-pointer rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-input)] px-4 text-sm font-bold text-[var(--ff-text)] outline-none transition hover:border-[var(--ff-border)] focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-violet-500/10"
         >
           <option value="">Todos os músculos</option>
           {muscleFilterOptions.map((option) => (
@@ -281,7 +281,7 @@ function HistoryFilters({
       </div>
 
       <div className="ff-history-filter-field ff-history-filter-field--pr">
-        <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-zinc-500">
+        <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-[var(--ff-muted-2)]">
           Recordes
         </label>
 
@@ -300,7 +300,7 @@ function HistoryFilters({
           <button
             type="button"
             onClick={clearFilters}
-            className="h-12 w-full rounded-2xl border border-zinc-800 bg-zinc-950 px-4 text-sm font-bold text-zinc-300 transition hover:border-[var(--ff-accent-border)]/40 hover:text-white"
+            className="h-12 w-full rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] px-4 text-sm font-bold text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)]/40 hover:text-[var(--ff-text)]"
           >
             Limpar
           </button>
@@ -980,48 +980,48 @@ export function HistorySidebar({ summary }) {
         <h2 className="text-xl font-bold">Resumo geral</h2>
 
         <div className="mt-5 space-y-3">
-          <div className="flex items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+          <div className="flex items-center gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
               <CalendarDays size={22} />
             </div>
 
             <div>
-              <p className="text-xs text-zinc-500">Último treino</p>
+              <p className="text-xs text-[var(--ff-muted-2)]">Último treino</p>
               <p className="font-bold">
                 {summary.lastWorkout ? formatShortDate(summary.lastWorkout.finishedAt) : 'Sem dados'}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+          <div className="flex items-center gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-orange-500/10 text-orange-400">
               <Flame size={22} />
             </div>
 
             <div>
-              <p className="text-xs text-zinc-500">Volume acumulado</p>
+              <p className="text-xs text-[var(--ff-muted-2)]">Volume acumulado</p>
               <p className="font-bold">{formatVolume(summary.totalVolume)}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+          <div className="flex items-center gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-yellow-500/10 text-yellow-400">
               <Trophy size={22} />
             </div>
 
             <div>
-              <p className="text-xs text-zinc-500">Recordes</p>
+              <p className="text-xs text-[var(--ff-muted-2)]">Recordes</p>
               <p className="font-bold">{summary.totalPRs} PRs</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+          <div className="flex items-center gap-3 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400">
               <Medal size={22} />
             </div>
 
             <div>
-              <p className="text-xs text-zinc-500">Séries concluídas</p>
+              <p className="text-xs text-[var(--ff-muted-2)]">Séries concluídas</p>
               <p className="font-bold">{summary.totalCompletedSets}</p>
             </div>
           </div>
@@ -1030,7 +1030,7 @@ export function HistorySidebar({ summary }) {
 
       <Card>
         <h2 className="text-xl font-bold">Dica</h2>
-        <p className="mt-2 text-sm leading-relaxed text-zinc-500">
+        <p className="mt-2 text-sm leading-relaxed text-[var(--ff-muted-2)]">
           Use a página de evolução para acompanhar um exercício específico ao longo do tempo.
         </p>
       </Card>

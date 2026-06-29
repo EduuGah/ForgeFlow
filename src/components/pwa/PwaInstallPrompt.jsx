@@ -128,7 +128,7 @@ function PwaInstallPrompt() {
 
   return (
     <div className="pointer-events-none fixed inset-x-3 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-[90] lg:bottom-5 lg:left-auto lg:right-5 lg:w-[390px]">
-      <Card className="pointer-events-auto overflow-hidden border border-[var(--ff-accent-border)] bg-[var(--ff-card)] p-0 shadow-2xl shadow-black/30">
+      <Card className="pointer-events-auto overflow-hidden border border-[var(--ff-accent-border)] bg-[var(--ff-card)] p-0 shadow-2xl shadow-[var(--ff-shadow-card)]">
         <div className="relative p-4">
           <button
             type="button"

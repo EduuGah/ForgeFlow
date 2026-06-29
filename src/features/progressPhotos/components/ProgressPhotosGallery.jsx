@@ -127,7 +127,7 @@ function ProgressPhotoCard({
                 'rounded-full border px-2.5 py-1 text-[11px] font-black shadow-sm backdrop-blur',
                 isSelectedForCompare
                   ? 'border-white/30 bg-[var(--ff-accent)] text-white shadow-[0_0_18px_var(--ff-accent-shadow)]'
-                  : 'border-white/30 bg-black/45 text-white',
+                  : 'border-white/30 bg-[var(--ff-overlay)] text-white',
               ].join(' ')}
             >
               {isSelectedForCompare ? `Selecionada ${selectedCompareIds.indexOf(photo.id) + 1}/2` : 'Selecionar'}
@@ -136,13 +136,13 @@ function ProgressPhotoCard({
         </div>
 
         {compareMode && !isSelectedForCompare && (
-          <div className="absolute inset-x-3 bottom-3 rounded-2xl border border-white/20 bg-black/50 px-3 py-2 text-center text-xs font-black text-white opacity-0 backdrop-blur transition group-hover:opacity-100">
+          <div className="absolute inset-x-3 bottom-3 rounded-2xl border border-white/20 bg-[var(--ff-overlay)] px-3 py-2 text-center text-xs font-black text-white opacity-0 backdrop-blur transition group-hover:opacity-100">
             Clique para comparar
           </div>
         )}
 
         {!compareMode && (
-          <div className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-2xl border border-white/20 bg-black/45 text-white opacity-0 backdrop-blur transition group-hover:opacity-100">
+          <div className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-2xl border border-white/20 bg-[var(--ff-overlay)] text-white opacity-0 backdrop-blur transition group-hover:opacity-100">
             <Maximize2 size={17} />
           </div>
         )}

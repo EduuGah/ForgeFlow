@@ -7,12 +7,12 @@ function MobileFilterSheet({ open, title = 'Filtros', description, children, onC
     <div className="fixed inset-0 z-[10020] lg:hidden">
       <button
         type="button"
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-[var(--ff-overlay)] backdrop-blur-sm"
         onClick={onClose}
         aria-label="Fechar filtros"
       />
 
-      <div className="safe-bottom absolute inset-x-0 bottom-0 max-h-[86dvh] overflow-hidden rounded-t-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] shadow-2xl shadow-black/30">
+      <div className="safe-bottom absolute inset-x-0 bottom-0 max-h-[86dvh] overflow-hidden rounded-t-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] shadow-2xl shadow-[var(--ff-shadow-card)]">
         <div className="sticky top-0 z-10 border-b border-[var(--ff-border)] bg-[var(--ff-card)]/95 p-4 backdrop-blur-xl">
           <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-[var(--ff-border-strong)]" />
 

@@ -333,7 +333,7 @@ function ExerciseOptionButton({ exercise, selected, onSelect }) {
         {exercise.mediaUrl ? (
           <img src={exercise.mediaUrl} alt={exercise.name} className="h-full w-full object-contain" loading="lazy" decoding="async" />
         ) : (
-          <Dumbbell size={20} className="text-zinc-500" />
+          <Dumbbell size={20} className="text-[var(--ff-muted-2)]" />
         )}
       </span>
       <span className="min-w-0 flex-1">
@@ -444,7 +444,7 @@ function SelectedExerciseHero({ exercise, stats }) {
           {exercise.mediaUrl ? (
             <img src={exercise.mediaUrl} alt={exercise.name} className="h-full w-full object-contain" loading="lazy" decoding="async" />
           ) : (
-            <Dumbbell size={30} className="text-zinc-500" />
+            <Dumbbell size={30} className="text-[var(--ff-muted-2)]" />
           )}
         </div>
 

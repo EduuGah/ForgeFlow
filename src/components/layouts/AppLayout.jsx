@@ -417,7 +417,7 @@ function AppLayout() {
         className={[
           'fixed inset-x-0 top-0 z-40 border-b border-[var(--ff-border)] bg-[var(--ff-header)] backdrop-blur-xl transition-all duration-300 ease-out',
           isRunningNativeApp || isHeaderVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0',
-          !isRunningNativeApp && isHeaderCompact ? 'shadow-lg shadow-black/10' : '',
+          !isRunningNativeApp && isHeaderCompact ? 'shadow-lg shadow-[var(--ff-shadow-card)]' : '',
         ].join(' ')}
       >
         <div className="safe-top">

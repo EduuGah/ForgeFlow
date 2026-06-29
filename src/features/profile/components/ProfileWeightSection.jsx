@@ -67,13 +67,13 @@ export default function ProfileWeightSection({
           }}
         />
 
-        <p className="mt-2 text-xs text-zinc-500">
+        <p className="mt-2 text-xs text-[var(--ff-muted-2)]">
           Pode usar virgula ou ponto. Exemplo: 72,5 ou 72.5.
         </p>
       </div>
 
       <div>
-        <label className="flex items-center gap-2 text-sm font-medium text-zinc-400">
+        <label className="flex items-center gap-2 text-sm font-medium text-[var(--ff-muted)]">
           <CalendarDays size={16} />
           Data do registro
         </label>
@@ -115,7 +115,7 @@ export default function ProfileWeightSection({
               onDateChange('')
             }
           }}
-          className="mt-2 w-full cursor-pointer rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-white outline-none transition focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-[var(--ff-accent)]/10"
+          className="mt-2 w-full cursor-pointer rounded-xl border border-[var(--ff-border)] bg-[var(--ff-card)] px-4 py-3 text-[var(--ff-text)] outline-none transition focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-[var(--ff-accent)]/10"
         />
       </div>
 
@@ -132,7 +132,7 @@ export default function ProfileWeightSection({
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2 className="text-xl font-bold">Evolução do peso corporal</h2>
-              <p className="mt-1 text-sm text-zinc-500">
+              <p className="mt-1 text-sm text-[var(--ff-muted-2)]">
                 Gráfico baseado nos registros adicionados.
               </p>
             </div>
@@ -156,18 +156,18 @@ export default function ProfileWeightSection({
             ) : (
               <ResponsiveContainer height={320}>
                 <LineChart data={bodyWeightChartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--ff-chart-grid)" />
                   <XAxis
                     dataKey="date"
-                    stroke="#71717a"
+                    stroke="var(--ff-muted)"
                     tickFormatter={formatShortDate}
                   />
-                  <YAxis stroke="#71717a" />
+                  <YAxis stroke="var(--ff-muted)" />
                   <Tooltip
                     labelFormatter={(value) => `Data: ${formatShortDate(value)}`}
                     formatter={(value) => [`${value} kg`, 'Peso']}
                     contentStyle={{
-                      background: '#09090b',
+                      background: 'var(--ff-card)',
                       border: '1px solid #27272a',
                       borderRadius: '12px',
                       color: '#fff',
@@ -200,7 +200,7 @@ export default function ProfileWeightSection({
 
               <div>
                 <h2 className="text-xl font-bold">Destaques pessoais</h2>
-                <p className="text-sm text-zinc-500">Melhores marcas</p>
+                <p className="text-sm text-[var(--ff-muted-2)]">Melhores marcas</p>
               </div>
             </div>
 
@@ -220,32 +220,32 @@ export default function ProfileWeightSection({
                   emphasis="blue"
                 />
               ) : (
-                <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-                  <p className="text-xs text-zinc-500">Maior carga registrada</p>
-                  <p className="mt-2 text-sm text-zinc-500">Sem dados ainda.</p>
+                <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
+                  <p className="text-xs text-[var(--ff-muted-2)]">Maior carga registrada</p>
+                  <p className="mt-2 text-sm text-[var(--ff-muted-2)]">Sem dados ainda.</p>
                 </div>
               )}
 
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-                <p className="text-xs text-zinc-500">Exercício mais feito</p>
+              <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
+                <p className="text-xs text-[var(--ff-muted-2)]">Exercício mais feito</p>
 
                 {mostTrainedExercise ? (
                   <>
                     <h3 className="mt-1 text-lg font-bold">
                       {mostTrainedExercise.name}
                     </h3>
-                    <p className="mt-1 text-sm text-zinc-400">
+                    <p className="mt-1 text-sm text-[var(--ff-muted)]">
                       {mostTrainedExercise.total} séries feitas
                     </p>
                   </>
                 ) : (
-                  <p className="mt-2 text-sm text-zinc-500">Sem dados ainda.</p>
+                  <p className="mt-2 text-sm text-[var(--ff-muted-2)]">Sem dados ainda.</p>
                 )}
               </div>
 
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-                <p className="text-xs text-zinc-500">Total pessoal</p>
-                <p className="mt-2 text-sm text-zinc-400">
+              <div className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
+                <p className="text-xs text-[var(--ff-muted-2)]">Total pessoal</p>
+                <p className="mt-2 text-sm text-[var(--ff-muted)]">
                   {totalWorkouts} treinos concluídos • {totalSets} séries concluídas
                 </p>
               </div>
@@ -254,7 +254,7 @@ export default function ProfileWeightSection({
 
           <Card>
             <h2 className="text-xl font-bold">PRs por exercício</h2>
-            <p className="mt-1 text-sm text-zinc-500">
+            <p className="mt-1 text-sm text-[var(--ff-muted-2)]">
               Melhores marcas salvas no histórico.
             </p>
 
@@ -290,7 +290,7 @@ export default function ProfileWeightSection({
       <div className="ff-hevy-profile space-y-5 sm:space-y-6">
         <Card>
           <h2 className="text-xl font-bold">Registrar peso</h2>
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-[var(--ff-muted-2)]">
             Adicione registros para acompanhar sua evolução corporal no gráfico.
           </p>
 
@@ -306,13 +306,13 @@ export default function ProfileWeightSection({
                 }}
               />
 
-              <p className="mt-2 text-xs text-zinc-500">
+              <p className="mt-2 text-xs text-[var(--ff-muted-2)]">
                 Pode usar vírgula ou ponto. Exemplo: 72,5 ou 72.5.
               </p>
             </div>
 
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-zinc-400">
+              <label className="flex items-center gap-2 text-sm font-medium text-[var(--ff-muted)]">
                 <CalendarDays size={16} />
                 Data do registro
               </label>
@@ -354,7 +354,7 @@ export default function ProfileWeightSection({
                     onDateChange('')
                   }
                 }}
-                className="mt-2 w-full cursor-pointer rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-white outline-none transition focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-[var(--ff-accent)]/10"
+                className="mt-2 w-full cursor-pointer rounded-xl border border-[var(--ff-border)] bg-[var(--ff-card)] px-4 py-3 text-[var(--ff-text)] outline-none transition focus:border-[var(--ff-accent-border)] focus:ring-2 focus:ring-[var(--ff-accent)]/10"
               />
             </div>
 
@@ -364,7 +364,7 @@ export default function ProfileWeightSection({
           </form>
 
           <div className="mt-4 rounded-2xl border border-[var(--ff-accent-border)]/20 bg-[var(--ff-accent-soft)]/10 p-3">
-            <p className="text-xs leading-relaxed text-zinc-400">
+            <p className="text-xs leading-relaxed text-[var(--ff-muted)]">
               Esse registro atualiza o gráfico e também usa o último peso como peso atual do perfil.
             </p>
           </div>
@@ -375,7 +375,7 @@ export default function ProfileWeightSection({
 
           <div className="mt-5 max-h-[400px] space-y-2 overflow-y-auto pr-2">
             {bodyWeightChartData.length === 0 && (
-              <p className="text-sm text-zinc-500">Nenhum registro ainda.</p>
+              <p className="text-sm text-[var(--ff-muted-2)]">Nenhum registro ainda.</p>
             )}
 
             {bodyWeightChartData
@@ -384,11 +384,11 @@ export default function ProfileWeightSection({
               .map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-950 p-3"
+                  className="flex items-center justify-between rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3"
                 >
                   <div>
                     <p className="font-bold">{item.weight} kg</p>
-                    <p className="text-xs text-zinc-500">{formatShortDate(item.date)}</p>
+                    <p className="text-xs text-[var(--ff-muted-2)]">{formatShortDate(item.date)}</p>
                   </div>
 
                   <button
@@ -406,7 +406,7 @@ export default function ProfileWeightSection({
         {profile.notes && (
           <Card>
             <h2 className="text-xl font-bold">Notas pessoais</h2>
-            <p className="mt-3 text-sm leading-relaxed text-zinc-300">{profile.notes}</p>
+            <p className="mt-3 text-sm leading-relaxed text-[var(--ff-text-soft)]">{profile.notes}</p>
           </Card>
         )}
 

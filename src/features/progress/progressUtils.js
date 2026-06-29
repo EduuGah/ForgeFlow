@@ -994,7 +994,7 @@ export function getTooltipStyle() {
     border: '1px solid var(--ff-border)',
     borderRadius: '16px',
     color: 'var(--ff-text)',
-    boxShadow: '0 22px 60px rgba(0,0,0,.35)',
+    boxShadow: 'var(--ff-shadow-floating)',
   }
 }
 

@@ -29,8 +29,8 @@ function ExerciseFiltersSidebar({
 }) {
   return (
     <aside className="order-2 space-y-6 xl:order-1">
-      <Card className="overflow-visible border border-zinc-800 bg-gradient-to-b from-[#17171b] to-[#121216]">
-        <div className="border-b border-zinc-800 p-5">
+      <Card className="overflow-visible border border-[var(--ff-border)] bg-gradient-to-b from-[#17171b] to-[#121216]">
+        <div className="border-b border-[var(--ff-border)] p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
               <Layers3 size={22} />
@@ -41,7 +41,7 @@ function ExerciseFiltersSidebar({
                 Grupos musculares
               </h2>
 
-              <p className="text-sm text-zinc-500">
+              <p className="text-sm text-[var(--ff-muted-2)]">
                 Filtre pelas categorias principais.
               </p>
             </div>
@@ -71,15 +71,15 @@ function ExerciseFiltersSidebar({
           ))}
 
           {filteredGroupStats.length === 0 && (
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-[var(--ff-muted-2)]">
               Nenhum grupo encontrado.
             </p>
           )}
         </div>
       </Card>
 
-      <Card className="overflow-visible border border-zinc-800 bg-gradient-to-b from-[#17171b] to-[#121216]">
-        <div className="border-b border-zinc-800 p-5">
+      <Card className="overflow-visible border border-[var(--ff-border)] bg-gradient-to-b from-[#17171b] to-[#121216]">
+        <div className="border-b border-[var(--ff-border)] p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
               <Target size={22} />
@@ -90,7 +90,7 @@ function ExerciseFiltersSidebar({
                 Subgrupos
               </h2>
 
-              <p className="text-sm text-zinc-500">
+              <p className="text-sm text-[var(--ff-muted-2)]">
                 Ex.: Trapézio, Dorsal, Oblíquos.
               </p>
             </div>
@@ -122,14 +122,14 @@ function ExerciseFiltersSidebar({
           ))}
 
           {filteredSubgroupStats.length === 0 && (
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-[var(--ff-muted-2)]">
               Nenhum subgrupo encontrado.
             </p>
           )}
         </div>
       </Card>
 
-      <Card className="border border-zinc-800 bg-gradient-to-b from-[#17171b] to-[#121216]">
+      <Card className="border border-[var(--ff-border)] bg-gradient-to-b from-[#17171b] to-[#121216]">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
             <Filter size={22} />
@@ -140,7 +140,7 @@ function ExerciseFiltersSidebar({
               Filtros rápidos
             </h2>
 
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-[var(--ff-muted-2)]">
               Refine a biblioteca rapidamente.
             </p>
           </div>
@@ -160,7 +160,7 @@ function ExerciseFiltersSidebar({
             className={
               showOnlyFavorites
                 ? 'flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-yellow-500/30 bg-yellow-500/10 text-sm font-bold text-yellow-300 transition hover:bg-yellow-500/20'
-                : 'flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-zinc-800 bg-zinc-950 text-sm font-bold text-zinc-300 transition hover:border-yellow-500/30 hover:text-yellow-300'
+                : 'flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] text-sm font-bold text-[var(--ff-text-soft)] transition hover:border-yellow-500/30 hover:text-yellow-300'
             }
           >
             <Star
@@ -222,7 +222,7 @@ function ExerciseFiltersSidebar({
         </div>
       </Card>
 
-      <Card className="hidden border border-zinc-800 bg-[#151518] xl:block">
+      <Card className="hidden border border-[var(--ff-border)] bg-[var(--ff-surface-2)] xl:block">
         <div className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
             <Wrench size={18} />
@@ -248,14 +248,14 @@ function ExerciseFiltersSidebar({
               className={
                 equipmentFilter === item.name
                   ? 'rounded-xl border border-[var(--ff-accent-border)]/40 bg-[var(--ff-accent-soft)]/10 p-2.5 text-left shadow-[0_0_14px_var(--ff-accent-shadow)]/10'
-                  : 'rounded-xl border border-zinc-800 bg-[#18181b] p-2.5 text-left transition hover:border-[var(--ff-accent-border)]/30'
+                  : 'rounded-xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-2.5 text-left transition hover:border-[var(--ff-accent-border)]/30'
               }
             >
               <p className="line-clamp-1 text-xs font-semibold">
                 {item.name}
               </p>
 
-              <p className="mt-1 text-[11px] text-zinc-500">
+              <p className="mt-1 text-[11px] text-[var(--ff-muted-2)]">
                 {item.count} ex.
               </p>
             </button>

@@ -148,9 +148,9 @@ export function getRecoveryStyle(level) {
     },
     unknown: {
       label: 'Sem dados',
-      text: 'text-zinc-400',
-      border: 'border-zinc-800',
-      bg: 'bg-zinc-950',
+      text: 'text-[var(--ff-muted)]',
+      border: 'border-[var(--ff-border)]',
+      bg: 'bg-[var(--ff-card)]',
       bar: 'bg-zinc-500',
     },
   }

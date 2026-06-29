@@ -46,11 +46,11 @@ export default function ProfileOverviewSection({
 
   return (
     <>
-      <section className="ff-profile-hero-card overflow-hidden rounded-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 shadow-2xl shadow-black/25 sm:p-6">
+      <section className="ff-profile-hero-card overflow-hidden rounded-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] p-4 shadow-2xl shadow-[var(--ff-shadow-card)] sm:p-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="min-w-0 flex-1">
             <div className="flex items-start gap-4 sm:items-center sm:gap-5">
-              <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-muted)] shadow-[0_16px_40px_rgba(0,0,0,.28)] sm:h-24 sm:w-24">
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-muted)] shadow-[var(--ff-shadow-card)] sm:h-24 sm:w-24">
                 {profile.avatarUrl ? (
                   <img
                     src={profile.avatarUrl}
@@ -85,7 +85,7 @@ export default function ProfileOverviewSection({
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-3 gap-3 rounded-[1.5rem] border border-[var(--ff-border)] bg-black/25 p-4 sm:max-w-2xl">
+            <div className="mt-6 grid grid-cols-3 gap-3 rounded-[1.5rem] border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4 sm:max-w-2xl">
               <ProfileStat label="Treinos" value={totalWorkouts} />
               <ProfileStat label="Séries" value={totalSets} />
               <ProfileStat label="Recordes" value={prsCount} />

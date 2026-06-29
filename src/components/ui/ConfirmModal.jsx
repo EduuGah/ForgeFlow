@@ -29,7 +29,7 @@ function ConfirmModal({
 
   const modal = (
     <div className="ff-confirm-modal-overlay fixed inset-0 z-[2147483645] flex items-end justify-center bg-[var(--ff-overlay)] p-3 backdrop-blur-sm sm:items-center sm:p-4">
-      <div className="ff-confirm-modal-panel max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] p-5 text-center text-[var(--ff-text)] shadow-2xl shadow-black/20 sm:rounded-3xl sm:p-6">
+      <div className="ff-confirm-modal-panel max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] p-5 text-center text-[var(--ff-text)] shadow-2xl shadow-[var(--ff-shadow-card)] sm:rounded-3xl sm:p-6">
         <div className="relative flex flex-col items-center text-center">
           <button
             type="button"

@@ -68,20 +68,20 @@ function ExerciseFormModal({
   }, [])
 
   const modal = (
-    <div className="ff-exercise-form-modal fixed inset-0 z-[2147483600] flex items-end justify-center bg-black/75 px-3 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] backdrop-blur-sm sm:items-center sm:p-6">
-      <div className="ff-exercise-form-modal__panel flex h-[94dvh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-zinc-800 bg-[#121212] shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)] sm:h-auto sm:max-h-[92vh]">
-        <div className="ff-exercise-form-modal__header shrink-0 border-b border-zinc-800 bg-[#121212]/95 p-4 backdrop-blur-xl sm:p-6">
+    <div className="ff-exercise-form-modal fixed inset-0 z-[2147483600] flex items-end justify-center bg-[var(--ff-overlay)] px-3 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] backdrop-blur-sm sm:items-center sm:p-6">
+      <div className="ff-exercise-form-modal__panel flex h-[94dvh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] shadow-2xl shadow-[0_0_20px_var(--ff-accent-shadow)] sm:h-auto sm:max-h-[92vh]">
+        <div className="ff-exercise-form-modal__header shrink-0 border-b border-[var(--ff-border)] bg-[var(--ff-card)]/95 p-4 backdrop-blur-xl sm:p-6">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--ff-accent-text)]">
                 {editingId ? 'Editar exercício' : 'Exercício pessoal'}
               </p>
 
-              <h2 className="mt-1 text-xl font-black text-white sm:text-2xl">
+              <h2 className="mt-1 text-xl font-black text-[var(--ff-text)] sm:text-2xl">
                 {editingId ? 'Atualizar exercício' : 'Criar exercício'}
               </h2>
 
-              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-500">
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--ff-muted-2)]">
                 {editingId
                   ? 'Atualize as informações que aparecem na sua biblioteca e nos detalhes do exercício.'
                   : 'Cadastre um movimento próprio com imagem, execução, dicas e erros para evitar. Ele fica só na biblioteca deste usuário.'}
@@ -91,7 +91,7 @@ function ExerciseFormModal({
             <button
               type="button"
               onClick={closeModal}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-900 text-zinc-400 transition hover:bg-zinc-800 hover:text-white"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--ff-surface)] text-[var(--ff-muted)] transition hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)]"
               aria-label="Fechar cadastro de exercício"
             >
               <X size={22} />
@@ -243,7 +243,7 @@ function ExerciseFormModal({
             </div>
           </div>
 
-          <div className="ff-exercise-form-modal__footer shrink-0 border-t border-zinc-800 bg-[#121212]/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-xl sm:px-6">
+          <div className="ff-exercise-form-modal__footer shrink-0 border-t border-[var(--ff-border)] bg-[var(--ff-card)]/95 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-xl sm:px-6">
             <div className="grid grid-cols-2 gap-3">
               <Button type="submit" className="w-full">
                 {editingId ? 'Salvar' : 'Criar exercício'}

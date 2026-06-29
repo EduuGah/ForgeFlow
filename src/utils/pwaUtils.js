@@ -58,8 +58,8 @@ export function setupPwaHeadTags() {
   ensureMeta('apple-mobile-web-app-capable', 'yes')
   ensureMeta('apple-mobile-web-app-status-bar-style', 'black-translucent')
   ensureMeta('mobile-web-app-capable', 'yes')
-  ensureMeta('theme-color', '#0b0b0f')
-  ensureMeta('msapplication-TileColor', '#0b0b0f')
+  ensureMeta('theme-color', document.documentElement?.dataset?.theme === 'light' ? '#f7f7fb' : '#000000')
+  ensureMeta('msapplication-TileColor', document.documentElement?.dataset?.theme === 'light' ? '#f7f7fb' : '#000000')
   ensureMeta('description', 'ForgeFlow é um app de treinos para registrar cargas, acompanhar evolução, metas e histórico.')
 }
 

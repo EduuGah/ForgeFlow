@@ -17,24 +17,24 @@ import Card from '../../../components/ui/Card'
 import EmptyState from '../../../components/ui/EmptyState'
 
 const chartCursor = {
-  fill: 'rgba(255, 255, 255, 0.04)',
+  fill: 'var(--ff-surface-2)',
 }
 
 const chartTooltipStyle = {
-  background: '#09090b',
-  border: '1px solid #27272a',
+  background: 'var(--ff-card)',
+  border: '1px solid var(--ff-border)',
   borderRadius: '12px',
-  color: '#fff',
-  boxShadow: '0 18px 40px rgba(0, 0, 0, 0.35)',
+  color: 'var(--ff-text)',
+  boxShadow: 'var(--ff-shadow-card)',
 }
 
 const chartTooltipLabelStyle = {
-  color: '#fff',
+  color: 'var(--ff-text)',
   fontWeight: 700,
 }
 
 const chartTooltipItemStyle = {
-  color: '#d4d4d8',
+  color: 'var(--ff-text-soft)',
 }
 
 const chartFocusFixClass =
@@ -80,7 +80,7 @@ function DashboardChartsSection({
       <div>
         <h2 className="text-xl font-bold">Volume por treino</h2>
 
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-[var(--ff-muted-2)]">
           Soma de peso × repetições nos últimos treinos.
         </p>
       </div>
@@ -152,7 +152,7 @@ function DashboardChartsSection({
       <div>
         <h2 className="text-xl font-bold">Mapa muscular</h2>
 
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-[var(--ff-muted-2)]">
           Distribuição dos grupos mais treinados.
         </p>
       </div>
@@ -171,8 +171,8 @@ function DashboardChartsSection({
       ) : (
         <ResponsiveContainer height={320}>
           <RadarChart data={radarData}>
-            <PolarGrid stroke="#3f3f46" />
-            <PolarAngleAxis dataKey="group" stroke="#a1a1aa" />
+            <PolarGrid stroke="var(--ff-chart-grid)" />
+            <PolarAngleAxis dataKey="group" stroke="var(--ff-muted)" />
 
             <Radar
               name="Séries"
@@ -183,7 +183,7 @@ function DashboardChartsSection({
               activeDot={{
                 r: 5,
                 fill: chartAccentColor,
-                stroke: '#fff',
+                stroke: 'var(--ff-card)',
                 strokeWidth: 2,
               }}
             />
@@ -208,7 +208,7 @@ function DashboardChartsSection({
       <div>
         <h2 className="text-xl font-bold">Treinos por semana</h2>
 
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-[var(--ff-muted-2)]">
           Frequência semanal registrada no histórico.
         </p>
       </div>
@@ -244,10 +244,10 @@ function DashboardChartsSection({
               formatter={(value) => [`${value} treino(s)`, 'Treinos']}
               labelFormatter={(label, payload) => payload?.[0]?.payload?.fullWeek || label}
               contentStyle={{
-                background: '#09090b',
-                border: '1px solid #27272a',
+                background: 'var(--ff-card)',
+                border: '1px solid var(--ff-border)',
                 borderRadius: '12px',
-                color: '#fff',
+                color: 'var(--ff-text)',
               }}
               labelStyle={{
                 color: 'var(--ff-text)',
@@ -277,7 +277,7 @@ function DashboardChartsSection({
       <div>
         <h2 className="text-xl font-bold">Séries por treino</h2>
 
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-[var(--ff-muted-2)]">
           Quantidade de séries válidas nos últimos treinos.
         </p>
       </div>
@@ -323,10 +323,10 @@ function DashboardChartsSection({
                 getTooltipLabel(payload?.[0]?.payload?.fullName || label)
               }
               contentStyle={{
-                background: '#09090b',
-                border: '1px solid #27272a',
+                background: 'var(--ff-card)',
+                border: '1px solid var(--ff-border)',
                 borderRadius: '12px',
-                color: '#fff',
+                color: 'var(--ff-text)',
               }}
               labelStyle={{
                 color: 'var(--ff-text)',
@@ -356,7 +356,7 @@ function DashboardChartsSection({
       <div>
         <h2 className="text-xl font-bold">Volume por músculo</h2>
 
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-[var(--ff-muted-2)]">
           Grupos musculares com maior volume acumulado.
         </p>
       </div>
@@ -391,10 +391,10 @@ function DashboardChartsSection({
               formatter={(value) => [formatChartVolume(value), 'Volume acumulado']}
               labelFormatter={(label) => `Grupo: ${label}`}
               contentStyle={{
-                background: '#09090b',
-                border: '1px solid #27272a',
+                background: 'var(--ff-card)',
+                border: '1px solid var(--ff-border)',
                 borderRadius: '12px',
-                color: '#fff',
+                color: 'var(--ff-text)',
               }}
               labelStyle={{
                 color: 'var(--ff-text)',

@@ -114,7 +114,7 @@ function Sidebar({ isOpen = false, onClose }) {
 
       <aside
         className={[
-          'ff-app-sidebar fixed left-0 top-0 z-[60] flex h-dvh w-[86vw] max-w-[300px] touch-pan-y flex-col overflow-hidden overscroll-contain border-r border-[var(--ff-border)] bg-[var(--ff-sidebar)] text-[var(--ff-text)] shadow-2xl shadow-black/20 transition-transform duration-300 ease-out will-change-transform',
+          'ff-app-sidebar fixed left-0 top-0 z-[60] flex h-dvh w-[86vw] max-w-[300px] touch-pan-y flex-col overflow-hidden overscroll-contain border-r border-[var(--ff-border)] bg-[var(--ff-sidebar)] text-[var(--ff-text)] shadow-2xl shadow-[var(--ff-shadow-card)] transition-transform duration-300 ease-out will-change-transform',
           isOpen ? 'translate-x-0' : '-translate-x-full',
         ].join(' ')}
       >
@@ -275,7 +275,7 @@ function Sidebar({ isOpen = false, onClose }) {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="group mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-red-500/35 bg-red-500/10 text-sm font-black text-red-200 shadow-[0_0_0_rgba(239,68,68,0)] transition duration-200 hover:border-red-400/70 hover:bg-red-500/25 hover:text-white hover:shadow-[0_0_22px_rgba(239,68,68,0.18)] active:scale-[0.98]"
+                className="group mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-red-500/35 bg-red-500/10 text-sm font-black text-red-200 shadow-[0_0_0_rgba(239,68,68,0)] transition duration-200 hover:border-red-400/70 hover:bg-red-500/25 hover:text-[var(--ff-text)] hover:shadow-[0_0_22px_rgba(239,68,68,0.18)] active:scale-[0.98]"
               >
                 <LogOut size={16} className="transition group-hover:-translate-x-0.5" />
                 Sair

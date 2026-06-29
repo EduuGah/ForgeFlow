@@ -80,7 +80,7 @@ function SmartNotificationPopup({ notification, onClose }) {
 
   return (
     <div className="safe-top pointer-events-none fixed left-3 right-3 top-20 z-[10050] sm:left-auto sm:right-4 sm:w-[calc(100%-32px)] sm:max-w-md">
-      <div className="pointer-events-auto overflow-hidden rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] text-[var(--ff-text)] shadow-2xl shadow-black/25 animate-[fadeIn_0.18s_ease-out]">
+      <div className="pointer-events-auto overflow-hidden rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] text-[var(--ff-text)] shadow-2xl shadow-[var(--ff-shadow-card)] animate-[fadeIn_0.18s_ease-out]">
         <div className="p-4 sm:p-5">
           <div className="flex items-start gap-3">
             <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${tone.border} ${tone.iconBg} ${tone.text} shadow-[0_0_22px_var(--ff-accent-shadow)]/15`}>

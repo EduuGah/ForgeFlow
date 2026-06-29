@@ -1,6 +1,6 @@
 /* Final APK layer: keep the Android WebView as one app viewport. */
 :root {
-  --ff-apk-bg: #000000;
+  --ff-apk-bg: var(--ff-bg);
   --ff-apk-header-height: 56px;
   --ff-apk-bottom-nav-height: 76px;
   --ff-apk-page-x: 14px;
@@ -70,8 +70,8 @@ body.is-native-app #app-header {
   width: 100% !important;
   transform: none !important;
   opacity: 1 !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
-  background: rgba(8, 9, 11, 0.98) !important;
+  border-bottom: 1px solid var(--ff-border) !important;
+  background: var(--ff-header) !important;
   box-shadow: none !important;
   backdrop-filter: blur(16px);
   touch-action: manipulation !important;
@@ -93,7 +93,7 @@ body.is-native-app #app-header button {
   height: 42px !important;
   min-height: 42px !important;
   border-radius: 14px !important;
-  background: #15161a !important;
+  background: var(--ff-surface-2) !important;
   box-shadow: none !important;
 }
 
@@ -174,8 +174,8 @@ body.is-native-app .ff-hevy-page :is(.rounded-3xl, .rounded-\[2rem\], .rounded-\
 
 body.is-native-app .ff-native-card,
 body.is-native-app .ff-hevy-page :is(article, section, aside, .ff-card, [class*='rounded-3xl'][class*='border'], [class*='rounded-[2rem]'][class*='border']) {
-  border-color: rgba(255, 255, 255, 0.08) !important;
-  background: #18191b !important;
+  border-color: var(--ff-border) !important;
+  background: var(--ff-card) !important;
   box-shadow: none !important;
 }
 
@@ -194,7 +194,9 @@ body.is-native-app .ff-hevy-page h2 {
 body.is-native-app .ff-hevy-page :is(input, select, textarea) {
   min-height: 46px !important;
   border-radius: 15px !important;
-  background: #101114 !important;
+  background: var(--ff-input) !important;
+  border-color: var(--ff-border) !important;
+  color: var(--ff-text) !important;
   font-size: 16px !important;
 }
 
@@ -226,9 +228,9 @@ body.is-native-app .mobile-bottom-nav > div {
   max-width: 560px !important;
   min-height: 58px !important;
   margin: 0 auto !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid var(--ff-border) !important;
   border-radius: 22px !important;
-  background: #15161a !important;
+  background: var(--ff-surface-2) !important;
   padding: 4px !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
@@ -240,10 +242,11 @@ body.is-native-app .mobile-bottom-nav a {
   border-radius: 16px !important;
   padding: 6px 4px !important;
   gap: 4px !important;
+  color: var(--ff-muted) !important;
 }
 
 body.is-native-app .mobile-bottom-nav a[aria-current='page'] {
-  background: rgba(10, 132, 255, 0.12) !important;
+  background: var(--ff-accent-soft) !important;
   color: var(--ff-accent-text) !important;
 }
 
@@ -275,8 +278,8 @@ body.is-native-app .ff-active-workout-mini-card-v3.ff-active-workout-mini-floati
   min-height: 78px !important;
   margin: 0 auto !important;
   border-radius: 22px !important;
-  background: rgba(18, 19, 22, 0.98) !important;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.42) !important;
+  background: var(--ff-card) !important;
+  box-shadow: var(--ff-shadow-floating) !important;
   backdrop-filter: blur(16px);
 }
 
@@ -292,11 +295,11 @@ body.is-native-app .ff-mobile-workout-action-bar {
   right: 12px !important;
   bottom: max(12px, env(safe-area-inset-bottom)) !important;
   z-index: 45 !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid var(--ff-border) !important;
   border-radius: 22px !important;
-  background: rgba(18, 19, 22, 0.98) !important;
+  background: var(--ff-card) !important;
   padding: 8px !important;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.42) !important;
+  box-shadow: var(--ff-shadow-floating) !important;
   backdrop-filter: blur(16px);
 }
 

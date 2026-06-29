@@ -38,7 +38,7 @@ function Toast({
 
   return (
     <div className="pointer-events-none safe-top fixed left-3 right-3 top-20 z-[10000] flex justify-center sm:left-auto sm:right-4 sm:justify-end">
-      <div className="pointer-events-auto relative w-full max-w-[420px] overflow-hidden rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] text-[var(--ff-text)] shadow-2xl shadow-black/25 backdrop-blur-xl animate-[fadeIn_0.16s_ease-out]">
+      <div className="pointer-events-auto relative w-full max-w-[420px] overflow-hidden rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] text-[var(--ff-text)] shadow-2xl shadow-[var(--ff-shadow-card)] backdrop-blur-xl animate-[fadeIn_0.16s_ease-out]">
         <div className={`absolute inset-x-0 top-0 h-1 ${tone.bar}`} />
 
         <div className="flex items-start gap-3 px-4 py-4 pr-12">
