@@ -8,7 +8,7 @@
 .ff-tutorial-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1200;
+  z-index: 2147483000;
   pointer-events: none;
   overflow: hidden;
 }
@@ -23,7 +23,7 @@
 
 .ff-tutorial-spotlight {
   position: fixed;
-  z-index: 1210;
+  z-index: 2147483020;
   border: 2px solid var(--ff-accent);
   border-radius: 22px;
   box-shadow:
@@ -36,8 +36,14 @@
 
 .ff-tutorial-active-target {
   position: relative !important;
-  z-index: 1211 !important;
+  z-index: 2147483025 !important;
   isolation: isolate;
+  scroll-margin-top: calc(7rem + env(safe-area-inset-top));
+  scroll-margin-bottom: calc(9rem + env(safe-area-inset-bottom));
+}
+
+.ff-tutorial-active-layer {
+  z-index: 2147483015 !important;
 }
 
 .ff-tutorial-target-label {
@@ -64,9 +70,9 @@
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 1220;
+  z-index: 2147483040;
   width: min(372px, calc(100vw - 24px));
-  max-height: min(78vh, calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 44px));
+  max-height: min(72vh, calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 92px));
   overflow: auto;
   overscroll-behavior: contain;
   border: 1px solid var(--ff-border);
@@ -279,7 +285,7 @@
 .ff-tutorial-welcome {
   position: fixed;
   inset: 0;
-  z-index: 1230;
+  z-index: 2147483050;
   display: grid;
   place-items: center;
   padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
@@ -330,7 +336,7 @@
   position: fixed;
   right: max(16px, env(safe-area-inset-right));
   bottom: calc(86px + env(safe-area-inset-bottom));
-  z-index: 900;
+  z-index: 850;
   display: grid;
   width: 48px;
   height: 48px;
@@ -462,4 +468,28 @@
   .ff-tutorial-tooltip__primary-actions {
     grid-template-columns: 1fr;
   }
+}
+
+/* Correções de camada para alvos fixos do treino ativo. O alvo fica visível
+   pelo recorte do spotlight, mas o tooltip continua sempre acima dele. */
+.ff-tutorial-active-target {
+  z-index: 2147482999 !important;
+}
+
+.ff-tutorial-active-layer {
+  z-index: 2147482998 !important;
+}
+
+.ff-page-start-workout .ff-mobile-workout-action-bar.ff-tutorial-active-layer,
+body.is-native-app .ff-page-start-workout .ff-mobile-workout-action-bar.ff-tutorial-active-layer {
+  transform: translateY(0) scale(1) !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+}
+
+/* O overlay não bloqueia mais o gesto de rolagem do app no Android;
+   só o tooltip captura toque/clique. */
+.ff-tutorial-scrim {
+  pointer-events: none !important;
 }

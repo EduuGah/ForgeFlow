@@ -138,7 +138,7 @@ export function WorkoutSessionSidebar({
           <Button
             type="button"
             onClick={onRequestFinish}
-            data-tutorial="active-finish-workout"
+            data-tutorial="active-finish-workout-desktop"
             className="w-full"
           >
             Finalizar treino
@@ -239,7 +239,7 @@ export function MobileWorkoutActionBar({
           type="button"
           onClick={onRequestFinish}
           disabled={savingWorkout}
-          data-tutorial="active-finish-workout"
+          data-tutorial="active-finish-workout-bottom"
           className="ff-mobile-workout-action-bar__finish h-12 shrink-0 rounded-2xl bg-[var(--ff-accent)] px-5 text-sm font-black text-white shadow-[0_0_24px_var(--ff-accent-shadow)] transition active:scale-95 disabled:opacity-60"
         >
           Concluir treino

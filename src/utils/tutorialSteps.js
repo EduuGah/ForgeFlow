@@ -456,7 +456,8 @@ const workoutSteps = [
     example: 'Se o descanso automático estiver ativo, o timer começa depois do toque.',
     target: '[data-tutorial="active-set-complete-button"]',
     route: '/start-workout',
-    placement: 'left',
+    placement: 'top',
+    allowInteraction: true,
     targetLabel: 'Concluir',
   }),
   step({
@@ -499,10 +500,11 @@ const workoutSteps = [
     title: 'Finalizar treino',
     description: 'Ao finalizar, treinos reais vão para o histórico. Treinos de tutorial são descartados com segurança.',
     example: 'O app nunca salva dados fake como treino real.',
-    target: '[data-tutorial="active-finish-workout"]',
+    target: '[data-tutorial="active-finish-workout-bottom"], [data-tutorial="active-finish-workout-hero"], [data-tutorial="active-finish-workout-desktop"]',
     route: '/start-workout',
     placement: 'top',
-    targetLabel: 'Finalizar',
+    allowInteraction: true,
+    targetLabel: 'Concluir treino',
   }),
 ]
 
@@ -825,8 +827,8 @@ const settingsSteps = [
     example: 'Use “Rever Treino Ativo” para abrir o modo demo de novo.',
     target: '[data-tutorial="settings-tutorial"]',
     route: '/settings',
-    placement: 'left',
-    targetLabel: 'Tutorial',
+    placement: 'top',
+    targetLabel: 'Tutorial e ajuda',
   }),
 ]
 
@@ -883,7 +885,7 @@ export const tutorialFlows = {
         example: 'Finalize agora ou reabra qualquer seção em Configurações.',
         route: '/settings',
         target: '[data-tutorial="settings-tutorial"]',
-        placement: 'left',
+        placement: 'top',
         targetLabel: 'Rever depois',
       }),
     ],

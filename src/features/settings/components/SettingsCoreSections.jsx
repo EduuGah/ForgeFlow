@@ -47,7 +47,7 @@ export function GooglePasswordNotice({ user }) {
 
 export function SettingsTutorialSection() {
   return (
-    <Card data-tutorial="settings-tutorial">
+    <Card data-tutorial="settings-tutorial-card">
       <TutorialLauncher />
     </Card>
   )

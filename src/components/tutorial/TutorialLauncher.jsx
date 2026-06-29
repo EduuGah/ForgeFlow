@@ -26,8 +26,8 @@ export default function TutorialLauncher({ compact = false }) {
     : `Você concluiu ${completedCount} de ${sections.length} seções.`
 
   return (
-    <section className={`ff-tutorial-launcher ${compact ? 'ff-tutorial-launcher--compact' : ''}`} data-tutorial="settings-tutorial">
-      <div className="ff-tutorial-launcher__header">
+    <section className={`ff-tutorial-launcher ${compact ? 'ff-tutorial-launcher--compact' : ''}`} data-tutorial="settings-tutorial-panel">
+      <div className="ff-tutorial-launcher__header" data-tutorial="settings-tutorial">
         <div>
           <span className="ff-tutorial-tooltip__eyebrow">Ajuda do app</span>
           <h3>Tutorial e ajuda</h3>

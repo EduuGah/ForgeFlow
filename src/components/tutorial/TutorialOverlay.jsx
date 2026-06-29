@@ -8,7 +8,8 @@ import TutorialTooltip from './TutorialTooltip'
 const TARGET_RETRY_LIMIT = 18
 const TARGET_RETRY_DELAY = 90
 const EDGE_MARGIN = 12
-const BOTTOM_SAFE_GAP = 92
+const TOP_SAFE_GAP = 84
+const BOTTOM_SAFE_GAP = 104
 
 function getViewport() {
   if (typeof window === 'undefined') return { width: 0, height: 0 }
@@ -21,6 +22,18 @@ function getViewport() {
   }
 }
 
+function isUsableTarget(element) {
+  if (!element || typeof window === 'undefined') return false
+  const rect = element.getBoundingClientRect()
+  const style = window.getComputedStyle(element)
+
+  if (rect.width <= 0 || rect.height <= 0) return false
+  if (style.display === 'none' || style.visibility === 'hidden') return false
+  if (element.closest('[hidden], [aria-hidden="true"]')) return false
+
+  return true
+}
+
 function getFirstMatchingElement(selector = '') {
   if (typeof document === 'undefined' || !selector) return null
 
@@ -31,8 +44,18 @@ function getFirstMatchingElement(selector = '') {
 
   for (const item of selectors) {
     try {
-      const element = document.querySelector(item)
-      if (element) return element
+      const elements = Array.from(document.querySelectorAll(item))
+      const usable = elements.filter(isUsableTarget)
+      if (usable.length > 0) {
+        const viewport = getViewport()
+        const viewportBottom = viewport.height + viewport.offsetTop
+        const viewportRight = viewport.width + viewport.offsetLeft
+
+        return usable.find((element) => {
+          const rect = element.getBoundingClientRect()
+          return rect.bottom > viewport.offsetTop && rect.top < viewportBottom && rect.right > viewport.offsetLeft && rect.left < viewportRight
+        }) || usable[0]
+      }
     } catch {
       // Ignora seletores inválidos para manter o tutorial vivo.
     }
@@ -58,6 +81,79 @@ function findScrollableParents(element) {
   return parents
 }
 
+function getTutorialLayerAncestors(element) {
+  if (!element || typeof window === 'undefined') return []
+  const layers = []
+  let parent = element.parentElement
+
+  while (parent && parent !== document.body && parent !== document.documentElement) {
+    const style = window.getComputedStyle(parent)
+    const hasStackingContext = (
+      /(fixed|sticky)/i.test(style.position) ||
+      style.transform !== 'none' ||
+      style.filter !== 'none' ||
+      style.perspective !== 'none' ||
+      Number(style.opacity) < 1 ||
+      (style.position !== 'static' && style.zIndex !== 'auto')
+    )
+
+    if (hasStackingContext) layers.push(parent)
+    parent = parent.parentElement
+  }
+
+  return layers
+}
+
+function getScrollParent(element) {
+  if (!element || typeof window === 'undefined') return null
+  let parent = element.parentElement
+
+  while (parent && parent !== document.body) {
+    const style = window.getComputedStyle(parent)
+    const overflowY = `${style.overflowY}${style.overflow}`
+    if (/(auto|scroll|overlay)/i.test(overflowY) && parent.scrollHeight > parent.clientHeight) {
+      return parent
+    }
+    parent = parent.parentElement
+  }
+
+  return document.scrollingElement || document.documentElement
+}
+
+function scrollTargetIntoComfortZone(element, updateRect) {
+  if (!element || typeof window === 'undefined') return
+
+  const viewport = getViewport()
+  const topSafe = TOP_SAFE_GAP + viewport.offsetTop
+  const bottomSafe = viewport.height + viewport.offsetTop - BOTTOM_SAFE_GAP
+  const currentRect = element.getBoundingClientRect()
+  const isComfortable = currentRect.top >= topSafe && currentRect.bottom <= bottomSafe
+
+  if (isComfortable) {
+    window.requestAnimationFrame(updateRect)
+    return
+  }
+
+  const scrollParent = getScrollParent(element)
+
+  try {
+    if (scrollParent && scrollParent !== document.documentElement && scrollParent !== document.body) {
+      const parentRect = scrollParent.getBoundingClientRect()
+      const elementCenter = currentRect.top - parentRect.top + scrollParent.scrollTop + (currentRect.height / 2)
+      const desiredTop = elementCenter - (scrollParent.clientHeight / 2)
+      scrollParent.scrollTo({ top: Math.max(0, desiredTop), behavior: 'smooth' })
+    } else {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
+    }
+  } catch {
+    element.scrollIntoView()
+  }
+
+  window.setTimeout(updateRect, 120)
+  window.setTimeout(updateRect, 320)
+  window.setTimeout(updateRect, 520)
+}
+
 function toRect(element) {
   if (!element) return null
   const rect = element.getBoundingClientRect()
@@ -80,11 +176,18 @@ function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max)
 }
 
+function getOverlapArea(a, b) {
+  if (!a || !b) return 0
+  const x = Math.max(0, Math.min(a.left + a.width, b.right) - Math.max(a.left, b.left))
+  const y = Math.max(0, Math.min(a.top + a.height, b.bottom) - Math.max(a.top, b.top))
+  return x * y
+}
+
 function computeTooltipPosition({ rect, tooltipSize, placement = 'auto', targetMissing = false }) {
   const viewport = getViewport()
   const width = tooltipSize.width || Math.min(360, viewport.width - EDGE_MARGIN * 2)
   const height = tooltipSize.height || 260
-  const minTop = EDGE_MARGIN + viewport.offsetTop
+  const minTop = EDGE_MARGIN + TOP_SAFE_GAP / 3 + viewport.offsetTop
   const maxTop = viewport.height + viewport.offsetTop - height - BOTTOM_SAFE_GAP
   const minLeft = EDGE_MARGIN + viewport.offsetLeft
   const maxLeft = viewport.width + viewport.offsetLeft - width - EDGE_MARGIN
@@ -96,32 +199,45 @@ function computeTooltipPosition({ rect, tooltipSize, placement = 'auto', targetM
     }
   }
 
-  const gap = 16
+  const gap = 18
   const centeredLeft = rect.left + rect.width / 2 - width / 2
   const centeredTop = rect.top + rect.height / 2 - height / 2
-  const normalizedPlacement = placement === 'auto'
-    ? rect.top > viewport.height * 0.48
-      ? 'top'
-      : 'bottom'
-    : placement
+  const autoPlacement = rect.top > viewport.height * 0.52 ? 'top' : 'bottom'
+  const preferred = placement === 'auto' ? autoPlacement : placement
 
-  const candidates = {
+  const rawCandidates = {
     top: { top: rect.top - height - gap, left: centeredLeft },
     bottom: { top: rect.bottom + gap, left: centeredLeft },
     left: { top: centeredTop, left: rect.left - width - gap },
     right: { top: centeredTop, left: rect.right + gap },
   }
 
-  let selected = candidates[normalizedPlacement] || candidates.bottom
+  const order = [preferred, autoPlacement, 'top', 'bottom', 'right', 'left']
+    .filter((item, index, arr) => item && arr.indexOf(item) === index)
 
-  if (selected.top < minTop || selected.top > maxTop) {
-    const opposite = normalizedPlacement === 'top' ? candidates.bottom : candidates.top
-    if (opposite.top >= minTop && opposite.top <= maxTop) selected = opposite
-  }
+  const scored = order.map((key, index) => {
+    const raw = rawCandidates[key] || rawCandidates.bottom
+    const top = clamp(raw.top, minTop, maxTop)
+    const left = clamp(raw.left, minLeft, maxLeft)
+    const box = { top, left, width, height }
+    const overflow = Math.max(0, minTop - raw.top) + Math.max(0, raw.top - maxTop) + Math.max(0, minLeft - raw.left) + Math.max(0, raw.left - maxLeft)
+    const overlap = getOverlapArea(box, rect)
+    const preferredPenalty = index * 120
+
+    return {
+      key,
+      top,
+      left,
+      score: overlap * 6 + overflow * 12 + preferredPenalty,
+    }
+  })
+
+  scored.sort((a, b) => a.score - b.score)
+  const selected = scored[0] || { top: minTop, left: minLeft }
 
   return {
-    top: clamp(selected.top, minTop, maxTop),
-    left: clamp(selected.left, minLeft, maxLeft),
+    top: selected.top,
+    left: selected.left,
   }
 }
 
@@ -222,19 +338,16 @@ function useTutorialTarget(step, pathname) {
 
     scrollDoneRef.current = step.id
     window.setTimeout(() => {
-      try {
-        target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
-      } catch {
-        target.scrollIntoView()
-      }
-      window.setTimeout(updateRect, 260)
+      scrollTargetIntoComfortZone(target, updateRect)
     }, 90)
   }, [step?.id, step?.scrollIntoView, target, updateRect])
 
   useEffect(() => {
     if (!target) return undefined
 
+    const layers = getTutorialLayerAncestors(target)
     target.classList.add('ff-tutorial-active-target')
+    layers.forEach((layer) => layer.classList.add('ff-tutorial-active-layer'))
     updateRect()
 
     const scrollParents = findScrollableParents(target)
@@ -242,6 +355,7 @@ function useTutorialTarget(step, pathname) {
     const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(handleUpdate) : null
 
     observer?.observe(target)
+    layers.forEach((layer) => observer?.observe(layer))
     scrollParents.forEach((item) => item.addEventListener('scroll', handleUpdate, { passive: true }))
     window.addEventListener('resize', handleUpdate)
     window.addEventListener('orientationchange', handleUpdate)
@@ -250,6 +364,7 @@ function useTutorialTarget(step, pathname) {
 
     return () => {
       target.classList.remove('ff-tutorial-active-target')
+      layers.forEach((layer) => layer.classList.remove('ff-tutorial-active-layer'))
       observer?.disconnect()
       scrollParents.forEach((item) => item.removeEventListener('scroll', handleUpdate))
       window.removeEventListener('resize', handleUpdate)

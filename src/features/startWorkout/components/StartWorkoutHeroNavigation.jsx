@@ -50,7 +50,7 @@ export function ActiveWorkoutHero({
           onClick={handleFinishClick}
           disabled={savingWorkout}
           className="ff-forge-active-hero__finish"
-          data-tutorial="active-finish-workout"
+          data-tutorial="active-finish-workout-hero"
         >
           {savingWorkout ? 'Salvando...' : 'Concluir'}
         </button>
