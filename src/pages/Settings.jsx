@@ -32,6 +32,7 @@ import {
   applyAppSettingsToDocument,
   defaultSettings,
   getUserAppSettings,
+  mergeSettingsByFreshness,
   saveUserAppSettings,
 } from '../utils/settingsUtils'
 import { getUserStorageData } from '../utils/userStorage'
@@ -422,24 +423,13 @@ function Settings() {
     return accentColors[settings.accentColor] || accentColors.blue || Object.values(accentColors)[0]
   }, [settings.accentColor])
 
-  const colorGroups = useMemo(() => [
-    { title: 'Recomendadas', keys: ['blue', 'purple', 'green', 'orange', 'rose', 'cyan'] },
-    { title: 'Frias', keys: ['indigo', 'sky', 'cyan', 'teal', 'emerald'] },
-    { title: 'Quentes', keys: ['amber', 'orange', 'red', 'crimson', 'pink', 'fuchsia'] },
-    { title: 'Neutras', keys: ['slate', 'zinc'] },
-  ], [])
-
-  const visibleAccentColors = useMemo(() => {
+  const visibleAccentColorKeys = useMemo(() => {
     const search = colorSearch.trim().toLowerCase()
-    if (!search) return colorGroups
 
-    return [{
-      title: 'Resultado da busca',
-      keys: Object.entries(accentColors)
-        .filter(([key, color]) => `${key} ${color.name}`.toLowerCase().includes(search))
-        .map(([key]) => key),
-    }]
-  }, [colorGroups, colorSearch])
+    return Object.entries(accentColors)
+      .filter(([key, color]) => !search || `${key} ${color.name}`.toLowerCase().includes(search))
+      .map(([key]) => key)
+  }, [colorSearch])
 
   const syncBadgeText = useMemo(() => getSyncBadgeText(syncStatus), [syncStatus])
   const reminderSummary = useMemo(() => getReminderSummary(settings), [settings])
@@ -485,10 +475,11 @@ function Settings() {
 
         if (!isMounted) return
 
-        const mergedSettings = saveUserAppSettings(user, {
-          ...cachedSettings,
-          ...settingsFromDatabase,
-        })
+        const mergedSettings = saveUserAppSettings(
+          user,
+          mergeSettingsByFreshness(cachedSettings, settingsFromDatabase),
+          { touch: false }
+        )
 
         setSettings(mergedSettings)
         applyAppSettingsToDocument(mergedSettings)
@@ -510,6 +501,16 @@ function Settings() {
       isMounted = false
     }
   }, [user])
+
+  useEffect(() => {
+    function handleSettingsChanged(event) {
+      if (!event?.detail) return
+      setSettings(event.detail)
+    }
+
+    window.addEventListener('forgeflow:settings-changed', handleSettingsChanged)
+    return () => window.removeEventListener('forgeflow:settings-changed', handleSettingsChanged)
+  }, [])
 
   async function handleUpdateSetting(key, value) {
     const patch = typeof key === 'object' && key !== null ? key : { [key]: value }
@@ -776,7 +777,7 @@ function Settings() {
                 currentAccent={currentAccent}
                 colorSearch={colorSearch}
                 onColorSearchChange={setColorSearch}
-                visibleAccentColors={visibleAccentColors}
+                visibleAccentColorKeys={visibleAccentColorKeys}
                 pendingSettingKey={pendingSettingKey}
                 onUpdateSetting={handleUpdateSetting}
               />

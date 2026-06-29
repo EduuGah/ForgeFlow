@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { apiFetch, saveAuthToken } from '../services/api'
 import { useAuth } from '../context/AuthContext'
-import forgeflowIcon from '../assets/forgeflow-icon.png'
+import ForgeFlowIcon from '../components/brand/ForgeFlowIcon'
 import { applyAppSettingsToDocument, getAppSettings } from '../utils/settingsUtils'
 import { getGoogleLoginUrl } from '../utils/platformUtils'
 import { markWelcomeTutorialPending } from '../utils/tutorialUtils'
@@ -87,12 +87,8 @@ function Register() {
     <main className="ff-hevy-page ff-hevy-page-register ff-auth-route text-[var(--ff-text)]">
         <section className="ff-auth-route__shell">
             <div className="ff-auth-card">
-                <div className="login-logo-card mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-3xl bg-white">
-                    <img
-                        src={forgeflowIcon}
-                        alt="ForgeFlow"
-                        className="h-full w-full object-cover"
-                    />
+                <div className="login-logo-card mx-auto flex h-16 w-16 items-center justify-center overflow-hidden rounded-3xl">
+                    <ForgeFlowIcon size="100%" className="ff-brand-app-icon--soft" />
                 </div>
 
                 <div className="mt-6 text-center">

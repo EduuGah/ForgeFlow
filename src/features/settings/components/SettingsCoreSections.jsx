@@ -10,6 +10,7 @@ import {
 
 import Card from '../../../components/ui/Card'
 import TutorialLauncher from '../../../components/tutorial/TutorialLauncher'
+import ForgeFlowIcon from '../../../components/brand/ForgeFlowIcon'
 import Badge from '../../../components/ui/Badge'
 import { accentColors } from '../../../utils/settingsUtils'
 import {
@@ -94,7 +95,7 @@ export function SettingsAppearanceSection({
   currentAccent,
   colorSearch,
   onColorSearchChange,
-  visibleAccentColors,
+  visibleAccentColorKeys,
   pendingSettingKey,
   onUpdateSetting,
 }) {
@@ -162,47 +163,40 @@ export function SettingsAppearanceSection({
           </div>
         </div>
 
-        <div className="mt-4 space-y-5">
-          {visibleAccentColors.map((group) => (
-            <div
-              key={group.title}
-              className="rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4"
-            >
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--ff-muted)]">
-                  {group.title}
-                </p>
+        <div className="mt-4 rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--ff-muted)]">
+              Todas as cores
+            </p>
 
-                <span className="text-xs font-bold text-[var(--ff-muted)]">
-                  {group.keys.length} cor(es)
-                </span>
-              </div>
+            <span className="text-xs font-bold text-[var(--ff-muted)]">
+              {visibleAccentColorKeys.length} cor(es)
+            </span>
+          </div>
 
-              {group.keys.length === 0 ? (
-                <p className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 text-sm text-[var(--ff-muted)]">
-                  Nenhuma cor encontrada.
-                </p>
-              ) : (
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                  {group.keys.map((key) => {
-                    const color = accentColors[key]
+          {visibleAccentColorKeys.length === 0 ? (
+            <p className="rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-3 text-sm text-[var(--ff-muted)]">
+              Nenhuma cor encontrada.
+            </p>
+          ) : (
+            <div className="ff-settings-unified-color-grid">
+              {visibleAccentColorKeys.map((key) => {
+                const color = accentColors[key]
 
-                    if (!color) return null
+                if (!color) return null
 
-                    return (
-                      <ColorOption
-                        key={`${group.title}-${key}`}
-                        colorKey={key}
-                        color={color}
-                        active={settings.accentColor === key}
-                        onClick={() => onUpdateSetting('accentColor', key)}
-                      />
-                    )
-                  })}
-                </div>
-              )}
+                return (
+                  <ColorOption
+                    key={key}
+                    colorKey={key}
+                    color={color}
+                    active={settings.accentColor === key}
+                    onClick={() => onUpdateSetting('accentColor', key)}
+                  />
+                )
+              })}
             </div>
-          ))}
+          )}
         </div>
 
         <div className="mt-4 rounded-3xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)] p-4">
@@ -233,18 +227,28 @@ export function SettingsAppearanceSection({
           )}
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          <span className="rounded-full bg-[var(--ff-accent)] px-3 py-1 text-xs font-black text-white">
-            Botão principal
-          </span>
+        <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap gap-2">
+            <span className="rounded-full bg-[var(--ff-accent)] px-3 py-1 text-xs font-black text-white">
+              Botão principal
+            </span>
 
-          <span className="rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-3 py-1 text-xs font-black text-[var(--ff-accent-text)]">
-            Destaque
-          </span>
+            <span className="rounded-full border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-3 py-1 text-xs font-black text-[var(--ff-accent-text)]">
+              Destaque
+            </span>
 
-          <span className="rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface)] px-3 py-1 text-xs font-black text-[var(--ff-muted)]">
-            Superfície
-          </span>
+            <span className="rounded-full border border-[var(--ff-border)] bg-[var(--ff-surface)] px-3 py-1 text-xs font-black text-[var(--ff-muted)]">
+              Superfície
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3 rounded-3xl border border-[var(--ff-accent-border)]/40 bg-[var(--ff-card)] p-3">
+            <ForgeFlowIcon size={48} className="ff-brand-app-icon--soft" />
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--ff-accent-text)]">Ícone interno</p>
+              <p className="text-xs text-[var(--ff-muted)]">Segue a cor escolhida</p>
+            </div>
+          </div>
         </div>
       </div>
 

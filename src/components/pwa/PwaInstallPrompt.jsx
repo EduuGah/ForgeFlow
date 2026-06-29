@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Download, Share, Smartphone, X } from 'lucide-react'
 
-import forgeflowIcon from '../../assets/forgeflow-icon.png'
+import ForgeFlowIcon from '../brand/ForgeFlowIcon'
 import Button from '../ui/Button'
 import Card from '../ui/Card'
 
@@ -141,11 +141,7 @@ function PwaInstallPrompt() {
 
           <div className="flex items-start gap-3 pr-10">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)] shadow-[0_0_18px_var(--ff-accent-shadow)]">
-              <img
-                src={forgeflowIcon}
-                alt="ForgeFlow"
-                className="h-full w-full object-cover"
-              />
+              <ForgeFlowIcon size="100%" className="ff-brand-app-icon--soft" />
             </div>
 
             <div className="min-w-0">

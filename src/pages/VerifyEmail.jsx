@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { CheckCircle2, MailCheck, RefreshCw, ShieldCheck } from 'lucide-react'
 
-import forgeflowIcon from '../assets/forgeflow-icon.png'
+import ForgeFlowIcon from '../components/brand/ForgeFlowIcon'
 import { useAuth } from '../context/AuthContext'
 import { apiFetch } from '../services/api'
 import { unlockGlobalScroll } from '../utils/scrollLockUtils'
@@ -144,11 +144,7 @@ function VerifyEmail() {
       <section className="ff-auth-route__shell">
         <div className="ff-auth-card">
           <div className="flex items-center gap-3">
-            <img
-              src={forgeflowIcon}
-              alt="ForgeFlow"
-              className="h-12 w-12 rounded-2xl object-cover"
-            />
+            <ForgeFlowIcon size={48} className="ff-brand-app-icon--soft" />
             <div className="min-w-0">
               <p className="text-xs font-black uppercase tracking-[0.16em] text-[var(--ff-accent-text)]">
                 Verificacao

@@ -21,7 +21,7 @@ import {
 } from 'lucide-react'
 import { Link, NavLink } from 'react-router-dom'
 
-import forgeflowIcon from '../../assets/forgeflow-icon.png'
+import ForgeFlowIcon from '../brand/ForgeFlowIcon'
 import { useAuth } from '../../context/AuthContext'
 import { getUserAppSettings } from '../../utils/settingsUtils'
 
@@ -125,11 +125,7 @@ function Sidebar({ isOpen = false, onClose }) {
             <div className="flex items-center justify-between gap-4 rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
               <div className="flex min-w-0 items-center gap-3">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)] shadow-[0_0_20px_var(--ff-accent-shadow)]">
-                  <img
-                    src={forgeflowIcon}
-                    alt="ForgeFlow"
-                    className="h-full w-full object-cover"
-                  />
+                  <ForgeFlowIcon size="100%" className="ff-brand-app-icon--soft" />
                 </div>
 
                 <div className="min-w-0">

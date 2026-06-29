@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext'
 import { normalizeNotificationFromApi, formatDateTime, getNotificationMeta } from '../../features/notifications/notificationUtils'
 import { apiFetch } from '../../services/api'
 import { clearLegacyForgeFlowStorage, getUserStorageData } from '../../utils/userStorage'
-import forgeflowIcon from '../../assets/forgeflow-icon.png'
+import ForgeFlowIcon from '../brand/ForgeFlowIcon'
 
 const MAX_PREVIEW_NOTIFICATIONS = 5
 
@@ -245,7 +245,7 @@ function NotificationBell() {
         <header className="ff-notification-menu__header">
           <div className="ff-notification-menu__brand-copy">
             <span className="ff-notification-menu__brand-icon" aria-hidden="true">
-              <img src={forgeflowIcon} alt="" />
+              <ForgeFlowIcon size="100%" className="ff-brand-app-icon--soft" decorative />
             </span>
             <span id="ff-notification-menu-title">Notificações</span>
             <strong>{unreadLabel}</strong>

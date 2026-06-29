@@ -370,6 +370,16 @@ function Profile() {
     }
   }, [user])
 
+  useEffect(() => {
+    function handleSettingsChanged(event) {
+      if (!event?.detail) return
+      setSettings(event.detail)
+    }
+
+    window.addEventListener('forgeflow:settings-changed', handleSettingsChanged)
+    return () => window.removeEventListener('forgeflow:settings-changed', handleSettingsChanged)
+  }, [])
+
   const stats = useMemo(() => {
     return calculateProfileStats(history, progressPhotos, bodyWeight)
   }, [bodyWeight, history, progressPhotos])
@@ -412,7 +422,7 @@ function Profile() {
     }
   }
 
-  function handleSettingChange(key, value) {
+  async function handleSettingChange(key, value) {
     const updatedSettings = saveUserAppSettings(user, {
       ...settings,
       [key]: value,
@@ -420,7 +430,17 @@ function Profile() {
 
     setSettings(updatedSettings)
     applyAppSettingsToDocument(updatedSettings)
-    showToast('success', 'Preferência salva', 'Sua experiência foi atualizada.')
+
+    try {
+      await apiFetch('/settings', {
+        method: 'PUT',
+        body: JSON.stringify(updatedSettings),
+      })
+      showToast('success', 'Preferência salva', 'Sua experiência foi atualizada.')
+    } catch (error) {
+      console.error(error)
+      showToast('success', 'Preferência salva neste aparelho', 'Será sincronizada quando o servidor estiver disponível.')
+    }
   }
 
   function handlePrivacyToggle(key) {

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { apiFetch, saveAuthToken } from '../services/api'
 import { useAuth } from '../context/AuthContext'
-import forgeflowIcon from '../assets/forgeflow-icon.png'
+import ForgeFlowIcon from '../components/brand/ForgeFlowIcon'
 import { applyAppSettingsToDocument, getAppSettings } from '../utils/settingsUtils'
 import { getGoogleLoginUrl, isNativeApp } from '../utils/platformUtils'
 import { unlockGlobalScroll } from '../utils/scrollLockUtils'
@@ -99,11 +99,7 @@ function Login() {
         <div className="ff-login-shell">
             <div className="ff-login-card">
                 <div className="ff-login-logo login-logo-card">
-                    <img
-                        src={forgeflowIcon}
-                        alt="ForgeFlow"
-                        className="h-full w-full object-cover"
-                    />
+                    <ForgeFlowIcon size="100%" className="ff-brand-app-icon--soft" />
                 </div>
 
                 <div className="ff-login-title">

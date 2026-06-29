@@ -4,6 +4,7 @@ export const defaultSettings = {
   // Aparência
   themeMode: 'dark',
   accentColor: 'blue',
+  settingsUpdatedAt: '',
   compactMobile: false,
   simpleMode: false,
 
@@ -314,6 +315,7 @@ export function normalizeSettings(settings = {}) {
 
   normalized.themeMode = normalizeThemeMode(normalized.themeMode)
   normalized.accentColor = normalizeAccentColor(normalized.accentColor)
+  normalized.settingsUpdatedAt = typeof normalized.settingsUpdatedAt === 'string' ? normalized.settingsUpdatedAt : ''
   normalized.workoutsVisibleLimit = Math.min(20, Math.max(1, Number(normalized.workoutsVisibleLimit) || defaultSettings.workoutsVisibleLimit))
   normalized.weightUnit = normalized.weightUnit === 'lb' ? 'lb' : 'kg'
   normalized.visualDensity = normalized.visualDensity === 'compact' ? 'compact' : 'comfortable'
@@ -379,8 +381,41 @@ export function getAppSettings() {
   }
 }
 
-export function saveAppSettings(settings) {
-  const updatedSettings = normalizeSettings(settings)
+function withSettingsTimestamp(settings, { touch = true } = {}) {
+  if (!touch) return settings
+
+  return {
+    ...settings,
+    settingsUpdatedAt: new Date().toISOString(),
+  }
+}
+
+export function mergeSettingsByFreshness(localSettings = {}, remoteSettings = {}) {
+  const hasRemoteSettings = remoteSettings && typeof remoteSettings === 'object' && Object.keys(remoteSettings).length > 0
+
+  if (!hasRemoteSettings) return normalizeSettings(localSettings)
+
+  const normalizedLocal = normalizeSettings(localSettings)
+  const normalizedRemote = normalizeSettings(remoteSettings)
+  const localTime = Date.parse(normalizedLocal.settingsUpdatedAt || '') || 0
+  const remoteTime = Date.parse(normalizedRemote.settingsUpdatedAt || '') || 0
+
+  if (localTime || remoteTime) {
+    return normalizeSettings(
+      remoteTime > localTime
+        ? { ...normalizedLocal, ...normalizedRemote }
+        : { ...normalizedRemote, ...normalizedLocal }
+    )
+  }
+
+  return normalizeSettings({
+    ...normalizedLocal,
+    ...normalizedRemote,
+  })
+}
+
+export function saveAppSettings(settings, options = {}) {
+  const updatedSettings = normalizeSettings(withSettingsTimestamp(settings, options))
 
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(updatedSettings))
 
@@ -406,9 +441,9 @@ export function getUserAppSettings(user) {
   }
 }
 
-export function saveUserAppSettings(user, settings) {
+export function saveUserAppSettings(user, settings, options = {}) {
   const key = getUserSettingsKey(user)
-  const updatedSettings = normalizeSettings(settings)
+  const updatedSettings = normalizeSettings(withSettingsTimestamp(settings, options))
 
   localStorage.setItem(key, JSON.stringify(updatedSettings))
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(updatedSettings))
