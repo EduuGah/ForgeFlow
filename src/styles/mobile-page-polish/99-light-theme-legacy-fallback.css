@@ -28,6 +28,7 @@ html[data-theme='light'] .ff-auth-route {
 
 html[data-theme='light'] #app-header,
 html[data-theme='light'] #app-header .safe-top,
+html[data-theme='light'] #app-header .safe-top > div,
 html[data-theme='light'] .ff-app-sidebar,
 html[data-theme='light'] .mobile-bottom-nav,
 html[data-theme='light'] .ff-mobile-bottom-nav,

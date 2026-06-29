@@ -4449,7 +4449,7 @@ body,
 }
 
 #app-header .safe-top > div {
-  background: rgba(24,25,27,.96);
+  background: color-mix(in srgb, var(--ff-header) 96%, transparent);
 }
 
 .ff-page-scroll-shell {
@@ -5235,7 +5235,7 @@ body,
 
   #app-header {
     border-bottom-color: var(--ff-border) !important;
-    background: rgba(12, 13, 15, .96) !important;
+    background: color-mix(in srgb, var(--ff-header) 94%, transparent) !important;
     box-shadow: 0 1px 0 rgba(255, 255, 255, .04) !important;
   }
 
@@ -5250,7 +5250,7 @@ body,
     height: 40px !important;
     min-height: 40px !important;
     border-radius: 14px !important;
-    background: rgba(255, 255, 255, .035) !important;
+    background: var(--ff-surface) !important;
   }
 
   #app-header img[alt='ForgeFlow'] {
@@ -15027,4 +15027,69 @@ body.ff-scroll-locked-by-workout-modal .ff-mobile-workout-action-bar,
 
 :root.ff-simple-mode .ff-settings-summary-grid {
   grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+}
+
+
+/* ForgeFlow fix — header stays theme-aware in light mode and admin icon keeps contrast. */
+#app-header,
+#app-header .safe-top,
+#app-header .safe-top > div {
+  background: color-mix(in srgb, var(--ff-header) 96%, transparent) !important;
+  color: var(--ff-text) !important;
+}
+
+#app-header button {
+  color: var(--ff-text-soft) !important;
+}
+
+#app-header button:hover {
+  color: var(--ff-text) !important;
+}
+
+:root[data-theme='light'] #app-header,
+:root[data-theme='light'] #app-header .safe-top,
+:root[data-theme='light'] #app-header .safe-top > div {
+  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.06) !important;
+}
+
+.ff-sidebar-admin-link {
+  border-color: transparent;
+  color: var(--ff-muted);
+}
+
+.ff-sidebar-admin-link:hover {
+  border-color: color-mix(in srgb, #8b5cf6 36%, var(--ff-border));
+  background: color-mix(in srgb, #8b5cf6 10%, var(--ff-card));
+  color: var(--ff-text);
+}
+
+.ff-sidebar-admin-link.is-active {
+  border-color: color-mix(in srgb, #8b5cf6 40%, var(--ff-border));
+  background: color-mix(in srgb, #8b5cf6 14%, var(--ff-card));
+  color: var(--ff-text);
+  box-shadow: 0 0 18px rgba(139, 92, 246, 0.14);
+}
+
+.ff-sidebar-admin-link__icon {
+  background: color-mix(in srgb, #8b5cf6 12%, var(--ff-surface-2));
+  color: #c4b5fd;
+}
+
+.ff-sidebar-admin-link:hover .ff-sidebar-admin-link__icon,
+.ff-sidebar-admin-link.is-active .ff-sidebar-admin-link__icon {
+  background: color-mix(in srgb, #8b5cf6 16%, var(--ff-surface-2));
+}
+
+:root[data-theme='light'] .ff-sidebar-admin-link {
+  color: var(--ff-text-soft);
+}
+
+:root[data-theme='light'] .ff-sidebar-admin-link:hover,
+:root[data-theme='light'] .ff-sidebar-admin-link.is-active {
+  color: #4c1d95;
+}
+
+:root[data-theme='light'] .ff-sidebar-admin-link__icon {
+  background: rgba(139, 92, 246, 0.12);
+  color: #6d28d9;
 }

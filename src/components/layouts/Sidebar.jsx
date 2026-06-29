@@ -201,12 +201,13 @@ function Sidebar({ isOpen = false, onClose }) {
                   to="/admin"
                   onClick={onClose}
                   className={({ isActive }) =>
-                    isActive
-                      ? 'group flex min-h-12 items-center gap-3 rounded-2xl border border-purple-400/35 bg-purple-500/10 px-4 py-3 text-purple-100 shadow-[0_0_18px_rgba(168,85,247,0.18)]'
-                      : 'group flex min-h-12 items-center gap-3 rounded-2xl border border-transparent px-4 py-3 text-[var(--ff-muted)] transition hover:border-purple-400/30 hover:bg-purple-500/10 hover:text-purple-100'
+                    [
+                      'ff-sidebar-admin-link group flex min-h-12 items-center gap-3 rounded-2xl border px-4 py-3 transition',
+                      isActive ? 'is-active' : '',
+                    ].filter(Boolean).join(' ')
                   }
                 >
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-200 transition group-hover:bg-purple-500/15">
+                  <span className="ff-sidebar-admin-link__icon flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl transition">
                     <ShieldCheck size={21} />
                   </span>
 
