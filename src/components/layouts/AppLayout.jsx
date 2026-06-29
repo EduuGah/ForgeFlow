@@ -1,8 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
-import { Download, Dumbbell, Menu } from 'lucide-react'
+import { Download, Menu } from 'lucide-react'
 import { Outlet, useLocation } from 'react-router-dom'
 
-import forgeflowIcon from '../../assets/forgeflow-icon.png'
 import { useAuth } from '../../context/AuthContext'
 import { useWorkoutSession } from '../../context/WorkoutSessionContext'
 import { apiFetch } from '../../services/api'
@@ -434,16 +433,9 @@ function AppLayout() {
               </button>
 
               <div className="flex min-w-0 items-center gap-3">
-                <div className="ff-header-brand-icon flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface-2)] text-[var(--ff-accent)] shadow-[0_0_18px_var(--ff-accent-shadow)]">
-                  <Dumbbell className="ff-header-brand-icon__fallback" size={22} aria-hidden="true" />
-                  <img
-                    src={forgeflowIcon}
-                    alt="ForgeFlow"
-                    className="ff-header-brand-icon__img"
-                    onError={(event) => {
-                      event.currentTarget.style.display = 'none'
-                    }}
-                  />
+                <div className="ff-header-brand-icon flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] text-[var(--ff-accent)] shadow-[0_0_18px_var(--ff-accent-shadow)]" aria-label="ForgeFlow">
+                  <span className="ff-header-brand-icon__monogram" aria-hidden="true">F</span>
+                  <span className="ff-header-brand-icon__barbell" aria-hidden="true" />
                 </div>
 
                 <div className="min-w-0">
