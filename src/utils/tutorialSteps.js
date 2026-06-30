@@ -490,8 +490,9 @@ const workoutSteps = [
     example: 'Essas anotações ajudam a interpretar o histórico depois.',
     target: '[data-tutorial="active-workout-notes"]',
     route: '/start-workout',
-    placement: 'left',
+    placement: 'top',
     optional: true,
+    scrollIntoView: true,
     targetLabel: 'Notas',
   }),
   step({

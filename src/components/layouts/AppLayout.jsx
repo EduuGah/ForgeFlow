@@ -17,6 +17,7 @@ import {
 
 import MobileBottomNav from './MobileBottomNav'
 import NotificationBell from '../notifications/NotificationBell'
+import ForgeFlowIcon from '../brand/ForgeFlowIcon'
 import { generateSmartNotifications } from '../../utils/notificationUtils'
 import { isStandalonePwaMode } from '../../utils/pwaUtils'
 import { isCapacitorLayout } from '../../utils/platformUtils'
@@ -436,8 +437,7 @@ function AppLayout() {
 
               <div className="flex min-w-0 items-center gap-3">
                 <div data-tutorial="theme-brand" className="ff-header-brand-icon flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-card)] text-[var(--ff-accent)] shadow-[0_0_18px_var(--ff-accent-shadow)]" aria-label="ForgeFlow">
-                  <span className="ff-header-brand-icon__monogram" aria-hidden="true">F</span>
-                  <span className="ff-header-brand-icon__barbell" aria-hidden="true" />
+                  <ForgeFlowIcon size="100%" className="ff-brand-app-icon--soft" decorative />
                 </div>
 
                 <div className="min-w-0">

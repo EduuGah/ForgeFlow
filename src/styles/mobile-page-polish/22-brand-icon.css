@@ -107,3 +107,27 @@
     font-size: 0.78rem;
   }
 }
+
+.ff-header-brand-icon .ff-brand-app-icon {
+  position: relative;
+  z-index: 2;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: inherit;
+  box-shadow: none;
+}
+
+.ff-header-brand-icon .ff-brand-app-icon::before {
+  inset: -24%;
+  opacity: 0.72;
+}
+
+.ff-header-brand-icon .ff-brand-app-icon__symbol {
+  width: 86%;
+  height: 66%;
+}
+
+.ff-active-workout-mobile-notes {
+  scroll-margin-top: calc(5.5rem + env(safe-area-inset-top));
+  scroll-margin-bottom: calc(7.5rem + env(safe-area-inset-bottom));
+}

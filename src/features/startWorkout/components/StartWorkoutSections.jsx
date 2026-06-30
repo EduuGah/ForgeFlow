@@ -10,6 +10,7 @@ export {
 
 export {
   WorkoutSessionSidebar,
+  MobileWorkoutNotesCard,
   MobileWorkoutActionBar,
   RestTimerCard,
   FinishWorkoutModal,
