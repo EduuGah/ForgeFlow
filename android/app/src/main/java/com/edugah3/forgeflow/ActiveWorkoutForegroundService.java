@@ -130,7 +130,7 @@ public class ActiveWorkoutForegroundService extends Service {
         Bitmap largeIcon = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(R.drawable.ic_stat_forgeflow)
             .setLargeIcon(largeIcon)
             .setContentTitle("ForgeFlow - " + title)
             .setContentText(compactStatus + " - " + progressLine)
@@ -150,7 +150,7 @@ public class ActiveWorkoutForegroundService extends Service {
             .setUsesChronometer(true)
             .setShowWhen(true)
             .setBadgeIconType(NotificationCompat.BADGE_ICON_SMALL)
-            .addAction(R.mipmap.ic_launcher, "Abrir detalhes", pendingIntent);
+            .addAction(R.drawable.ic_stat_forgeflow, "Abrir detalhes", pendingIntent);
 
         builder.setProgress(100, safeProgress, false);
 

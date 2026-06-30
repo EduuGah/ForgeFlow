@@ -64,6 +64,8 @@ function buildOneShotSchedule(secondsFromNow = 10) {
 function buildNotification(payload) {
   return {
     channelId: REMINDER_CHANNEL_ID,
+    smallIcon: 'ic_stat_forgeflow',
+    iconColor: '#22d3ee',
     autoCancel: true,
     ...payload,
   }
@@ -491,7 +493,7 @@ export async function updateActiveWorkoutNotification({
         channelId: ACTIVE_WORKOUT_CHANNEL_ID,
         title: 'ForgeFlow · Treino em andamento',
         body,
-        smallIcon: 'ic_launcher',
+        smallIcon: 'ic_stat_forgeflow',
         extra: {
           forgeflowRoute: '/start-workout',
           deepLink: 'forgeflow://workout/active?source=local-notification',
