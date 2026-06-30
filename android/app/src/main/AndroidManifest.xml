@@ -4,7 +4,6 @@
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
 
-    
     <queries>
         <package android:name="com.instagram.android" />
         <intent>
@@ -50,11 +49,11 @@
             </intent-filter>
         </activity>
 
-
         <service
             android:name=".ActiveWorkoutForegroundService"
             android:exported="false"
-            android:foregroundServiceType="dataSync" />
+            android:foregroundServiceType="dataSync"
+        />
 
         <provider
             android:name="androidx.core.content.FileProvider"
