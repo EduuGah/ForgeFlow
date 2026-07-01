@@ -11,6 +11,13 @@ const EDGE_MARGIN = 12
 const TOP_SAFE_GAP = 132
 const BOTTOM_SAFE_GAP = 162
 const TOOLTIP_TARGET_GAP = 30
+const MOBILE_TUTORIAL_BREAKPOINT = 640
+
+function isMobileTutorialViewport() {
+  if (typeof window === 'undefined') return false
+  const viewport = getViewport()
+  return viewport.width <= MOBILE_TUTORIAL_BREAKPOINT
+}
 
 function getViewport() {
   if (typeof window === 'undefined') return { width: 0, height: 0 }
@@ -179,12 +186,36 @@ function scrollTargetIntoComfortZone(element, updateRect, tooltipSize = { height
   const viewport = getViewport()
   const obstructions = measureFixedObstructions()
   const currentRect = element.getBoundingClientRect()
-  const tooltipReserve = Math.min(Math.max(Number(tooltipSize?.height) || 260, 220), viewport.height * 0.48)
+  const tooltipReserve = Math.min(Math.max(Number(tooltipSize?.height) || 220, 132), viewport.height * 0.34)
   const topSafe = viewport.offsetTop + obstructions.top + EDGE_MARGIN
   const bottomSafe = viewport.height + viewport.offsetTop - obstructions.bottom - EDGE_MARGIN
-  const canFitTooltipBelow = bottomSafe - currentRect.bottom >= tooltipReserve + TOOLTIP_TARGET_GAP
-  const canFitTooltipAbove = currentRect.top - topSafe >= tooltipReserve + TOOLTIP_TARGET_GAP
-  const isComfortable = currentRect.top >= topSafe && currentRect.bottom <= bottomSafe && (canFitTooltipBelow || canFitTooltipAbove)
+  const targetCenter = currentRect.top + currentRect.height / 2
+  const isMobileDock = isMobileTutorialViewport()
+
+  let isComfortable = false
+  let targetCenterInViewport
+
+  if (isMobileDock) {
+    // No mobile/APK, o card da dica fica dockado no lado oposto ao alvo.
+    // O scroll empurra o alvo para a área livre, em vez de tentar encaixar
+    // tooltip e spotlight no mesmo espaço pequeno.
+    const dockTop = placement === 'top' || (placement !== 'bottom' && targetCenter > viewport.offsetTop + viewport.height * 0.52)
+    const reserve = tooltipReserve + TOOLTIP_TARGET_GAP + 12
+    const freeTop = dockTop ? topSafe + reserve : topSafe
+    const freeBottom = dockTop ? bottomSafe : bottomSafe - reserve
+    const freeHeight = Math.max(140, freeBottom - freeTop)
+
+    targetCenterInViewport = freeTop + freeHeight * 0.5
+    isComfortable = currentRect.top >= freeTop && currentRect.bottom <= freeBottom
+  } else {
+    const canFitTooltipBelow = bottomSafe - currentRect.bottom >= tooltipReserve + TOOLTIP_TARGET_GAP
+    const canFitTooltipAbove = currentRect.top - topSafe >= tooltipReserve + TOOLTIP_TARGET_GAP
+    isComfortable = currentRect.top >= topSafe && currentRect.bottom <= bottomSafe && (canFitTooltipBelow || canFitTooltipAbove)
+
+    const safeHeight = Math.max(220, bottomSafe - topSafe)
+    const placementRatio = placement === 'top' ? 0.68 : placement === 'bottom' ? 0.32 : 0.5
+    targetCenterInViewport = topSafe + safeHeight * placementRatio
+  }
 
   if (isComfortable) {
     window.requestAnimationFrame(updateRect)
@@ -192,9 +223,6 @@ function scrollTargetIntoComfortZone(element, updateRect, tooltipSize = { height
   }
 
   const scrollParent = getScrollParent(element)
-  const safeHeight = Math.max(220, bottomSafe - topSafe)
-  const placementRatio = placement === 'top' ? 0.68 : placement === 'bottom' ? 0.32 : 0.5
-  const targetCenterInViewport = topSafe + safeHeight * placementRatio
 
   try {
     if (scrollParent && scrollParent !== document.documentElement && scrollParent !== document.body) {
@@ -259,6 +287,15 @@ function computeTooltipPosition({ rect, tooltipSize, placement = 'auto', targetM
   if (targetMissing || !rect || placement === 'center') {
     return {
       top: clamp((viewport.height - height) / 2 + viewport.offsetTop, minTop, maxTop),
+      left: clamp((viewport.width - width) / 2 + viewport.offsetLeft, minLeft, maxLeft),
+    }
+  }
+
+  if (isMobileTutorialViewport()) {
+    const targetCenter = rect.top + rect.height / 2
+    const dockTop = placement === 'top' || (placement !== 'bottom' && targetCenter > viewport.offsetTop + viewport.height * 0.52)
+    return {
+      top: dockTop ? minTop : maxTop,
       left: clamp((viewport.width - width) / 2 + viewport.offsetLeft, minLeft, maxLeft),
     }
   }

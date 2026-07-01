@@ -613,3 +613,130 @@ body.is-native-app .ff-page-start-workout .ff-mobile-workout-action-bar.ff-tutor
     font-size: 0.7rem !important;
   }
 }
+
+
+/* Hotfix 2: no mobile o tutorial vira um coach-card dockado e translúcido.
+   A dica fica menor e presa no topo/rodapé oposto ao alvo, reduzindo a chance
+   de ficar por cima do spotlight ou de botões fixos do APK. */
+@media (max-width: 640px) {
+  .ff-tutorial-overlay {
+    --ff-tutorial-mobile-card-width: min(292px, calc(100vw - 32px));
+  }
+
+  .ff-tutorial-tooltip {
+    width: var(--ff-tutorial-mobile-card-width) !important;
+    max-height: min(28vh, 190px) !important;
+    border-radius: 18px !important;
+    padding: 0.56rem !important;
+    background:
+      linear-gradient(145deg, color-mix(in srgb, var(--ff-accent-soft) 14%, transparent), transparent 48%),
+      color-mix(in srgb, var(--ff-card) 88%, transparent) !important;
+    backdrop-filter: blur(14px) saturate(1.12) !important;
+    -webkit-backdrop-filter: blur(14px) saturate(1.12) !important;
+    border-color: color-mix(in srgb, var(--ff-border) 54%, transparent) !important;
+    box-shadow: 0 14px 42px rgba(0, 0, 0, 0.24) !important;
+  }
+
+  .ff-tutorial-tooltip__header {
+    gap: 0.5rem !important;
+    align-items: center !important;
+  }
+
+  .ff-tutorial-tooltip__eyebrow {
+    padding: 0.16rem 0.42rem !important;
+    font-size: 0.56rem !important;
+    letter-spacing: 0.045em !important;
+  }
+
+  .ff-tutorial-tooltip h2 {
+    margin-top: 0.28rem !important;
+    font-size: 0.9rem !important;
+    line-height: 1.08 !important;
+    letter-spacing: -0.025em !important;
+  }
+
+  .ff-tutorial-close {
+    min-width: 30px !important;
+    min-height: 30px !important;
+    font-size: 1rem !important;
+  }
+
+  .ff-tutorial-progress {
+    margin-top: 0.42rem !important;
+  }
+
+  .ff-tutorial-progress__bar {
+    height: 4px !important;
+  }
+
+  .ff-tutorial-step-counter {
+    font-size: 0.62rem !important;
+  }
+
+  .ff-tutorial-tooltip__body {
+    margin-top: 0.42rem !important;
+  }
+
+  .ff-tutorial-tooltip__body p {
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    font-size: 0.72rem !important;
+    line-height: 1.28 !important;
+  }
+
+  .ff-tutorial-tooltip__controls {
+    gap: 0.42rem !important;
+    margin-top: 0.48rem !important;
+  }
+
+  .ff-tutorial-tooltip__primary-actions {
+    grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr) !important;
+    gap: 0.42rem !important;
+  }
+
+  .ff-tutorial-btn {
+    min-height: 34px !important;
+    border-radius: 12px !important;
+    padding: 0.42rem 0.54rem !important;
+    font-size: 0.72rem !important;
+  }
+
+  .ff-tutorial-tooltip__secondary-actions {
+    justify-content: center !important;
+    gap: 0.38rem !important;
+  }
+
+  .ff-tutorial-link-btn {
+    min-height: 26px !important;
+    border-radius: 999px !important;
+    padding: 0.22rem 0.42rem !important;
+    font-size: 0.62rem !important;
+    background: transparent !important;
+  }
+
+  .ff-tutorial-scrim {
+    background: rgba(0, 0, 0, 0.52) !important;
+    backdrop-filter: blur(0.5px) !important;
+  }
+
+  [data-theme='light'] .ff-tutorial-scrim,
+  .light .ff-tutorial-scrim,
+  :root:not(.dark) .ff-tutorial-scrim {
+    background: rgba(15, 23, 42, 0.34) !important;
+  }
+
+  .ff-tutorial-spotlight {
+    border-radius: 18px !important;
+    border-width: 1px !important;
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--ff-accent-border) 42%, transparent),
+      0 0 14px color-mix(in srgb, var(--ff-accent-soft) 45%, transparent) !important;
+  }
+
+  .ff-tutorial-target-label {
+    display: none !important;
+  }
+}
