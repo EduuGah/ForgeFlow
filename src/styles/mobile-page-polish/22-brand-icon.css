@@ -172,3 +172,99 @@ body.is-native-app.ff-complete-profile-scroll-fix .ff-hevy-page-completeprofile 
   overflow: visible !important;
   padding-bottom: max(3rem, env(safe-area-inset-bottom)) !important;
 }
+
+/* CompleteProfile hard scroll isolation.
+   This route runs outside AppLayout, so it must not depend on html/body scroll.
+   The fixed screen owns the viewport and .ff-complete-profile-scroll is the only scroller. */
+html.ff-complete-profile-scroll-fix,
+body.ff-complete-profile-scroll-fix,
+body.ff-complete-profile-scroll-fix #root,
+html.is-native-app.ff-complete-profile-scroll-fix,
+body.is-native-app.ff-complete-profile-scroll-fix,
+body.is-native-app.ff-complete-profile-scroll-fix #root {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  max-height: 100% !important;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  touch-action: pan-y !important;
+}
+
+.ff-complete-profile-screen,
+body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-screen {
+  position: fixed !important;
+  inset: 0 !important;
+  display: block !important;
+  width: 100vw !important;
+  height: var(--ff-complete-profile-vh, 100dvh) !important;
+  min-height: 0 !important;
+  max-height: var(--ff-complete-profile-vh, 100dvh) !important;
+  overflow: hidden !important;
+  background:
+    radial-gradient(circle at top, var(--ff-accent-soft), transparent 32rem),
+    var(--ff-bg) !important;
+  color: var(--ff-text) !important;
+  isolation: isolate;
+}
+
+.ff-complete-profile-scroll,
+body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-scroll {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain !important;
+  touch-action: pan-y !important;
+  box-sizing: border-box !important;
+  padding:
+    max(16px, env(safe-area-inset-top))
+    12px
+    max(7rem, calc(5rem + env(safe-area-inset-bottom))) !important;
+  scroll-padding-top: max(24px, env(safe-area-inset-top)) !important;
+  scroll-padding-bottom: max(8rem, calc(6rem + env(safe-area-inset-bottom))) !important;
+}
+
+.ff-complete-profile-shell,
+body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-shell {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  width: 100% !important;
+  min-height: 100% !important;
+  height: auto !important;
+  overflow: visible !important;
+  padding: 10px 0 max(2rem, env(safe-area-inset-bottom)) !important;
+}
+
+.ff-complete-profile-screen .ff-auth-card--wide,
+body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-screen .ff-auth-card--wide {
+  width: min(100%, 760px) !important;
+  margin: 0 auto max(5rem, calc(3rem + env(safe-area-inset-bottom))) !important;
+}
+
+.ff-complete-profile-screen input,
+.ff-complete-profile-screen select,
+.ff-complete-profile-screen textarea {
+  scroll-margin-top: max(34px, env(safe-area-inset-top)) !important;
+  scroll-margin-bottom: max(8rem, calc(6rem + env(safe-area-inset-bottom))) !important;
+}
+
+@media (max-width: 767px) {
+  .ff-complete-profile-scroll,
+  body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-scroll {
+    padding:
+      max(12px, env(safe-area-inset-top))
+      10px
+      max(8rem, calc(6rem + env(safe-area-inset-bottom))) !important;
+  }
+
+  .ff-complete-profile-screen .ff-auth-card,
+  body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-screen .ff-auth-card {
+    border-radius: 22px !important;
+    padding: 16px !important;
+  }
+}

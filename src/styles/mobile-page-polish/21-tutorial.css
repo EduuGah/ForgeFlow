@@ -530,3 +530,30 @@ body.is-native-app .ff-page-start-workout .ff-mobile-workout-action-bar.ff-tutor
     font-size: 0.8rem;
   }
 }
+
+/* Tutorial mobile safe-positioning override: keep the tip smaller and away from
+   Android status/navigation areas so the highlighted target is easier to see. */
+@media (max-width: 640px) {
+  .ff-tutorial-tooltip {
+    width: min(330px, calc(100vw - 24px)) !important;
+    max-height: min(42vh, calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 196px)) !important;
+    padding: 0.76rem !important;
+  }
+
+  .ff-tutorial-tooltip__example,
+  .ff-tutorial-tooltip__warning {
+    display: none;
+  }
+
+  .ff-tutorial-active-target {
+    scroll-margin-top: calc(9rem + env(safe-area-inset-top)) !important;
+    scroll-margin-bottom: calc(11rem + env(safe-area-inset-bottom)) !important;
+  }
+
+  .ff-tutorial-spotlight {
+    border-width: 1px !important;
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--ff-accent-border) 55%, transparent),
+      0 0 18px color-mix(in srgb, var(--ff-accent-soft) 55%, transparent) !important;
+  }
+}

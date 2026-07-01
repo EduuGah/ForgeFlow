@@ -8,9 +8,9 @@ import TutorialTooltip from './TutorialTooltip'
 const TARGET_RETRY_LIMIT = 18
 const TARGET_RETRY_DELAY = 90
 const EDGE_MARGIN = 12
-const TOP_SAFE_GAP = 104
-const BOTTOM_SAFE_GAP = 128
-const TOOLTIP_TARGET_GAP = 22
+const TOP_SAFE_GAP = 132
+const BOTTOM_SAFE_GAP = 162
+const TOOLTIP_TARGET_GAP = 30
 
 function getViewport() {
   if (typeof window === 'undefined') return { width: 0, height: 0 }
@@ -201,11 +201,11 @@ function scrollTargetIntoComfortZone(element, updateRect, tooltipSize = { height
       const parentRect = scrollParent.getBoundingClientRect()
       const currentCenter = currentRect.top + (currentRect.height / 2)
       const delta = currentCenter - targetCenterInViewport
-      scrollParent.scrollTo({ top: Math.max(0, scrollParent.scrollTop + delta), behavior: 'smooth' })
+      scrollParent.scrollTo({ top: Math.max(0, scrollParent.scrollTop + delta), behavior: 'auto' })
     } else {
       const currentCenter = currentRect.top + window.scrollY + (currentRect.height / 2)
       const desiredTop = currentCenter - targetCenterInViewport
-      window.scrollTo({ top: Math.max(0, desiredTop), behavior: 'smooth' })
+      window.scrollTo({ top: Math.max(0, desiredTop), behavior: 'auto' })
     }
   } catch {
     element.scrollIntoView({ block: 'center', inline: 'nearest' })
@@ -406,7 +406,7 @@ function useTutorialTarget(step, pathname, tooltipSize) {
       ? scrollAttemptsRef.current.count
       : 0
 
-    if (currentAttempts >= 3) return undefined
+    if (currentAttempts >= 5) return undefined
 
     scrollAttemptsRef.current = { key: scrollKey, count: currentAttempts + 1 }
     const timeoutId = window.setTimeout(() => {

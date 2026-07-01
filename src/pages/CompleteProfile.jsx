@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ImageUp, Save, Target, UserRound, X } from 'lucide-react'
 
@@ -51,6 +51,7 @@ async function compressAvatarImage(file) {
 function CompleteProfile() {
     const navigate = useNavigate()
     const { setUser } = useAuth()
+    const scrollRef = useRef(null)
 
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
@@ -65,6 +66,29 @@ function CompleteProfile() {
     const [trainingFrequency, setTrainingFrequency] = useState('')
     const [preferredSplit, setPreferredSplit] = useState('')
     const [notes, setNotes] = useState('')
+
+    useLayoutEffect(() => {
+        if (typeof window === 'undefined') return undefined
+
+        const updateViewportHeight = () => {
+            const visualHeight = window.visualViewport?.height || window.innerHeight || document.documentElement.clientHeight
+            document.documentElement.style.setProperty('--ff-complete-profile-vh', `${Math.max(320, Math.round(visualHeight))}px`)
+        }
+
+        updateViewportHeight()
+        window.addEventListener('resize', updateViewportHeight)
+        window.addEventListener('orientationchange', updateViewportHeight)
+        window.visualViewport?.addEventListener('resize', updateViewportHeight)
+        window.visualViewport?.addEventListener('scroll', updateViewportHeight)
+
+        return () => {
+            window.removeEventListener('resize', updateViewportHeight)
+            window.removeEventListener('orientationchange', updateViewportHeight)
+            window.visualViewport?.removeEventListener('resize', updateViewportHeight)
+            window.visualViewport?.removeEventListener('scroll', updateViewportHeight)
+            document.documentElement.style.removeProperty('--ff-complete-profile-vh')
+        }
+    }, [])
 
     useEffect(() => {
         unlockGlobalScroll()
@@ -159,6 +183,26 @@ function CompleteProfile() {
         }
     }
 
+    function handleFieldFocus(event) {
+        const field = event.target
+
+        if (!field?.matches?.('input, select, textarea')) return
+
+        window.setTimeout(() => {
+            const scroller = scrollRef.current
+            if (!scroller) return
+
+            const fieldRect = field.getBoundingClientRect()
+            const scrollerRect = scroller.getBoundingClientRect()
+            const desiredTop = scroller.scrollTop + (fieldRect.top - scrollerRect.top) - scroller.clientHeight * 0.28
+
+            scroller.scrollTo({
+                top: Math.max(0, desiredTop),
+                behavior: 'smooth',
+            })
+        }, 180)
+    }
+
     if (loading) {
         return (
             <div className="flex min-h-screen items-center justify-center bg-[var(--ff-card)] text-[var(--ff-text)]">
@@ -174,9 +218,13 @@ function CompleteProfile() {
     }
 
     return (
-    <main className="ff-hevy-page ff-hevy-page-completeprofile ff-auth-route text-[var(--ff-text)]">
-
-        <section className="ff-auth-route__shell">
+    <main className="ff-hevy-page-completeprofile ff-complete-profile-screen text-[var(--ff-text)]">
+        <div
+            ref={scrollRef}
+            className="ff-complete-profile-scroll"
+            onFocusCapture={handleFieldFocus}
+        >
+            <section className="ff-auth-route__shell ff-complete-profile-shell">
             <div className="ff-auth-card ff-auth-card--wide">
                 <div className="flex items-center gap-4">
                     <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
@@ -419,8 +467,8 @@ function CompleteProfile() {
                     </div>
                 </form>
             </div>
-        </section>
-    
+            </section>
+        </div>
     </main>
   )
 }
