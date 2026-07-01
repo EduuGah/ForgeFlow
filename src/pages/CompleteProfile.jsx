@@ -16,36 +16,84 @@ function readFileAsDataUrl(file) {
     })
 }
 
-async function compressAvatarImage(file) {
+function validateAvatarFile(file) {
     if (!file?.type?.startsWith('image/')) {
-        throw new Error('Selecione um arquivo de imagem valido.')
+        throw new Error('Selecione um arquivo de imagem válido.')
     }
 
     if (file.size > 6 * 1024 * 1024) {
-        throw new Error('A imagem precisa ter no maximo 6 MB.')
+        throw new Error('A imagem precisa ter no máximo 6 MB.')
     }
+}
 
-    const dataUrl = await readFileAsDataUrl(file)
+function clampNumber(value, min, max) {
+    return Math.min(max, Math.max(min, value))
+}
+
+function clampAvatarOffset(offset, zoom, frameSize, naturalSize) {
+    if (!frameSize || !naturalSize.width || !naturalSize.height) return offset
+
+    const baseScale = Math.max(frameSize / naturalSize.width, frameSize / naturalSize.height)
+    const renderedWidth = naturalSize.width * baseScale * zoom
+    const renderedHeight = naturalSize.height * baseScale * zoom
+    const maxX = Math.max(0, (renderedWidth - frameSize) / 2)
+    const maxY = Math.max(0, (renderedHeight - frameSize) / 2)
+
+    return {
+        x: clampNumber(offset.x, -maxX, maxX),
+        y: clampNumber(offset.y, -maxY, maxY),
+    }
+}
+
+async function cropAvatarImage({ src, zoom, offset, frameSize, naturalSize }) {
     const image = new Image()
+    image.decoding = 'async'
 
     await new Promise((resolve, reject) => {
         image.onload = resolve
-        image.onerror = () => reject(new Error('Nao foi possivel processar a imagem.'))
-        image.src = dataUrl
+        image.onerror = () => reject(new Error('Não foi possível processar a imagem.'))
+        image.src = src
     })
 
-    const maxSize = 512
-    const scale = Math.min(1, maxSize / Math.max(image.width, image.height))
-    const width = Math.max(1, Math.round(image.width * scale))
-    const height = Math.max(1, Math.round(image.height * scale))
+    const outputSize = 512
     const canvas = document.createElement('canvas')
-    canvas.width = width
-    canvas.height = height
+    canvas.width = outputSize
+    canvas.height = outputSize
 
     const context = canvas.getContext('2d')
-    context.drawImage(image, 0, 0, width, height)
+    context.fillStyle = '#050608'
+    context.fillRect(0, 0, outputSize, outputSize)
 
-    return canvas.toDataURL('image/jpeg', 0.82)
+    const safeFrameSize = Math.max(1, frameSize || 280)
+    const safeNaturalSize = naturalSize?.width && naturalSize?.height
+        ? naturalSize
+        : { width: image.naturalWidth || image.width, height: image.naturalHeight || image.height }
+    const safeZoom = clampNumber(Number(zoom) || 1, 1, 3)
+    const safeOffset = clampAvatarOffset(offset || { x: 0, y: 0 }, safeZoom, safeFrameSize, safeNaturalSize)
+    const baseScale = Math.max(safeFrameSize / safeNaturalSize.width, safeFrameSize / safeNaturalSize.height)
+    const totalScale = baseScale * safeZoom
+    const renderedWidth = safeNaturalSize.width * totalScale
+    const renderedHeight = safeNaturalSize.height * totalScale
+    const imageLeft = safeFrameSize / 2 + safeOffset.x - renderedWidth / 2
+    const imageTop = safeFrameSize / 2 + safeOffset.y - renderedHeight / 2
+    const sourceX = (0 - imageLeft) / totalScale
+    const sourceY = (0 - imageTop) / totalScale
+    const sourceWidth = safeFrameSize / totalScale
+    const sourceHeight = safeFrameSize / totalScale
+
+    context.drawImage(
+        image,
+        sourceX,
+        sourceY,
+        sourceWidth,
+        sourceHeight,
+        0,
+        0,
+        outputSize,
+        outputSize,
+    )
+
+    return canvas.toDataURL('image/jpeg', 0.86)
 }
 
 function CompleteProfile() {
@@ -59,6 +107,14 @@ function CompleteProfile() {
 
     const [name, setName] = useState('')
     const [avatarUrl, setAvatarUrl] = useState('')
+    const [avatarEditorSrc, setAvatarEditorSrc] = useState('')
+    const [avatarEditorError, setAvatarEditorError] = useState('')
+    const [avatarZoom, setAvatarZoom] = useState(1)
+    const [avatarOffset, setAvatarOffset] = useState({ x: 0, y: 0 })
+    const [avatarNaturalSize, setAvatarNaturalSize] = useState({ width: 0, height: 0 })
+    const [croppingAvatar, setCroppingAvatar] = useState(false)
+    const cropFrameRef = useRef(null)
+    const dragStateRef = useRef(null)
     const [height, setHeight] = useState('')
     const [currentWeight, setCurrentWeight] = useState('')
     const [mainGoal, setMainGoal] = useState('')
@@ -174,12 +230,107 @@ function CompleteProfile() {
         if (!file) return
 
         try {
-            const compressedAvatar = await compressAvatarImage(file)
-            setAvatarUrl(compressedAvatar)
+            validateAvatarFile(file)
+            const imageSrc = await readFileAsDataUrl(file)
+            setAvatarEditorError('')
+            setAvatarEditorSrc(imageSrc)
+            setAvatarZoom(1)
+            setAvatarOffset({ x: 0, y: 0 })
+            setAvatarNaturalSize({ width: 0, height: 0 })
         } catch (err) {
-            setError(err.message || 'Nao foi possivel carregar a foto.')
+            setError(err.message || 'Não foi possível carregar a foto.')
         } finally {
             event.target.value = ''
+        }
+    }
+
+    function closeAvatarEditor() {
+        if (croppingAvatar) return
+        setAvatarEditorSrc('')
+        setAvatarEditorError('')
+        setAvatarZoom(1)
+        setAvatarOffset({ x: 0, y: 0 })
+        setAvatarNaturalSize({ width: 0, height: 0 })
+    }
+
+    function handleAvatarPreviewLoad(event) {
+        const image = event.currentTarget
+        setAvatarNaturalSize({
+            width: image.naturalWidth || image.width,
+            height: image.naturalHeight || image.height,
+        })
+        setAvatarOffset({ x: 0, y: 0 })
+    }
+
+    function getCropFrameSize() {
+        const frame = cropFrameRef.current
+        return frame?.getBoundingClientRect?.().width || 280
+    }
+
+    function updateAvatarOffset(nextOffset, nextZoom = avatarZoom, nextNaturalSize = avatarNaturalSize) {
+        const frameSize = getCropFrameSize()
+        setAvatarOffset(clampAvatarOffset(nextOffset, nextZoom, frameSize, nextNaturalSize))
+    }
+
+    function handleAvatarZoomChange(event) {
+        const nextZoom = clampNumber(Number(event.target.value) || 1, 1, 3)
+        setAvatarZoom(nextZoom)
+        updateAvatarOffset(avatarOffset, nextZoom)
+    }
+
+    function handleAvatarPointerDown(event) {
+        if (!avatarEditorSrc) return
+
+        event.preventDefault()
+        dragStateRef.current = {
+            pointerId: event.pointerId,
+            startX: event.clientX,
+            startY: event.clientY,
+            offset: avatarOffset,
+        }
+        event.currentTarget.setPointerCapture?.(event.pointerId)
+    }
+
+    function handleAvatarPointerMove(event) {
+        const dragState = dragStateRef.current
+        if (!dragState || dragState.pointerId !== event.pointerId) return
+
+        const nextOffset = {
+            x: dragState.offset.x + event.clientX - dragState.startX,
+            y: dragState.offset.y + event.clientY - dragState.startY,
+        }
+
+        updateAvatarOffset(nextOffset)
+    }
+
+    function handleAvatarPointerUp(event) {
+        if (dragStateRef.current?.pointerId === event.pointerId) {
+            dragStateRef.current = null
+        }
+    }
+
+    async function confirmAvatarCrop() {
+        if (!avatarEditorSrc) return
+
+        setAvatarEditorError('')
+        setCroppingAvatar(true)
+
+        try {
+            const frameSize = getCropFrameSize()
+            const croppedAvatar = await cropAvatarImage({
+                src: avatarEditorSrc,
+                zoom: avatarZoom,
+                offset: avatarOffset,
+                frameSize,
+                naturalSize: avatarNaturalSize,
+            })
+
+            setAvatarUrl(croppedAvatar)
+            setAvatarEditorSrc('')
+        } catch (err) {
+            setAvatarEditorError(err.message || 'Não foi possível enquadrar a foto.')
+        } finally {
+            setCroppingAvatar(false)
         }
     }
 
@@ -246,8 +397,8 @@ function CompleteProfile() {
                     Essas informações ajudam o ForgeFlow a personalizar seus treinos, metas e evolução.
                 </p>
 
-                <form onSubmit={handleSubmit} className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div className="md:col-span-2 rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
+                <form onSubmit={handleSubmit} className="ff-complete-profile-form mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="ff-complete-profile-avatar-card md:col-span-2 rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                             <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-3xl border border-[var(--ff-accent-border)]/30 bg-[var(--ff-accent-soft)]/10 text-[var(--ff-accent-text)]">
                                 {avatarUrl ? (
@@ -268,7 +419,7 @@ function CompleteProfile() {
                                 </p>
 
                                 <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                                    <label className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-4 text-sm font-black text-[var(--ff-accent-text)] transition hover:bg-[var(--ff-card-hover)]">
+                                    <label className="ff-complete-profile-avatar-button inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-[var(--ff-accent-border)] bg-[var(--ff-accent-soft)] px-4 text-sm font-black text-[var(--ff-accent-text)] transition hover:bg-[var(--ff-card-hover)]">
                                         <ImageUp size={17} />
                                         Selecionar foto
                                         <input
@@ -469,6 +620,75 @@ function CompleteProfile() {
             </div>
             </section>
         </div>
+
+        {avatarEditorSrc && (
+            <div className="ff-avatar-cropper-modal" role="dialog" aria-modal="true" aria-labelledby="avatar-cropper-title">
+                <div className="ff-avatar-cropper-card">
+                    <div className="ff-avatar-cropper-header">
+                        <div>
+                            <p className="ff-avatar-cropper-kicker">Foto de perfil</p>
+                            <h2 id="avatar-cropper-title">Enquadre sua foto</h2>
+                            <p>Arraste a imagem e use o zoom para deixar o rosto dentro do quadrado.</p>
+                        </div>
+
+                        <button
+                            type="button"
+                            className="ff-avatar-cropper-close"
+                            onClick={closeAvatarEditor}
+                            aria-label="Fechar edição da foto"
+                        >
+                            <X size={18} />
+                        </button>
+                    </div>
+
+                    <div
+                        ref={cropFrameRef}
+                        className="ff-avatar-cropper-frame"
+                        onPointerDown={handleAvatarPointerDown}
+                        onPointerMove={handleAvatarPointerMove}
+                        onPointerUp={handleAvatarPointerUp}
+                        onPointerCancel={handleAvatarPointerUp}
+                    >
+                        <img
+                            src={avatarEditorSrc}
+                            alt="Prévia da foto de perfil"
+                            draggable="false"
+                            onLoad={handleAvatarPreviewLoad}
+                            style={{
+                                transform: `translate(calc(-50% + ${avatarOffset.x}px), calc(-50% + ${avatarOffset.y}px)) scale(${avatarZoom})`,
+                            }}
+                        />
+                        <div className="ff-avatar-cropper-grid" aria-hidden="true" />
+                    </div>
+
+                    <label className="ff-avatar-cropper-zoom">
+                        <span>Zoom</span>
+                        <input
+                            type="range"
+                            min="1"
+                            max="3"
+                            step="0.01"
+                            value={avatarZoom}
+                            onChange={handleAvatarZoomChange}
+                        />
+                    </label>
+
+                    {avatarEditorError && (
+                        <p className="ff-avatar-cropper-error">{avatarEditorError}</p>
+                    )}
+
+                    <div className="ff-avatar-cropper-actions">
+                        <button type="button" className="ff-avatar-cropper-secondary" onClick={closeAvatarEditor}>
+                            Cancelar
+                        </button>
+                        <button type="button" className="ff-avatar-cropper-primary" onClick={confirmAvatarCrop} disabled={croppingAvatar}>
+                            {croppingAvatar ? 'Salvando...' : 'Usar foto'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+
     </main>
   )
 }

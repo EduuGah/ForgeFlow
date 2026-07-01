@@ -269,52 +269,298 @@ body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-screen .f
   }
 }
 
-/* CompleteProfile gap fix: keep the isolated scroller, but remove the excessive
-   bottom reserve that created a large black empty area when the keyboard is closed. */
+/* CompleteProfile final gap fix + avatar cropper.
+   Keep one internal scroller, but remove the oversized empty safe area that created
+   the black block under the profile-photo card. Extra space is only added while a
+   field is focused, so the keyboard can still be handled in the APK. */
+html.ff-complete-profile-scroll-fix,
+body.ff-complete-profile-scroll-fix,
+body.ff-complete-profile-scroll-fix #root,
+html.is-native-app.ff-complete-profile-scroll-fix,
+body.is-native-app.ff-complete-profile-scroll-fix,
+body.is-native-app.ff-complete-profile-scroll-fix #root {
+  height: 100% !important;
+  min-height: 100% !important;
+  overflow: hidden !important;
+  background: var(--ff-bg) !important;
+}
+
+.ff-complete-profile-screen,
+body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-screen {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: var(--ff-complete-profile-vh, 100dvh) !important;
+  min-height: 0 !important;
+  max-height: var(--ff-complete-profile-vh, 100dvh) !important;
+  display: block !important;
+  overflow: hidden !important;
+  background:
+    radial-gradient(circle at 50% -10%, color-mix(in srgb, var(--ff-accent) 18%, transparent), transparent 24rem),
+    var(--ff-bg) !important;
+}
+
 .ff-complete-profile-scroll,
 body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-scroll {
+  height: 100% !important;
+  max-height: 100% !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain !important;
+  touch-action: pan-y !important;
+  box-sizing: border-box !important;
   padding:
     max(12px, env(safe-area-inset-top))
     10px
-    max(24px, calc(18px + env(safe-area-inset-bottom))) !important;
-  scroll-padding-top: max(24px, env(safe-area-inset-top)) !important;
-  scroll-padding-bottom: max(88px, calc(72px + env(safe-area-inset-bottom))) !important;
-}
-
-.ff-complete-profile-shell,
-body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-shell {
-  min-height: auto !important;
-  padding: 10px 0 max(16px, env(safe-area-inset-bottom)) !important;
-}
-
-.ff-complete-profile-screen .ff-auth-card--wide,
-body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-screen .ff-auth-card--wide {
-  margin: 0 auto max(16px, env(safe-area-inset-bottom)) !important;
-}
-
-.ff-complete-profile-screen input,
-.ff-complete-profile-screen select,
-.ff-complete-profile-screen textarea {
-  scroll-margin-top: max(34px, env(safe-area-inset-top)) !important;
-  scroll-margin-bottom: max(104px, calc(88px + env(safe-area-inset-bottom))) !important;
+    max(18px, calc(12px + env(safe-area-inset-bottom))) !important;
+  scroll-padding-top: max(18px, env(safe-area-inset-top)) !important;
+  scroll-padding-bottom: max(24px, calc(16px + env(safe-area-inset-bottom))) !important;
 }
 
 .ff-complete-profile-scroll:focus-within,
 body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-scroll:focus-within {
-  padding-bottom: max(96px, calc(80px + env(safe-area-inset-bottom))) !important;
+  padding-bottom: max(88px, calc(68px + env(safe-area-inset-bottom))) !important;
+  scroll-padding-bottom: max(112px, calc(88px + env(safe-area-inset-bottom))) !important;
+}
+
+.ff-complete-profile-shell,
+body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-shell {
+  min-height: 0 !important;
+  height: auto !important;
+  display: block !important;
+  overflow: visible !important;
+  padding: 0 !important;
+}
+
+.ff-complete-profile-screen .ff-auth-card--wide,
+body.ff-complete-profile-scroll-fix .ff-complete-profile-screen .ff-auth-card--wide,
+body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-screen .ff-auth-card--wide {
+  width: min(100%, 760px) !important;
+  max-width: 760px !important;
+  min-height: 0 !important;
+  height: auto !important;
+  margin: 0 auto max(18px, calc(12px + env(safe-area-inset-bottom))) !important;
+  padding: clamp(16px, 4vw, 24px) !important;
+  overflow: visible !important;
+}
+
+.ff-complete-profile-form,
+body.ff-complete-profile-scroll-fix .ff-complete-profile-form,
+body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-form {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 14px !important;
+  max-width: none !important;
+  width: 100% !important;
+  min-height: 0 !important;
+  height: auto !important;
+  margin-top: 22px !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+@media (min-width: 768px) {
+  .ff-complete-profile-form,
+  body.ff-complete-profile-scroll-fix .ff-complete-profile-form,
+  body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+.ff-complete-profile-avatar-card,
+body.ff-complete-profile-scroll-fix .ff-complete-profile-avatar-card,
+body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-avatar-card {
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 14px !important;
+  overflow: visible !important;
+}
+
+.ff-complete-profile-avatar-button {
+  width: 100%;
+  min-width: 0;
 }
 
 @media (max-width: 767px) {
-  .ff-complete-profile-scroll,
-  body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-scroll {
-    padding:
-      max(10px, env(safe-area-inset-top))
-      8px
-      max(22px, calc(16px + env(safe-area-inset-bottom))) !important;
+  .ff-complete-profile-screen .ff-auth-card--wide,
+  body.ff-complete-profile-scroll-fix .ff-complete-profile-screen .ff-auth-card--wide,
+  body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-screen .ff-auth-card--wide {
+    border-radius: 22px !important;
+    padding: 16px !important;
   }
 
-  .ff-complete-profile-scroll:focus-within,
-  body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-scroll:focus-within {
-    padding-bottom: max(96px, calc(80px + env(safe-area-inset-bottom))) !important;
+  .ff-complete-profile-screen h1 {
+    font-size: 1.45rem !important;
+    line-height: 1.08 !important;
   }
+}
+
+.ff-avatar-cropper-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding:
+    max(18px, env(safe-area-inset-top))
+    14px
+    max(18px, env(safe-area-inset-bottom));
+  background: rgba(0, 0, 0, 0.76);
+  backdrop-filter: blur(16px);
+}
+
+.ff-avatar-cropper-card {
+  width: min(100%, 420px);
+  max-height: min(92dvh, 720px);
+  overflow-y: auto;
+  border: 1px solid var(--ff-border);
+  border-radius: 28px;
+  background: linear-gradient(180deg, var(--ff-card), var(--ff-surface-2));
+  box-shadow: var(--ff-shadow-floating);
+  padding: 18px;
+  color: var(--ff-text);
+}
+
+.ff-avatar-cropper-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ff-avatar-cropper-kicker {
+  margin: 0 0 4px;
+  color: var(--ff-accent-text);
+  font-size: 0.75rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.ff-avatar-cropper-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 950;
+}
+
+.ff-avatar-cropper-header p:not(.ff-avatar-cropper-kicker) {
+  margin: 6px 0 0;
+  color: var(--ff-muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.ff-avatar-cropper-close {
+  display: inline-flex;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ff-border);
+  border-radius: 14px;
+  background: var(--ff-surface);
+  color: var(--ff-text);
+}
+
+.ff-avatar-cropper-frame {
+  position: relative;
+  width: min(100%, 320px);
+  aspect-ratio: 1 / 1;
+  margin: 18px auto 14px;
+  overflow: hidden;
+  border: 2px solid var(--ff-accent-border);
+  border-radius: 24px;
+  background: #050608;
+  box-shadow:
+    0 0 0 999px rgba(0, 0, 0, 0.22),
+    0 0 24px color-mix(in srgb, var(--ff-accent) 22%, transparent);
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+
+.ff-avatar-cropper-frame:active {
+  cursor: grabbing;
+}
+
+.ff-avatar-cropper-frame img {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100%;
+  height: 100%;
+  min-width: 100%;
+  min-height: 100%;
+  object-fit: cover;
+  transform-origin: center center;
+  pointer-events: none;
+  user-select: none;
+}
+
+.ff-avatar-cropper-grid {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(to right, transparent 33%, rgba(255,255,255,0.18) 33%, rgba(255,255,255,0.18) calc(33% + 1px), transparent calc(33% + 1px), transparent 66%, rgba(255,255,255,0.18) 66%, rgba(255,255,255,0.18) calc(66% + 1px), transparent calc(66% + 1px)),
+    linear-gradient(to bottom, transparent 33%, rgba(255,255,255,0.18) 33%, rgba(255,255,255,0.18) calc(33% + 1px), transparent calc(33% + 1px), transparent 66%, rgba(255,255,255,0.18) 66%, rgba(255,255,255,0.18) calc(66% + 1px), transparent calc(66% + 1px));
+  pointer-events: none;
+}
+
+.ff-avatar-cropper-zoom {
+  display: grid;
+  gap: 8px;
+  color: var(--ff-muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.ff-avatar-cropper-zoom input {
+  width: 100%;
+  accent-color: var(--ff-accent);
+}
+
+.ff-avatar-cropper-error {
+  margin: 12px 0 0;
+  border: 1px solid rgba(248, 113, 113, 0.32);
+  border-radius: 14px;
+  background: rgba(239, 68, 68, 0.12);
+  padding: 10px 12px;
+  color: #fca5a5;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.ff-avatar-cropper-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.ff-avatar-cropper-secondary,
+.ff-avatar-cropper-primary {
+  min-height: 44px;
+  border-radius: 16px;
+  font-size: 0.88rem;
+  font-weight: 950;
+}
+
+.ff-avatar-cropper-secondary {
+  border: 1px solid var(--ff-border);
+  background: var(--ff-surface);
+  color: var(--ff-text);
+}
+
+.ff-avatar-cropper-primary {
+  border: 1px solid var(--ff-accent-border);
+  background: var(--ff-accent);
+  color: #fff;
+}
+
+.ff-avatar-cropper-primary:disabled {
+  opacity: 0.65;
 }
