@@ -8,9 +8,9 @@ import TutorialTooltip from './TutorialTooltip'
 const TARGET_RETRY_LIMIT = 18
 const TARGET_RETRY_DELAY = 90
 const EDGE_MARGIN = 12
-const TOP_SAFE_GAP = 84
-const BOTTOM_SAFE_GAP = 112
-const TOOLTIP_TARGET_GAP = 18
+const TOP_SAFE_GAP = 104
+const BOTTOM_SAFE_GAP = 128
+const TOOLTIP_TARGET_GAP = 22
 
 function getViewport() {
   if (typeof window === 'undefined') return { width: 0, height: 0 }
@@ -173,7 +173,7 @@ function getScrollParent(element) {
   return document.scrollingElement || document.documentElement
 }
 
-function scrollTargetIntoComfortZone(element, updateRect, tooltipSize = { height: 260 }) {
+function scrollTargetIntoComfortZone(element, updateRect, tooltipSize = { height: 260 }, placement = 'auto') {
   if (!element || typeof window === 'undefined') return
 
   const viewport = getViewport()
@@ -193,7 +193,8 @@ function scrollTargetIntoComfortZone(element, updateRect, tooltipSize = { height
 
   const scrollParent = getScrollParent(element)
   const safeHeight = Math.max(220, bottomSafe - topSafe)
-  const targetCenterInViewport = topSafe + safeHeight * 0.38
+  const placementRatio = placement === 'top' ? 0.68 : placement === 'bottom' ? 0.32 : 0.5
+  const targetCenterInViewport = topSafe + safeHeight * placementRatio
 
   try {
     if (scrollParent && scrollParent !== document.documentElement && scrollParent !== document.body) {
@@ -293,7 +294,7 @@ function computeTooltipPosition({ rect, tooltipSize, placement = 'auto', targetM
       key,
       top,
       left,
-      score: overlap * 6 + overflow * 12 + preferredPenalty,
+      score: overlap * 22 + overflow * 14 + preferredPenalty,
     }
   })
 
@@ -338,7 +339,7 @@ function useTutorialTarget(step, pathname, tooltipSize) {
   const [target, setTarget] = useState(null)
   const [rect, setRect] = useState(null)
   const [targetMissing, setTargetMissing] = useState(false)
-  const scrollDoneRef = useRef('')
+  const scrollAttemptsRef = useRef({ key: '', count: 0 })
 
   const updateRect = useCallback(() => {
     const element = getFirstMatchingElement(step?.target || step?.selector)
@@ -359,7 +360,7 @@ function useTutorialTarget(step, pathname, tooltipSize) {
     setTarget(null)
     setRect(null)
     setTargetMissing(false)
-    scrollDoneRef.current = ''
+    scrollAttemptsRef.current = { key: '', count: 0 }
 
     if (!step) return undefined
     if (!step.target && !step.selector) {
@@ -398,14 +399,22 @@ function useTutorialTarget(step, pathname, tooltipSize) {
   }, [pathname, step, updateRect])
 
   useEffect(() => {
-    if (!target || !step?.scrollIntoView) return
-    if (scrollDoneRef.current === step.id) return
+    if (!target || !step?.scrollIntoView) return undefined
 
-    scrollDoneRef.current = step.id
-    window.setTimeout(() => {
-      scrollTargetIntoComfortZone(target, updateRect, { height: tooltipSize?.height || 260 })
-    }, 90)
-  }, [step?.id, step?.scrollIntoView, target, tooltipSize?.height, updateRect])
+    const scrollKey = `${step.id}:${Math.round(tooltipSize?.height || 260)}`
+    const currentAttempts = scrollAttemptsRef.current.key === scrollKey
+      ? scrollAttemptsRef.current.count
+      : 0
+
+    if (currentAttempts >= 3) return undefined
+
+    scrollAttemptsRef.current = { key: scrollKey, count: currentAttempts + 1 }
+    const timeoutId = window.setTimeout(() => {
+      scrollTargetIntoComfortZone(target, updateRect, { height: tooltipSize?.height || 260 }, step?.placement || 'auto')
+    }, currentAttempts === 0 ? 90 : 220)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [step?.id, step?.placement, step?.scrollIntoView, target, tooltipSize?.height, updateRect])
 
   useEffect(() => {
     if (!target) return undefined

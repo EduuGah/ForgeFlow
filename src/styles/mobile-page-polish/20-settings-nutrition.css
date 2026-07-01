@@ -261,43 +261,6 @@
   align-items: center;
 }
 
-.ff-water-ring {
-  width: 9rem;
-  height: 9rem;
-  flex: 0 0 auto;
-  border-radius: 999px;
-  padding: 0.5rem;
-  background: conic-gradient(var(--ff-accent) var(--water-progress, 0%), var(--ff-surface-3) 0);
-  box-shadow: 0 0 28px color-mix(in srgb, var(--ff-accent-shadow) 24%, transparent);
-}
-
-.ff-water-ring > div {
-  display: flex;
-  width: 100%;
-  height: 100%;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border-radius: inherit;
-  background: var(--ff-card);
-}
-
-.ff-water-ring span {
-  color: var(--ff-text);
-  font-size: 2rem;
-  font-weight: 950;
-  letter-spacing: -0.055em;
-}
-
-.ff-water-ring small {
-  max-width: 6.5rem;
-  color: var(--ff-muted);
-  font-size: 0.72rem;
-  font-weight: 800;
-  line-height: 1.25;
-  text-align: center;
-}
-
 .ff-water-progress-track {
   height: 0.75rem;
   margin-top: 1rem;
@@ -810,12 +773,6 @@
     display: flex;
   }
 
-  .ff-water-ring {
-    width: min(100%, 11rem);
-    height: 11rem;
-    margin: 0 auto;
-  }
-
   .ff-water-button-grid,
   .ff-water-custom-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -919,5 +876,114 @@
   .ff-meal-actions--compact {
     width: 100%;
     justify-content: flex-end;
+  }
+}
+
+/* Nutrition compact redesign fixes after mobile validation. */
+.ff-nutrition-quick-summary {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.65rem;
+  min-width: min(100%, 15rem);
+}
+
+.ff-nutrition-quick-summary > div {
+  display: grid;
+  gap: 0.14rem;
+  min-width: 0;
+  padding: 0.78rem 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--ff-border) 76%, transparent);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--ff-surface) 82%, transparent);
+}
+
+.ff-nutrition-quick-summary span,
+.ff-nutrition-quick-summary small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ff-muted);
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.ff-nutrition-quick-summary strong {
+  overflow: hidden;
+  color: var(--ff-text);
+  font-size: 1rem;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-nutrition-hero-card .mt-4.flex.flex-wrap.gap-2 {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.ff-nutrition-hero-card .mt-4.flex.flex-wrap.gap-2 > button {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 44px;
+  justify-content: center;
+  gap: 0.42rem;
+  padding-inline: 0.7rem;
+  text-align: center;
+  line-height: 1.1;
+}
+
+.ff-nutrition-hero-card,
+.ff-nutrition-insights-top,
+.ff-hydration-card,
+.ff-hevy-page-nutrition .ff-card,
+.ff-hevy-page-nutrition .card {
+  border-color: color-mix(in srgb, var(--ff-border) 74%, transparent) !important;
+}
+
+.ff-goal-mini-list div,
+.ff-history-compact-list div,
+.ff-history-sheet-list article,
+.ff-water-button-grid button,
+.ff-water-custom-grid button,
+.ff-meal-preset-grid button,
+.ff-insight-list--compact p {
+  border-color: color-mix(in srgb, var(--ff-border) 76%, transparent) !important;
+}
+
+@media (max-width: 640px) {
+  .ff-nutrition-hero-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    align-items: stretch !important;
+  }
+
+  .ff-nutrition-quick-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    min-width: 0;
+  }
+
+  .ff-nutrition-quick-summary > div {
+    padding: 0.65rem 0.62rem;
+    text-align: center;
+  }
+
+  .ff-nutrition-quick-summary strong {
+    font-size: 0.92rem;
+  }
+
+  .ff-nutrition-hero-card h1 {
+    font-size: clamp(1.55rem, 10vw, 2.25rem);
+  }
+
+  .ff-nutrition-hero-card .mt-4.flex.flex-wrap.gap-2 {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem !important;
+  }
+
+  .ff-nutrition-hero-card .mt-4.flex.flex-wrap.gap-2 > button {
+    min-height: 42px;
+    border-radius: 0.95rem;
+    font-size: 0.78rem;
   }
 }

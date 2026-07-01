@@ -54,9 +54,9 @@
   --ff-input: #111214;
   --ff-header: rgba(24, 25, 27, 0.94);
   --ff-sidebar: #18191b;
-  --ff-border: rgba(255, 255, 255, 0.08);
-  --ff-border-soft: rgba(255, 255, 255, 0.06);
-  --ff-border-strong: rgba(255, 255, 255, 0.16);
+  --ff-border: rgba(255, 255, 255, 0.055);
+  --ff-border-soft: rgba(255, 255, 255, 0.04);
+  --ff-border-strong: rgba(255, 255, 255, 0.11);
   --ff-text: #ffffff;
   --ff-text-soft: #e4e4e7;
   --ff-muted: #a1a1aa;
@@ -69,8 +69,8 @@
   --ff-card-emphasis: linear-gradient(145deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.032));
   --ff-panel-emphasis: linear-gradient(180deg, rgba(24, 24, 30, 0.95), rgba(12, 12, 16, 0.98));
   --ff-section-emphasis: linear-gradient(180deg, rgba(23, 23, 28, 0.94), rgba(12, 12, 15, 0.97));
-  --ff-card-outline: rgba(255, 255, 255, 0.14);
-  --ff-card-outline-strong: rgba(255, 255, 255, 0.20);
+  --ff-card-outline: rgba(255, 255, 255, 0.09);
+  --ff-card-outline-strong: rgba(255, 255, 255, 0.14);
   --ff-subtle-chip-bg: rgba(255, 255, 255, 0.055);
   --ff-stat-surface: rgba(255, 255, 255, 0.04);
 
@@ -3759,8 +3759,8 @@ body.is-native-app.ff-sidebar-open .mobile-bottom-nav {
   --ff-surface-3: #2c2c2e;
   --ff-input: #111113;
   --ff-header: rgba(28, 28, 30, 0.92);
-  --ff-border: rgba(255, 255, 255, 0.075);
-  --ff-border-soft: rgba(255, 255, 255, 0.05);
+  --ff-border: rgba(255, 255, 255, 0.052);
+  --ff-border-soft: rgba(255, 255, 255, 0.035);
 }
 
 body {

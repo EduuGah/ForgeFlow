@@ -24,12 +24,12 @@
 .ff-tutorial-spotlight {
   position: fixed;
   z-index: 2147483020;
-  border: 2px solid var(--ff-accent);
+  border: 1.5px solid color-mix(in srgb, var(--ff-accent) 78%, transparent);
   border-radius: 22px;
   box-shadow:
-    0 0 0 1px var(--ff-accent-border),
-    0 0 30px var(--ff-accent-soft),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+    0 0 0 1px color-mix(in srgb, var(--ff-accent-border) 70%, transparent),
+    0 0 24px color-mix(in srgb, var(--ff-accent-soft) 70%, transparent),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
   pointer-events: none;
   transition: top 180ms ease, left 180ms ease, width 180ms ease, height 180ms ease;
 }
@@ -72,17 +72,17 @@
   left: 0;
   z-index: 2147483040;
   width: min(372px, calc(100vw - 24px));
-  max-height: min(72vh, calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 92px));
+  max-height: min(58vh, calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 128px));
   overflow: auto;
   overscroll-behavior: contain;
-  border: 1px solid var(--ff-border);
-  border-radius: 28px;
+  border: 1px solid color-mix(in srgb, var(--ff-border) 76%, transparent);
+  border-radius: 24px;
   background:
     linear-gradient(145deg, color-mix(in srgb, var(--ff-accent-soft) 18%, transparent), transparent 46%),
     var(--ff-card);
   color: var(--ff-text);
   box-shadow: var(--ff-shadow-floating), 0 20px 70px rgba(0, 0, 0, 0.34);
-  padding: 1rem;
+  padding: 0.9rem;
   pointer-events: auto;
   outline: none;
   animation: ff-tutorial-tooltip-in 180ms ease both;
@@ -492,4 +492,41 @@ body.is-native-app .ff-page-start-workout .ff-mobile-workout-action-bar.ff-tutor
    só o tooltip captura toque/clique. */
 .ff-tutorial-scrim {
   pointer-events: none !important;
+}
+
+
+@media (max-width: 640px) {
+  .ff-tutorial-tooltip {
+    width: min(342px, calc(100vw - 20px));
+    max-height: min(54vh, calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 148px));
+    border-radius: 22px;
+    padding: 0.82rem;
+  }
+
+  .ff-tutorial-tooltip h2 {
+    font-size: 1.08rem;
+  }
+
+  .ff-tutorial-tooltip__body p,
+  .ff-tutorial-tooltip__example,
+  .ff-tutorial-tooltip__warning {
+    font-size: 0.82rem !important;
+    line-height: 1.42;
+  }
+
+  .ff-tutorial-progress {
+    margin-top: 0.65rem;
+  }
+
+  .ff-tutorial-tooltip__controls {
+    gap: 0.55rem;
+    margin-top: 0.75rem;
+  }
+
+  .ff-tutorial-btn,
+  .ff-tutorial-link-btn {
+    min-height: 38px;
+    padding: 0.58rem 0.72rem;
+    font-size: 0.8rem;
+  }
 }

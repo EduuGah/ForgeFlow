@@ -1,4 +1,3 @@
-import { requestLocationPermission } from './geolocationService'
 import {
   requestExactNotificationPermission,
   requestNotificationPermission,
@@ -17,7 +16,6 @@ export async function requestStartupPermissions(user) {
   const results = {
     notification: null,
     exactAlarm: null,
-    location: null,
     requestedAt: new Date().toISOString(),
   }
 
@@ -31,12 +29,6 @@ export async function requestStartupPermissions(user) {
     results.exactAlarm = await requestExactNotificationPermission()
   } catch (error) {
     results.exactAlarm = { exact_alarm: 'unknown', error: error?.message || 'exact-alarm-permission-error' }
-  }
-
-  try {
-    results.location = await requestLocationPermission()
-  } catch (error) {
-    results.location = { location: 'unknown', error: error?.message || 'location-permission-error' }
   }
 
   saveUserStorageData(user, STARTUP_PERMISSION_KEY, results)

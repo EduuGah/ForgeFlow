@@ -312,6 +312,7 @@ function DashboardTodaySummary({
   nutrition,
   dashboardGoals,
   criticalRecovery,
+  hasTrainingHistory = false,
 }) {
   const mainGoal = dashboardGoals[0]
   const plannedWorkoutName = todayPlan?.workout
@@ -356,11 +357,11 @@ function DashboardTodaySummary({
 
         <Link to="/muscle-recovery" className="is-wide">
           <Gauge size={17} />
-          <span>Recuperação crítica</span>
+          <span>Recuperação</span>
           <strong>
-            {criticalRecovery
+            {hasTrainingHistory && criticalRecovery
               ? `${criticalRecovery.muscleGroup} - ${Math.round(toNumber(criticalRecovery.recoveryPercent))}%`
-              : 'Sem alerta muscular'}
+              : 'Sem dados ainda'}
           </strong>
         </Link>
       </div>
@@ -888,12 +889,15 @@ function Dashboard() {
     [weeklySchedule, workouts]
   )
   const nutritionToday = useMemo(() => getTodayNutrition(), [])
+  const hasTrainingHistory = history.length > 0
   const criticalRecovery = useMemo(() => {
+    if (!hasTrainingHistory) return null
+
     return muscleRecovery
-      .filter((item) => Number.isFinite(Number(item.recoveryPercent)))
+      .filter((item) => item.level !== 'unknown' && Number.isFinite(Number(item.recoveryPercent)) && Number(item.totalSessions || item.totalSets || 0) > 0)
       .slice()
       .sort((a, b) => toNumber(a.recoveryPercent) - toNumber(b.recoveryPercent))[0] || null
-  }, [muscleRecovery])
+  }, [hasTrainingHistory, muscleRecovery])
   const weeklyTarget = useMemo(() => getWeeklyTarget(profile, user), [profile, user])
   const weeklyProgress = useMemo(() => {
     return Math.min(100, Math.round((toNumber(consistencyStats.workoutsLast7Days) / weeklyTarget) * 100))
@@ -1015,6 +1019,7 @@ function Dashboard() {
         nutrition={nutritionToday}
         dashboardGoals={dashboardGoals}
         criticalRecovery={criticalRecovery}
+        hasTrainingHistory={hasTrainingHistory}
       />
 
       <DashboardGeneralInsights insights={dashboardInsights} />
@@ -1025,7 +1030,7 @@ function Dashboard() {
         nutrition={nutritionToday}
         criticalRecovery={criticalRecovery}
         recentPRs={recentPRs}
-        hasTrainingHistory={history.length > 0}
+        hasTrainingHistory={hasTrainingHistory}
       />
 
       <DashboardTodayWorkout
@@ -1080,7 +1085,7 @@ function Dashboard() {
             bestVolumeSet={bestVolumeSet}
             mostRecoveredMuscles={mostRecoveredMuscles}
             recentPRs={recentPRs}
-            hasTrainingHistory={history.length > 0}
+            hasTrainingHistory={hasTrainingHistory}
           />
         </div>
       </details>

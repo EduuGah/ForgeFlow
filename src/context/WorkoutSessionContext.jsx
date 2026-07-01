@@ -51,6 +51,11 @@ export function WorkoutSessionProvider({ children }) {
   const lastRemotePollRef = useRef(0)
   const lastRemoteSaveHashRef = useRef('')
 
+
+  function isTutorialSession(session) {
+    return Boolean(session?.isTutorialDemo || session?.isTutorial || session?.tutorialOnly || session?.demo)
+  }
+
   function getUserSyncId() {
     return String(user?.id || user?._id || user?.email || 'anonymous')
   }
@@ -209,6 +214,10 @@ export function WorkoutSessionProvider({ children }) {
       if (isFinishingRef.current) return current
 
       if (!remoteSession) {
+        if (isTutorialSession(current)) {
+          return current
+        }
+
         if (current) {
           persistActiveSessionLocally(null)
         }
@@ -338,6 +347,7 @@ export function WorkoutSessionProvider({ children }) {
 
     async function pollRemoteActiveSession({ force = false } = {}) {
       if (isFinishingRef.current) return
+      if (isTutorialSession(activeSession)) return
       if (document.visibilityState === 'hidden') return
 
       const now = Date.now()
@@ -438,7 +448,9 @@ export function WorkoutSessionProvider({ children }) {
     const session = createWorkoutSession(workout)
 
     setActiveSession(session)
-    saveActiveSessionToApi(session)
+    if (!isTutorialSession(session)) {
+      saveActiveSessionToApi(session)
+    }
   }
 
   function startSessionFromHistory(historySession) {

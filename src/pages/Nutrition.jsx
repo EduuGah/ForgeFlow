@@ -607,10 +607,21 @@ function Nutrition() {
               </div>
             </div>
 
-            <div className="ff-water-ring" data-tutorial="nutrition-water" aria-label={`${waterPercent}% da meta de água`}>
-              <div style={{ '--water-progress': `${waterPercent}%` }}>
-                <span>{waterPercent}%</span>
-                <small>{nutrition.waterMl} / {nutrition.waterGoalMl} ml</small>
+            <div className="ff-nutrition-quick-summary" data-tutorial="nutrition-water" aria-label="Resumo rápido de nutrição">
+              <div>
+                <span>Água</span>
+                <strong>{nutrition.waterMl} ml</strong>
+                <small>{waterPercent}% da meta</small>
+              </div>
+              <div>
+                <span>Refeições</span>
+                <strong>{nutrition.meals.length}</strong>
+                <small>hoje</small>
+              </div>
+              <div>
+                <span>Kcal</span>
+                <strong>{nutrition.calories}</strong>
+                <small>{nutrition.calorieGoal ? `${remaining.calories} restantes` : 'meta opcional'}</small>
               </div>
             </div>
           </div>

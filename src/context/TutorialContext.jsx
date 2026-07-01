@@ -293,25 +293,30 @@ export function TutorialProvider({ children }) {
         return
       }
 
-      const completedSections = uniqueValues([
-        ...(state.completedSections || []),
-        ...(activeFlow.sections || []),
-        getStepSection(activeStep),
-      ])
+      const finishesFullTour = Boolean(options.full || activeFlow.id === 'welcome')
+      const completedSections = finishesFullTour
+        ? uniqueValues(Object.keys(tutorialSections))
+        : uniqueValues([
+          ...(state.completedSections || []),
+          ...(activeFlow.sections || []),
+          getStepSection(activeStep),
+        ])
 
       updateState((current) => ({
         ...current,
-        tutorialCompleted: options.full || activeFlow.id === 'welcome' ? true : current.tutorialCompleted,
-        tutorialCompletedAt: options.full || activeFlow.id === 'welcome' ? nowIso() : current.tutorialCompletedAt,
+        tutorialCompleted: finishesFullTour ? true : current.tutorialCompleted,
+        tutorialCompletedAt: finishesFullTour ? nowIso() : current.tutorialCompletedAt,
         tutorialPaused: false,
         tutorialSkipped: Boolean(options.skipped || current.tutorialSkipped),
         hasSeenWelcome: activeFlow.id === 'welcome' || options.full ? true : current.hasSeenWelcome,
         dismissedWelcome: activeFlow.id === 'welcome' || options.full ? true : current.dismissedWelcome,
         tutorialSeenSections: uniqueValues([...(current.tutorialSeenSections || []), ...completedSections]),
-        completedFlows: {
-          ...(current.completedFlows || {}),
-          [activeFlow.id]: true,
-        },
+        completedFlows: finishesFullTour
+          ? Object.keys(tutorialFlows).reduce((acc, flowId) => ({ ...acc, [flowId]: true }), {})
+          : {
+            ...(current.completedFlows || {}),
+            [activeFlow.id]: true,
+          },
         completedSections,
       }))
 
