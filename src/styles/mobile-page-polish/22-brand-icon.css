@@ -268,3 +268,53 @@ body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-screen .f
     padding: 16px !important;
   }
 }
+
+/* CompleteProfile gap fix: keep the isolated scroller, but remove the excessive
+   bottom reserve that created a large black empty area when the keyboard is closed. */
+.ff-complete-profile-scroll,
+body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-scroll {
+  padding:
+    max(12px, env(safe-area-inset-top))
+    10px
+    max(24px, calc(18px + env(safe-area-inset-bottom))) !important;
+  scroll-padding-top: max(24px, env(safe-area-inset-top)) !important;
+  scroll-padding-bottom: max(88px, calc(72px + env(safe-area-inset-bottom))) !important;
+}
+
+.ff-complete-profile-shell,
+body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-shell {
+  min-height: auto !important;
+  padding: 10px 0 max(16px, env(safe-area-inset-bottom)) !important;
+}
+
+.ff-complete-profile-screen .ff-auth-card--wide,
+body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-screen .ff-auth-card--wide {
+  margin: 0 auto max(16px, env(safe-area-inset-bottom)) !important;
+}
+
+.ff-complete-profile-screen input,
+.ff-complete-profile-screen select,
+.ff-complete-profile-screen textarea {
+  scroll-margin-top: max(34px, env(safe-area-inset-top)) !important;
+  scroll-margin-bottom: max(104px, calc(88px + env(safe-area-inset-bottom))) !important;
+}
+
+.ff-complete-profile-scroll:focus-within,
+body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-scroll:focus-within {
+  padding-bottom: max(96px, calc(80px + env(safe-area-inset-bottom))) !important;
+}
+
+@media (max-width: 767px) {
+  .ff-complete-profile-scroll,
+  body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-scroll {
+    padding:
+      max(10px, env(safe-area-inset-top))
+      8px
+      max(22px, calc(16px + env(safe-area-inset-bottom))) !important;
+  }
+
+  .ff-complete-profile-scroll:focus-within,
+  body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-scroll:focus-within {
+    padding-bottom: max(96px, calc(80px + env(safe-area-inset-bottom))) !important;
+  }
+}
