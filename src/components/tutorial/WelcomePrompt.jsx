@@ -44,31 +44,28 @@ export default function WelcomePrompt() {
         aria-labelledby="ff-tutorial-welcome-title"
         aria-describedby="ff-tutorial-welcome-description"
       >
-        <span className="ff-tutorial-welcome__badge">Guia rápido</span>
-        <h2 id="ff-tutorial-welcome-title">Bem-vindo ao ForgeFlow</h2>
+        <span className="ff-tutorial-welcome__badge">Primeiros passos</span>
+        <h2 id="ff-tutorial-welcome-title">Aprenda fazendo</h2>
         <p id="ff-tutorial-welcome-description">
-          O ForgeFlow acompanha seus treinos, séries, kg, repetições, PRs e consistência. O tour é curto e explica apenas o essencial sem cobrir os cards da tela.
+          Em vez de um tour longo cobrindo a tela, o ForgeFlow mostra 5 missões no Dashboard: criar treino, iniciar, registrar série, finalizar e ver histórico.
         </p>
 
         <div className="ff-tutorial-welcome__grid" aria-hidden="true">
-          <span>Treino do dia</span>
-          <span>Kg e reps</span>
+          <span>Criar treino</span>
+          <span>Registrar série</span>
+          <span>Finalizar</span>
           <span>Histórico</span>
-          <span>Progresso</span>
         </div>
 
         <div className="ff-tutorial-welcome__actions">
           <button type="button" className="ff-tutorial-btn ff-tutorial-btn--primary" onClick={() => startTutorial('welcome')}>
-            Começar tour
+            Começar primeiros passos
           </button>
           <button type="button" className="ff-tutorial-btn ff-tutorial-btn--ghost" onClick={() => closeWelcomePrompt({ pause: true })}>
             Ver depois
           </button>
           <button type="button" className="ff-tutorial-link-btn" onClick={skipAll}>
             Pular
-          </button>
-          <button type="button" className="ff-tutorial-link-btn" onClick={() => closeWelcomePrompt({ dontShowAgain: true })}>
-            Não mostrar novamente
           </button>
         </div>
       </section>

@@ -1,283 +1,192 @@
-export const TUTORIAL_VERSION = 5
+export const TUTORIAL_VERSION = 6
+
+export const FIRST_STEPS_MISSIONS = [
+  {
+    id: 'create-workout',
+    order: 1,
+    title: 'Criar seu primeiro treino',
+    shortTitle: 'Criar treino',
+    description: 'Monte uma rotina simples para começar a usar o ForgeFlow com dados reais.',
+    actionLabel: 'Ir para Treinos',
+    route: '/workouts',
+    section: 'workouts',
+    target: '[data-tutorial="create-workout-button"]',
+  },
+  {
+    id: 'start-workout',
+    order: 2,
+    title: 'Iniciar um treino',
+    shortTitle: 'Iniciar treino',
+    description: 'Abra uma sessão ativa para registrar séries, cargas e repetições.',
+    actionLabel: 'Iniciar treino',
+    route: '/workouts',
+    section: 'workouts',
+    target: '[data-tutorial="workout-start-button"]',
+  },
+  {
+    id: 'register-set',
+    order: 3,
+    title: 'Registrar uma série',
+    shortTitle: 'Registrar série',
+    description: 'Preencha kg e reps e conclua a série. Isso vira histórico e progresso.',
+    actionLabel: 'Abrir treino ativo',
+    route: '/start-workout',
+    section: 'workout',
+    target: '[data-tutorial="active-set-row"]',
+  },
+  {
+    id: 'finish-workout',
+    order: 4,
+    title: 'Finalizar treino com segurança',
+    shortTitle: 'Finalizar treino',
+    description: 'Revise o resumo e confirme para salvar o treino no histórico.',
+    actionLabel: 'Finalizar treino',
+    route: '/start-workout',
+    section: 'workout',
+    target: '[data-tutorial="active-finish-workout-bottom"], [data-tutorial="active-finish-workout"]',
+  },
+  {
+    id: 'view-history',
+    order: 5,
+    title: 'Ver seu histórico',
+    shortTitle: 'Ver histórico',
+    description: 'Depois de finalizar, veja volume, exercícios feitos e evolução.',
+    actionLabel: 'Abrir histórico',
+    route: '/history',
+    section: 'history',
+    target: '[data-tutorial="history-list"], [data-tutorial="dashboard-recent-history"]',
+  },
+]
+
+export const FIRST_STEPS_MISSION_IDS = FIRST_STEPS_MISSIONS.map((mission) => mission.id)
 
 export const tutorialRouteFlows = {
-  '/': 'dashboard',
-  '/dashboard': 'dashboard',
-  '/workouts': 'workouts',
-  '/exercises': 'workouts',
-  '/start-workout': 'workout',
-  '/history': 'history',
-  '/calendar': 'dashboard',
-  '/schedule': 'dashboard',
-  '/progress': 'history',
-  '/exercise-progress': 'history',
-  '/progress-photos': 'history',
-  '/muscle-recovery': 'history',
-  '/nutrition': 'nutrition',
-  '/notifications': 'settings',
-  '/profile': 'settings',
-  '/settings': 'settings',
-  '/goals': 'dashboard',
+  '/': 'first-steps',
+  '/dashboard': 'first-steps',
+  '/workouts': 'first-steps',
+  '/start-workout': 'first-steps',
+  '/history': 'first-steps',
+  '/progress': 'first-steps',
+  '/nutrition': 'first-steps',
+  '/settings': 'first-steps',
 }
 
 export const tutorialSections = {
-  welcome: {
-    id: 'welcome',
+  firstSteps: {
+    id: 'firstSteps',
     order: 1,
-    title: 'Boas-vindas',
-    shortTitle: 'Início',
-    description: 'O mínimo para começar sem cansar.',
-  },
-  dashboard: {
-    id: 'dashboard',
-    order: 2,
-    title: 'Dashboard',
-    shortTitle: 'Dashboard',
-    description: 'Resumo do dia e ponto de partida.',
-  },
-  navigation: {
-    id: 'navigation',
-    order: 3,
-    title: 'Navegação',
-    shortTitle: 'Navegação',
-    description: 'Como circular pelo app.',
+    title: 'Primeiros passos',
+    shortTitle: 'Primeiros passos',
+    description: 'Aprenda o fluxo principal fazendo ações reais no app.',
   },
   workouts: {
     id: 'workouts',
-    order: 4,
+    order: 2,
     title: 'Treinos',
     shortTitle: 'Treinos',
-    description: 'Criar, editar e iniciar rotinas.',
+    description: 'Criar e iniciar rotinas.',
   },
   workout: {
     id: 'workout',
-    order: 5,
+    order: 3,
     title: 'Treino ativo',
-    shortTitle: 'Ativo',
-    description: 'Registrar séries sem mexer em treino real durante o tutorial.',
+    shortTitle: 'Treino ativo',
+    description: 'Registrar séries e finalizar com confirmação.',
   },
   history: {
     id: 'history',
-    order: 6,
+    order: 4,
     title: 'Histórico',
     shortTitle: 'Histórico',
-    description: 'Evolução real após registrar treinos.',
+    description: 'Ver o que foi salvo e acompanhar evolução.',
   },
   nutrition: {
     id: 'nutrition',
-    order: 7,
+    order: 5,
     title: 'Nutrição',
     shortTitle: 'Nutrição',
-    description: 'Água, refeições e metas.',
+    description: 'Água, refeições e metas aparecem como ajuda contextual, não como tour longo.',
   },
   settings: {
     id: 'settings',
-    order: 8,
+    order: 6,
     title: 'Ajuda',
     shortTitle: 'Ajuda',
-    description: 'Onde rever o tutorial.',
+    description: 'Reiniciar ou rever os primeiros passos.',
   },
 }
 
-function step({
-  id,
-  section,
-  title,
-  description,
-  example = '',
-  target = '',
-  route = '/',
-  mode = 'panel',
-  dock = 'auto',
-  scroll = true,
-  requireTarget = false,
-  allowInteraction = true,
-  canSkip = true,
-  fallbackTitle = '',
-  fallbackDescription = '',
-}) {
+export const tutorialSectionOrder = Object.values(tutorialSections).sort((a, b) => a.order - b.order)
+
+function step({ id, title, description, route = '/', section = 'firstSteps' }) {
   return {
     id,
-    section,
     title,
     description,
-    example,
-    target,
-    selector: target,
     route,
-    mode,
-    presentation: mode === 'highlight' ? 'inline' : 'panel',
-    placement: dock,
-    dock,
-    scroll,
-    scrollIntoView: scroll,
-    requireTarget,
-    requireElement: requireTarget,
-    allowInteraction,
-    canSkip,
-    fallbackTitle,
-    fallbackDescription,
+    section,
+    mode: 'mission',
+    presentation: 'checklist',
+    canSkip: true,
   }
 }
-
-const quickTourSteps = [
-  step({
-    id: 'welcome-short',
-    section: 'welcome',
-    title: 'Bem-vindo ao ForgeFlow',
-    description: 'Um tour rápido para entender o básico. Sem dezenas de passos e sem card cobrindo a tela.',
-    route: '/',
-    mode: 'welcome',
-    canSkip: true,
-  }),
-  step({
-    id: 'dashboard-start',
-    section: 'dashboard',
-    title: 'Seu ponto de partida',
-    description: 'O Dashboard mostra o que fazer agora. No começo, ele orienta; depois usa seus treinos reais.',
-    target: '[data-tutorial="dashboard-insights"], [data-tutorial="dashboard-hero"]',
-    route: '/',
-    mode: 'highlight',
-    fallbackTitle: 'Dashboard',
-    fallbackDescription: 'Quando ainda não há dados, o Dashboard mostra orientações simples para começar.',
-  }),
-  step({
-    id: 'navigation-simple',
-    section: 'navigation',
-    title: 'Navegação simples',
-    description: 'Use a barra inferior para trocar de área. Ela não será destacada para evitar cortes no rodapé do Android.',
-    route: '/',
-    mode: 'panel',
-  }),
-  step({
-    id: 'workouts-create',
-    section: 'workouts',
-    title: 'Crie ou inicie treinos',
-    description: 'Em Treinos você monta rotinas e inicia uma sessão quando for treinar de verdade.',
-    target: '[data-tutorial="create-workout-button"], [data-tutorial="workouts-list"]',
-    route: '/workouts',
-    mode: 'highlight',
-    fallbackTitle: 'Treinos',
-    fallbackDescription: 'Se a lista estiver vazia, use o botão de criar treino para montar sua primeira rotina.',
-  }),
-  step({
-    id: 'workout-register-demo',
-    section: 'workout',
-    title: 'Registre kg e reps',
-    description: 'Cada série concluída vira histórico, volume e recorde pessoal. Esta etapa é só uma simulação visual.',
-    route: '/',
-    mode: 'demo',
-  }),
-  step({
-    id: 'workout-finish-confirmation',
-    section: 'workout',
-    title: 'Finalize com segurança',
-    description: 'Treinos reais pedem confirmação antes de salvar. Assim você evita histórico duplicado ou incompleto.',
-    route: '/',
-    mode: 'panel',
-  }),
-  step({
-    id: 'history-empty-friendly',
-    section: 'history',
-    title: 'Histórico e evolução',
-    description: 'Gráficos, PRs e histórico aparecem depois dos primeiros treinos. Conta nova pode ficar vazia mesmo.',
-    route: '/history',
-    mode: 'panel',
-  }),
-  step({
-    id: 'nutrition-start',
-    section: 'nutrition',
-    title: 'Nutrição rápida',
-    description: 'Acompanhe água, refeições e metas sem precisar descer a tela toda.',
-    target: '[data-tutorial="nutrition-overview"], [data-tutorial="nutrition-insights"], [data-tutorial="nutrition-water"]',
-    route: '/nutrition',
-    mode: 'highlight',
-    fallbackTitle: 'Nutrição',
-    fallbackDescription: 'Use os botões rápidos para registrar água e refeições. Os insights aparecem conforme houver dados.',
-  }),
-  step({
-    id: 'settings-replay',
-    section: 'settings',
-    title: 'Rever quando quiser',
-    description: 'Em Configurações você pode reiniciar o tutorial ou rever partes específicas.',
-    target: '[data-tutorial="settings-tutorial"], [data-tutorial="settings-tutorial-card"], [data-tutorial="settings-tutorial-panel"]',
-    route: '/settings',
-    mode: 'highlight',
-    fallbackTitle: 'Tutorial e ajuda',
-    fallbackDescription: 'A área de ajuda fica nas Configurações para você rever este guia quando quiser.',
-  }),
-]
 
 export const tutorialFlows = {
   welcome: {
     id: 'welcome',
-    title: 'Tour rápido do ForgeFlow',
-    description: 'Tutorial curto, contextual e sem tooltip cobrindo conteúdo.',
-    sections: ['welcome', 'dashboard', 'navigation', 'workouts', 'workout', 'history', 'nutrition', 'settings'],
-    steps: quickTourSteps,
+    title: 'Primeiros passos',
+    description: 'Checklist curto para aprender o essencial usando o app.',
+    sections: ['firstSteps', 'workouts', 'workout', 'history'],
+    steps: FIRST_STEPS_MISSIONS.map((mission) => step(mission)),
+  },
+  'first-steps': {
+    id: 'first-steps',
+    title: 'Primeiros passos',
+    description: 'Checklist curto para aprender o essencial usando o app.',
+    sections: ['firstSteps', 'workouts', 'workout', 'history'],
+    steps: FIRST_STEPS_MISSIONS.map((mission) => step(mission)),
   },
   dashboard: {
     id: 'dashboard',
-    title: 'Tutorial do Dashboard',
-    description: tutorialSections.dashboard.description,
-    sections: ['dashboard', 'navigation'],
-    steps: [quickTourSteps[1], quickTourSteps[2]],
-  },
-  navigation: {
-    id: 'navigation',
-    title: 'Tutorial da navegação',
-    description: tutorialSections.navigation.description,
-    sections: ['navigation'],
-    steps: [quickTourSteps[2]],
+    title: 'Primeiros passos',
+    description: 'Aprenda o fluxo principal pelo Dashboard.',
+    sections: ['firstSteps'],
+    steps: FIRST_STEPS_MISSIONS.map((mission) => step(mission)),
   },
   workouts: {
     id: 'workouts',
-    title: 'Tutorial de Treinos',
-    description: tutorialSections.workouts.description,
+    title: 'Criar e iniciar treino',
+    description: 'Missões ligadas aos treinos.',
     sections: ['workouts'],
-    steps: [quickTourSteps[3]],
+    steps: FIRST_STEPS_MISSIONS.slice(0, 2).map((mission) => step(mission)),
   },
   workout: {
     id: 'workout',
-    title: 'Tutorial de Treino ativo',
-    description: tutorialSections.workout.description,
+    title: 'Treino ativo',
+    description: 'Missões ligadas ao registro de série e finalização.',
     sections: ['workout'],
-    steps: [quickTourSteps[4], quickTourSteps[5]],
+    steps: FIRST_STEPS_MISSIONS.slice(2, 4).map((mission) => step(mission)),
   },
   history: {
     id: 'history',
-    title: 'Tutorial de Histórico',
-    description: tutorialSections.history.description,
+    title: 'Histórico',
+    description: 'Missão para entender o histórico.',
     sections: ['history'],
-    steps: [quickTourSteps[6]],
-  },
-  progress: {
-    id: 'progress',
-    title: 'Tutorial de Evolução',
-    description: tutorialSections.history.description,
-    sections: ['history'],
-    steps: [quickTourSteps[6]],
+    steps: [step(FIRST_STEPS_MISSIONS[4])],
   },
   nutrition: {
     id: 'nutrition',
-    title: 'Tutorial de Nutrição',
-    description: tutorialSections.nutrition.description,
+    title: 'Nutrição',
+    description: 'Ajuda contextual de nutrição.',
     sections: ['nutrition'],
-    steps: [quickTourSteps[7]],
-  },
-  notifications: {
-    id: 'notifications',
-    title: 'Tutorial de Notificações',
-    description: 'Como acompanhar avisos importantes sem bagunça.',
-    sections: ['settings'],
-    steps: [quickTourSteps[8]],
+    steps: [step({ id: 'nutrition-context', title: 'Nutrição e insights', description: tutorialSections.nutrition.description, route: '/nutrition', section: 'nutrition' })],
   },
   settings: {
     id: 'settings',
-    title: 'Tutorial de Configurações',
+    title: 'Ajuda',
     description: tutorialSections.settings.description,
     sections: ['settings'],
-    steps: [quickTourSteps[8]],
+    steps: [step({ id: 'settings-help', title: 'Tutorial e ajuda', description: tutorialSections.settings.description, route: '/settings', section: 'settings' })],
   },
 }
 
@@ -287,6 +196,33 @@ export function getTutorialSteps(flowId = 'welcome') {
 
 export function getTutorialFlow(flowId = 'welcome') {
   return tutorialFlows[flowId] || tutorialFlows.welcome
+}
+
+export function getTutorialSection(sectionId = 'firstSteps') {
+  return tutorialSections[sectionId] || tutorialSections.firstSteps
+}
+
+export function getTutorialSections() {
+  return tutorialSectionOrder
+}
+
+export function getFlowForPath(pathname = '/') {
+  const normalizedPath = pathname === '/dashboard' ? '/' : pathname
+  if (tutorialRouteFlows[normalizedPath]) return tutorialRouteFlows[normalizedPath]
+
+  const match = Object.entries(tutorialRouteFlows)
+    .filter(([path]) => path !== '/')
+    .find(([path]) => normalizedPath.startsWith(`${path}/`))
+
+  return match?.[1] || 'first-steps'
+}
+
+export function getFlowStepCount(flowId = 'welcome') {
+  return getTutorialSteps(flowId).length
+}
+
+export function getSectionStepCount(sectionId = 'firstSteps') {
+  return getTutorialSteps('welcome').filter((item) => item.section === sectionId).length
 }
 
 export default tutorialFlows

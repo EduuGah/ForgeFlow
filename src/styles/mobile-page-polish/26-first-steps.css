@@ -1,0 +1,287 @@
+/* ForgeFlow First Steps — mission based onboarding.
+   This replaces floating tutorial overlays on mobile. */
+
+.ff-tutorial-v5-panel-wrap,
+.ff-tutorial-v5-inline-host,
+.ff-tutorial-v5-card,
+.ff-tutorial-v2,
+.ff-tutorial-overlay,
+.ff-tutorial-reframe {
+  display: none !important;
+}
+
+.ff-first-steps,
+.ff-first-steps-hint {
+  border: 1px solid color-mix(in srgb, var(--ff-accent) 20%, var(--ff-border));
+  background:
+    radial-gradient(circle at 12% 0%, color-mix(in srgb, var(--ff-accent) 14%, transparent), transparent 34%),
+    color-mix(in srgb, var(--ff-card) 96%, transparent);
+  color: var(--ff-text);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.16);
+}
+
+.ff-first-steps {
+  display: grid;
+  gap: 12px;
+  margin: 14px 0;
+  padding: 16px;
+  border-radius: 24px;
+}
+
+.ff-first-steps--compact {
+  margin: 0;
+  box-shadow: none;
+}
+
+.ff-first-steps__header,
+.ff-first-steps__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ff-first-steps__header {
+  justify-content: space-between;
+}
+
+.ff-first-steps__badge,
+.ff-first-steps__count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.ff-first-steps__badge {
+  color: var(--ff-accent);
+}
+
+.ff-first-steps__count {
+  border: 1px solid color-mix(in srgb, var(--ff-accent) 18%, var(--ff-border));
+  background: color-mix(in srgb, var(--ff-accent) 10%, var(--ff-surface));
+  color: var(--ff-text);
+  padding: 7px 9px;
+}
+
+.ff-first-steps__copy h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.ff-first-steps__copy p {
+  margin: 5px 0 0;
+  color: var(--ff-muted);
+  font-size: 0.86rem;
+  line-height: 1.35;
+}
+
+.ff-first-steps__meter {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ff-surface-2) 84%, transparent);
+}
+
+.ff-first-steps__meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ff-accent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--ff-accent) 45%, transparent);
+  transition: width 220ms ease;
+}
+
+.ff-first-steps__list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ff-first-steps__list li button {
+  display: grid;
+  width: 100%;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 58px;
+  border: 1px solid color-mix(in srgb, var(--ff-border) 82%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--ff-surface) 82%, transparent);
+  color: var(--ff-text);
+  padding: 10px;
+  text-align: left;
+}
+
+.ff-first-steps__list li.is-active button {
+  border-color: color-mix(in srgb, var(--ff-accent) 42%, var(--ff-border));
+  background: color-mix(in srgb, var(--ff-accent) 9%, var(--ff-surface));
+}
+
+.ff-first-steps__list li.is-complete button {
+  opacity: 0.72;
+}
+
+.ff-first-steps__status {
+  display: inline-flex;
+  color: var(--ff-muted);
+}
+
+.ff-first-steps__list li.is-complete .ff-first-steps__status {
+  color: var(--ff-accent);
+}
+
+.ff-first-steps__mission-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.ff-first-steps__mission-copy strong {
+  overflow: hidden;
+  font-size: 0.88rem;
+  font-weight: 900;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ff-first-steps__mission-copy small {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  color: var(--ff-muted);
+  font-size: 0.76rem;
+  line-height: 1.25;
+}
+
+.ff-first-steps__actions {
+  flex-wrap: wrap;
+}
+
+.ff-first-steps__primary,
+.ff-first-steps__ghost,
+.ff-first-steps-hint__actions button {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 13px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.ff-first-steps__primary {
+  background: var(--ff-accent);
+  color: var(--ff-accent-contrast, #061015);
+  box-shadow: 0 12px 22px color-mix(in srgb, var(--ff-accent) 25%, transparent);
+}
+
+.ff-first-steps__ghost {
+  border: 1px solid color-mix(in srgb, var(--ff-border) 86%, transparent);
+  background: color-mix(in srgb, var(--ff-surface) 88%, transparent);
+  color: var(--ff-muted);
+}
+
+.ff-first-steps-hint {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 12px;
+  border-radius: 20px;
+}
+
+.ff-first-steps-hint__icon {
+  display: inline-grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--ff-accent) 12%, var(--ff-surface));
+  color: var(--ff-accent);
+}
+
+.ff-first-steps-hint__copy {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.ff-first-steps-hint__copy strong {
+  color: var(--ff-text);
+  font-size: 0.9rem;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.ff-first-steps-hint__copy p {
+  margin: 0;
+  color: var(--ff-muted);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.ff-first-steps-hint__content {
+  margin-top: 4px;
+}
+
+.ff-first-steps-hint__actions {
+  display: flex;
+  grid-column: 1 / -1;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.ff-first-steps-hint__actions button {
+  min-height: 32px;
+  background: var(--ff-accent);
+  color: var(--ff-accent-contrast, #061015);
+}
+
+.ff-first-steps-hint__actions button.is-ghost {
+  width: 32px;
+  padding: 0;
+  background: color-mix(in srgb, var(--ff-surface) 88%, transparent);
+  color: var(--ff-muted);
+}
+
+.ff-first-steps-focus-ring {
+  outline: 2px solid var(--ff-accent);
+  outline-offset: 4px;
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--ff-accent) 14%, transparent);
+}
+
+@media (max-width: 420px) {
+  .ff-first-steps {
+    border-radius: 22px;
+    padding: 14px;
+  }
+
+  .ff-first-steps__copy p,
+  .ff-first-steps__mission-copy small {
+    font-size: 0.74rem;
+  }
+
+  .ff-first-steps__primary,
+  .ff-first-steps__ghost {
+    min-height: 34px;
+    padding-inline: 11px;
+    font-size: 0.72rem;
+  }
+}

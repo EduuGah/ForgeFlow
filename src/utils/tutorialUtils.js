@@ -1,5 +1,7 @@
 export {
   TUTORIAL_VERSION,
+  FIRST_STEPS_MISSIONS,
+  FIRST_STEPS_MISSION_IDS,
   tutorialFlows,
   tutorialRouteFlows,
   tutorialSections,

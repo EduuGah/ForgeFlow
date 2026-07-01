@@ -61,6 +61,12 @@ export function createDefaultTutorialState(overrides = {}) {
     completedFlows: {},
     completedSections: [],
     skippedSections: [],
+    firstStepsStarted: false,
+    firstStepsPaused: false,
+    firstStepsDismissed: false,
+    firstStepsCompleted: {},
+    firstStepsCompletedAt: '',
+    firstStepsLastFocusedMission: '',
     updatedAt: '',
     ...overrides,
   }
@@ -96,6 +102,12 @@ export function normalizeTutorialState(parsed = {}, user = null) {
       : parsed.skippedSections && typeof parsed.skippedSections === 'object'
         ? Object.keys(parsed.skippedSections).filter((key) => parsed.skippedSections[key])
         : [],
+    firstStepsStarted: Boolean(parsed.firstStepsStarted || parsed.tutorialStartedAt),
+    firstStepsPaused: Boolean(parsed.firstStepsPaused),
+    firstStepsDismissed: Boolean(parsed.firstStepsDismissed),
+    firstStepsCompleted: parsed.firstStepsCompleted && typeof parsed.firstStepsCompleted === 'object' ? parsed.firstStepsCompleted : {},
+    firstStepsCompletedAt: parsed.firstStepsCompletedAt || '',
+    firstStepsLastFocusedMission: parsed.firstStepsLastFocusedMission || '',
   })
 
   if (state.tutorialVersion !== TUTORIAL_VERSION) {
@@ -111,6 +123,12 @@ export function normalizeTutorialState(parsed = {}, user = null) {
       tutorialCurrentStep: 0,
       tutorialStartedAt: '',
       tutorialCompletedAt: '',
+      firstStepsStarted: false,
+      firstStepsPaused: false,
+      firstStepsDismissed: false,
+      firstStepsCompleted: {},
+      firstStepsCompletedAt: '',
+      firstStepsLastFocusedMission: '',
     }
   }
 

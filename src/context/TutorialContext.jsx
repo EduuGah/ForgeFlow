@@ -18,6 +18,8 @@ import {
   getTutorialSection,
   getTutorialSections,
   getTutorialState,
+  FIRST_STEPS_MISSIONS,
+  FIRST_STEPS_MISSION_IDS,
   markWelcomeTutorialPending,
   resetTutorialState,
   saveTutorialState,
@@ -145,7 +147,7 @@ function createTutorialWorkout() {
 
 export function TutorialProvider({ children }) {
   const { user, loadingUser } = useAuth()
-  const { activeSession, startSession } = useWorkoutSession()
+  const { activeSession, startSession, completedSets } = useWorkoutSession()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -183,6 +185,11 @@ export function TutorialProvider({ children }) {
             tutorialPaused: savedState.tutorialPaused,
             tutorialSeenSections: savedState.tutorialSeenSections,
             tutorialAutoStartEnabled: savedState.tutorialAutoStartEnabled,
+            firstStepsStarted: savedState.firstStepsStarted,
+            firstStepsPaused: savedState.firstStepsPaused,
+            firstStepsDismissed: savedState.firstStepsDismissed,
+            firstStepsCompleted: savedState.firstStepsCompleted,
+            firstStepsCompletedAt: savedState.firstStepsCompletedAt,
           }
           const hash = JSON.stringify(payload)
           if (!user || hash === lastRemotePayloadRef.current) return
@@ -234,6 +241,120 @@ export function TutorialProvider({ children }) {
     unlockGlobalScroll()
   }, [])
 
+
+  const firstStepsCompletedMap = useMemo(
+    () => (state.firstStepsCompleted && typeof state.firstStepsCompleted === 'object' ? state.firstStepsCompleted : {}),
+    [state.firstStepsCompleted]
+  )
+
+  const firstStepsCompletedIds = useMemo(
+    () => FIRST_STEPS_MISSION_IDS.filter((missionId) => Boolean(firstStepsCompletedMap[missionId])),
+    [firstStepsCompletedMap]
+  )
+
+  const firstStepsProgress = useMemo(() => {
+    const total = FIRST_STEPS_MISSIONS.length
+    const completed = firstStepsCompletedIds.length
+
+    return {
+      total,
+      completed,
+      remaining: Math.max(0, total - completed),
+      percentage: total ? Math.round((completed / total) * 100) : 0,
+      completedIds: firstStepsCompletedIds,
+      isCompleted: total > 0 && completed >= total,
+    }
+  }, [firstStepsCompletedIds])
+
+  const completeFirstStepMission = useCallback(
+    (missionId) => {
+      if (!FIRST_STEPS_MISSION_IDS.includes(missionId)) return
+
+      updateState((current) => {
+        const currentCompleted = current.firstStepsCompleted && typeof current.firstStepsCompleted === 'object'
+          ? current.firstStepsCompleted
+          : {}
+
+        if (currentCompleted[missionId]) return current
+
+        const nextCompleted = {
+          ...currentCompleted,
+          [missionId]: nowIso(),
+        }
+        const allCompleted = FIRST_STEPS_MISSION_IDS.every((id) => Boolean(nextCompleted[id]))
+
+        return {
+          ...current,
+          firstStepsStarted: true,
+          firstStepsPaused: false,
+          firstStepsCompleted: nextCompleted,
+          firstStepsCompletedAt: allCompleted ? nowIso() : current.firstStepsCompletedAt,
+          tutorialCompleted: allCompleted ? true : current.tutorialCompleted,
+          tutorialCompletedAt: allCompleted ? nowIso() : current.tutorialCompletedAt,
+          tutorialSeenSections: uniqueValues([...(current.tutorialSeenSections || []), 'firstSteps']),
+          completedSections: allCompleted
+            ? uniqueValues([...(current.completedSections || []), 'firstSteps', 'workouts', 'workout', 'history'])
+            : current.completedSections,
+        }
+      })
+    },
+    [updateState]
+  )
+
+  const focusFirstStepMission = useCallback(
+    (missionId) => {
+      if (!FIRST_STEPS_MISSION_IDS.includes(missionId)) return
+
+      updateState((current) => ({
+        ...current,
+        firstStepsStarted: true,
+        firstStepsPaused: false,
+        firstStepsDismissed: false,
+        firstStepsLastFocusedMission: missionId,
+        hasSeenWelcome: true,
+        dismissedWelcome: true,
+        tutorialStartedAt: current.tutorialStartedAt || nowIso(),
+      }))
+    },
+    [updateState]
+  )
+
+  const pauseFirstSteps = useCallback(() => {
+    updateState((current) => ({
+      ...current,
+      firstStepsPaused: true,
+      firstStepsStarted: true,
+      hasSeenWelcome: true,
+      dismissedWelcome: true,
+    }))
+  }, [updateState])
+
+  const resumeFirstSteps = useCallback(() => {
+    updateState((current) => ({
+      ...current,
+      firstStepsStarted: true,
+      firstStepsPaused: false,
+      firstStepsDismissed: false,
+      hasSeenWelcome: true,
+      dismissedWelcome: true,
+      tutorialStartedAt: current.tutorialStartedAt || nowIso(),
+    }))
+    if (canShowTutorialOnPath(location.pathname)) {
+      navigate('/')
+    }
+  }, [location.pathname, navigate, updateState])
+
+  const dismissFirstSteps = useCallback(() => {
+    updateState((current) => ({
+      ...current,
+      firstStepsStarted: true,
+      firstStepsPaused: false,
+      firstStepsDismissed: true,
+      hasSeenWelcome: true,
+      dismissedWelcome: true,
+    }))
+  }, [updateState])
+
   const persistCurrentPosition = useCallback(
     (flowId, stepIndex, options = {}) => {
       const flow = tutorialFlows[flowId]
@@ -254,36 +375,40 @@ export function TutorialProvider({ children }) {
 
   const startTutorial = useCallback(
     (flowId = 'welcome', options = {}) => {
-      const flow = tutorialFlows[flowId] || tutorialFlows.welcome
-
       if (!user || !user.profileCompleted || !canShowTutorialOnPath(location.pathname)) {
         stopTutorialUi()
         return false
       }
 
-      const requestedStep = options.resume
-        ? state.tutorialCurrentFlow === flow.id
-          ? state.tutorialCurrentStep
-          : 0
-        : options.stepIndex || 0
-      const nextStepIndex = getInitialStepIndex(flow, requestedStep)
-      const firstStep = flow.steps[nextStepIndex]
+      const firstMission = FIRST_STEPS_MISSIONS[0]?.id || ''
 
-      if (firstStep?.createDemoSession === true) {
-        ensureTutorialWorkoutSession()
-      }
-
-      if (flow.id === 'welcome') {
-        clearWelcomeTutorialPending(user)
-      }
-
+      clearWelcomeTutorialPending(user)
       setWelcomePromptVisible(false)
-      setActiveFlowId(flow.id)
-      setActiveStepIndex(nextStepIndex)
-      persistCurrentPosition(flow.id, nextStepIndex)
+      stopTutorialUi()
+
+      updateState((current) => ({
+        ...current,
+        tutorialCurrentFlow: flowId || 'welcome',
+        tutorialCurrentStep: 0,
+        tutorialPaused: false,
+        tutorialSkipped: false,
+        tutorialStartedAt: current.tutorialStartedAt || nowIso(),
+        hasSeenWelcome: true,
+        dismissedWelcome: true,
+        firstStepsStarted: true,
+        firstStepsPaused: false,
+        firstStepsDismissed: false,
+        firstStepsLastFocusedMission: options.missionId || current.firstStepsLastFocusedMission || firstMission,
+        tutorialSeenSections: uniqueValues([...(current.tutorialSeenSections || []), 'firstSteps']),
+      }))
+
+      if (canShowTutorialOnPath(location.pathname) && location.pathname !== '/') {
+        navigate('/')
+      }
+
       return true
     },
-    [ensureTutorialWorkoutSession, location.pathname, persistCurrentPosition, state.tutorialCurrentFlow, state.tutorialCurrentStep, stopTutorialUi, user]
+    [location.pathname, navigate, stopTutorialUi, updateState, user]
   )
 
   const completeTutorial = useCallback(
@@ -370,6 +495,11 @@ export function TutorialProvider({ children }) {
       dismissedWelcome: true,
       tutorialAutoStartEnabled: false,
       tutorialSeenSections: uniqueValues(Object.keys(tutorialSections)),
+      firstStepsStarted: true,
+      firstStepsPaused: false,
+      firstStepsDismissed: true,
+      firstStepsCompleted: FIRST_STEPS_MISSION_IDS.reduce((acc, missionId) => ({ ...acc, [missionId]: nowIso() }), {}),
+      firstStepsCompletedAt: nowIso(),
       completedFlows: Object.keys(tutorialFlows).reduce((acc, flowId) => ({ ...acc, [flowId]: true }), {}),
       completedSections: uniqueValues(Object.keys(tutorialSections)),
     }))
@@ -397,6 +527,10 @@ export function TutorialProvider({ children }) {
         updateState((current) => ({
           ...current,
           tutorialPaused: true,
+          firstStepsStarted: true,
+          firstStepsPaused: true,
+          hasSeenWelcome: true,
+          dismissedWelcome: true,
           tutorialCurrentFlow: current.tutorialCurrentFlow || 'welcome',
           tutorialCurrentStep: current.tutorialCurrentStep || 0,
         }))
@@ -406,16 +540,19 @@ export function TutorialProvider({ children }) {
   )
 
   const continueTutorial = useCallback(() => {
-    const flowId = state.tutorialCurrentFlow || getFlowForPath(location.pathname)
-    return startTutorial(flowId, { resume: true })
+    return startTutorial(state.tutorialCurrentFlow || getFlowForPath(location.pathname), { resume: true })
   }, [location.pathname, startTutorial, state.tutorialCurrentFlow])
 
   const openTutorialSection = useCallback(
     (sectionId) => {
-      const flowId = tutorialFlows[sectionId] ? sectionId : getFlowForPath(location.pathname)
-      return startTutorial(flowId, { stepIndex: 0 })
+      const missionBySection = FIRST_STEPS_MISSIONS.find((mission) => mission.section === sectionId) || FIRST_STEPS_MISSIONS[0]
+      startTutorial('welcome', { missionId: missionBySection?.id })
+      if (missionBySection?.route && canShowTutorialOnPath(location.pathname)) {
+        navigate(missionBySection.route)
+      }
+      return true
     },
-    [location.pathname, startTutorial]
+    [location.pathname, navigate, startTutorial]
   )
 
   const restartTutorial = useCallback(() => {
@@ -547,6 +684,26 @@ export function TutorialProvider({ children }) {
     persistCurrentPosition(activeFlow.id, activeStepIndex)
   }, [activeFlow, activeStepIndex, isRunning, persistCurrentPosition])
 
+
+  useEffect(() => {
+    if (!state.firstStepsStarted || state.firstStepsDismissed) return
+
+    if (activeSession && !activeSession.isTutorial && !activeSession.tutorialOnly) {
+      completeFirstStepMission('start-workout')
+    }
+
+    if (Number(completedSets || 0) > 0) {
+      completeFirstStepMission('register-set')
+    }
+  }, [activeSession, completeFirstStepMission, completedSets, state.firstStepsDismissed, state.firstStepsStarted])
+
+  useEffect(() => {
+    if (!state.firstStepsStarted || state.firstStepsDismissed) return
+    if (location.pathname === '/history' || location.pathname.startsWith('/history/')) {
+      completeFirstStepMission('view-history')
+    }
+  }, [completeFirstStepMission, location.pathname, state.firstStepsDismissed, state.firstStepsStarted])
+
   const currentPageFlowId = getFlowForPath(location.pathname)
   const currentPageFlow = tutorialFlows[currentPageFlowId] || tutorialFlows.welcome
   const currentSection = getTutorialSection(activeStep?.section || currentPageFlowId)
@@ -562,12 +719,15 @@ export function TutorialProvider({ children }) {
       currentStep: currentStepNumber,
       totalSteps,
       percentage,
-      completedSections: completedSectionCount,
-      totalSections: sections.length,
-      currentSectionId: currentSection?.id || '',
-      currentSectionTitle: currentSection?.shortTitle || currentSection?.title || '',
+      completedSections: Math.max(completedSectionCount, firstStepsProgress.completed),
+      totalSections: Math.max(1, firstStepsProgress.total),
+      currentSectionId: currentSection?.id || 'firstSteps',
+      currentSectionTitle: currentSection?.shortTitle || currentSection?.title || 'Primeiros passos',
+      missionsCompleted: firstStepsProgress.completed,
+      missionsTotal: firstStepsProgress.total,
+      missionsPercentage: firstStepsProgress.percentage,
     }
-  }, [activeFlow?.steps?.length, activeStepIndex, completedSectionCount, currentSection, sections.length])
+  }, [activeFlow?.steps?.length, activeStepIndex, completedSectionCount, currentSection, firstStepsProgress.completed, firstStepsProgress.percentage, firstStepsProgress.total, sections.length])
 
   const value = useMemo(
     () => ({
@@ -587,6 +747,14 @@ export function TutorialProvider({ children }) {
       canShowTutorial,
       currentSection,
       progress,
+      firstStepMissions: FIRST_STEPS_MISSIONS,
+      firstStepsCompleted: firstStepsCompletedMap,
+      firstStepsProgress,
+      completeFirstStepMission,
+      focusFirstStepMission,
+      pauseFirstSteps,
+      resumeFirstSteps,
+      dismissFirstSteps,
       startTutorial,
       continueTutorial,
       nextStep,
@@ -611,19 +779,26 @@ export function TutorialProvider({ children }) {
       activeStepIndex,
       canShowTutorial,
       closeWelcomePrompt,
+      completeFirstStepMission,
+      dismissFirstSteps,
       completeTutorial,
       continueTutorial,
       currentPageFlow,
       currentPageFlowId,
       currentSection,
       isRunning,
+      firstStepsCompletedMap,
+      firstStepsProgress,
+      focusFirstStepMission,
       nextStep,
       openTutorialSection,
       pauseTutorial,
       previousStep,
       progress,
+      pauseFirstSteps,
       resetAllTutorials,
       restartTutorial,
+      resumeFirstSteps,
       sections,
       setAutoStartEnabled,
       skipAll,

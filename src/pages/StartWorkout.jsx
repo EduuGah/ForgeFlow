@@ -17,6 +17,8 @@ import ActiveExerciseCard from '../features/startWorkout/components/ActiveExerci
 
 import { useWorkoutSession } from '../context/WorkoutSessionContext'
 import { useAuth } from '../context/AuthContext'
+import { useTutorial } from '../context/TutorialContext'
+import FirstStepsInlineHint from '../components/tutorial/FirstStepsInlineHint'
 import {
   getUserStorageData,
   removeUserStorageData,
@@ -193,6 +195,7 @@ const EMPTY_WORKOUT_ERROR =
 
 function StartWorkout() {
   const { user } = useAuth()
+  const { completeFirstStepMission, firstStepsCompleted, state: tutorialState } = useTutorial()
 
   const {
     activeSession,
@@ -520,6 +523,7 @@ function StartWorkout() {
         location,
         durationSeconds: options.durationSeconds ?? finishElapsedSeconds ?? elapsedSeconds,
       })
+      completeFirstStepMission?.('finish-workout')
       setFinishWorkoutModalOpen(false)
       setFinishElapsedSeconds(null)
 
@@ -592,6 +596,10 @@ function StartWorkout() {
     const wasCompleted = Boolean(currentSet?.completed)
 
     toggleSetCompleted(sessionExercise.id, setId)
+
+    if (!wasCompleted) {
+      completeFirstStepMission?.('register-set')
+    }
 
     if (wasCompleted) return
     if (!appSettings.autoStartRestTimer) return
@@ -853,6 +861,22 @@ function StartWorkout() {
 
       <section className="ff-start-workout-main-grid ff-page-mobile-main-grid grid grid-cols-1 gap-4 xl:grid-cols-4 xl:gap-6">
         <div className="ff-workout-input-polish ff-active-workout-exercise-flow space-y-4 pb-40 xl:col-span-3 xl:pb-6">
+          {!firstStepsCompleted?.['register-set'] && tutorialState.firstStepsStarted ? (
+            <FirstStepsInlineHint
+              missionId="register-set"
+              title="Missão: registre sua primeira série"
+              description="Preencha kg e reps em uma série e toque em concluir. Esse dado vira histórico, volume e evolução."
+              actionLabel="Marcar como entendido"
+            />
+          ) : completedSets > 0 && !firstStepsCompleted?.['finish-workout'] && tutorialState.firstStepsStarted ? (
+            <FirstStepsInlineHint
+              missionId="finish-workout"
+              title="Missão: finalize com confirmação"
+              description="Quando terminar, toque em Concluir treino. O ForgeFlow mostra um resumo antes de salvar."
+              actionLabel="Entendi"
+            />
+          ) : null}
+
           <MobileWorkoutNotesCard
             activeSession={activeSession}
             onUpdateNotes={updateNotes}

@@ -1,57 +1,47 @@
-import { useMemo } from 'react'
+import FirstStepsChecklist from './FirstStepsChecklist'
 import { useTutorial } from '../../context/TutorialContext'
-
-const REVIEW_SECTIONS = [
-  { id: 'dashboard', label: 'Rever Dashboard' },
-  { id: 'workout', label: 'Rever Treino Ativo' },
-  { id: 'history', label: 'Rever Histórico' },
-  { id: 'nutrition', label: 'Rever Nutrição' },
-]
 
 export default function TutorialLauncher({ compact = false }) {
   const {
     state,
-    sections,
-    progress,
+    firstStepsProgress,
     continueTutorial,
     restartTutorial,
-    openTutorialSection,
     toggleAutoStart,
   } = useTutorial()
 
-  const completedSections = useMemo(() => new Set(state.completedSections || []), [state.completedSections])
-  const completedCount = Math.min(completedSections.size, sections.length)
-  const completionText = state.tutorialCompleted
-    ? 'Tutorial concluído. Você pode rever qualquer parte quando quiser.'
-    : `Você concluiu ${completedCount} de ${sections.length} seções.`
+  const completed = firstStepsProgress?.completed || 0
+  const total = firstStepsProgress?.total || 5
+  const completedText = firstStepsProgress?.isCompleted
+    ? 'Primeiros passos concluídos. Você pode reiniciar quando quiser.'
+    : `${completed} de ${total} missões concluídas.`
 
   return (
     <section className={`ff-tutorial-launcher ${compact ? 'ff-tutorial-launcher--compact' : ''}`} data-tutorial="settings-tutorial-panel">
       <div className="ff-tutorial-launcher__header" data-tutorial="settings-tutorial">
         <div>
           <span className="ff-tutorial-tooltip__eyebrow">Ajuda do app</span>
-          <h3>Tutorial e ajuda</h3>
-          <p>{completionText}</p>
+          <h3>Primeiros passos</h3>
+          <p>{completedText}</p>
         </div>
-        <span className="ff-tutorial-launcher__progress">{completedCount}/{sections.length}</span>
+        <span className="ff-tutorial-launcher__progress">{completed}/{total}</span>
       </div>
 
       <div className="ff-tutorial-launcher__meter" aria-hidden="true">
-        <span style={{ width: `${sections.length ? (completedCount / sections.length) * 100 : progress.percentage || 0}%` }} />
+        <span style={{ width: `${firstStepsProgress?.percentage || 0}%` }} />
       </div>
 
       <div className="ff-tutorial-section-picker">
         <button type="button" className="ff-tutorial-btn ff-tutorial-btn--primary" onClick={continueTutorial}>
-          Continuar tutorial
+          Abrir primeiros passos
         </button>
         <button type="button" className="ff-tutorial-btn ff-tutorial-btn--ghost" onClick={restartTutorial}>
-          Reiniciar tutorial
+          Reiniciar missões
         </button>
-        {REVIEW_SECTIONS.map((item) => (
-          <button key={item.id} type="button" className="ff-tutorial-btn ff-tutorial-btn--soft" onClick={() => openTutorialSection(item.id)}>
-            {item.label}
-          </button>
-        ))}
+      </div>
+
+      <div className="mt-4">
+        <FirstStepsChecklist compact />
       </div>
 
       <label className="ff-tutorial-launcher__toggle">
@@ -60,7 +50,7 @@ export default function TutorialLauncher({ compact = false }) {
           checked={Boolean(state.tutorialAutoStartEnabled)}
           onChange={toggleAutoStart}
         />
-        <span>Mostrar tutorial automaticamente</span>
+        <span>Mostrar primeiros passos automaticamente</span>
       </label>
     </section>
   )

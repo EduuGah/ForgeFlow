@@ -41,6 +41,7 @@ import {
   WEEK_DAYS,
 } from '../utils/workoutScheduleUtils'
 import { getTodayNutrition } from '../services/nutritionService'
+import FirstStepsChecklist from '../components/tutorial/FirstStepsChecklist'
 
 function toNumber(value) {
   return Number(value) || 0
@@ -1010,6 +1011,13 @@ function Dashboard() {
         elapsedSeconds={elapsedSeconds}
         completedSets={completedSets}
         totalSets={totalSets}
+      />
+
+      <FirstStepsChecklist
+        workouts={workouts}
+        history={history}
+        activeSession={activeSession}
+        completedSets={completedSets}
       />
 
       <DashboardWeekStrip days={currentWeekDays} />
