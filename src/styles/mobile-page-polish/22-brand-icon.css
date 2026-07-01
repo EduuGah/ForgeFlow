@@ -764,3 +764,35 @@ body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-avatar-ca
     margin-top: 10px !important;
   }
 }
+
+
+/* CompleteProfile gap fix v4: remove legacy auth page bottom padding.
+   The black bar was caused by older .ff-hevy-page-completeprofile rules adding 88px+ bottom padding
+   to the fixed screen itself. The inner .ff-complete-profile-scroll keeps the safe-area spacing. */
+.ff-complete-profile-screen,
+body.ff-complete-profile-scroll-fix .ff-complete-profile-screen,
+body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-screen,
+.ff-hevy-page-completeprofile.ff-complete-profile-screen,
+body.ff-complete-profile-scroll-fix .ff-hevy-page-completeprofile.ff-complete-profile-screen,
+body.is-native-app.ff-complete-profile-scroll-fix .ff-hevy-page-completeprofile.ff-complete-profile-screen {
+  padding: 0 !important;
+  margin: 0 !important;
+  min-height: 0 !important;
+  height: var(--ff-complete-profile-vh, 100dvh) !important;
+  max-height: var(--ff-complete-profile-vh, 100dvh) !important;
+  background:
+    radial-gradient(circle at 50% -10%, color-mix(in srgb, var(--ff-accent) 18%, transparent), transparent 24rem),
+    var(--ff-bg) !important;
+}
+
+.ff-complete-profile-scroll,
+body.ff-complete-profile-scroll-fix .ff-complete-profile-scroll,
+body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-scroll {
+  padding-bottom: max(14px, calc(10px + env(safe-area-inset-bottom))) !important;
+}
+
+.ff-complete-profile-scroll:focus-within,
+body.ff-complete-profile-scroll-fix .ff-complete-profile-scroll:focus-within,
+body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-scroll:focus-within {
+  padding-bottom: max(72px, calc(54px + env(safe-area-inset-bottom))) !important;
+}

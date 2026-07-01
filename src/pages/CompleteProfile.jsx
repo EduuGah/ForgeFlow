@@ -503,7 +503,7 @@ function CompleteProfile() {
     const avatarPreviewHeight = Math.max(1, safePreviewNaturalSize.height * previewBaseScale)
 
     return (
-    <main className="ff-hevy-page-completeprofile ff-complete-profile-screen text-[var(--ff-text)]">
+    <main className="ff-complete-profile-screen text-[var(--ff-text)]">
         <div
             ref={scrollRef}
             className="ff-complete-profile-scroll"
