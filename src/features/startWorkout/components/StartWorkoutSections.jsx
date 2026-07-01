@@ -10,8 +10,8 @@ export {
 
 export {
   WorkoutSessionSidebar,
-  MobileWorkoutNotesCard,
   MobileWorkoutActionBar,
+  MobileWorkoutNotesCard,
   RestTimerCard,
   FinishWorkoutModal,
 } from './StartWorkoutActionSections'

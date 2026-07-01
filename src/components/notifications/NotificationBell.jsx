@@ -7,7 +7,6 @@ import { useAuth } from '../../context/AuthContext'
 import { normalizeNotificationFromApi, formatDateTime, getNotificationMeta } from '../../features/notifications/notificationUtils'
 import { apiFetch } from '../../services/api'
 import { clearLegacyForgeFlowStorage, getUserStorageData } from '../../utils/userStorage'
-import ForgeFlowIcon from '../brand/ForgeFlowIcon'
 
 const MAX_PREVIEW_NOTIFICATIONS = 5
 
@@ -245,11 +244,11 @@ function NotificationBell() {
         <header className="ff-notification-menu__header">
           <div className="ff-notification-menu__brand-copy">
             <span className="ff-notification-menu__brand-icon" aria-hidden="true">
-              <ForgeFlowIcon size="100%" className="ff-brand-app-icon--soft" decorative />
+              <Bell size={18} />
             </span>
             <span id="ff-notification-menu-title">Notificações</span>
             <strong>{unreadLabel}</strong>
-            <small>Resumo rapido do ForgeFlow.</small>
+            <small>Resumo rápido do ForgeFlow.</small>
           </div>
 
           <button type="button" onClick={() => setIsMenuOpen(false)} aria-label="Fechar notificações">
@@ -261,7 +260,7 @@ function NotificationBell() {
           <section className="ff-notification-menu__section" aria-labelledby="ff-notification-menu-recent-title">
             <div className="ff-notification-menu__section-title">
               <span id="ff-notification-menu-recent-title">Recentes</span>
-              <em>{previewItems.length > 0 ? `${previewItems.length} item${previewItems.length === 1 ? '' : 's'}` : 'Nada novo'}</em>
+              <em>{previewItems.length > 0 ? `${previewItems.length} ite${previewItems.length === 1 ? 'm' : 'ns'}` : 'Nada novo'}</em>
             </div>
 
             {previewItems.length > 0 ? (

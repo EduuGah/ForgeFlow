@@ -163,7 +163,7 @@ function getActiveWorkoutInfo(activeSession, completedSets, totalSets) {
     currentExercise?.exercise?.name ||
     currentExercise?.exerciseName ||
     currentExercise?.name ||
-    'Proximo exercicio'
+    'Próximo exercício'
 
   const currentWorkingSets = (currentExercise?.sets || []).filter(
     (set) => set.type !== 'warmup'
@@ -173,8 +173,8 @@ function getActiveWorkoutInfo(activeSession, completedSets, totalSets) {
     ? nextIncompleteSetIndex
     : Math.max(0, currentWorkingSets.length - 1)
   const currentSetLabel = currentWorkingSets.length > 0
-    ? `Serie ${activeSetIndex + 1}/${currentWorkingSets.length}`
-    : `${completedSets}/${totalSets} series`
+    ? `Série ${activeSetIndex + 1}/${currentWorkingSets.length}`
+    : `${completedSets}/${totalSets} séries`
   const nextSet = currentWorkingSets[activeSetIndex]
 
   return {
@@ -247,7 +247,7 @@ function DashboardHero({
           <strong>{toNumber(consistencyStats.workoutsLast7Days)}x</strong>
         </div>
         <div>
-          <span>Ultimo volume</span>
+          <span>Último volume</span>
           <strong>{formatCompactNumber(lastWorkoutVolume, 'kg')}</strong>
         </div>
       </div>
@@ -258,7 +258,7 @@ function DashboardHero({
           {loadingDashboard ? 'Sincronizando dados' : dashboardSource === 'api' ? 'Dados online' : 'Dados locais'}
         </span>
         <Link to="/history">
-          Ver historico
+          Ver histórico
           <ChevronRight size={15} />
         </Link>
       </div>
@@ -291,7 +291,7 @@ function DashboardActiveWorkoutCard({ activeSession, elapsedSeconds, completedSe
         <strong>Continuar {activeSession.workoutName || 'treino'}</strong>
         <small>{activeInfo.currentSetLabel} - {activeInfo.currentExerciseName}</small>
         <em>
-          Proxima serie: {activeInfo.nextSet?.plannedDescription || activeInfo.nextSet?.description || 'registrar kg e reps'}
+          Próxima série: {activeInfo.nextSet?.plannedDescription || activeInfo.nextSet?.description || 'registrar kg e reps'}
         </em>
       </span>
 
@@ -338,7 +338,7 @@ function DashboardTodaySummary({
 
         <Link to="/nutrition">
           <Droplets size={17} />
-          <span>Agua</span>
+          <span>Água</span>
           <strong>{formatCompactNumber(nutrition.waterMl, 'ml')}</strong>
         </Link>
 
@@ -356,7 +356,7 @@ function DashboardTodaySummary({
 
         <Link to="/muscle-recovery" className="is-wide">
           <Gauge size={17} />
-          <span>Recuperacao critica</span>
+          <span>Recuperação crítica</span>
           <strong>
             {criticalRecovery
               ? `${criticalRecovery.muscleGroup} - ${Math.round(toNumber(criticalRecovery.recoveryPercent))}%`
@@ -374,37 +374,40 @@ function DashboardNextAction({
   nutrition,
   criticalRecovery,
   recentPRs,
+  hasTrainingHistory = false,
 }) {
   const waterLeft = Math.max(0, toNumber(nutrition.waterGoalMl) - toNumber(nutrition.waterMl))
-  let label = 'Proxima melhor acao'
-  let title = 'Escolha uma acao para manter ritmo'
-  let description = 'Treino, agua, meta ou recuperacao: mantenha o dia simples.'
+  let label = 'Próxima melhor ação'
+  let title = hasTrainingHistory ? 'Escolha uma ação para manter ritmo' : 'Registre seu primeiro treino'
+  let description = hasTrainingHistory
+    ? 'Treino, água, meta ou recuperação: mantenha o dia simples.'
+    : 'Comece por uma rotina simples. Depois disso, o ForgeFlow cria análises mais úteis.'
   let to = '/workouts'
   let Icon = Zap
 
   if (activeSession) {
     title = 'Continue o treino ativo'
-    description = 'Seu treino ainda esta aberto. Finalize as series antes de sair do ritmo.'
+    description = 'Seu treino ainda está aberto. Finalize as séries antes de sair do ritmo.'
     to = '/start-workout'
     Icon = Dumbbell
   } else if (todayPlan?.workout) {
-    title = `Hoje e dia de ${getWorkoutName(todayPlan.workout)}`
-    description = `${getWorkoutExerciseCount(todayPlan.workout)} exercicio(s) planejado(s) na agenda.`
+    title = `Hoje é dia de ${getWorkoutName(todayPlan.workout)}`
+    description = `${getWorkoutExerciseCount(todayPlan.workout)} exercício(s) planejado(s) na agenda.`
     to = '/workouts'
     Icon = CalendarCheck
   } else if (waterLeft > 0 && waterLeft <= 750) {
-    title = `Faltam ${waterLeft}ml para sua meta de agua`
-    description = 'Um copo agora ja fecha boa parte da meta do dia.'
+    title = `Faltam ${waterLeft}ml para sua meta de água`
+    description = 'Um copo agora já fecha boa parte da meta do dia.'
     to = '/nutrition'
     Icon = Droplets
-  } else if (criticalRecovery) {
-    title = `Evite forcar ${criticalRecovery.muscleGroup} hoje`
-    description = `Recuperacao estimada em ${Math.round(toNumber(criticalRecovery.recoveryPercent))}%.`
+  } else if (hasTrainingHistory && criticalRecovery && toNumber(criticalRecovery.recoveryPercent) < 65) {
+    title = `Evite forçar ${criticalRecovery.muscleGroup} hoje`
+    description = `Recuperação estimada em ${Math.round(toNumber(criticalRecovery.recoveryPercent))}%.`
     to = '/muscle-recovery'
     Icon = Gauge
-  } else if (recentPRs.length > 0) {
-    title = `Voce esta perto de novos PRs`
-    description = `${recentPRs[0]?.exerciseName || 'Um exercicio'} apareceu nos recordes recentes.`
+  } else if (hasTrainingHistory && recentPRs.length > 0) {
+    title = `Você está perto de novos PRs`
+    description = `${recentPRs[0]?.exerciseName || 'Um exercício'} apareceu nos recordes recentes.`
     to = '/exercise-progress'
     Icon = Trophy
   }
@@ -520,7 +523,7 @@ function DashboardTodayWorkout({ user, workouts, onStartWorkout }) {
           </h3>
           <p>
             {todayWorkoutName
-              ? `${plannedExercises} exercicio(s) na rotina.`
+              ? `${plannedExercises} exercício(s) na rotina.`
               : hasSchedule
                 ? 'Ajuste sua semana ou aproveite para recuperar.'
                 : 'Monte uma agenda semanal para o app guiar seu dia.'}
@@ -534,7 +537,7 @@ function DashboardTodayWorkout({ user, workouts, onStartWorkout }) {
 
       {nextWorkout && (
         <div className="ff-dashboard-v2-next">
-          <span>Proximo</span>
+          <span>Próximo</span>
           <strong>{getWorkoutName(nextWorkout.workout)}</strong>
           <small>{nextWorkout.day.label}</small>
         </div>
@@ -553,7 +556,7 @@ function DashboardWeekStrip({ days }) {
           <span>Semana</span>
           <h2>Agenda e treinos</h2>
         </div>
-        <Link to="/calendar">Calendario</Link>
+        <Link to="/calendar">Calendário</Link>
       </div>
 
       <div className="ff-dashboard-v2-week__grid">
@@ -591,7 +594,7 @@ function DashboardMiniChart({ volumeByWorkout }) {
           <h2>Volume recente</h2>
         </div>
         <Link to="/progress">
-          Evolucao
+          Evolução
           <ChevronRight size={15} />
         </Link>
       </div>
@@ -607,7 +610,7 @@ function DashboardMiniChart({ volumeByWorkout }) {
           ))}
         </div>
       ) : (
-        <div className="ff-dashboard-v2-empty">Finalize treinos para ver seu grafico aqui.</div>
+        <div className="ff-dashboard-v2-empty">Finalize treinos para ver seu gráfico aqui.</div>
       )}
     </section>
   )
@@ -619,14 +622,17 @@ function DashboardFocusCards({
   bestVolumeSet,
   mostRecoveredMuscles,
   recentPRs,
+  hasTrainingHistory = false,
 }) {
-  const readyMuscle = mostRecoveredMuscles[0]
+  const readyMuscle = hasTrainingHistory ? mostRecoveredMuscles[0] : null
+  const leaderGroup = hasTrainingHistory ? strongestMuscleGroup : null
+  const recordExercise = hasTrainingHistory ? (heaviestExercise?.exerciseName || bestVolumeSet?.exerciseName) : ''
 
   return (
     <section className="ff-dashboard-v2-panel ff-dashboard-v2-focus">
       <div className="ff-dashboard-v2-section-title">
         <div>
-          <span>Leitura rapida</span>
+          <span>Leitura rápida</span>
           <h2>Onde focar</h2>
         </div>
       </div>
@@ -635,7 +641,7 @@ function DashboardFocusCards({
         <Link to="/muscle-recovery">
           <Gauge size={18} />
           <span>
-            <strong>{readyMuscle?.muscleGroup || 'Recuperacao'}</strong>
+            <strong>{readyMuscle?.muscleGroup || 'Recuperação'}</strong>
             <small>{readyMuscle ? `${Math.round(toNumber(readyMuscle.recoveryPercent))}% pronto` : 'Sem dados suficientes'}</small>
           </span>
         </Link>
@@ -643,16 +649,16 @@ function DashboardFocusCards({
         <Link to="/progress">
           <TrendingUp size={18} />
           <span>
-            <strong>{strongestMuscleGroup?.muscleGroup || 'Grupo lider'}</strong>
-            <small>{strongestMuscleGroup ? `${strongestMuscleGroup.total} series registradas` : 'Ainda sem ranking'}</small>
+            <strong>{leaderGroup?.muscleGroup || 'Grupo líder'}</strong>
+            <small>{leaderGroup ? `${leaderGroup.total} séries registradas` : 'Ainda sem ranking'}</small>
           </span>
         </Link>
 
         <Link to="/exercise-progress">
           <Trophy size={18} />
           <span>
-            <strong>{heaviestExercise?.exerciseName || bestVolumeSet?.exerciseName || 'Recordes'}</strong>
-            <small>{recentPRs.length > 0 ? `${recentPRs.length} PRs recentes` : 'Registre cargas para comparar'}</small>
+            <strong>{recordExercise || 'Recordes'}</strong>
+            <small>{hasTrainingHistory && recentPRs.length > 0 ? `${recentPRs.length} PRs recentes` : 'Registre cargas para comparar'}</small>
           </span>
         </Link>
       </div>
@@ -665,7 +671,7 @@ function DashboardGoalsAlerts({ dashboardGoals, dashboardNotifications, unreadNo
     <section className="ff-dashboard-v2-panel ff-dashboard-v2-goals">
       <div className="ff-dashboard-v2-section-title">
         <div>
-          <span>Proximos passos</span>
+          <span>Próximos passos</span>
           <h2>Metas e alertas</h2>
         </div>
         <Link to="/notifications">
@@ -678,7 +684,7 @@ function DashboardGoalsAlerts({ dashboardGoals, dashboardNotifications, unreadNo
         <Link to="/goals" className="ff-dashboard-v2-goal-card">
           <Target size={18} />
           <strong>{dashboardGoals[0]?.title || dashboardGoals[0]?.name || 'Criar meta'}</strong>
-          <span>{dashboardGoals[0] ? `${Math.round(toNumber(dashboardGoals[0].progressPercent))}% completo` : 'Defina seu proximo alvo'}</span>
+          <span>{dashboardGoals[0] ? `${Math.round(toNumber(dashboardGoals[0].progressPercent))}% completo` : 'Defina seu próximo alvo'}</span>
         </Link>
 
         <Link to="/notifications" className="ff-dashboard-v2-goal-card">
@@ -696,8 +702,8 @@ function DashboardRecentSessions({ recentSessions }) {
     <section className="ff-dashboard-v2-panel ff-dashboard-v2-recent" data-tutorial="dashboard-recent-history">
       <div className="ff-dashboard-v2-section-title">
         <div>
-          <span>Historico</span>
-          <h2>Ultimos treinos</h2>
+          <span>Histórico</span>
+          <h2>Últimos treinos</h2>
         </div>
         <Link to="/history">Ver tudo</Link>
       </div>
@@ -715,8 +721,40 @@ function DashboardRecentSessions({ recentSessions }) {
             </Link>
           ))
         ) : (
-          <div className="ff-dashboard-v2-empty">Seu historico aparece aqui depois do primeiro treino.</div>
+          <div className="ff-dashboard-v2-empty">Seu histórico aparece aqui depois do primeiro treino.</div>
         )}
+      </div>
+    </section>
+  )
+}
+
+function DashboardGeneralInsights({ insights = [] }) {
+  return (
+    <section className="ff-dashboard-v2-panel ff-dashboard-v2-focus ff-dashboard-v2-insights" data-tutorial="dashboard-insights">
+      <div className="ff-dashboard-v2-section-title">
+        <div>
+          <span>Insights</span>
+          <h2>Visão geral do ForgeFlow</h2>
+        </div>
+        <Link to="/progress">
+          Ver mais
+          <ChevronRight size={15} />
+        </Link>
+      </div>
+
+      <div className="ff-dashboard-v2-focus__list">
+        {insights.slice(0, 5).map((insight) => {
+          const Icon = insight.icon || Sparkles
+          return (
+            <Link key={insight.id} to={insight.to || '/progress'}>
+              <Icon size={18} />
+              <span>
+                <strong>{insight.title}</strong>
+                <small>{insight.description}</small>
+              </span>
+            </Link>
+          )
+        })}
       </div>
     </section>
   )
@@ -725,9 +763,9 @@ function DashboardRecentSessions({ recentSessions }) {
 function DashboardQuickActions() {
   const actions = [
     { to: '/workouts', label: 'Treinos', icon: Dumbbell },
-    { to: '/exercises', label: 'Exercicios', icon: Activity },
+    { to: '/exercises', label: 'Exercícios', icon: Activity },
     { to: '/progress-photos', label: 'Fotos', icon: Sparkles },
-    { to: '/nutrition', label: 'Nutricao', icon: Flame },
+    { to: '/nutrition', label: 'Nutrição', icon: Flame },
   ]
 
   return (
@@ -865,6 +903,74 @@ function Dashboard() {
     [history, weeklySchedule]
   )
   const recentSessions = useMemo(() => history.slice(0, 3), [history])
+  const dashboardInsights = useMemo(() => {
+    const items = []
+    const hasHistory = history.length > 0
+
+    if (!hasHistory) {
+      return [
+        {
+          id: 'start-first-workout',
+          title: 'Seu histórico ainda está começando',
+          description: 'Registre um treino para liberar análises de volume, frequência e PRs.',
+          icon: Dumbbell,
+          to: '/workouts',
+        },
+        {
+          id: 'setup-schedule',
+          title: 'Monte sua agenda',
+          description: 'Com uma semana planejada, o dashboard mostra o treino certo no dia certo.',
+          icon: CalendarCheck,
+          to: '/schedule',
+        },
+        {
+          id: 'nutrition-start',
+          title: 'Nutrição rápida',
+          description: `${toNumber(nutritionToday.waterMl)} ml de água registrados hoje.`,
+          icon: Droplets,
+          to: '/nutrition',
+        },
+      ]
+    }
+
+    items.push({
+      id: 'weekly-frequency',
+      title: `${toNumber(consistencyStats.workoutsLast7Days)} treino(s) nos últimos 7 dias`,
+      description: `Meta semanal atual: ${weeklyTarget}x.`,
+      icon: CalendarCheck,
+      to: '/calendar',
+    })
+
+    if (lastSession) {
+      items.push({
+        id: 'last-workout',
+        title: `Último treino: ${lastSession.workoutName || 'Treino'}`,
+        description: `${formatShortDate(lastSession.finishedAt)} · ${formatDuration(getSessionDuration(lastSession))}.`,
+        icon: Dumbbell,
+        to: '/history',
+      })
+    }
+
+    items.push({
+      id: 'water-today',
+      title: `Água de hoje: ${toNumber(nutritionToday.waterMl)}/${toNumber(nutritionToday.waterGoalMl)} ml`,
+      description: toNumber(nutritionToday.waterGoalMl) > 0 ? 'Atualize sua hidratação em poucos toques.' : 'Configure sua meta de água em Nutrição.',
+      icon: Droplets,
+      to: '/nutrition',
+    })
+
+    if (currentWeight) {
+      items.push({
+        id: 'current-weight',
+        title: `Peso atual: ${currentWeight} kg`,
+        description: 'Use o progresso para acompanhar tendência ao longo do tempo.',
+        icon: Weight,
+        to: '/progress',
+      })
+    }
+
+    return items
+  }, [consistencyStats.workoutsLast7Days, currentWeight, history.length, lastSession, nutritionToday, weeklyTarget])
 
   async function handleStartWorkout(workout) {
     try {
@@ -911,12 +1017,15 @@ function Dashboard() {
         criticalRecovery={criticalRecovery}
       />
 
+      <DashboardGeneralInsights insights={dashboardInsights} />
+
       <DashboardNextAction
         activeSession={activeSession}
         todayPlan={todayPlan}
         nutrition={nutritionToday}
         criticalRecovery={criticalRecovery}
         recentPRs={recentPRs}
+        hasTrainingHistory={history.length > 0}
       />
 
       <DashboardTodayWorkout
@@ -930,14 +1039,14 @@ function Dashboard() {
           icon={CalendarCheck}
           label="Treinos"
           value={history.length}
-          detail={`${toNumber(consistencyStats.currentStreak)} dias de sequencia`}
+          detail={`${toNumber(consistencyStats.currentStreak)} dias de sequência`}
           tone="accent"
         />
         <DashboardMetricCard
           icon={Weight}
           label="Volume"
           value={formatCompactNumber(totalVolume, 'kg')}
-          detail={`${formatCompactNumber(averageVolume, 'kg')} media`}
+          detail={`${formatCompactNumber(averageVolume, 'kg')} média`}
         />
         <DashboardMetricCard
           icon={Medal}
@@ -957,7 +1066,7 @@ function Dashboard() {
         <summary>
           <span>
             <TrendingUp size={17} />
-            Estatisticas avancadas
+            Estatísticas avançadas
           </span>
           <ChevronRight size={17} />
         </summary>
@@ -971,6 +1080,7 @@ function Dashboard() {
             bestVolumeSet={bestVolumeSet}
             mostRecoveredMuscles={mostRecoveredMuscles}
             recentPRs={recentPRs}
+            hasTrainingHistory={history.length > 0}
           />
         </div>
       </details>
@@ -985,7 +1095,7 @@ function Dashboard() {
         <div className="ff-dashboard-v2-section-title">
           <div>
             <span>Rotinas</span>
-            <h2>Acesso rapido</h2>
+            <h2>Acesso rápido</h2>
           </div>
           <Link to="/workouts">Todas</Link>
         </div>
@@ -999,7 +1109,7 @@ function Dashboard() {
             >
               <Play size={16} />
               <strong>{getWorkoutName(workout)}</strong>
-              <span>{Array.isArray(workout.exercises) ? workout.exercises.length : 0} exercicios</span>
+              <span>{Array.isArray(workout.exercises) ? workout.exercises.length : 0} exercícios</span>
             </button>
           ))}
 
@@ -1017,9 +1127,9 @@ function Dashboard() {
       <DashboardQuickActions />
 
       <div className="ff-dashboard-v2-bottom-note">
-        <span>Tempo medio</span>
+        <span>Tempo médio</span>
         <strong>{formatDuration(averageDuration)}</strong>
-        <small>{getSessionExerciseCount(lastSession)} exercicios no ultimo treino</small>
+        <small>{getSessionExerciseCount(lastSession)} exercícios no último treino</small>
       </div>
     </div>
   )

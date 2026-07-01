@@ -118,7 +118,7 @@ export function WorkoutSessionSidebar({
         </div>
       </Card>
 
-      <Card className="hidden xl:block" data-tutorial="active-workout-notes">
+      <Card data-tutorial="active-workout-notes">
         <div className="mb-3 flex items-center gap-2">
           <StickyNote size={18} className="text-[var(--ff-accent-text)]" />
           <h2 className="text-lg font-black">Observações</h2>
@@ -160,30 +160,22 @@ export function WorkoutSessionSidebar({
 
 
 
-export function MobileWorkoutNotesCard({
-  activeSession,
-  onUpdateNotes,
-}) {
-  if (!activeSession) return null
-
+export function MobileWorkoutNotesCard({ activeSession, onUpdateNotes }) {
   return (
-    <Card className="ff-active-workout-mobile-notes xl:hidden" data-tutorial="active-workout-notes">
-      <div className="mb-3 flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--ff-accent-soft)] text-[var(--ff-accent-text)]">
-          <StickyNote size={18} />
-        </div>
+    <Card className="ff-active-workout-notes-mobile xl:hidden" data-tutorial="active-workout-notes">
+      <div className="mb-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-base font-black text-[var(--ff-text)]">Adicionar observação</h2>
-          <p className="mt-1 text-xs font-medium text-[var(--ff-muted)]">
-            Registre dor, dificuldade, energia ou ajustes antes de concluir o treino.
-          </p>
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-[var(--ff-accent-text)]">Observações</p>
+          <h2 className="mt-1 text-lg font-black text-[var(--ff-text)]">Notas rápidas do treino</h2>
+          <p className="mt-1 text-sm text-[var(--ff-muted)]">Anote dor, energia, técnica ou ajustes sem sair da tela ativa.</p>
         </div>
+        <StickyNote size={20} className="shrink-0 text-[var(--ff-accent-text)]" />
       </div>
 
       <Textarea
         label="Observação do treino"
-        placeholder="Ex: ombro incomodou, treino rendeu bem, aumentar carga na próxima..."
-        value={activeSession.notes || ''}
+        placeholder="Ex: ombro incomodou, aumentei carga, treino pesado..."
+        value={activeSession?.notes || ''}
         onChange={(event) => onUpdateNotes(event.target.value)}
         rows={3}
       />

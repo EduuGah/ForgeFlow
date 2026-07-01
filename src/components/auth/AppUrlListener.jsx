@@ -41,6 +41,9 @@ function AppUrlListener() {
         if (isForgeFlowActiveWorkout(url)) {
           try {
             window.sessionStorage.setItem('forgeflow:open-active-workout-details', '1')
+            if (url.searchParams.get('action') === 'finish-confirm') {
+              window.sessionStorage.setItem('forgeflow:active-workout-finish-confirm', '1')
+            }
           } catch {
             // A navegação direta continua funcionando mesmo se sessionStorage não estiver disponível.
           }
@@ -91,8 +94,16 @@ function AppUrlListener() {
       'localNotificationActionPerformed',
       (event) => {
         const route = event?.notification?.extra?.forgeflowRoute
+        const action = event?.notification?.extra?.forgeflowAction || event?.actionId
 
         if (route === '/start-workout') {
+          try {
+            if (action === 'finish-confirm') {
+              window.sessionStorage.setItem('forgeflow:active-workout-finish-confirm', '1')
+            }
+          } catch {
+            // A navegação continua funcionando sem sessionStorage.
+          }
           navigate('/start-workout', {
             replace: false,
             state: { fromActiveWorkoutNotification: true },

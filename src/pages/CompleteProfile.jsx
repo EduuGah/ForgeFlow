@@ -68,6 +68,8 @@ function CompleteProfile() {
 
     useEffect(() => {
         unlockGlobalScroll()
+        document.documentElement.classList.add('ff-complete-profile-scroll-fix')
+        document.body.classList.add('ff-complete-profile-scroll-fix')
 
         async function loadUser() {
             try {
@@ -97,7 +99,11 @@ function CompleteProfile() {
 
         loadUser()
 
-        return () => unlockGlobalScroll()
+        return () => {
+            unlockGlobalScroll()
+            document.documentElement.classList.remove('ff-complete-profile-scroll-fix')
+            document.body.classList.remove('ff-complete-profile-scroll-fix')
+        }
     }, [navigate, setUser])
 
     async function handleSubmit(event) {

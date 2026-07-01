@@ -5,7 +5,6 @@ export default function TutorialControls({
   onBack,
   onNext,
   onSkipStep,
-  onSkipSection,
   onPause,
   onSkipAll,
 }) {
@@ -31,9 +30,6 @@ export default function TutorialControls({
             Pular etapa
           </button>
         ) : null}
-        <button type="button" className="ff-tutorial-link-btn" onClick={onSkipSection}>
-          Pular seção
-        </button>
         <button type="button" className="ff-tutorial-link-btn" onClick={onPause}>
           Rever depois
         </button>

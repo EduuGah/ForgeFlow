@@ -7,11 +7,11 @@ import {
   ExerciseJumpNav,
   InvalidSessionState,
   MobileWorkoutActionBar,
+  MobileWorkoutNotesCard,
   NoActiveSessionState,
   RestTimerCard,
   FinishWorkoutModal,
   WorkoutSessionSidebar,
-  MobileWorkoutNotesCard,
 } from '../features/startWorkout/components/StartWorkoutSections'
 import ActiveExerciseCard from '../features/startWorkout/components/ActiveExerciseCard'
 
@@ -426,6 +426,28 @@ function StartWorkout() {
     cancelSession()
     window.location.href = '/workouts'
   }
+
+
+  useEffect(() => {
+    if (!activeSession || finishWorkoutModalOpen) return undefined
+
+    let shouldOpen = false
+
+    try {
+      shouldOpen = window.sessionStorage.getItem('forgeflow:active-workout-finish-confirm') === '1'
+      if (shouldOpen) window.sessionStorage.removeItem('forgeflow:active-workout-finish-confirm')
+    } catch {
+      shouldOpen = false
+    }
+
+    if (!shouldOpen) return undefined
+
+    const timeoutId = window.setTimeout(() => {
+      handleRequestFinishWorkout()
+    }, 180)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [activeSession, finishWorkoutModalOpen, hasValidCompletedSet, elapsedSeconds])
 
   function handleRequestFinishWorkout() {
     if (!hasValidCompletedSet) {
@@ -875,7 +897,6 @@ function StartWorkout() {
               onRemoveSet={removeSet}
             />
           ))}
-
         </div>
 
         <WorkoutSessionSidebar

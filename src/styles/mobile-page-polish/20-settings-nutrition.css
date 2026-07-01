@@ -872,3 +872,52 @@
   }
 }
 
+
+/* Nutrition refactor: keep insights and edit actions visible near the top. */
+.ff-nutrition-insights-top {
+  border-color: var(--ff-accent-border, var(--ff-border));
+}
+
+.ff-insight-list--compact {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.65rem;
+}
+
+.ff-insight-list--compact p {
+  min-height: 3.25rem;
+  border: 1px solid var(--ff-border);
+  border-radius: 18px;
+  background: var(--ff-surface);
+  padding: 0.78rem 0.85rem;
+  color: var(--ff-text-soft);
+  font-size: 0.86rem;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.ff-meal-actions--compact {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.ff-meal-actions--compact button {
+  min-width: 2.4rem;
+  height: 2.4rem;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+}
+
+@media (max-width: 640px) {
+  .ff-insight-list--compact {
+    grid-template-columns: 1fr;
+  }
+
+  .ff-meal-actions--compact {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

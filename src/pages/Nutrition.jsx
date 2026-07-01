@@ -3,12 +3,12 @@ import {
   Apple,
   Beef,
   CalendarDays,
-  CheckCircle2,
   Coffee,
   Droplets,
   Flame,
   ImagePlus,
   Moon,
+  Pencil,
   Plus,
   RotateCcw,
   Salad,
@@ -601,6 +601,9 @@ function Nutrition() {
                 <Button type="button" variant="ghost" onClick={() => setActiveSheet('history')} className="flex-1 sm:flex-none">
                   <CalendarDays size={17} /> Histórico
                 </Button>
+                <Button type="button" variant="ghost" onClick={() => setActiveSheet('goals')} className="flex-1 sm:flex-none" aria-label="Editar metas nutricionais">
+                  <Pencil size={17} /> Editar metas
+                </Button>
               </div>
             </div>
 
@@ -610,6 +613,22 @@ function Nutrition() {
                 <small>{nutrition.waterMl} / {nutrition.waterGoalMl} ml</small>
               </div>
             </div>
+          </div>
+        </Card>
+
+        <Card className="ff-nutrition-insights-top p-4 sm:p-5" data-tutorial="nutrition-insights">
+          <div className="ff-card-section-head">
+            <div className="min-w-0">
+              <p className="ff-section-eyebrow">Insights</p>
+              <h2>Leitura rápida do dia</h2>
+              <span>Os pontos mais úteis aparecem aqui, sem precisar descer a página.</span>
+            </div>
+            <Sparkles size={22} className="text-[var(--ff-accent-text)]" />
+          </div>
+          <div className="ff-insight-list ff-insight-list--compact">
+            {insights.length > 0 ? insights.map((insight) => <p key={insight}>{insight}</p>) : (
+              <p>Registre água ou uma refeição para liberar insights mais úteis.</p>
+            )}
           </div>
         </Card>
 
@@ -699,9 +718,11 @@ function Nutrition() {
                       <p>{item.time || '--:--'} · {item.calories || 0} kcal · {item.proteinG || 0}g prot. · {item.carbsG || 0}g carb. · {item.fatG || 0}g gord.</p>
                       {item.notes && <small>{item.notes}</small>}
                     </div>
-                    <div className="ff-meal-actions">
-                      <button type="button" onClick={() => openMealSheet(item)}>Editar</button>
-                      <button type="button" onClick={() => handleRemoveMeal(item.id)} aria-label="Excluir refeição"><Trash2 size={16} /></button>
+                    <div className="ff-meal-actions ff-meal-actions--compact">
+                      <button type="button" onClick={() => openMealSheet(item)} aria-label="Editar refeição" title="Editar refeição">
+                        <Pencil size={15} />
+                      </button>
+                      <button type="button" onClick={() => handleRemoveMeal(item.id)} aria-label="Excluir refeição" title="Excluir refeição"><Trash2 size={16} /></button>
                     </div>
                   </article>
                 )) : (
@@ -726,8 +747,8 @@ function Nutrition() {
                   <h2>Ajuste rápido</h2>
                   <span>Valores opcionais, exceto meta de água.</span>
                 </div>
-                <Button type="button" variant="secondary" onClick={() => setActiveSheet('goals')} className="shrink-0 px-3">
-                  Editar
+                <Button type="button" variant="secondary" onClick={() => setActiveSheet('goals')} className="shrink-0 px-3" aria-label="Editar metas">
+                  <Pencil size={15} />
                 </Button>
               </div>
               <div className="ff-goal-mini-list">
@@ -754,19 +775,6 @@ function Nutrition() {
               <p className="mt-3 text-sm font-bold text-[var(--ff-text-soft)]">
                 {macroSplit.protein}% prot. / {macroSplit.carbs}% carb. / {macroSplit.fat}% gord.
               </p>
-            </Card>
-
-            <Card className="p-4 sm:p-5">
-              <div className="ff-card-section-head">
-                <div className="min-w-0">
-                  <p className="ff-section-eyebrow">Insights</p>
-                  <h2>Leitura rápida</h2>
-                </div>
-                <CheckCircle2 size={22} className="text-[var(--ff-success-text)]" />
-              </div>
-              <div className="ff-insight-list">
-                {insights.map((insight) => <p key={insight}>{insight}</p>)}
-              </div>
             </Card>
 
             <Card className="p-4 sm:p-5">

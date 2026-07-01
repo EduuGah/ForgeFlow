@@ -114,20 +114,26 @@ public class ActiveWorkoutForegroundService extends Service {
 
         String setLine = safeSetLabel;
         if (!hasText(setLine) && safeTotalSets > 0) {
-            setLine = safeCompletedSets + "/" + safeTotalSets + " series";
+            setLine = safeCompletedSets + "/" + safeTotalSets + " séries";
         }
 
         String compactStatus = hasText(safeExerciseName)
             ? (hasText(setLine) ? setLine + " - " + safeExerciseName : safeExerciseName)
             : "Toque para voltar ao ForgeFlow";
-        String progressLine = safeProgress + "% concluido";
-        String setsLine = safeTotalSets > 0 ? safeCompletedSets + "/" + safeTotalSets + " series" : "Series em andamento";
+        String progressLine = safeProgress + "% concluído";
+        String setsLine = safeTotalSets > 0 ? safeCompletedSets + "/" + safeTotalSets + " séries" : "Séries em andamento";
         String title = hasText(safeExerciseName) ? safeExerciseName : safeWorkoutName;
         String detailText = hasText(summary)
             ? summary.trim()
             : safeWorkoutName + " - " + compactStatus + " - " + setsLine + " - " + progressLine;
 
         Bitmap largeIcon = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
+
+        Intent finishIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("forgeflow://workout/active?action=finish-confirm&source=notification"), this, MainActivity.class);
+        finishIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        finishIntent.putExtra("forgeflowRoute", "/start-workout");
+        finishIntent.putExtra("forgeflowAction", "finish-confirm");
+        PendingIntent finishPendingIntent = PendingIntent.getActivity(this, 1, finishIntent, pendingFlags);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_forgeflow)
@@ -150,7 +156,8 @@ public class ActiveWorkoutForegroundService extends Service {
             .setUsesChronometer(true)
             .setShowWhen(true)
             .setBadgeIconType(NotificationCompat.BADGE_ICON_SMALL)
-            .addAction(R.drawable.ic_stat_forgeflow, "Abrir detalhes", pendingIntent);
+            .addAction(R.drawable.ic_stat_forgeflow, "Abrir treino", pendingIntent)
+            .addAction(R.drawable.ic_stat_forgeflow, "Encerrar", finishPendingIntent);
 
         builder.setProgress(100, safeProgress, false);
 
@@ -172,7 +179,7 @@ public class ActiveWorkoutForegroundService extends Service {
             "Treino ativo ForgeFlow",
             NotificationManager.IMPORTANCE_LOW
         );
-        channel.setDescription("Notificacao fixa enquanto existe treino em andamento.");
+        channel.setDescription("Notificação fixa enquanto existe treino em andamento.");
         channel.setShowBadge(false);
         manager.createNotificationChannel(channel);
     }

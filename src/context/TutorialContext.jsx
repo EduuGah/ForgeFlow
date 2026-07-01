@@ -344,29 +344,6 @@ export function TutorialProvider({ children }) {
     nextStep()
   }, [nextStep])
 
-  const skipSection = useCallback(() => {
-    if (!activeFlow || !activeStep) return
-
-    const currentSection = getStepSection(activeStep)
-    const nextIndex = activeFlow.steps.findIndex((step, index) => (
-      index > activeStepIndex && getStepSection(step) !== currentSection
-    ))
-
-    updateState((current) => ({
-      ...current,
-      skippedSections: uniqueValues([...(current.skippedSections || []), currentSection]),
-      tutorialSeenSections: uniqueValues([...(current.tutorialSeenSections || []), currentSection]),
-    }))
-
-    if (nextIndex === -1) {
-      completeTutorial()
-      return
-    }
-
-    setActiveStepIndex(nextIndex)
-    persistCurrentPosition(activeFlow.id, nextIndex)
-  }, [activeFlow, activeStep, activeStepIndex, completeTutorial, persistCurrentPosition, updateState])
-
   const pauseTutorial = useCallback(() => {
     if (activeFlow) {
       persistCurrentPosition(activeFlow.id, activeStepIndex, { paused: true })
@@ -610,7 +587,6 @@ export function TutorialProvider({ children }) {
       nextStep,
       previousStep,
       skipStep,
-      skipSection,
       skipAll,
       skipTutorial,
       pauseTutorial,
@@ -646,7 +622,6 @@ export function TutorialProvider({ children }) {
       sections,
       setAutoStartEnabled,
       skipAll,
-      skipSection,
       skipStep,
       skipTutorial,
       startTutorial,

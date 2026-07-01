@@ -64,8 +64,6 @@ function buildOneShotSchedule(secondsFromNow = 10) {
 function buildNotification(payload) {
   return {
     channelId: REMINDER_CHANNEL_ID,
-    smallIcon: 'ic_stat_forgeflow',
-    iconColor: '#22d3ee',
     autoCancel: true,
     ...payload,
   }
@@ -437,7 +435,12 @@ export async function updateActiveWorkoutNotification({
   currentSetLabel = '',
   completedExercises = 0,
   totalExercises = 0,
+  isTutorialDemo = false,
+  isTutorial = false,
+  tutorialOnly = false,
+  demo = false,
 }) {
+  if (isTutorialDemo || isTutorial || tutorialOnly || demo) return { scheduled: false, reason: 'tutorial-demo' }
   if (!canUseNativeNotifications()) return { scheduled: false, reason: 'not-native' }
 
   const permission = await requestNotificationPermission()
@@ -455,7 +458,7 @@ export async function updateActiveWorkoutNotification({
   const exerciseSummary = safeTotalExercises > 0
     ? `${safeCompletedExercises}/${safeTotalExercises} exercícios`
     : 'Exercícios em andamento'
-  const setSummary = `${safeCompletedSets}/${safeTotalSets} series`
+  const setSummary = `${safeCompletedSets}/${safeTotalSets} séries`
   const summary = `${elapsedLabel || '00:00:00'} - ${setSummary} - ${safeProgress}%`
   const detailedSummary = safeExerciseName
     ? `${safeCurrentSetLabel ? `${safeCurrentSetLabel} - ` : ''}${safeExerciseName} - ${summary}`

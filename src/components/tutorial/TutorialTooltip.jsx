@@ -14,7 +14,6 @@ export default function TutorialTooltip({
   onBack,
   onNext,
   onSkipStep,
-  onSkipSection,
   onPause,
   onSkipAll,
 }) {
@@ -60,7 +59,6 @@ export default function TutorialTooltip({
         onBack={onBack}
         onNext={onNext}
         onSkipStep={onSkipStep}
-        onSkipSection={onSkipSection}
         onPause={onPause}
         onSkipAll={onSkipAll}
       />

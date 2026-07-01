@@ -333,7 +333,9 @@ function AppLayout() {
   useEffect(() => {
     if (!isRunningNativeApp) return undefined
 
-    if (!activeSession) {
+    const isTutorialSession = Boolean(activeSession?.isTutorialDemo || activeSession?.isTutorial || activeSession?.tutorialOnly || activeSession?.demo)
+
+    if (!activeSession || isTutorialSession) {
       cancelActiveWorkoutNotification().catch(() => {})
       return undefined
     }
@@ -355,8 +357,8 @@ function AppLayout() {
         ? nextIncompleteSetIndex
         : Math.max(0, currentWorkingSets.length - 1)
       const currentSetLabel = currentWorkingSets.length > 0
-        ? `Serie ${activeSetIndex + 1}/${currentWorkingSets.length}`
-        : `${completedSets}/${totalSets} series`
+        ? `Série ${activeSetIndex + 1}/${currentWorkingSets.length}`
+        : `${completedSets}/${totalSets} séries`
       const completedExercises = sessionExercises.filter((exercise) => {
         const workingSets = Array.isArray(exercise.sets) ? exercise.sets.filter((set) => set.type !== 'warmup') : []
         return workingSets.length > 0 && workingSets.every((set) => set.completed)
@@ -373,6 +375,10 @@ function AppLayout() {
         currentSetLabel,
         completedExercises,
         totalExercises: sessionExercises.length,
+        isTutorialDemo: Boolean(activeSession?.isTutorialDemo),
+        isTutorial: Boolean(activeSession?.isTutorial),
+        tutorialOnly: Boolean(activeSession?.tutorialOnly),
+        demo: Boolean(activeSession?.demo),
       }).catch(() => {})
     }
 
@@ -380,7 +386,7 @@ function AppLayout() {
     const intervalId = window.setInterval(syncActiveWorkoutNotification, 60000)
 
     return () => window.clearInterval(intervalId)
-  }, [activeSession, activeSession?.startedAt, activeSession?.workoutName, completedSets, elapsedSeconds, isRunningNativeApp, totalSets])
+  }, [activeSession, activeSession?.id, activeSession?.isTutorial, activeSession?.isTutorialDemo, activeSession?.startedAt, activeSession?.tutorialOnly, activeSession?.workoutName, completedSets, elapsedSeconds, isRunningNativeApp, totalSets])
 
   useEffect(() => {
     function handleNotificationPopup(event) {

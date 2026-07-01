@@ -9,7 +9,8 @@ const TARGET_RETRY_LIMIT = 18
 const TARGET_RETRY_DELAY = 90
 const EDGE_MARGIN = 12
 const TOP_SAFE_GAP = 84
-const BOTTOM_SAFE_GAP = 104
+const BOTTOM_SAFE_GAP = 112
+const TOOLTIP_TARGET_GAP = 18
 
 function getViewport() {
   if (typeof window === 'undefined') return { width: 0, height: 0 }
@@ -104,6 +105,58 @@ function getTutorialLayerAncestors(element) {
   return layers
 }
 
+
+function getVisibleFixedRect(selector) {
+  if (typeof document === 'undefined' || typeof window === 'undefined') return null
+
+  try {
+    const elements = Array.from(document.querySelectorAll(selector)).filter(isUsableTarget)
+    const viewport = getViewport()
+
+    return elements
+      .map((element) => element.getBoundingClientRect())
+      .filter((rect) => rect.width > 0 && rect.height > 0 && rect.bottom > viewport.offsetTop && rect.top < viewport.height + viewport.offsetTop)
+      .sort((a, b) => (b.width * b.height) - (a.width * a.height))[0] || null
+  } catch {
+    return null
+  }
+}
+
+function measureFixedObstructions() {
+  if (typeof window === 'undefined') return { top: TOP_SAFE_GAP, bottom: BOTTOM_SAFE_GAP }
+
+  const viewport = getViewport()
+  const topCandidates = [
+    getVisibleFixedRect('[data-tutorial="app-header"]'),
+    getVisibleFixedRect('#app-header'),
+    getVisibleFixedRect('.ff-mobile-topbar'),
+    getVisibleFixedRect('.ff-app-header'),
+  ].filter(Boolean)
+  const bottomCandidates = [
+    getVisibleFixedRect('[data-tutorial="bottom-nav"]'),
+    getVisibleFixedRect('.mobile-bottom-nav'),
+    getVisibleFixedRect('.ff-mobile-bottom-nav'),
+    getVisibleFixedRect('.ff-active-workout-mini-floating'),
+    getVisibleFixedRect('.ff-mobile-workout-action-bar.is-visible'),
+    getVisibleFixedRect('.ff-mobile-workout-action-bar'),
+  ].filter(Boolean)
+
+  const top = topCandidates.reduce((max, rect) => {
+    if (rect.top > viewport.height * 0.35) return max
+    return Math.max(max, Math.ceil(rect.bottom - viewport.offsetTop + 14))
+  }, TOP_SAFE_GAP)
+
+  const bottom = bottomCandidates.reduce((max, rect) => {
+    if (rect.bottom < viewport.height * 0.55) return max
+    return Math.max(max, Math.ceil(viewport.height + viewport.offsetTop - rect.top + 14))
+  }, BOTTOM_SAFE_GAP)
+
+  return {
+    top: Math.min(viewport.height * 0.42, Math.max(TOP_SAFE_GAP, top)),
+    bottom: Math.min(viewport.height * 0.45, Math.max(BOTTOM_SAFE_GAP, bottom)),
+  }
+}
+
 function getScrollParent(element) {
   if (!element || typeof window === 'undefined') return null
   let parent = element.parentElement
@@ -120,14 +173,18 @@ function getScrollParent(element) {
   return document.scrollingElement || document.documentElement
 }
 
-function scrollTargetIntoComfortZone(element, updateRect) {
+function scrollTargetIntoComfortZone(element, updateRect, tooltipSize = { height: 260 }) {
   if (!element || typeof window === 'undefined') return
 
   const viewport = getViewport()
-  const topSafe = TOP_SAFE_GAP + viewport.offsetTop
-  const bottomSafe = viewport.height + viewport.offsetTop - BOTTOM_SAFE_GAP
+  const obstructions = measureFixedObstructions()
   const currentRect = element.getBoundingClientRect()
-  const isComfortable = currentRect.top >= topSafe && currentRect.bottom <= bottomSafe
+  const tooltipReserve = Math.min(Math.max(Number(tooltipSize?.height) || 260, 220), viewport.height * 0.48)
+  const topSafe = viewport.offsetTop + obstructions.top + EDGE_MARGIN
+  const bottomSafe = viewport.height + viewport.offsetTop - obstructions.bottom - EDGE_MARGIN
+  const canFitTooltipBelow = bottomSafe - currentRect.bottom >= tooltipReserve + TOOLTIP_TARGET_GAP
+  const canFitTooltipAbove = currentRect.top - topSafe >= tooltipReserve + TOOLTIP_TARGET_GAP
+  const isComfortable = currentRect.top >= topSafe && currentRect.bottom <= bottomSafe && (canFitTooltipBelow || canFitTooltipAbove)
 
   if (isComfortable) {
     window.requestAnimationFrame(updateRect)
@@ -135,23 +192,28 @@ function scrollTargetIntoComfortZone(element, updateRect) {
   }
 
   const scrollParent = getScrollParent(element)
+  const safeHeight = Math.max(220, bottomSafe - topSafe)
+  const targetCenterInViewport = topSafe + safeHeight * 0.38
 
   try {
     if (scrollParent && scrollParent !== document.documentElement && scrollParent !== document.body) {
       const parentRect = scrollParent.getBoundingClientRect()
-      const elementCenter = currentRect.top - parentRect.top + scrollParent.scrollTop + (currentRect.height / 2)
-      const desiredTop = elementCenter - (scrollParent.clientHeight / 2)
-      scrollParent.scrollTo({ top: Math.max(0, desiredTop), behavior: 'smooth' })
+      const currentCenter = currentRect.top + (currentRect.height / 2)
+      const delta = currentCenter - targetCenterInViewport
+      scrollParent.scrollTo({ top: Math.max(0, scrollParent.scrollTop + delta), behavior: 'smooth' })
     } else {
-      element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
+      const currentCenter = currentRect.top + window.scrollY + (currentRect.height / 2)
+      const desiredTop = currentCenter - targetCenterInViewport
+      window.scrollTo({ top: Math.max(0, desiredTop), behavior: 'smooth' })
     }
   } catch {
-    element.scrollIntoView()
+    element.scrollIntoView({ block: 'center', inline: 'nearest' })
   }
 
-  window.setTimeout(updateRect, 120)
-  window.setTimeout(updateRect, 320)
-  window.setTimeout(updateRect, 520)
+  window.setTimeout(updateRect, 80)
+  window.setTimeout(updateRect, 180)
+  window.setTimeout(updateRect, 340)
+  window.setTimeout(updateRect, 620)
 }
 
 function toRect(element) {
@@ -187,8 +249,9 @@ function computeTooltipPosition({ rect, tooltipSize, placement = 'auto', targetM
   const viewport = getViewport()
   const width = tooltipSize.width || Math.min(360, viewport.width - EDGE_MARGIN * 2)
   const height = tooltipSize.height || 260
-  const minTop = EDGE_MARGIN + TOP_SAFE_GAP / 3 + viewport.offsetTop
-  const maxTop = viewport.height + viewport.offsetTop - height - BOTTOM_SAFE_GAP
+  const obstructions = measureFixedObstructions()
+  const minTop = EDGE_MARGIN + obstructions.top + viewport.offsetTop
+  const maxTop = viewport.height + viewport.offsetTop - height - obstructions.bottom - EDGE_MARGIN
   const minLeft = EDGE_MARGIN + viewport.offsetLeft
   const maxLeft = viewport.width + viewport.offsetLeft - width - EDGE_MARGIN
 
@@ -199,10 +262,12 @@ function computeTooltipPosition({ rect, tooltipSize, placement = 'auto', targetM
     }
   }
 
-  const gap = 18
+  const gap = TOOLTIP_TARGET_GAP
   const centeredLeft = rect.left + rect.width / 2 - width / 2
   const centeredTop = rect.top + rect.height / 2 - height / 2
-  const autoPlacement = rect.top > viewport.height * 0.52 ? 'top' : 'bottom'
+  const spaceAbove = rect.top - minTop
+  const spaceBelow = maxTop + height - rect.bottom
+  const autoPlacement = spaceBelow >= height + gap || spaceBelow >= spaceAbove ? 'bottom' : 'top'
   const preferred = placement === 'auto' ? autoPlacement : placement
 
   const rawCandidates = {
@@ -269,7 +334,7 @@ function getScrimRects(rect) {
   }
 }
 
-function useTutorialTarget(step, pathname) {
+function useTutorialTarget(step, pathname, tooltipSize) {
   const [target, setTarget] = useState(null)
   const [rect, setRect] = useState(null)
   const [targetMissing, setTargetMissing] = useState(false)
@@ -338,9 +403,9 @@ function useTutorialTarget(step, pathname) {
 
     scrollDoneRef.current = step.id
     window.setTimeout(() => {
-      scrollTargetIntoComfortZone(target, updateRect)
+      scrollTargetIntoComfortZone(target, updateRect, { height: tooltipSize?.height || 260 })
     }, 90)
-  }, [step?.id, step?.scrollIntoView, target, updateRect])
+  }, [step?.id, step?.scrollIntoView, target, tooltipSize?.height, updateRect])
 
   useEffect(() => {
     if (!target) return undefined
@@ -455,14 +520,13 @@ export default function TutorialOverlay() {
     nextStep,
     previousStep,
     skipStep,
-    skipSection,
     pauseTutorial,
     skipAll,
   } = useTutorial()
   const tooltipRef = useRef(null)
   const [tooltipSize, setTooltipSize] = useState({ width: 340, height: 260 })
 
-  const { rect, targetMissing } = useTutorialTarget(activeStep, location.pathname)
+  const { rect, targetMissing } = useTutorialTarget(activeStep, location.pathname, tooltipSize)
   const shouldSpotlight = Boolean(rect && !targetMissing && activeStep?.placement !== 'center')
 
   const scrimRects = useMemo(() => getScrimRects(shouldSpotlight ? rect : null), [rect, shouldSpotlight])
@@ -533,7 +597,6 @@ export default function TutorialOverlay() {
         onBack={previousStep}
         onNext={nextStep}
         onSkipStep={skipStep}
-        onSkipSection={skipSection}
         onPause={pauseTutorial}
         onSkipAll={skipAll}
       />

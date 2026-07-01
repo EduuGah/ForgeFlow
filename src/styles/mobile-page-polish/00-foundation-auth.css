@@ -88,3 +88,36 @@
   }
 }
 
+
+/* Complete-profile Android scroll fix: this route must own the viewport scroll. */
+html.ff-complete-profile-scroll-fix,
+body.ff-complete-profile-scroll-fix {
+  height: auto !important;
+  min-height: 100dvh !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior-y: contain;
+}
+
+.ff-hevy-page-completeprofile.ff-auth-route {
+  min-height: 100dvh !important;
+  height: auto !important;
+  overflow: visible !important;
+  padding-bottom: max(42px, calc(24px + env(safe-area-inset-bottom))) !important;
+}
+
+.ff-hevy-page-completeprofile .ff-auth-route__shell {
+  min-height: auto !important;
+  align-items: flex-start !important;
+}
+
+.ff-hevy-page-completeprofile .ff-auth-card--wide {
+  margin-bottom: max(2rem, env(safe-area-inset-bottom));
+}
+
+.ff-hevy-page-completeprofile input,
+.ff-hevy-page-completeprofile select,
+.ff-hevy-page-completeprofile textarea {
+  scroll-margin-top: calc(5rem + env(safe-area-inset-top));
+  scroll-margin-bottom: calc(8rem + env(safe-area-inset-bottom));
+}
