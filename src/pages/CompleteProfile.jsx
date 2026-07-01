@@ -30,6 +30,20 @@ function clampNumber(value, min, max) {
     return Math.min(max, Math.max(min, value))
 }
 
+function getPointerDistance(first, second) {
+    const dx = first.clientX - second.clientX
+    const dy = first.clientY - second.clientY
+    return Math.hypot(dx, dy)
+}
+
+function getPointerCenter(first, second) {
+    return {
+        x: (first.clientX + second.clientX) / 2,
+        y: (first.clientY + second.clientY) / 2,
+    }
+}
+
+
 function clampAvatarOffset(offset, zoom, frameSize, naturalSize) {
     if (!frameSize || !naturalSize.width || !naturalSize.height) return offset
 
@@ -109,12 +123,15 @@ function CompleteProfile() {
     const [avatarUrl, setAvatarUrl] = useState('')
     const [avatarEditorSrc, setAvatarEditorSrc] = useState('')
     const [avatarEditorError, setAvatarEditorError] = useState('')
+    const [avatarFileError, setAvatarFileError] = useState('')
     const [avatarZoom, setAvatarZoom] = useState(1)
     const [avatarOffset, setAvatarOffset] = useState({ x: 0, y: 0 })
     const [avatarNaturalSize, setAvatarNaturalSize] = useState({ width: 0, height: 0 })
     const [croppingAvatar, setCroppingAvatar] = useState(false)
     const cropFrameRef = useRef(null)
+    const [cropFrameSize, setCropFrameSize] = useState(0)
     const dragStateRef = useRef(null)
+    const activePointersRef = useRef(new Map())
     const [height, setHeight] = useState('')
     const [currentWeight, setCurrentWeight] = useState('')
     const [mainGoal, setMainGoal] = useState('')
@@ -145,6 +162,25 @@ function CompleteProfile() {
             document.documentElement.style.removeProperty('--ff-complete-profile-vh')
         }
     }, [])
+
+
+    useLayoutEffect(() => {
+        if (!avatarEditorSrc || typeof ResizeObserver === 'undefined') return undefined
+
+        const frame = cropFrameRef.current
+        if (!frame) return undefined
+
+        const updateFrameSize = () => {
+            const rect = frame.getBoundingClientRect()
+            setCropFrameSize(Math.max(1, Math.round(rect.width || 280)))
+        }
+
+        updateFrameSize()
+        const observer = new ResizeObserver(updateFrameSize)
+        observer.observe(frame)
+
+        return () => observer.disconnect()
+    }, [avatarEditorSrc])
 
     useEffect(() => {
         unlockGlobalScroll()
@@ -193,6 +229,7 @@ function CompleteProfile() {
 
         if (!height || !currentWeight || !mainGoal || !trainingLevel) {
             setError('Preencha altura, peso atual, objetivo e nível de treino.')
+            window.setTimeout(() => scrollRef.current?.scrollTo?.({ top: 0, behavior: 'smooth' }), 0)
             return
         }
 
@@ -232,13 +269,18 @@ function CompleteProfile() {
         try {
             validateAvatarFile(file)
             const imageSrc = await readFileAsDataUrl(file)
+            setError('')
+            setAvatarFileError('')
             setAvatarEditorError('')
             setAvatarEditorSrc(imageSrc)
             setAvatarZoom(1)
             setAvatarOffset({ x: 0, y: 0 })
             setAvatarNaturalSize({ width: 0, height: 0 })
         } catch (err) {
-            setError(err.message || 'Não foi possível carregar a foto.')
+            const message = err.message || 'Não foi possível carregar a foto.'
+            setAvatarFileError(message)
+            setError('')
+            window.setTimeout(() => scrollRef.current?.scrollTo?.({ top: 0, behavior: 'smooth' }), 0)
         } finally {
             event.target.value = ''
         }
@@ -246,6 +288,8 @@ function CompleteProfile() {
 
     function closeAvatarEditor() {
         if (croppingAvatar) return
+        activePointersRef.current.clear()
+        dragStateRef.current = null
         setAvatarEditorSrc('')
         setAvatarEditorError('')
         setAvatarZoom(1)
@@ -260,6 +304,11 @@ function CompleteProfile() {
             height: image.naturalHeight || image.height,
         })
         setAvatarOffset({ x: 0, y: 0 })
+        const frame = cropFrameRef.current
+        if (frame) {
+            const rect = frame.getBoundingClientRect()
+            setCropFrameSize(Math.max(1, Math.round(rect.width || 280)))
+        }
     }
 
     function getCropFrameSize() {
@@ -282,18 +331,66 @@ function CompleteProfile() {
         if (!avatarEditorSrc) return
 
         event.preventDefault()
+        const pointers = activePointersRef.current
+        pointers.set(event.pointerId, { clientX: event.clientX, clientY: event.clientY })
+        event.currentTarget.setPointerCapture?.(event.pointerId)
+
+        const values = Array.from(pointers.values())
+        if (values.length >= 2) {
+            dragStateRef.current = {
+                mode: 'pinch',
+                distance: getPointerDistance(values[0], values[1]) || 1,
+                center: getPointerCenter(values[0], values[1]),
+                zoom: avatarZoom,
+                offset: avatarOffset,
+            }
+            return
+        }
+
         dragStateRef.current = {
+            mode: 'drag',
             pointerId: event.pointerId,
             startX: event.clientX,
             startY: event.clientY,
             offset: avatarOffset,
         }
-        event.currentTarget.setPointerCapture?.(event.pointerId)
     }
 
     function handleAvatarPointerMove(event) {
+        const pointers = activePointersRef.current
+        if (!pointers.has(event.pointerId)) return
+
+        event.preventDefault()
+        pointers.set(event.pointerId, { clientX: event.clientX, clientY: event.clientY })
+        const values = Array.from(pointers.values())
         const dragState = dragStateRef.current
-        if (!dragState || dragState.pointerId !== event.pointerId) return
+
+        if (values.length >= 2) {
+            const distance = getPointerDistance(values[0], values[1]) || 1
+            const center = getPointerCenter(values[0], values[1])
+            const pinchState = dragState?.mode === 'pinch'
+                ? dragState
+                : {
+                    mode: 'pinch',
+                    distance,
+                    center,
+                    zoom: avatarZoom,
+                    offset: avatarOffset,
+                }
+
+            const nextZoom = clampNumber(pinchState.zoom * (distance / Math.max(1, pinchState.distance)), 1, 3)
+            const nextOffset = {
+                x: pinchState.offset.x + center.x - pinchState.center.x,
+                y: pinchState.offset.y + center.y - pinchState.center.y,
+            }
+
+            dragStateRef.current = pinchState
+            setAvatarZoom(nextZoom)
+            updateAvatarOffset(nextOffset, nextZoom)
+            return
+        }
+
+        if (!dragState || dragState.mode !== 'drag' || dragState.pointerId !== event.pointerId) return
 
         const nextOffset = {
             x: dragState.offset.x + event.clientX - dragState.startX,
@@ -304,9 +401,31 @@ function CompleteProfile() {
     }
 
     function handleAvatarPointerUp(event) {
-        if (dragStateRef.current?.pointerId === event.pointerId) {
-            dragStateRef.current = null
+        const pointers = activePointersRef.current
+        pointers.delete(event.pointerId)
+
+        if (pointers.size === 1) {
+            const [remainingPointerId, pointer] = Array.from(pointers.entries())[0]
+            dragStateRef.current = {
+                mode: 'drag',
+                pointerId: remainingPointerId,
+                startX: pointer.clientX,
+                startY: pointer.clientY,
+                offset: avatarOffset,
+            }
+            return
         }
+
+        dragStateRef.current = null
+    }
+
+
+    function handleAvatarWheel(event) {
+        if (!avatarEditorSrc) return
+        event.preventDefault()
+        const nextZoom = clampNumber(avatarZoom + (event.deltaY > 0 ? -0.08 : 0.08), 1, 3)
+        setAvatarZoom(nextZoom)
+        updateAvatarOffset(avatarOffset, nextZoom)
     }
 
     async function confirmAvatarCrop() {
@@ -325,8 +444,11 @@ function CompleteProfile() {
                 naturalSize: avatarNaturalSize,
             })
 
+            activePointersRef.current.clear()
+            dragStateRef.current = null
             setAvatarUrl(croppedAvatar)
             setAvatarEditorSrc('')
+            setAvatarFileError('')
         } catch (err) {
             setAvatarEditorError(err.message || 'Não foi possível enquadrar a foto.')
         } finally {
@@ -368,6 +490,18 @@ function CompleteProfile() {
         )
     }
 
+
+    const safePreviewFrameSize = Math.max(1, cropFrameSize || 280)
+    const safePreviewNaturalSize = avatarNaturalSize.width && avatarNaturalSize.height
+        ? avatarNaturalSize
+        : { width: safePreviewFrameSize, height: safePreviewFrameSize }
+    const previewBaseScale = Math.max(
+        safePreviewFrameSize / Math.max(1, safePreviewNaturalSize.width),
+        safePreviewFrameSize / Math.max(1, safePreviewNaturalSize.height),
+    )
+    const avatarPreviewWidth = Math.max(1, safePreviewNaturalSize.width * previewBaseScale)
+    const avatarPreviewHeight = Math.max(1, safePreviewNaturalSize.height * previewBaseScale)
+
     return (
     <main className="ff-hevy-page-completeprofile ff-complete-profile-screen text-[var(--ff-text)]">
         <div
@@ -396,6 +530,12 @@ function CompleteProfile() {
                 <p className="mt-4 text-sm leading-relaxed text-[var(--ff-muted)]">
                     Essas informações ajudam o ForgeFlow a personalizar seus treinos, metas e evolução.
                 </p>
+
+                {error && (
+                    <div className="ff-complete-profile-top-error" role="alert">
+                        {error}
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit} className="ff-complete-profile-form mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="ff-complete-profile-avatar-card md:col-span-2 rounded-3xl border border-[var(--ff-border)] bg-[var(--ff-card)] p-4">
@@ -441,6 +581,12 @@ function CompleteProfile() {
                                         </button>
                                     )}
                                 </div>
+
+                                {avatarFileError && (
+                                    <p className="ff-complete-profile-avatar-error" role="alert">
+                                        {avatarFileError}
+                                    </p>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -592,11 +738,6 @@ function CompleteProfile() {
                         />
                     </div>
 
-                    {error && (
-                        <div className="md:col-span-2 rounded-2xl border border-red-500/20 bg-red-500/10 p-3 text-sm font-semibold text-red-300">
-                            {error}
-                        </div>
-                    )}
 
                     <button
                         type="submit"
@@ -628,7 +769,7 @@ function CompleteProfile() {
                         <div>
                             <p className="ff-avatar-cropper-kicker">Foto de perfil</p>
                             <h2 id="avatar-cropper-title">Enquadre sua foto</h2>
-                            <p>Arraste a imagem e use o zoom para deixar o rosto dentro do quadrado.</p>
+                            <p>Arraste com um dedo, use dois dedos para dar zoom e deixe o rosto dentro do quadrado.</p>
                         </div>
 
                         <button
@@ -648,6 +789,8 @@ function CompleteProfile() {
                         onPointerMove={handleAvatarPointerMove}
                         onPointerUp={handleAvatarPointerUp}
                         onPointerCancel={handleAvatarPointerUp}
+                        onLostPointerCapture={handleAvatarPointerUp}
+                        onWheel={handleAvatarWheel}
                     >
                         <img
                             src={avatarEditorSrc}
@@ -655,6 +798,8 @@ function CompleteProfile() {
                             draggable="false"
                             onLoad={handleAvatarPreviewLoad}
                             style={{
+                                width: `${avatarPreviewWidth}px`,
+                                height: `${avatarPreviewHeight}px`,
                                 transform: `translate(calc(-50% + ${avatarOffset.x}px), calc(-50% + ${avatarOffset.y}px)) scale(${avatarZoom})`,
                             }}
                         />

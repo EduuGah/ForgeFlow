@@ -564,3 +564,203 @@ body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-avatar-ca
 .ff-avatar-cropper-primary:disabled {
   opacity: 0.65;
 }
+
+/* CompleteProfile hotfix v3: compact top, visible errors and stable mobile cropper.
+   This block intentionally comes last to override older scroll workarounds above. */
+body.ff-complete-profile-scroll-fix,
+html.ff-complete-profile-scroll-fix,
+body.ff-complete-profile-scroll-fix #root,
+body.is-native-app.ff-complete-profile-scroll-fix,
+html.is-native-app.ff-complete-profile-scroll-fix,
+body.is-native-app.ff-complete-profile-scroll-fix #root {
+  height: 100% !important;
+  min-height: 100% !important;
+  overflow: hidden !important;
+  background: var(--ff-bg) !important;
+}
+
+.ff-complete-profile-screen,
+body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-screen {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: var(--ff-complete-profile-vh, 100dvh) !important;
+  max-height: var(--ff-complete-profile-vh, 100dvh) !important;
+  overflow: hidden !important;
+  background: var(--ff-bg) !important;
+}
+
+.ff-complete-profile-scroll,
+body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-scroll {
+  height: 100% !important;
+  max-height: 100% !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  padding: max(10px, env(safe-area-inset-top)) 10px max(14px, calc(10px + env(safe-area-inset-bottom))) !important;
+  scroll-padding-top: max(14px, env(safe-area-inset-top)) !important;
+  scroll-padding-bottom: max(26px, calc(18px + env(safe-area-inset-bottom))) !important;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ff-accent) 8%, var(--ff-bg)) 0%, var(--ff-bg) 185px) !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior-y: contain !important;
+  touch-action: pan-y !important;
+}
+
+.ff-complete-profile-scroll:focus-within,
+body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-scroll:focus-within {
+  padding-bottom: max(76px, calc(58px + env(safe-area-inset-bottom))) !important;
+  scroll-padding-bottom: max(96px, calc(76px + env(safe-area-inset-bottom))) !important;
+}
+
+.ff-complete-profile-shell,
+body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-shell {
+  display: block !important;
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+.ff-complete-profile-screen .ff-auth-card--wide,
+body.ff-complete-profile-scroll-fix .ff-complete-profile-screen .ff-auth-card--wide,
+body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-screen .ff-auth-card--wide {
+  margin: 0 auto 12px !important;
+  padding: 14px !important;
+  border-radius: 22px !important;
+  background: var(--ff-card) !important;
+}
+
+.ff-complete-profile-screen h1 {
+  font-size: clamp(1.3rem, 6vw, 1.8rem) !important;
+  line-height: 1.05 !important;
+}
+
+.ff-complete-profile-form,
+body.ff-complete-profile-scroll-fix .ff-complete-profile-form,
+body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-form {
+  margin-top: 14px !important;
+  gap: 12px !important;
+}
+
+.ff-complete-profile-avatar-card,
+body.ff-complete-profile-scroll-fix .ff-complete-profile-avatar-card,
+body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-avatar-card {
+  padding: 12px !important;
+  border-radius: 20px !important;
+  background: color-mix(in srgb, var(--ff-card) 94%, var(--ff-accent) 6%) !important;
+}
+
+.ff-complete-profile-avatar-card > div {
+  display: grid !important;
+  grid-template-columns: 58px minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.ff-complete-profile-avatar-card > div > div:first-child {
+  width: 58px !important;
+  height: 58px !important;
+  border-radius: 18px !important;
+}
+
+.ff-complete-profile-avatar-card p {
+  margin-top: 2px !important;
+}
+
+.ff-complete-profile-avatar-card .ff-complete-profile-avatar-button,
+.ff-complete-profile-avatar-card button {
+  min-height: 40px !important;
+  height: 40px !important;
+  border-radius: 14px !important;
+}
+
+.ff-complete-profile-avatar-card .mt-3 {
+  margin-top: 8px !important;
+}
+
+.ff-complete-profile-top-error,
+.ff-complete-profile-avatar-error {
+  margin-top: 10px;
+  border: 1px solid rgba(248, 113, 113, 0.38);
+  border-radius: 14px;
+  background: rgba(239, 68, 68, 0.14);
+  padding: 10px 12px;
+  color: #fecaca;
+  font-size: 0.82rem;
+  font-weight: 850;
+  line-height: 1.35;
+}
+
+.ff-complete-profile-avatar-error {
+  margin-top: 8px;
+}
+
+@media (max-width: 420px) {
+  .ff-complete-profile-screen .ff-auth-card--wide,
+  body.ff-complete-profile-scroll-fix .ff-complete-profile-screen .ff-auth-card--wide,
+  body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-screen .ff-auth-card--wide {
+    padding: 12px !important;
+  }
+
+  .ff-complete-profile-avatar-card > div {
+    grid-template-columns: 52px minmax(0, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  .ff-complete-profile-avatar-card > div > div:first-child {
+    width: 52px !important;
+    height: 52px !important;
+  }
+}
+
+.ff-avatar-cropper-modal {
+  align-items: center !important;
+  padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom)) !important;
+  overscroll-behavior: contain;
+  touch-action: none;
+}
+
+.ff-avatar-cropper-card {
+  width: min(100%, 430px) !important;
+  max-height: min(94dvh, var(--ff-complete-profile-vh, 720px)) !important;
+  padding: 14px !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.ff-avatar-cropper-frame {
+  width: min(100%, 300px) !important;
+  max-width: calc(100vw - 48px) !important;
+  border-radius: 22px !important;
+  touch-action: none !important;
+  overscroll-behavior: contain !important;
+}
+
+.ff-avatar-cropper-frame img {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  max-width: none !important;
+  max-height: none !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  object-fit: fill !important;
+  transform-origin: center center !important;
+  pointer-events: none !important;
+  user-select: none !important;
+  -webkit-user-drag: none !important;
+}
+
+@media (max-height: 680px) {
+  .ff-avatar-cropper-header p:not(.ff-avatar-cropper-kicker) {
+    display: none !important;
+  }
+
+  .ff-avatar-cropper-frame {
+    width: min(100%, 260px) !important;
+    margin-block: 10px !important;
+  }
+
+  .ff-avatar-cropper-actions {
+    margin-top: 10px !important;
+  }
+}
