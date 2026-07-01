@@ -1,6 +1,31 @@
 import TutorialControls from './TutorialControls'
 import TutorialProgress from './TutorialProgress'
 
+function TutorialDemoPreview() {
+  return (
+    <div className="ff-tutorial-demo-preview" aria-label="Simulação de treino ativo">
+      <div className="ff-tutorial-demo-preview__top">
+        <span>Supino reto</span>
+        <strong>2/3 séries</strong>
+      </div>
+      <div className="ff-tutorial-demo-preview__row">
+        <label>
+          <span>Kg</span>
+          <output>40</output>
+        </label>
+        <label>
+          <span>Reps</span>
+          <output>10</output>
+        </label>
+        <button type="button" aria-label="Exemplo de concluir série" tabIndex={-1}>
+          Concluir
+        </button>
+      </div>
+      <p>Simulação visual. Não cria treino, notificação ou histórico.</p>
+    </div>
+  )
+}
+
 export default function TutorialTooltip({
   step,
   section,
@@ -10,7 +35,7 @@ export default function TutorialTooltip({
   targetMissing,
   tooltipRef,
   style,
-  variant = 'panel',
+  variant = 'dock',
   onClose,
   onBack,
   onNext,
@@ -20,13 +45,16 @@ export default function TutorialTooltip({
 }) {
   if (!step) return null
 
+  const showDemo = step.mode === 'demo' || variant === 'demo'
+  const showWarning = targetMissing && step.requireTarget
+
   return (
     <article
       ref={tooltipRef}
       className={`ff-tutorial-tooltip ff-tutorial-tooltip--${variant}`}
       style={style}
       role="dialog"
-      aria-modal={variant === 'panel' ? 'true' : 'false'}
+      aria-modal="false"
       aria-labelledby="ff-tutorial-title"
       aria-describedby="ff-tutorial-description"
       tabIndex={-1}
@@ -45,10 +73,11 @@ export default function TutorialTooltip({
 
       <div className="ff-tutorial-tooltip__body">
         <p id="ff-tutorial-description">{step.description}</p>
-        {step.example ? <p className="ff-tutorial-tooltip__example">{step.example}</p> : null}
-        {targetMissing ? (
+        {showDemo ? <TutorialDemoPreview /> : null}
+        {!showDemo && step.example ? <p className="ff-tutorial-tooltip__example">{step.example}</p> : null}
+        {showWarning ? (
           <p className="ff-tutorial-tooltip__warning">
-            Não encontrei esse item na tela agora. Talvez você ainda não tenha dados aqui. Pode pular esta etapa sem problema.
+            Não encontrei esse item agora. A dica continua em modo explicativo para não quebrar a tela.
           </p>
         ) : null}
       </div>

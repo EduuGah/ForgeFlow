@@ -1,4 +1,4 @@
-export const TUTORIAL_VERSION = 3
+export const TUTORIAL_VERSION = 4
 
 export const tutorialRouteFlows = {
   '/': 'dashboard',
@@ -11,13 +11,13 @@ export const tutorialRouteFlows = {
   '/schedule': 'schedule',
   '/progress': 'progress',
   '/exercise-progress': 'progress',
-  '/progress-photos': 'photosRecovery',
-  '/muscle-recovery': 'photosRecovery',
+  '/progress-photos': 'progress',
+  '/muscle-recovery': 'progress',
   '/nutrition': 'nutrition',
   '/notifications': 'notifications',
-  '/profile': 'profile',
+  '/profile': 'settings',
   '/settings': 'settings',
-  '/goals': 'goals',
+  '/goals': 'dashboard',
 }
 
 export const tutorialSections = {
@@ -26,21 +26,21 @@ export const tutorialSections = {
     order: 1,
     title: 'Boas-vindas',
     shortTitle: 'Início',
-    description: 'O básico para começar sem se perder.',
+    description: 'Um início rápido, sem excesso de etapas.',
   },
   dashboard: {
     id: 'dashboard',
     order: 2,
     title: 'Dashboard',
     shortTitle: 'Dashboard',
-    description: 'Seu resumo principal do ForgeFlow.',
+    description: 'Visão geral do dia e dos próximos passos.',
   },
   navigation: {
     id: 'navigation',
     order: 3,
     title: 'Navegação',
     shortTitle: 'Navegação',
-    description: 'Como circular pelo app sem depender de dicas longas.',
+    description: 'Como circular pelo app sem destacar áreas fixas problemáticas.',
   },
   workouts: {
     id: 'workouts',
@@ -54,70 +54,28 @@ export const tutorialSections = {
     order: 5,
     title: 'Treino ativo',
     shortTitle: 'Ativo',
-    description: 'Registrar kg, reps, observações e finalizar com segurança.',
-  },
-  exercises: {
-    id: 'exercises',
-    order: 6,
-    title: 'Exercícios',
-    shortTitle: 'Exercícios',
-    description: 'Biblioteca, busca e detalhes por exercício.',
+    description: 'Registrar séries sem criar dados falsos.',
   },
   history: {
     id: 'history',
-    order: 7,
-    title: 'Histórico',
+    order: 6,
+    title: 'Histórico e evolução',
     shortTitle: 'Histórico',
-    description: 'Treinos finalizados, volume e PRs.',
-  },
-  schedule: {
-    id: 'schedule',
-    order: 8,
-    title: 'Agenda',
-    shortTitle: 'Agenda',
-    description: 'Planeje treinos e dias de descanso.',
-  },
-  progress: {
-    id: 'progress',
-    order: 9,
-    title: 'Evolução',
-    shortTitle: 'Evolução',
-    description: 'Gráficos e análise depois que houver histórico.',
-  },
-  photosRecovery: {
-    id: 'photosRecovery',
-    order: 10,
-    title: 'Fotos e recuperação',
-    shortTitle: 'Fotos/Recup.',
-    description: 'Apoio visual e recuperação muscular.',
+    description: 'Treinos finalizados, PRs e gráficos quando houver dados.',
   },
   nutrition: {
     id: 'nutrition',
-    order: 11,
+    order: 7,
     title: 'Nutrição',
     shortTitle: 'Nutrição',
-    description: 'Água, refeições, metas e insights simples.',
-  },
-  notifications: {
-    id: 'notifications',
-    order: 12,
-    title: 'Notificações',
-    shortTitle: 'Notificações',
-    description: 'Central de avisos e lembretes.',
+    description: 'Água, refeições, metas e insights.',
   },
   settings: {
     id: 'settings',
-    order: 13,
-    title: 'Perfil e Configurações',
+    order: 8,
+    title: 'Configurações',
     shortTitle: 'Config.',
-    description: 'Tema, cor do app, perfil e ajuda.',
-  },
-  goals: {
-    id: 'goals',
-    order: 14,
-    title: 'Metas',
-    shortTitle: 'Metas',
-    description: 'Objetivos simples de hábito, treino e consistência.',
+    description: 'Tema, cor do app e ajuda.',
   },
 }
 
@@ -129,15 +87,16 @@ function step({
   example = '',
   target = '',
   route = '/',
-  placement = 'auto',
-  requireElement = false,
-  scrollIntoView = true,
+  mode = 'panel',
+  dock = 'auto',
+  scroll = true,
+  requireTarget = false,
   allowInteraction = true,
-  optional = false,
   canSkip = true,
-  targetLabel = '',
-  presentation = '',
-  inlinePlacement = 'after',
+  fallbackTitle = '',
+  fallbackDescription = '',
+  skipWhenNoData = false,
+  onlyWhenHasData = false,
 }) {
   return {
     id,
@@ -148,254 +107,135 @@ function step({
     target,
     selector: target,
     route,
-    placement,
-    requireElement,
-    scrollIntoView,
+    mode,
+    presentation: mode === 'highlight' ? '' : 'panel',
+    placement: dock,
+    dock,
+    scroll,
+    scrollIntoView: scroll,
+    requireTarget,
+    requireElement: requireTarget,
     allowInteraction,
-    optional,
     canSkip,
-    targetLabel,
-    presentation,
-    inlinePlacement,
+    fallbackTitle,
+    fallbackDescription,
+    skipWhenNoData,
+    onlyWhenHasData,
   }
 }
 
-const welcomeSteps = [
+const quickTourSteps = [
   step({
-    id: 'welcome-intro',
+    id: 'welcome-start',
     section: 'welcome',
     title: 'Bem-vindo ao ForgeFlow',
-    description: 'Este guia foi reformulado para não ficar em cima dos cards. As dicas aparecem no fluxo da página ou em um painel curto quando não há um alvo seguro.',
-    example: 'Você pode avançar, voltar, pular uma etapa ou rever depois nas Configurações.',
+    description: 'Este tour é curto. Ele mostra o básico sem ficar em cima dos botões ou cards.',
+    example: 'Você pode rever depois em Configurações.',
     route: '/',
-    placement: 'center',
-    presentation: 'panel',
+    mode: 'welcome',
+    dock: 'bottom',
   }),
-]
-
-const dashboardSteps = [
   step({
-    id: 'dashboard-hero',
+    id: 'dashboard-overview',
     section: 'dashboard',
-    title: 'Dashboard',
-    description: 'Aqui fica a visão principal do app. No começo, o ForgeFlow evita recomendações sem histórico e mostra estados iniciais honestos.',
-    example: 'Depois dos primeiros treinos, este resumo ganha mais contexto.',
-    target: '[data-tutorial="dashboard-hero"]',
+    title: 'Seu centro do app',
+    description: 'Aqui fica o resumo do seu dia. No começo, o app mostra orientações simples; depois usa seus treinos reais.',
+    target: '[data-tutorial="dashboard-hero"], [data-tutorial="dashboard-summary"], main',
     route: '/',
-    inlinePlacement: 'after',
-    targetLabel: 'Dashboard',
+    mode: 'highlight',
+    dock: 'auto',
+    fallbackTitle: 'Dashboard',
+    fallbackDescription: 'Quando ainda não há dados, o Dashboard mostra um ponto de partida em vez de inventar recomendações.',
   }),
   step({
-    id: 'dashboard-navigation',
+    id: 'navigation-main',
     section: 'navigation',
-    title: 'Como navegar',
-    description: 'Use a barra inferior para ir até Treinos, Exercícios, Progresso e Configurações. Ela não será destacada para evitar conflito com a área fixa do celular.',
-    example: 'Quando uma área fixa atrapalha, o tutorial explica sem tentar cobrir a tela.',
+    title: 'Navegação principal',
+    description: 'Use a barra inferior para ir para Treinos, Progresso, Nutrição e Configurações. Essa etapa é explicativa para evitar destaque cortado no rodapé.',
     route: '/',
-    placement: 'center',
-    presentation: 'panel',
+    mode: 'panel',
+    dock: 'bottom',
   }),
-]
-
-const workoutsSteps = [
   step({
-    id: 'workouts-create',
+    id: 'workouts-start',
     section: 'workouts',
-    title: 'Criar ou iniciar treino',
-    description: 'Na aba Treinos você cria rotinas e inicia uma sessão real. O tutorial pode abrir uma sessão teste sem salvar nada no histórico.',
-    example: 'Treinos reais continuam intactos; treino de tutorial é descartável.',
-    target: '[data-tutorial="create-workout-button"], [data-tutorial="workouts-list"]',
+    title: 'Crie ou inicie um treino',
+    description: 'Na aba Treinos você monta suas rotinas e inicia uma sessão real quando for treinar.',
+    target: '[data-tutorial="create-workout-button"], [data-tutorial="workouts-list"], [data-tutorial="workout-card"]',
     route: '/workouts',
-    inlinePlacement: 'after',
-    targetLabel: 'Treinos',
+    mode: 'highlight',
+    dock: 'auto',
+    fallbackTitle: 'Treinos',
+    fallbackDescription: 'Se ainda não houver treino salvo, crie sua primeira rotina para começar.',
   }),
-]
-
-const workoutSteps = [
   step({
-    id: 'active-overview',
+    id: 'workout-demo-register',
     section: 'workout',
-    title: 'Treino ativo',
-    description: 'Esta é a tela onde você registra o treino. A sessão teste não gera notificação e não entra no histórico real.',
-    example: 'Se já existir treino real ativo, o ForgeFlow usa o treino real como exemplo sem sobrescrever dados.',
-    target: '[data-tutorial="active-workout-header"]',
-    route: '/start-workout',
-    inlinePlacement: 'after',
-    targetLabel: 'Treino ativo',
+    title: 'Como registrar uma série',
+    description: 'Durante o treino, você registra kg e repetições. Esses dados viram histórico, volume e recordes pessoais.',
+    example: 'Esta é uma simulação visual: não cria notificação, não salva histórico e não mexe no treino real.',
+    route: '/',
+    mode: 'demo',
+    dock: 'bottom',
   }),
   step({
-    id: 'active-register-set',
-    section: 'workout',
-    title: 'Kg, reps e série',
-    description: 'Preencha carga e repetições e toque em concluir série. Esses dados alimentam histórico, volume e PRs.',
-    example: 'Use valores fictícios no modo tutorial. Nada disso vira treino real.',
-    target: '[data-tutorial="active-set-row"], [data-tutorial="active-set-complete-button"]',
-    route: '/start-workout',
-    inlinePlacement: 'before',
-    targetLabel: 'Série',
-  }),
-  step({
-    id: 'active-notes',
-    section: 'workout',
-    title: 'Observações',
-    description: 'Anote técnica, dor, energia ou ajustes. As observações ajudam a entender seu histórico depois.',
-    example: 'Exemplo: “ombro incomodou no supino” ou “subir carga na próxima”.',
-    target: '[data-tutorial="active-workout-notes"]',
-    route: '/start-workout',
-    inlinePlacement: 'before',
-    targetLabel: 'Observações',
-  }),
-  step({
-    id: 'active-finish-safe',
+    id: 'workout-finish-safe',
     section: 'workout',
     title: 'Finalização segura',
-    description: 'Para evitar toque acidental, a finalização pede confirmação e mostra um resumo antes de salvar.',
-    example: 'No tutorial, finalizar apenas descarta a demonstração. No treino real, salva no histórico.',
-    route: '/start-workout',
-    placement: 'center',
-    presentation: 'panel',
+    description: 'Ao concluir um treino real, o ForgeFlow pede confirmação. Assim você evita salvar algo incompleto por acidente.',
+    route: '/',
+    mode: 'panel',
+    dock: 'bottom',
   }),
-]
-
-const exercisesSteps = [
   step({
-    id: 'exercises-library',
-    section: 'exercises',
-    title: 'Biblioteca de exercícios',
-    description: 'Busque por nome, grupo muscular ou equipamento e acompanhe evolução por exercício.',
-    example: 'Se ainda não houver histórico, a tela mostra estado inicial.',
-    target: '[data-tutorial="exercise-library"]',
-    route: '/exercises',
-    inlinePlacement: 'after',
-    targetLabel: 'Biblioteca',
-  }),
-]
-
-const historySteps = [
-  step({
-    id: 'history-empty-aware',
+    id: 'history-progress-empty',
     section: 'history',
-    title: 'Histórico e PRs',
-    description: 'O histórico aparece depois de finalizar treinos reais. Em conta nova, é normal não haver gráficos ou PRs ainda.',
-    example: 'Finalize alguns treinos para liberar volume, recordes e comparações.',
+    title: 'Histórico e evolução',
+    description: 'Histórico, PRs e gráficos aparecem depois que você registra treinos reais. Em conta nova, é normal essa área estar vazia.',
     route: '/history',
-    placement: 'center',
-    presentation: 'panel',
+    mode: 'panel',
+    dock: 'bottom',
   }),
-]
-
-const scheduleSteps = [
-  step({
-    id: 'schedule-week',
-    section: 'schedule',
-    title: 'Agenda semanal',
-    description: 'Planeje treinos e descansos para o Dashboard mostrar o plano do dia sem inventar recomendações.',
-    example: 'Sem agenda, o app mostra orientação inicial em vez de sugestão automática.',
-    target: '[data-tutorial="schedule-week"]',
-    route: '/schedule',
-    inlinePlacement: 'after',
-    targetLabel: 'Semana',
-  }),
-]
-
-const progressSteps = [
-  step({
-    id: 'progress-empty-aware',
-    section: 'progress',
-    title: 'Evolução',
-    description: 'Gráficos precisam de histórico real. No primeiro acesso, o mais correto é mostrar que ainda não há dados suficientes.',
-    example: 'Depois dos primeiros treinos, aqui entram volume, frequência e PRs.',
-    route: '/progress',
-    placement: 'center',
-    presentation: 'panel',
-  }),
-]
-
-const photosRecoverySteps = [
-  step({
-    id: 'photos-recovery-overview',
-    section: 'photosRecovery',
-    title: 'Fotos e recuperação',
-    description: 'Use fotos e recuperação como apoio visual. Recuperação muscular só deve orientar quando houver histórico suficiente.',
-    example: 'Em conta nova, evite interpretar porcentagens como recomendação automática.',
-    route: '/muscle-recovery',
-    placement: 'center',
-    presentation: 'panel',
-  }),
-]
-
-const nutritionSteps = [
   step({
     id: 'nutrition-overview',
     section: 'nutrition',
-    title: 'Nutrição',
-    description: 'Registre água e refeições rapidamente. Os insights principais ficam no topo para não precisar descer a tela inteira.',
-    example: 'Se ainda não houver registros, o app mostra um resumo inicial simples.',
+    title: 'Nutrição e insights',
+    description: 'Em Nutrição você acompanha água, refeições e metas. Os insights principais ficam no topo quando houver dados.',
+    target: '[data-tutorial="nutrition-water"], [data-tutorial="nutrition-goals"], [data-tutorial="nutrition-overview"]',
     route: '/nutrition',
-    placement: 'center',
-    presentation: 'panel',
+    mode: 'highlight',
+    dock: 'auto',
+    fallbackTitle: 'Nutrição',
+    fallbackDescription: 'Se ainda não houver registro, use os botões rápidos para começar com água e refeições.',
   }),
-]
-
-const notificationsSteps = [
   step({
-    id: 'notifications-overview',
-    section: 'notifications',
-    title: 'Notificações',
-    description: 'O sino mostra alertas, lembretes e avisos importantes. A central permite marcar, arquivar e revisar depois.',
-    example: 'Notificação de treino ativo real continua no Android; treino teste do tutorial não cria notificação.',
-    route: '/',
-    placement: 'center',
-    presentation: 'panel',
-  }),
-]
-
-const settingsSteps = [
-  step({
-    id: 'settings-tutorial',
+    id: 'settings-help',
     section: 'settings',
-    title: 'Rever depois',
-    description: 'Em Configurações você pode reiniciar o tutorial, rever uma seção ou deixar para outro momento.',
-    example: 'O guia foi feito para ajudar, não para prender você em várias etapas.',
+    title: 'Rever quando quiser',
+    description: 'Em Configurações você pode reiniciar o tour, rever o treino ativo ou deixar a ajuda automática ligada/desligada.',
+    target: '[data-tutorial="settings-tutorial"], [data-tutorial="settings-tutorial-panel"]',
     route: '/settings',
-    placement: 'center',
-    presentation: 'panel',
+    mode: 'highlight',
+    dock: 'auto',
+    fallbackTitle: 'Tutorial e ajuda',
+    fallbackDescription: 'Você pode rever este guia pelas Configurações sempre que precisar.',
   }),
 ]
 
-const goalsSteps = [
-  step({
-    id: 'goals-overview',
-    section: 'goals',
-    title: 'Metas',
-    description: 'Use metas simples de treino, hábito ou consistência. Poucas metas bem claras funcionam melhor.',
-    example: 'Evite cadastrar muitas metas de uma vez no início.',
-    target: '[data-tutorial="goals-overview"]',
-    route: '/goals',
-    inlinePlacement: 'after',
-    targetLabel: 'Metas',
-  }),
-]
+const dashboardSteps = [quickTourSteps[1], quickTourSteps[2]]
+const workoutsSteps = [quickTourSteps[3]]
+const workoutSteps = [quickTourSteps[4], quickTourSteps[5]]
+const historySteps = [quickTourSteps[6]]
+const nutritionSteps = [quickTourSteps[7]]
+const settingsSteps = [quickTourSteps[8]]
 
 export const tutorialFlows = {
   welcome: {
     id: 'welcome',
-    title: 'Tour essencial do ForgeFlow',
-    description: 'Um guia curto, sem cards cobrindo o que você precisa ver.',
+    title: 'Tour rápido do ForgeFlow',
+    description: 'Um guia curto, mobile-first e sem tooltip cobrindo o conteúdo.',
     sections: ['welcome', 'dashboard', 'navigation', 'workouts', 'workout', 'history', 'nutrition', 'settings'],
-    steps: [
-      welcomeSteps[0],
-      dashboardSteps[0],
-      dashboardSteps[1],
-      workoutsSteps[0],
-      workoutSteps[0],
-      workoutSteps[1],
-      workoutSteps[2],
-      workoutSteps[3],
-      historySteps[0],
-      nutritionSteps[0],
-      settingsSteps[0],
-    ],
+    steps: quickTourSteps,
   },
   dashboard: {
     id: 'dashboard',
@@ -409,7 +249,7 @@ export const tutorialFlows = {
     title: 'Tutorial da navegação',
     description: tutorialSections.navigation.description,
     sections: ['navigation'],
-    steps: [dashboardSteps[1]],
+    steps: [quickTourSteps[2]],
   },
   workouts: {
     id: 'workouts',
@@ -428,9 +268,18 @@ export const tutorialFlows = {
   exercises: {
     id: 'exercises',
     title: 'Tutorial da biblioteca',
-    description: tutorialSections.exercises.description,
-    sections: ['exercises'],
-    steps: exercisesSteps,
+    description: 'Como usar exercícios depois de criar seu primeiro treino.',
+    sections: ['workouts'],
+    steps: [
+      step({
+        id: 'exercises-panel',
+        section: 'workouts',
+        title: 'Biblioteca de exercícios',
+        description: 'Use a biblioteca para buscar exercícios por nome, grupo muscular ou equipamento.',
+        route: '/exercises',
+        mode: 'panel',
+      }),
+    ],
   },
   history: {
     id: 'history',
@@ -442,23 +291,50 @@ export const tutorialFlows = {
   schedule: {
     id: 'schedule',
     title: 'Tutorial da agenda',
-    description: tutorialSections.schedule.description,
-    sections: ['schedule'],
-    steps: scheduleSteps,
+    description: 'Planeje sua semana sem depender de recomendações automáticas.',
+    sections: ['dashboard'],
+    steps: [
+      step({
+        id: 'schedule-panel',
+        section: 'dashboard',
+        title: 'Agenda semanal',
+        description: 'A agenda ajuda o Dashboard a mostrar o plano do dia. Se ainda não houver agenda, o app mostra orientação inicial.',
+        route: '/schedule',
+        mode: 'panel',
+      }),
+    ],
   },
   progress: {
     id: 'progress',
     title: 'Tutorial da evolução',
-    description: tutorialSections.progress.description,
-    sections: ['progress'],
-    steps: progressSteps,
+    description: tutorialSections.history.description,
+    sections: ['history'],
+    steps: [
+      step({
+        id: 'progress-panel',
+        section: 'history',
+        title: 'Gráficos e PRs',
+        description: 'Os gráficos precisam de treinos reais. No primeiro acesso, o correto é mostrar que ainda não há dados suficientes.',
+        route: '/progress',
+        mode: 'panel',
+      }),
+    ],
   },
   photosRecovery: {
     id: 'photosRecovery',
-    title: 'Tutorial de fotos e recuperação',
-    description: tutorialSections.photosRecovery.description,
-    sections: ['photosRecovery'],
-    steps: photosRecoverySteps,
+    title: 'Tutorial de evolução visual',
+    description: 'Fotos e recuperação aparecem melhor depois de alguns registros.',
+    sections: ['history'],
+    steps: [
+      step({
+        id: 'photos-recovery-panel',
+        section: 'history',
+        title: 'Fotos e recuperação',
+        description: 'Use fotos e recuperação como apoio. Evite interpretar recuperação como sugestão automática sem histórico suficiente.',
+        route: '/muscle-recovery',
+        mode: 'panel',
+      }),
+    ],
   },
   nutrition: {
     id: 'nutrition',
@@ -470,26 +346,32 @@ export const tutorialFlows = {
   notifications: {
     id: 'notifications',
     title: 'Tutorial de notificações',
-    description: tutorialSections.notifications.description,
-    sections: ['notifications'],
-    steps: notificationsSteps,
+    description: 'Central de lembretes e alertas importantes.',
+    sections: ['settings'],
+    steps: [
+      step({
+        id: 'notifications-panel',
+        section: 'settings',
+        title: 'Notificações',
+        description: 'O sino mostra lembretes e avisos. Notificação de treino real aparece no Android; a simulação do tutorial não cria notificação.',
+        route: '/',
+        mode: 'panel',
+      }),
+    ],
   },
   profile: {
     id: 'profile',
     title: 'Tutorial do perfil',
-    description: 'Veja seus dados, preferências e atalhos da conta.',
+    description: 'Dados da conta e preferências simples.',
     sections: ['settings'],
     steps: [
       step({
-        id: 'profile-overview',
+        id: 'profile-panel',
         section: 'settings',
         title: 'Perfil',
-        description: 'A página de Perfil concentra dados pessoais, experiência do app e preferências do usuário.',
-        example: 'Use Configurações para aparência, tutorial e privacidade avançada.',
-        target: '[data-tutorial="profile-overview"]',
+        description: 'No Perfil ficam dados pessoais e preferências rápidas. Configurações concentra tema, tutorial e privacidade.',
         route: '/profile',
-        inlinePlacement: 'after',
-        targetLabel: 'Perfil',
+        mode: 'panel',
       }),
     ],
   },
@@ -503,9 +385,18 @@ export const tutorialFlows = {
   goals: {
     id: 'goals',
     title: 'Tutorial de metas',
-    description: tutorialSections.goals.description,
-    sections: ['goals'],
-    steps: goalsSteps,
+    description: 'Metas funcionam melhor depois de definir uma rotina simples.',
+    sections: ['dashboard'],
+    steps: [
+      step({
+        id: 'goals-panel',
+        section: 'dashboard',
+        title: 'Metas',
+        description: 'Comece com poucas metas claras. Depois, use seu histórico para ajustar frequência, água ou consistência.',
+        route: '/goals',
+        mode: 'panel',
+      }),
+    ],
   },
 }
 

@@ -47,7 +47,7 @@ export default function WelcomePrompt() {
         <span className="ff-tutorial-welcome__badge">Guia rápido</span>
         <h2 id="ff-tutorial-welcome-title">Bem-vindo ao ForgeFlow</h2>
         <p id="ff-tutorial-welcome-description">
-          O ForgeFlow acompanha seus treinos, séries, kg, repetições, PRs e consistência. O tour mostra exatamente onde tocar, com destaque visual na tela.
+          O ForgeFlow acompanha seus treinos, séries, kg, repetições, PRs e consistência. O tour é curto e explica apenas o essencial sem cobrir os cards da tela.
         </p>
 
         <div className="ff-tutorial-welcome__grid" aria-hidden="true">

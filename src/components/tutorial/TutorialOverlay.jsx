@@ -5,18 +5,44 @@ import { useLocation } from 'react-router-dom'
 import { useTutorial } from '../../context/TutorialContext'
 import TutorialTooltip from './TutorialTooltip'
 
-const TARGET_RETRY_LIMIT = 12
-const TARGET_RETRY_DELAY = 120
-const MOBILE_BREAKPOINT = 720
+const TARGET_RETRY_LIMIT = 10
+const TARGET_RETRY_DELAY = 100
+const MOBILE_BREAKPOINT = 760
+const DEFAULT_DOCK_HEIGHT = 132
+const SAFE_GAP = 14
+
+const HEADER_SELECTORS = [
+  '[data-tutorial="app-header"]',
+  '[data-app-header]',
+  '.ff-app-header',
+  '.app-header',
+  'header[role="banner"]',
+  'header',
+]
+
+const BOTTOM_NAV_SELECTORS = [
+  '[data-tutorial="bottom-nav"]',
+  '.ff-mobile-bottom-nav',
+  '.mobile-bottom-nav',
+  '.bottom-nav',
+  'nav[aria-label*="inferior" i]',
+]
+
+const ACTIVE_MINI_SELECTORS = [
+  '[data-tutorial="active-workout-mini"]',
+  '.ff-active-workout-mini',
+  '.active-workout-mini',
+  '.workout-mini-card',
+]
 
 function getViewport() {
-  if (typeof window === 'undefined') return { width: 0, height: 0 }
-  const vv = window.visualViewport
+  if (typeof window === 'undefined') return { width: 0, height: 0, offsetTop: 0, offsetLeft: 0 }
+  const viewport = window.visualViewport
   return {
-    width: vv?.width || window.innerWidth,
-    height: vv?.height || window.innerHeight,
-    offsetTop: vv?.offsetTop || 0,
-    offsetLeft: vv?.offsetLeft || 0,
+    width: viewport?.width || window.innerWidth,
+    height: viewport?.height || window.innerHeight,
+    offsetTop: viewport?.offsetTop || 0,
+    offsetLeft: viewport?.offsetLeft || 0,
   }
 }
 
@@ -24,12 +50,17 @@ function isMobileViewport() {
   return getViewport().width <= MOBILE_BREAKPOINT
 }
 
+function clamp(value, min, max) {
+  if (max < min) return min
+  return Math.min(Math.max(value, min), max)
+}
+
 function isUsableTarget(element) {
   if (!element || typeof window === 'undefined') return false
   const rect = element.getBoundingClientRect()
   const style = window.getComputedStyle(element)
 
-  if (rect.width <= 0 || rect.height <= 0) return false
+  if (rect.width < 4 || rect.height < 4) return false
   if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) return false
   if (element.closest('[hidden], [aria-hidden="true"]')) return false
 
@@ -46,21 +77,23 @@ function getFirstMatchingElement(selector = '') {
 
   for (const item of selectors) {
     try {
-      const elements = Array.from(document.querySelectorAll(item))
-      const usable = elements.filter(isUsableTarget)
-      if (!usable.length) continue
+      const elements = Array.from(document.querySelectorAll(item)).filter(isUsableTarget)
+      if (!elements.length) continue
 
       const viewport = getViewport()
-      const viewportBottom = viewport.offsetTop + viewport.height
-      const viewportRight = viewport.offsetLeft + viewport.width
-      const visible = usable.find((element) => {
+      const visible = elements.find((element) => {
         const rect = element.getBoundingClientRect()
-        return rect.bottom > viewport.offsetTop && rect.top < viewportBottom && rect.right > viewport.offsetLeft && rect.left < viewportRight
+        return (
+          rect.bottom > viewport.offsetTop &&
+          rect.top < viewport.offsetTop + viewport.height &&
+          rect.right > viewport.offsetLeft &&
+          rect.left < viewport.offsetLeft + viewport.width
+        )
       })
 
-      return visible || usable[0]
+      return visible || elements[0]
     } catch {
-      // Mantém o tutorial vivo mesmo se um seletor antigo estiver inválido.
+      // Seletor legado inválido não pode derrubar o tutorial.
     }
   }
 
@@ -68,13 +101,13 @@ function getFirstMatchingElement(selector = '') {
 }
 
 function getScrollParent(element) {
-  if (!element || typeof window === 'undefined') return document.scrollingElement || document.documentElement
+  if (!element || typeof document === 'undefined') return document.scrollingElement || document.documentElement
 
   let parent = element.parentElement
   while (parent && parent !== document.body && parent !== document.documentElement) {
     const style = window.getComputedStyle(parent)
-    const overflow = `${style.overflowY}${style.overflow}`
-    if (/(auto|scroll|overlay)/i.test(overflow) && parent.scrollHeight > parent.clientHeight) {
+    const overflowY = style.overflowY || style.overflow
+    if (/(auto|scroll|overlay)/i.test(overflowY) && parent.scrollHeight > parent.clientHeight + 8) {
       return parent
     }
     parent = parent.parentElement
@@ -83,75 +116,155 @@ function getScrollParent(element) {
   return document.scrollingElement || document.documentElement
 }
 
-function hasFixedContext(element) {
-  if (!element || typeof window === 'undefined') return false
-  let node = element
+function queryFirstVisible(selectors = []) {
+  if (typeof document === 'undefined') return null
 
-  while (node && node !== document.body && node !== document.documentElement) {
-    const style = window.getComputedStyle(node)
-    if (style.position === 'fixed' || style.position === 'sticky') return true
-    node = node.parentElement
+  for (const selector of selectors) {
+    try {
+      const elements = Array.from(document.querySelectorAll(selector)).filter(isUsableTarget)
+      const fixedish = elements.find((element) => {
+        const style = window.getComputedStyle(element)
+        return style.position === 'fixed' || style.position === 'sticky'
+      })
+      if (fixedish) return fixedish
+      if (elements[0]) return elements[0]
+    } catch {
+      // Ignora seletor inválido.
+    }
   }
 
-  return false
+  return null
 }
 
-function canUseInlineCard(target, step) {
-  if (!target || !step) return false
-  if (step.presentation === 'panel' || step.placement === 'center') return false
-  if (hasFixedContext(target)) return false
+function getCssSafeAreaBottom() {
+  if (typeof document === 'undefined' || typeof window === 'undefined') return 0
+  const probe = document.createElement('div')
+  probe.style.cssText = 'position:absolute;visibility:hidden;height:env(safe-area-inset-bottom);bottom:0;'
+  document.body.appendChild(probe)
+  const value = Number.parseFloat(window.getComputedStyle(probe).height) || 0
+  probe.remove()
+  return value
+}
+
+function getFixedObstructions(dock = 'bottom', dockHeight = DEFAULT_DOCK_HEIGHT) {
+  const viewport = getViewport()
+  const viewportTop = viewport.offsetTop
+  const viewportBottom = viewport.offsetTop + viewport.height
+  const header = queryFirstVisible(HEADER_SELECTORS)
+  const bottomNav = queryFirstVisible(BOTTOM_NAV_SELECTORS)
+  const activeMini = queryFirstVisible(ACTIVE_MINI_SELECTORS)
+
+  let top = viewportTop + SAFE_GAP
+  let bottom = SAFE_GAP + getCssSafeAreaBottom()
+
+  if (header) {
+    const rect = header.getBoundingClientRect()
+    if (rect.bottom > viewportTop && rect.top < viewportTop + viewport.height * 0.45) {
+      top = Math.max(top, rect.bottom + SAFE_GAP)
+    }
+  }
+
+  if (bottomNav) {
+    const rect = bottomNav.getBoundingClientRect()
+    if (rect.bottom > viewportTop && rect.top < viewportBottom) {
+      bottom = Math.max(bottom, viewportBottom - rect.top + SAFE_GAP)
+    }
+  }
+
+  if (activeMini) {
+    const rect = activeMini.getBoundingClientRect()
+    if (rect.bottom > viewportTop && rect.top < viewportBottom) {
+      bottom = Math.max(bottom, viewportBottom - rect.top + SAFE_GAP)
+    }
+  }
+
+  if (dock === 'top') top += dockHeight + SAFE_GAP
+  if (dock === 'bottom') bottom += dockHeight + SAFE_GAP
+
+  const safeTop = top
+  const safeBottom = viewportBottom - bottom
+  return {
+    viewport,
+    safeTop,
+    safeBottom,
+    safeHeight: Math.max(80, safeBottom - safeTop),
+  }
+}
+
+function chooseDock(step, target) {
+  if (step?.dock === 'top' || step?.dock === 'bottom') return step.dock
+  if (!target) return 'bottom'
 
   const rect = target.getBoundingClientRect()
   const viewport = getViewport()
-  if (rect.height > viewport.height * 0.62) return false
-
-  return true
+  const center = rect.top + rect.height / 2
+  return center < viewport.offsetTop + viewport.height * 0.5 ? 'bottom' : 'top'
 }
 
-function scrollTargetIntoView(target, host) {
-  if (!target || typeof window === 'undefined') return
+function isTargetTooLarge(target, dock, dockHeight) {
+  if (!target) return true
+  const rect = target.getBoundingClientRect()
+  const { safeHeight, viewport } = getFixedObstructions(dock, dockHeight)
 
-  const scrollParent = getScrollParent(target)
-  const options = { block: 'center', inline: 'nearest', behavior: 'auto' }
+  if (rect.height > safeHeight * 0.82) return true
+  if (rect.width > viewport.width - 18) return true
+  return false
+}
 
-  try {
-    target.scrollIntoView(options)
-  } catch {
-    // fallback manual para WebViews antigos
-    const rect = target.getBoundingClientRect()
-    const viewport = getViewport()
-    const desiredCenter = viewport.offsetTop + viewport.height * 0.48
-    const delta = rect.top + rect.height / 2 - desiredCenter
+function scrollByDelta(scrollParent, delta) {
+  if (!Number.isFinite(delta) || Math.abs(delta) < 1) return
 
-    if (scrollParent && scrollParent !== document.documentElement && scrollParent !== document.body) {
-      scrollParent.scrollTop += delta
-    } else {
-      window.scrollTo({ top: Math.max(0, window.scrollY + delta), behavior: 'auto' })
-    }
+  if (
+    !scrollParent ||
+    scrollParent === document.documentElement ||
+    scrollParent === document.body ||
+    scrollParent === document.scrollingElement
+  ) {
+    window.scrollBy({ top: delta, left: 0, behavior: 'auto' })
+    return
   }
 
-  window.setTimeout(() => {
-    try {
-      const viewport = getViewport()
-      const rect = target.getBoundingClientRect()
-      const topLimit = viewport.offsetTop + 88
-      const bottomLimit = viewport.offsetTop + viewport.height - 132
+  scrollParent.scrollTop += delta
+}
 
-      if (rect.top < topLimit || rect.bottom > bottomLimit) {
-        target.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' })
-      }
+async function waitFrame() {
+  await new Promise((resolve) => window.requestAnimationFrame(() => resolve()))
+}
 
-      // Se o card inline ficou logo abaixo e fora da tela, aproxima só o necessário.
-      if (host && isMobileViewport()) {
-        const hostRect = host.getBoundingClientRect()
-        if (hostRect.bottom > viewport.offsetTop + viewport.height - 18) {
-          host.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'auto' })
-        }
-      }
-    } catch {
-      // sem ação
+async function scrollTargetIntoTutorialSafeArea(target, dock, dockHeight) {
+  if (!target || typeof window === 'undefined') return { ok: false, reason: 'missing' }
+
+  const scrollParent = getScrollParent(target)
+  let result = { ok: false, reason: 'unknown' }
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const rect = target.getBoundingClientRect()
+    const safe = getFixedObstructions(dock, dockHeight)
+    const targetTooLarge = rect.height > safe.safeHeight * 0.82
+
+    if (targetTooLarge) {
+      const delta = rect.top - safe.safeTop
+      scrollByDelta(scrollParent, delta)
+      result = { ok: false, reason: 'too-large' }
+    } else {
+      const currentCenter = rect.top + rect.height / 2
+      const wantedCenter = safe.safeTop + safe.safeHeight / 2
+      const delta = currentCenter - wantedCenter
+      scrollByDelta(scrollParent, delta)
+      result = { ok: true, reason: 'scrolled' }
     }
-  }, 80)
+
+    await waitFrame()
+  }
+
+  const finalRect = target.getBoundingClientRect()
+  const finalSafe = getFixedObstructions(dock, dockHeight)
+  const finalOk =
+    finalRect.top >= finalSafe.safeTop - 2 &&
+    finalRect.bottom <= finalSafe.safeBottom + 2 &&
+    finalRect.height <= finalSafe.safeHeight * 0.82
+
+  return finalOk ? { ok: true, reason: 'safe' } : { ok: false, reason: 'unsafe' }
 }
 
 function useTutorialTarget(step, pathname) {
@@ -159,6 +272,12 @@ function useTutorialTarget(step, pathname) {
   const [targetMissing, setTargetMissing] = useState(false)
 
   const updateTarget = useCallback(() => {
+    if (!step?.target && !step?.selector) {
+      setTarget(null)
+      setTargetMissing(false)
+      return false
+    }
+
     const element = getFirstMatchingElement(step?.target || step?.selector)
     setTarget(element)
     return Boolean(element)
@@ -169,6 +288,7 @@ function useTutorialTarget(step, pathname) {
     setTargetMissing(false)
 
     if (!step?.target && !step?.selector) return undefined
+    if (step?.mode === 'panel' || step?.mode === 'welcome' || step?.mode === 'demo') return undefined
 
     let cancelled = false
     let attempts = 0
@@ -198,7 +318,7 @@ function useTutorialTarget(step, pathname) {
       cancelled = true
       window.clearTimeout(timeoutId)
     }
-  }, [pathname, step?.id, step?.selector, step?.target, updateTarget])
+  }, [pathname, step?.id, step?.mode, step?.selector, step?.target, updateTarget])
 
   useEffect(() => {
     if (!target) return undefined
@@ -224,34 +344,72 @@ function useTutorialTarget(step, pathname) {
   return { target, targetMissing }
 }
 
-function useInlineTutorialHost(target, step) {
-  const [host, setHost] = useState(null)
+function useDockHeight(ref, stepId) {
+  const [height, setHeight] = useState(DEFAULT_DOCK_HEIGHT)
 
   useEffect(() => {
-    setHost(null)
-    if (!canUseInlineCard(target, step)) return undefined
+    const element = ref.current
+    if (!element) return undefined
 
-    const hostElement = document.createElement('div')
-    const position = step?.inlinePlacement === 'before' ? 'beforebegin' : 'afterend'
+    const measure = () => {
+      const rect = element.getBoundingClientRect()
+      setHeight(Math.max(96, Math.ceil(rect.height)))
+    }
 
-    hostElement.className = `ff-tutorial-inline-host ff-tutorial-inline-host--${step?.inlinePlacement === 'before' ? 'before' : 'after'}`
-    hostElement.setAttribute('data-tutorial-inline-host', step?.id || '')
-
-    target.insertAdjacentElement(position, hostElement)
-    target.classList.add('ff-tutorial-active-target')
-    setHost(hostElement)
-
-    window.setTimeout(() => scrollTargetIntoView(target, hostElement), 50)
-    window.setTimeout(() => scrollTargetIntoView(target, hostElement), 180)
+    measure()
+    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null
+    observer?.observe(element)
+    window.addEventListener('resize', measure)
+    window.visualViewport?.addEventListener('resize', measure)
 
     return () => {
-      target.classList.remove('ff-tutorial-active-target')
-      hostElement.remove()
-      setHost(null)
+      observer?.disconnect()
+      window.removeEventListener('resize', measure)
+      window.visualViewport?.removeEventListener('resize', measure)
     }
-  }, [step?.id, step?.inlinePlacement, step?.placement, step?.presentation, target])
+  }, [ref, stepId])
 
-  return host
+  return height
+}
+
+function useTargetHighlight({ target, enabled, dock, dockHeight, step }) {
+  const [safeHighlight, setSafeHighlight] = useState(false)
+
+  useEffect(() => {
+    setSafeHighlight(false)
+    if (!target || !enabled || !step) return undefined
+
+    let cancelled = false
+    let cleanupTimer = 0
+
+    const run = async () => {
+      const result = step.scroll === false
+        ? { ok: !isTargetTooLarge(target, dock, dockHeight), reason: 'no-scroll' }
+        : await scrollTargetIntoTutorialSafeArea(target, dock, dockHeight)
+
+      if (cancelled) return
+
+      const canHighlight = result.ok && !isTargetTooLarge(target, dock, dockHeight)
+      setSafeHighlight(canHighlight)
+
+      if (canHighlight) {
+        target.setAttribute('data-tutorial-active', 'true')
+        target.classList.add('ff-tutorial-v2-active-target')
+      }
+    }
+
+    cleanupTimer = window.setTimeout(run, 40)
+
+    return () => {
+      cancelled = true
+      window.clearTimeout(cleanupTimer)
+      target.removeAttribute('data-tutorial-active')
+      target.classList.remove('ff-tutorial-v2-active-target')
+      setSafeHighlight(false)
+    }
+  }, [dock, dockHeight, enabled, step, target])
+
+  return safeHighlight
 }
 
 function useGlobalTutorialKeys(isEnabled, handlers) {
@@ -262,6 +420,10 @@ function useGlobalTutorialKeys(isEnabled, handlers) {
       if (event.key === 'Escape') {
         event.preventDefault()
         handlers?.onEscape?.()
+      }
+      if (event.key === 'Enter' && event.target === document.body) {
+        event.preventDefault()
+        handlers?.onNext?.()
       }
     }
 
@@ -285,53 +447,79 @@ export default function TutorialOverlay() {
     pauseTutorial,
     skipAll,
   } = useTutorial()
+
+  const dockRef = useRef(null)
   const tooltipRef = useRef(null)
-
   const { target, targetMissing } = useTutorialTarget(activeStep, location.pathname)
-  const inlineHost = useInlineTutorialHost(target, activeStep)
-  const useInline = Boolean(inlineHost)
+  const dock = useMemo(() => chooseDock(activeStep, target), [activeStep, target])
+  const dockHeight = useDockHeight(dockRef, activeStep?.id)
 
-  useGlobalTutorialKeys(isTutorialOpen, useMemo(() => ({ onEscape: pauseTutorial }), [pauseTutorial]))
+  const wantsHighlight = Boolean(activeStep?.mode === 'highlight' && target)
+  const safeHighlight = useTargetHighlight({
+    target,
+    enabled: isTutorialOpen && wantsHighlight,
+    dock,
+    dockHeight,
+    step: activeStep,
+  })
+
+  const shouldFallback = Boolean(
+    activeStep?.mode === 'highlight' &&
+    ((activeStep?.requireTarget && targetMissing) || targetMissing || !target || !safeHighlight)
+  )
+
+  useGlobalTutorialKeys(
+    isTutorialOpen,
+    useMemo(() => ({ onEscape: pauseTutorial, onNext: nextStep }), [nextStep, pauseTutorial])
+  )
 
   useEffect(() => {
     if (!isTutorialOpen || !tooltipRef.current) return undefined
-    const id = window.setTimeout(() => {
-      tooltipRef.current?.focus?.({ preventScroll: true })
-    }, 30)
+    const id = window.setTimeout(() => tooltipRef.current?.focus?.({ preventScroll: true }), 60)
     return () => window.clearTimeout(id)
-  }, [activeStep?.id, isTutorialOpen, useInline])
+  }, [activeStep?.id, isTutorialOpen])
 
   if (!isTutorialOpen || !activeStep) return null
 
   const isLastStep = activeFlow ? activeStepIndex >= activeFlow.steps.length - 1 : false
   const canGoBack = activeStepIndex > 0
+  const variant = activeStep.mode === 'demo' ? 'demo' : activeStep.mode === 'welcome' ? 'welcome' : 'dock'
+  const resolvedStep = shouldFallback
+    ? {
+        ...activeStep,
+        title: activeStep.fallbackTitle || activeStep.title,
+        description: activeStep.fallbackDescription || activeStep.description,
+        mode: 'panel',
+      }
+    : activeStep
 
-  const tooltip = (
-    <TutorialTooltip
-      step={activeStep}
-      section={currentSection}
-      progress={progress}
-      isLastStep={isLastStep}
-      canGoBack={canGoBack}
-      targetMissing={targetMissing && Boolean(activeStep?.target || activeStep?.selector)}
-      tooltipRef={tooltipRef}
-      variant={useInline ? 'inline' : 'panel'}
-      onClose={pauseTutorial}
-      onBack={previousStep}
-      onNext={nextStep}
-      onSkipStep={skipStep}
-      onPause={pauseTutorial}
-      onSkipAll={skipAll}
-    />
-  )
-
-  if (useInline && inlineHost) {
-    return createPortal(tooltip, inlineHost)
-  }
-
-  return (
-    <div className="ff-tutorial-overlay ff-tutorial-overlay--panel" aria-live="polite">
-      {tooltip}
+  const tutorial = (
+    <div
+      className={`ff-tutorial-v2 ff-tutorial-v2--${dock} ff-tutorial-v2--${variant} ${safeHighlight ? 'ff-tutorial-v2--has-highlight' : 'ff-tutorial-v2--panel'}`}
+      aria-live="polite"
+      data-tutorial-dock={dock}
+    >
+      <div className="ff-tutorial-v2__shade" aria-hidden="true" />
+      <div ref={dockRef} className="ff-tutorial-v2__dock">
+        <TutorialTooltip
+          step={resolvedStep}
+          section={currentSection}
+          progress={progress}
+          isLastStep={isLastStep}
+          canGoBack={canGoBack}
+          targetMissing={targetMissing && Boolean(activeStep?.target || activeStep?.selector)}
+          tooltipRef={tooltipRef}
+          variant={variant}
+          onClose={pauseTutorial}
+          onBack={previousStep}
+          onNext={nextStep}
+          onSkipStep={skipStep}
+          onPause={pauseTutorial}
+          onSkipAll={skipAll}
+        />
+      </div>
     </div>
   )
+
+  return createPortal(tutorial, document.body)
 }

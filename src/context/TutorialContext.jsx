@@ -269,7 +269,7 @@ export function TutorialProvider({ children }) {
       const nextStepIndex = getInitialStepIndex(flow, requestedStep)
       const firstStep = flow.steps[nextStepIndex]
 
-      if (flow.id === 'workout' || firstStep?.route === '/start-workout') {
+      if (firstStep?.createDemoSession === true) {
         ensureTutorialWorkoutSession()
       }
 
@@ -538,9 +538,9 @@ export function TutorialProvider({ children }) {
   }, [activeStep?.route, isRunning, location.pathname, navigate, stopTutorialUi, user])
 
   useEffect(() => {
-    if (!isRunning || activeStep?.route !== '/start-workout') return
+    if (!isRunning || activeStep?.createDemoSession !== true) return
     ensureTutorialWorkoutSession()
-  }, [activeStep?.route, ensureTutorialWorkoutSession, isRunning])
+  }, [activeStep?.createDemoSession, ensureTutorialWorkoutSession, isRunning])
 
   useEffect(() => {
     if (!isRunning || !activeFlow) return
