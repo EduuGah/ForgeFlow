@@ -1,23 +1,13 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useLocation } from 'react-router-dom'
 
 import { useTutorial } from '../../context/TutorialContext'
-import TutorialSpotlight from './TutorialSpotlight'
 import TutorialTooltip from './TutorialTooltip'
 
-const TARGET_RETRY_LIMIT = 18
-const TARGET_RETRY_DELAY = 90
-const EDGE_MARGIN = 12
-const TOP_SAFE_GAP = 132
-const BOTTOM_SAFE_GAP = 162
-const TOOLTIP_TARGET_GAP = 30
-const MOBILE_TUTORIAL_BREAKPOINT = 640
-
-function isMobileTutorialViewport() {
-  if (typeof window === 'undefined') return false
-  const viewport = getViewport()
-  return viewport.width <= MOBILE_TUTORIAL_BREAKPOINT
-}
+const TARGET_RETRY_LIMIT = 12
+const TARGET_RETRY_DELAY = 120
+const MOBILE_BREAKPOINT = 720
 
 function getViewport() {
   if (typeof window === 'undefined') return { width: 0, height: 0 }
@@ -30,13 +20,17 @@ function getViewport() {
   }
 }
 
+function isMobileViewport() {
+  return getViewport().width <= MOBILE_BREAKPOINT
+}
+
 function isUsableTarget(element) {
   if (!element || typeof window === 'undefined') return false
   const rect = element.getBoundingClientRect()
   const style = window.getComputedStyle(element)
 
   if (rect.width <= 0 || rect.height <= 0) return false
-  if (style.display === 'none' || style.visibility === 'hidden') return false
+  if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) return false
   if (element.closest('[hidden], [aria-hidden="true"]')) return false
 
   return true
@@ -54,124 +48,33 @@ function getFirstMatchingElement(selector = '') {
     try {
       const elements = Array.from(document.querySelectorAll(item))
       const usable = elements.filter(isUsableTarget)
-      if (usable.length > 0) {
-        const viewport = getViewport()
-        const viewportBottom = viewport.height + viewport.offsetTop
-        const viewportRight = viewport.width + viewport.offsetLeft
+      if (!usable.length) continue
 
-        return usable.find((element) => {
-          const rect = element.getBoundingClientRect()
-          return rect.bottom > viewport.offsetTop && rect.top < viewportBottom && rect.right > viewport.offsetLeft && rect.left < viewportRight
-        }) || usable[0]
-      }
+      const viewport = getViewport()
+      const viewportBottom = viewport.offsetTop + viewport.height
+      const viewportRight = viewport.offsetLeft + viewport.width
+      const visible = usable.find((element) => {
+        const rect = element.getBoundingClientRect()
+        return rect.bottom > viewport.offsetTop && rect.top < viewportBottom && rect.right > viewport.offsetLeft && rect.left < viewportRight
+      })
+
+      return visible || usable[0]
     } catch {
-      // Ignora seletores inválidos para manter o tutorial vivo.
+      // Mantém o tutorial vivo mesmo se um seletor antigo estiver inválido.
     }
   }
 
   return null
 }
 
-function findScrollableParents(element) {
-  if (!element || typeof window === 'undefined') return [window]
-  const parents = [window]
+function getScrollParent(element) {
+  if (!element || typeof window === 'undefined') return document.scrollingElement || document.documentElement
+
   let parent = element.parentElement
-
-  while (parent && parent !== document.body) {
-    const style = window.getComputedStyle(parent)
-    const overflowY = `${style.overflowY}${style.overflow}`
-    const canScroll = /(auto|scroll|overlay)/i.test(overflowY) && parent.scrollHeight > parent.clientHeight
-
-    if (canScroll) parents.push(parent)
-    parent = parent.parentElement
-  }
-
-  return parents
-}
-
-function getTutorialLayerAncestors(element) {
-  if (!element || typeof window === 'undefined') return []
-  const layers = []
-  let parent = element.parentElement
-
   while (parent && parent !== document.body && parent !== document.documentElement) {
     const style = window.getComputedStyle(parent)
-    const hasStackingContext = (
-      /(fixed|sticky)/i.test(style.position) ||
-      style.transform !== 'none' ||
-      style.filter !== 'none' ||
-      style.perspective !== 'none' ||
-      Number(style.opacity) < 1 ||
-      (style.position !== 'static' && style.zIndex !== 'auto')
-    )
-
-    if (hasStackingContext) layers.push(parent)
-    parent = parent.parentElement
-  }
-
-  return layers
-}
-
-
-function getVisibleFixedRect(selector) {
-  if (typeof document === 'undefined' || typeof window === 'undefined') return null
-
-  try {
-    const elements = Array.from(document.querySelectorAll(selector)).filter(isUsableTarget)
-    const viewport = getViewport()
-
-    return elements
-      .map((element) => element.getBoundingClientRect())
-      .filter((rect) => rect.width > 0 && rect.height > 0 && rect.bottom > viewport.offsetTop && rect.top < viewport.height + viewport.offsetTop)
-      .sort((a, b) => (b.width * b.height) - (a.width * a.height))[0] || null
-  } catch {
-    return null
-  }
-}
-
-function measureFixedObstructions() {
-  if (typeof window === 'undefined') return { top: TOP_SAFE_GAP, bottom: BOTTOM_SAFE_GAP }
-
-  const viewport = getViewport()
-  const topCandidates = [
-    getVisibleFixedRect('[data-tutorial="app-header"]'),
-    getVisibleFixedRect('#app-header'),
-    getVisibleFixedRect('.ff-mobile-topbar'),
-    getVisibleFixedRect('.ff-app-header'),
-  ].filter(Boolean)
-  const bottomCandidates = [
-    getVisibleFixedRect('[data-tutorial="bottom-nav"]'),
-    getVisibleFixedRect('.mobile-bottom-nav'),
-    getVisibleFixedRect('.ff-mobile-bottom-nav'),
-    getVisibleFixedRect('.ff-active-workout-mini-floating'),
-    getVisibleFixedRect('.ff-mobile-workout-action-bar.is-visible'),
-    getVisibleFixedRect('.ff-mobile-workout-action-bar'),
-  ].filter(Boolean)
-
-  const top = topCandidates.reduce((max, rect) => {
-    if (rect.top > viewport.height * 0.35) return max
-    return Math.max(max, Math.ceil(rect.bottom - viewport.offsetTop + 14))
-  }, TOP_SAFE_GAP)
-
-  const bottom = bottomCandidates.reduce((max, rect) => {
-    if (rect.bottom < viewport.height * 0.55) return max
-    return Math.max(max, Math.ceil(viewport.height + viewport.offsetTop - rect.top + 14))
-  }, BOTTOM_SAFE_GAP)
-
-  return {
-    top: Math.min(viewport.height * 0.42, Math.max(TOP_SAFE_GAP, top)),
-    bottom: Math.min(viewport.height * 0.45, Math.max(BOTTOM_SAFE_GAP, bottom)),
-  }
-}
-
-function getScrollParent(element) {
-  if (!element || typeof window === 'undefined') return null
-  let parent = element.parentElement
-
-  while (parent && parent !== document.body) {
-    const style = window.getComputedStyle(parent)
-    const overflowY = `${style.overflowY}${style.overflow}`
-    if (/(auto|scroll|overlay)/i.test(overflowY) && parent.scrollHeight > parent.clientHeight) {
+    const overflow = `${style.overflowY}${style.overflow}`
+    if (/(auto|scroll|overlay)/i.test(overflow) && parent.scrollHeight > parent.clientHeight) {
       return parent
     }
     parent = parent.parentElement
@@ -180,239 +83,101 @@ function getScrollParent(element) {
   return document.scrollingElement || document.documentElement
 }
 
-function scrollTargetIntoComfortZone(element, updateRect, tooltipSize = { height: 260 }, placement = 'auto') {
-  if (!element || typeof window === 'undefined') return
+function hasFixedContext(element) {
+  if (!element || typeof window === 'undefined') return false
+  let node = element
 
+  while (node && node !== document.body && node !== document.documentElement) {
+    const style = window.getComputedStyle(node)
+    if (style.position === 'fixed' || style.position === 'sticky') return true
+    node = node.parentElement
+  }
+
+  return false
+}
+
+function canUseInlineCard(target, step) {
+  if (!target || !step) return false
+  if (step.presentation === 'panel' || step.placement === 'center') return false
+  if (hasFixedContext(target)) return false
+
+  const rect = target.getBoundingClientRect()
   const viewport = getViewport()
-  const obstructions = measureFixedObstructions()
-  const currentRect = element.getBoundingClientRect()
-  const tooltipReserve = Math.min(Math.max(Number(tooltipSize?.height) || 220, 132), viewport.height * 0.34)
-  const topSafe = viewport.offsetTop + obstructions.top + EDGE_MARGIN
-  const bottomSafe = viewport.height + viewport.offsetTop - obstructions.bottom - EDGE_MARGIN
-  const targetCenter = currentRect.top + currentRect.height / 2
-  const isMobileDock = isMobileTutorialViewport()
+  if (rect.height > viewport.height * 0.62) return false
 
-  let isComfortable = false
-  let targetCenterInViewport
+  return true
+}
 
-  if (isMobileDock) {
-    // No mobile/APK, o card da dica fica dockado no lado oposto ao alvo.
-    // O scroll empurra o alvo para a área livre, em vez de tentar encaixar
-    // tooltip e spotlight no mesmo espaço pequeno.
-    const dockTop = placement === 'top' || (placement !== 'bottom' && targetCenter > viewport.offsetTop + viewport.height * 0.52)
-    const reserve = tooltipReserve + TOOLTIP_TARGET_GAP + 12
-    const freeTop = dockTop ? topSafe + reserve : topSafe
-    const freeBottom = dockTop ? bottomSafe : bottomSafe - reserve
-    const freeHeight = Math.max(140, freeBottom - freeTop)
+function scrollTargetIntoView(target, host) {
+  if (!target || typeof window === 'undefined') return
 
-    targetCenterInViewport = freeTop + freeHeight * 0.5
-    isComfortable = currentRect.top >= freeTop && currentRect.bottom <= freeBottom
-  } else {
-    const canFitTooltipBelow = bottomSafe - currentRect.bottom >= tooltipReserve + TOOLTIP_TARGET_GAP
-    const canFitTooltipAbove = currentRect.top - topSafe >= tooltipReserve + TOOLTIP_TARGET_GAP
-    isComfortable = currentRect.top >= topSafe && currentRect.bottom <= bottomSafe && (canFitTooltipBelow || canFitTooltipAbove)
-
-    const safeHeight = Math.max(220, bottomSafe - topSafe)
-    const placementRatio = placement === 'top' ? 0.68 : placement === 'bottom' ? 0.32 : 0.5
-    targetCenterInViewport = topSafe + safeHeight * placementRatio
-  }
-
-  if (isComfortable) {
-    window.requestAnimationFrame(updateRect)
-    return
-  }
-
-  const scrollParent = getScrollParent(element)
+  const scrollParent = getScrollParent(target)
+  const options = { block: 'center', inline: 'nearest', behavior: 'auto' }
 
   try {
-    if (scrollParent && scrollParent !== document.documentElement && scrollParent !== document.body) {
-      const parentRect = scrollParent.getBoundingClientRect()
-      const currentCenter = currentRect.top + (currentRect.height / 2)
-      const delta = currentCenter - targetCenterInViewport
-      scrollParent.scrollTo({ top: Math.max(0, scrollParent.scrollTop + delta), behavior: 'auto' })
-    } else {
-      const currentCenter = currentRect.top + window.scrollY + (currentRect.height / 2)
-      const desiredTop = currentCenter - targetCenterInViewport
-      window.scrollTo({ top: Math.max(0, desiredTop), behavior: 'auto' })
-    }
+    target.scrollIntoView(options)
   } catch {
-    element.scrollIntoView({ block: 'center', inline: 'nearest' })
-  }
+    // fallback manual para WebViews antigos
+    const rect = target.getBoundingClientRect()
+    const viewport = getViewport()
+    const desiredCenter = viewport.offsetTop + viewport.height * 0.48
+    const delta = rect.top + rect.height / 2 - desiredCenter
 
-  window.setTimeout(updateRect, 80)
-  window.setTimeout(updateRect, 180)
-  window.setTimeout(updateRect, 340)
-  window.setTimeout(updateRect, 620)
-}
-
-function toRect(element) {
-  if (!element) return null
-  const rect = element.getBoundingClientRect()
-  const viewport = getViewport()
-
-  if (rect.width <= 0 || rect.height <= 0) return null
-
-  return {
-    top: rect.top + viewport.offsetTop,
-    left: rect.left + viewport.offsetLeft,
-    right: rect.right + viewport.offsetLeft,
-    bottom: rect.bottom + viewport.offsetTop,
-    width: rect.width,
-    height: rect.height,
-  }
-}
-
-function clamp(value, min, max) {
-  if (max < min) return min
-  return Math.min(Math.max(value, min), max)
-}
-
-function getOverlapArea(a, b) {
-  if (!a || !b) return 0
-  const x = Math.max(0, Math.min(a.left + a.width, b.right) - Math.max(a.left, b.left))
-  const y = Math.max(0, Math.min(a.top + a.height, b.bottom) - Math.max(a.top, b.top))
-  return x * y
-}
-
-function computeTooltipPosition({ rect, tooltipSize, placement = 'auto', targetMissing = false }) {
-  const viewport = getViewport()
-  const width = tooltipSize.width || Math.min(360, viewport.width - EDGE_MARGIN * 2)
-  const height = tooltipSize.height || 260
-  const obstructions = measureFixedObstructions()
-  const minTop = EDGE_MARGIN + obstructions.top + viewport.offsetTop
-  const maxTop = viewport.height + viewport.offsetTop - height - obstructions.bottom - EDGE_MARGIN
-  const minLeft = EDGE_MARGIN + viewport.offsetLeft
-  const maxLeft = viewport.width + viewport.offsetLeft - width - EDGE_MARGIN
-
-  if (targetMissing || !rect || placement === 'center') {
-    return {
-      top: clamp((viewport.height - height) / 2 + viewport.offsetTop, minTop, maxTop),
-      left: clamp((viewport.width - width) / 2 + viewport.offsetLeft, minLeft, maxLeft),
+    if (scrollParent && scrollParent !== document.documentElement && scrollParent !== document.body) {
+      scrollParent.scrollTop += delta
+    } else {
+      window.scrollTo({ top: Math.max(0, window.scrollY + delta), behavior: 'auto' })
     }
   }
 
-  if (isMobileTutorialViewport()) {
-    const targetCenter = rect.top + rect.height / 2
-    const dockTop = placement === 'top' || (placement !== 'bottom' && targetCenter > viewport.offsetTop + viewport.height * 0.52)
-    return {
-      top: dockTop ? minTop : maxTop,
-      left: clamp((viewport.width - width) / 2 + viewport.offsetLeft, minLeft, maxLeft),
+  window.setTimeout(() => {
+    try {
+      const viewport = getViewport()
+      const rect = target.getBoundingClientRect()
+      const topLimit = viewport.offsetTop + 88
+      const bottomLimit = viewport.offsetTop + viewport.height - 132
+
+      if (rect.top < topLimit || rect.bottom > bottomLimit) {
+        target.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' })
+      }
+
+      // Se o card inline ficou logo abaixo e fora da tela, aproxima só o necessário.
+      if (host && isMobileViewport()) {
+        const hostRect = host.getBoundingClientRect()
+        if (hostRect.bottom > viewport.offsetTop + viewport.height - 18) {
+          host.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'auto' })
+        }
+      }
+    } catch {
+      // sem ação
     }
-  }
-
-  const gap = TOOLTIP_TARGET_GAP
-  const centeredLeft = rect.left + rect.width / 2 - width / 2
-  const centeredTop = rect.top + rect.height / 2 - height / 2
-  const spaceAbove = rect.top - minTop
-  const spaceBelow = maxTop + height - rect.bottom
-  const autoPlacement = spaceBelow >= height + gap || spaceBelow >= spaceAbove ? 'bottom' : 'top'
-  const preferred = placement === 'auto' ? autoPlacement : placement
-
-  const rawCandidates = {
-    top: { top: rect.top - height - gap, left: centeredLeft },
-    bottom: { top: rect.bottom + gap, left: centeredLeft },
-    left: { top: centeredTop, left: rect.left - width - gap },
-    right: { top: centeredTop, left: rect.right + gap },
-  }
-
-  const order = [preferred, autoPlacement, 'top', 'bottom', 'right', 'left']
-    .filter((item, index, arr) => item && arr.indexOf(item) === index)
-
-  const scored = order.map((key, index) => {
-    const raw = rawCandidates[key] || rawCandidates.bottom
-    const top = clamp(raw.top, minTop, maxTop)
-    const left = clamp(raw.left, minLeft, maxLeft)
-    const box = { top, left, width, height }
-    const overflow = Math.max(0, minTop - raw.top) + Math.max(0, raw.top - maxTop) + Math.max(0, minLeft - raw.left) + Math.max(0, raw.left - maxLeft)
-    const overlap = getOverlapArea(box, rect)
-    const preferredPenalty = index * 120
-
-    return {
-      key,
-      top,
-      left,
-      score: overlap * 22 + overflow * 14 + preferredPenalty,
-    }
-  })
-
-  scored.sort((a, b) => a.score - b.score)
-  const selected = scored[0] || { top: minTop, left: minLeft }
-
-  return {
-    top: selected.top,
-    left: selected.left,
-  }
+  }, 80)
 }
 
-function getScrimRects(rect) {
-  const viewport = getViewport()
-  const width = viewport.width + viewport.offsetLeft
-  const height = viewport.height + viewport.offsetTop
-
-  if (!rect) {
-    return {
-      top: { top: viewport.offsetTop, left: viewport.offsetLeft, width: viewport.width, height: viewport.height },
-      right: null,
-      bottom: null,
-      left: null,
-    }
-  }
-
-  const padding = 8
-  const top = Math.max(viewport.offsetTop, rect.top - padding)
-  const left = Math.max(viewport.offsetLeft, rect.left - padding)
-  const right = Math.min(width, rect.right + padding)
-  const bottom = Math.min(height, rect.bottom + padding)
-
-  return {
-    top: { top: viewport.offsetTop, left: viewport.offsetLeft, width: viewport.width, height: Math.max(0, top - viewport.offsetTop) },
-    right: { top, left: right, width: Math.max(0, width - right), height: Math.max(0, bottom - top) },
-    bottom: { top: bottom, left: viewport.offsetLeft, width: viewport.width, height: Math.max(0, height - bottom) },
-    left: { top, left: viewport.offsetLeft, width: Math.max(0, left - viewport.offsetLeft), height: Math.max(0, bottom - top) },
-  }
-}
-
-function useTutorialTarget(step, pathname, tooltipSize) {
+function useTutorialTarget(step, pathname) {
   const [target, setTarget] = useState(null)
-  const [rect, setRect] = useState(null)
   const [targetMissing, setTargetMissing] = useState(false)
-  const scrollAttemptsRef = useRef({ key: '', count: 0 })
 
-  const updateRect = useCallback(() => {
+  const updateTarget = useCallback(() => {
     const element = getFirstMatchingElement(step?.target || step?.selector)
-
-    if (!element) {
-      setTarget(null)
-      setRect(null)
-      return false
-    }
-
-    const nextRect = toRect(element)
-    setTarget(nextRect ? element : null)
-    setRect(nextRect)
-    return Boolean(nextRect)
+    setTarget(element)
+    return Boolean(element)
   }, [step?.selector, step?.target])
 
   useEffect(() => {
     setTarget(null)
-    setRect(null)
     setTargetMissing(false)
-    scrollAttemptsRef.current = { key: '', count: 0 }
 
-    if (!step) return undefined
-    if (!step.target && !step.selector) {
-      setTargetMissing(false)
-      return undefined
-    }
+    if (!step?.target && !step?.selector) return undefined
 
     let cancelled = false
     let attempts = 0
-    let retryId = 0
+    let timeoutId = 0
 
-    const attemptFind = () => {
+    const run = () => {
       if (cancelled) return
       attempts += 1
-      const found = updateRect()
+      const found = updateTarget()
 
       if (found) {
         setTargetMissing(false)
@@ -424,134 +189,85 @@ function useTutorialTarget(step, pathname, tooltipSize) {
         return
       }
 
-      retryId = window.setTimeout(attemptFind, TARGET_RETRY_DELAY)
+      timeoutId = window.setTimeout(run, TARGET_RETRY_DELAY)
     }
 
-    attemptFind()
+    run()
 
     return () => {
       cancelled = true
-      window.clearTimeout(retryId)
+      window.clearTimeout(timeoutId)
     }
-  }, [pathname, step, updateRect])
-
-  useEffect(() => {
-    if (!target || !step?.scrollIntoView) return undefined
-
-    const scrollKey = `${step.id}:${Math.round(tooltipSize?.height || 260)}`
-    const currentAttempts = scrollAttemptsRef.current.key === scrollKey
-      ? scrollAttemptsRef.current.count
-      : 0
-
-    if (currentAttempts >= 5) return undefined
-
-    scrollAttemptsRef.current = { key: scrollKey, count: currentAttempts + 1 }
-    const timeoutId = window.setTimeout(() => {
-      scrollTargetIntoComfortZone(target, updateRect, { height: tooltipSize?.height || 260 }, step?.placement || 'auto')
-    }, currentAttempts === 0 ? 90 : 220)
-
-    return () => window.clearTimeout(timeoutId)
-  }, [step?.id, step?.placement, step?.scrollIntoView, target, tooltipSize?.height, updateRect])
+  }, [pathname, step?.id, step?.selector, step?.target, updateTarget])
 
   useEffect(() => {
     if (!target) return undefined
 
-    const layers = getTutorialLayerAncestors(target)
-    target.classList.add('ff-tutorial-active-target')
-    layers.forEach((layer) => layer.classList.add('ff-tutorial-active-layer'))
-    updateRect()
+    const handleUpdate = () => {
+      if (!isUsableTarget(target)) updateTarget()
+    }
 
-    const scrollParents = findScrollableParents(target)
-    const handleUpdate = () => window.requestAnimationFrame(updateRect)
     const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(handleUpdate) : null
-
     observer?.observe(target)
-    layers.forEach((layer) => observer?.observe(layer))
-    scrollParents.forEach((item) => item.addEventListener('scroll', handleUpdate, { passive: true }))
     window.addEventListener('resize', handleUpdate)
     window.addEventListener('orientationchange', handleUpdate)
     window.visualViewport?.addEventListener('resize', handleUpdate)
-    window.visualViewport?.addEventListener('scroll', handleUpdate)
 
     return () => {
-      target.classList.remove('ff-tutorial-active-target')
-      layers.forEach((layer) => layer.classList.remove('ff-tutorial-active-layer'))
       observer?.disconnect()
-      scrollParents.forEach((item) => item.removeEventListener('scroll', handleUpdate))
       window.removeEventListener('resize', handleUpdate)
       window.removeEventListener('orientationchange', handleUpdate)
       window.visualViewport?.removeEventListener('resize', handleUpdate)
-      window.visualViewport?.removeEventListener('scroll', handleUpdate)
     }
-  }, [target, updateRect])
+  }, [target, updateTarget])
 
-  return { target, rect, targetMissing }
+  return { target, targetMissing }
 }
 
-function useFocusTrap(isEnabled, rootRef, handlers) {
+function useInlineTutorialHost(target, step) {
+  const [host, setHost] = useState(null)
+
   useEffect(() => {
-    if (!isEnabled || !rootRef.current) return undefined
+    setHost(null)
+    if (!canUseInlineCard(target, step)) return undefined
 
-    const root = rootRef.current
-    const focusableSelector = [
-      'button:not([disabled])',
-      '[href]',
-      'input:not([disabled])',
-      'select:not([disabled])',
-      'textarea:not([disabled])',
-      '[tabindex]:not([tabindex="-1"])',
-    ].join(',')
+    const hostElement = document.createElement('div')
+    const position = step?.inlinePlacement === 'before' ? 'beforebegin' : 'afterend'
 
-    const focusInitial = () => {
-      const first = root.querySelector(focusableSelector)
-      ;(first || root).focus({ preventScroll: true })
+    hostElement.className = `ff-tutorial-inline-host ff-tutorial-inline-host--${step?.inlinePlacement === 'before' ? 'before' : 'after'}`
+    hostElement.setAttribute('data-tutorial-inline-host', step?.id || '')
+
+    target.insertAdjacentElement(position, hostElement)
+    target.classList.add('ff-tutorial-active-target')
+    setHost(hostElement)
+
+    window.setTimeout(() => scrollTargetIntoView(target, hostElement), 50)
+    window.setTimeout(() => scrollTargetIntoView(target, hostElement), 180)
+
+    return () => {
+      target.classList.remove('ff-tutorial-active-target')
+      hostElement.remove()
+      setHost(null)
     }
+  }, [step?.id, step?.inlinePlacement, step?.placement, step?.presentation, target])
+
+  return host
+}
+
+function useGlobalTutorialKeys(isEnabled, handlers) {
+  useEffect(() => {
+    if (!isEnabled) return undefined
 
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
         event.preventDefault()
         handlers?.onEscape?.()
-        return
-      }
-
-      if (event.key === 'Enter' && !event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey) {
-        const tag = event.target?.tagName?.toLowerCase()
-        if (!['input', 'textarea', 'select', 'button'].includes(tag)) {
-          event.preventDefault()
-          handlers?.onEnter?.()
-        }
-        return
-      }
-
-      if (event.key !== 'Tab') return
-
-      const focusable = Array.from(root.querySelectorAll(focusableSelector))
-      if (focusable.length === 0) {
-        event.preventDefault()
-        root.focus({ preventScroll: true })
-        return
-      }
-
-      const first = focusable[0]
-      const last = focusable[focusable.length - 1]
-
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault()
-        last.focus({ preventScroll: true })
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault()
-        first.focus({ preventScroll: true })
       }
     }
 
-    const id = window.setTimeout(focusInitial, 50)
-    root.addEventListener('keydown', handleKeyDown)
-
-    return () => {
-      window.clearTimeout(id)
-      root.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [handlers, isEnabled, rootRef])
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handlers, isEnabled])
 }
 
 export default function TutorialOverlay() {
@@ -570,82 +286,52 @@ export default function TutorialOverlay() {
     skipAll,
   } = useTutorial()
   const tooltipRef = useRef(null)
-  const [tooltipSize, setTooltipSize] = useState({ width: 340, height: 260 })
 
-  const { rect, targetMissing } = useTutorialTarget(activeStep, location.pathname, tooltipSize)
-  const shouldSpotlight = Boolean(rect && !targetMissing && activeStep?.placement !== 'center')
+  const { target, targetMissing } = useTutorialTarget(activeStep, location.pathname)
+  const inlineHost = useInlineTutorialHost(target, activeStep)
+  const useInline = Boolean(inlineHost)
 
-  const scrimRects = useMemo(() => getScrimRects(shouldSpotlight ? rect : null), [rect, shouldSpotlight])
-  const tooltipPosition = useMemo(
-    () => computeTooltipPosition({
-      rect,
-      tooltipSize,
-      placement: activeStep?.placement || 'auto',
-      targetMissing: targetMissing || !shouldSpotlight,
-    }),
-    [activeStep?.placement, rect, shouldSpotlight, targetMissing, tooltipSize]
-  )
+  useGlobalTutorialKeys(isTutorialOpen, useMemo(() => ({ onEscape: pauseTutorial }), [pauseTutorial]))
 
-  useLayoutEffect(() => {
-    if (!tooltipRef.current || !isTutorialOpen) return
-    const measured = tooltipRef.current.getBoundingClientRect()
-    if (measured.width && measured.height) {
-      setTooltipSize({ width: measured.width, height: measured.height })
-    }
-  }, [activeStep?.id, isTutorialOpen, tooltipPosition.left, tooltipPosition.top])
-
-  useFocusTrap(isTutorialOpen, tooltipRef, useMemo(() => ({
-    onEscape: pauseTutorial,
-    onEnter: nextStep,
-  }), [nextStep, pauseTutorial]))
+  useEffect(() => {
+    if (!isTutorialOpen || !tooltipRef.current) return undefined
+    const id = window.setTimeout(() => {
+      tooltipRef.current?.focus?.({ preventScroll: true })
+    }, 30)
+    return () => window.clearTimeout(id)
+  }, [activeStep?.id, isTutorialOpen, useInline])
 
   if (!isTutorialOpen || !activeStep) return null
 
   const isLastStep = activeFlow ? activeStepIndex >= activeFlow.steps.length - 1 : false
   const canGoBack = activeStepIndex > 0
-  const tooltipStyle = {
-    transform: `translate3d(${Math.round(tooltipPosition.left)}px, ${Math.round(tooltipPosition.top)}px, 0)`,
+
+  const tooltip = (
+    <TutorialTooltip
+      step={activeStep}
+      section={currentSection}
+      progress={progress}
+      isLastStep={isLastStep}
+      canGoBack={canGoBack}
+      targetMissing={targetMissing && Boolean(activeStep?.target || activeStep?.selector)}
+      tooltipRef={tooltipRef}
+      variant={useInline ? 'inline' : 'panel'}
+      onClose={pauseTutorial}
+      onBack={previousStep}
+      onNext={nextStep}
+      onSkipStep={skipStep}
+      onPause={pauseTutorial}
+      onSkipAll={skipAll}
+    />
+  )
+
+  if (useInline && inlineHost) {
+    return createPortal(tooltip, inlineHost)
   }
 
   return (
-    <div className="ff-tutorial-overlay" aria-live="polite">
-      {Object.entries(scrimRects).map(([key, item]) => (
-        item ? (
-          <div
-            key={key}
-            className={`ff-tutorial-scrim ff-tutorial-scrim--${key}`}
-            style={{
-              top: `${item.top}px`,
-              left: `${item.left}px`,
-              width: `${item.width}px`,
-              height: `${item.height}px`,
-            }}
-          />
-        ) : null
-      ))}
-
-      <TutorialSpotlight
-        rect={rect}
-        label={activeStep.targetLabel}
-        visible={shouldSpotlight}
-      />
-
-      <TutorialTooltip
-        step={activeStep}
-        section={currentSection}
-        progress={progress}
-        isLastStep={isLastStep}
-        canGoBack={canGoBack}
-        targetMissing={targetMissing}
-        tooltipRef={tooltipRef}
-        style={tooltipStyle}
-        onClose={pauseTutorial}
-        onBack={previousStep}
-        onNext={nextStep}
-        onSkipStep={skipStep}
-        onPause={pauseTutorial}
-        onSkipAll={skipAll}
-      />
+    <div className="ff-tutorial-overlay ff-tutorial-overlay--panel" aria-live="polite">
+      {tooltip}
     </div>
   )
 }

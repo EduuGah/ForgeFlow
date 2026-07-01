@@ -1,0 +1,211 @@
+/* ForgeFlow Tutorial v3 — inline coach system
+   O objetivo deste arquivo é encerrar o modelo antigo de tooltip flutuante
+   que cobria cards/campos no mobile. A dica passa a entrar no fluxo da página
+   quando existe alvo seguro; quando não existe, vira um painel curto e genérico. */
+
+.ff-tutorial-overlay--panel {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.ff-tutorial-inline-host {
+  display: block;
+  width: 100%;
+  margin: 0.7rem 0;
+  scroll-margin-top: calc(5.5rem + env(safe-area-inset-top, 0px));
+  scroll-margin-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+.ff-tutorial-inline-host--before {
+  margin-bottom: 0.75rem;
+}
+
+.ff-tutorial-inline-host--after {
+  margin-top: 0.75rem;
+}
+
+.ff-tutorial-tooltip--inline,
+.ff-tutorial-tooltip--panel {
+  transform: none !important;
+  max-height: none !important;
+  overflow: visible !important;
+  overscroll-behavior: auto !important;
+}
+
+.ff-tutorial-tooltip--inline {
+  position: relative !important;
+  inset: auto !important;
+  top: auto !important;
+  left: auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  border-radius: 20px;
+  padding: 0.82rem;
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.22),
+    inset 0 0 0 1px color-mix(in srgb, var(--ff-accent) 12%, transparent);
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--ff-accent-soft) 16%, transparent), transparent 58%),
+    color-mix(in srgb, var(--ff-card) 96%, transparent);
+}
+
+.ff-tutorial-tooltip--panel {
+  position: fixed !important;
+  top: auto !important;
+  left: max(10px, env(safe-area-inset-left, 0px)) !important;
+  right: max(10px, env(safe-area-inset-right, 0px)) !important;
+  bottom: max(10px, env(safe-area-inset-bottom, 0px)) !important;
+  width: min(460px, calc(100vw - 20px)) !important;
+  max-width: calc(100vw - 20px) !important;
+  margin-inline: auto;
+  border-radius: 22px;
+  padding: 0.86rem;
+  pointer-events: auto;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--ff-accent-soft) 16%, transparent), transparent 58%),
+    color-mix(in srgb, var(--ff-card) 97%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.ff-tutorial-active-target {
+  position: relative !important;
+  z-index: 3 !important;
+  isolation: isolate;
+  outline: 2px solid color-mix(in srgb, var(--ff-accent) 66%, transparent);
+  outline-offset: 5px;
+  box-shadow:
+    0 0 0 7px color-mix(in srgb, var(--ff-accent-soft) 52%, transparent),
+    0 0 22px color-mix(in srgb, var(--ff-accent-soft) 60%, transparent) !important;
+  border-radius: max(16px, inherit);
+  scroll-margin-top: calc(6rem + env(safe-area-inset-top, 0px));
+  scroll-margin-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
+}
+
+.ff-tutorial-tooltip__header {
+  align-items: flex-start;
+  gap: 0.65rem;
+}
+
+.ff-tutorial-tooltip__eyebrow {
+  padding: 0.18rem 0.48rem;
+  font-size: 0.62rem;
+}
+
+.ff-tutorial-tooltip h2 {
+  margin-top: 0.38rem;
+  font-size: clamp(0.98rem, 3.8vw, 1.2rem);
+  line-height: 1.08;
+}
+
+.ff-tutorial-close {
+  min-width: 34px;
+  min-height: 34px;
+  font-size: 1.15rem;
+}
+
+.ff-tutorial-progress {
+  margin-top: 0.62rem;
+  gap: 0.55rem;
+}
+
+.ff-tutorial-progress__bar {
+  height: 6px;
+}
+
+.ff-tutorial-step-counter {
+  font-size: 0.68rem;
+}
+
+.ff-tutorial-tooltip__body {
+  margin-top: 0.62rem;
+}
+
+.ff-tutorial-tooltip__body p {
+  font-size: 0.84rem;
+  line-height: 1.42;
+}
+
+.ff-tutorial-tooltip__example {
+  margin-top: 0.5rem !important;
+  border-radius: 14px;
+  padding: 0.55rem 0.64rem;
+  font-size: 0.8rem;
+}
+
+.ff-tutorial-tooltip__controls {
+  margin-top: 0.72rem;
+  gap: 0.55rem;
+}
+
+.ff-tutorial-tooltip__primary-actions {
+  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+  gap: 0.45rem;
+}
+
+.ff-tutorial-tooltip__secondary-actions {
+  gap: 0.36rem;
+  justify-content: center;
+}
+
+.ff-tutorial-btn {
+  min-height: 38px;
+  border-radius: 14px;
+  padding: 0.58rem 0.68rem;
+  font-size: 0.8rem;
+}
+
+.ff-tutorial-link-btn {
+  min-height: 30px;
+  padding: 0.32rem 0.42rem;
+  font-size: 0.75rem;
+}
+
+.ff-tutorial-scrim,
+.ff-tutorial-spotlight,
+.ff-tutorial-target-label {
+  display: none !important;
+}
+
+@media (max-width: 640px) {
+  .ff-tutorial-inline-host {
+    margin: 0.58rem 0;
+  }
+
+  .ff-tutorial-tooltip--inline,
+  .ff-tutorial-tooltip--panel {
+    border-radius: 18px;
+    padding: 0.72rem;
+  }
+
+  .ff-tutorial-tooltip--panel {
+    bottom: max(8px, env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .ff-tutorial-tooltip__body p {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .ff-tutorial-tooltip__example {
+    display: none !important;
+  }
+
+  .ff-tutorial-link-btn--danger {
+    display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ff-tutorial-tooltip--inline,
+  .ff-tutorial-tooltip--panel,
+  .ff-tutorial-active-target {
+    animation: none !important;
+    transition: none !important;
+  }
+}

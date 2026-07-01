@@ -10,6 +10,7 @@ export default function TutorialTooltip({
   targetMissing,
   tooltipRef,
   style,
+  variant = 'panel',
   onClose,
   onBack,
   onNext,
@@ -22,10 +23,10 @@ export default function TutorialTooltip({
   return (
     <article
       ref={tooltipRef}
-      className="ff-tutorial-tooltip"
+      className={`ff-tutorial-tooltip ff-tutorial-tooltip--${variant}`}
       style={style}
       role="dialog"
-      aria-modal="true"
+      aria-modal={variant === 'panel' ? 'true' : 'false'}
       aria-labelledby="ff-tutorial-title"
       aria-describedby="ff-tutorial-description"
       tabIndex={-1}
