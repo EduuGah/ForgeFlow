@@ -557,3 +557,59 @@ body.is-native-app .ff-page-start-workout .ff-mobile-workout-action-bar.ff-tutor
       0 0 18px color-mix(in srgb, var(--ff-accent-soft) 55%, transparent) !important;
   }
 }
+
+/* Hotfix: keep the compact mobile tutorial card from covering the highlighted
+   target on low-height Android screens. */
+@media (max-width: 640px) {
+  .ff-tutorial-tooltip {
+    width: min(316px, calc(100vw - 28px)) !important;
+    max-height: min(36vh, calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 220px)) !important;
+    padding: 0.68rem !important;
+  }
+
+  .ff-tutorial-tooltip__eyebrow {
+    padding: 0.2rem 0.48rem !important;
+    font-size: 0.62rem !important;
+  }
+
+  .ff-tutorial-tooltip h2 {
+    margin-top: 0.42rem !important;
+    font-size: 1rem !important;
+  }
+
+  .ff-tutorial-tooltip__body {
+    margin-top: 0.58rem !important;
+  }
+
+  .ff-tutorial-tooltip__body p {
+    font-size: 0.78rem !important;
+    line-height: 1.36 !important;
+  }
+
+  .ff-tutorial-progress {
+    gap: 0.52rem !important;
+    margin-top: 0.52rem !important;
+  }
+
+  .ff-tutorial-progress__bar {
+    height: 6px !important;
+  }
+
+  .ff-tutorial-step-counter {
+    font-size: 0.68rem !important;
+  }
+
+  .ff-tutorial-tooltip__controls {
+    margin-top: 0.62rem !important;
+  }
+
+  .ff-tutorial-tooltip__secondary-actions {
+    gap: 0.35rem !important;
+  }
+
+  .ff-tutorial-link-btn {
+    min-height: 30px !important;
+    padding: 0.32rem 0.42rem !important;
+    font-size: 0.7rem !important;
+  }
+}
