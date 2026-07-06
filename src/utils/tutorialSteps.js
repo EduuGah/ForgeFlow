@@ -1,4 +1,4 @@
-export const TUTORIAL_VERSION = 6
+export const TUTORIAL_VERSION = 7
 
 export const FIRST_STEPS_MISSIONS = [
   {
@@ -118,15 +118,19 @@ export const tutorialSections = {
 
 export const tutorialSectionOrder = Object.values(tutorialSections).sort((a, b) => a.order - b.order)
 
-function step({ id, title, description, route = '/', section = 'firstSteps' }) {
+function step({ id, title, shortTitle, description, actionLabel, route = '/', section = 'firstSteps', target = '', requireTarget = false }) {
   return {
     id,
     title,
+    shortTitle,
     description,
+    actionLabel,
     route,
     section,
+    target,
+    requireTarget,
     mode: 'mission',
-    presentation: 'checklist',
+    presentation: 'guided',
     canSkip: true,
   }
 }

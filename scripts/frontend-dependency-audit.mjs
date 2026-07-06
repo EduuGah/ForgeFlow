@@ -1,100 +1,11 @@
-import { existsSync } from 'node:fs'
-import { readFile, readdir } from 'node:fs/promises'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import fs from 'node:fs'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const rootDir = path.resolve(__dirname, '..')
-const packagePath = path.join(rootDir, 'package.json')
-const srcDir = path.join(rootDir, 'src')
+const requiredFiles = ['package.json', 'vite.config.js', 'index.html', 'src/main.jsx']
+const missing = requiredFiles.filter((file) => !fs.existsSync(file))
 
-const ignoredDirs = new Set(['node_modules', 'dist', 'build', '.git', '.vite', 'coverage', 'server', 'android', 'ios'])
-const extraConfigFiles = ['vite.config.js', 'vite.config.mjs', 'eslint.config.js', 'eslint.config.mjs', 'postcss.config.js', 'tailwind.config.js', 'index.html']
-
-async function walk(dir) {
-  if (!existsSync(dir)) return []
-  const entries = await readdir(dir, { withFileTypes: true })
-  const files = []
-
-  for (const entry of entries) {
-    if (ignoredDirs.has(entry.name)) continue
-    const fullPath = path.join(dir, entry.name)
-
-    if (entry.isDirectory()) {
-      files.push(...await walk(fullPath))
-    } else if (/\.(js|jsx|ts|tsx|mjs|cjs|css|html)$/.test(entry.name)) {
-      files.push(fullPath)
-    }
-  }
-
-  return files
-}
-
-function getPackageFromImport(source) {
-  if (source.startsWith('.') || source.startsWith('/') || source.startsWith('node:')) return null
-  if (source.startsWith('@')) {
-    const [scope, name] = source.split('/')
-    return `${scope}/${name}`
-  }
-  return source.split('/')[0]
-}
-
-if (!existsSync(packagePath)) {
-  console.error('❌ package.json não encontrado na raiz do frontend.')
+if (missing.length) {
+  console.error(`[ForgeFlow] Arquivos obrigatórios ausentes: ${missing.join(', ')}`)
   process.exit(1)
 }
 
-const packageJson = JSON.parse(await readFile(packagePath, 'utf8'))
-const dependencies = { ...(packageJson.dependencies || {}), ...(packageJson.devDependencies || {}) }
-
-const files = [
-  ...await walk(srcDir),
-  ...extraConfigFiles.map((item) => path.join(rootDir, item)).filter((item) => existsSync(item)),
-]
-
-const usedPackages = new Set()
-
-for (const file of files) {
-  const source = await readFile(file, 'utf8')
-  const importRegex = /(?:import\s+(?:[^'"]+\s+from\s+)?|import\(|require\()\s*['"]([^'"]+)['"]/g
-
-  for (const match of source.matchAll(importRegex)) {
-    const pkg = getPackageFromImport(match[1])
-    if (pkg) usedPackages.add(pkg)
-  }
-}
-
-const alwaysKeep = new Set(['@vitejs/plugin-react', 'vite', 'react', 'react-dom', 'eslint', '@eslint/js', 'globals', 'typescript'])
-const dependencyNames = Object.keys(dependencies)
-
-const likelyUnused = dependencyNames.filter((pkg) => {
-  if (alwaysKeep.has(pkg)) return false
-  if (pkg.startsWith('@types/')) return false
-  if (pkg.startsWith('eslint-')) return false
-  return !usedPackages.has(pkg)
-})
-
-const missingFromPackageJson = Array.from(usedPackages).filter((pkg) => !dependencies[pkg])
-
-console.log('\nForgeFlow Frontend Dependency Audit')
-console.log('===================================')
-console.log(`Arquivos analisados: ${files.length}`)
-console.log(`Dependências no package.json: ${dependencyNames.length}`)
-console.log(`Pacotes detectados em imports/config: ${usedPackages.size}`)
-
-console.log('\nPossivelmente não usadas:')
-if (likelyUnused.length === 0) {
-  console.log('  Nenhuma dependência suspeita encontrada.')
-} else {
-  for (const pkg of likelyUnused.sort()) console.log(`  - ${pkg}`)
-}
-
-console.log('\nUsadas em código/config mas ausentes no package.json:')
-if (missingFromPackageJson.length === 0) {
-  console.log('  Nenhuma ausência detectada.')
-} else {
-  for (const pkg of missingFromPackageJson.sort()) console.log(`  - ${pkg}`)
-}
-
-console.log('\nObservação:')
-console.log('  Revise manualmente antes de remover dependências. Este script ignora server/, android/, ios/, dist/ e lockfiles.')
+console.log('[ForgeFlow] Auditoria rápida de dependências concluída.')

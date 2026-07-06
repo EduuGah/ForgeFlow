@@ -380,16 +380,25 @@ export function TutorialProvider({ children }) {
         return false
       }
 
+      const flow = tutorialFlows[flowId] || tutorialFlows.welcome
       const firstMission = FIRST_STEPS_MISSIONS[0]?.id || ''
+      const missionStepIndex = options.missionId
+        ? flow.steps.findIndex((item) => item.id === options.missionId)
+        : -1
+      const savedStepIndex = options.resume ? getInitialStepIndex(flow, state.tutorialCurrentStep || 0) : 0
+      const nextStepIndex = missionStepIndex >= 0 ? missionStepIndex : savedStepIndex
+      const nextStep = flow.steps[nextStepIndex] || flow.steps[0]
 
       clearWelcomeTutorialPending(user)
       setWelcomePromptVisible(false)
       stopTutorialUi()
+      setActiveFlowId(flow.id)
+      setActiveStepIndex(nextStepIndex)
 
       updateState((current) => ({
         ...current,
-        tutorialCurrentFlow: flowId || 'welcome',
-        tutorialCurrentStep: 0,
+        tutorialCurrentFlow: flow.id || 'welcome',
+        tutorialCurrentStep: nextStepIndex,
         tutorialPaused: false,
         tutorialSkipped: false,
         tutorialStartedAt: current.tutorialStartedAt || nowIso(),
@@ -399,16 +408,16 @@ export function TutorialProvider({ children }) {
         firstStepsPaused: false,
         firstStepsDismissed: false,
         firstStepsLastFocusedMission: options.missionId || current.firstStepsLastFocusedMission || firstMission,
-        tutorialSeenSections: uniqueValues([...(current.tutorialSeenSections || []), 'firstSteps']),
+        tutorialSeenSections: uniqueValues([...(current.tutorialSeenSections || []), getStepSection(nextStep)]),
       }))
 
-      if (canShowTutorialOnPath(location.pathname) && location.pathname !== '/') {
-        navigate('/')
+      if (nextStep?.route && canShowTutorialOnPath(location.pathname) && location.pathname !== nextStep.route) {
+        navigate(nextStep.route)
       }
 
       return true
     },
-    [location.pathname, navigate, stopTutorialUi, updateState, user]
+    [location.pathname, navigate, state.tutorialCurrentStep, stopTutorialUi, updateState, user]
   )
 
   const completeTutorial = useCallback(

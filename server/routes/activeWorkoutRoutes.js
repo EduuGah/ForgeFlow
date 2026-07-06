@@ -5,7 +5,7 @@ import authMiddleware from '../middleware/authMiddleware.js'
 const router = express.Router()
 
 router.get('/active-workout', authMiddleware, async (req, res) => {
-  const record = await ActiveWorkoutSession.findOne({ user: req.user.id }).lean()
+  const record = await ActiveWorkoutSession.findOne({ userId: req.user.userId }).lean()
 
   if (!record) {
     return res.json({ session: null })
@@ -18,13 +18,13 @@ router.put('/active-workout', authMiddleware, async (req, res) => {
   const { session } = req.body
 
   if (!session) {
-    await ActiveWorkoutSession.deleteOne({ user: req.user.id })
+    await ActiveWorkoutSession.deleteOne({ userId: req.user.userId })
     return res.json({ session: null })
   }
 
   const record = await ActiveWorkoutSession.findOneAndUpdate(
-    { user: req.user.id },
-    { session },
+    { userId: req.user.userId },
+    { userId: req.user.userId, session },
     { new: true, upsert: true }
   ).lean()
 
@@ -32,7 +32,7 @@ router.put('/active-workout', authMiddleware, async (req, res) => {
 })
 
 router.delete('/active-workout', authMiddleware, async (req, res) => {
-  await ActiveWorkoutSession.deleteOne({ user: req.user.id })
+  await ActiveWorkoutSession.deleteOne({ userId: req.user.userId })
 
   return res.json({ ok: true })
 })

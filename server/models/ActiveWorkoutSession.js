@@ -2,7 +2,7 @@ import mongoose from 'mongoose'
 
 const activeWorkoutSessionSchema = new mongoose.Schema(
   {
-    user: {
+    userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
@@ -12,6 +12,7 @@ const activeWorkoutSessionSchema = new mongoose.Schema(
     session: {
       type: mongoose.Schema.Types.Mixed,
       required: true,
+      default: {},
     },
   },
   {
@@ -19,4 +20,4 @@ const activeWorkoutSessionSchema = new mongoose.Schema(
   }
 )
 
-export default mongoose.model('ActiveWorkoutSession', activeWorkoutSessionSchema)
+export default mongoose.models.ActiveWorkoutSession || mongoose.model('ActiveWorkoutSession', activeWorkoutSessionSchema)
