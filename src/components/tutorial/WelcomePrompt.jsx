@@ -47,7 +47,7 @@ export default function WelcomePrompt() {
         <span className="ff-tutorial-welcome__badge">Primeiros passos</span>
         <h2 id="ff-tutorial-welcome-title">Aprenda fazendo</h2>
         <p id="ff-tutorial-welcome-description">
-          Em vez de um tour longo cobrindo a tela, o ForgeFlow mostra 5 missões no Dashboard: criar treino, iniciar, registrar série, finalizar e ver histórico.
+          Faça um tour rápido pelo fluxo principal: criar treino, iniciar, registrar série, finalizar e abrir o histórico.
         </p>
 
         <div className="ff-tutorial-welcome__grid" aria-hidden="true">
@@ -59,7 +59,7 @@ export default function WelcomePrompt() {
 
         <div className="ff-tutorial-welcome__actions">
           <button type="button" className="ff-tutorial-btn ff-tutorial-btn--primary" onClick={() => startTutorial('welcome')}>
-            Começar primeiros passos
+            Começar
           </button>
           <button type="button" className="ff-tutorial-btn ff-tutorial-btn--ghost" onClick={() => closeWelcomePrompt({ pause: true })}>
             Ver depois

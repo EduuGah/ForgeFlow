@@ -88,10 +88,10 @@ export default function FirstStepsChecklist({ workouts = [], history = [], activ
         <h2>{isCompleted ? 'Tudo pronto para começar' : isPaused ? 'Primeiros passos pausados' : 'Aprenda fazendo'}</h2>
         <p>
           {isCompleted
-            ? 'Você já completou o fluxo principal. Pode reiniciar quando quiser nas Configurações.'
+            ? 'Fluxo principal concluído.'
             : isPaused
-              ? 'O checklist fica salvo. Continue quando quiser sem precisar assistir a um tour longo.'
-              : 'Siga 5 missões curtas para aprender o essencial sem card cobrindo a tela.'}
+              ? 'Seu progresso foi salvo. Continue quando quiser.'
+              : 'Siga 5 passos rápidos para aprender o essencial.'}
         </p>
       </div>
 

@@ -104,7 +104,7 @@ function getTooltipPlacement(rect) {
 
 function getTooltipStyle(rect, placement) {
   const viewport = getViewport()
-  const maxWidth = Math.min(460, viewport.width - 20)
+  const maxWidth = Math.min(440, Math.max(280, viewport.width - 20))
   const left = rect
     ? clamp(rect.left + rect.width / 2 - maxWidth / 2, viewport.left + 10, viewport.left + viewport.width - maxWidth - 10)
     : viewport.left + 10
@@ -113,12 +113,15 @@ function getTooltipStyle(rect, placement) {
     left: `${Math.round(left)}px`,
     width: `${Math.round(maxWidth)}px`,
     maxWidth: `calc(100vw - 20px)`,
+    maxHeight: `${Math.round(Math.max(260, viewport.height - 28))}px`,
   }
 
   if (rect && placement === 'top') {
-    style.bottom = `${Math.round(Math.max(CARD_MARGIN, viewport.height - rect.top + CARD_MARGIN))}px`
+    const bottom = clamp(viewport.height - rect.top + CARD_MARGIN, CARD_MARGIN, Math.max(CARD_MARGIN, viewport.height - 220))
+    style.bottom = `${Math.round(bottom)}px`
   } else if (rect) {
-    style.top = `${Math.round(rect.bottom + CARD_MARGIN)}px`
+    const top = clamp(rect.bottom + CARD_MARGIN, viewport.top + CARD_MARGIN, Math.max(viewport.top + CARD_MARGIN, viewport.top + viewport.height - 220))
+    style.top = `${Math.round(top)}px`
   } else {
     style.bottom = `max(12px, calc(env(safe-area-inset-bottom, 0px) + 12px))`
   }
@@ -175,6 +178,8 @@ export default function TutorialOverlay() {
       attempts += 1
       if (attempts >= TARGET_RETRY_LIMIT) {
         setTargetMissing(Boolean(activeStep.requireTarget || selector))
+        setTargetElement(null)
+        setTargetRect(null)
         return
       }
 
