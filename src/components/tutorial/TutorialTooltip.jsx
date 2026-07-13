@@ -3,7 +3,7 @@ import TutorialProgress from './TutorialProgress'
 
 function TutorialDemoPreview() {
   return (
-    <div className="ff-tutorial-demo-preview" aria-label="Simulação de treino ativo">
+    <div className="ff-tutorial-demo-preview" aria-label="Previa de treino ativo">
       <div className="ff-tutorial-demo-preview__top">
         <span>Supino reto</span>
         <strong>2/3 séries</strong>
@@ -21,7 +21,7 @@ function TutorialDemoPreview() {
           Concluir
         </button>
       </div>
-      <p>Simulação visual. Não cria treino, notificação ou histórico.</p>
+      <p>Preencha carga, registre reps e conclua a serie.</p>
     </div>
   )
 }
@@ -32,7 +32,9 @@ export default function TutorialTooltip({
   progress,
   isLastStep,
   canGoBack,
+  targetPending,
   targetMissing,
+  nextDisabled,
   tooltipRef,
   style,
   variant = 'dock',
@@ -75,9 +77,14 @@ export default function TutorialTooltip({
         <p id="ff-tutorial-description">{step.description}</p>
         {showDemo ? <TutorialDemoPreview /> : null}
         {!showDemo && step.example ? <p className="ff-tutorial-tooltip__example">{step.example}</p> : null}
+        {targetPending ? (
+          <p className="ff-tutorial-tooltip__warning">
+            Preparando a proxima etapa...
+          </p>
+        ) : null}
         {showWarning ? (
           <p className="ff-tutorial-tooltip__warning">
-            Não encontrei esse item agora. A dica continua em modo explicativo para não quebrar a tela.
+            Nao encontrei esse item agora. Voce pode continuar pelo menu da tela.
           </p>
         ) : null}
       </div>
@@ -86,6 +93,7 @@ export default function TutorialTooltip({
         isLastStep={isLastStep}
         canGoBack={canGoBack}
         canSkipStep={step.canSkip !== false}
+        nextDisabled={nextDisabled}
         onBack={onBack}
         onNext={onNext}
         onSkipStep={onSkipStep}

@@ -1,7 +1,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const scriptDir = path.dirname(new URL(import.meta.url).pathname)
+const scriptDir = path.dirname(fileURLToPath(import.meta.url))
 const serverRoot = path.resolve(scriptDir, '..')
 const indexPath = path.join(serverRoot, 'index.js')
 const source = fs.readFileSync(indexPath, 'utf8')
@@ -20,6 +21,7 @@ const publicRouteMatchers = [
   /^POST \/auth\/login$/,
   /^POST \/auth\/forgot-password$/,
   /^POST \/auth\/reset-password\/:token$/,
+  /^POST \/auth\/reset-password-code$/,
   /^POST \/auth\/logout$/,
 ]
 
@@ -28,6 +30,7 @@ const sensitiveRouteMatchers = [
   /^POST \/auth\/login$/,
   /^POST \/auth\/forgot-password$/,
   /^POST \/auth\/reset-password\/:token$/,
+  /^POST \/auth\/reset-password-code$/,
   /^POST \/admin\/users\/:userId\/reset-password$/,
   /^DELETE \/me$/,
 ]

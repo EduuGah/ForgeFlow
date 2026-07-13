@@ -1,14 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { apiFetch, saveAuthToken } from '../services/api'
+import { API_BASE_URL, apiFetch, saveAuthToken } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import ForgeFlowIcon from '../components/brand/ForgeFlowIcon'
 import { applyAppSettingsToDocument, getAppSettings } from '../utils/settingsUtils'
-import { getGoogleLoginUrl } from '../utils/platformUtils'
+import { getGoogleLoginUrl, isNativeApp } from '../utils/platformUtils'
 import { markWelcomeTutorialPending } from '../utils/tutorialUtils'
 import { unlockGlobalScroll } from '../utils/scrollLockUtils'
-
-const API_URL = (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3001' : 'https://forgeflow-citr.onrender.com')).replace(/\/$/, '')
 
 function GoogleIcon() {
     return (
@@ -50,8 +48,22 @@ function Register() {
         return () => unlockGlobalScroll()
     }, [])
 
-    function handleGoogleLogin() {
-        window.location.href = getGoogleLoginUrl(API_URL)
+    async function handleGoogleLogin() {
+        const googleUrl = getGoogleLoginUrl(API_BASE_URL)
+
+        if (isNativeApp()) {
+            try {
+                const { Browser } = await import('@capacitor/browser')
+                await Browser.open({ url: googleUrl, presentationStyle: 'fullscreen' })
+                return
+            } catch (error) {
+                console.warn('[ForgeFlow] Browser plugin indisponível, usando fallback do sistema:', error)
+                window.open(googleUrl, '_system', 'noopener,noreferrer')
+                return
+            }
+        }
+
+        window.location.assign(googleUrl)
     }
 
     async function handleSubmit(event) {

@@ -434,14 +434,17 @@ function StartWorkout() {
   useEffect(() => {
     if (!activeSession || finishWorkoutModalOpen) return undefined
 
-    let shouldOpen = false
+    const shouldOpen = (() => {
+      try {
+        const shouldOpenFromNotification = window.sessionStorage.getItem('forgeflow:active-workout-finish-confirm') === '1'
 
-    try {
-      shouldOpen = window.sessionStorage.getItem('forgeflow:active-workout-finish-confirm') === '1'
-      if (shouldOpen) window.sessionStorage.removeItem('forgeflow:active-workout-finish-confirm')
-    } catch {
-      shouldOpen = false
-    }
+        if (shouldOpenFromNotification) window.sessionStorage.removeItem('forgeflow:active-workout-finish-confirm')
+
+        return shouldOpenFromNotification
+      } catch {
+        return false
+      }
+    })()
 
     if (!shouldOpen) return undefined
 
@@ -528,7 +531,7 @@ function StartWorkout() {
       setFinishElapsedSeconds(null)
 
       if (savedSession?.skippedHistorySave) {
-        showToast('success', 'Tutorial encerrado', 'O treino de teste foi descartado e não entrou no histórico.')
+        showToast('success', 'Guia concluído', 'Agora você já pode continuar com seus treinos.')
         return
       }
 

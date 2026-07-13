@@ -68,10 +68,47 @@ function getInitialStepIndex(flow, preferredStep = 0) {
   return Math.min(Math.max(0, numericStep), flow.steps.length - 1)
 }
 
-function createTutorialWorkout() {
+const TUTORIAL_WORKOUT_COPY = {
+  'tutorial-exercise-warmup-bar': {
+    instructions: 'Prepare o movimento e observe como as series ficam organizadas.',
+    tips: 'Use esta etapa para se familiarizar com o treino ativo.',
+  },
+  'tutorial-exercise-bench-press': {
+    instructions: 'Preencha carga, repeticoes e conclua a serie quando terminar.',
+    tips: 'Escolha valores simples para praticar o registro.',
+  },
+  'tutorial-exercise-lat-pulldown': {
+    instructions: 'Use a navegacao do treino ativo para alternar entre exercicios.',
+    tips: 'Mantenha o foco no proximo exercicio pendente.',
+  },
+  'tutorial-exercise-squat': {
+    instructions: 'Finalize o treino quando estiver pronto para ver o fechamento.',
+    tips: 'Revise o resumo antes de confirmar a finalizacao.',
+  },
+}
+
+function sanitizeTutorialWorkout(workout) {
   return {
+    ...workout,
+    name: 'Treino guiado',
+    exercises: workout.exercises.map((item) => {
+      const copy = TUTORIAL_WORKOUT_COPY[item.exercise?.id] || {}
+
+      return {
+        ...item,
+        exercise: {
+          ...item.exercise,
+          ...copy,
+        },
+      }
+    }),
+  }
+}
+
+function createTutorialWorkout() {
+  return sanitizeTutorialWorkout({
     id: 'tutorial-workout-demo',
-    name: 'Treino Teste — Modo Tutorial',
+    name: 'Treino guiado',
     isTutorial: true,
     tutorialOnly: true,
     isTutorialDemo: true,
@@ -142,7 +179,7 @@ function createTutorialWorkout() {
         ],
       },
     ],
-  }
+  })
 }
 
 export function TutorialProvider({ children }) {
@@ -196,7 +233,7 @@ export function TutorialProvider({ children }) {
 
           lastRemotePayloadRef.current = hash
           ;(async () => {
-            let currentRemoteSettings = {}
+            let currentRemoteSettings
 
             try {
               const settingsFromApi = await apiFetch('/settings', { timeoutMs: 5000 })
@@ -589,7 +626,7 @@ export function TutorialProvider({ children }) {
   const toggleContextualTips = useCallback(() => {
     updateState((current) => ({
       ...current,
-      contextualTipsEnabled: !Boolean(current.contextualTipsEnabled),
+      contextualTipsEnabled: !current.contextualTipsEnabled,
     }))
   }, [updateState])
 

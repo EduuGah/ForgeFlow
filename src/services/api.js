@@ -1,6 +1,8 @@
-const API_URL = (
+const DEFAULT_PRODUCTION_API_URL = "https://forgeflow-citr.onrender.com";
+
+export const API_BASE_URL = (
   import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? "http://localhost:3001" : "")
+  (import.meta.env.DEV ? "http://localhost:3001" : DEFAULT_PRODUCTION_API_URL)
 ).replace(/\/$/, "");
 
 const TOKEN_KEY = "forgeflow:token";
@@ -30,7 +32,7 @@ function createTimeoutSignal(timeoutMs = DEFAULT_TIMEOUT_MS) {
 async function ensureCsrfToken() {
   if (cachedCsrfToken) return cachedCsrfToken;
 
-  const response = await fetch(`${API_URL}/auth/csrf`, {
+  const response = await fetch(`${API_BASE_URL}/auth/csrf`, {
     method: "GET",
     credentials: "include",
   });
@@ -79,7 +81,7 @@ export async function apiFetch(path, options = {}) {
     const timeout = createTimeoutSignal(options.timeoutMs);
 
     try {
-      return await fetch(`${API_URL}${path}`, {
+      return await fetch(`${API_BASE_URL}${path}`, {
         ...options,
         credentials: "include",
         signal: options.signal || timeout.signal,
@@ -132,7 +134,7 @@ export async function apiFetch(path, options = {}) {
 export async function apiDownload(path, filename, options = {}) {
   const token = getToken();
 
-  const response = await fetch(`${API_URL}${path}`, {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
     method: "GET",
     credentials: "include",
     headers: {
@@ -177,7 +179,7 @@ export async function apiFormData(path, formData, options = {}) {
     const timeout = createTimeoutSignal(options.timeoutMs);
 
     try {
-      return await fetch(`${API_URL}${path}`, {
+      return await fetch(`${API_BASE_URL}${path}`, {
         method,
         credentials: "include",
         signal: options.signal || timeout.signal,

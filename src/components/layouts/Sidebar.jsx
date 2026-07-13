@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import {
   AlertCircle,
   Bell,
@@ -23,7 +22,6 @@ import { Link, NavLink } from 'react-router-dom'
 
 import ForgeFlowIcon from '../brand/ForgeFlowIcon'
 import { useAuth } from '../../context/AuthContext'
-import { getUserAppSettings } from '../../utils/settingsUtils'
 
 function getInitials(name = '') {
   const parts = name.trim().split(' ').filter(Boolean)
@@ -72,18 +70,6 @@ const linkGroups = [
 
 function Sidebar({ isOpen = false, onClose }) {
   const { user, logout } = useAuth()
-  const [settings, setSettings] = useState(() => getUserAppSettings(user))
-
-  useEffect(() => {
-    setSettings(getUserAppSettings(user))
-
-    function handleSettingsChanged(event) {
-      setSettings(getUserAppSettings(user))
-    }
-
-    window.addEventListener('forgeflow:settings-changed', handleSettingsChanged)
-    return () => window.removeEventListener('forgeflow:settings-changed', handleSettingsChanged)
-  }, [user])
 
   const visibleLinkGroups = linkGroups
 

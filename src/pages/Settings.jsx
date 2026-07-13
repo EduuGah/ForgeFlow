@@ -257,7 +257,7 @@ function SettingsExperienceSection({ onNavigate }) {
         icon={Sparkles}
         eyebrow="Ajuda"
         title="Primeiros passos"
-        description="O menu fica completo, mas o usuário pode aprender pelo tutorial guiado e pelo treino de teste."
+        description="Reveja o fluxo principal quando quiser e pratique os passos essenciais."
       />
 
       <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2">

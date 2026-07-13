@@ -2,6 +2,7 @@ export default function TutorialControls({
   isLastStep = false,
   canGoBack = false,
   canSkipStep = true,
+  nextDisabled = false,
   onBack,
   onNext,
   onSkipStep,
@@ -19,7 +20,7 @@ export default function TutorialControls({
         >
           Voltar
         </button>
-        <button type="button" className="ff-tutorial-btn ff-tutorial-btn--primary" onClick={onNext}>
+        <button type="button" className="ff-tutorial-btn ff-tutorial-btn--primary" onClick={onNext} disabled={nextDisabled}>
           {isLastStep ? 'Finalizar' : 'Próximo'}
         </button>
       </div>

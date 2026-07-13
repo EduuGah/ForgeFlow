@@ -1,10 +1,10 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 import { useTutorial } from '../../context/TutorialContext'
 import TutorialTooltip from './TutorialTooltip'
 
-const TARGET_RETRY_MS = 90
-const TARGET_RETRY_LIMIT = 24
+const TARGET_WAIT_TIMEOUT_MS = 5000
 const TARGET_PADDING = 10
 const CARD_MARGIN = 12
 
@@ -31,8 +31,87 @@ function findTarget(selector) {
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean)
-    .map((item) => document.querySelector(item))
-    .find((element) => element instanceof HTMLElement && element.offsetParent !== null) || null
+    .map((item) => {
+      try {
+        return document.querySelector(item)
+      } catch {
+        return null
+      }
+    })
+    .find((element) => {
+      if (!(element instanceof HTMLElement)) return false
+
+      const rect = element.getBoundingClientRect()
+      const style = window.getComputedStyle(element)
+
+      return (
+        rect.width > 0 &&
+        rect.height > 0 &&
+        style.display !== 'none' &&
+        style.visibility !== 'hidden'
+      )
+    }) || null
+}
+
+function waitForElement(selector, { timeoutMs = TARGET_WAIT_TIMEOUT_MS, signal } = {}) {
+  if (!selector || typeof document === 'undefined') return Promise.resolve(null)
+
+  return new Promise((resolve) => {
+    let frameId = null
+    let timeoutId = null
+    let observer = null
+
+    const cleanup = () => {
+      if (frameId) window.cancelAnimationFrame(frameId)
+      window.clearTimeout(timeoutId)
+      observer?.disconnect()
+      window.removeEventListener('resize', scheduleCheck)
+      signal?.removeEventListener('abort', handleAbort)
+    }
+
+    const finish = (element) => {
+      cleanup()
+      resolve(element)
+    }
+
+    const check = () => {
+      frameId = null
+      const element = findTarget(selector)
+      if (element) finish(element)
+    }
+
+    const scheduleCheck = () => {
+      if (frameId) return
+      frameId = window.requestAnimationFrame(check)
+    }
+
+    function handleAbort() {
+      finish(null)
+    }
+
+    if (signal?.aborted) {
+      finish(null)
+      return
+    }
+
+    const immediateTarget = findTarget(selector)
+    if (immediateTarget) {
+      finish(immediateTarget)
+      return
+    }
+
+    observer = new MutationObserver(scheduleCheck)
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class', 'style', 'hidden', 'data-tutorial'],
+    })
+
+    window.addEventListener('resize', scheduleCheck)
+    signal?.addEventListener('abort', handleAbort, { once: true })
+    timeoutId = window.setTimeout(() => finish(null), timeoutMs)
+  })
 }
 
 function getSafeRect(element) {
@@ -49,28 +128,68 @@ function getSafeRect(element) {
   }
 }
 
-function scrollTargetIntoSafeView(element) {
-  if (!element || typeof window === 'undefined') return
+function scrollTargetIntoSafeViewSafely(element, { signal } = {}) {
+  if (!element || typeof window === 'undefined') return Promise.resolve()
 
-  element.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' })
+  return new Promise((resolve) => {
+    const startedAt = performance.now()
+    let frameId = null
+    let lastTop = Number.POSITIVE_INFINITY
+    let stableFrames = 0
 
-  // Segunda correção após o scroll nativo: evita que barras fixas superiores/inferiores
-  // escondam o alvo em telas pequenas ou dentro do APK.
-  window.setTimeout(() => {
-    const viewport = getViewport()
-    const rect = element.getBoundingClientRect()
-    const topReserve = 96 + viewport.top
-    const bottomReserve = 170
-
-    if (rect.top < topReserve) {
-      window.scrollBy({ top: rect.top - topReserve, behavior: 'smooth' })
-      return
+    const cleanup = () => {
+      if (frameId) window.cancelAnimationFrame(frameId)
+      signal?.removeEventListener('abort', handleAbort)
     }
 
-    if (rect.bottom > viewport.top + viewport.height - bottomReserve) {
-      window.scrollBy({ top: rect.bottom - (viewport.top + viewport.height - bottomReserve), behavior: 'smooth' })
+    const finish = () => {
+      cleanup()
+      resolve()
     }
-  }, 280)
+
+    function handleAbort() {
+      finish()
+    }
+
+    function keepTargetInsideSafeArea() {
+      const viewport = getViewport()
+      const rect = element.getBoundingClientRect()
+      const topReserve = 96 + viewport.top
+      const bottomReserve = 170
+      const safeBottom = viewport.top + viewport.height - bottomReserve
+
+      if (rect.top < topReserve) {
+        window.scrollBy({ top: rect.top - topReserve, behavior: 'auto' })
+      } else if (rect.bottom > safeBottom) {
+        window.scrollBy({ top: rect.bottom - safeBottom, behavior: 'auto' })
+      }
+    }
+
+    function tick() {
+      if (signal?.aborted) {
+        finish()
+        return
+      }
+
+      keepTargetInsideSafeArea()
+
+      const rect = element.getBoundingClientRect()
+      const topDelta = Math.abs(rect.top - lastTop)
+      lastTop = rect.top
+      stableFrames = topDelta < 1 ? stableFrames + 1 : 0
+
+      if (stableFrames >= 3 || performance.now() - startedAt > 900) {
+        finish()
+        return
+      }
+
+      frameId = window.requestAnimationFrame(tick)
+    }
+
+    signal?.addEventListener('abort', handleAbort, { once: true })
+    element.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' })
+    frameId = window.requestAnimationFrame(tick)
+  })
 }
 
 function buildSpotlight(rect) {
@@ -146,51 +265,47 @@ export default function TutorialOverlay() {
   const tooltipRef = useRef(null)
   const [targetElement, setTargetElement] = useState(null)
   const [targetRect, setTargetRect] = useState(null)
-  const [targetMissing, setTargetMissing] = useState(false)
+  const [targetStatus, setTargetStatus] = useState('idle')
 
   const selector = activeStep?.target || ''
   const spotlight = useMemo(() => buildSpotlight(targetRect), [targetRect])
   const placement = useMemo(() => getTooltipPlacement(targetRect), [targetRect])
   const tooltipStyle = useMemo(() => getTooltipStyle(targetRect, placement), [targetRect, placement])
+  const targetPending = Boolean(selector && targetStatus === 'waiting')
+  const targetMissing = Boolean(selector && targetStatus === 'missing')
+  const nextDisabled = targetPending || (targetMissing && activeStep?.requireTarget)
 
   useEffect(() => {
     if (!isRunning || !activeStep) return undefined
 
-    let cancelled = false
-    let attempts = 0
-    let retryId = null
+    const controller = new AbortController()
 
     setTargetElement(null)
     setTargetRect(null)
-    setTargetMissing(false)
+    setTargetStatus(selector ? 'waiting' : 'idle')
 
-    const resolveTarget = () => {
-      if (cancelled) return
-      const element = findTarget(selector)
+    waitForElement(selector, { signal: controller.signal })
+      .then(async (element) => {
+        if (controller.signal.aborted) return
 
-      if (element) {
+        if (!element) {
+          setTargetStatus('missing')
+          setTargetElement(null)
+          setTargetRect(null)
+          return
+        }
+
         setTargetElement(element)
-        setTargetMissing(false)
-        scrollTargetIntoSafeView(element)
-        return
-      }
+        await scrollTargetIntoSafeViewSafely(element, { signal: controller.signal })
 
-      attempts += 1
-      if (attempts >= TARGET_RETRY_LIMIT) {
-        setTargetMissing(Boolean(activeStep.requireTarget || selector))
-        setTargetElement(null)
-        setTargetRect(null)
-        return
-      }
+        if (controller.signal.aborted) return
 
-      retryId = window.setTimeout(resolveTarget, TARGET_RETRY_MS)
-    }
-
-    retryId = window.setTimeout(resolveTarget, 80)
+        setTargetStatus('found')
+        setTargetRect(getSafeRect(element))
+      })
 
     return () => {
-      cancelled = true
-      window.clearTimeout(retryId)
+      controller.abort()
     }
   }, [activeStep, activeStepIndex, isRunning, selector])
 
@@ -210,6 +325,11 @@ export default function TutorialOverlay() {
     }
 
     targetElement.setAttribute('data-tutorial-active', 'true')
+    const resizeObserver = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(scheduleUpdate)
+      : null
+
+    resizeObserver?.observe(targetElement)
     scheduleUpdate()
 
     window.addEventListener('resize', scheduleUpdate)
@@ -219,6 +339,7 @@ export default function TutorialOverlay() {
 
     return () => {
       targetElement.removeAttribute('data-tutorial-active')
+      resizeObserver?.disconnect()
       if (frameId) window.cancelAnimationFrame(frameId)
       window.removeEventListener('resize', scheduleUpdate)
       window.removeEventListener('scroll', scheduleUpdate, true)
@@ -241,17 +362,20 @@ export default function TutorialOverlay() {
     }
 
     document.addEventListener('keydown', handleKeyDown)
-    window.setTimeout(() => tooltipRef.current?.focus({ preventScroll: true }), 60)
+    const focusFrameId = window.requestAnimationFrame(() => {
+      tooltipRef.current?.focus({ preventScroll: true })
+    })
 
     return () => {
+      window.cancelAnimationFrame(focusFrameId)
       document.body.style.overflowX = previousOverflow
       document.removeEventListener('keydown', handleKeyDown)
     }
   }, [isRunning, pauseTutorial])
 
-  if (!isRunning || !activeStep) return null
+  if (!isRunning || !activeStep || typeof document === 'undefined') return null
 
-  return (
+  const overlay = (
     <div className={`ff-tutorial-v3 ff-tutorial-v3--${placement}`} role="presentation">
       {spotlight ? (
         <>
@@ -280,7 +404,9 @@ export default function TutorialOverlay() {
         progress={progress}
         isLastStep={progress?.currentStep >= progress?.totalSteps}
         canGoBack={activeStepIndex > 0}
+        targetPending={targetPending}
         targetMissing={targetMissing}
+        nextDisabled={nextDisabled}
         tooltipRef={tooltipRef}
         style={tooltipStyle}
         variant="guided"
@@ -293,4 +419,6 @@ export default function TutorialOverlay() {
       />
     </div>
   )
+
+  return createPortal(overlay, document.body)
 }
