@@ -7,6 +7,8 @@ import TutorialTooltip from './TutorialTooltip'
 const TARGET_WAIT_TIMEOUT_MS = 5000
 const TARGET_PADDING = 10
 const CARD_MARGIN = 12
+const MOBILE_BREAKPOINT = 760
+const TARGET_UPDATE_MIN_MS = 80
 
 function getViewport() {
   if (typeof window === 'undefined') return { width: 0, height: 0, top: 0, left: 0 }
@@ -128,17 +130,25 @@ function getSafeRect(element) {
   }
 }
 
+function areRectsClose(a, b) {
+  if (!a || !b) return a === b
+
+  return (
+    Math.abs(a.top - b.top) < 0.5 &&
+    Math.abs(a.left - b.left) < 0.5 &&
+    Math.abs(a.width - b.width) < 0.5 &&
+    Math.abs(a.height - b.height) < 0.5
+  )
+}
+
 function scrollTargetIntoSafeViewSafely(element, { signal } = {}) {
   if (!element || typeof window === 'undefined') return Promise.resolve()
 
   return new Promise((resolve) => {
-    const startedAt = performance.now()
-    let frameId = null
-    let lastTop = Number.POSITIVE_INFINITY
-    let stableFrames = 0
+    let timeoutId = null
 
     const cleanup = () => {
-      if (frameId) window.cancelAnimationFrame(frameId)
+      window.clearTimeout(timeoutId)
       signal?.removeEventListener('abort', handleAbort)
     }
 
@@ -165,30 +175,10 @@ function scrollTargetIntoSafeViewSafely(element, { signal } = {}) {
       }
     }
 
-    function tick() {
-      if (signal?.aborted) {
-        finish()
-        return
-      }
-
-      keepTargetInsideSafeArea()
-
-      const rect = element.getBoundingClientRect()
-      const topDelta = Math.abs(rect.top - lastTop)
-      lastTop = rect.top
-      stableFrames = topDelta < 1 ? stableFrames + 1 : 0
-
-      if (stableFrames >= 3 || performance.now() - startedAt > 900) {
-        finish()
-        return
-      }
-
-      frameId = window.requestAnimationFrame(tick)
-    }
-
     signal?.addEventListener('abort', handleAbort, { once: true })
-    element.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' })
-    frameId = window.requestAnimationFrame(tick)
+    element.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'auto' })
+    keepTargetInsideSafeArea()
+    timeoutId = window.setTimeout(finish, 90)
   })
 }
 
@@ -223,26 +213,64 @@ function getTooltipPlacement(rect) {
 
 function getTooltipStyle(rect, placement) {
   const viewport = getViewport()
-  const maxWidth = Math.min(440, Math.max(280, viewport.width - 20))
-  const left = rect
-    ? clamp(rect.left + rect.width / 2 - maxWidth / 2, viewport.left + 10, viewport.left + viewport.width - maxWidth - 10)
-    : viewport.left + 10
+  const isMobile = viewport.width <= MOBILE_BREAKPOINT
+  const maxWidth = isMobile
+    ? Math.max(280, viewport.width - 24)
+    : Math.min(380, Math.max(300, viewport.width - 32))
+  const maxHeight = isMobile
+    ? Math.max(220, Math.min(360, viewport.height * 0.46))
+    : Math.max(260, Math.min(400, viewport.height - 32))
 
   const style = {
-    left: `${Math.round(left)}px`,
     width: `${Math.round(maxWidth)}px`,
-    maxWidth: `calc(100vw - 20px)`,
-    maxHeight: `${Math.round(Math.max(260, viewport.height - 28))}px`,
+    maxWidth: isMobile ? `calc(100vw - 24px)` : `min(380px, calc(100vw - 32px))`,
+    maxHeight: `${Math.round(maxHeight)}px`,
   }
 
-  if (rect && placement === 'top') {
-    const bottom = clamp(viewport.height - rect.top + CARD_MARGIN, CARD_MARGIN, Math.max(CARD_MARGIN, viewport.height - 220))
-    style.bottom = `${Math.round(bottom)}px`
-  } else if (rect) {
-    const top = clamp(rect.bottom + CARD_MARGIN, viewport.top + CARD_MARGIN, Math.max(viewport.top + CARD_MARGIN, viewport.top + viewport.height - 220))
-    style.top = `${Math.round(top)}px`
-  } else {
+  if (isMobile) {
+    style.left = `${Math.round(viewport.left + 12)}px`
     style.bottom = `max(12px, calc(env(safe-area-inset-bottom, 0px) + 12px))`
+    return style
+  }
+
+  if (!rect) {
+    style.left = `${Math.round(viewport.left + viewport.width - maxWidth - 16)}px`
+    style.bottom = `max(16px, calc(env(safe-area-inset-bottom, 0px) + 16px))`
+    return style
+  }
+
+  const spaceRight = viewport.left + viewport.width - rect.right
+  const spaceLeft = rect.left - viewport.left
+  const canUseRightSide = spaceRight >= maxWidth + CARD_MARGIN + 10
+  const canUseLeftSide = spaceLeft >= maxWidth + CARD_MARGIN + 10
+
+  if (canUseRightSide || canUseLeftSide) {
+    const left = canUseRightSide
+      ? rect.right + CARD_MARGIN
+      : rect.left - maxWidth - CARD_MARGIN
+    const top = clamp(
+      rect.top + rect.height / 2 - maxHeight / 2,
+      viewport.top + 16,
+      viewport.top + viewport.height - maxHeight - 16
+    )
+
+    style.left = `${Math.round(left)}px`
+    style.top = `${Math.round(top)}px`
+    return style
+  }
+
+  const left = clamp(
+    rect.left + rect.width / 2 - maxWidth / 2,
+    viewport.left + 16,
+    viewport.left + viewport.width - maxWidth - 16
+  )
+
+  style.left = `${Math.round(left)}px`
+
+  if (placement === 'top') {
+    style.bottom = `${Math.round(clamp(viewport.height - rect.top + CARD_MARGIN, 16, Math.max(16, viewport.height - maxHeight - 16)))}px`
+  } else {
+    style.top = `${Math.round(clamp(rect.bottom + CARD_MARGIN, viewport.top + 16, Math.max(viewport.top + 16, viewport.top + viewport.height - maxHeight - 16)))}px`
   }
 
   return style
@@ -313,14 +341,31 @@ export default function TutorialOverlay() {
     if (!isRunning || !targetElement) return undefined
 
     let frameId = null
+    let timeoutId = null
+    let lastUpdateAt = 0
 
     const updateRect = () => {
       frameId = null
-      setTargetRect(getSafeRect(targetElement))
+      timeoutId = null
+      lastUpdateAt = performance.now()
+      const nextRect = getSafeRect(targetElement)
+      setTargetRect((currentRect) => (areRectsClose(currentRect, nextRect) ? currentRect : nextRect))
     }
 
-    const scheduleUpdate = () => {
+    const scheduleUpdate = ({ immediate = false } = {}) => {
       if (frameId) return
+
+      const elapsed = performance.now() - lastUpdateAt
+      const delay = immediate ? 0 : Math.max(0, TARGET_UPDATE_MIN_MS - elapsed)
+
+      if (delay > 0) {
+        if (timeoutId) return
+        timeoutId = window.setTimeout(() => {
+          frameId = window.requestAnimationFrame(updateRect)
+        }, delay)
+        return
+      }
+
       frameId = window.requestAnimationFrame(updateRect)
     }
 
@@ -330,20 +375,23 @@ export default function TutorialOverlay() {
       : null
 
     resizeObserver?.observe(targetElement)
-    scheduleUpdate()
+    scheduleUpdate({ immediate: true })
 
-    window.addEventListener('resize', scheduleUpdate)
+    const scheduleImmediateUpdate = () => scheduleUpdate({ immediate: true })
+
+    window.addEventListener('resize', scheduleImmediateUpdate)
     window.addEventListener('scroll', scheduleUpdate, true)
-    window.visualViewport?.addEventListener('resize', scheduleUpdate)
+    window.visualViewport?.addEventListener('resize', scheduleImmediateUpdate)
     window.visualViewport?.addEventListener('scroll', scheduleUpdate)
 
     return () => {
       targetElement.removeAttribute('data-tutorial-active')
       resizeObserver?.disconnect()
       if (frameId) window.cancelAnimationFrame(frameId)
-      window.removeEventListener('resize', scheduleUpdate)
+      window.clearTimeout(timeoutId)
+      window.removeEventListener('resize', scheduleImmediateUpdate)
       window.removeEventListener('scroll', scheduleUpdate, true)
-      window.visualViewport?.removeEventListener('resize', scheduleUpdate)
+      window.visualViewport?.removeEventListener('resize', scheduleImmediateUpdate)
       window.visualViewport?.removeEventListener('scroll', scheduleUpdate)
     }
   }, [isRunning, targetElement])
@@ -378,22 +426,16 @@ export default function TutorialOverlay() {
   const overlay = (
     <div className={`ff-tutorial-v3 ff-tutorial-v3--${placement}`} role="presentation">
       {spotlight ? (
-        <>
-          <div className="ff-tutorial-v3__shade ff-tutorial-v3__shade--top" style={{ height: `${Math.max(0, spotlight.top)}px` }} />
-          <div className="ff-tutorial-v3__shade ff-tutorial-v3__shade--left" style={{ top: `${spotlight.top}px`, width: `${Math.max(0, spotlight.left)}px`, height: `${spotlight.height}px` }} />
-          <div className="ff-tutorial-v3__shade ff-tutorial-v3__shade--right" style={{ top: `${spotlight.top}px`, left: `${spotlight.right}px`, height: `${spotlight.height}px` }} />
-          <div className="ff-tutorial-v3__shade ff-tutorial-v3__shade--bottom" style={{ top: `${spotlight.bottom}px` }} />
-          <div
-            className="ff-tutorial-v3__spotlight"
-            style={{
-              top: `${spotlight.top}px`,
-              left: `${spotlight.left}px`,
-              width: `${spotlight.width}px`,
-              height: `${spotlight.height}px`,
-            }}
-            aria-hidden="true"
-          />
-        </>
+        <div
+          className="ff-tutorial-v3__spotlight"
+          style={{
+            top: `${spotlight.top}px`,
+            left: `${spotlight.left}px`,
+            width: `${spotlight.width}px`,
+            height: `${spotlight.height}px`,
+          }}
+          aria-hidden="true"
+        />
       ) : (
         <div className="ff-tutorial-v3__shade ff-tutorial-v3__shade--full" />
       )}
