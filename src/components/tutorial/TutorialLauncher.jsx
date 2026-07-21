@@ -12,8 +12,11 @@ export default function TutorialLauncher({ compact = false }) {
 
   const completed = firstStepsProgress?.completed || 0
   const total = firstStepsProgress?.total || 5
+  const isHidden = Boolean(state.firstStepsDismissed)
   const completedText = firstStepsProgress?.isCompleted
     ? 'Missões concluídas. Você pode reiniciar quando quiser.'
+    : isHidden
+      ? 'O guia está oculto no Dashboard. Você pode mostrar novamente quando quiser.'
     : `${completed} de ${total} missões concluídas.`
 
   return (
@@ -33,7 +36,7 @@ export default function TutorialLauncher({ compact = false }) {
 
       <div className="ff-tutorial-section-picker">
         <button type="button" className="ff-tutorial-btn ff-tutorial-btn--primary" onClick={continueTutorial}>
-          Continuar missões
+          {isHidden ? 'Mostrar guia novamente' : 'Continuar missões'}
         </button>
         <button type="button" className="ff-tutorial-btn ff-tutorial-btn--ghost" onClick={restartTutorial}>
           Reiniciar missões

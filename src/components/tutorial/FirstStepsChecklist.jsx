@@ -22,7 +22,7 @@ function isTutorialWorkoutSession(session) {
   return Boolean(session?.isTutorialDemo || session?.isTutorial || session?.tutorialOnly || session?.demo)
 }
 
-export default function FirstStepsChecklist({ workouts = [], history = [], activeSession = null, completedSets = 0, compact = false }) {
+export default function FirstStepsChecklist({ workouts = [], history = [], goals = [], activeSession = null, completedSets = 0, compact = false }) {
   const navigate = useNavigate()
   const {
     state,
@@ -57,7 +57,10 @@ export default function FirstStepsChecklist({ workouts = [], history = [], activ
     if (Array.isArray(history) && history.length > 0) {
       completeFirstStepMission?.('finish-workout')
     }
-  }, [activeSession, completeFirstStepMission, completedSets, history, isDismissed, workouts])
+    if (Array.isArray(goals) && goals.length > 0) {
+      completeFirstStepMission?.('create-goal')
+    }
+  }, [activeSession, completeFirstStepMission, completedSets, goals, history, isDismissed, workouts])
 
   const nextMission = useMemo(
     () => firstStepMissions.find((mission) => !firstStepsCompleted[mission.id]) || firstStepMissions[0],

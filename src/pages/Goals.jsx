@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import GoalsPageSections from '../features/goals/components/GoalsPageSections'
 
 import { useAuth } from '../context/AuthContext'
+import { useTutorial } from '../context/TutorialContext'
 import { apiFetch } from '../services/api'
+import { removeGoalReminder, syncGoalReminder } from '../utils/goalReminderUtils'
 import {
   generateSmartNotifications,
   notifyNotificationsChanged,
@@ -16,10 +18,13 @@ import {
 import {
   enrichGoalWithLocalProgress,
   getGoalDeadlineState,
+  getGoalPacing,
   getGoalPeriodKey,
+  getGoalRawValue,
   getLocalDateKey,
   normalizeGoal,
   parseLocalDate,
+  shouldUseGoalBaseline,
 } from '../features/goals/goalUtils'
 
 import AppPageIntro from '../components/app/AppPageIntro'
@@ -37,14 +42,25 @@ function createLocalGoal(data, existingGoal = null) {
   })
 }
 
-function prepareGoalPayload(data, existingGoal = null) {
+function prepareGoalPayload(data, existingGoal = null, context = {}) {
   const period = data.period || 'none'
   const periodKey = period !== 'none' ? getGoalPeriodKey({ period }, new Date()) : ''
+  const structuralChange = existingGoal && (
+    data.type !== existingGoal.type ||
+    data.period !== existingGoal.period ||
+    data.exerciseName !== existingGoal.exerciseName ||
+    data.exerciseId !== existingGoal.exerciseId
+  )
+  const resetBaseline = !existingGoal || data.resetProgressBaseline || structuralChange
+  const shouldSetBaseline = resetBaseline && shouldUseGoalBaseline(data)
+  const baselineValue = shouldSetBaseline ? getGoalRawValue(data, context) : existingGoal?.baselineValue || data.baselineValue || 0
 
   return {
     ...data,
     manualPeriodKey: periodKey,
-    baselinePeriodKey: existingGoal?.baselinePeriodKey || '',
+    baselineValue,
+    baselineAt: shouldSetBaseline ? new Date().toISOString() : existingGoal?.baselineAt || data.baselineAt || null,
+    baselinePeriodKey: shouldSetBaseline ? getGoalPeriodKey(data, new Date()) : existingGoal?.baselinePeriodKey || data.baselinePeriodKey || '',
     completedAt: data.status === 'completed' ? (existingGoal?.completedAt || new Date().toISOString()) : null,
   }
 }
@@ -86,6 +102,7 @@ function isCompletedThisWeek(goal) {
 
 function Goals() {
   const { user } = useAuth()
+  const { completeFirstStepMission } = useTutorial()
 
   const [goals, setGoals] = useState([])
   const [history, setHistory] = useState([])
@@ -206,6 +223,12 @@ function Goals() {
     return goals.map((goal) => enrichGoalWithLocalProgress(goal, progressContext))
   }, [goals, progressContext])
 
+  useEffect(() => {
+    if (enrichedGoals.length > 0) {
+      completeFirstStepMission?.('create-goal')
+    }
+  }, [completeFirstStepMission, enrichedGoals.length])
+
   const exerciseOptions = useMemo(() => {
     return exercises
       .map((exercise) => exercise.name)
@@ -218,6 +241,8 @@ function Goals() {
     const completed = enrichedGoals.filter((goal) => goal.status === 'completed' || goal.isCompleted)
     const archived = enrichedGoals.filter((goal) => goal.status === 'archived')
     const overdue = enrichedGoals.filter((goal) => goal.status === 'active' && getGoalDeadlineState(goal) === 'overdue')
+    const behind = active.filter((goal) => getGoalPacing(goal).status === 'behind')
+    const dueToday = active.filter((goal) => getGoalPacing(goal).daysLeft === 0)
     const almostDone = active.filter((goal) => Number(goal.progressPercent || 0) >= 75)
     const completedThisWeek = completed.filter(isCompletedThisWeek)
     const averageProgress = active.length > 0
@@ -231,6 +256,8 @@ function Goals() {
       completedThisWeek: completedThisWeek.length,
       archived: archived.length,
       overdue: overdue.length,
+      behind: behind.length,
+      dueToday: dueToday.length,
       almostDone: almostDone.length,
       streak: getActiveWorkoutStreak(history),
       averageProgress,
@@ -298,7 +325,7 @@ function Goals() {
   }
 
   async function handleSubmitGoal(data) {
-    const payloadData = prepareGoalPayload(data, modalGoal)
+    const payloadData = prepareGoalPayload(data, modalGoal, progressContext)
 
     try {
       const path = modalGoal ? `/goals/${modalGoal.id}` : '/goals'
@@ -316,6 +343,8 @@ function Goals() {
 
       persistGoals(updatedGoals)
       setSource('database')
+      await syncGoalReminder(user, normalizeGoal({ ...payloadData, ...normalizedGoal }))
+      completeFirstStepMission?.('create-goal')
 
       if (modalGoal) {
         generateSmartNotifications({
@@ -340,6 +369,8 @@ function Goals() {
 
       persistGoals(updatedGoals)
       setSource('local')
+      await syncGoalReminder(user, localGoal)
+      completeFirstStepMission?.('create-goal')
       closeModal()
       showToast('success', modalGoal ? 'Meta salva localmente' : 'Meta criada localmente', 'Não consegui sincronizar agora, mas preservei a meta no aparelho.')
     }
@@ -361,6 +392,7 @@ function Goals() {
 
           persistGoals(updatedGoals)
           setSource('database')
+          await removeGoalReminder(user, normalizedGoal)
 
           if (goalFromApi?.createdNotification) {
             showNotificationPopup({
@@ -394,6 +426,7 @@ function Goals() {
           persistGoals(updatedGoals)
           setConfirmModal(null)
           setSource('local')
+          await removeGoalReminder(user, goal)
           showToast('success', 'Meta concluída localmente', 'Não consegui sincronizar agora, mas preservei a alteração no aparelho.')
         }
       },
@@ -416,6 +449,7 @@ function Goals() {
 
           persistGoals(updatedGoals)
           setSource('database')
+          await removeGoalReminder(user, normalizedGoal)
           setConfirmModal(null)
           showToast('success', 'Meta arquivada', 'A meta foi arquivada.')
         } catch (error) {
@@ -423,6 +457,7 @@ function Goals() {
           const updatedGoals = goals.map((item) => item.id === goal.id ? normalizeGoal({ ...item, status: 'archived' }) : item)
           persistGoals(updatedGoals)
           setSource('local')
+          await removeGoalReminder(user, goal)
           setConfirmModal(null)
           showToast('success', 'Meta arquivada localmente', 'Não consegui sincronizar agora, mas preservei a alteração no aparelho.')
         }
@@ -449,6 +484,7 @@ function Goals() {
 
           persistGoals(updatedGoals)
           setSource('database')
+          await syncGoalReminder(user, normalizedGoal)
           setConfirmModal(null)
           showToast('success', 'Meta desarquivada', 'A meta voltou para a lista de ativas.')
         } catch (error) {
@@ -456,6 +492,7 @@ function Goals() {
           const updatedGoals = goals.map((item) => item.id === goal.id ? normalizeGoal({ ...item, ...nextPayload, isCompleted: false }) : item)
           persistGoals(updatedGoals)
           setSource('local')
+          await syncGoalReminder(user, normalizeGoal({ ...goal, ...nextPayload, isCompleted: false }))
           setConfirmModal(null)
           showToast('success', 'Meta desarquivada localmente', 'Não consegui sincronizar agora, mas preservei a alteração no aparelho.')
         }
@@ -482,6 +519,7 @@ function Goals() {
 
           persistGoals(updatedGoals)
           setSource('database')
+          await syncGoalReminder(user, normalizedGoal)
           setConfirmModal(null)
           showToast('success', 'Meta reativada', 'A meta voltou para andamento.')
         } catch (error) {
@@ -489,6 +527,7 @@ function Goals() {
           const updatedGoals = goals.map((item) => item.id === goal.id ? normalizeGoal({ ...item, ...nextPayload, isCompleted: false }) : item)
           persistGoals(updatedGoals)
           setSource('local')
+          await syncGoalReminder(user, normalizeGoal({ ...goal, ...nextPayload, isCompleted: false }))
           setConfirmModal(null)
           showToast('success', 'Meta reativada localmente', 'Não consegui sincronizar agora, mas preservei a alteração no aparelho.')
         }
@@ -512,6 +551,7 @@ function Goals() {
 
           persistGoals(updatedGoals)
           setSource('database')
+          await removeGoalReminder(user, goal)
           setConfirmModal(null)
           showToast('success', 'Meta excluída', 'A meta foi removida.')
         } catch (error) {
@@ -519,6 +559,7 @@ function Goals() {
           const updatedGoals = goals.filter((item) => item.id !== goal.id)
           persistGoals(updatedGoals)
           setSource('local')
+          await removeGoalReminder(user, goal)
           setConfirmModal(null)
           showToast('success', 'Meta excluída localmente', 'Não consegui sincronizar agora, mas removi a meta deste aparelho.')
         }

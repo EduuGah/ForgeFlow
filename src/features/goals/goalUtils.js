@@ -12,6 +12,7 @@ const AUTOMATIC_GOAL_TYPES = new Set([
 ])
 
 const BASELINE_GOAL_TYPES = new Set([
+  'body_weight',
   'daily_workouts',
   'weekly_workouts',
   'monthly_workouts',
@@ -56,7 +57,7 @@ export function getLocalDateKey(value) {
 }
 
 export function getGoalDeadlineState(goal = {}, today = new Date()) {
-  const deadline = parseLocalDate(goal.deadline)
+  const deadline = getGoalEffectiveDeadline(goal, today)
   if (!deadline || goal.status === 'archived') return 'none'
 
   const todayDate = parseLocalDate(today)
@@ -100,6 +101,9 @@ export function normalizeGoal(goal = {}) {
     baselineAt: goal.baselineAt || null,
     baselinePeriodKey: goal.baselinePeriodKey || '',
     manualPeriodKey: goal.manualPeriodKey || '',
+    reminderEnabled: Boolean(goal.reminderEnabled),
+    reminderTime: /^\d{2}:\d{2}$/.test(String(goal.reminderTime || '')) ? goal.reminderTime : '19:00',
+    reminderDays: Array.isArray(goal.reminderDays) ? goal.reminderDays : [],
     isCompleted: Boolean(goal.isCompleted || status === 'completed' || progressPercent >= 100),
   }
 }
@@ -125,10 +129,33 @@ function getStartOfMonth(date = new Date()) {
   return new Date(copy.getFullYear(), copy.getMonth(), 1, 12, 0, 0, 0)
 }
 
+function getEndOfDay(date = new Date()) {
+  const copy = parseLocalDate(date) || new Date()
+  return new Date(copy.getFullYear(), copy.getMonth(), copy.getDate(), 12, 0, 0, 0)
+}
+
+function getEndOfWeek(date = new Date()) {
+  const start = getStartOfWeek(date)
+  start.setDate(start.getDate() + 6)
+  return start
+}
+
+function getEndOfMonth(date = new Date()) {
+  const copy = parseLocalDate(date) || new Date()
+  return new Date(copy.getFullYear(), copy.getMonth() + 1, 0, 12, 0, 0, 0)
+}
+
 function getPeriodStart(period = 'none', date = new Date()) {
   if (period === 'daily') return getStartOfDay(date)
   if (period === 'weekly') return getStartOfWeek(date)
   if (period === 'monthly') return getStartOfMonth(date)
+  return null
+}
+
+function getPeriodEnd(period = 'none', date = new Date()) {
+  if (period === 'daily') return getEndOfDay(date)
+  if (period === 'weekly') return getEndOfWeek(date)
+  if (period === 'monthly') return getEndOfMonth(date)
   return null
 }
 
@@ -145,22 +172,53 @@ function isOnOrAfter(value, startDate) {
   return date >= startDate
 }
 
-function calculateGoalPercent(currentValue, targetValue, direction = 'increase') {
+function calculateGoalPercent(currentValue, targetValue, direction = 'increase', baselineValue = 0) {
   const current = toNumber(currentValue)
   const target = toNumber(targetValue)
+  const baseline = toNumber(baselineValue)
 
   if (target <= 0) return 0
 
+  if (direction === 'reach' && baseline > 0 && baseline !== target) {
+    const totalChange = Math.abs(target - baseline)
+    const currentChange = target > baseline
+      ? current - baseline
+      : baseline - current
+
+    return Math.max(0, Math.min(100, Math.round((currentChange / totalChange) * 100)))
+  }
+
   if (direction === 'decrease') {
     if (current <= target) return 100
+    if (baseline > target) {
+      return Math.max(0, Math.min(100, Math.round(((baseline - current) / (baseline - target)) * 100)))
+    }
     return Math.max(0, Math.min(100, Math.round((target / Math.max(current, 1)) * 100)))
   }
 
+  if (baseline > 0 && baseline < target) {
+    return Math.max(0, Math.min(100, Math.round(((current - baseline) / (target - baseline)) * 100)))
+  }
+
   if (direction === 'reach') {
+    if (current === target) return 100
     return Math.max(0, Math.min(100, Math.round((current / target) * 100)))
   }
 
   return Math.max(0, Math.min(100, Math.round((current / target) * 100)))
+}
+
+function getRemainingGoalValue(goal = {}, currentValue = 0) {
+  const target = toNumber(goal.targetValue)
+  const current = toNumber(currentValue)
+  const baseline = toNumber(goal.baselineValue)
+
+  if (goal.direction === 'decrease') return Math.max(0, current - target)
+  if (goal.direction === 'reach' && baseline > 0 && baseline > target) return Math.max(0, current - target)
+  if (goal.direction === 'reach' && baseline > 0 && baseline < target) return Math.max(0, target - current)
+  if (goal.direction === 'reach') return Math.abs(target - current)
+
+  return Math.max(0, target - current)
 }
 
 export function getGoalPeriodKey(goal = {}, date = new Date()) {
@@ -261,7 +319,7 @@ function getExerciseBestWeight(history = [], exerciseName = '', exerciseId = '')
   }, 0)
 }
 
-function calculateGoalRawValue(goal, context = {}) {
+export function getGoalRawValue(goal, context = {}) {
   const history = Array.isArray(context.history) ? context.history : []
   const bodyWeight = Array.isArray(context.bodyWeight) ? context.bodyWeight : []
   const progressPhotos = Array.isArray(context.progressPhotos) ? context.progressPhotos : []
@@ -279,8 +337,9 @@ function calculateGoalRawValue(goal, context = {}) {
 }
 
 function calculateGoalCurrentValue(goal, context = {}) {
-  const rawValue = calculateGoalRawValue(goal, context)
+  const rawValue = getGoalRawValue(goal, context)
 
+  if (goal.type === 'body_weight') return rawValue
   if (!shouldUseGoalBaseline(goal)) return rawValue
 
   const currentPeriodKey = getGoalPeriodKey(goal, new Date())
@@ -326,7 +385,8 @@ export function enrichGoalWithLocalProgress(goal, context = {}) {
     const progressPercent = calculateGoalPercent(
       currentValue,
       normalizedGoal.targetValue,
-      normalizedGoal.direction
+      normalizedGoal.direction,
+      normalizedGoal.baselineValue
     )
 
     return {
@@ -342,7 +402,8 @@ export function enrichGoalWithLocalProgress(goal, context = {}) {
   const progressPercent = calculateGoalPercent(
     currentValue,
     normalizedGoal.targetValue,
-    normalizedGoal.direction
+    normalizedGoal.direction,
+    normalizedGoal.baselineValue
   )
 
   return {
@@ -361,4 +422,112 @@ export function formatGoalValue(value, unit = '') {
     : number.toLocaleString('pt-BR')
 
   return unit ? `${compact} ${unit}` : compact
+}
+
+export function getGoalPeriodWindow(goal = {}, today = new Date()) {
+  const normalizedGoal = normalizeGoal(goal)
+  const periodStart = getPeriodStart(normalizedGoal.period, today)
+  const periodEnd = getPeriodEnd(normalizedGoal.period, today)
+  const explicitDeadline = parseLocalDate(normalizedGoal.deadline)
+  const createdStart = parseLocalDate(normalizedGoal.baselineAt || normalizedGoal.createdAt || today)
+  const start = periodStart || createdStart || parseLocalDate(today)
+  let end = explicitDeadline || periodEnd || null
+
+  if (periodEnd && explicitDeadline) {
+    end = explicitDeadline < periodEnd ? explicitDeadline : periodEnd
+  }
+
+  return {
+    start,
+    end,
+    periodStart,
+    periodEnd,
+    explicitDeadline,
+  }
+}
+
+export function getGoalEffectiveDeadline(goal = {}, today = new Date()) {
+  return getGoalPeriodWindow(goal, today).end
+}
+
+export function getGoalDaysRemaining(goal = {}, today = new Date()) {
+  const deadline = getGoalEffectiveDeadline(goal, today)
+  const todayDate = parseLocalDate(today)
+  if (!deadline || !todayDate) return null
+
+  return Math.ceil((deadline.getTime() - todayDate.getTime()) / 86400000)
+}
+
+export function getGoalPacing(goal = {}, today = new Date()) {
+  const normalizedGoal = normalizeGoal(goal)
+  const current = toNumber(normalizedGoal.currentValue)
+  const target = toNumber(normalizedGoal.targetValue)
+  const progressPercent = Math.max(0, Math.min(100, toNumber(normalizedGoal.progressPercent)))
+  const remainingValue = getRemainingGoalValue(normalizedGoal, current)
+  const { start, end } = getGoalPeriodWindow(normalizedGoal, today)
+  const todayDate = parseLocalDate(today)
+  const completed = normalizedGoal.status === 'completed' || normalizedGoal.isCompleted || progressPercent >= 100
+
+  if (!start || !end || !todayDate || target <= 0) {
+    return {
+      status: completed ? 'completed' : 'no_deadline',
+      daysTotal: null,
+      daysElapsed: null,
+      daysLeft: null,
+      expectedPercent: null,
+      progressPercent,
+      remainingValue,
+      requiredPerDay: null,
+      averagePerDay: null,
+      label: completed ? 'Concluída' : 'Sem prazo',
+    }
+  }
+
+  const dayMs = 86400000
+  const daysTotal = Math.max(1, Math.floor((end.getTime() - start.getTime()) / dayMs) + 1)
+  const daysElapsed = Math.max(1, Math.min(daysTotal, Math.floor((todayDate.getTime() - start.getTime()) / dayMs) + 1))
+  const rawDaysLeft = Math.ceil((end.getTime() - todayDate.getTime()) / dayMs)
+  const daysLeft = Math.max(0, rawDaysLeft)
+  const expectedPercent = Math.max(0, Math.min(100, Math.round((daysElapsed / daysTotal) * 100)))
+  const requiredPerDay = remainingValue > 0 ? remainingValue / Math.max(1, daysLeft + 1) : 0
+  const averagePerDay = current / Math.max(1, daysElapsed)
+
+  let status = 'on_track'
+  if (completed) status = 'completed'
+  else if (rawDaysLeft < 0) status = 'overdue'
+  else if (progressPercent + 8 < expectedPercent) status = 'behind'
+  else if (progressPercent >= expectedPercent + 10) status = 'ahead'
+
+  const labels = {
+    completed: 'Concluída',
+    overdue: 'Prazo vencido',
+    behind: 'Abaixo do ritmo',
+    ahead: 'Adiantada',
+    on_track: 'No ritmo',
+    no_deadline: 'Sem prazo',
+  }
+
+  return {
+    status,
+    daysTotal,
+    daysElapsed,
+    daysLeft,
+    expectedPercent,
+    progressPercent,
+    remainingValue,
+    requiredPerDay,
+    averagePerDay,
+    label: labels[status] || labels.on_track,
+  }
+}
+
+export function formatGoalDate(value) {
+  const date = parseLocalDate(value)
+  if (!date) return ''
+
+  return date.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+  })
 }

@@ -1016,6 +1016,7 @@ function Dashboard() {
       <FirstStepsChecklist
         workouts={workouts}
         history={history}
+        goals={goals}
         activeSession={activeSession}
         completedSets={completedSets}
       />

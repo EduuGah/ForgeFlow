@@ -2267,3 +2267,161 @@ body.ff-fullscreen-modal-open .ff-active-workout-mini-floating {
   }
 }
 
+/* Goals v2: pacing and reminders */
+.ff-goal-card-pacing,
+.ff-goal-reminder-box {
+  border: 1px solid color-mix(in srgb, var(--ff-border) 82%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--ff-surface-2) 88%, transparent);
+}
+
+.ff-goal-card-pacing {
+  display: grid;
+  gap: 0.25rem;
+  margin-top: 0.85rem;
+  padding: 0.78rem 0.9rem;
+}
+
+.ff-goal-card-pacing span {
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.ff-goal-card-pacing strong {
+  color: var(--ff-text);
+  font-size: 0.82rem;
+  font-weight: 850;
+  line-height: 1.32;
+}
+
+.ff-goal-card-pacing.is-danger,
+.ff-goal-pacing-note.is-danger {
+  border-color: color-mix(in srgb, var(--ff-danger, #ef4444) 38%, var(--ff-border));
+  background: color-mix(in srgb, var(--ff-danger, #ef4444) 10%, var(--ff-surface-2));
+}
+
+.ff-goal-card-pacing.is-success,
+.ff-goal-pacing-note.is-success {
+  border-color: color-mix(in srgb, var(--ff-success, #22c55e) 34%, var(--ff-border));
+  background: color-mix(in srgb, var(--ff-success, #22c55e) 9%, var(--ff-surface-2));
+}
+
+.ff-goal-reminder-box {
+  display: grid;
+  gap: 0.9rem;
+  padding: 0.92rem;
+}
+
+.ff-goal-reminder-box__head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.78rem;
+}
+
+.ff-goal-reminder-box__head > span {
+  display: inline-grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 15px;
+  background: var(--ff-accent-soft);
+  color: var(--ff-accent-text);
+}
+
+.ff-goal-reminder-box__head strong,
+.ff-goal-reminder-box__head small {
+  display: block;
+}
+
+.ff-goal-reminder-box__head strong {
+  color: var(--ff-text);
+  font-size: 0.9rem;
+  font-weight: 950;
+}
+
+.ff-goal-reminder-box__head small {
+  margin-top: 0.15rem;
+  color: var(--ff-muted);
+  font-size: 0.76rem;
+  line-height: 1.25;
+}
+
+.ff-goal-reminder-box__head button,
+.ff-goal-day-picker button {
+  border: 1px solid var(--ff-border);
+  border-radius: 999px;
+  background: var(--ff-surface);
+  color: var(--ff-muted);
+  font-size: 0.74rem;
+  font-weight: 950;
+}
+
+.ff-goal-reminder-box__head button {
+  min-height: 34px;
+  padding: 0 0.8rem;
+}
+
+.ff-goal-reminder-box__head button.is-active,
+.ff-goal-day-picker button.is-active {
+  border-color: var(--ff-accent-border);
+  background: var(--ff-accent);
+  color: var(--ff-accent-contrast, #fff);
+}
+
+.ff-goal-reminder-box__body {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.ff-goal-time-field {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 44px;
+  border: 1px solid var(--ff-border);
+  border-radius: 16px;
+  background: var(--ff-card);
+  color: var(--ff-muted);
+  padding: 0 0.82rem;
+  font-size: 0.8rem;
+  font-weight: 850;
+}
+
+.ff-goal-time-field input {
+  border: 0;
+  background: transparent;
+  color: var(--ff-text);
+  font: inherit;
+  outline: none;
+}
+
+.ff-goal-day-picker {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.ff-goal-day-picker button {
+  min-height: 34px;
+  padding: 0;
+}
+
+@media (max-width: 430px) {
+  .ff-goal-reminder-box__head {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .ff-goal-reminder-box__head button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .ff-goal-day-picker {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

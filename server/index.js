@@ -1244,12 +1244,15 @@ const goalSchema = new mongoose.Schema(
         type: {
             type: String,
             enum: [
+                'daily_workouts',
                 'weekly_workouts',
                 'monthly_workouts',
                 'body_weight',
                 'exercise_pr_weight',
                 'monthly_volume',
+                'streak_days',
                 'progress_photos',
+                'nutrition',
                 'custom',
             ],
             default: 'custom',
@@ -1305,7 +1308,7 @@ const goalSchema = new mongoose.Schema(
 
         period: {
             type: String,
-            enum: ['none', 'weekly', 'monthly'],
+            enum: ['none', 'daily', 'weekly', 'monthly'],
             default: 'none',
         },
 
@@ -1329,6 +1332,21 @@ const goalSchema = new mongoose.Schema(
         color: {
             type: String,
             default: '',
+        },
+
+        reminderEnabled: {
+            type: Boolean,
+            default: false,
+        },
+
+        reminderTime: {
+            type: String,
+            default: '19:00',
+        },
+
+        reminderDays: {
+            type: [String],
+            default: [],
         },
     },
     {
@@ -5098,17 +5116,36 @@ function getStartOfMonth(date = new Date()) {
     return new Date(date.getFullYear(), date.getMonth(), 1)
 }
 
-function calculateGoalPercent(currentValue, targetValue, direction = 'increase') {
+function calculateGoalPercent(currentValue, targetValue, direction = 'increase', baselineValue = 0) {
     const current = Number(currentValue) || 0
     const target = Number(targetValue) || 0
+    const baseline = Number(baselineValue) || 0
 
     if (target <= 0) return 0
 
+    if (direction === 'reach' && baseline > 0 && baseline !== target) {
+        const totalChange = Math.abs(target - baseline)
+        const currentChange = target > baseline
+            ? current - baseline
+            : baseline - current
+
+        return Math.max(0, Math.min(100, Math.round((currentChange / totalChange) * 100)))
+    }
+
     if (direction === 'decrease') {
         if (current <= target) return 100
+        if (baseline > target) {
+            return Math.max(0, Math.min(100, Math.round(((baseline - current) / (baseline - target)) * 100)))
+        }
 
         return Math.max(0, Math.min(100, Math.round((target / current) * 100)))
     }
+
+    if (baseline > 0 && baseline < target) {
+        return Math.max(0, Math.min(100, Math.round(((current - baseline) / (target - baseline)) * 100)))
+    }
+
+    if (direction === 'reach' && current === target) return 100
 
     return Math.max(0, Math.min(100, Math.round((current / target) * 100)))
 }
@@ -5157,6 +5194,19 @@ function getWeeklyWorkoutCount(history = []) {
     }).length
 }
 
+function getDailyWorkoutCount(history = []) {
+    const startOfDay = new Date()
+    startOfDay.setHours(0, 0, 0, 0)
+
+    return history.filter((session) => {
+        const rawDate = session.finishedAt || session.createdAt
+
+        if (!rawDate) return false
+
+        return new Date(rawDate) >= startOfDay
+    }).length
+}
+
 function getMonthlyWorkoutCount(history = []) {
     const startOfMonth = getStartOfMonth(new Date())
 
@@ -5167,6 +5217,30 @@ function getMonthlyWorkoutCount(history = []) {
 
         return new Date(rawDate) >= startOfMonth
     }).length
+}
+
+function getWorkoutStreakDays(history = []) {
+    const trainedDays = new Set(
+        history
+            .map((session) => {
+                const rawDate = session.finishedAt || session.completedAt || session.date || session.createdAt || session.startedAt
+                if (!rawDate) return ''
+
+                return new Date(rawDate).toISOString().slice(0, 10)
+            })
+            .filter(Boolean)
+    )
+    const cursor = new Date()
+    let streak = 0
+
+    while (true) {
+        const key = cursor.toISOString().slice(0, 10)
+        if (!trainedDays.has(key)) break
+        streak += 1
+        cursor.setDate(cursor.getDate() - 1)
+    }
+
+    return streak
 }
 
 function getMonthlyProgressPhotoCount(progressPhotos = []) {
@@ -5235,6 +5309,10 @@ function getExerciseBestWeight(history = [], exerciseName = '', exerciseId = '')
 }
 
 function getGoalPeriodKey(goal, date = new Date()) {
+    if (goal.period === 'daily') {
+        return date.toISOString().slice(0, 10)
+    }
+
     if (goal.period === 'monthly') {
         return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
     }
@@ -5251,6 +5329,8 @@ function getGoalPeriodKey(goal, date = new Date()) {
 
 function shouldUseGoalBaseline(goal) {
     return [
+        'body_weight',
+        'daily_workouts',
         'weekly_workouts',
         'monthly_workouts',
         'monthly_volume',
@@ -5263,6 +5343,16 @@ async function calculateGoalRawValue(goal, userId) {
 
     if (type === 'custom') {
         return Number(goal.currentValue || 0)
+    }
+
+    if (type === 'nutrition') {
+        return Number(goal.currentValue || 0)
+    }
+
+    if (type === 'daily_workouts') {
+        const history = await WorkoutHistory.find({ userId })
+
+        return getDailyWorkoutCount(history)
     }
 
     if (type === 'weekly_workouts') {
@@ -5298,6 +5388,12 @@ async function calculateGoalRawValue(goal, userId) {
         return getMonthlyVolumeFromHistory(history)
     }
 
+    if (type === 'streak_days') {
+        const history = await WorkoutHistory.find({ userId })
+
+        return getWorkoutStreakDays(history)
+    }
+
     if (type === 'progress_photos') {
         const progressPhotos = await ProgressPhoto.find({ userId })
 
@@ -5309,6 +5405,10 @@ async function calculateGoalRawValue(goal, userId) {
 
 async function calculateGoalCurrentValue(goal, userId) {
     const rawValue = await calculateGoalRawValue(goal, userId)
+
+    if (goal.type === 'body_weight') {
+        return rawValue
+    }
 
     if (!shouldUseGoalBaseline(goal)) {
         return rawValue
@@ -5330,7 +5430,8 @@ async function enrichGoalWithProgress(goal, userId) {
     const progressPercent = calculateGoalPercent(
         currentValue,
         goal.targetValue,
-        goal.direction
+        goal.direction,
+        goal.baselineValue
     )
 
     const isCompleted = progressPercent >= 100
@@ -6050,6 +6151,9 @@ app.post('/goals', authMiddleware, async (req, res) => {
             period = 'none',
             deadline = null,
             color = '',
+            reminderEnabled = false,
+            reminderTime = '19:00',
+            reminderDays = [],
         } = req.body
 
         if (!title?.trim()) {
@@ -6097,6 +6201,9 @@ app.post('/goals', authMiddleware, async (req, res) => {
             period,
             deadline: deadline || null,
             color,
+            reminderEnabled: Boolean(reminderEnabled),
+            reminderTime,
+            reminderDays: Array.isArray(reminderDays) ? reminderDays : [],
         })
 
         const enrichedGoal = await enrichGoalWithProgress(goal, req.user.userId)
@@ -6127,6 +6234,9 @@ app.put('/goals/:id', authMiddleware, async (req, res) => {
             deadline,
             status,
             color,
+            reminderEnabled,
+            reminderTime,
+            reminderDays,
             resetProgressBaseline = false,
         } = req.body
 
@@ -6152,6 +6262,9 @@ app.put('/goals/:id', authMiddleware, async (req, res) => {
         if (deadline !== undefined) updateData.deadline = deadline || null
         if (status !== undefined) updateData.status = status
         if (color !== undefined) updateData.color = color
+        if (reminderEnabled !== undefined) updateData.reminderEnabled = Boolean(reminderEnabled)
+        if (reminderTime !== undefined) updateData.reminderTime = reminderTime || '19:00'
+        if (reminderDays !== undefined) updateData.reminderDays = Array.isArray(reminderDays) ? reminderDays : []
 
         if (targetValue !== undefined) {
             const parsedTarget = Number(targetValue)

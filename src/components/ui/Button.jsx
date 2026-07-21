@@ -5,6 +5,7 @@ function Button({
   className = '',
   onClick,
   disabled = false,
+  ...props
 }) {
   const baseClasses = `
     inline-flex
@@ -68,6 +69,7 @@ function Button({
       onClick={onClick}
       disabled={disabled}
       className={`${baseClasses} ${variants[variant] || variants.primary} ${className}`}
+      {...props}
     >
       {children}
     </button>

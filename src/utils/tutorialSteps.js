@@ -58,6 +58,17 @@ export const FIRST_STEPS_MISSIONS = [
     section: 'history',
     target: '[data-tutorial="history-list"], [data-tutorial="dashboard-recent-history"], main',
   },
+  {
+    id: 'create-goal',
+    order: 6,
+    title: 'Criar uma meta',
+    shortTitle: 'Criar meta',
+    description: 'Defina um alvo com prazo, ritmo e lembrete.',
+    actionLabel: 'Ir para Metas',
+    route: '/goals',
+    section: 'goals',
+    target: '[data-tutorial="goals-create-button"], [data-tutorial="goals-overview"], main',
+  },
 ]
 
 export const FIRST_STEPS_MISSION_IDS = FIRST_STEPS_MISSIONS.map((mission) => mission.id)
@@ -68,6 +79,7 @@ export const tutorialRouteFlows = {
   '/workouts': 'first-steps',
   '/start-workout': 'first-steps',
   '/history': 'first-steps',
+  '/goals': 'first-steps',
   '/progress': 'first-steps',
   '/nutrition': 'first-steps',
   '/settings': 'first-steps',
@@ -102,16 +114,23 @@ export const tutorialSections = {
     shortTitle: 'Histórico',
     description: 'Consultar treinos salvos.',
   },
+  goals: {
+    id: 'goals',
+    order: 5,
+    title: 'Metas',
+    shortTitle: 'Metas',
+    description: 'Criar objetivos com prazo, ritmo e lembretes.',
+  },
   nutrition: {
     id: 'nutrition',
-    order: 5,
+    order: 6,
     title: 'Nutrição',
     shortTitle: 'Nutrição',
     description: 'Acompanhar água, refeições e metas.',
   },
   settings: {
     id: 'settings',
-    order: 6,
+    order: 7,
     title: 'Ajuda',
     shortTitle: 'Ajuda',
     description: 'Rever os primeiros passos.',
@@ -143,14 +162,14 @@ export const tutorialFlows = {
     id: 'welcome',
     title: 'Primeiros passos',
     description: 'Tutorial rápido do fluxo principal.',
-    sections: ['firstSteps', 'workouts', 'workout', 'history'],
+    sections: ['firstSteps', 'workouts', 'workout', 'history', 'goals'],
     steps: FIRST_STEPS_MISSIONS.map((mission) => step(mission)),
   },
   'first-steps': {
     id: 'first-steps',
     title: 'Primeiros passos',
     description: 'Tutorial rápido do fluxo principal.',
-    sections: ['firstSteps', 'workouts', 'workout', 'history'],
+    sections: ['firstSteps', 'workouts', 'workout', 'history', 'goals'],
     steps: FIRST_STEPS_MISSIONS.map((mission) => step(mission)),
   },
   dashboard: {
@@ -180,6 +199,13 @@ export const tutorialFlows = {
     description: 'Abrir treinos salvos.',
     sections: ['history'],
     steps: [step(FIRST_STEPS_MISSIONS[4])],
+  },
+  goals: {
+    id: 'goals',
+    title: 'Metas',
+    description: 'Criar objetivos.',
+    sections: ['goals'],
+    steps: [step(FIRST_STEPS_MISSIONS[5])],
   },
   nutrition: {
     id: 'nutrition',

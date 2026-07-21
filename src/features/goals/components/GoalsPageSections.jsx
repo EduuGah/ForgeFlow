@@ -38,7 +38,7 @@ function GoalsHeader({ source, loading, stats, onRefresh, onCreate }) {
             Atualizar
           </Button>
 
-          <Button type="button" onClick={onCreate} className="ff-goals-create-button">
+          <Button type="button" onClick={onCreate} className="ff-goals-create-button" data-tutorial="goals-create-button">
             <Plus size={16} />
             Nova meta
           </Button>
@@ -74,7 +74,7 @@ function GoalsStats({ stats }) {
     {
       label: 'Progresso',
       value: `${stats.averageProgress}%`,
-      description: stats.almostDone > 0 ? `${stats.almostDone} quase lá` : 'média ativa',
+      description: stats.behind > 0 ? `${stats.behind} fora do ritmo` : stats.almostDone > 0 ? `${stats.almostDone} quase lá` : 'média ativa',
       icon: TrendingUp,
       tone: 'accent',
     },
@@ -127,7 +127,7 @@ function GoalsFilters({ search, statusFilter, onSearchChange, onStatusFilterChan
           )}
         </label>
 
-        <Button type="button" onClick={onCreate} className="ff-goals-inline-create">
+        <Button type="button" onClick={onCreate} className="ff-goals-inline-create" data-tutorial="goals-create-button">
           <Plus size={16} />
           Nova meta
         </Button>
@@ -152,18 +152,21 @@ function GoalsFilters({ search, statusFilter, onSearchChange, onStatusFilterChan
 
 function GoalsMotivation({ stats, onCreate }) {
   const hasOverdue = stats.overdue > 0
+  const hasBehind = stats.behind > 0
   const hasAlmostDone = stats.almostDone > 0
 
   return (
     <Card className="ff-goals-motivation-card">
       <div className="ff-goals-motivation-card__icon">
-        {hasOverdue ? <AlertTriangle size={20} /> : hasAlmostDone ? <Sparkles size={20} /> : <Target size={20} />}
+        {hasOverdue || hasBehind ? <AlertTriangle size={20} /> : hasAlmostDone ? <Sparkles size={20} /> : <Target size={20} />}
       </div>
       <div className="min-w-0">
-        <p>{hasOverdue ? 'Atenção nas metas atrasadas' : hasAlmostDone ? 'Você está perto de concluir' : 'Escolha um alvo simples'}</p>
+        <p>{hasOverdue ? 'Atenção nas metas atrasadas' : hasBehind ? 'Ajuste o ritmo da semana' : hasAlmostDone ? 'Você está perto de concluir' : 'Escolha um alvo simples'}</p>
         <span>
           {hasOverdue
             ? 'Revise prazos ou conclua o que já evoluiu para manter sua lista limpa.'
+            : hasBehind
+              ? 'Algumas metas estão abaixo do ritmo esperado para o prazo. Priorize uma ação pequena hoje.'
             : hasAlmostDone
               ? 'Priorize as metas acima de 75% e transforme progresso em vitória.'
               : 'Uma boa meta para começar é treinar 3 ou 4 vezes na semana.'}

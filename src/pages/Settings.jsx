@@ -27,6 +27,7 @@ import NotificationSettingsSection from '../components/settings/NotificationSett
 import { useAuth } from '../context/AuthContext'
 import { apiDownload, apiFetch } from '../services/api'
 import { clearForgeFlowPwaCache } from '../utils/pwaUtils'
+import { useTutorial } from '../context/TutorialContext'
 import {
   accentColors,
   applyAppSettingsToDocument,
@@ -251,6 +252,8 @@ function SettingsPrivacySection({ settings, onUpdateSetting }) {
 }
 
 function SettingsExperienceSection({ onNavigate }) {
+  const { restartTutorial, startTutorial } = useTutorial()
+
   return (
     <Card className="settings-card p-4 sm:p-5" id="settings-experience" data-settings-panel="experience">
       <SettingsSectionHeader
@@ -263,7 +266,7 @@ function SettingsExperienceSection({ onNavigate }) {
       <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
         <Button
           type="button"
-          onClick={() => window.dispatchEvent(new CustomEvent('forgeflow:start-tutorial', { detail: { flowId: 'welcome' } }))}
+          onClick={restartTutorial}
           className="w-full"
         >
           Ver tutorial completo
@@ -271,7 +274,7 @@ function SettingsExperienceSection({ onNavigate }) {
         <Button
           type="button"
           variant="secondary"
-          onClick={() => window.dispatchEvent(new CustomEvent('forgeflow:start-tutorial', { detail: { flowId: 'workout' } }))}
+          onClick={() => startTutorial('first-steps', { missionId: 'register-set' })}
           className="w-full"
         >
           Abrir treino guiado
@@ -378,6 +381,8 @@ function SettingsAccountSection({ user, syncBadgeText, onProfile, onLogout }) {
 }
 
 function SettingsAboutSection({ onClearPwaCache }) {
+  const { continueTutorial } = useTutorial()
+
   return (
     <Card className="settings-card p-4 sm:p-5">
       <SettingsSectionHeader
@@ -391,7 +396,7 @@ function SettingsAboutSection({ onClearPwaCache }) {
         <Button type="button" variant="secondary" onClick={onClearPwaCache}>
           Limpar cache do app
         </Button>
-        <Button type="button" variant="ghost" onClick={() => window.dispatchEvent(new CustomEvent('forgeflow:start-tutorial', { detail: { flowId: 'settings' } }))}>
+        <Button type="button" variant="ghost" onClick={continueTutorial}>
           Rever guia
         </Button>
       </div>

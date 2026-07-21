@@ -20,7 +20,14 @@ import {
 import Badge from '../ui/Badge'
 import Card from '../ui/Card'
 import GoalProgressBar from './GoalProgressBar'
-import { formatGoalValue, getGoalDeadlineState, parseLocalDate } from '../../features/goals/goalUtils'
+import {
+  formatGoalDate,
+  formatGoalValue,
+  getGoalDeadlineState,
+  getGoalEffectiveDeadline,
+  getGoalPacing,
+  parseLocalDate,
+} from '../../features/goals/goalUtils'
 
 const GOAL_TYPE_LABELS = {
   daily_workouts: 'Treinos por dia',
@@ -93,9 +100,7 @@ function getGoalExplanation(goal) {
 }
 
 function getRemainingText(goal) {
-  const target = Number(goal.targetValue || 0)
-  const current = Number(goal.currentValue || 0)
-  const remaining = Math.max(0, target - current)
+  const remaining = getGoalPacing(goal).remainingValue
 
   if (goal.status === 'completed' || goal.isCompleted || Number(goal.progressPercent || 0) >= 100) {
     return 'Meta concluída'
@@ -107,12 +112,15 @@ function getRemainingText(goal) {
 }
 
 function getDeadlineText(goal, deadlineState) {
-  if (!goal.deadline) return 'Sem prazo definido'
-  if (deadlineState === 'overdue') return `Atrasada desde ${formatDate(goal.deadline)}`
-  if (deadlineState === 'soon') return `Prazo próximo: ${formatDate(goal.deadline)}`
-  if (deadlineState === 'completed') return `Concluída até ${formatDate(goal.deadline)}`
+  const deadline = getGoalEffectiveDeadline(goal)
+  const formattedDeadline = formatGoalDate(deadline) || formatDate(goal.deadline)
 
-  return `Prazo: ${formatDate(goal.deadline)}`
+  if (!deadline) return 'Sem prazo definido'
+  if (deadlineState === 'overdue') return `Atrasada desde ${formattedDeadline}`
+  if (deadlineState === 'soon') return `Prazo próximo: ${formattedDeadline}`
+  if (deadlineState === 'completed') return `Concluída até ${formattedDeadline}`
+
+  return `Prazo: ${formattedDeadline}`
 }
 
 function getCardTone(goal, deadlineState) {
@@ -124,7 +132,24 @@ function getCardTone(goal, deadlineState) {
   return 'is-active'
 }
 
-function GoalDetailsSheet({ goal, open, deadlineState, percent, statusLabel, canComplete, isCompleted, isArchived, onClose, onEdit, onDelete, onComplete, onArchive, onUnarchive, onReactivate }) {
+function getPacingTone(pacing) {
+  if (pacing.status === 'behind' || pacing.status === 'overdue') return 'is-danger'
+  if (pacing.status === 'ahead' || pacing.status === 'completed') return 'is-success'
+  return 'is-neutral'
+}
+
+function getPacingText(goal, pacing) {
+  if (pacing.status === 'no_deadline') return 'Defina prazo para ver ritmo diário.'
+  if (pacing.status === 'completed') return 'Meta no alvo.'
+  if (pacing.status === 'overdue') return 'Prazo vencido. Revise ou conclua.'
+
+  const daily = formatGoalValue(pacing.requiredPerDay || 0, goal.unit)
+  const days = pacing.daysLeft === 0 ? 'hoje' : `${pacing.daysLeft} dia(s)`
+
+  return `${pacing.label}: ${daily}/dia por ${days}.`
+}
+
+function GoalDetailsSheet({ goal, open, deadlineState, pacing, percent, statusLabel, canComplete, isCompleted, isArchived, onClose, onEdit, onDelete, onComplete, onArchive, onUnarchive, onReactivate }) {
   useEffect(() => {
     if (!open || typeof document === 'undefined') return undefined
 
@@ -197,6 +222,23 @@ function GoalDetailsSheet({ goal, open, deadlineState, percent, statusLabel, can
               <p>Reset</p>
               <strong>{getPeriodLabel(goal.period)}</strong>
             </div>
+
+            <div>
+              <Target size={16} />
+              <p>Ritmo</p>
+              <strong>{pacing.label}</strong>
+            </div>
+
+            <div>
+              <Clock3 size={16} />
+              <p>Necessário</p>
+              <strong>{pacing.requiredPerDay !== null ? `${formatGoalValue(pacing.requiredPerDay, goal.unit)}/dia` : 'Sem prazo'}</strong>
+            </div>
+          </section>
+
+          <section className={`ff-goal-details-sheet__note ff-goal-pacing-note ${getPacingTone(pacing)}`}>
+            <Info size={17} />
+            <span>{getPacingText(goal, pacing)}</span>
           </section>
 
           {goal.exerciseName && (
@@ -273,6 +315,7 @@ function GoalCard({
   const isArchived = goal.status === 'archived'
   const canComplete = !isCompleted && !isArchived
   const percent = Math.max(0, Math.min(100, Number(goal.progressPercent || 0)))
+  const pacing = getGoalPacing(goal)
   const statusLabel = deadlineState === 'overdue' && !isCompleted ? 'Atrasada' : STATUS_LABELS[goal.status] || 'Em andamento'
 
   const primaryIcon = useMemo(() => {
@@ -334,6 +377,11 @@ function GoalCard({
           progressPercent={goal.progressPercent}
         />
 
+        <div className={`ff-goal-card-pacing ${getPacingTone(pacing)}`}>
+          <span>{pacing.label}</span>
+          <strong>{getPacingText(goal, pacing)}</strong>
+        </div>
+
         <div className="ff-goal-card-footer">
           <span className={deadlineState === 'overdue' ? 'is-danger' : ''}>
             <Clock3 size={15} />
@@ -344,6 +392,13 @@ function GoalCard({
             <span>
               <Dumbbell size={15} />
               {goal.exerciseName}
+            </span>
+          )}
+
+          {goal.reminderEnabled && (
+            <span>
+              <Clock3 size={15} />
+              Lembrete {goal.reminderTime || '19:00'}
             </span>
           )}
         </div>
@@ -362,6 +417,7 @@ function GoalCard({
         goal={goal}
         open={detailsOpen}
         deadlineState={deadlineState}
+        pacing={pacing}
         percent={percent}
         statusLabel={statusLabel}
         canComplete={canComplete}

@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
+  Bell,
   CalendarDays,
   ChevronDown,
+  Clock3,
   Dumbbell,
   Flag,
   Info,
@@ -152,6 +154,16 @@ const PERIOD_OPTIONS = [
     label: 'Não repete',
     helper: 'Meta única, sem reset automático.',
   },
+]
+
+const REMINDER_DAY_OPTIONS = [
+  { key: 'monday', label: 'Seg' },
+  { key: 'tuesday', label: 'Ter' },
+  { key: 'wednesday', label: 'Qua' },
+  { key: 'thursday', label: 'Qui' },
+  { key: 'friday', label: 'Sex' },
+  { key: 'saturday', label: 'Sáb' },
+  { key: 'sunday', label: 'Dom' },
 ]
 
 function getPeriodLabel(period) {
@@ -374,6 +386,9 @@ function GoalFormModal({
   const [exerciseSearch, setExerciseSearch] = useState('')
   const [showExerciseLibrary, setShowExerciseLibrary] = useState(false)
   const [deadline, setDeadline] = useState('')
+  const [reminderEnabled, setReminderEnabled] = useState(false)
+  const [reminderTime, setReminderTime] = useState('19:00')
+  const [reminderDays, setReminderDays] = useState(() => REMINDER_DAY_OPTIONS.map((day) => day.key))
   const [formError, setFormError] = useState('')
 
   const selectedConfig = useMemo(() => {
@@ -419,6 +434,9 @@ function GoalFormModal({
       setExerciseSearch('')
       setShowExerciseLibrary(false)
       setDeadline(goal.deadline ? String(goal.deadline).slice(0, 10) : '')
+      setReminderEnabled(Boolean(goal.reminderEnabled))
+      setReminderTime(/^\d{2}:\d{2}$/.test(String(goal.reminderTime || '')) ? goal.reminderTime : '19:00')
+      setReminderDays(Array.isArray(goal.reminderDays) && goal.reminderDays.length ? goal.reminderDays : REMINDER_DAY_OPTIONS.map((day) => day.key))
       return
     }
 
@@ -438,6 +456,9 @@ function GoalFormModal({
     setExerciseSearch('')
     setShowExerciseLibrary(false)
     setDeadline('')
+    setReminderEnabled(false)
+    setReminderTime('19:00')
+    setReminderDays(REMINDER_DAY_OPTIONS.map((day) => day.key))
   }, [open, goal])
 
   if (!open) return null
@@ -473,6 +494,15 @@ function GoalFormModal({
     }
   }
 
+  function handleReminderDayToggle(dayKey) {
+    setReminderDays((current) => {
+      const days = Array.isArray(current) ? current : []
+      return days.includes(dayKey)
+        ? days.filter((day) => day !== dayKey)
+        : [...days, dayKey]
+    })
+  }
+
   function handleSubmit(event) {
     event.preventDefault()
 
@@ -493,6 +523,11 @@ function GoalFormModal({
       return
     }
 
+    if (reminderEnabled && reminderDays.length === 0) {
+      setFormError('Escolha pelo menos um dia para o lembrete.')
+      return
+    }
+
     setFormError('')
 
     onSubmit({
@@ -507,6 +542,9 @@ function GoalFormModal({
       direction: selectedConfig.direction,
       period,
       deadline: deadline || null,
+      reminderEnabled,
+      reminderTime,
+      reminderDays,
       status: goal?.status || 'active',
       resetProgressBaseline: !goal,
     })
@@ -675,6 +713,54 @@ function GoalFormModal({
                     value={deadline}
                     onChange={(event) => setDeadline(event.target.value)}
                   />
+
+                  <div className="ff-goal-reminder-box">
+                    <div className="ff-goal-reminder-box__head">
+                      <span>
+                        <Bell size={17} />
+                      </span>
+                      <div>
+                        <strong>Lembrete da meta</strong>
+                        <small>Receba um aviso no horário escolhido para revisar o progresso.</small>
+                      </div>
+                      <button
+                        type="button"
+                        className={reminderEnabled ? 'is-active' : ''}
+                        onClick={() => setReminderEnabled((current) => !current)}
+                        aria-pressed={reminderEnabled}
+                      >
+                        {reminderEnabled ? 'Ativo' : 'Desativado'}
+                      </button>
+                    </div>
+
+                    {reminderEnabled && (
+                      <div className="ff-goal-reminder-box__body">
+                        <label className="ff-goal-time-field">
+                          <Clock3 size={16} />
+                          <span>Horário</span>
+                          <input
+                            type="time"
+                            value={reminderTime}
+                            onChange={(event) => setReminderTime(event.target.value)}
+                          />
+                        </label>
+
+                        <div className="ff-goal-day-picker" role="group" aria-label="Dias do lembrete da meta">
+                          {REMINDER_DAY_OPTIONS.map((day) => (
+                            <button
+                              key={day.key}
+                              type="button"
+                              className={reminderDays.includes(day.key) ? 'is-active' : ''}
+                              onClick={() => handleReminderDayToggle(day.key)}
+                              aria-pressed={reminderDays.includes(day.key)}
+                            >
+                              {day.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -749,6 +835,16 @@ function GoalFormModal({
                       </p>
                     </div>
                   )}
+
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wide text-[var(--ff-muted)]">
+                      Lembrete
+                    </p>
+                    <p className="mt-1 flex items-center gap-2 font-bold text-[var(--ff-text)]">
+                      <Bell size={15} />
+                      {reminderEnabled ? `${reminderTime} · ${reminderDays.length} dia(s)` : 'Desativado'}
+                    </p>
+                  </div>
                 </div>
               </div>
 
