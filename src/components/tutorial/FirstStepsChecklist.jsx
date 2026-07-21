@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react'
-import { CheckCircle2, ChevronRight, Circle, EyeOff, ListChecks, RotateCcw } from 'lucide-react'
+import { CheckCircle2, ChevronRight, Circle, Eye, EyeOff, ListChecks, RotateCcw } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 import { useTutorial } from '../../context/TutorialContext'
@@ -33,7 +33,6 @@ export default function FirstStepsChecklist({ workouts = [], history = [], goals
     focusFirstStepMission,
     resumeFirstSteps,
     pauseFirstSteps,
-    dismissFirstSteps,
     startTutorial,
     restartTutorial,
   } = useTutorial()
@@ -70,7 +69,6 @@ export default function FirstStepsChecklist({ workouts = [], history = [], goals
   const totalMissions = firstStepsProgress?.total || firstStepMissions.length
   const completedMissions = firstStepsProgress?.completed || 0
 
-  if (isDismissed && !compact) return null
   if (isCompleted && !compact) return null
   if (!shouldShow && !compact) return null
 
@@ -83,6 +81,23 @@ export default function FirstStepsChecklist({ workouts = [], history = [], goals
 
   function handleResume() {
     resumeFirstSteps?.()
+  }
+
+  if ((isDismissed || isPaused) && !compact) {
+    return (
+      <section className="ff-first-steps-restore" data-tutorial="first-steps-checklist">
+        <span className="ff-first-steps-restore__icon" aria-hidden="true">
+          <ListChecks size={18} />
+        </span>
+        <div className="ff-first-steps-restore__copy">
+          <strong>Guia minimizado</strong>
+          <small>{completedMissions}/{totalMissions} missões concluídas. Continue quando quiser.</small>
+        </div>
+        <button type="button" onClick={handleResume}>
+          <Eye size={15} /> Mostrar
+        </button>
+      </section>
+    )
   }
 
   return (
@@ -162,8 +177,8 @@ export default function FirstStepsChecklist({ workouts = [], history = [], goals
         </button>
 
         {!isCompleted ? (
-          <button type="button" className="ff-first-steps__ghost" onClick={isPaused ? dismissFirstSteps : pauseFirstSteps}>
-            <EyeOff size={14} /> {isPaused ? 'Ocultar' : 'Ver depois'}
+          <button type="button" className="ff-first-steps__ghost" onClick={pauseFirstSteps}>
+            <EyeOff size={14} /> Minimizar
           </button>
         ) : null}
       </div>

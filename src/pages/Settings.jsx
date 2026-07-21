@@ -10,7 +10,6 @@ import {
   Moon,
   Shield,
   SlidersHorizontal,
-  Sparkles,
   UserRound,
   Utensils,
 } from 'lucide-react'
@@ -27,7 +26,6 @@ import NotificationSettingsSection from '../components/settings/NotificationSett
 import { useAuth } from '../context/AuthContext'
 import { apiDownload, apiFetch } from '../services/api'
 import { clearForgeFlowPwaCache } from '../utils/pwaUtils'
-import { useTutorial } from '../context/TutorialContext'
 import {
   accentColors,
   applyAppSettingsToDocument,
@@ -44,7 +42,6 @@ import {
   SettingsBackupSection,
   SettingsPasswordSection,
   SettingsTrainingPreferencesSection,
-  SettingsTutorialSection,
 } from '../features/settings/components/SettingsSections'
 import { SettingToggleCard } from '../features/settings/components/SettingsBaseControls'
 
@@ -251,40 +248,22 @@ function SettingsPrivacySection({ settings, onUpdateSetting }) {
   )
 }
 
-function SettingsExperienceSection({ onNavigate }) {
-  const { restartTutorial, startTutorial } = useTutorial()
+function SettingsExperienceSection({ onNavigate, onOpenAdvanced }) {
 
   return (
     <Card className="settings-card p-4 sm:p-5" id="settings-experience" data-settings-panel="experience">
       <SettingsSectionHeader
-        icon={Sparkles}
-        eyebrow="Ajuda"
-        title="Primeiros passos"
-        description="Reveja o fluxo principal quando quiser e pratique os passos essenciais."
+        icon={SlidersHorizontal}
+        eyebrow="Atalhos"
+        title="O que você mais ajusta"
+        description="Acesso rápido às áreas principais, sem misturar tutorial com preferências do app."
       />
 
-      <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <Button
-          type="button"
-          onClick={restartTutorial}
-          className="w-full"
-        >
-          Ver tutorial completo
-        </Button>
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => startTutorial('first-steps', { missionId: 'register-set' })}
-          className="w-full"
-        >
-          Abrir treino guiado
-        </Button>
-        <Button type="button" variant="ghost" onClick={() => onNavigate('/workouts')} className="w-full">
-          Ir para treinos
-        </Button>
-        <Button type="button" variant="ghost" onClick={() => onNavigate('/nutrition')} className="w-full">
-          Ir para nutrição
-        </Button>
+      <div className="ff-settings-shortcut-grid ff-settings-shortcut-grid--compact mt-5">
+        <ShortcutCard icon={UserRound} title="Perfil" description="Conta e dados pessoais" onClick={() => onNavigate('/profile')} />
+        <ShortcutCard icon={Bell} title="Notificações" description="Lembretes do app" onClick={() => onNavigate('/notifications')} />
+        <ShortcutCard icon={Utensils} title="Nutrição" description="Água e refeições" onClick={() => onNavigate('/nutrition')} />
+        <ShortcutCard icon={Lock} title="Avançado" description="Backup e senha" onClick={onOpenAdvanced} />
       </div>
     </Card>
   )
@@ -380,24 +359,22 @@ function SettingsAccountSection({ user, syncBadgeText, onProfile, onLogout }) {
   )
 }
 
-function SettingsAboutSection({ onClearPwaCache }) {
-  const { continueTutorial } = useTutorial()
-
+function SettingsAboutSection({ syncBadgeText, onClearPwaCache, onResetSettings }) {
   return (
     <Card className="settings-card p-4 sm:p-5">
       <SettingsSectionHeader
         icon={Info}
-        eyebrow="Sobre"
-        title="ForgeFlow"
-        description="Versão 1.0.0"
-        action={<Badge>APK pronto</Badge>}
+        eyebrow="App"
+        title="Manutenção"
+        description="Cache, versão e preferências locais em um só lugar."
+        action={<Badge>{syncBadgeText}</Badge>}
       />
       <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Button type="button" variant="secondary" onClick={onClearPwaCache}>
           Limpar cache do app
         </Button>
-        <Button type="button" variant="ghost" onClick={continueTutorial}>
-          Rever guia
+        <Button type="button" variant="ghost" onClick={onResetSettings}>
+          Restaurar padrão
         </Button>
       </div>
     </Card>
@@ -728,7 +705,6 @@ function Settings() {
     { icon: Moon, label: 'Aparência', value: getThemeLabel(settings.themeMode), helper: currentAccent?.name || summaryFallback },
     { icon: Dumbbell, label: 'Unidade', value: settings.weightUnit || 'kg', helper: settings.visualDensity === 'compact' ? 'Compacta' : 'Confortável' },
     { icon: Shield, label: 'Privacidade', value: settings.hideSensitiveShareData ? 'Protegida' : 'Padrão', helper: settings.hideBodyWeightOnShare ? 'Peso oculto' : 'Compartilhamento completo' },
-    { icon: Sparkles, label: 'Ajuda', value: 'Tutorial', helper: 'Treino guiado disponível' },
     { icon: Bell, label: 'Notificações', value: reminderSummary, helper: settings.hydrationReminderEnabled ? 'Água ativa' : 'Ajustável' },
   ]
 
@@ -736,8 +712,8 @@ function Settings() {
     <div className="ff-hevy-page ff-hevy-page-settings settings-page">
       <AppPageIntro
         eyebrow="Configurações"
-        title="Ajuste o ForgeFlow do seu jeito"
-        description="Preferências gerais, privacidade, nutrição e conta em uma tela premium mobile-first."
+        title="Configurações"
+        description="Preferências do app organizadas por uso diário, conta e segurança."
         metrics={[
           { label: 'Tema', value: getThemeLabel(settings.themeMode) },
           { label: 'Unidade', value: settings.weightUnit || 'kg' },
@@ -747,34 +723,17 @@ function Settings() {
       />
 
       <div className="ff-settings-page space-y-5">
-        <section className="ff-settings-hero-card">
-          <div className="min-w-0">
-            <p>Configurações</p>
-            <h1>Personalize sua experiência</h1>
-            <span>Tema {getThemeLabel(settings.themeMode).toLowerCase()} · Unidade {settings.weightUnit || 'kg'} · {reminderSummary}</span>
-          </div>
-          <div className="ff-settings-hero-actions">
-            <Button type="button" onClick={() => showToast('success', 'Preferências salvas', syncBadgeText)}>
-              <SlidersHorizontal size={17} /> Preferências salvas
-            </Button>
-            <Button type="button" variant="secondary" onClick={handleResetSettings}>
-              Restaurar
-            </Button>
-          </div>
-        </section>
-
         <section className="ff-settings-summary-grid">
           {summaryCards.map((card) => <SettingsSummaryCard key={card.label} {...card} />)}
         </section>
 
-        <section className="ff-settings-shortcut-grid">
-          <ShortcutCard icon={UserRound} title="Perfil" description="Editar informações pessoais" onClick={() => navigate('/profile')} />
-          <ShortcutCard icon={Bell} title="Notificações" description="Lembretes e permissões" onClick={() => navigate('/notifications')} />
-          <ShortcutCard icon={Utensils} title="Nutrição" description="Água, refeições e metas" onClick={() => navigate('/nutrition')} />
-          <ShortcutCard icon={Lock} title="Senha e acesso" description="Segurança da conta" onClick={() => { setShowAdvancedSettings(true); window.setTimeout(() => document.getElementById('settings-security')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80) }} />
-        </section>
-
-        <SettingsExperienceSection settings={settings} onUpdateSetting={handleUpdateSetting} onNavigate={navigate} />
+        <SettingsExperienceSection
+          onNavigate={navigate}
+          onOpenAdvanced={() => {
+            setShowAdvancedSettings(true)
+            window.setTimeout(() => document.getElementById('settings-security')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80)
+          }}
+        />
 
         <GooglePasswordNotice user={user} />
 
@@ -815,9 +774,11 @@ function Settings() {
           <aside className="space-y-5">
             <SettingsAccountSection user={user} syncBadgeText={syncBadgeText} onProfile={() => navigate('/profile')} onLogout={handleLogoutRequest} />
 
-            <SettingsTutorialSection />
-
-            <SettingsAboutSection onClearPwaCache={handleClearPwaCache} />
+            <SettingsAboutSection
+              syncBadgeText={syncBadgeText}
+              onClearPwaCache={handleClearPwaCache}
+              onResetSettings={handleResetSettings}
+            />
 
             <Card className="settings-card p-4 sm:p-5" id="settings-security" data-settings-panel="security">
               <button

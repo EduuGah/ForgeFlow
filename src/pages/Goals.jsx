@@ -4,6 +4,7 @@ import GoalsPageSections from '../features/goals/components/GoalsPageSections'
 import { useAuth } from '../context/AuthContext'
 import { useTutorial } from '../context/TutorialContext'
 import { apiFetch } from '../services/api'
+import { getInitialExercises } from '../utils/exerciseStorage'
 import { removeGoalReminder, syncGoalReminder } from '../utils/goalReminderUtils'
 import {
   generateSmartNotifications,
@@ -40,6 +41,25 @@ function createLocalGoal(data, existingGoal = null) {
     createdAt: existingGoal?.createdAt || now,
     updatedAt: now,
   })
+}
+
+function normalizeGoalExerciseList(value, fallback = []) {
+  const list = Array.isArray(value)
+    ? value
+    : Array.isArray(value?.exercises)
+      ? value.exercises
+      : Array.isArray(value?.data)
+        ? value.data
+        : []
+  const source = list.length ? list : fallback
+
+  return source
+    .filter(Boolean)
+    .map((exercise, index) => ({
+      ...exercise,
+      id: exercise._id || exercise.id || exercise.localId || `${exercise.name || 'exercise'}-${index}`,
+      isFavorite: Boolean(exercise.isFavorite),
+    }))
 }
 
 function prepareGoalPayload(data, existingGoal = null, context = {}) {
@@ -129,13 +149,14 @@ function Goals() {
 
       const cachedGoals = getUserStorageData(user, 'goals', [])
       const cachedExercises = getUserStorageData(user, 'exercises', [])
+      const initialExercises = normalizeGoalExerciseList(cachedExercises, getInitialExercises())
       const cachedHistory = getUserStorageData(user, 'history', [])
       const cachedBodyWeight = getUserStorageData(user, 'bodyweight', [])
       const cachedProgressPhotos = getUserStorageData(user, 'progress-photos', [])
 
       if (isMounted) {
         setGoals(Array.isArray(cachedGoals) ? cachedGoals.map(normalizeGoal) : [])
-        setExercises(Array.isArray(cachedExercises) ? cachedExercises : [])
+        setExercises(initialExercises)
         setHistory(Array.isArray(cachedHistory) ? cachedHistory : [])
         setBodyWeight(Array.isArray(cachedBodyWeight) ? cachedBodyWeight : [])
         setProgressPhotos(Array.isArray(cachedProgressPhotos) ? cachedProgressPhotos : [])
@@ -166,9 +187,7 @@ function Goals() {
       }
 
       if (exercisesResult.status === 'fulfilled') {
-        const normalizedExercises = Array.isArray(exercisesResult.value)
-          ? exercisesResult.value.map((exercise) => ({ ...exercise, id: exercise._id || exercise.id }))
-          : []
+        const normalizedExercises = normalizeGoalExerciseList(exercisesResult.value, initialExercises)
 
         setExercises(normalizedExercises)
         saveUserStorageData(user, 'exercises', normalizedExercises)

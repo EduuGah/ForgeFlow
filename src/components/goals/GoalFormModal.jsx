@@ -299,8 +299,8 @@ function ExercisePickerModal({ open, exercises = [], selectedExerciseId, search,
 
   if (!open) return null
 
-  return (
-    <div className="ff-goal-exercise-library fixed inset-0 z-[95] flex items-end justify-center bg-[var(--ff-overlay)] p-0 backdrop-blur-sm sm:items-center sm:p-4">
+  const modal = (
+    <div className="ff-goal-exercise-library fixed inset-0 z-[2147483610] flex items-end justify-center bg-[var(--ff-overlay)] p-0 backdrop-blur-sm sm:items-center sm:p-4">
       <div className="ff-goal-exercise-library__panel flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-t-[2rem] border border-[var(--ff-border)] bg-[var(--ff-card)] shadow-2xl sm:rounded-[2rem]">
         <div className="border-b border-[var(--ff-border)] p-4 sm:p-5">
           <div className="flex items-start justify-between gap-3">
@@ -363,6 +363,10 @@ function ExercisePickerModal({ open, exercises = [], selectedExerciseId, search,
       </div>
     </div>
   )
+
+  if (typeof document === 'undefined') return modal
+
+  return createPortal(modal, document.body)
 }
 
 function GoalFormModal({
@@ -492,6 +496,11 @@ function GoalFormModal({
     if (!goal && name && (!title || title === selectedConfig.titleExample)) {
       setTitle(`Bater ${targetValue || selectedConfig.placeholder} ${selectedConfig.unit || ''} em ${name}`.trim())
     }
+  }
+
+  function openExerciseLibrary() {
+    setExerciseSearch('')
+    setShowExerciseLibrary(true)
   }
 
   function handleReminderDayToggle(dayKey) {
@@ -630,7 +639,7 @@ function GoalFormModal({
                         <label className="text-sm font-bold text-[var(--ff-text)]">
                           Exercício
                         </label>
-                        <button type="button" onClick={() => setShowExerciseLibrary(true)}>
+                        <button type="button" onClick={openExerciseLibrary}>
                           Abrir biblioteca
                         </button>
                       </div>
@@ -646,7 +655,7 @@ function GoalFormModal({
                           </div>
                         </div>
                       ) : (
-                        <button type="button" className="ff-goal-empty-exercise-picker" onClick={() => setShowExerciseLibrary(true)}>
+                        <button type="button" className="ff-goal-empty-exercise-picker" onClick={openExerciseLibrary}>
                           <Dumbbell size={20} />
                           Selecionar exercício na biblioteca
                         </button>

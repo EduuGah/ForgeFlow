@@ -128,6 +128,10 @@
   gap: 0.75rem;
 }
 
+.ff-settings-shortcut-grid--compact {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
 .ff-settings-shortcut {
   display: flex;
   align-items: center;
