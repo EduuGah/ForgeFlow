@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import { useTutorial } from '../../context/TutorialContext'
@@ -6,9 +6,7 @@ import TutorialTooltip from './TutorialTooltip'
 
 const TARGET_WAIT_TIMEOUT_MS = 5000
 const TARGET_PADDING = 10
-const CARD_MARGIN = 12
 const MOBILE_BREAKPOINT = 760
-const TARGET_UPDATE_MIN_MS = 80
 
 function getViewport() {
   if (typeof window === 'undefined') return { width: 0, height: 0, top: 0, left: 0 }
@@ -106,8 +104,6 @@ function waitForElement(selector, { timeoutMs = TARGET_WAIT_TIMEOUT_MS, signal }
     observer.observe(document.body, {
       childList: true,
       subtree: true,
-      attributes: true,
-      attributeFilter: ['class', 'style', 'hidden', 'data-tutorial'],
     })
 
     window.addEventListener('resize', scheduleCheck)
@@ -128,17 +124,6 @@ function getSafeRect(element) {
     width: rect.width,
     height: rect.height,
   }
-}
-
-function areRectsClose(a, b) {
-  if (!a || !b) return a === b
-
-  return (
-    Math.abs(a.top - b.top) < 0.5 &&
-    Math.abs(a.left - b.left) < 0.5 &&
-    Math.abs(a.width - b.width) < 0.5 &&
-    Math.abs(a.height - b.height) < 0.5
-  )
 }
 
 function scrollTargetIntoSafeViewSafely(element, { signal } = {}) {
@@ -201,79 +186,30 @@ function buildSpotlight(rect) {
   }
 }
 
-function getTooltipPlacement(rect) {
-  if (!rect) return 'bottom'
-
-  const viewport = getViewport()
-  const spaceAbove = rect.top - viewport.top
-  const spaceBelow = viewport.top + viewport.height - rect.bottom
-
-  return spaceBelow >= 250 || spaceBelow >= spaceAbove ? 'bottom' : 'top'
-}
-
-function getTooltipStyle(rect, placement) {
+function getTooltipStyle() {
   const viewport = getViewport()
   const isMobile = viewport.width <= MOBILE_BREAKPOINT
   const maxWidth = isMobile
     ? Math.max(280, viewport.width - 24)
     : Math.min(380, Math.max(300, viewport.width - 32))
   const maxHeight = isMobile
-    ? Math.max(220, Math.min(360, viewport.height * 0.46))
-    : Math.max(260, Math.min(400, viewport.height - 32))
+    ? Math.max(220, Math.min(330, viewport.height * 0.42))
+    : Math.max(240, Math.min(360, viewport.height * 0.44))
+  const left = isMobile
+    ? viewport.left + 12
+    : viewport.left + viewport.width - maxWidth - 16
 
-  const style = {
+  return {
+    top: 'auto',
+    right: 'auto',
+    bottom: isMobile
+      ? 'max(12px, calc(env(safe-area-inset-bottom, 0px) + 12px))'
+      : 'max(16px, calc(env(safe-area-inset-bottom, 0px) + 16px))',
+    left: `${Math.round(Math.max(viewport.left + 12, left))}px`,
     width: `${Math.round(maxWidth)}px`,
     maxWidth: isMobile ? `calc(100vw - 24px)` : `min(380px, calc(100vw - 32px))`,
     maxHeight: `${Math.round(maxHeight)}px`,
   }
-
-  if (isMobile) {
-    style.left = `${Math.round(viewport.left + 12)}px`
-    style.bottom = `max(12px, calc(env(safe-area-inset-bottom, 0px) + 12px))`
-    return style
-  }
-
-  if (!rect) {
-    style.left = `${Math.round(viewport.left + viewport.width - maxWidth - 16)}px`
-    style.bottom = `max(16px, calc(env(safe-area-inset-bottom, 0px) + 16px))`
-    return style
-  }
-
-  const spaceRight = viewport.left + viewport.width - rect.right
-  const spaceLeft = rect.left - viewport.left
-  const canUseRightSide = spaceRight >= maxWidth + CARD_MARGIN + 10
-  const canUseLeftSide = spaceLeft >= maxWidth + CARD_MARGIN + 10
-
-  if (canUseRightSide || canUseLeftSide) {
-    const left = canUseRightSide
-      ? rect.right + CARD_MARGIN
-      : rect.left - maxWidth - CARD_MARGIN
-    const top = clamp(
-      rect.top + rect.height / 2 - maxHeight / 2,
-      viewport.top + 16,
-      viewport.top + viewport.height - maxHeight - 16
-    )
-
-    style.left = `${Math.round(left)}px`
-    style.top = `${Math.round(top)}px`
-    return style
-  }
-
-  const left = clamp(
-    rect.left + rect.width / 2 - maxWidth / 2,
-    viewport.left + 16,
-    viewport.left + viewport.width - maxWidth - 16
-  )
-
-  style.left = `${Math.round(left)}px`
-
-  if (placement === 'top') {
-    style.bottom = `${Math.round(clamp(viewport.height - rect.top + CARD_MARGIN, 16, Math.max(16, viewport.height - maxHeight - 16)))}px`
-  } else {
-    style.top = `${Math.round(clamp(rect.bottom + CARD_MARGIN, viewport.top + 16, Math.max(viewport.top + 16, viewport.top + viewport.height - maxHeight - 16)))}px`
-  }
-
-  return style
 }
 
 export default function TutorialOverlay() {
@@ -294,11 +230,11 @@ export default function TutorialOverlay() {
   const [targetElement, setTargetElement] = useState(null)
   const [targetRect, setTargetRect] = useState(null)
   const [targetStatus, setTargetStatus] = useState('idle')
+  const [viewportVersion, setViewportVersion] = useState(0)
 
   const selector = activeStep?.target || ''
   const spotlight = useMemo(() => buildSpotlight(targetRect), [targetRect])
-  const placement = useMemo(() => getTooltipPlacement(targetRect), [targetRect])
-  const tooltipStyle = useMemo(() => getTooltipStyle(targetRect, placement), [targetRect, placement])
+  const tooltipStyle = useMemo(() => getTooltipStyle(), [viewportVersion])
   const targetPending = Boolean(selector && targetStatus === 'waiting')
   const targetMissing = Boolean(selector && targetStatus === 'missing')
   const nextDisabled = targetPending || (targetMissing && activeStep?.requireTarget)
@@ -337,62 +273,30 @@ export default function TutorialOverlay() {
     }
   }, [activeStep, activeStepIndex, isRunning, selector])
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (!isRunning || !targetElement) return undefined
 
-    let frameId = null
-    let timeoutId = null
-    let lastUpdateAt = 0
-
     const updateRect = () => {
-      frameId = null
-      timeoutId = null
-      lastUpdateAt = performance.now()
-      const nextRect = getSafeRect(targetElement)
-      setTargetRect((currentRect) => (areRectsClose(currentRect, nextRect) ? currentRect : nextRect))
-    }
-
-    const scheduleUpdate = ({ immediate = false } = {}) => {
-      if (frameId) return
-
-      const elapsed = performance.now() - lastUpdateAt
-      const delay = immediate ? 0 : Math.max(0, TARGET_UPDATE_MIN_MS - elapsed)
-
-      if (delay > 0) {
-        if (timeoutId) return
-        timeoutId = window.setTimeout(() => {
-          frameId = window.requestAnimationFrame(updateRect)
-        }, delay)
-        return
-      }
-
-      frameId = window.requestAnimationFrame(updateRect)
+      setTargetRect(getSafeRect(targetElement))
+      setViewportVersion((value) => value + 1)
     }
 
     targetElement.setAttribute('data-tutorial-active', 'true')
     const resizeObserver = typeof ResizeObserver !== 'undefined'
-      ? new ResizeObserver(scheduleUpdate)
+      ? new ResizeObserver(updateRect)
       : null
 
     resizeObserver?.observe(targetElement)
-    scheduleUpdate({ immediate: true })
+    updateRect()
 
-    const scheduleImmediateUpdate = () => scheduleUpdate({ immediate: true })
-
-    window.addEventListener('resize', scheduleImmediateUpdate)
-    window.addEventListener('scroll', scheduleUpdate, true)
-    window.visualViewport?.addEventListener('resize', scheduleImmediateUpdate)
-    window.visualViewport?.addEventListener('scroll', scheduleUpdate)
+    window.addEventListener('resize', updateRect)
+    window.visualViewport?.addEventListener('resize', updateRect)
 
     return () => {
       targetElement.removeAttribute('data-tutorial-active')
       resizeObserver?.disconnect()
-      if (frameId) window.cancelAnimationFrame(frameId)
-      window.clearTimeout(timeoutId)
-      window.removeEventListener('resize', scheduleImmediateUpdate)
-      window.removeEventListener('scroll', scheduleUpdate, true)
-      window.visualViewport?.removeEventListener('resize', scheduleImmediateUpdate)
-      window.visualViewport?.removeEventListener('scroll', scheduleUpdate)
+      window.removeEventListener('resize', updateRect)
+      window.visualViewport?.removeEventListener('resize', updateRect)
     }
   }, [isRunning, targetElement])
 
@@ -401,6 +305,8 @@ export default function TutorialOverlay() {
 
     const previousOverflow = document.body.style.overflowX
     document.body.style.overflowX = 'hidden'
+    document.body.classList.add('ff-tutorial-running')
+    document.documentElement.classList.add('ff-tutorial-running')
 
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
@@ -417,6 +323,8 @@ export default function TutorialOverlay() {
     return () => {
       window.cancelAnimationFrame(focusFrameId)
       document.body.style.overflowX = previousOverflow
+      document.body.classList.remove('ff-tutorial-running')
+      document.documentElement.classList.remove('ff-tutorial-running')
       document.removeEventListener('keydown', handleKeyDown)
     }
   }, [isRunning, pauseTutorial])
@@ -424,7 +332,7 @@ export default function TutorialOverlay() {
   if (!isRunning || !activeStep || typeof document === 'undefined') return null
 
   const overlay = (
-    <div className={`ff-tutorial-v3 ff-tutorial-v3--${placement}`} role="presentation">
+    <div className="ff-tutorial-v3 ff-tutorial-v3--dock" role="presentation">
       {spotlight ? (
         <div
           className="ff-tutorial-v3__spotlight"

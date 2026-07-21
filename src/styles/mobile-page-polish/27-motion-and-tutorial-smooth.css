@@ -97,15 +97,13 @@
     0 0 0 5px color-mix(in srgb, var(--ff-accent-soft) 64%, transparent),
     0 0 24px color-mix(in srgb, var(--ff-accent) 34%, transparent) !important;
   animation: none !important;
-  transition:
-    top 120ms var(--ff-motion-ease),
-    left 120ms var(--ff-motion-ease),
-    width 120ms var(--ff-motion-ease),
-    height 120ms var(--ff-motion-ease);
-  will-change: top, left, width, height;
+  transition: none !important;
+  will-change: auto;
 }
 
 .ff-tutorial-v3 .ff-tutorial-tooltip {
+  top: auto !important;
+  right: auto !important;
   width: min(380px, calc(100vw - 32px)) !important;
   min-width: 0 !important;
   max-width: min(380px, calc(100vw - 32px)) !important;
@@ -151,6 +149,7 @@
 
 @media (max-width: 760px) {
   .ff-tutorial-v3 .ff-tutorial-tooltip {
+    top: auto !important;
     left: 12px !important;
     right: 12px !important;
     bottom: max(12px, calc(env(safe-area-inset-bottom, 0px) + 12px)) !important;
@@ -167,6 +166,26 @@
   .ff-tutorial-v3 .ff-tutorial-tooltip__secondary-actions {
     gap: 0.42rem !important;
   }
+}
+
+.ff-tutorial-running .ff-page-scroll-shell > div > :where(section, article, aside, form),
+.ff-tutorial-running .ff-forge-active-hero,
+.ff-tutorial-running .ff-forge-exercise-strip,
+.ff-tutorial-running .ff-hevy-active-exercise,
+.ff-tutorial-running .ff-first-steps,
+.ff-tutorial-running .ff-tutorial-launcher,
+.ff-tutorial-running .ff-workout-focus-card,
+.ff-tutorial-running .ff-dashboard-hero-card,
+.ff-tutorial-running .ff-exercise-library-card,
+.ff-tutorial-running .ff-goal-card,
+.ff-tutorial-running .ff-history-card,
+.ff-tutorial-running .ff-schedule-v2-hero,
+.ff-tutorial-running .ff-schedule-v2-details {
+  animation: none !important;
+}
+
+.ff-tutorial-running :where(button, a, input, textarea, select, .ff-card, .ff-hevy-active-exercise, .ff-forge-active-hero, .ff-forge-exercise-strip__item, .ff-first-steps__mission) {
+  transition-duration: 60ms !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
