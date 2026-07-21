@@ -20,7 +20,6 @@ import {
   getTutorialState,
   FIRST_STEPS_MISSIONS,
   FIRST_STEPS_MISSION_IDS,
-  markWelcomeTutorialPending,
   resetTutorialState,
   saveTutorialState,
   shouldShowWelcomeTutorial,
@@ -77,6 +76,12 @@ function getInitialStepIndex(flow, preferredStep = 0) {
   const numericStep = Number(preferredStep)
   if (!Number.isFinite(numericStep)) return 0
   return Math.min(Math.max(0, numericStep), flow.steps.length - 1)
+}
+
+function getMissionRoute(mission, activeSession) {
+  if (!mission) return '/'
+  if ((mission.id === 'register-set' || mission.id === 'finish-workout') && activeSession) return '/start-workout'
+  return mission.route || '/'
 }
 
 const TUTORIAL_WORKOUT_COPY = {
@@ -392,31 +397,33 @@ export function TutorialProvider({ children }) {
   )
 
   const startTutorial = useCallback(
-    (flowId = 'welcome', options = {}) => {
+    (flowIdOrOptions = 'welcome', options = {}) => {
+      const startOptions = flowIdOrOptions && typeof flowIdOrOptions === 'object' ? flowIdOrOptions : options
+
       if (!user || !user.profileCompleted || !canShowTutorialOnPath(location.pathname)) {
         stopTutorialUi()
         return false
       }
 
-      const flow = tutorialFlows[flowId] || tutorialFlows.welcome
-      const firstMission = FIRST_STEPS_MISSIONS[0]?.id || ''
-      const missionStepIndex = options.missionId
-        ? flow.steps.findIndex((item) => item.id === options.missionId)
-        : -1
-      const savedStepIndex = options.resume ? getInitialStepIndex(flow, state.tutorialCurrentStep || 0) : 0
-      const nextStepIndex = missionStepIndex >= 0 ? missionStepIndex : savedStepIndex
-      const nextStep = flow.steps[nextStepIndex] || flow.steps[0]
+      const completedMissions = state.firstStepsCompleted && typeof state.firstStepsCompleted === 'object'
+        ? state.firstStepsCompleted
+        : {}
+      const requestedMission = startOptions.missionId
+        ? FIRST_STEPS_MISSIONS.find((mission) => mission.id === startOptions.missionId)
+        : null
+      const nextMission = requestedMission ||
+        FIRST_STEPS_MISSIONS.find((mission) => !completedMissions[mission.id]) ||
+        FIRST_STEPS_MISSIONS[0]
+      const nextMissionIndex = Math.max(0, FIRST_STEPS_MISSIONS.findIndex((mission) => mission.id === nextMission?.id))
 
       clearWelcomeTutorialPending(user)
       setWelcomePromptVisible(false)
       stopTutorialUi()
-      setActiveFlowId(flow.id)
-      setActiveStepIndex(nextStepIndex)
 
       updateState((current) => ({
         ...current,
-        tutorialCurrentFlow: flow.id || 'welcome',
-        tutorialCurrentStep: nextStepIndex,
+        tutorialCurrentFlow: 'first-steps',
+        tutorialCurrentStep: nextMissionIndex,
         tutorialPaused: false,
         tutorialSkipped: false,
         tutorialStartedAt: current.tutorialStartedAt || nowIso(),
@@ -425,17 +432,23 @@ export function TutorialProvider({ children }) {
         firstStepsStarted: true,
         firstStepsPaused: false,
         firstStepsDismissed: false,
-        firstStepsLastFocusedMission: options.missionId || current.firstStepsLastFocusedMission || firstMission,
-        tutorialSeenSections: uniqueValues([...(current.tutorialSeenSections || []), getStepSection(nextStep)]),
+        firstStepsLastFocusedMission: nextMission?.id || current.firstStepsLastFocusedMission || '',
+        tutorialSeenSections: uniqueValues([...(current.tutorialSeenSections || []), 'firstSteps', nextMission?.section].filter(Boolean)),
       }))
 
-      if (nextStep?.route && canShowTutorialOnPath(location.pathname) && location.pathname !== nextStep.route) {
-        navigate(nextStep.route)
+      if (nextMission?.createDemoSession) {
+        ensureTutorialWorkoutSession()
+      }
+
+      const nextRoute = getMissionRoute(nextMission, activeSession)
+
+      if (nextRoute && canShowTutorialOnPath(location.pathname) && location.pathname !== nextRoute) {
+        navigate(nextRoute)
       }
 
       return true
     },
-    [location.pathname, navigate, state.tutorialCurrentStep, stopTutorialUi, updateState, user]
+    [activeSession, ensureTutorialWorkoutSession, location.pathname, navigate, state.firstStepsCompleted, stopTutorialUi, updateState, user]
   )
 
   const completeTutorial = useCallback(
@@ -592,8 +605,8 @@ export function TutorialProvider({ children }) {
   )
 
   const continueTutorial = useCallback(() => {
-    return startTutorial(state.tutorialCurrentFlow || getFlowForPath(location.pathname), { resume: true })
-  }, [location.pathname, startTutorial, state.tutorialCurrentFlow])
+    return startTutorial('first-steps', { resume: true })
+  }, [startTutorial])
 
   const openTutorialSection = useCallback(
     (sectionId) => {
@@ -610,17 +623,28 @@ export function TutorialProvider({ children }) {
   const restartTutorial = useCallback(() => {
     cleanupTutorialWorkoutSession('restarted')
     resetTutorialState(user)
-    markWelcomeTutorialPending(user)
     const nextState = getTutorialState(user)
-    setState(nextState)
+    const startedAt = nowIso()
+    const restartedState = {
+      ...nextState,
+      firstStepsStarted: true,
+      firstStepsPaused: false,
+      firstStepsDismissed: false,
+      hasSeenWelcome: true,
+      dismissedWelcome: true,
+      tutorialStartedAt: startedAt,
+      tutorialCurrentFlow: 'first-steps',
+      tutorialCurrentStep: 0,
+      firstStepsLastFocusedMission: FIRST_STEPS_MISSIONS[0]?.id || '',
+    }
+
+    setState(saveTutorialState(user, restartedState))
     setWelcomePromptVisible(false)
     setActiveFlowId('')
     setActiveStepIndex(0)
     unlockGlobalScroll()
-    window.setTimeout(() => {
-      startTutorial('welcome')
-    }, 80)
-  }, [cleanupTutorialWorkoutSession, startTutorial, user])
+    navigate(getMissionRoute(FIRST_STEPS_MISSIONS[0], activeSession))
+  }, [activeSession, cleanupTutorialWorkoutSession, navigate, user])
 
   const resetAllTutorials = useCallback(() => {
     restartTutorial()
@@ -673,11 +697,23 @@ export function TutorialProvider({ children }) {
 
     const timeoutId = window.setTimeout(() => {
       const nextState = getTutorialState(user)
-      setState(nextState)
+      const shouldStartInline = shouldShowWelcomeTutorial(user, nextState)
+      const inlineState = shouldStartInline
+        ? saveTutorialState(user, {
+          ...nextState,
+          firstStepsStarted: true,
+          firstStepsPaused: false,
+          firstStepsDismissed: false,
+          hasSeenWelcome: true,
+          dismissedWelcome: true,
+          tutorialStartedAt: nextState.tutorialStartedAt || nowIso(),
+          tutorialCurrentFlow: 'first-steps',
+          firstStepsLastFocusedMission: FIRST_STEPS_MISSIONS[0]?.id || '',
+        })
+        : nextState
 
-      if (shouldShowWelcomeTutorial(user, nextState)) {
-        setWelcomePromptVisible(true)
-      }
+      setState(inlineState)
+      setWelcomePromptVisible(false)
     }, 900)
 
     return () => window.clearTimeout(timeoutId)

@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react'
-import { CheckCircle2, ChevronRight, Circle, EyeOff, RotateCcw, Sparkles } from 'lucide-react'
+import { CheckCircle2, ChevronRight, Circle, EyeOff, ListChecks, RotateCcw } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 import { useTutorial } from '../../context/TutorialContext'
@@ -34,6 +34,7 @@ export default function FirstStepsChecklist({ workouts = [], history = [], activ
     resumeFirstSteps,
     pauseFirstSteps,
     dismissFirstSteps,
+    startTutorial,
     restartTutorial,
   } = useTutorial()
 
@@ -62,6 +63,9 @@ export default function FirstStepsChecklist({ workouts = [], history = [], activ
     () => firstStepMissions.find((mission) => !firstStepsCompleted[mission.id]) || firstStepMissions[0],
     [firstStepMissions, firstStepsCompleted]
   )
+  const nextMissionIndex = Math.max(0, firstStepMissions.findIndex((mission) => mission.id === nextMission?.id))
+  const totalMissions = firstStepsProgress?.total || firstStepMissions.length
+  const completedMissions = firstStepsProgress?.completed || 0
 
   if (isDismissed && !compact) return null
   if (isCompleted && !compact) return null
@@ -69,6 +73,7 @@ export default function FirstStepsChecklist({ workouts = [], history = [], activ
 
   function handleMissionClick(mission) {
     if (!mission) return
+    if (startTutorial?.('first-steps', { missionId: mission.id })) return
     focusFirstStepMission?.(mission.id)
     navigate(getMissionRoute(mission, { workouts, activeSession }))
   }
@@ -81,10 +86,10 @@ export default function FirstStepsChecklist({ workouts = [], history = [], activ
     <section className={`ff-first-steps ${compact ? 'ff-first-steps--compact' : ''}`} data-tutorial="first-steps-checklist">
       <div className="ff-first-steps__header">
         <span className="ff-first-steps__badge">
-          <Sparkles size={14} /> Primeiros passos
+          <ListChecks size={14} /> Guia do app
         </span>
         <span className="ff-first-steps__count">
-          {firstStepsProgress?.completed || 0}/{firstStepsProgress?.total || firstStepMissions.length}
+          {completedMissions}/{totalMissions} missões
         </span>
       </div>
 
@@ -95,13 +100,24 @@ export default function FirstStepsChecklist({ workouts = [], history = [], activ
             ? 'Fluxo principal concluído.'
             : isPaused
               ? 'Seu progresso foi salvo. Continue quando quiser.'
-              : 'Siga 5 passos rápidos para aprender o essencial.'}
+              : 'Complete as missões essenciais direto nas telas do app.'}
         </p>
       </div>
 
       <div className="ff-first-steps__meter" aria-hidden="true">
         <span style={{ width: `${firstStepsProgress?.percentage || 0}%` }} />
       </div>
+
+      {!compact && !isCompleted && !isPaused && nextMission ? (
+        <button type="button" className="ff-first-steps__next" onClick={() => handleMissionClick(nextMission)}>
+          <span className="ff-first-steps__next-copy">
+            <small>Próxima missão</small>
+            <strong>{nextMission.shortTitle || nextMission.title}</strong>
+            <em>Passo {nextMissionIndex + 1} de {totalMissions}</em>
+          </span>
+          <ChevronRight size={18} aria-hidden="true" />
+        </button>
+      ) : null}
 
       {!isCompleted && !isPaused ? (
         <ol className="ff-first-steps__list">
@@ -111,7 +127,7 @@ export default function FirstStepsChecklist({ workouts = [], history = [], activ
 
             return (
               <li key={mission.id} className={completed ? 'is-complete' : active ? 'is-active' : ''}>
-                <button type="button" onClick={() => handleMissionClick(mission)}>
+                <button type="button" onClick={() => handleMissionClick(mission)} aria-current={active ? 'step' : undefined}>
                   <span className="ff-first-steps__status" aria-hidden="true">
                     {completed ? <CheckCircle2 size={18} /> : <Circle size={18} />}
                   </span>

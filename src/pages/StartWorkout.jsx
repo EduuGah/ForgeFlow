@@ -875,6 +875,7 @@ function StartWorkout() {
               title="Missão: registre sua primeira série"
               description={activeSessionIsTutorial ? 'Use o card do tutorial destacado. A série de teste já vem preenchida e não entra no histórico real.' : 'Preencha kg e reps em uma série e toque em concluir. Esse dado vira histórico, volume e evolução.'}
               actionLabel={activeSessionIsTutorial ? 'Entendi' : 'Marcar como entendido'}
+              completeOnAction={false}
             />
           ) : completedSets > 0 && !firstStepsCompleted?.['finish-workout'] && tutorialState.firstStepsStarted ? (
             <FirstStepsInlineHint
@@ -882,6 +883,7 @@ function StartWorkout() {
               title="Missão: finalize com confirmação"
               description="Quando terminar, toque em Concluir treino. O ForgeFlow mostra um resumo antes de salvar."
               actionLabel="Entendi"
+              completeOnAction={false}
             />
           ) : null}
 

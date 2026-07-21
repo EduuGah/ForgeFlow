@@ -10,7 +10,6 @@ import PublicRoute from './components/auth/PublicRoute'
 import AppUrlListener from './components/auth/AppUrlListener'
 
 const AppLayout = lazy(() => import('./components/layouts/AppLayout'))
-const GuidedTutorial = lazy(() => import('./components/tutorial/GuidedTutorial'))
 
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Exercises = lazy(() => import('./pages/Exercises'))
@@ -156,9 +155,6 @@ function App() {
 
               <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
-            </Suspense>
-            <Suspense fallback={null}>
-              <GuidedTutorial />
             </Suspense>
           </TutorialProvider>
         </WorkoutSessionProvider>

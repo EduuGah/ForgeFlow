@@ -1,7 +1,7 @@
 import { CheckCircle2, Sparkles } from 'lucide-react'
 import { useTutorial } from '../../context/TutorialContext'
 
-export default function FirstStepsInlineHint({ missionId, title, description, actionLabel = 'Entendi', children }) {
+export default function FirstStepsInlineHint({ missionId, title, description, actionLabel = 'Entendi', completeOnAction = true, children }) {
   const {
     state,
     firstStepsCompleted = {},
@@ -23,7 +23,7 @@ export default function FirstStepsInlineHint({ missionId, title, description, ac
         {children ? <div className="ff-first-steps-hint__content">{children}</div> : null}
       </div>
       <div className="ff-first-steps-hint__actions">
-        {missionId ? (
+        {missionId && completeOnAction ? (
           <button type="button" onClick={() => completeFirstStepMission?.(missionId)}>
             <CheckCircle2 size={14} /> {actionLabel}
           </button>

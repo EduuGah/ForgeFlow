@@ -13,15 +13,15 @@ export default function TutorialLauncher({ compact = false }) {
   const completed = firstStepsProgress?.completed || 0
   const total = firstStepsProgress?.total || 5
   const completedText = firstStepsProgress?.isCompleted
-    ? 'Primeiros passos concluídos. Você pode reiniciar quando quiser.'
+    ? 'Missões concluídas. Você pode reiniciar quando quiser.'
     : `${completed} de ${total} missões concluídas.`
 
   return (
     <section className={`ff-tutorial-launcher ${compact ? 'ff-tutorial-launcher--compact' : ''}`} data-tutorial="settings-tutorial-panel">
       <div className="ff-tutorial-launcher__header" data-tutorial="settings-tutorial">
         <div>
-          <span className="ff-tutorial-tooltip__eyebrow">Ajuda do app</span>
-          <h3>Primeiros passos</h3>
+          <span className="ff-tutorial-tooltip__eyebrow">Central de missões</span>
+          <h3>Guia rápido</h3>
           <p>{completedText}</p>
         </div>
         <span className="ff-tutorial-launcher__progress">{completed}/{total}</span>
@@ -33,7 +33,7 @@ export default function TutorialLauncher({ compact = false }) {
 
       <div className="ff-tutorial-section-picker">
         <button type="button" className="ff-tutorial-btn ff-tutorial-btn--primary" onClick={continueTutorial}>
-          Abrir primeiros passos
+          Continuar missões
         </button>
         <button type="button" className="ff-tutorial-btn ff-tutorial-btn--ghost" onClick={restartTutorial}>
           Reiniciar missões
