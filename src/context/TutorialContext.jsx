@@ -57,6 +57,17 @@ function nowIso() {
   return new Date().toISOString()
 }
 
+function isTutorialWorkoutSession(session) {
+  return Boolean(session?.isTutorialDemo || session?.isTutorial || session?.tutorialOnly || session?.demo)
+}
+
+function hasGuidedRegisterSet(session) {
+  return (session?.exercises || []).some((exercise) =>
+    exercise?.tutorialRole === 'register-set' &&
+    (exercise.sets || []).some((set) => set?.tutorialTarget === 'register-set')
+  )
+}
+
 function getStepSection(step) {
   return step?.section || 'welcome'
 }
@@ -69,10 +80,6 @@ function getInitialStepIndex(flow, preferredStep = 0) {
 }
 
 const TUTORIAL_WORKOUT_COPY = {
-  'tutorial-exercise-warmup-bar': {
-    instructions: 'Prepare o movimento e observe como as series ficam organizadas.',
-    tips: 'Use esta etapa para se familiarizar com o treino ativo.',
-  },
   'tutorial-exercise-bench-press': {
     instructions: 'Preencha carga, repeticoes e conclua a serie quando terminar.',
     tips: 'Escolha valores simples para praticar o registro.',
@@ -80,10 +87,6 @@ const TUTORIAL_WORKOUT_COPY = {
   'tutorial-exercise-lat-pulldown': {
     instructions: 'Use a navegacao do treino ativo para alternar entre exercicios.',
     tips: 'Mantenha o foco no proximo exercicio pendente.',
-  },
-  'tutorial-exercise-squat': {
-    instructions: 'Finalize o treino quando estiver pronto para ver o fechamento.',
-    tips: 'Revise o resumo antes de confirmar a finalizacao.',
   },
 }
 
@@ -114,23 +117,8 @@ function createTutorialWorkout() {
     isTutorialDemo: true,
     exercises: [
       {
-        id: 'tutorial-warmup-bar',
-        exercise: {
-          id: 'tutorial-exercise-warmup-bar',
-          name: 'Aquecimento com barra',
-          muscleGroup: 'Mobilidade',
-          equipment: 'Barra',
-          instructions: 'Exercício de exemplo para entender a estrutura de um treino ativo.',
-          tips: 'Tudo neste modo é descartável e não entra no histórico real.',
-        },
-        restTimer: '45s',
-        sets: [
-          { id: 'tutorial-warmup-1', description: '10 repetições leves', type: 'warmup' },
-          { id: 'tutorial-warmup-2', description: '8 repetições controladas', type: 'warmup' },
-        ],
-      },
-      {
         id: 'tutorial-bench-press',
+        tutorialRole: 'register-set',
         exercise: {
           id: 'tutorial-exercise-bench-press',
           name: 'Supino reto',
@@ -141,9 +129,8 @@ function createTutorialWorkout() {
         },
         restTimer: '90s',
         sets: [
-          { id: 'tutorial-bench-1', description: '8-12 reps', type: 'working' },
-          { id: 'tutorial-bench-2', description: '8-12 reps', type: 'working' },
-          { id: 'tutorial-bench-3', description: '8-12 reps', type: 'working' },
+          { id: 'tutorial-bench-1', description: 'Série guiada', type: 'working', weight: '40', reps: '10', tutorialTarget: 'register-set' },
+          { id: 'tutorial-bench-2', description: 'Opcional', type: 'working', weight: '', reps: '' },
         ],
       },
       {
@@ -158,24 +145,7 @@ function createTutorialWorkout() {
         },
         restTimer: '75s',
         sets: [
-          { id: 'tutorial-pulldown-1', description: '10-12 reps', type: 'working' },
-          { id: 'tutorial-pulldown-2', description: '10-12 reps', type: 'working' },
-        ],
-      },
-      {
-        id: 'tutorial-squat',
-        exercise: {
-          id: 'tutorial-exercise-squat',
-          name: 'Agachamento',
-          muscleGroup: 'Pernas',
-          equipment: 'Barra',
-          instructions: 'Exercício final da demonstração para explicar finalização e histórico.',
-          tips: 'Ao finalizar a demo, o ForgeFlow descarta o treino sem enviar para o backend.',
-        },
-        restTimer: '120s',
-        sets: [
-          { id: 'tutorial-squat-1', description: '6-10 reps', type: 'working' },
-          { id: 'tutorial-squat-2', description: '6-10 reps', type: 'working' },
+          { id: 'tutorial-pulldown-1', description: 'Opcional', type: 'working' },
         ],
       },
     ],
@@ -184,7 +154,7 @@ function createTutorialWorkout() {
 
 export function TutorialProvider({ children }) {
   const { user, loadingUser } = useAuth()
-  const { activeSession, startSession, completedSets } = useWorkoutSession()
+  const { activeSession, startSession, completedSets, finishSession, cancelSession } = useWorkoutSession()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -259,11 +229,11 @@ export function TutorialProvider({ children }) {
   )
 
   const ensureTutorialWorkoutSession = useCallback(() => {
-    if (activeSession && !activeSession.isTutorial && !activeSession.tutorialOnly) {
+    if (activeSession && !isTutorialWorkoutSession(activeSession)) {
       return false
     }
 
-    if (activeSession?.isTutorial || activeSession?.tutorialOnly) {
+    if (isTutorialWorkoutSession(activeSession) && hasGuidedRegisterSet(activeSession)) {
       return true
     }
 
@@ -277,6 +247,17 @@ export function TutorialProvider({ children }) {
     setWelcomePromptVisible(false)
     unlockGlobalScroll()
   }, [])
+
+  const cleanupTutorialWorkoutSession = useCallback(
+    (reason = 'completed') => {
+      if (!isTutorialWorkoutSession(activeSession)) return
+
+      finishSession({ durationSeconds: 0, tutorialCleanupReason: reason }).catch(() => {
+        cancelSession()
+      })
+    },
+    [activeSession, cancelSession, finishSession]
+  )
 
 
   const firstStepsCompletedMap = useMemo(
@@ -460,11 +441,16 @@ export function TutorialProvider({ children }) {
   const completeTutorial = useCallback(
     (options = {}) => {
       if (!activeFlow) {
+        cleanupTutorialWorkoutSession('completed')
         stopTutorialUi()
         return
       }
 
-      const finishesFullTour = Boolean(options.full || activeFlow.id === 'welcome')
+      const completedAt = nowIso()
+      const flowMissionIds = (activeFlow.steps || []).map((step) => step.id)
+      const finishesFullTour = Boolean(
+        options.full || FIRST_STEPS_MISSION_IDS.every((missionId) => flowMissionIds.includes(missionId))
+      )
       const completedSections = finishesFullTour
         ? uniqueValues(Object.keys(tutorialSections))
         : uniqueValues([
@@ -473,27 +459,45 @@ export function TutorialProvider({ children }) {
           getStepSection(activeStep),
         ])
 
-      updateState((current) => ({
-        ...current,
-        tutorialCompleted: finishesFullTour ? true : current.tutorialCompleted,
-        tutorialCompletedAt: finishesFullTour ? nowIso() : current.tutorialCompletedAt,
-        tutorialPaused: false,
-        tutorialSkipped: Boolean(options.skipped || current.tutorialSkipped),
-        hasSeenWelcome: activeFlow.id === 'welcome' || options.full ? true : current.hasSeenWelcome,
-        dismissedWelcome: activeFlow.id === 'welcome' || options.full ? true : current.dismissedWelcome,
-        tutorialSeenSections: uniqueValues([...(current.tutorialSeenSections || []), ...completedSections]),
-        completedFlows: finishesFullTour
-          ? Object.keys(tutorialFlows).reduce((acc, flowId) => ({ ...acc, [flowId]: true }), {})
-          : {
-            ...(current.completedFlows || {}),
-            [activeFlow.id]: true,
-          },
-        completedSections,
-      }))
+      updateState((current) => {
+        const existingFirstStepsCompleted = current.firstStepsCompleted && typeof current.firstStepsCompleted === 'object'
+          ? current.firstStepsCompleted
+          : {}
+        const completedFirstSteps = finishesFullTour
+          ? FIRST_STEPS_MISSION_IDS.reduce(
+            (acc, missionId) => ({ ...acc, [missionId]: acc[missionId] || completedAt }),
+            { ...existingFirstStepsCompleted }
+          )
+          : current.firstStepsCompleted
 
+        return {
+          ...current,
+          tutorialCompleted: finishesFullTour ? true : current.tutorialCompleted,
+          tutorialCompletedAt: finishesFullTour ? completedAt : current.tutorialCompletedAt,
+          tutorialPaused: false,
+          tutorialSkipped: Boolean(options.skipped || current.tutorialSkipped),
+          hasSeenWelcome: finishesFullTour || activeFlow.id === 'welcome' || options.full ? true : current.hasSeenWelcome,
+          dismissedWelcome: finishesFullTour || activeFlow.id === 'welcome' || options.full ? true : current.dismissedWelcome,
+          tutorialSeenSections: uniqueValues([...(current.tutorialSeenSections || []), ...completedSections]),
+          firstStepsStarted: finishesFullTour ? true : current.firstStepsStarted,
+          firstStepsPaused: finishesFullTour ? false : current.firstStepsPaused,
+          firstStepsDismissed: finishesFullTour ? true : current.firstStepsDismissed,
+          firstStepsCompleted: completedFirstSteps,
+          firstStepsCompletedAt: finishesFullTour ? current.firstStepsCompletedAt || completedAt : current.firstStepsCompletedAt,
+          completedFlows: finishesFullTour
+            ? Object.keys(tutorialFlows).reduce((acc, flowId) => ({ ...acc, [flowId]: true }), {})
+            : {
+              ...(current.completedFlows || {}),
+              [activeFlow.id]: true,
+            },
+          completedSections,
+        }
+      })
+
+      cleanupTutorialWorkoutSession('completed')
       stopTutorialUi()
     },
-    [activeFlow, activeStep, state.completedSections, stopTutorialUi, updateState]
+    [activeFlow, activeStep, cleanupTutorialWorkoutSession, state.completedSections, stopTutorialUi, updateState]
   )
 
   const nextStep = useCallback(() => {
@@ -527,8 +531,9 @@ export function TutorialProvider({ children }) {
       updateState((current) => ({ ...current, tutorialPaused: true }))
     }
 
+    cleanupTutorialWorkoutSession('paused')
     stopTutorialUi()
-  }, [activeFlow, activeStepIndex, persistCurrentPosition, stopTutorialUi, updateState])
+  }, [activeFlow, activeStepIndex, cleanupTutorialWorkoutSession, persistCurrentPosition, stopTutorialUi, updateState])
 
   const skipAll = useCallback(() => {
     updateState((current) => ({
@@ -551,8 +556,9 @@ export function TutorialProvider({ children }) {
     }))
 
     clearWelcomeTutorialPending(user)
+    cleanupTutorialWorkoutSession('skipped')
     stopTutorialUi()
-  }, [stopTutorialUi, updateState, user])
+  }, [cleanupTutorialWorkoutSession, stopTutorialUi, updateState, user])
 
   const closeWelcomePrompt = useCallback(
     ({ dontShowAgain = false, pause = false } = {}) => {
@@ -602,6 +608,7 @@ export function TutorialProvider({ children }) {
   )
 
   const restartTutorial = useCallback(() => {
+    cleanupTutorialWorkoutSession('restarted')
     resetTutorialState(user)
     markWelcomeTutorialPending(user)
     const nextState = getTutorialState(user)
@@ -613,7 +620,7 @@ export function TutorialProvider({ children }) {
     window.setTimeout(() => {
       startTutorial('welcome')
     }, 80)
-  }, [startTutorial, user])
+  }, [cleanupTutorialWorkoutSession, startTutorial, user])
 
   const resetAllTutorials = useCallback(() => {
     restartTutorial()
@@ -734,7 +741,7 @@ export function TutorialProvider({ children }) {
   useEffect(() => {
     if (!state.firstStepsStarted || state.firstStepsDismissed) return
 
-    if (activeSession && !activeSession.isTutorial && !activeSession.tutorialOnly) {
+    if (activeSession && !isTutorialWorkoutSession(activeSession)) {
       completeFirstStepMission('start-workout')
     }
 

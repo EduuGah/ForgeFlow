@@ -216,6 +216,7 @@ export function createWorkoutSession(workout) {
     workoutName: workout.name,
     isTutorial: Boolean(workout.isTutorial || workout.tutorialOnly),
     tutorialOnly: Boolean(workout.isTutorial || workout.tutorialOnly),
+    isTutorialDemo: Boolean(workout.isTutorialDemo || workout.demo || workout.isTutorial || workout.tutorialOnly),
     startedAt: nowIso(),
     notes: '',
     exercises: workout.exercises.map((item) => {
@@ -225,6 +226,7 @@ export function createWorkoutSession(workout) {
         id: safeCryptoId(),
         originalExerciseId: item.exercise.id,
         exercise: item.exercise,
+        tutorialRole: item.tutorialRole || '',
         skipped: false,
         restTimer: item.restTimer || 'Desligado',
         sets: item.sets.map((set) => {
@@ -236,11 +238,12 @@ export function createWorkoutSession(workout) {
 
           return {
             id: safeCryptoId(),
-            plannedDescription: set.description,
+            plannedDescription: set.description || set.plannedDescription || (type === 'warmup' ? 'Aquecimento' : `Série ${workingSetNumber}`),
             type,
             setNumber: type === 'warmup' ? null : workingSetNumber,
-            weight: '',
-            reps: '',
+            weight: set.weight === undefined || set.weight === null ? '' : String(set.weight),
+            reps: set.reps === undefined || set.reps === null ? '' : String(set.reps),
+            tutorialTarget: set.tutorialTarget || '',
             completed: false,
             isPR: false,
             isWeightPR: false,

@@ -1,4 +1,4 @@
-import { Dumbbell, ListChecks, Plus } from 'lucide-react'
+import { Dumbbell, ListChecks, Plus, Sparkles } from 'lucide-react'
 
 export function ActiveWorkoutHero({
   activeSession,
@@ -20,6 +20,7 @@ export function ActiveWorkoutHero({
 }) {
   const totalExercises = activeSession.exercises?.length || 0
   const focusName = focusExercise ? getExerciseName(focusExercise) : 'Próximo exercício'
+  const isTutorialSession = Boolean(activeSession.isTutorialDemo || activeSession.isTutorial || activeSession.tutorialOnly || activeSession.demo)
 
   function handleFinishClick() {
     if (appSettings.confirmBeforeFinishWorkout) {
@@ -31,16 +32,16 @@ export function ActiveWorkoutHero({
   }
 
   return (
-    <header className="ff-forge-active-hero" data-tutorial="active-workout-header">
+    <header className={`ff-forge-active-hero ${isTutorialSession ? 'is-tutorial-session' : ''}`} data-tutorial="active-workout-header">
       <div className="ff-forge-active-hero__top">
         <button type="button" onClick={onBack} className="ff-forge-active-hero__back" aria-label="Voltar para treinos">
           <span>‹</span>
         </button>
 
         <div className="ff-forge-active-hero__title">
-          <span>Treino ativo</span>
+          <span>{isTutorialSession ? 'Tutorial ativo' : 'Treino ativo'}</span>
           <h1>{activeSession.workoutName || 'Treinamento'}</h1>
-          {(activeSession.isTutorial || activeSession.tutorialOnly) && (
+          {isTutorialSession && (
             <small className="ff-tutorial-demo-ribbon">Modo tutorial · não salva histórico real</small>
           )}
         </div>
@@ -52,9 +53,17 @@ export function ActiveWorkoutHero({
           className="ff-forge-active-hero__finish"
           data-tutorial="active-finish-workout-hero"
         >
-          {savingWorkout ? 'Salvando...' : 'Concluir'}
+          {savingWorkout ? 'Salvando...' : isTutorialSession ? 'Concluir guia' : 'Concluir'}
         </button>
       </div>
+
+      {isTutorialSession && (
+        <div className="ff-guided-workout-hero-banner">
+          <Sparkles size={17} />
+          <span>Guia de teste</span>
+          <strong>Use a série destacada. Nada daqui entra no histórico real.</strong>
+        </div>
+      )}
 
       <div className="ff-forge-active-hero__progress" aria-label={`${progressPercent}% concluído`}>
         <div style={{ width: `${progressPercent}%` }} />
@@ -103,8 +112,10 @@ export function ExerciseJumpNav({
   onFocusExercise,
   onAddExercise,
 }) {
+  const isTutorialSession = sessionExercises.some((exercise) => exercise.tutorialRole)
+
   return (
-    <section className="ff-forge-exercise-strip" data-tutorial="active-next-exercise" aria-label="Lista de exercícios do treino">
+    <section className={`ff-forge-exercise-strip ${isTutorialSession ? 'is-tutorial-session' : ''}`} data-tutorial="active-next-exercise" aria-label="Lista de exercícios do treino">
       <div className="ff-forge-exercise-strip__label">
         <ListChecks size={15} />
         <span>Exercícios</span>
@@ -125,6 +136,7 @@ export function ExerciseJumpNav({
       <div className="ff-forge-exercise-strip__scroller">
         {sessionExercises.map((exercise, index) => {
           const isActive = selectedExercise?.id === exercise.id
+          const isRegisterGuide = exercise.tutorialRole === 'register-set'
           const completed = (exercise.sets || []).filter((set) => set.completed && set.type !== 'warmup').length
           const total = (exercise.sets || []).filter((set) => set.type !== 'warmup').length || 1
           const media = getSessionExerciseMedia?.(exercise)
@@ -132,7 +144,11 @@ export function ExerciseJumpNav({
           const lastSet = performance.lastSet
           const exerciseTitle = getExerciseName(exercise)
           const subtitle = getExerciseSubtitle?.(exercise)
-          const lastLabel = lastSet?.weight || lastSet?.reps ? `Último: ${lastSet.weight || 0}kg × ${lastSet.reps || 0}` : 'Sem registro anterior'
+          const lastLabel = isRegisterGuide
+            ? 'Card do tutorial'
+            : lastSet?.weight || lastSet?.reps
+              ? `Último: ${lastSet.weight || 0}kg × ${lastSet.reps || 0}`
+              : 'Sem registro anterior'
           const progressWidth = Math.min(100, Math.round((completed / total) * 100))
 
           return (
@@ -140,7 +156,7 @@ export function ExerciseJumpNav({
               key={exercise.id}
               type="button"
               onClick={() => onFocusExercise(exercise.id)}
-              className={`ff-forge-exercise-strip__item ${isActive ? 'is-active' : ''}`}
+              className={`ff-forge-exercise-strip__item ${isActive ? 'is-active' : ''} ${isRegisterGuide ? 'is-register-guide' : ''}`}
             >
               <span className="ff-forge-exercise-strip__thumb">
                 {media ? <img src={media} alt="" loading="lazy" decoding="async" /> : index + 1}

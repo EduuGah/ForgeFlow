@@ -374,6 +374,7 @@ function GoalFormModal({
   const [exerciseSearch, setExerciseSearch] = useState('')
   const [showExerciseLibrary, setShowExerciseLibrary] = useState(false)
   const [deadline, setDeadline] = useState('')
+  const [formError, setFormError] = useState('')
 
   const selectedConfig = useMemo(() => {
     return getGoalTypeConfig(type)
@@ -401,6 +402,8 @@ function GoalFormModal({
 
   useEffect(() => {
     if (!open) return
+
+    setFormError('')
 
     if (goal) {
       setTitle(goal.title || '')
@@ -449,6 +452,7 @@ function GoalFormModal({
     setCurrentValue('')
     setExerciseName('')
     setExerciseId('')
+    setFormError('')
 
     if (!goal) {
       setTitle(config.titleExample)
@@ -461,6 +465,7 @@ function GoalFormModal({
 
     setExerciseId(id)
     setExerciseName(name)
+    setFormError('')
     setShowExerciseLibrary(false)
 
     if (!goal && name && (!title || title === selectedConfig.titleExample)) {
@@ -474,19 +479,21 @@ function GoalFormModal({
     const parsedTarget = Number(targetValue)
 
     if (!title.trim()) {
-      alert('Informe um nome para a meta.')
+      setFormError('Informe um nome para a meta.')
       return
     }
 
     if (!Number.isFinite(parsedTarget) || parsedTarget <= 0) {
-      alert('Informe um número válido no campo "Quero alcançar".')
+      setFormError('Informe um número válido no campo "Quero alcançar".')
       return
     }
 
     if (type === 'exercise_pr_weight' && !exerciseName.trim()) {
-      alert('Escolha um exercício na biblioteca.')
+      setFormError('Escolha um exercício na biblioteca.')
       return
     }
+
+    setFormError('')
 
     onSubmit({
       title: title.trim(),
@@ -756,6 +763,12 @@ function GoalFormModal({
               </div>
             </aside>
           </div>
+
+          {formError && (
+            <div role="alert" className="mt-5 rounded-2xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm font-bold text-[var(--ff-danger-text)]">
+              {formError}
+            </div>
+          )}
 
           <div className="ff-goal-modal__footer mt-6 grid grid-cols-1 gap-3 sm:flex sm:justify-end">
             <Button

@@ -15094,3 +15094,181 @@ body.ff-scroll-locked-by-workout-modal .ff-mobile-workout-action-bar,
   background: rgba(139, 92, 246, 0.12);
   color: #6d28d9;
 }
+
+/* Start workout tutorial polish */
+.ff-start-workout-native-page.is-tutorial-session .ff-start-workout-main-grid {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.ff-start-workout-native-page.is-tutorial-session [data-tutorial='active-workout-sidebar'] {
+  display: none !important;
+}
+
+.ff-forge-active-hero.is-tutorial-session {
+  border: 2px solid color-mix(in srgb, #f59e0b 64%, var(--ff-border));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, #f59e0b 18%, var(--ff-card)), color-mix(in srgb, #14b8a6 10%, var(--ff-surface-2)));
+  box-shadow: 0 18px 42px rgba(245, 158, 11, 0.18);
+}
+
+.ff-forge-active-hero.is-tutorial-session .ff-forge-active-hero__title span,
+.ff-tutorial-demo-ribbon,
+.ff-guided-workout-hero-banner span,
+.ff-guided-workout-card-banner span,
+.ff-guided-register-callout span {
+  letter-spacing: 0;
+}
+
+.ff-tutorial-demo-ribbon {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.16);
+  padding: 4px 8px;
+  color: #fbbf24;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.ff-guided-workout-hero-banner,
+.ff-guided-workout-card-banner,
+.ff-guided-register-callout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(245, 158, 11, 0.36);
+  border-radius: 14px;
+  background: rgba(245, 158, 11, 0.14);
+  padding: 10px 12px;
+  color: var(--ff-text);
+}
+
+.ff-guided-workout-hero-banner {
+  margin-top: 12px;
+}
+
+.ff-guided-workout-hero-banner svg,
+.ff-guided-workout-card-banner svg,
+.ff-guided-register-callout svg {
+  flex-shrink: 0;
+  color: #f59e0b;
+}
+
+.ff-guided-workout-hero-banner span,
+.ff-guided-workout-card-banner span,
+.ff-guided-register-callout span {
+  flex-shrink: 0;
+  color: #fbbf24;
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.ff-guided-workout-hero-banner strong,
+.ff-guided-workout-card-banner strong,
+.ff-guided-register-callout strong {
+  min-width: 0;
+  color: var(--ff-text);
+  font-size: 0.84rem;
+  font-weight: 850;
+  line-height: 1.25;
+}
+
+.ff-forge-active-hero.is-tutorial-session .ff-forge-active-hero__finish {
+  background: #f59e0b;
+  color: #111827;
+}
+
+.ff-forge-exercise-strip.is-tutorial-session {
+  border-color: rgba(245, 158, 11, 0.32);
+  background: color-mix(in srgb, #f59e0b 8%, var(--ff-card));
+}
+
+.ff-forge-exercise-strip__item.is-register-guide {
+  border-color: rgba(245, 158, 11, 0.55) !important;
+  background: color-mix(in srgb, #f59e0b 14%, var(--ff-surface-2)) !important;
+}
+
+.ff-start-workout-native-page.is-tutorial-session .ff-active-workout-exercise-flow {
+  width: min(100%, 860px);
+  margin-inline: auto;
+}
+
+.ff-start-workout-native-page.is-tutorial-session .ff-hevy-active-exercise.is-tutorial-session {
+  margin-bottom: 14px;
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  border-radius: 20px;
+  background: color-mix(in srgb, #f59e0b 7%, var(--ff-card));
+  padding: 14px;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.16);
+}
+
+.ff-start-workout-native-page.is-tutorial-session .ff-hevy-active-exercise.is-register-guide {
+  border: 2px solid color-mix(in srgb, #f59e0b 68%, var(--ff-border));
+  box-shadow: 0 18px 44px rgba(245, 158, 11, 0.22);
+}
+
+.ff-guided-workout-card-banner {
+  margin: 2px 6px 12px;
+}
+
+.ff-guided-workout-card-banner.is-primary {
+  background: rgba(245, 158, 11, 0.2);
+}
+
+.ff-guided-register-callout {
+  margin: 10px 6px 8px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.24), rgba(20, 184, 166, 0.12));
+}
+
+.ff-hevy-set-row.is-guided-register {
+  min-height: 66px;
+  border-radius: 16px;
+  outline: 3px solid #f59e0b;
+  outline-offset: 2px;
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.36), color-mix(in srgb, #f59e0b 16%, var(--ff-surface-2)));
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.24), 0 16px 34px rgba(245, 158, 11, 0.2);
+}
+
+.ff-hevy-set-row.is-guided-register input {
+  border-radius: 10px !important;
+  background: rgba(255, 255, 255, 0.16) !important;
+}
+
+.ff-hevy-set-row.is-guided-register .ff-hevy-set-check {
+  background: #f59e0b;
+  color: #111827;
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2);
+}
+
+.ff-hevy-set-row.is-guided-register.is-done {
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.86), rgba(5, 150, 105, 0.76));
+  outline-color: #10b981;
+}
+
+.ff-hevy-set-row.is-guided-register.is-done .ff-hevy-set-check {
+  background: #10b981;
+  color: #052e1a;
+}
+
+.ff-hevy-set-row.is-guided-register .ff-hevy-set-number:disabled,
+.ff-hevy-set-row.is-guided-register .ff-hevy-set-prev:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+@media (max-width: 640px) {
+  .ff-guided-workout-hero-banner,
+  .ff-guided-workout-card-banner,
+  .ff-guided-register-callout {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .ff-guided-workout-hero-banner strong,
+  .ff-guided-workout-card-banner strong,
+  .ff-guided-register-callout strong {
+    flex-basis: 100%;
+  }
+}

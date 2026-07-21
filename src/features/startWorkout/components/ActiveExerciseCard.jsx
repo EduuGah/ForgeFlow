@@ -13,6 +13,7 @@ import {
   MoreVertical,
   Plus,
   Repeat2,
+  Sparkles,
   Trash2,
   X,
 } from 'lucide-react'
@@ -128,6 +129,7 @@ export default function ActiveExerciseCard({
   replaceExerciseId,
   replaceSearch,
   replacementOptions,
+  isTutorialSession = false,
   onRegisterCardRef,
   onToggleCollapse,
   onToggleReplace,
@@ -160,6 +162,16 @@ export default function ActiveExerciseCard({
   const [replaceMode, setReplaceMode] = useState(false)
   const [replaceMuscleFilter, setReplaceMuscleFilter] = useState('')
   const [replaceEquipmentFilter, setReplaceEquipmentFilter] = useState('')
+  const isRegisterGuideExercise = isTutorialSession && sessionExercise.tutorialRole === 'register-set'
+  const guidedRegisterSetId = useMemo(() => {
+    if (!isRegisterGuideExercise) return ''
+
+    const sets = sessionExercise.sets || []
+    const guidedSet = sets.find((set) => set.tutorialTarget === 'register-set')
+    const firstWorkingSet = sets.find((set) => !isWarmupSet(set))
+
+    return (guidedSet || firstWorkingSet)?.id || ''
+  }, [isRegisterGuideExercise, sessionExercise.sets])
 
   const replaceMuscleOptions = useMemo(
     () => getUniqueFilterValues(replacementOptions, getExerciseMuscle),
@@ -337,7 +349,7 @@ export default function ActiveExerciseCard({
   const canApplySuggestion = Boolean(performance?.lastSet?.weight || performance?.lastSet?.reps)
   const canRepeatLastSet = getFilledWorkingSets().length > 0 || canApplySuggestion
 
-  const exerciseOptionsModal = isOptionsOpen && typeof document !== 'undefined'
+  const exerciseOptionsModal = !isTutorialSession && isOptionsOpen && typeof document !== 'undefined'
     ? createPortal(
       <div className="ff-active-exercise-actions-modal" role="dialog" aria-modal="true" aria-label={`Opções de ${getExerciseName(sessionExercise)}`}>
         <button
@@ -482,7 +494,8 @@ export default function ActiveExerciseCard({
     <article
       ref={(node) => onRegisterCardRef(sessionExercise.id, node)}
       data-tutorial="active-exercise-card"
-      className={`ff-hevy-active-exercise scroll-mt-24 ${isCurrent ? 'is-current' : ''} ${sessionExercise.skipped ? 'is-skipped' : ''}`}
+      data-tutorial-role={isRegisterGuideExercise ? 'register-set' : undefined}
+      className={`ff-hevy-active-exercise scroll-mt-24 ${isCurrent ? 'is-current' : ''} ${sessionExercise.skipped ? 'is-skipped' : ''} ${isTutorialSession ? 'is-tutorial-session' : ''} ${isRegisterGuideExercise ? 'is-register-guide' : ''}`}
     >
       <header className="ff-hevy-active-exercise__header">
         <div className="ff-hevy-active-exercise__media">
@@ -517,26 +530,36 @@ export default function ActiveExerciseCard({
             {isCollapsed ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
           </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              if (replaceExerciseId === sessionExercise.id) {
-                closeExerciseOptions()
-                return
-              }
+          {!isTutorialSession && (
+            <button
+              type="button"
+              onClick={() => {
+                if (replaceExerciseId === sessionExercise.id) {
+                  closeExerciseOptions()
+                  return
+                }
 
-              setReplaceMode(false)
-              onToggleReplace(sessionExercise.id)
-            }}
-            className="ff-hevy-active-exercise__menu"
-            aria-label={replaceExerciseId === sessionExercise.id ? 'Fechar opções do exercício' : 'Abrir opções do exercício'}
-          >
-            <MoreVertical size={22} />
-          </button>
+                setReplaceMode(false)
+                onToggleReplace(sessionExercise.id)
+              }}
+              className="ff-hevy-active-exercise__menu"
+              aria-label={replaceExerciseId === sessionExercise.id ? 'Fechar opções do exercício' : 'Abrir opções do exercício'}
+            >
+              <MoreVertical size={22} />
+            </button>
+          )}
         </div>
       </header>
 
       {exerciseOptionsModal}
+
+      {isTutorialSession && (
+        <div className={`ff-guided-workout-card-banner ${isRegisterGuideExercise ? 'is-primary' : ''}`}>
+          <Sparkles size={16} />
+          <span>{isRegisterGuideExercise ? 'Card do tutorial' : 'Parte opcional do guia'}</span>
+          <strong>{isRegisterGuideExercise ? 'Registre a série destacada abaixo.' : 'Use só se quiser navegar.'}</strong>
+        </div>
+      )}
 
       {isCurrent && (
         <div className="ff-hevy-current-exercise">
@@ -545,7 +568,7 @@ export default function ActiveExerciseCard({
         </div>
       )}
 
-      {!isCollapsed && progressionSuggestion && (
+      {!isCollapsed && !isTutorialSession && progressionSuggestion && (
         <div className={`ff-active-progression-card ff-active-progression-card--${progressionSuggestion.tone || 'neutral'}`}>
           <div className="ff-active-progression-card__copy">
             <span>{progressionSuggestion.badge || 'Sugestão'}</span>
@@ -564,7 +587,7 @@ export default function ActiveExerciseCard({
         </div>
       )}
 
-      {!isCollapsed && <p className="ff-hevy-exercise-note">Dica: toque em “Anterior” ou em “Usar última” para preencher a série mais rápido.</p>}
+      {!isCollapsed && !isTutorialSession && <p className="ff-hevy-exercise-note">Dica: toque em “Anterior” ou em “Usar última” para preencher a série mais rápido.</p>}
 
       {!isCollapsed && (
       <div className="ff-hevy-set-table" aria-label={`Séries de ${getExerciseName(sessionExercise)}`}>
@@ -578,20 +601,37 @@ export default function ActiveExerciseCard({
         </div>
 
         {(sessionExercise.sets || []).map((set, setIndex) => {
-          const isWarmup = set?.type === 'warmup'
+          const isWarmup = isWarmupSet(set)
           const isCompleted = Boolean(set.completed)
+          const isGuidedRegisterRow = isRegisterGuideExercise && set.id === guidedRegisterSetId
+          const tutorialTarget = isGuidedRegisterRow
+            ? 'guided-register-set-row'
+            : isWarmup
+              ? 'active-warmup-set-row'
+              : 'active-set-row'
           const previousSet = getPreviousSetForRow(performance, set, setIndex)
           const previousLabel = getPreviousLabel(previousSet)
           const hasPreviousValues = Boolean(previousSet?.weight || previousSet?.reps)
 
           return (
             <Fragment key={set.id}>
-            <div data-set-row-id={set.id} data-tutorial="active-set-row" className={`ff-hevy-set-row ${isCompleted ? 'is-done' : ''} ${isWarmup ? 'is-warmup' : ''}`}>
+            {isGuidedRegisterRow && (
+              <div className="ff-guided-register-callout" data-tutorial="guided-register-callout">
+                <Sparkles size={15} />
+                <span>Série de teste</span>
+                <strong>Os valores já estão prontos. Toque no check para registrar.</strong>
+              </div>
+            )}
+            <div data-set-row-id={set.id} data-tutorial={tutorialTarget} className={`ff-hevy-set-row ${isCompleted ? 'is-done' : ''} ${isWarmup ? 'is-warmup' : ''} ${isGuidedRegisterRow ? 'is-guided-register' : ''}`}>
               <button
                 type="button"
-                onClick={() => onToggleSetWarmup(sessionExercise.id, set.id)}
+                onClick={() => {
+                  if (isTutorialSession) return
+                  onToggleSetWarmup(sessionExercise.id, set.id)
+                }}
                 className="ff-hevy-set-number"
-                aria-label="Alternar aquecimento"
+                disabled={isTutorialSession}
+                aria-label={isTutorialSession ? 'Série guiada' : 'Alternar aquecimento'}
               >
                 {isWarmup ? 'A' : set.setNumber}
               </button>
@@ -600,7 +640,7 @@ export default function ActiveExerciseCard({
                 type="button"
                 className="ff-hevy-set-prev"
                 onClick={() => applyPreviousSet(set.id, previousSet)}
-                disabled={!hasPreviousValues}
+                disabled={!hasPreviousValues || isTutorialSession}
                 title={hasPreviousValues ? 'Usar carga e reps anteriores' : 'Sem registro anterior'}
                 aria-label={hasPreviousValues ? 'Usar carga e repetições anteriores nesta série' : 'Sem registro anterior'}
               >
@@ -682,7 +722,7 @@ export default function ActiveExerciseCard({
       </div>
       )}
 
-      {!isCollapsed && (
+      {!isCollapsed && !isTutorialSession && (
       <div className="ff-hevy-set-actions ff-hevy-set-actions--smart" data-tutorial="active-add-set-button">
         <button type="button" onClick={handleRepeatLastSet} disabled={!canRepeatLastSet} className="ff-hevy-repeat-set-button">
           <Repeat2 size={18} />

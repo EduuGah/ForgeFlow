@@ -274,7 +274,7 @@ function SettingsExperienceSection({ onNavigate }) {
           onClick={() => window.dispatchEvent(new CustomEvent('forgeflow:start-tutorial', { detail: { flowId: 'workout' } }))}
           className="w-full"
         >
-          Abrir treino teste
+          Abrir treino guiado
         </Button>
         <Button type="button" variant="ghost" onClick={() => onNavigate('/workouts')} className="w-full">
           Ir para treinos
@@ -694,32 +694,36 @@ function Settings() {
     const file = event.target.files?.[0]
     if (!file) return
 
-    const confirmed = window.confirm('Deseja importar este backup? Os dados do arquivo serão adicionados à sua conta.')
-    if (!confirmed) {
-      event.target.value = ''
-      return
-    }
+    event.target.value = ''
 
-    try {
-      const text = await file.text()
-      const backup = JSON.parse(text)
-      const result = await apiFetch('/import-data', {
-        method: 'POST',
-        body: JSON.stringify({ backup, mode: 'merge' }),
-      })
-      showToast('success', 'Backup importado', result?.message || 'Os dados foram importados.')
-    } catch (error) {
-      showToast('error', 'Erro ao importar', error.message || 'Não foi possível importar o backup.')
-    } finally {
-      event.target.value = ''
-    }
+    setConfirmModal({
+      title: 'Importar backup?',
+      description: 'Os dados do arquivo serão adicionados à sua conta. Nada será apagado no modo atual.',
+      confirmText: 'Importar',
+      variant: 'default',
+      onConfirm: async () => {
+        setConfirmModal(null)
+
+        try {
+          const text = await file.text()
+          const backup = JSON.parse(text)
+          const result = await apiFetch('/import-data', {
+            method: 'POST',
+            body: JSON.stringify({ backup, mode: 'merge' }),
+          })
+          showToast('success', 'Backup importado', result?.message || 'Os dados foram importados.')
+        } catch (error) {
+          showToast('error', 'Erro ao importar', error.message || 'Não foi possível importar o backup.')
+        }
+      },
+    })
   }
 
   const summaryCards = [
     { icon: Moon, label: 'Aparência', value: getThemeLabel(settings.themeMode), helper: currentAccent?.name || summaryFallback },
     { icon: Dumbbell, label: 'Unidade', value: settings.weightUnit || 'kg', helper: settings.visualDensity === 'compact' ? 'Compacta' : 'Confortável' },
     { icon: Shield, label: 'Privacidade', value: settings.hideSensitiveShareData ? 'Protegida' : 'Padrão', helper: settings.hideBodyWeightOnShare ? 'Peso oculto' : 'Compartilhamento completo' },
-    { icon: Sparkles, label: 'Ajuda', value: 'Tutorial', helper: 'Treino teste disponível' },
+    { icon: Sparkles, label: 'Ajuda', value: 'Tutorial', helper: 'Treino guiado disponível' },
     { icon: Bell, label: 'Notificações', value: reminderSummary, helper: settings.hydrationReminderEnabled ? 'Água ativa' : 'Ajustável' },
   ]
 

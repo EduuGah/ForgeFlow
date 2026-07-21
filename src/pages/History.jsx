@@ -1,9 +1,8 @@
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import ConfirmModal from '../components/ui/ConfirmModal'
 import Toast from '../components/ui/Toast'
-import WorkoutShareStudio from '../components/workout/WorkoutShareStudio'
 
 import { useAuth } from '../context/AuthContext'
 import { useWorkoutSession } from '../context/WorkoutSessionContext'
@@ -31,6 +30,8 @@ import {
   HistorySidebar,
   HistorySummaryCards,
 } from '../features/history/components/HistorySections'
+
+const WorkoutShareStudio = lazy(() => import('../components/workout/WorkoutShareStudio'))
 
 
 function History() {
@@ -394,12 +395,16 @@ function History() {
           onDeleteSession={handleDeleteSession}
         />
 
-        <WorkoutShareStudio
-          open={Boolean(shareSession)}
-          session={shareSession}
-          meta={shareSession ? historyMetaMap.get(shareSession.id) : null}
-          onClose={() => setShareSessionId(null)}
-        />
+        {shareSession && (
+          <Suspense fallback={null}>
+            <WorkoutShareStudio
+              open
+              session={shareSession}
+              meta={historyMetaMap.get(shareSession.id)}
+              onClose={() => setShareSessionId(null)}
+            />
+          </Suspense>
+        )}
 
         <ConfirmModal
           open={Boolean(confirmModal)}
@@ -493,12 +498,16 @@ function History() {
         onClose={() => setToast(null)}
       />
 
-      <WorkoutShareStudio
-        open={Boolean(shareSession)}
-        session={shareSession}
-        meta={shareSession ? historyMetaMap.get(shareSession.id) : null}
-        onClose={() => setShareSessionId(null)}
-      />
+      {shareSession && (
+        <Suspense fallback={null}>
+          <WorkoutShareStudio
+            open
+            session={shareSession}
+            meta={historyMetaMap.get(shareSession.id)}
+            onClose={() => setShareSessionId(null)}
+          />
+        </Suspense>
+      )}
     </div>
   )
 }

@@ -18,6 +18,10 @@ function getMissionRoute(mission, { workouts = [], activeSession = null } = {}) 
   return mission.route || '/'
 }
 
+function isTutorialWorkoutSession(session) {
+  return Boolean(session?.isTutorialDemo || session?.isTutorial || session?.tutorialOnly || session?.demo)
+}
+
 export default function FirstStepsChecklist({ workouts = [], history = [], activeSession = null, completedSets = 0, compact = false }) {
   const navigate = useNavigate()
   const {
@@ -43,7 +47,7 @@ export default function FirstStepsChecklist({ workouts = [], history = [], activ
     if (Array.isArray(workouts) && workouts.length > 0) {
       completeFirstStepMission?.('create-workout')
     }
-    if (activeSession && !activeSession.isTutorial && !activeSession.tutorialOnly) {
+    if (activeSession && !isTutorialWorkoutSession(activeSession)) {
       completeFirstStepMission?.('start-workout')
     }
     if (Number(completedSets || 0) > 0) {

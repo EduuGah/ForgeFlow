@@ -67,6 +67,10 @@ function isValidActiveSession(session) {
   )
 }
 
+function isTutorialWorkoutSession(session) {
+  return Boolean(session?.isTutorialDemo || session?.isTutorial || session?.tutorialOnly || session?.demo)
+}
+
 function getRestSeconds(restTimerText) {
   if (!restTimerText || restTimerText === 'Desligado') return 0
 
@@ -242,6 +246,7 @@ function StartWorkout() {
   const exerciseCardRefs = useRef({})
 
   const sessionIsInvalid = activeSession && !isValidActiveSession(activeSession)
+  const activeSessionIsTutorial = isTutorialWorkoutSession(activeSession)
 
   const sessionExercises = useMemo(() => {
     return Array.isArray(activeSession?.exercises) ? activeSession.exercises : []
@@ -427,7 +432,7 @@ function StartWorkout() {
   function handleClearBrokenSession() {
     removeUserStorageData(user, 'active-session')
     cancelSession()
-    window.location.href = '/workouts'
+    navigate('/workouts', { replace: true })
   }
 
 
@@ -831,7 +836,7 @@ function StartWorkout() {
   }
 
   return (
-    <div className="ff-hevy-page ff-hevy-page-startworkout ff-start-workout-native-page">
+    <div className={`ff-hevy-page ff-hevy-page-startworkout ff-start-workout-native-page ${activeSessionIsTutorial ? 'is-tutorial-session' : ''}`}>
       <ActiveWorkoutHero
         activeSession={activeSession}
         completedSets={completedSets}
@@ -859,7 +864,7 @@ function StartWorkout() {
         getExerciseSubtitle={getExerciseSubtitle}
         getSessionExerciseMedia={getSessionExerciseMedia}
         onFocusExercise={focusExerciseCard}
-        onAddExercise={() => setAddExerciseOpen(true)}
+        onAddExercise={activeSessionIsTutorial ? null : () => setAddExerciseOpen(true)}
       />
 
       <section className="ff-start-workout-main-grid ff-page-mobile-main-grid grid grid-cols-1 gap-4 xl:grid-cols-4 xl:gap-6">
@@ -868,8 +873,8 @@ function StartWorkout() {
             <FirstStepsInlineHint
               missionId="register-set"
               title="Missão: registre sua primeira série"
-              description="Preencha kg e reps em uma série e toque em concluir. Esse dado vira histórico, volume e evolução."
-              actionLabel="Marcar como entendido"
+              description={activeSessionIsTutorial ? 'Use o card do tutorial destacado. A série de teste já vem preenchida e não entra no histórico real.' : 'Preencha kg e reps em uma série e toque em concluir. Esse dado vira histórico, volume e evolução.'}
+              actionLabel={activeSessionIsTutorial ? 'Entendi' : 'Marcar como entendido'}
             />
           ) : completedSets > 0 && !firstStepsCompleted?.['finish-workout'] && tutorialState.firstStepsStarted ? (
             <FirstStepsInlineHint
@@ -880,10 +885,12 @@ function StartWorkout() {
             />
           ) : null}
 
-          <MobileWorkoutNotesCard
-            activeSession={activeSession}
-            onUpdateNotes={updateNotes}
-          />
+          {!activeSessionIsTutorial && (
+            <MobileWorkoutNotesCard
+              activeSession={activeSession}
+              onUpdateNotes={updateNotes}
+            />
+          )}
 
           {sessionExercises.map((sessionExercise, exerciseIndex) => (
             <ActiveExerciseCard
@@ -899,6 +906,7 @@ function StartWorkout() {
               replaceSearch={replaceSearch}
               replacementOptions={replacementOptions}
               exercises={exercises}
+              isTutorialSession={activeSessionIsTutorial}
               getExerciseId={getExerciseId}
               getExerciseName={getExerciseName}
               getExerciseSubtitle={getExerciseSubtitle}

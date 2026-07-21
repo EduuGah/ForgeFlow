@@ -12,18 +12,15 @@ import ExerciseFiltersSidebar from '../features/exercises/components/ExerciseFil
 import ExerciseFormModal from '../features/exercises/components/ExerciseFormModal'
 import ExerciseLibrarySection from '../features/exercises/components/ExerciseLibrarySection'
 import AppPageIntro from '../components/app/AppPageIntro'
+import ConfirmModal from '../components/ui/ConfirmModal'
+import Toast from '../components/ui/Toast'
 
 import {
   INITIAL_VISIBLE_COUNT,
-  buildStatsMap,
-  defaultEquipmentList,
   getExerciseMedia,
-  getSortedUnique,
-  getStatsFromMap,
   getSubgroup,
   listToText,
   mergeExercisesWithoutDuplicates,
-  muscleGroupOrder,
   normalizeEquipment,
   normalizeExerciseForList,
   normalizeExerciseFromApi,
@@ -33,115 +30,11 @@ import {
   normalizeText,
   textToList,
 } from '../features/exercises/exerciseLibraryUtils'
+import {
+  buildExerciseLibraryStats,
+  buildExerciseStatsMapFromHistory,
+} from '../features/exercises/exerciseStatsUtils'
 
-function formatExerciseStatDate(value) {
-  if (!value) return ''
-
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) return ''
-
-  return date.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-  })
-}
-
-function getExerciseNameKey(value) {
-  return normalizeText(value || '')
-}
-
-function getHistoryExerciseKeys(historyExercise = {}) {
-  const exercise = historyExercise.exercise || historyExercise
-  const keys = [
-    historyExercise.originalExerciseId,
-    historyExercise.exerciseId,
-    historyExercise.id,
-    exercise.id,
-    exercise._id,
-    exercise.localId,
-    exercise.originalLocalId,
-    exercise.name,
-    exercise.originalName,
-  ]
-
-  return keys.filter(Boolean).map((value) => String(value))
-}
-
-function buildExerciseStatsMapFromHistory(history = []) {
-  const map = new Map()
-
-  function applyStat(key, session, set, historyExercise) {
-    if (!key) return
-
-    const exerciseName = historyExercise.exercise?.name || historyExercise.name || key
-    const normalizedKey = String(key)
-    const weight = Number(set.weight) || 0
-    const reps = Number(set.reps) || 0
-    const volume = weight * reps
-    const finishedAt = session.finishedAt || session.createdAt || session.updatedAt || session.startedAt
-    const current = map.get(normalizedKey) || {
-      exerciseName,
-      sessions: 0,
-      setCount: 0,
-      prCount: 0,
-      bestWeight: 0,
-      bestVolume: 0,
-      lastPerformedAtRaw: '',
-      lastPerformedAt: '',
-      lastSetLabel: '',
-    }
-
-    current.setCount += 1
-    current.bestWeight = Math.max(current.bestWeight, weight)
-    current.bestVolume = Math.max(current.bestVolume, volume)
-
-    if (set.isPR || set.isWeightPR || set.isVolumePR) {
-      current.prCount += 1
-    }
-
-    const currentLast = current.lastPerformedAtRaw ? new Date(current.lastPerformedAtRaw).getTime() : 0
-    const candidateLast = finishedAt ? new Date(finishedAt).getTime() : 0
-
-    if (!current.lastPerformedAtRaw || candidateLast >= currentLast) {
-      current.lastPerformedAtRaw = finishedAt || current.lastPerformedAtRaw
-      current.lastPerformedAt = formatExerciseStatDate(finishedAt)
-      current.lastSetLabel = weight && reps ? `${weight}kg × ${reps}` : `${reps || 0} reps`
-      current.sessions += current._lastSessionId === session.id ? 0 : 1
-      current._lastSessionId = session.id
-    }
-
-    map.set(normalizedKey, current)
-  }
-
-  history.forEach((session) => {
-    const sessionExercises = Array.isArray(session.exercises) ? session.exercises : []
-
-    sessionExercises.forEach((historyExercise) => {
-      const workingSets = Array.isArray(historyExercise.sets)
-        ? historyExercise.sets.filter((set) => set.completed && Number(set.weight) > 0 && Number(set.reps) > 0)
-        : []
-
-      if (workingSets.length === 0) return
-
-      const rawKeys = getHistoryExerciseKeys(historyExercise)
-      const keys = new Set([
-        ...rawKeys,
-        ...rawKeys.map(getExerciseNameKey).filter(Boolean),
-      ])
-
-      workingSets.forEach((set) => {
-        keys.forEach((key) => applyStat(key, session, set, historyExercise))
-      })
-    })
-  })
-
-  map.forEach((value) => {
-    delete value._lastSessionId
-  })
-
-  return map
-}
 
 
 function Exercises() {
@@ -178,6 +71,9 @@ function Exercises() {
   const [dataSource, setDataSource] = useState('local')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [visibleState, setVisibleState] = useState({ key: '', count: INITIAL_VISIBLE_COUNT })
+  const [toast, setToast] = useState(null)
+  const [exerciseToDeleteId, setExerciseToDeleteId] = useState('')
+  const toastTimeoutRef = useRef(null)
 
   const [exercises, setExercises] = useState([])
 
@@ -254,6 +150,10 @@ function Exercises() {
     }
   }, [user])
 
+  useEffect(() => () => {
+    window.clearTimeout(toastTimeoutRef.current)
+  }, [])
+
   useEffect(() => {
     if (!isLoaded || !user) return
 
@@ -264,6 +164,7 @@ function Exercises() {
     return exercises.map((exercise) => {
       const normalized = normalizeExerciseForList(exercise)
       const secondaryMuscles = normalizeList(normalized.secondaryMuscles)
+      const sortTimestamp = Date.parse(normalized.updatedAt || normalized.createdAt || '') || 0
 
       const searchableText = normalizeText(`
         ${normalized.name || ''}
@@ -281,43 +182,12 @@ function Exercises() {
       return {
         ...normalized,
         searchableText,
+        sortTimestamp,
       }
     })
   }, [exercises])
 
-  const stats = useMemo(() => {
-    const groupMap = buildStatsMap(indexedExercises, 'normalizedGroup')
-    const subgroupMap = buildStatsMap(indexedExercises, 'subgroup')
-    const equipmentMap = buildStatsMap(indexedExercises, 'normalizedEquipment')
-
-    const muscleGroups = getStatsFromMap(groupMap, muscleGroupOrder).map((item) => item.name)
-    const subgroupList = getStatsFromMap(subgroupMap).map((item) => item.name)
-
-    const equipmentNames = getSortedUnique(
-      [
-        ...defaultEquipmentList,
-        ...Array.from(equipmentMap.keys()),
-      ],
-      defaultEquipmentList
-    )
-
-    const equipmentStats = equipmentNames
-      .map((item) => ({
-        name: item,
-        count: equipmentMap.get(item) || 0,
-      }))
-      .filter((item) => item.count > 0)
-
-    return {
-      groupStats: getStatsFromMap(groupMap, muscleGroupOrder),
-      subgroupStats: getStatsFromMap(subgroupMap),
-      equipmentStats,
-      muscleGroups,
-      subgroupList,
-      equipmentList: equipmentNames,
-      favoriteExercisesCount: indexedExercises.filter((exercise) => exercise.isFavorite).length,
-    }
-  }, [indexedExercises])
+  const stats = useMemo(() => buildExerciseLibraryStats(indexedExercises), [indexedExercises])
 
   const exerciseStatsMap = useMemo(() => buildExerciseStatsMapFromHistory(cachedHistory), [cachedHistory])
 
@@ -358,10 +228,7 @@ function Exercises() {
       if (a.isFavorite && !b.isFavorite) return -1
       if (!a.isFavorite && b.isFavorite) return 1
 
-      const dateA = new Date(a.updatedAt || a.createdAt || 0)
-      const dateB = new Date(b.updatedAt || b.createdAt || 0)
-
-      return dateB - dateA
+      return (b.sortTimestamp || 0) - (a.sortTimestamp || 0)
     })
   }, [
     indexedExercises,
@@ -384,6 +251,20 @@ function Exercises() {
   const displayedExercises = useMemo(() => {
     return filteredExercises.slice(0, visibleCount)
   }, [filteredExercises, visibleCount])
+
+  const exerciseToDelete = useMemo(() => {
+    if (!exerciseToDeleteId) return null
+
+    return exercises.find((exercise) => String(exercise.id || exercise._id || exercise.localId) === String(exerciseToDeleteId)) || null
+  }, [exerciseToDeleteId, exercises])
+
+  function showToast(type, title, message = '') {
+    window.clearTimeout(toastTimeoutRef.current)
+    setToast({ type, title, message })
+    toastTimeoutRef.current = window.setTimeout(() => {
+      setToast(null)
+    }, 3200)
+  }
 
   const filteredGroupStats = useMemo(() => {
     const term = normalizeText(deferredGroupSearch)
@@ -438,7 +319,7 @@ function Exercises() {
     const allowedTypes = ['image/png', 'image/jpeg', 'image/webp', 'image/gif']
 
     if (!allowedTypes.includes(file.type)) {
-      alert('Envie apenas arquivos PNG, JPG, WEBP ou GIF.')
+      showToast('error', 'Arquivo incompatível', 'Envie apenas arquivos PNG, JPG, WEBP ou GIF.')
       event.target.value = ''
       return
     }
@@ -447,7 +328,9 @@ function Exercises() {
     const maxSizeInBytes = maxSizeInMB * 1024 * 1024
 
     if (file.size > maxSizeInBytes) {
-      alert(
+      showToast(
+        'error',
+        'Arquivo muito grande',
         `Esse arquivo tem ${(file.size / 1024 / 1024).toFixed(2)}MB. Use uma imagem/GIF de até ${maxSizeInMB}MB.`
       )
 
@@ -463,7 +346,7 @@ function Exercises() {
     }
 
     reader.onerror = () => {
-      alert('Não foi possível carregar esse arquivo.')
+      showToast('error', 'Erro ao carregar', 'Não foi possível carregar esse arquivo.')
     }
 
     reader.readAsDataURL(file)
@@ -482,7 +365,7 @@ function Exercises() {
     event.preventDefault()
 
     if (!name.trim() || !muscleGroup || !equipment) {
-      alert('Preencha nome, grupo muscular e equipamento.')
+      showToast('error', 'Dados incompletos', 'Preencha nome, grupo muscular e equipamento.')
       return
     }
 
@@ -521,6 +404,7 @@ function Exercises() {
       )
 
       closeModal()
+      showToast('success', 'Exercício salvo', 'As alterações ficaram disponíveis na sua biblioteca.')
       return
     }
 
@@ -543,6 +427,7 @@ function Exercises() {
 
     setExercises([newExercise, ...exercises])
     closeModal()
+    showToast('success', 'Exercício criado', 'Ele já está disponível para montar seus treinos.')
   }
 
   function handleEdit(exercise) {
@@ -562,17 +447,20 @@ function Exercises() {
   }
 
   function handleDelete(id) {
-    const confirmDelete = window.confirm(
-      'Tem certeza que deseja excluir este exercício?'
-    )
+    setExerciseToDeleteId(String(id || ''))
+  }
 
-    if (!confirmDelete) return
+  function confirmDeleteExercise() {
+    if (!exerciseToDeleteId) return
 
-    setExercises(exercises.filter((exercise) => exercise.id !== id))
+    setExercises(exercises.filter((exercise) => String(exercise.id || exercise._id || exercise.localId) !== String(exerciseToDeleteId)))
 
-    if (editingId === id) {
+    if (String(editingId) === String(exerciseToDeleteId)) {
       resetForm()
     }
+
+    setExerciseToDeleteId('')
+    showToast('success', 'Exercício excluído', 'A biblioteca foi atualizada.')
   }
 
   function handleToggleFavorite(exercise, event) {
@@ -721,6 +609,28 @@ function Exercises() {
           setVariations={setVariations}
         />
       )}
+
+      <ConfirmModal
+        open={Boolean(exerciseToDeleteId)}
+        title="Excluir exercício?"
+        description={
+          exerciseToDelete?.name
+            ? `Você está prestes a remover "${exerciseToDelete.name}" da sua biblioteca.`
+            : 'Você está prestes a remover este exercício da sua biblioteca.'
+        }
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        onConfirm={confirmDeleteExercise}
+        onCancel={() => setExerciseToDeleteId('')}
+      />
+
+      <Toast
+        show={Boolean(toast)}
+        type={toast?.type}
+        title={toast?.title}
+        message={toast?.message}
+        onClose={() => setToast(null)}
+      />
     </div>
   )
 }

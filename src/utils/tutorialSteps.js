@@ -1,4 +1,4 @@
-export const TUTORIAL_VERSION = 8
+export const TUTORIAL_VERSION = 9
 
 export const FIRST_STEPS_MISSIONS = [
   {
@@ -29,10 +29,10 @@ export const FIRST_STEPS_MISSIONS = [
     title: 'Registrar uma série',
     shortTitle: 'Registrar série',
     description: 'Digite carga e reps, depois toque em concluir.',
-    actionLabel: 'Abrir treino ativo',
+    actionLabel: 'Registrar série guiada',
     route: '/start-workout',
     section: 'workout',
-    target: '[data-tutorial="active-set-row"], [data-tutorial="active-workout-summary"], .ff-active-exercise-card',
+    target: '[data-tutorial="guided-register-set-row"], [data-tutorial="guided-register-callout"]',
     createDemoSession: true,
   },
   {

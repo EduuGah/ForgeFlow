@@ -862,7 +862,7 @@ export function WorkoutSessionProvider({ children }) {
       }),
     }
 
-    if (finishedSession.isTutorial || finishedSession.tutorialOnly) {
+    if (isTutorialSession(finishedSession)) {
       rememberFinishedActiveSession(finishedSession.id)
       persistActiveSessionLocally(null)
       setActiveSession(null)
