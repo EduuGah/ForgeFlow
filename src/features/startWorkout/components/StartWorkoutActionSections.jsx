@@ -194,6 +194,7 @@ export function MobileWorkoutActionBar({
   onStartRestTimer,
   onRequestFinish,
   hidden = false,
+  forceVisible = false,
 }) {
   const [isVisible, setIsVisible] = useState(false)
 
@@ -229,7 +230,7 @@ export function MobileWorkoutActionBar({
   if (hidden) return null
 
   return (
-    <div className={`ff-mobile-workout-action-bar ff-mobile-workout-action-bar--finish ${isVisible ? 'is-visible' : ''} fixed inset-x-0 bottom-0 z-40 border-t border-[var(--ff-border)] bg-[var(--ff-bg)]/95 px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[var(--ff-shadow-floating)] backdrop-blur-xl xl:hidden`}>
+    <div className={`ff-mobile-workout-action-bar ff-mobile-workout-action-bar--finish ${isVisible || forceVisible ? 'is-visible' : ''} ${forceVisible ? 'ff-tutorial-active-layer' : ''} fixed inset-x-0 bottom-0 z-40 border-t border-[var(--ff-border)] bg-[var(--ff-bg)]/95 px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[var(--ff-shadow-floating)] backdrop-blur-xl xl:hidden`}>
       <div className="mx-auto flex max-w-[1600px] items-center gap-3">
         <button
           type="button"
@@ -572,6 +573,7 @@ export function FinishWorkoutModal({
             variant="secondary"
             onClick={() => finishWithDuration({ saveLocation: false })}
             disabled={savingWorkout}
+            data-tutorial="active-finish-workout-confirm"
             className="w-full"
           >
             Finalizar sem local

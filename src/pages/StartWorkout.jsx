@@ -637,6 +637,7 @@ function StartWorkout() {
     }
 
     if (wasCompleted) return
+    if (isGuidedSetTutorialStep) return
     if (!appSettings.autoStartRestTimer) return
 
     const seconds = getRestSeconds(sessionExercise.restTimer)
@@ -1008,6 +1009,7 @@ function StartWorkout() {
         onCancelWorkout={handleCancelWorkout}
         onStartRestTimer={startManualRestTimer}
         onRequestFinish={handleRequestFinishWorkout}
+        forceVisible={tutorialIsRunning && activeTutorialStep?.id === 'finish-workout'}
         hidden={finishWorkoutModalOpen || Boolean(confirmModal) || addExerciseOpen || Boolean(replaceExerciseId)}
       />
 

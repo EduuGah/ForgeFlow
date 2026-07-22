@@ -20,6 +20,18 @@ function isUsableElement(element) {
     Number(style.opacity || 1) > 0.02
 }
 
+function isViewportAnchored(element) {
+  let current = element
+
+  while (current && current !== document.documentElement) {
+    const position = window.getComputedStyle(current).position
+    if (position === 'fixed') return true
+    current = current.parentElement
+  }
+
+  return false
+}
+
 function getPrioritySelectors(selector = '') {
   return String(selector || '')
     .split(',')
@@ -103,10 +115,11 @@ export function isTutorialElementVisible(element, margin = 72) {
   const viewport = getViewport()
   const viewportTop = window.visualViewport?.offsetTop || 0
   const viewportLeft = window.visualViewport?.offsetLeft || 0
+  const viewportMargin = isViewportAnchored(element) ? 8 : margin
 
-  return rect.top >= viewportTop + margin &&
+  return rect.top >= viewportTop + viewportMargin &&
     rect.left >= viewportLeft + 12 &&
-    rect.bottom <= viewportTop + viewport.height - margin &&
+    rect.bottom <= viewportTop + viewport.height - viewportMargin &&
     rect.right <= viewportLeft + viewport.width - 12
 }
 
@@ -159,6 +172,7 @@ function waitForScrollIdle(element, { signal, maxMs = 1800 } = {}) {
 
 export async function scrollToTutorialTarget(element, { signal } = {}) {
   if (!element || signal?.aborted) return
+  if (isViewportAnchored(element)) return
 
   for (let attempt = 0; attempt < 2 && !isTutorialElementVisible(element); attempt += 1) {
     element.scrollIntoView({

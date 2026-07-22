@@ -161,7 +161,7 @@ export default function useTutorialStepTarget(step, watchKey = '') {
           prepareTarget()
           return
         }
-        scheduleMeasure({ ensureVisible: true })
+        scheduleMeasure()
       })
       mutationObserver.observe(document.body, {
         childList: true,

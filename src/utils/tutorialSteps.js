@@ -48,7 +48,7 @@ export const FIRST_STEPS_MISSIONS = [
     actionLabel: 'Finalizar treino',
     route: '/start-workout',
     section: 'workout',
-    target: '[data-tutorial="active-finish-workout-bottom"], [data-tutorial="active-finish-workout-hero"], [data-tutorial="active-finish-workout-desktop"]',
+    target: '[data-tutorial="active-finish-workout-confirm"], [data-tutorial="active-finish-workout-bottom"], [data-tutorial="active-finish-workout-hero"], [data-tutorial="active-finish-workout-desktop"]',
     pendingText: 'Finalize o treino para continuar.',
   },
   {
