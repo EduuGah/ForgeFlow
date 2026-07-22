@@ -619,7 +619,7 @@ export default function ActiveExerciseCard({
               <div className="ff-guided-register-callout" data-tutorial="guided-register-callout">
                 <Sparkles size={15} />
                 <span>Série de teste</span>
-                <strong>Os valores já estão prontos. Toque no check para registrar.</strong>
+                <strong>Preencha peso, reps e toque no check.</strong>
               </div>
             )}
             <div data-set-row-id={set.id} data-tutorial={tutorialTarget} className={`ff-hevy-set-row ${isCompleted ? 'is-done' : ''} ${isWarmup ? 'is-warmup' : ''} ${isGuidedRegisterRow ? 'is-guided-register' : ''}`}>

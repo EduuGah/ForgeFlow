@@ -873,7 +873,7 @@ function StartWorkout() {
             <FirstStepsInlineHint
               missionId="register-set"
               title="Missão: registre sua primeira série"
-              description={activeSessionIsTutorial ? 'Use o card do tutorial destacado. A série de teste já vem preenchida e não entra no histórico real.' : 'Preencha kg e reps em uma série e toque em concluir. Esse dado vira histórico, volume e evolução.'}
+              description={activeSessionIsTutorial ? 'Use o card do tutorial destacado. Preencha peso, reps e conclua sem salvar histórico real.' : 'Preencha kg e reps em uma série e toque em concluir. Esse dado vira histórico, volume e evolução.'}
               actionLabel={activeSessionIsTutorial ? 'Entendi' : 'Marcar como entendido'}
               completeOnAction={false}
             />

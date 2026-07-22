@@ -1,0 +1,285 @@
+/* ForgeFlow guided tutorial: contextual spotlight onboarding. */
+
+.ff-guided-tutorial-open {
+  scroll-behavior: smooth;
+}
+
+.ff-guided-tutorial-target {
+  scroll-margin: 96px;
+}
+
+.ff-guided-tutorial-root {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483620;
+  pointer-events: none;
+}
+
+.ff-guided-tutorial-pane {
+  position: fixed;
+  z-index: 2147483621;
+  background: rgba(4, 7, 14, 0.62);
+  pointer-events: auto;
+  transition: opacity 180ms ease, top 180ms ease, left 180ms ease, width 180ms ease, height 180ms ease;
+  animation: ff-guided-fade-in 180ms ease both;
+}
+
+.ff-guided-tutorial-pane--full {
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+}
+
+.ff-guided-tutorial-ring {
+  position: fixed;
+  z-index: 2147483622;
+  border: 2px solid color-mix(in srgb, var(--ff-accent) 72%, white);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, white 24%, transparent),
+    0 0 0 8px color-mix(in srgb, var(--ff-accent) 16%, transparent),
+    0 16px 34px rgba(0, 0, 0, 0.24),
+    0 0 26px color-mix(in srgb, var(--ff-accent) 36%, transparent);
+  pointer-events: none;
+  transition: top 180ms ease, left 180ms ease, width 180ms ease, height 180ms ease, border-radius 180ms ease;
+  animation: ff-guided-ring-in 190ms ease both;
+}
+
+.ff-guided-tutorial-root.has-feedback .ff-guided-tutorial-ring {
+  animation: ff-guided-ring-pulse 210ms ease both;
+}
+
+.ff-guided-tutorial-popup {
+  position: fixed;
+  z-index: 2147483624;
+  display: grid;
+  gap: 12px;
+  max-width: min(340px, calc(100vw - 24px));
+  border: 1px solid color-mix(in srgb, var(--ff-border) 74%, white 10%);
+  border-radius: 22px;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--ff-card) 96%, white 4%), color-mix(in srgb, var(--ff-surface-2) 92%, transparent));
+  color: var(--ff-text);
+  padding: 14px;
+  box-shadow: 0 20px 46px rgba(0, 0, 0, 0.26);
+  pointer-events: auto;
+  transform-origin: center;
+  animation: ff-guided-popup-in 180ms ease both;
+}
+
+.ff-guided-tutorial-popup__top,
+.ff-guided-tutorial-popup__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ff-guided-tutorial-popup__top span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  border-radius: 999px;
+  background: var(--ff-accent-soft);
+  color: var(--ff-accent-text);
+  padding: 0 9px;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ff-guided-tutorial-popup__top button,
+.ff-guided-tutorial-popup__actions button,
+.ff-guided-tutorial-popup__skip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 999px;
+  font-weight: 950;
+  transition: transform 160ms ease, opacity 160ms ease, background 160ms ease;
+}
+
+.ff-guided-tutorial-popup__top button {
+  width: 30px;
+  height: 30px;
+  background: color-mix(in srgb, var(--ff-surface-2) 88%, transparent);
+  color: var(--ff-muted);
+}
+
+.ff-guided-tutorial-popup__copy {
+  display: grid;
+  gap: 4px;
+}
+
+.ff-guided-tutorial-popup__copy small {
+  color: var(--ff-muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ff-guided-tutorial-popup__copy h3 {
+  margin: 0;
+  color: var(--ff-text);
+  font-size: 1rem;
+  font-weight: 1000;
+  letter-spacing: 0;
+  line-height: 1.12;
+}
+
+.ff-guided-tutorial-popup__copy p,
+.ff-guided-tutorial-popup__feedback {
+  margin: 0;
+  color: var(--ff-muted);
+  font-size: 0.86rem;
+  font-weight: 750;
+  line-height: 1.38;
+}
+
+.ff-guided-tutorial-popup__feedback {
+  border: 1px solid color-mix(in srgb, var(--ff-accent) 26%, var(--ff-border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--ff-accent) 9%, transparent);
+  color: var(--ff-text);
+  padding: 8px 10px;
+  animation: ff-guided-feedback-in 160ms ease both;
+}
+
+.ff-guided-tutorial-popup__feedback.is-error {
+  border-color: rgba(248, 113, 113, 0.36);
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--ff-danger-text);
+}
+
+.ff-guided-tutorial-popup__progress {
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ff-surface-3) 78%, transparent);
+}
+
+.ff-guided-tutorial-popup__progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ff-accent);
+  transition: width 200ms ease;
+}
+
+.ff-guided-tutorial-popup__actions {
+  justify-content: flex-end;
+}
+
+.ff-guided-tutorial-popup__actions button {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 0.78rem;
+}
+
+.ff-guided-tutorial-popup__actions button.is-primary {
+  background: var(--ff-accent);
+  color: var(--ff-accent-contrast, #071016);
+  box-shadow: 0 12px 22px color-mix(in srgb, var(--ff-accent) 24%, transparent);
+}
+
+.ff-guided-tutorial-popup__actions button.is-ghost {
+  border: 1px solid var(--ff-border);
+  background: color-mix(in srgb, var(--ff-surface-2) 88%, transparent);
+  color: var(--ff-text-soft);
+}
+
+.ff-guided-tutorial-popup__actions button:disabled {
+  cursor: progress;
+  opacity: 0.62;
+}
+
+.ff-guided-tutorial-popup__skip {
+  justify-self: start;
+  min-height: 26px;
+  background: transparent;
+  color: var(--ff-muted);
+  padding: 0;
+  font-size: 0.74rem;
+}
+
+.ff-guided-tutorial-popup button:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+@keyframes ff-guided-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ff-guided-ring-in {
+  from {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes ff-guided-ring-pulse {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.018); }
+  100% { transform: scale(1); }
+}
+
+@keyframes ff-guided-popup-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes ff-guided-feedback-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 520px) {
+  .ff-guided-tutorial-popup {
+    border-radius: 20px;
+    padding: 12px;
+  }
+
+  .ff-guided-tutorial-popup__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ff-guided-tutorial-popup__actions button {
+    width: 100%;
+  }
+
+  .ff-guided-tutorial-popup__actions button.is-primary:first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ff-guided-tutorial-pane,
+  .ff-guided-tutorial-ring,
+  .ff-guided-tutorial-popup,
+  .ff-guided-tutorial-popup__feedback {
+    animation: none !important;
+    transition-duration: 1ms !important;
+  }
+}
+

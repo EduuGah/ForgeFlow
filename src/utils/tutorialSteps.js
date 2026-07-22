@@ -1,4 +1,4 @@
-export const TUTORIAL_VERSION = 9
+export const TUTORIAL_VERSION = 10
 
 export const FIRST_STEPS_MISSIONS = [
   {
@@ -6,68 +6,77 @@ export const FIRST_STEPS_MISSIONS = [
     order: 1,
     title: 'Criar seu primeiro treino',
     shortTitle: 'Criar treino',
-    description: 'Crie uma rotina para começar.',
+    description: 'Crie sua primeira rotina.',
     actionLabel: 'Ir para Treinos',
     route: '/workouts',
     section: 'workouts',
     target: '[data-tutorial="create-workout-button"]',
+    pendingText: 'Crie uma rotina para continuar.',
   },
   {
     id: 'start-workout',
     order: 2,
     title: 'Iniciar um treino',
     shortTitle: 'Iniciar treino',
-    description: 'Inicie o treino que você criou.',
+    description: 'Escolha uma rotina.',
     actionLabel: 'Iniciar treino',
     route: '/workouts',
     section: 'workouts',
     target: '[data-tutorial="workout-start-button"]',
+    pendingText: 'Inicie uma rotina para continuar.',
   },
   {
     id: 'register-set',
     order: 3,
     title: 'Registrar uma série',
     shortTitle: 'Registrar série',
-    description: 'Digite carga e reps, depois toque em concluir.',
+    description: 'Registre sua primeira série.',
     actionLabel: 'Registrar série guiada',
     route: '/start-workout',
     section: 'workout',
-    target: '[data-tutorial="guided-register-set-row"], [data-tutorial="guided-register-callout"]',
+    target: '[data-tutorial="active-set-complete-button"], [data-tutorial="guided-register-set-row"]',
     createDemoSession: true,
+    pendingText: 'Conclua a série destacada.',
+    startStepId: 'set-weight',
   },
   {
     id: 'finish-workout',
     order: 4,
     title: 'Finalizar treino com segurança',
     shortTitle: 'Finalizar treino',
-    description: 'Finalize somente quando terminar tudo.',
+    description: 'Finalize seu treino.',
     actionLabel: 'Finalizar treino',
     route: '/start-workout',
     section: 'workout',
     target: '[data-tutorial="active-finish-workout-bottom"], [data-tutorial="active-finish-workout-hero"], [data-tutorial="active-finish-workout-desktop"]',
     createDemoSession: true,
+    pendingText: 'Finalize o treino para continuar.',
   },
   {
     id: 'view-history',
     order: 5,
     title: 'Ver seu histórico',
     shortTitle: 'Ver histórico',
-    description: 'Confira os treinos salvos.',
+    description: 'Acompanhe sua evolução.',
     actionLabel: 'Abrir histórico',
     route: '/history',
     section: 'history',
     target: '[data-tutorial="history-list"], [data-tutorial="dashboard-recent-history"], main',
+    pendingText: 'Abra o histórico.',
+    requiresAction: false,
+    validation: 'none',
   },
   {
     id: 'create-goal',
     order: 6,
     title: 'Criar uma meta',
     shortTitle: 'Criar meta',
-    description: 'Defina um alvo com prazo, ritmo e lembrete.',
+    description: 'Defina uma meta.',
     actionLabel: 'Ir para Metas',
     route: '/goals',
     section: 'goals',
     target: '[data-tutorial="goals-create-button"], [data-tutorial="goals-overview"], main',
+    pendingText: 'Crie uma meta para continuar.',
   },
 ]
 
@@ -139,7 +148,7 @@ export const tutorialSections = {
 
 export const tutorialSectionOrder = Object.values(tutorialSections).sort((a, b) => a.order - b.order)
 
-function step({ id, title, shortTitle, description, actionLabel, route = '/', section = 'firstSteps', target = '', requireTarget = false, createDemoSession = false }) {
+function step({ id, title, shortTitle, description, actionLabel, route = '/', section = 'firstSteps', target = '', requireTarget = false, createDemoSession = false, requiresAction = true, pendingText = '', validation = 'mission', autoAdvanceOn = '' }) {
   return {
     id,
     title,
@@ -151,11 +160,66 @@ function step({ id, title, shortTitle, description, actionLabel, route = '/', se
     target,
     requireTarget,
     createDemoSession,
+    requiresAction,
+    pendingText,
+    validation,
+    autoAdvanceOn,
     mode: 'mission',
     presentation: 'guided',
     canSkip: true,
   }
 }
+
+const INTRO_STEP = step({
+  id: 'welcome-dashboard',
+  title: 'Vamos conhecer o ForgeFlow',
+  shortTitle: 'Boas-vindas',
+  description: 'Eu vou guiar você pelo essencial.',
+  actionLabel: 'Começar',
+  route: '/',
+  section: 'firstSteps',
+  target: '[data-tutorial="dashboard-hero"], main',
+  requiresAction: false,
+  validation: 'none',
+})
+
+const WORKOUT_INPUT_STEPS = [
+  step({
+    id: 'set-weight',
+    title: 'Informe o peso',
+    shortTitle: 'Peso',
+    description: 'Digite a carga usada.',
+    actionLabel: 'Informar peso',
+    route: '/start-workout',
+    section: 'workout',
+    target: '[data-tutorial="active-set-weight-input"]',
+    createDemoSession: true,
+    validation: 'input-value',
+    autoAdvanceOn: 'input',
+    pendingText: 'Digite o peso usado.',
+  }),
+  step({
+    id: 'set-reps',
+    title: 'Informe as repetições',
+    shortTitle: 'Repetições',
+    description: 'Digite as reps feitas.',
+    actionLabel: 'Informar reps',
+    route: '/start-workout',
+    section: 'workout',
+    target: '[data-tutorial="active-set-reps-input"]',
+    createDemoSession: true,
+    validation: 'input-value',
+    autoAdvanceOn: 'input',
+    pendingText: 'Digite as repetições.',
+  }),
+]
+
+const FIRST_STEPS_FLOW_STEPS = [
+  INTRO_STEP,
+  ...FIRST_STEPS_MISSIONS.slice(0, 2).map((mission) => step(mission)),
+  ...WORKOUT_INPUT_STEPS,
+  ...FIRST_STEPS_MISSIONS.slice(2).map((mission) => step(mission)),
+]
 
 export const tutorialFlows = {
   welcome: {
@@ -163,21 +227,21 @@ export const tutorialFlows = {
     title: 'Primeiros passos',
     description: 'Tutorial rápido do fluxo principal.',
     sections: ['firstSteps', 'workouts', 'workout', 'history', 'goals'],
-    steps: FIRST_STEPS_MISSIONS.map((mission) => step(mission)),
+    steps: FIRST_STEPS_FLOW_STEPS,
   },
   'first-steps': {
     id: 'first-steps',
     title: 'Primeiros passos',
     description: 'Tutorial rápido do fluxo principal.',
     sections: ['firstSteps', 'workouts', 'workout', 'history', 'goals'],
-    steps: FIRST_STEPS_MISSIONS.map((mission) => step(mission)),
+    steps: FIRST_STEPS_FLOW_STEPS,
   },
   dashboard: {
     id: 'dashboard',
     title: 'Primeiros passos',
     description: 'Comece pelo Dashboard.',
     sections: ['firstSteps'],
-    steps: FIRST_STEPS_MISSIONS.map((mission) => step(mission)),
+    steps: FIRST_STEPS_FLOW_STEPS,
   },
   workouts: {
     id: 'workouts',
@@ -191,7 +255,7 @@ export const tutorialFlows = {
     title: 'Treino ativo',
     description: 'Registrar e finalizar treinos.',
     sections: ['workout'],
-    steps: FIRST_STEPS_MISSIONS.slice(2, 4).map((mission) => step(mission)),
+    steps: [...WORKOUT_INPUT_STEPS, ...FIRST_STEPS_MISSIONS.slice(2, 4).map((mission) => step(mission))],
   },
   history: {
     id: 'history',
@@ -212,14 +276,14 @@ export const tutorialFlows = {
     title: 'Nutrição',
     description: 'Ajuda rápida de nutrição.',
     sections: ['nutrition'],
-    steps: [step({ id: 'nutrition-context', title: 'Nutrição', description: tutorialSections.nutrition.description, route: '/nutrition', section: 'nutrition' })],
+    steps: [step({ id: 'nutrition-context', title: 'Nutrição', description: tutorialSections.nutrition.description, route: '/nutrition', section: 'nutrition', requiresAction: false, validation: 'none' })],
   },
   settings: {
     id: 'settings',
     title: 'Ajuda',
     description: tutorialSections.settings.description,
     sections: ['settings'],
-    steps: [step({ id: 'settings-help', title: 'Ajuda do app', description: tutorialSections.settings.description, route: '/settings', section: 'settings' })],
+    steps: [step({ id: 'settings-help', title: 'Ajuda do app', description: tutorialSections.settings.description, route: '/settings', section: 'settings', requiresAction: false, validation: 'none' })],
   },
 }
 

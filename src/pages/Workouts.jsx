@@ -10,6 +10,7 @@ import Toast from '../components/ui/Toast'
 
 import { useWorkoutSession } from '../context/useWorkoutSession'
 import { useAuth } from '../context/AuthContext'
+import { useTutorial } from '../context/TutorialContext'
 import { apiFetch } from '../services/api'
 import {
     getUserStorageData,
@@ -87,7 +88,14 @@ function Workouts() {
 
     const { startSession } = useWorkoutSession()
     const { user } = useAuth()
+    const { completeFirstStepMission } = useTutorial()
     const navigate = useNavigate()
+
+    useEffect(() => {
+        if (workouts.length > 0) {
+            completeFirstStepMission?.('create-workout')
+        }
+    }, [completeFirstStepMission, workouts.length])
 
     async function handleImportDefaultExercises() {
         try {

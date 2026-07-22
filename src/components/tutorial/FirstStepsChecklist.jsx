@@ -26,6 +26,7 @@ export default function FirstStepsChecklist({ workouts = [], history = [], goals
   const navigate = useNavigate()
   const {
     state,
+    isRunning,
     firstStepMissions = [],
     firstStepsCompleted = {},
     firstStepsProgress,
@@ -69,6 +70,7 @@ export default function FirstStepsChecklist({ workouts = [], history = [], goals
   const totalMissions = firstStepsProgress?.total || firstStepMissions.length
   const completedMissions = firstStepsProgress?.completed || 0
 
+  if (isRunning && !compact) return null
   if (isCompleted && !compact) return null
   if (!shouldShow && !compact) return null
 
@@ -137,7 +139,7 @@ export default function FirstStepsChecklist({ workouts = [], history = [], goals
         </button>
       ) : null}
 
-      {!isCompleted && !isPaused ? (
+      {compact && !isCompleted && !isPaused ? (
         <ol className="ff-first-steps__list">
           {firstStepMissions.map((mission) => {
             const completed = Boolean(firstStepsCompleted[mission.id])

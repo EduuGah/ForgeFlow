@@ -26,6 +26,7 @@ import {
   tutorialFlows,
   tutorialSections,
 } from '../utils/tutorialUtils'
+import { getTutorialStepActionText, isTutorialStepActionComplete } from '../utils/tutorialActions'
 import { unlockGlobalScroll } from '../utils/scrollLockUtils'
 
 const TutorialContext = createContext(null)
@@ -84,6 +85,16 @@ function getMissionRoute(mission, activeSession) {
   return mission.route || '/'
 }
 
+function getStepIndexById(flow, stepId, fallbackIndex = 0) {
+  if (!flow?.steps?.length) return 0
+  const foundIndex = flow.steps.findIndex((step) => step.id === stepId)
+  return foundIndex >= 0 ? foundIndex : getInitialStepIndex(flow, fallbackIndex)
+}
+
+function getFirstIncompleteMission(completedMissions = {}) {
+  return FIRST_STEPS_MISSIONS.find((mission) => !completedMissions[mission.id]) || FIRST_STEPS_MISSIONS[0]
+}
+
 const TUTORIAL_WORKOUT_COPY = {
   'tutorial-exercise-bench-press': {
     instructions: 'Preencha carga, repeticoes e conclua a serie quando terminar.',
@@ -129,12 +140,12 @@ function createTutorialWorkout() {
           name: 'Supino reto',
           muscleGroup: 'Peito',
           equipment: 'Barra',
-          instructions: 'Use esta etapa para aprender onde preencher carga, reps e concluir uma série.',
-          tips: 'Pode digitar valores fictícios. Nada é salvo como treino real.',
+          instructions: 'Use esta etapa para preencher carga, reps e concluir uma série.',
+          tips: 'Pode digitar valores simples. Nada é salvo como treino real.',
         },
         restTimer: '90s',
         sets: [
-          { id: 'tutorial-bench-1', description: 'Série guiada', type: 'working', weight: '40', reps: '10', tutorialTarget: 'register-set' },
+          { id: 'tutorial-bench-1', description: 'Série guiada', type: 'working', weight: '', reps: '', tutorialTarget: 'register-set' },
           { id: 'tutorial-bench-2', description: 'Opcional', type: 'working', weight: '', reps: '' },
         ],
       },
@@ -353,6 +364,13 @@ export function TutorialProvider({ children }) {
   }, [updateState])
 
   const resumeFirstSteps = useCallback(() => {
+    const flow = tutorialFlows['first-steps']
+    const completedMissions = state.firstStepsCompleted && typeof state.firstStepsCompleted === 'object'
+      ? state.firstStepsCompleted
+      : {}
+    const nextMission = getFirstIncompleteMission(completedMissions)
+    const nextIndex = getStepIndexById(flow, state.firstStepsLastFocusedMission || nextMission?.startStepId || nextMission?.id, 0)
+
     updateState((current) => ({
       ...current,
       firstStepsStarted: true,
@@ -361,11 +379,18 @@ export function TutorialProvider({ children }) {
       hasSeenWelcome: true,
       dismissedWelcome: true,
       tutorialStartedAt: current.tutorialStartedAt || nowIso(),
+      tutorialCurrentFlow: 'first-steps',
+      tutorialCurrentStep: nextIndex,
+      firstStepsLastFocusedMission: flow.steps[nextIndex]?.id || nextMission?.id || current.firstStepsLastFocusedMission || '',
     }))
-    if (canShowTutorialOnPath(location.pathname)) {
-      navigate('/')
+    setActiveFlowId('first-steps')
+    setActiveStepIndex(nextIndex)
+
+    const nextRoute = flow.steps[nextIndex]?.route || getMissionRoute(nextMission, activeSession)
+    if (nextRoute && canShowTutorialOnPath(location.pathname) && location.pathname !== nextRoute) {
+      navigate(nextRoute)
     }
-  }, [location.pathname, navigate, updateState])
+  }, [activeSession, location.pathname, navigate, state.firstStepsCompleted, state.firstStepsLastFocusedMission, updateState])
 
   const dismissFirstSteps = useCallback(() => {
     updateState((current) => ({
@@ -398,6 +423,8 @@ export function TutorialProvider({ children }) {
 
   const startTutorial = useCallback(
     (flowIdOrOptions = 'welcome', options = {}) => {
+      const requestedFlowId = typeof flowIdOrOptions === 'string' ? flowIdOrOptions : 'first-steps'
+      const flow = tutorialFlows[requestedFlowId] || tutorialFlows['first-steps']
       const startOptions = flowIdOrOptions && typeof flowIdOrOptions === 'object' ? flowIdOrOptions : options
 
       if (!user || !user.profileCompleted || !canShowTutorialOnPath(location.pathname)) {
@@ -411,19 +438,20 @@ export function TutorialProvider({ children }) {
       const requestedMission = startOptions.missionId
         ? FIRST_STEPS_MISSIONS.find((mission) => mission.id === startOptions.missionId)
         : null
-      const nextMission = requestedMission ||
-        FIRST_STEPS_MISSIONS.find((mission) => !completedMissions[mission.id]) ||
-        FIRST_STEPS_MISSIONS[0]
-      const nextMissionIndex = Math.max(0, FIRST_STEPS_MISSIONS.findIndex((mission) => mission.id === nextMission?.id))
+      const nextMission = requestedMission || (startOptions.resume ? getFirstIncompleteMission(completedMissions) : null)
+      const nextStep = nextMission || flow.steps?.[0] || FIRST_STEPS_MISSIONS[0]
+      const nextStepIndex = getStepIndexById(flow, nextStep?.startStepId || nextStep?.id, 0)
 
       clearWelcomeTutorialPending(user)
       setWelcomePromptVisible(false)
       stopTutorialUi()
+      setActiveFlowId(flow.id)
+      setActiveStepIndex(nextStepIndex)
 
       updateState((current) => ({
         ...current,
-        tutorialCurrentFlow: 'first-steps',
-        tutorialCurrentStep: nextMissionIndex,
+        tutorialCurrentFlow: flow.id,
+        tutorialCurrentStep: nextStepIndex,
         tutorialPaused: false,
         tutorialSkipped: false,
         tutorialStartedAt: current.tutorialStartedAt || nowIso(),
@@ -432,15 +460,15 @@ export function TutorialProvider({ children }) {
         firstStepsStarted: true,
         firstStepsPaused: false,
         firstStepsDismissed: false,
-        firstStepsLastFocusedMission: nextMission?.id || current.firstStepsLastFocusedMission || '',
-        tutorialSeenSections: uniqueValues([...(current.tutorialSeenSections || []), 'firstSteps', nextMission?.section].filter(Boolean)),
+        firstStepsLastFocusedMission: nextStep?.id || current.firstStepsLastFocusedMission || '',
+        tutorialSeenSections: uniqueValues([...(current.tutorialSeenSections || []), 'firstSteps', nextStep?.section].filter(Boolean)),
       }))
 
-      if (nextMission?.createDemoSession) {
+      if (nextStep?.createDemoSession) {
         ensureTutorialWorkoutSession()
       }
 
-      const nextRoute = getMissionRoute(nextMission, activeSession)
+      const nextRoute = nextStep?.route || getMissionRoute(nextMission, activeSession)
 
       if (nextRoute && canShowTutorialOnPath(location.pathname) && location.pathname !== nextRoute) {
         navigate(nextRoute)
@@ -525,6 +553,28 @@ export function TutorialProvider({ children }) {
     setActiveStepIndex(nextIndex)
     persistCurrentPosition(activeFlow.id, nextIndex)
   }, [activeFlow, activeStepIndex, completeTutorial, persistCurrentPosition])
+
+  const requestNextStep = useCallback((actionContext = {}) => {
+    if (!activeStep) {
+      return { advanced: false, message: 'Etapa indisponível.' }
+    }
+
+    const actionCompleted = isTutorialStepActionComplete(activeStep, {
+      firstStepsCompleted: firstStepsCompletedMap,
+      location,
+      ...actionContext,
+    })
+
+    if (!actionCompleted) {
+      return {
+        advanced: false,
+        message: getTutorialStepActionText(activeStep),
+      }
+    }
+
+    nextStep()
+    return { advanced: true }
+  }, [activeStep, firstStepsCompletedMap, location, nextStep])
 
   const previousStep = useCallback(() => {
     if (!activeFlow) return
@@ -625,6 +675,7 @@ export function TutorialProvider({ children }) {
     resetTutorialState(user)
     const nextState = getTutorialState(user)
     const startedAt = nowIso()
+    const firstStep = tutorialFlows['first-steps']?.steps?.[0] || FIRST_STEPS_MISSIONS[0]
     const restartedState = {
       ...nextState,
       firstStepsStarted: true,
@@ -635,15 +686,15 @@ export function TutorialProvider({ children }) {
       tutorialStartedAt: startedAt,
       tutorialCurrentFlow: 'first-steps',
       tutorialCurrentStep: 0,
-      firstStepsLastFocusedMission: FIRST_STEPS_MISSIONS[0]?.id || '',
+      firstStepsLastFocusedMission: firstStep?.id || '',
     }
 
     setState(saveTutorialState(user, restartedState))
     setWelcomePromptVisible(false)
-    setActiveFlowId('')
+    setActiveFlowId('first-steps')
     setActiveStepIndex(0)
     unlockGlobalScroll()
-    navigate(getMissionRoute(FIRST_STEPS_MISSIONS[0], activeSession))
+    navigate(firstStep?.route || getMissionRoute(FIRST_STEPS_MISSIONS[0], activeSession))
   }, [activeSession, cleanupTutorialWorkoutSession, navigate, user])
 
   const resetAllTutorials = useCallback(() => {
@@ -695,7 +746,7 @@ export function TutorialProvider({ children }) {
       return
     }
 
-    const timeoutId = window.setTimeout(() => {
+    const frameId = window.requestAnimationFrame(() => {
       const nextState = getTutorialState(user)
       const shouldStartInline = shouldShowWelcomeTutorial(user, nextState)
       const inlineState = shouldStartInline
@@ -714,10 +765,19 @@ export function TutorialProvider({ children }) {
 
       setState(inlineState)
       setWelcomePromptVisible(false)
-    }, 900)
 
-    return () => window.clearTimeout(timeoutId)
-  }, [loadingUser, location.pathname, stopTutorialUi, user])
+      if (shouldStartInline) {
+        setActiveFlowId('first-steps')
+        setActiveStepIndex(0)
+        const firstStep = tutorialFlows['first-steps']?.steps?.[0]
+        if (firstStep?.route && location.pathname !== firstStep.route) {
+          navigate(firstStep.route)
+        }
+      }
+    })
+
+    return () => window.cancelAnimationFrame(frameId)
+  }, [loadingUser, location.pathname, navigate, stopTutorialUi, user])
 
   useEffect(() => {
     function handleOpenTutorial(event) {
@@ -773,6 +833,16 @@ export function TutorialProvider({ children }) {
     persistCurrentPosition(activeFlow.id, activeStepIndex)
   }, [activeFlow, activeStepIndex, isRunning, persistCurrentPosition])
 
+  useEffect(() => {
+    if (!isRunning || !activeStep || activeStep.requiresAction === false) return
+    if (!isTutorialStepActionComplete(activeStep, { firstStepsCompleted: firstStepsCompletedMap, location })) return
+
+    const frameId = window.requestAnimationFrame(() => {
+      nextStep()
+    })
+
+    return () => window.cancelAnimationFrame(frameId)
+  }, [activeStep, firstStepsCompletedMap, isRunning, location, nextStep])
 
   useEffect(() => {
     if (!state.firstStepsStarted || state.firstStepsDismissed) return
@@ -847,6 +917,7 @@ export function TutorialProvider({ children }) {
       startTutorial,
       continueTutorial,
       nextStep,
+      requestNextStep,
       previousStep,
       skipStep,
       skipAll,
@@ -880,6 +951,7 @@ export function TutorialProvider({ children }) {
       firstStepsProgress,
       focusFirstStepMission,
       nextStep,
+      requestNextStep,
       openTutorialSection,
       pauseTutorial,
       previousStep,
