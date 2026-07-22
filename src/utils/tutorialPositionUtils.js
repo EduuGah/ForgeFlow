@@ -106,12 +106,10 @@ export function calculatePopupPosition(highlight, popupSize = DEFAULT_POPUP_SIZE
         left: centerX,
         availableHeight: highlight.top - viewport.top - VIEWPORT_MARGIN - POPUP_GAP,
       },
-    ]
-      .filter((candidate) => candidate.availableHeight >= MIN_POPUP_HEIGHT)
-      .sort((a, b) => b.availableHeight - a.availableHeight)
+    ].sort((a, b) => b.availableHeight - a.availableHeight)
 
     const adaptiveCandidate = verticalCandidates[0]
-    if (adaptiveCandidate) {
+    if (adaptiveCandidate?.availableHeight > 0) {
       renderedHeight = Math.min(size.height, adaptiveCandidate.availableHeight)
       chosen = {
         ...adaptiveCandidate,

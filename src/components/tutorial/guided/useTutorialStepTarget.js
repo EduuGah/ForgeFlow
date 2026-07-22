@@ -151,7 +151,13 @@ export default function useTutorialStepTarget(step, watchKey = '') {
       resizeObserver = typeof ResizeObserver !== 'undefined'
         ? new ResizeObserver(() => scheduleMeasure({ ensureVisible: true }))
         : null
-      resizeObserver?.observe(element)
+
+      const observedLayoutElements = [
+        element,
+        element.parentElement,
+        element.closest?.('[data-tutorial="active-exercise-card"]'),
+      ].filter((item, index, items) => item && items.indexOf(item) === index)
+      observedLayoutElements.forEach((item) => resizeObserver?.observe(item))
 
       mutationObserver = new MutationObserver((records) => {
         if (records.length > 0 && records.every(isOverlayMutation)) return
@@ -161,7 +167,7 @@ export default function useTutorialStepTarget(step, watchKey = '') {
           prepareTarget()
           return
         }
-        scheduleMeasure()
+        scheduleMeasure({ ensureVisible: true })
       })
       mutationObserver.observe(document.body, {
         childList: true,

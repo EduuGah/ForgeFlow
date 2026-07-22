@@ -45,6 +45,7 @@ export function WorkoutSessionProvider({ children }) {
   const [timerTick, setTimerTick] = useState(() => Date.now())
   const [isLoaded, setIsLoaded] = useState(false)
 
+  const activeSessionRef = useRef(activeSession)
   const syncTimeoutRef = useRef(null)
   const isFinishingRef = useRef(false)
   const hasCompletedInitialLoadRef = useRef(false)
@@ -55,6 +56,13 @@ export function WorkoutSessionProvider({ children }) {
   function isTutorialSession(session) {
     return Boolean(session?.isTutorialDemo || session?.isTutorial || session?.tutorialOnly || session?.demo)
   }
+
+  const activeSessionId = activeSession?.id || ''
+  const activeSessionIsTutorial = isTutorialSession(activeSession)
+
+  useEffect(() => {
+    activeSessionRef.current = activeSession
+  }, [activeSession])
 
   function getUserSyncId() {
     return String(user?.id || user?._id || user?.email || 'anonymous')
@@ -316,6 +324,7 @@ export function WorkoutSessionProvider({ children }) {
     if (!isLoaded || !hasCompletedInitialLoadRef.current) return
 
     window.clearTimeout(syncTimeoutRef.current)
+    syncTimeoutRef.current = null
 
     if (!activeSession) {
       persistActiveSessionLocally(null)
@@ -330,6 +339,7 @@ export function WorkoutSessionProvider({ children }) {
     persistActiveSessionLocally(activeSession)
 
     syncTimeoutRef.current = window.setTimeout(() => {
+      syncTimeoutRef.current = null
       if (!isFinishingRef.current) {
         saveActiveSessionToApi(activeSession)
       }
@@ -337,6 +347,7 @@ export function WorkoutSessionProvider({ children }) {
 
     return () => {
       window.clearTimeout(syncTimeoutRef.current)
+      syncTimeoutRef.current = null
     }
   }, [activeSession, isLoaded, user])
 
@@ -346,12 +357,14 @@ export function WorkoutSessionProvider({ children }) {
     let isMounted = true
 
     async function pollRemoteActiveSession({ force = false } = {}) {
+      const currentActiveSession = activeSessionRef.current
       if (isFinishingRef.current) return
-      if (isTutorialSession(activeSession)) return
+      if (syncTimeoutRef.current) return
+      if (isTutorialSession(currentActiveSession)) return
       if (document.visibilityState === 'hidden') return
 
       const now = Date.now()
-      const minDelay = activeSession ? 30000 : 120000
+      const minDelay = currentActiveSession ? 30000 : 120000
 
       if (!force && now - lastRemotePollRef.current < minDelay) {
         return
@@ -380,7 +393,7 @@ export function WorkoutSessionProvider({ children }) {
 
     const intervalId = window.setInterval(() => {
       pollRemoteActiveSession()
-    }, activeSession ? 30000 : 120000)
+    }, activeSessionId ? 30000 : 120000)
 
     window.addEventListener('focus', handleFocusSync)
     document.addEventListener('visibilitychange', handleVisibilitySync)
@@ -391,7 +404,7 @@ export function WorkoutSessionProvider({ children }) {
       window.removeEventListener('focus', handleFocusSync)
       document.removeEventListener('visibilitychange', handleVisibilitySync)
     }
-  }, [activeSession, isLoaded, user])
+  }, [activeSessionId, activeSessionIsTutorial, isLoaded, user])
 
   useEffect(() => {
     function handleActiveSessionStorage(event) {

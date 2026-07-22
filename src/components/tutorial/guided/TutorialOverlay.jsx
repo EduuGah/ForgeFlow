@@ -26,9 +26,9 @@ export default function TutorialOverlay({
     const popup = popupRef.current
     if (!popup || typeof ResizeObserver === 'undefined') return undefined
 
-    const observer = new ResizeObserver(([entry]) => {
-      const box = entry?.contentRect
-      if (!box) return
+    const observer = new ResizeObserver(() => {
+      const box = popup.getBoundingClientRect()
+      if (!box.width || !box.height) return
       setPopupSize((currentSize) => {
         if (Math.abs(currentSize.width - box.width) < 0.5 && Math.abs(currentSize.height - box.height) < 0.5) {
           return currentSize
@@ -102,7 +102,7 @@ export default function TutorialOverlay({
 
   const overlay = (
     <div className={`ff-guided-tutorial-root ${outsidePulse ? 'has-feedback' : ''}`} data-pulse={outsidePulse}>
-      {targetState.highlight && !popupPosition.overlapsTarget ? (
+      {targetState.highlight ? (
         <TutorialHighlight
           highlight={targetState.highlight}
           onOutsidePointerDown={handleOutsidePointerDown}

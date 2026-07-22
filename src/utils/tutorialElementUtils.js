@@ -20,12 +20,33 @@ function isUsableElement(element) {
     Number(style.opacity || 1) > 0.02
 }
 
+function isScrollableElement(element) {
+  if (!element || element === document.body || element === document.documentElement) return false
+
+  const style = window.getComputedStyle(element)
+  const canScrollVertically = /(auto|scroll|overlay)/.test(style.overflowY)
+
+  return canScrollVertically && element.scrollHeight > element.clientHeight + 1
+}
+
+function getScrollableAncestor(element) {
+  let current = element?.parentElement
+
+  while (current && current !== document.body && current !== document.documentElement) {
+    if (isScrollableElement(current)) return current
+    current = current.parentElement
+  }
+
+  return null
+}
+
 function isViewportAnchored(element) {
   let current = element
 
-  while (current && current !== document.documentElement) {
+  while (current && current !== document.body && current !== document.documentElement) {
     const position = window.getComputedStyle(current).position
     if (position === 'fixed') return true
+    if (isScrollableElement(current)) return false
     current = current.parentElement
   }
 
@@ -116,20 +137,27 @@ export function isTutorialElementVisible(element, margin = 72) {
   const viewportTop = window.visualViewport?.offsetTop || 0
   const viewportLeft = window.visualViewport?.offsetLeft || 0
   const viewportMargin = isViewportAnchored(element) ? 8 : margin
+  const scrollableAncestor = getScrollableAncestor(element)
+  const scrollRect = scrollableAncestor?.getBoundingClientRect()
+  const visibleTop = Math.max(viewportTop + viewportMargin, scrollRect ? scrollRect.top + 8 : -Infinity)
+  const visibleBottom = Math.min(viewportTop + viewport.height - viewportMargin, scrollRect ? scrollRect.bottom - 8 : Infinity)
+  const visibleLeft = Math.max(viewportLeft + 12, scrollRect ? scrollRect.left + 8 : -Infinity)
+  const visibleRight = Math.min(viewportLeft + viewport.width - 12, scrollRect ? scrollRect.right - 8 : Infinity)
 
-  return rect.top >= viewportTop + viewportMargin &&
-    rect.left >= viewportLeft + 12 &&
-    rect.bottom <= viewportTop + viewport.height - viewportMargin &&
-    rect.right <= viewportLeft + viewport.width - 12
+  return rect.top >= visibleTop &&
+    rect.left >= visibleLeft &&
+    rect.bottom <= visibleBottom &&
+    rect.right <= visibleRight
 }
 
-function waitForScrollIdle(element, { signal, maxMs = 1800 } = {}) {
+function waitForScrollIdle(element, { signal, scrollableAncestor = null, maxMs = 1800 } = {}) {
   return new Promise((resolve) => {
     const startedAt = performance.now()
-    let lastWindowX = window.scrollX
-    let lastWindowY = window.scrollY
+    let lastScrollX = scrollableAncestor?.scrollLeft ?? window.scrollX
+    let lastScrollY = scrollableAncestor?.scrollTop ?? window.scrollY
     let lastTop = element?.getBoundingClientRect()?.top || 0
     let stableFrames = 0
+    let hasMoved = false
     let frameId = 0
 
     function finish() {
@@ -144,20 +172,22 @@ function waitForScrollIdle(element, { signal, maxMs = 1800 } = {}) {
         return
       }
 
-      const nextWindowX = window.scrollX
-      const nextWindowY = window.scrollY
+      const nextScrollX = scrollableAncestor?.scrollLeft ?? window.scrollX
+      const nextScrollY = scrollableAncestor?.scrollTop ?? window.scrollY
       const nextTop = element?.getBoundingClientRect()?.top || 0
-      const stable = Math.abs(nextWindowX - lastWindowX) < 1 &&
-        Math.abs(nextWindowY - lastWindowY) < 1 &&
+      const stable = Math.abs(nextScrollX - lastScrollX) < 1 &&
+        Math.abs(nextScrollY - lastScrollY) < 1 &&
         Math.abs(nextTop - lastTop) < 1
+      if (!stable) hasMoved = true
 
       stableFrames = stable ? stableFrames + 1 : 0
-      lastWindowX = nextWindowX
-      lastWindowY = nextWindowY
+      lastScrollX = nextScrollX
+      lastScrollY = nextScrollY
       lastTop = nextTop
 
       const elapsed = performance.now() - startedAt
-      if ((stableFrames >= SCROLL_IDLE_FRAMES && elapsed >= 220) || elapsed >= maxMs) {
+      const minimumWait = hasMoved ? 220 : 420
+      if ((stableFrames >= SCROLL_IDLE_FRAMES && elapsed >= minimumWait) || elapsed >= maxMs) {
         finish()
         return
       }
@@ -173,15 +203,47 @@ function waitForScrollIdle(element, { signal, maxMs = 1800 } = {}) {
 export async function scrollToTutorialTarget(element, { signal } = {}) {
   if (!element || signal?.aborted) return
   if (isViewportAnchored(element)) return
+  const scrollableAncestor = getScrollableAncestor(element)
 
-  for (let attempt = 0; attempt < 2 && !isTutorialElementVisible(element); attempt += 1) {
-    element.scrollIntoView({
-      behavior: 'smooth',
-      block: 'center',
-      inline: 'nearest',
-    })
+  function moveTargetIntoView(behavior) {
+    if (scrollableAncestor) {
+      const viewport = getViewport()
+      const viewportTop = window.visualViewport?.offsetTop || 0
+      const containerRect = scrollableAncestor.getBoundingClientRect()
+      const targetRect = element.getBoundingClientRect()
+      const visibleTop = Math.max(containerRect.top, viewportTop)
+      const visibleBottom = Math.min(containerRect.bottom, viewportTop + viewport.height)
+      const targetCenter = targetRect.top + targetRect.height / 2
+      const visibleCenter = visibleTop + (visibleBottom - visibleTop) / 2
+      const maxScrollTop = Math.max(0, scrollableAncestor.scrollHeight - scrollableAncestor.clientHeight)
+      const nextScrollTop = Math.min(
+        maxScrollTop,
+        Math.max(0, scrollableAncestor.scrollTop + targetCenter - visibleCenter),
+      )
 
-    await waitForScrollIdle(element, { signal })
+      scrollableAncestor.scrollTo({
+        top: nextScrollTop,
+        left: scrollableAncestor.scrollLeft,
+        behavior,
+      })
+    } else {
+      element.scrollIntoView({
+        behavior,
+        block: 'center',
+        inline: 'nearest',
+      })
+    }
+  }
+
+  for (let attempt = 0; attempt < 3 && !isTutorialElementVisible(element); attempt += 1) {
+    moveTargetIntoView('smooth')
+
+    await waitForScrollIdle(element, { signal, scrollableAncestor })
     if (signal?.aborted) return
+  }
+
+  if (!isTutorialElementVisible(element)) {
+    moveTargetIntoView('auto')
+    await new Promise((resolve) => window.requestAnimationFrame(() => window.requestAnimationFrame(resolve)))
   }
 }
