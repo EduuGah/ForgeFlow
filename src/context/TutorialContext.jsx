@@ -180,6 +180,7 @@ export function TutorialProvider({ children }) {
   const [welcomePromptVisible, setWelcomePromptVisible] = useState(false)
   const remoteSyncTimeoutRef = useRef(null)
   const lastRemotePayloadRef = useRef('')
+  const suppressAutoAdvanceStepRef = useRef('')
 
   const activeFlow = activeFlowId ? tutorialFlows[activeFlowId] : null
   const activeStep = activeFlow?.steps?.[activeStepIndex] || null
@@ -585,6 +586,7 @@ export function TutorialProvider({ children }) {
   const previousStep = useCallback(() => {
     if (!activeFlow) return
     const nextIndex = Math.max(0, activeStepIndex - 1)
+    suppressAutoAdvanceStepRef.current = `${activeFlow.id}:${nextIndex}`
     setActiveStepIndex(nextIndex)
     persistCurrentPosition(activeFlow.id, nextIndex)
   }, [activeFlow, activeStepIndex, persistCurrentPosition])
@@ -841,6 +843,13 @@ export function TutorialProvider({ children }) {
 
   useEffect(() => {
     if (!isRunning || !activeStep || activeStep.requiresAction === false) return
+
+    const activeStepKey = `${activeFlow?.id || ''}:${activeStepIndex}`
+    if (suppressAutoAdvanceStepRef.current === activeStepKey) {
+      suppressAutoAdvanceStepRef.current = ''
+      return
+    }
+
     if (!isTutorialStepActionComplete(activeStep, { firstStepsCompleted: firstStepsCompletedMap, location })) return
 
     const frameId = window.requestAnimationFrame(() => {
@@ -848,7 +857,7 @@ export function TutorialProvider({ children }) {
     })
 
     return () => window.cancelAnimationFrame(frameId)
-  }, [activeStep, firstStepsCompletedMap, isRunning, location, nextStep])
+  }, [activeFlow?.id, activeStep, activeStepIndex, firstStepsCompletedMap, isRunning, location, nextStep])
 
   useEffect(() => {
     if (!state.firstStepsStarted || state.firstStepsDismissed) return

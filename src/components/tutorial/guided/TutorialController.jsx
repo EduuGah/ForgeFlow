@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 
 import { useTutorial } from '../../../context/TutorialContext'
@@ -7,6 +7,7 @@ import useTutorialStepTarget from './useTutorialStepTarget'
 
 export default function TutorialController() {
   const location = useLocation()
+  const [targetRetryIndex, setTargetRetryIndex] = useState(0)
   const {
     activeFlow,
     activeStep,
@@ -18,7 +19,7 @@ export default function TutorialController() {
     skipTutorial,
     progress,
   } = useTutorial()
-  const watchKey = `${activeFlow?.id || ''}:${activeStep?.id || ''}:${activeStepIndex}:${location.pathname}`
+  const watchKey = `${activeFlow?.id || ''}:${activeStep?.id || ''}:${activeStepIndex}:${location.pathname}:${targetRetryIndex}`
   const targetState = useTutorialStepTarget(isRunning && canShowTutorial ? activeStep : null, watchKey)
 
   useEffect(() => {
@@ -74,6 +75,7 @@ export default function TutorialController() {
       targetState={targetState}
       onBack={previousStep}
       onNext={() => requestNextStep({ targetElement: targetState.element })}
+      onRetry={() => setTargetRetryIndex((current) => current + 1)}
       onSkip={skipTutorial}
     />
   )

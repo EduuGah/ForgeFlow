@@ -14,6 +14,7 @@ export default function TutorialOverlay({
   targetState,
   onBack,
   onNext,
+  onRetry,
   onSkip,
 }) {
   const popupRef = useRef(null)
@@ -55,12 +56,16 @@ export default function TutorialOverlay({
 
     if (!targetState.highlight) {
       const width = Math.min(320, Math.max(260, window.innerWidth - 24))
+      const viewport = window.visualViewport
+      const viewportTop = viewport?.offsetTop || 0
+      const viewportHeight = viewport?.height || window.innerHeight
       return {
         placement: 'bottom',
         style: {
           width,
           left: Math.max(12, (window.innerWidth - width) / 2),
-          top: Math.max(80, window.innerHeight * 0.28),
+          top: viewportTop + Math.max(12, Math.min(80, (viewportHeight - Math.min(popupSize.height, 250)) / 2)),
+          maxHeight: Math.max(180, viewportHeight - 24),
         },
       }
     }
@@ -82,6 +87,12 @@ export default function TutorialOverlay({
   }
 
   function handleNext() {
+    if (targetState.status === 'missing') {
+      setFeedback('Procurando o campo novamente...')
+      onRetry?.()
+      return
+    }
+
     const result = onNext?.()
     if (result && result.advanced === false) {
       setOutsidePulse((value) => value + 1)

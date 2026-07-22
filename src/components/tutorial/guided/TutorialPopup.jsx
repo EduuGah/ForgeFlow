@@ -61,15 +61,13 @@ export default function TutorialPopup({
         )}
 
         <button type="button" className="is-primary" onClick={onNext} disabled={isWaiting}>
-          Próximo <ArrowRight size={15} />
+          {isMissing ? 'Tentar novamente' : 'Próximo'} <ArrowRight size={15} />
         </button>
       </div>
 
-      {!compact && (
-        <button type="button" className="ff-guided-tutorial-popup__skip" onClick={onSkip}>
-          Pular tutorial
-        </button>
-      )}
+      <button type="button" className="ff-guided-tutorial-popup__skip" onClick={onSkip}>
+        Sair do tutorial
+      </button>
     </section>
   )
 }

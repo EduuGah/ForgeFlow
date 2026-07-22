@@ -1,4 +1,4 @@
-export const TUTORIAL_VERSION = 11
+export const TUTORIAL_VERSION = 12
 
 export const FIRST_STEPS_MISSIONS = [
   {
@@ -191,7 +191,7 @@ const WORKOUT_INPUT_STEPS = [
     actionLabel: 'Informar peso',
     route: '/start-workout',
     section: 'workout',
-    target: '[data-tutorial="active-set-weight-input"]',
+    target: '[data-tutorial="active-set-weight-input"], [data-set-field="weight"]',
     createDemoSession: true,
     validation: 'input-value',
     pendingText: 'Digite o peso usado.',
@@ -204,7 +204,7 @@ const WORKOUT_INPUT_STEPS = [
     actionLabel: 'Informar reps',
     route: '/start-workout',
     section: 'workout',
-    target: '[data-tutorial="active-set-reps-input"]',
+    target: '[data-tutorial="active-set-reps-input"], [data-set-field="reps"]',
     createDemoSession: true,
     validation: 'input-value',
     pendingText: 'Digite as repetições.',

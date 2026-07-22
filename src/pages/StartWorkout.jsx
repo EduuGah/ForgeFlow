@@ -199,7 +199,13 @@ const EMPTY_WORKOUT_ERROR =
 
 function StartWorkout() {
   const { user } = useAuth()
-  const { completeFirstStepMission, firstStepsCompleted, state: tutorialState } = useTutorial()
+  const {
+    activeStep: activeTutorialStep,
+    completeFirstStepMission,
+    firstStepsCompleted,
+    isRunning: tutorialIsRunning,
+    state: tutorialState,
+  } = useTutorial()
 
   const {
     activeSession,
@@ -244,6 +250,7 @@ function StartWorkout() {
   const [appSettings, setAppSettings] = useState(getAppSettings())
   const [selectedExerciseId, setSelectedExerciseId] = useState('')
   const exerciseCardRefs = useRef({})
+  const collapseInitializationKeyRef = useRef('')
 
   const sessionIsInvalid = activeSession && !isValidActiveSession(activeSession)
   const activeSessionIsTutorial = isTutorialWorkoutSession(activeSession)
@@ -315,6 +322,21 @@ function StartWorkout() {
       null
     )
   }, [focusExercise, selectedExerciseId, sessionExercises])
+
+  const isGuidedSetTutorialStep = tutorialIsRunning && [
+    'set-weight',
+    'set-reps',
+    'register-set',
+  ].includes(activeTutorialStep?.id)
+
+  useEffect(() => {
+    if (!isGuidedSetTutorialStep || !focusExercise?.id) return
+
+    setCollapsedExerciseIds((current) => current.includes(focusExercise.id)
+      ? current.filter((exerciseId) => exerciseId !== focusExercise.id)
+      : current)
+    setSelectedExerciseId(focusExercise.id)
+  }, [activeTutorialStep?.id, focusExercise?.id, isGuidedSetTutorialStep])
 
   function focusExerciseCard(exerciseId) {
     if (!exerciseId) return
@@ -818,21 +840,38 @@ function StartWorkout() {
   }, [addExerciseOpen])
 
   useEffect(() => {
-    if (!activeSession) return
+    if (!activeSession?.id) return
 
     if (!selectedExerciseId && focusExercise?.id) {
       // Mantém o foco inicial alinhado com o primeiro exercício pendente.
-       
       setSelectedExerciseId(focusExercise.id)
     }
+  }, [activeSession?.id, focusExercise?.id, selectedExerciseId])
+
+  useEffect(() => {
+    if (!activeSession?.id) {
+      collapseInitializationKeyRef.current = ''
+      return
+    }
+
+    const initializationKey = [
+      activeSession.id,
+      activeSessionIsTutorial ? 'tutorial' : 'standard',
+      appSettings.collapseSeriesByDefault ? 'collapsed' : 'expanded',
+    ].join(':')
+
+    if (collapseInitializationKeyRef.current === initializationKey) return
+    collapseInitializationKeyRef.current = initializationKey
 
     if (activeSessionIsTutorial) {
       setCollapsedExerciseIds([])
     } else if (appSettings.collapseSeriesByDefault) {
       // Aplica a preferência visual somente ao iniciar/alternar sessão.
       setCollapsedExerciseIds(sessionExercises.map((exercise) => exercise.id))
+    } else {
+      setCollapsedExerciseIds([])
     }
-  }, [activeSession, activeSession?.id, activeSessionIsTutorial, appSettings.collapseSeriesByDefault, focusExercise?.id, selectedExerciseId, sessionExercises])
+  }, [activeSession?.id, activeSessionIsTutorial, appSettings.collapseSeriesByDefault, sessionExercises])
 
   if (sessionIsInvalid) {
     return <InvalidSessionState onClear={handleClearBrokenSession} />
@@ -916,6 +955,7 @@ function StartWorkout() {
               replacementOptions={replacementOptions}
               exercises={exercises}
               isTutorialSession={activeSessionIsTutorial}
+              isTutorialTargetExercise={isGuidedSetTutorialStep && sessionExercise.id === focusExercise?.id}
               getExerciseId={getExerciseId}
               getExerciseName={getExerciseName}
               getExerciseSubtitle={getExerciseSubtitle}

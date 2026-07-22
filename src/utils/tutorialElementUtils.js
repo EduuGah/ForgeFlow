@@ -90,7 +90,7 @@ export function waitForElement(selector = '', { signal, timeoutMs = DEFAULT_WAIT
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ['class', 'style', 'hidden', 'data-state', 'open'],
+      attributeFilter: ['class', 'style', 'hidden', 'data-state', 'data-tutorial', 'open'],
     })
 
     timeoutId = window.setTimeout(() => finish(null), timeoutMs)

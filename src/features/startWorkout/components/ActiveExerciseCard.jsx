@@ -130,6 +130,7 @@ export default function ActiveExerciseCard({
   replaceSearch,
   replacementOptions,
   isTutorialSession = false,
+  isTutorialTargetExercise = false,
   onRegisterCardRef,
   onToggleCollapse,
   onToggleReplace,
@@ -163,15 +164,16 @@ export default function ActiveExerciseCard({
   const [replaceMuscleFilter, setReplaceMuscleFilter] = useState('')
   const [replaceEquipmentFilter, setReplaceEquipmentFilter] = useState('')
   const isRegisterGuideExercise = isTutorialSession && sessionExercise.tutorialRole === 'register-set'
+  const exposesTutorialSetTargets = isRegisterGuideExercise || isTutorialTargetExercise
   const guidedRegisterSetId = useMemo(() => {
-    if (!isRegisterGuideExercise) return ''
+    if (!exposesTutorialSetTargets) return ''
 
     const sets = sessionExercise.sets || []
     const guidedSet = sets.find((set) => set.tutorialTarget === 'register-set')
     const firstWorkingSet = sets.find((set) => !isWarmupSet(set))
 
-    return (guidedSet || firstWorkingSet)?.id || ''
-  }, [isRegisterGuideExercise, sessionExercise.sets])
+    return (guidedSet || firstWorkingSet || sets[0])?.id || ''
+  }, [exposesTutorialSetTargets, sessionExercise.sets])
 
   const replaceMuscleOptions = useMemo(
     () => getUniqueFilterValues(replacementOptions, getExerciseMuscle),
@@ -603,7 +605,7 @@ export default function ActiveExerciseCard({
         {(sessionExercise.sets || []).map((set, setIndex) => {
           const isWarmup = isWarmupSet(set)
           const isCompleted = Boolean(set.completed)
-          const isGuidedRegisterRow = isRegisterGuideExercise && set.id === guidedRegisterSetId
+          const isGuidedRegisterRow = exposesTutorialSetTargets && set.id === guidedRegisterSetId
           const tutorialTarget = isGuidedRegisterRow
             ? 'guided-register-set-row'
             : isWarmup
@@ -618,7 +620,7 @@ export default function ActiveExerciseCard({
             {isGuidedRegisterRow && (
               <div className="ff-guided-register-callout" data-tutorial="guided-register-callout">
                 <Sparkles size={15} />
-                <span>Série de teste</span>
+                <span>{isTutorialSession ? 'Série de teste' : 'Série guiada'}</span>
                 <strong>Preencha peso, reps e toque no check.</strong>
               </div>
             )}
@@ -665,7 +667,7 @@ export default function ActiveExerciseCard({
                 onFocus={(event) => {
                   if (Number(event.target.value) === 0) onUpdateSet(sessionExercise.id, set.id, 'weight', '')
                   event.target?.select?.()
-                  if (!isTutorialSession) {
+                  if (!isTutorialSession && !isTutorialTargetExercise) {
                     window.setTimeout(() => event.target?.scrollIntoView?.({ behavior: 'smooth', block: 'center' }), 120)
                   }
                 }}
@@ -690,7 +692,7 @@ export default function ActiveExerciseCard({
                 onFocus={(event) => {
                   if (Number(event.target.value) === 0) onUpdateSet(sessionExercise.id, set.id, 'reps', '')
                   event.target?.select?.()
-                  if (!isTutorialSession) {
+                  if (!isTutorialSession && !isTutorialTargetExercise) {
                     window.setTimeout(() => event.target?.scrollIntoView?.({ behavior: 'smooth', block: 'center' }), 120)
                   }
                 }}
