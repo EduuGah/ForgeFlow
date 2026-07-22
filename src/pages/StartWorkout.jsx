@@ -332,11 +332,15 @@ function StartWorkout() {
   useEffect(() => {
     if (!isGuidedSetTutorialStep || !focusExercise?.id) return
 
+    if (!Array.isArray(focusExercise.sets) || focusExercise.sets.length === 0) {
+      addSet(focusExercise.id)
+    }
+
     setCollapsedExerciseIds((current) => current.includes(focusExercise.id)
       ? current.filter((exerciseId) => exerciseId !== focusExercise.id)
       : current)
     setSelectedExerciseId(focusExercise.id)
-  }, [activeTutorialStep?.id, focusExercise?.id, isGuidedSetTutorialStep])
+  }, [activeTutorialStep?.id, addSet, focusExercise?.id, focusExercise?.sets, isGuidedSetTutorialStep])
 
   function focusExerciseCard(exerciseId) {
     if (!exerciseId) return
@@ -864,7 +868,7 @@ function StartWorkout() {
     if (collapseInitializationKeyRef.current === initializationKey) return
     collapseInitializationKeyRef.current = initializationKey
 
-    if (activeSessionIsTutorial) {
+    if (activeSessionIsTutorial || isGuidedSetTutorialStep) {
       setCollapsedExerciseIds([])
     } else if (appSettings.collapseSeriesByDefault) {
       // Aplica a preferência visual somente ao iniciar/alternar sessão.
@@ -872,7 +876,7 @@ function StartWorkout() {
     } else {
       setCollapsedExerciseIds([])
     }
-  }, [activeSession?.id, activeSessionIsTutorial, appSettings.collapseSeriesByDefault, sessionExercises])
+  }, [activeSession?.id, activeSessionIsTutorial, appSettings.collapseSeriesByDefault, isGuidedSetTutorialStep, sessionExercises])
 
   if (sessionIsInvalid) {
     return <InvalidSessionState onClear={handleClearBrokenSession} />
@@ -950,7 +954,9 @@ function StartWorkout() {
               appSettings={appSettings}
               selectedExercise={selectedExercise}
               focusExercise={focusExercise}
-              isCollapsed={collapsedExerciseIds.includes(sessionExercise.id)}
+              isCollapsed={isGuidedSetTutorialStep && sessionExercise.id === focusExercise?.id
+                ? false
+                : collapsedExerciseIds.includes(sessionExercise.id)}
               replaceExerciseId={replaceExerciseId}
               replaceSearch={replaceSearch}
               replacementOptions={replacementOptions}

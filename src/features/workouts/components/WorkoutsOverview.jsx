@@ -207,7 +207,7 @@ export function WorkoutNextActionCard({ workout, workoutListMetaMap, onCreateWor
     }
 
     return (
-        <section className="ff-workouts-next-action-card" data-tutorial="workout-start-button">
+        <section className="ff-workouts-next-action-card">
             <div className="ff-workouts-next-action-card__icon">
                 <Sparkles size={22} />
             </div>
@@ -226,7 +226,11 @@ export function WorkoutNextActionCard({ workout, workoutListMetaMap, onCreateWor
                 </div>
             </div>
 
-            <button type="button" onClick={() => onStartWorkout(workout)}>
+            <button
+                type="button"
+                data-tutorial="workout-start-button"
+                onClick={() => onStartWorkout(workout)}
+            >
                 <Play size={18} />
                 Iniciar
             </button>
