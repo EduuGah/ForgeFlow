@@ -61,9 +61,24 @@
   color: var(--ff-text);
   padding: 14px;
   box-shadow: 0 20px 46px rgba(0, 0, 0, 0.26);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   pointer-events: auto;
   transform-origin: center;
   animation: ff-guided-popup-in 180ms ease both;
+}
+
+.ff-guided-tutorial-popup.is-compact {
+  gap: 9px;
+  padding: 12px;
+}
+
+.ff-guided-tutorial-popup.is-compact .ff-guided-tutorial-popup__copy {
+  gap: 3px;
+}
+
+.ff-guided-tutorial-popup.is-compact .ff-guided-tutorial-popup__actions button {
+  min-height: 34px;
 }
 
 .ff-guided-tutorial-popup__top,
@@ -282,4 +297,3 @@
     transition-duration: 1ms !important;
   }
 }
-

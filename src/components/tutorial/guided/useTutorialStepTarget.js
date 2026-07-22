@@ -1,15 +1,21 @@
 import { useEffect, useRef, useState } from 'react'
 
-import { waitForElement, scrollToTutorialTarget } from '../../../utils/tutorialElementUtils'
+import { isTutorialElementVisible, waitForElement, scrollToTutorialTarget } from '../../../utils/tutorialElementUtils'
 import { calculateHighlight } from '../../../utils/tutorialPositionUtils'
 
 function getTargetSelector(step) {
-  return step?.target || 'main'
+  return step?.target || ''
 }
 
 function isOverlayMutation(record) {
   const target = record?.target
-  return Boolean(target?.closest?.('.ff-guided-tutorial-root'))
+  if (target?.closest?.('.ff-guided-tutorial-root')) return true
+
+  const changedNodes = [...(record?.addedNodes || []), ...(record?.removedNodes || [])]
+  return changedNodes.length > 0 && changedNodes.every((node) =>
+    node?.nodeType === Node.ELEMENT_NODE &&
+    (node.matches?.('.ff-guided-tutorial-root') || node.closest?.('.ff-guided-tutorial-root'))
+  )
 }
 
 function isSameHighlight(currentHighlight, nextHighlight) {
@@ -41,6 +47,9 @@ export default function useTutorialStepTarget(step, watchKey = '') {
     const abortController = new AbortController()
     let resizeObserver = null
     let mutationObserver = null
+    let isPositioning = false
+    let preparationId = 0
+    let layoutEpoch = 0
 
     function disconnectObservers() {
       resizeObserver?.disconnect()
@@ -80,12 +89,29 @@ export default function useTutorialStepTarget(step, watchKey = '') {
       })
     }
 
-    function scheduleMeasure() {
+    function scheduleMeasure({ ensureVisible = false } = {}) {
+      if (isPositioning) return
+      const currentEpoch = ++layoutEpoch
       window.cancelAnimationFrame(frameRef.current)
-      frameRef.current = window.requestAnimationFrame(() => measure())
+      frameRef.current = window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(async () => {
+          if (currentEpoch !== layoutEpoch || abortController.signal.aborted) return
+
+          const element = elementRef.current
+          if (ensureVisible && element && !isTutorialElementVisible(element)) {
+            isPositioning = true
+            await scrollToTutorialTarget(element, { signal: abortController.signal })
+            isPositioning = false
+          }
+
+          measure(element)
+        })
+      })
     }
 
     async function prepareTarget() {
+      const currentPreparationId = ++preparationId
+      isPositioning = true
       setTargetState({
         status: 'waiting',
         element: null,
@@ -98,9 +124,10 @@ export default function useTutorialStepTarget(step, watchKey = '') {
         timeoutMs: step.requireTarget ? 9000 : 7000,
       })
 
-      if (abortController.signal.aborted) return
+      if (abortController.signal.aborted || currentPreparationId !== preparationId) return
 
       if (!element) {
+        isPositioning = false
         setTargetState({
           status: 'missing',
           element: null,
@@ -116,15 +143,15 @@ export default function useTutorialStepTarget(step, watchKey = '') {
       element.classList.add('ff-guided-tutorial-target')
 
       await scrollToTutorialTarget(element, { signal: abortController.signal })
-      if (abortController.signal.aborted) return
+      if (abortController.signal.aborted || currentPreparationId !== preparationId) return
 
+      isPositioning = false
       measure(element)
 
       resizeObserver = typeof ResizeObserver !== 'undefined'
-        ? new ResizeObserver(scheduleMeasure)
+        ? new ResizeObserver(() => scheduleMeasure({ ensureVisible: true }))
         : null
       resizeObserver?.observe(element)
-      resizeObserver?.observe(document.documentElement)
 
       mutationObserver = new MutationObserver((records) => {
         if (records.length > 0 && records.every(isOverlayMutation)) return
@@ -134,13 +161,11 @@ export default function useTutorialStepTarget(step, watchKey = '') {
           prepareTarget()
           return
         }
-        scheduleMeasure()
+        scheduleMeasure({ ensureVisible: true })
       })
       mutationObserver.observe(document.body, {
         childList: true,
         subtree: true,
-        attributes: true,
-        attributeFilter: ['class', 'style', 'hidden', 'data-state', 'open'],
       })
     }
 
@@ -153,6 +178,7 @@ export default function useTutorialStepTarget(step, watchKey = '') {
     window.addEventListener('orientationchange', handleViewportChange)
     window.visualViewport?.addEventListener('resize', handleViewportChange)
     window.visualViewport?.addEventListener('scroll', handleViewportChange)
+    document.addEventListener('transitionend', handleViewportChange, true)
 
     prepareTarget()
 
@@ -166,6 +192,7 @@ export default function useTutorialStepTarget(step, watchKey = '') {
       window.removeEventListener('orientationchange', handleViewportChange)
       window.visualViewport?.removeEventListener('resize', handleViewportChange)
       window.visualViewport?.removeEventListener('scroll', handleViewportChange)
+      document.removeEventListener('transitionend', handleViewportChange, true)
     }
   }, [step, watchKey])
 

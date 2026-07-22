@@ -17,7 +17,7 @@ export default function TutorialOverlay({
   onSkip,
 }) {
   const popupRef = useRef(null)
-  const [popupSize, setPopupSize] = useState({ width: 320, height: 170 })
+  const [popupSize, setPopupSize] = useState({ width: 320, height: 250 })
   const [feedback, setFeedback] = useState('')
   const [outsidePulse, setOutsidePulse] = useState(0)
 
@@ -28,9 +28,12 @@ export default function TutorialOverlay({
     const observer = new ResizeObserver(([entry]) => {
       const box = entry?.contentRect
       if (!box) return
-      setPopupSize({
-        width: box.width,
-        height: box.height,
+      setPopupSize((currentSize) => {
+        if (Math.abs(currentSize.width - box.width) < 0.5 && Math.abs(currentSize.height - box.height) < 0.5) {
+          return currentSize
+        }
+
+        return { width: box.width, height: box.height }
       })
     })
 
@@ -62,8 +65,12 @@ export default function TutorialOverlay({
       }
     }
 
-    return calculatePopupPosition(targetState.highlight, popupSize)
-  }, [popupSize, targetState.highlight])
+    const minimumHeight = step?.validation === 'input-value' ? 160 : 250
+    return calculatePopupPosition(targetState.highlight, {
+      ...popupSize,
+      height: Math.max(minimumHeight, popupSize.height),
+    })
+  }, [popupSize, step?.validation, targetState.highlight])
 
   if (typeof document === 'undefined' || !step) return null
 
@@ -84,14 +91,14 @@ export default function TutorialOverlay({
 
   const overlay = (
     <div className={`ff-guided-tutorial-root ${outsidePulse ? 'has-feedback' : ''}`} data-pulse={outsidePulse}>
-      {targetState.highlight ? (
+      {targetState.highlight && !popupPosition.overlapsTarget ? (
         <TutorialHighlight
           highlight={targetState.highlight}
           onOutsidePointerDown={handleOutsidePointerDown}
         />
-      ) : (
+      ) : targetState.status !== 'ready' ? (
         <div className="ff-guided-tutorial-pane ff-guided-tutorial-pane--full" onPointerDown={handleOutsidePointerDown} />
-      )}
+      ) : null}
 
       <TutorialPopup
         popupRef={popupRef}
@@ -101,6 +108,7 @@ export default function TutorialOverlay({
         total={total}
         placement={popupPosition.placement}
         style={popupPosition.style}
+        compact={step.validation === 'input-value'}
         canGoBack={canGoBack}
         feedback={feedback || (targetState.status === 'missing' ? targetState.message : '')}
         status={targetState.status}

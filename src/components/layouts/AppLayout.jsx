@@ -1,9 +1,10 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
-import { Download, Menu } from 'lucide-react'
+import { CircleHelp, Download, Menu } from 'lucide-react'
 import { Outlet, useLocation } from 'react-router-dom'
 
 import { useAuth } from '../../context/AuthContext'
 import { useWorkoutSession } from '../../context/WorkoutSessionContext'
+import { useTutorial } from '../../context/TutorialContext'
 import { apiFetch } from '../../services/api'
 import { requestStartupPermissions } from '../../services/appPermissionService'
 import { cancelActiveWorkoutNotification, updateActiveWorkoutNotification } from '../../services/nativeNotificationService'
@@ -86,6 +87,13 @@ function AppLayout() {
   const { user } = useAuth()
   const location = useLocation()
   const { activeSession, elapsedSeconds, completedSets, totalSets } = useWorkoutSession()
+  const {
+    firstStepsProgress,
+    isRunning: isTutorialRunning,
+    restartTutorial,
+    continueTutorial,
+    state: tutorialState,
+  } = useTutorial()
   const isActiveWorkoutRoute = location.pathname.startsWith('/start-workout')
   const hasBottomNav = !isActiveWorkoutRoute
   const hasFloatingWorkoutMini =
@@ -104,6 +112,23 @@ function AppLayout() {
   const lastScrollYRef = useRef(0)
   const tickingRef = useRef(false)
   const pageScrollRef = useRef(null)
+
+  function handleTutorialShortcut() {
+    if (isTutorialRunning) return
+
+    const shouldRestart = Boolean(
+      firstStepsProgress?.isCompleted ||
+      tutorialState.tutorialCompleted ||
+      tutorialState.tutorialSkipped
+    )
+
+    if (shouldRestart) {
+      restartTutorial()
+      return
+    }
+
+    continueTutorial()
+  }
 
   useEffect(() => {
     const native = isCapacitorLayout()
@@ -469,6 +494,17 @@ function AppLayout() {
                 App
               </button>
               )}
+
+              <button
+                type="button"
+                onClick={handleTutorialShortcut}
+                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface)] text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-accent-text)] active:scale-95"
+                aria-label={firstStepsProgress?.isCompleted ? 'Refazer tutorial' : 'Abrir tutorial'}
+                title={firstStepsProgress?.isCompleted ? 'Refazer tutorial' : 'Abrir tutorial'}
+                data-tutorial="tutorial-shortcut"
+              >
+                <CircleHelp size={20} />
+              </button>
 
               <NotificationBell />
             </div>

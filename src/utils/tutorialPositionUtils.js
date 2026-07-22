@@ -2,6 +2,7 @@ const VIEWPORT_MARGIN = 12
 const TARGET_PADDING = 8
 const POPUP_GAP = 14
 const DEFAULT_POPUP_SIZE = { width: 320, height: 170 }
+const MIN_POPUP_HEIGHT = 148
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max)
@@ -89,24 +90,63 @@ export function calculatePopupPosition(highlight, popupSize = DEFAULT_POPUP_SIZE
   ]
 
   const fittingCandidate = candidates.find((candidate) => hasRoom(candidate, size, viewport) && !overlapsTarget(candidate, size, highlight))
-  const chosen = fittingCandidate || candidates
-    .map((candidate) => ({
-      ...candidate,
-      left: clamp(candidate.left, viewport.left + VIEWPORT_MARGIN, viewport.left + viewport.width - size.width - VIEWPORT_MARGIN),
-      top: clamp(candidate.top, viewport.top + VIEWPORT_MARGIN, viewport.top + viewport.height - size.height - VIEWPORT_MARGIN),
-    }))
-    .find((candidate) => !overlapsTarget(candidate, size, highlight)) || {
-      placement: 'bottom',
-      left: clamp(centerX, viewport.left + VIEWPORT_MARGIN, viewport.left + viewport.width - size.width - VIEWPORT_MARGIN),
-      top: clamp(highlight.bottom + POPUP_GAP, viewport.top + VIEWPORT_MARGIN, viewport.top + viewport.height - size.height - VIEWPORT_MARGIN),
+  let chosen = fittingCandidate
+  let renderedHeight = size.height
+
+  if (!chosen) {
+    const verticalCandidates = [
+      {
+        placement: 'bottom',
+        left: centerX,
+        top: highlight.bottom + POPUP_GAP,
+        availableHeight: viewport.top + viewport.height - VIEWPORT_MARGIN - highlight.bottom - POPUP_GAP,
+      },
+      {
+        placement: 'top',
+        left: centerX,
+        availableHeight: highlight.top - viewport.top - VIEWPORT_MARGIN - POPUP_GAP,
+      },
+    ]
+      .filter((candidate) => candidate.availableHeight >= MIN_POPUP_HEIGHT)
+      .sort((a, b) => b.availableHeight - a.availableHeight)
+
+    const adaptiveCandidate = verticalCandidates[0]
+    if (adaptiveCandidate) {
+      renderedHeight = Math.min(size.height, adaptiveCandidate.availableHeight)
+      chosen = {
+        ...adaptiveCandidate,
+        top: adaptiveCandidate.placement === 'top'
+          ? highlight.top - POPUP_GAP - renderedHeight
+          : adaptiveCandidate.top,
+      }
     }
+  }
+
+  if (!chosen) {
+    return {
+      placement: 'detached',
+      overlapsTarget: true,
+      style: {
+        width: size.width,
+        left: clamp(centerX, viewport.left + VIEWPORT_MARGIN, viewport.left + viewport.width - size.width - VIEWPORT_MARGIN),
+        top: viewport.top + VIEWPORT_MARGIN,
+        maxHeight: Math.max(MIN_POPUP_HEIGHT, viewport.height - VIEWPORT_MARGIN * 2),
+      },
+    }
+  }
+
+  const finalLeft = clamp(chosen.left, viewport.left + VIEWPORT_MARGIN, viewport.left + viewport.width - size.width - VIEWPORT_MARGIN)
+  const finalTop = clamp(chosen.top, viewport.top + VIEWPORT_MARGIN, viewport.top + viewport.height - renderedHeight - VIEWPORT_MARGIN)
+  const finalCandidate = { left: finalLeft, top: finalTop }
 
   return {
     placement: chosen.placement,
+    overlapsTarget: overlapsTarget(finalCandidate, { ...size, height: renderedHeight }, highlight),
     style: {
       width: size.width,
-      left: clamp(chosen.left, viewport.left + VIEWPORT_MARGIN, viewport.left + viewport.width - size.width - VIEWPORT_MARGIN),
-      top: clamp(chosen.top, viewport.top + VIEWPORT_MARGIN, viewport.top + viewport.height - size.height - VIEWPORT_MARGIN),
+      left: finalLeft,
+      top: finalTop,
+      maxHeight: renderedHeight < size.height ? renderedHeight : undefined,
     },
   }
 }
@@ -154,4 +194,3 @@ export function calculateOverlayPanes(highlight) {
     },
   ]
 }
-

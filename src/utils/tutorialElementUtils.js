@@ -20,24 +20,36 @@ function isUsableElement(element) {
     Number(style.opacity || 1) > 0.02
 }
 
+function getPrioritySelectors(selector = '') {
+  return String(selector || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
 export function findTutorialElement(selector = '') {
   if (typeof document === 'undefined') return null
 
-  const safeSelector = selector || 'main'
-  try {
-    const matches = Array.from(document.querySelectorAll(safeSelector))
-    return matches.find(isUsableElement) || null
-  } catch {
-    return null
+  const prioritySelectors = getPrioritySelectors(selector)
+
+  for (const prioritySelector of prioritySelectors) {
+    try {
+      const match = Array.from(document.querySelectorAll(prioritySelector)).find(isUsableElement)
+      if (match) return match
+    } catch {
+      // Ignora apenas o seletor inválido e tenta a próxima alternativa.
+    }
   }
+
+  return null
 }
 
 export function waitForElement(selector = '', { signal, timeoutMs = DEFAULT_WAIT_MS } = {}) {
   if (typeof document === 'undefined') return Promise.resolve(null)
 
   return new Promise((resolve) => {
-    const startedAt = performance.now()
     let frameId = 0
+    let timeoutId = 0
     let observer = null
     let settled = false
 
@@ -45,6 +57,7 @@ export function waitForElement(selector = '', { signal, timeoutMs = DEFAULT_WAIT
       if (settled) return
       settled = true
       window.cancelAnimationFrame(frameId)
+      window.clearTimeout(timeoutId)
       observer?.disconnect()
       signal?.removeEventListener('abort', handleAbort)
       resolve(element || null)
@@ -54,7 +67,7 @@ export function waitForElement(selector = '', { signal, timeoutMs = DEFAULT_WAIT
       finish(null)
     }
 
-    function check() {
+    function checkNow() {
       if (signal?.aborted) {
         finish(null)
         return
@@ -63,19 +76,16 @@ export function waitForElement(selector = '', { signal, timeoutMs = DEFAULT_WAIT
       const element = findTutorialElement(selector)
       if (element) {
         finish(element)
-        return
       }
+    }
 
-      if (performance.now() - startedAt >= timeoutMs) {
-        finish(null)
-        return
-      }
-
-      frameId = window.requestAnimationFrame(check)
+    function scheduleCheck() {
+      window.cancelAnimationFrame(frameId)
+      frameId = window.requestAnimationFrame(checkNow)
     }
 
     signal?.addEventListener('abort', handleAbort, { once: true })
-    observer = new MutationObserver(check)
+    observer = new MutationObserver(scheduleCheck)
     observer.observe(document.body, {
       childList: true,
       subtree: true,
@@ -83,18 +93,21 @@ export function waitForElement(selector = '', { signal, timeoutMs = DEFAULT_WAIT
       attributeFilter: ['class', 'style', 'hidden', 'data-state', 'open'],
     })
 
-    check()
+    timeoutId = window.setTimeout(() => finish(null), timeoutMs)
+    checkNow()
   })
 }
 
-function isElementComfortablyVisible(element, margin = 72) {
+export function isTutorialElementVisible(element, margin = 72) {
   const rect = element.getBoundingClientRect()
   const viewport = getViewport()
+  const viewportTop = window.visualViewport?.offsetTop || 0
+  const viewportLeft = window.visualViewport?.offsetLeft || 0
 
-  return rect.top >= margin &&
-    rect.left >= 12 &&
-    rect.bottom <= viewport.height - margin &&
-    rect.right <= viewport.width - 12
+  return rect.top >= viewportTop + margin &&
+    rect.left >= viewportLeft + 12 &&
+    rect.bottom <= viewportTop + viewport.height - margin &&
+    rect.right <= viewportLeft + viewport.width - 12
 }
 
 function waitForScrollIdle(element, { signal, maxMs = 1800 } = {}) {
@@ -130,7 +143,8 @@ function waitForScrollIdle(element, { signal, maxMs = 1800 } = {}) {
       lastWindowY = nextWindowY
       lastTop = nextTop
 
-      if (stableFrames >= SCROLL_IDLE_FRAMES || performance.now() - startedAt >= maxMs) {
+      const elapsed = performance.now() - startedAt
+      if ((stableFrames >= SCROLL_IDLE_FRAMES && elapsed >= 220) || elapsed >= maxMs) {
         finish()
         return
       }
@@ -146,14 +160,14 @@ function waitForScrollIdle(element, { signal, maxMs = 1800 } = {}) {
 export async function scrollToTutorialTarget(element, { signal } = {}) {
   if (!element || signal?.aborted) return
 
-  if (!isElementComfortablyVisible(element)) {
+  for (let attempt = 0; attempt < 2 && !isTutorialElementVisible(element); attempt += 1) {
     element.scrollIntoView({
       behavior: 'smooth',
       block: 'center',
       inline: 'nearest',
     })
+
+    await waitForScrollIdle(element, { signal })
+    if (signal?.aborted) return
   }
-
-  await waitForScrollIdle(element, { signal })
 }
-

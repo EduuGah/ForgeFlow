@@ -1,4 +1,4 @@
-export const TUTORIAL_VERSION = 10
+export const TUTORIAL_VERSION = 11
 
 export const FIRST_STEPS_MISSIONS = [
   {
@@ -49,7 +49,6 @@ export const FIRST_STEPS_MISSIONS = [
     route: '/start-workout',
     section: 'workout',
     target: '[data-tutorial="active-finish-workout-bottom"], [data-tutorial="active-finish-workout-hero"], [data-tutorial="active-finish-workout-desktop"]',
-    createDemoSession: true,
     pendingText: 'Finalize o treino para continuar.',
   },
   {
@@ -61,7 +60,7 @@ export const FIRST_STEPS_MISSIONS = [
     actionLabel: 'Abrir histórico',
     route: '/history',
     section: 'history',
-    target: '[data-tutorial="history-list"], [data-tutorial="dashboard-recent-history"], main',
+    target: '[data-tutorial="history-overview"]',
     pendingText: 'Abra o histórico.',
     requiresAction: false,
     validation: 'none',
@@ -75,7 +74,7 @@ export const FIRST_STEPS_MISSIONS = [
     actionLabel: 'Ir para Metas',
     route: '/goals',
     section: 'goals',
-    target: '[data-tutorial="goals-create-button"], [data-tutorial="goals-overview"], main',
+    target: '[data-tutorial="goals-create-button"], [data-tutorial="goals-overview"]',
     pendingText: 'Crie uma meta para continuar.',
   },
 ]
@@ -178,7 +177,7 @@ const INTRO_STEP = step({
   actionLabel: 'Começar',
   route: '/',
   section: 'firstSteps',
-  target: '[data-tutorial="dashboard-hero"], main',
+  target: '[data-tutorial="dashboard-hero"]',
   requiresAction: false,
   validation: 'none',
 })
@@ -195,7 +194,6 @@ const WORKOUT_INPUT_STEPS = [
     target: '[data-tutorial="active-set-weight-input"]',
     createDemoSession: true,
     validation: 'input-value',
-    autoAdvanceOn: 'input',
     pendingText: 'Digite o peso usado.',
   }),
   step({
@@ -209,7 +207,6 @@ const WORKOUT_INPUT_STEPS = [
     target: '[data-tutorial="active-set-reps-input"]',
     createDemoSession: true,
     validation: 'input-value',
-    autoAdvanceOn: 'input',
     pendingText: 'Digite as repetições.',
   }),
 ]
@@ -276,14 +273,14 @@ export const tutorialFlows = {
     title: 'Nutrição',
     description: 'Ajuda rápida de nutrição.',
     sections: ['nutrition'],
-    steps: [step({ id: 'nutrition-context', title: 'Nutrição', description: tutorialSections.nutrition.description, route: '/nutrition', section: 'nutrition', requiresAction: false, validation: 'none' })],
+    steps: [step({ id: 'nutrition-context', title: 'Nutrição', description: tutorialSections.nutrition.description, route: '/nutrition', section: 'nutrition', target: '[data-tutorial="nutrition-overview"]', requiresAction: false, validation: 'none' })],
   },
   settings: {
     id: 'settings',
     title: 'Ajuda',
     description: tutorialSections.settings.description,
     sections: ['settings'],
-    steps: [step({ id: 'settings-help', title: 'Ajuda do app', description: tutorialSections.settings.description, route: '/settings', section: 'settings', requiresAction: false, validation: 'none' })],
+    steps: [step({ id: 'settings-help', title: 'Ajuda do app', description: tutorialSections.settings.description, route: '/settings', section: 'settings', target: '[data-tutorial="settings-tutorial-panel"]', requiresAction: false, validation: 'none' })],
   },
 }
 

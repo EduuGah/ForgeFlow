@@ -369,7 +369,10 @@ export function TutorialProvider({ children }) {
       ? state.firstStepsCompleted
       : {}
     const nextMission = getFirstIncompleteMission(completedMissions)
-    const nextIndex = getStepIndexById(flow, state.firstStepsLastFocusedMission || nextMission?.startStepId || nextMission?.id, 0)
+    let nextIndex = getStepIndexById(flow, state.firstStepsLastFocusedMission || nextMission?.startStepId || nextMission?.id, 0)
+    if (nextMission?.id === 'finish-workout' && !activeSession) {
+      nextIndex = getStepIndexById(flow, 'set-weight', nextIndex)
+    }
 
     updateState((current) => ({
       ...current,
@@ -439,7 +442,10 @@ export function TutorialProvider({ children }) {
         ? FIRST_STEPS_MISSIONS.find((mission) => mission.id === startOptions.missionId)
         : null
       const nextMission = requestedMission || (startOptions.resume ? getFirstIncompleteMission(completedMissions) : null)
-      const nextStep = nextMission || flow.steps?.[0] || FIRST_STEPS_MISSIONS[0]
+      let nextStep = nextMission || flow.steps?.[0] || FIRST_STEPS_MISSIONS[0]
+      if (nextMission?.id === 'finish-workout' && !activeSession) {
+        nextStep = flow.steps?.find((item) => item.id === 'set-weight') || nextStep
+      }
       const nextStepIndex = getStepIndexById(flow, nextStep?.startStepId || nextStep?.id, 0)
 
       clearWelcomeTutorialPending(user)

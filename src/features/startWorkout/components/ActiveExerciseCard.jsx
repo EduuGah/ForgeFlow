@@ -653,7 +653,7 @@ export default function ActiveExerciseCard({
                 enterKeyHint="done"
                 pattern="[0-9]*[.,]?[0-9]*"
                 data-set-field="weight"
-                data-tutorial="active-set-weight-input"
+                data-tutorial={isGuidedRegisterRow ? 'active-set-weight-input' : undefined}
                 value={set.weight}
                 placeholder={previousSet?.weight ? String(previousSet.weight) : (appSettings.weightUnit || 'kg')}
                 onChange={(event) => handleSetInputChange(set.id, 'weight', event.target.value)}
@@ -664,10 +664,10 @@ export default function ActiveExerciseCard({
                 onKeyPress={handleSetInputDone}
                 onFocus={(event) => {
                   if (Number(event.target.value) === 0) onUpdateSet(sessionExercise.id, set.id, 'weight', '')
-                  window.setTimeout(() => {
-                    event.target?.select?.()
-                    event.target?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
-                  }, 120)
+                  event.target?.select?.()
+                  if (!isTutorialSession) {
+                    window.setTimeout(() => event.target?.scrollIntoView?.({ behavior: 'smooth', block: 'center' }), 120)
+                  }
                 }}
                 aria-label="Carga"
               />
@@ -678,7 +678,7 @@ export default function ActiveExerciseCard({
                 enterKeyHint="done"
                 pattern="[0-9]*"
                 data-set-field="reps"
-                data-tutorial="active-set-reps-input"
+                data-tutorial={isGuidedRegisterRow ? 'active-set-reps-input' : undefined}
                 value={set.reps}
                 placeholder={previousSet?.reps ? String(previousSet.reps) : 'reps'}
                 onChange={(event) => handleSetInputChange(set.id, 'reps', event.target.value)}
@@ -689,10 +689,10 @@ export default function ActiveExerciseCard({
                 onKeyPress={handleSetInputDone}
                 onFocus={(event) => {
                   if (Number(event.target.value) === 0) onUpdateSet(sessionExercise.id, set.id, 'reps', '')
-                  window.setTimeout(() => {
-                    event.target?.select?.()
-                    event.target?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
-                  }, 120)
+                  event.target?.select?.()
+                  if (!isTutorialSession) {
+                    window.setTimeout(() => event.target?.scrollIntoView?.({ behavior: 'smooth', block: 'center' }), 120)
+                  }
                 }}
                 aria-label="Repetições"
               />
@@ -710,7 +710,7 @@ export default function ActiveExerciseCard({
                   onCompleteSet(sessionExercise, set.id)
                 }}
                 className="ff-hevy-set-check"
-                data-tutorial="active-set-complete-button"
+                data-tutorial={isGuidedRegisterRow ? 'active-set-complete-button' : undefined}
                 aria-label={isCompleted ? 'Desmarcar série' : 'Concluir série'}
               >
                 <Check size={20} />

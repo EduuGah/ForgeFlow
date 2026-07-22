@@ -861,7 +861,7 @@ export function HistoryListSection({
 }) {
   return (
     <section className="ff-history-list-panel" data-tutorial="history-list">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between" data-tutorial="history-overview">
         <div>
           <h2 className="ff-history-list-panel__title">Treinos finalizados</h2>
           <p className="ff-history-list-panel__subtitle">

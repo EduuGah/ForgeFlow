@@ -30,19 +30,23 @@ export default function TutorialController() {
       : [activeStep.autoAdvanceOn]
 
     function handleAction(event) {
-      requestNextStep({
-        eventType: event.type,
-        targetElement: element,
+      const eventType = event.type
+      window.queueMicrotask(() => {
+        if (!element.isConnected) return
+        requestNextStep({
+          eventType,
+          targetElement: element,
+        })
       })
     }
 
     eventNames.forEach((eventName) => {
-      element.addEventListener(eventName, handleAction, true)
+      element.addEventListener(eventName, handleAction)
     })
 
     return () => {
       eventNames.forEach((eventName) => {
-        element.removeEventListener(eventName, handleAction, true)
+        element.removeEventListener(eventName, handleAction)
       })
     }
   }, [activeStep, isRunning, requestNextStep, targetState.element, targetState.status])

@@ -470,6 +470,11 @@ function StartWorkout() {
       return
     }
 
+    if (activeSessionIsTutorial) {
+      handleFinishWorkout({ durationSeconds: elapsedSeconds, manualOnly: true })
+      return
+    }
+
     setFinishElapsedSeconds(elapsedSeconds)
     setFinishWorkoutModalOpen(true)
   }
@@ -821,11 +826,13 @@ function StartWorkout() {
       setSelectedExerciseId(focusExercise.id)
     }
 
-    if (appSettings.collapseSeriesByDefault) {
+    if (activeSessionIsTutorial) {
+      setCollapsedExerciseIds([])
+    } else if (appSettings.collapseSeriesByDefault) {
       // Aplica a preferência visual somente ao iniciar/alternar sessão.
       setCollapsedExerciseIds(sessionExercises.map((exercise) => exercise.id))
     }
-  }, [activeSession, activeSession?.id, appSettings.collapseSeriesByDefault, focusExercise?.id, selectedExerciseId, sessionExercises])
+  }, [activeSession, activeSession?.id, activeSessionIsTutorial, appSettings.collapseSeriesByDefault, focusExercise?.id, selectedExerciseId, sessionExercises])
 
   if (sessionIsInvalid) {
     return <InvalidSessionState onClear={handleClearBrokenSession} />
