@@ -1,8 +1,7 @@
-import { registerPlugin } from '@capacitor/core'
+import { Geolocation } from './capacitorPlugins'
 
 import { isNativeApp } from '../utils/platformUtils'
 
-const Geolocation = registerPlugin('Geolocation')
 
 function normalizePosition(position) {
   const coords = position?.coords || {}

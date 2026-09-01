@@ -27,27 +27,11 @@
   }
 }
 
-.ff-page-scroll-shell > div > :where(section, article, aside, form),
-.ff-forge-active-hero,
-.ff-forge-exercise-strip,
-.ff-hevy-active-exercise,
-.ff-first-steps,
-.ff-tutorial-launcher,
-.ff-workout-focus-card,
-.ff-dashboard-hero-card,
-.ff-exercise-library-card,
-.ff-goal-card,
-.ff-history-card,
-.ff-schedule-v2-hero,
-.ff-schedule-v2-details {
+.ff-page-scroll-shell > div > :where(section, article, aside, form), .ff-forge-active-hero, .ff-forge-exercise-strip, .ff-hevy-active-exercise, .ff-first-steps, .ff-tutorial-launcher, .ff-schedule-v2-hero, .ff-schedule-v2-details {
   animation: ff-app-fade-up var(--ff-motion-page) var(--ff-motion-ease) both;
 }
 
-.ff-tutorial-welcome,
 .ff-active-exercise-actions-modal,
-.ff-confirm-modal,
-.ff-toast,
-.ff-smart-notification-popup,
 .ff-rest-timer-card,
 .ff-mobile-workout-action-bar,
 .mobile-bottom-nav,

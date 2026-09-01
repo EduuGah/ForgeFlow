@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { getCurrentUser } from '../services/api'
+import { getCurrentUser, logout as clearStoredToken, saveAuthToken } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 
 import AppPageIntro from '../components/app/AppPageIntro'
@@ -29,9 +29,9 @@ function AuthCallback() {
       }
 
       if (token) {
-        localStorage.setItem('forgeflow:token', token)
+        saveAuthToken(token)
       } else {
-        localStorage.removeItem('forgeflow:token')
+        clearStoredToken()
       }
 
       try {
@@ -45,10 +45,11 @@ function AuthCallback() {
         }
 
         navigate('/', { replace: true })
-      } catch {
-        localStorage.removeItem('forgeflow:token')
+      } catch (error) {
+        console.warn('[ForgeFlow] Falha ao concluir o login social:', error)
+        clearStoredToken()
         setUser(null)
-        navigate('/login', { replace: true })
+        navigate('/login?error=google', { replace: true })
       }
     }
 

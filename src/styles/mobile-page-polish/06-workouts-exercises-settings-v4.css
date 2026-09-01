@@ -154,6 +154,11 @@
 
 .ff-workout-native-card__titleline {
   display: flex;
+  /* O nome do treino e o badge de volume disputavam ~177px em telas estreitas e
+     os dois acabavam cortados. Com wrap, os dois ficam na mesma linha quando
+     cabem e o badge desce para a linha de baixo quando o nome e longo — o nome
+     entao usa a largura inteira do card. */
+  flex-wrap: wrap;
   min-width: 0;
   align-items: center;
   gap: 8px;
@@ -195,6 +200,9 @@
 
 .ff-workout-native-card__meta {
   display: flex;
+  /* Em telas estreitas as pilhas de meta eram espremidas ate cortar ("7 seri...").
+     Quebrar linha preserva a informacao inteira. */
+  flex-wrap: wrap;
   gap: 7px;
   margin-top: 8px;
   color: var(--ff-text-soft);
@@ -203,6 +211,7 @@
 }
 
 .ff-workout-native-card__meta span {
+  flex-shrink: 0;
   border: 1px solid var(--ff-mobile-border);
   border-radius: 999px;
   background: var(--ff-surface-2);
@@ -746,38 +755,6 @@
   color: #fca5a5;
 }
 
-.ff-settings-native-hero-metrics {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.ff-settings-native-hero-metrics > div {
-  border: 1px solid var(--ff-border);
-  border-radius: 14px;
-  background: var(--ff-surface-2);
-  padding: 9px;
-}
-
-.ff-settings-native-hero-metrics small {
-  display: block;
-  color: var(--ff-muted);
-  font-size: 0.66rem;
-  font-weight: 850;
-}
-
-.ff-settings-native-hero-metrics strong {
-  display: block;
-  margin-top: 3px;
-  overflow: hidden;
-  color: var(--ff-text);
-  font-size: 0.88rem;
-  font-weight: 950;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 @media (max-width: 767px) {
   .ff-hevy-page-workouts {
     gap: 10px !important;
@@ -834,106 +811,6 @@
     display: none !important;
   }
 
-  .ff-settings-native {
-    padding-inline: 0 !important;
-  }
-
-  .ff-settings-native-hero {
-    border: 1px solid var(--ff-mobile-border) !important;
-    border-radius: 22px !important;
-    background:
-      linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(34, 197, 94, 0.06)),
-      #0c1014 !important;
-    padding: 14px !important;
-  }
-
-  .ff-settings-native-hero > span {
-    color: var(--ff-accent-text) !important;
-    font-size: 0.68rem !important;
-    font-weight: 950 !important;
-    text-transform: uppercase;
-  }
-
-  .ff-settings-native-hero h2 {
-    margin-top: 3px !important;
-    color: var(--ff-text) !important;
-    font-size: 1.42rem !important;
-    font-weight: 950 !important;
-    line-height: 1.05 !important;
-  }
-
-  .ff-settings-native-hero p {
-    margin-top: 6px !important;
-    color: var(--ff-muted) !important;
-    font-size: 0.82rem !important;
-    line-height: 1.35 !important;
-  }
-
-  .ff-settings-native-group {
-    margin-bottom: 12px !important;
-  }
-
-  .ff-settings-native-title {
-    padding: 0 4px 7px !important;
-    color: var(--ff-muted) !important;
-    font-size: 0.7rem !important;
-    font-weight: 950 !important;
-    text-transform: uppercase;
-  }
-
-  .ff-settings-native-list {
-    display: grid;
-    gap: 7px;
-    overflow: visible !important;
-    border: 0 !important;
-    background: transparent !important;
-  }
-
-  .ff-settings-native-row {
-    min-height: 58px !important;
-    border: 1px solid var(--ff-mobile-border) !important;
-    border-radius: 17px !important;
-    background: var(--ff-surface) !important;
-    padding: 10px 12px !important;
-  }
-
-  .ff-settings-native-row svg:not(.chev) {
-    width: 34px !important;
-    height: 34px !important;
-    border-radius: 13px;
-    background: rgba(14, 165, 233, 0.1);
-    padding: 8px;
-    color: var(--ff-accent-text) !important;
-  }
-
-  .ff-settings-native-row p {
-    font-size: 0.92rem !important;
-    font-weight: 900 !important;
-  }
-
-  .ff-settings-native-row small {
-    margin-top: 1px !important;
-    font-size: 0.7rem !important;
-  }
-
-  .ff-settings-native-detail {
-    border: 1px solid var(--ff-mobile-border);
-    border-radius: 20px;
-    background: var(--ff-surface);
-    padding: 12px;
-  }
-
-  .ff-settings-native-back {
-    min-height: 36px !important;
-    border-radius: 999px;
-    background: var(--ff-surface-2);
-    padding: 0 12px;
-    color: var(--ff-accent-text);
-    font-size: 0.78rem;
-    font-weight: 950;
-  }
-
-  .ff-settings-layout.is-mobile-directory,
   .ff-hevy-page-settings .ff-settings-risk-sidebar {
     display: none !important;
   }

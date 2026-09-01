@@ -1,15 +1,6 @@
 /* ForgeFlow First Steps — mission based onboarding.
    This replaces floating tutorial overlays on mobile. */
 
-.ff-tutorial-v5-panel-wrap,
-.ff-tutorial-v5-inline-host,
-.ff-tutorial-v5-card,
-.ff-tutorial-v2,
-.ff-tutorial-overlay,
-.ff-tutorial-reframe {
-  display: none !important;
-}
-
 .ff-first-steps,
 .ff-first-steps-hint {
   border: 1px solid color-mix(in srgb, var(--ff-accent) 26%, var(--ff-border));
@@ -382,12 +373,6 @@
   padding: 0;
   background: color-mix(in srgb, var(--ff-surface) 88%, transparent);
   color: var(--ff-muted);
-}
-
-.ff-first-steps-focus-ring {
-  outline: 2px solid var(--ff-accent);
-  outline-offset: 4px;
-  box-shadow: 0 0 0 5px color-mix(in srgb, var(--ff-accent) 14%, transparent);
 }
 
 @media (max-width: 420px) {

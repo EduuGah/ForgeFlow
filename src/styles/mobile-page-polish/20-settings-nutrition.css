@@ -16,15 +16,12 @@
 
 .settings-card,
 .nutrition-card,
-.ff-settings-summary-card,
 .ff-nutrition-stat-card {
   min-width: 0;
   max-width: 100%;
   overflow: hidden;
 }
 
-.settings-card__title,
-.nutrition-card__title,
 .settings-option-title,
 .nutrition-meal-title {
   overflow: hidden;
@@ -32,10 +29,6 @@
   white-space: nowrap;
 }
 
-.settings-card__description,
-.nutrition-card__description,
-.settings-insight,
-.nutrition-insight,
 .ff-settings-row p,
 .ff-insight-list p,
 .ff-safe-hint {
@@ -44,9 +37,7 @@
 }
 
 .settings-row,
-.nutrition-row,
-.settings-row-content,
-.nutrition-row-content {
+.settings-row-content {
   min-width: 0;
 }
 
@@ -59,7 +50,6 @@
   text-transform: uppercase;
 }
 
-.ff-settings-hero-card,
 .ff-nutrition-hero-card {
   display: flex;
   align-items: stretch;
@@ -76,7 +66,6 @@
   overflow: hidden;
 }
 
-.ff-settings-hero-card p,
 .ff-nutrition-hero-card p {
   margin: 0;
   color: var(--ff-accent-text);
@@ -86,7 +75,6 @@
   text-transform: uppercase;
 }
 
-.ff-settings-hero-card h1,
 .ff-nutrition-hero-card h1 {
   margin: 0.25rem 0;
   font-size: clamp(1.75rem, 8vw, 3rem);
@@ -95,7 +83,6 @@
   line-height: 0.95;
 }
 
-.ff-settings-hero-card span,
 .ff-nutrition-hero-card span,
 .ff-nutrition-hero-card .ff-nutrition-hero-grid > div > p:last-child {
   display: block;
@@ -106,68 +93,12 @@
   text-transform: none;
 }
 
-.ff-settings-hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: flex-end;
-  gap: 0.625rem;
-  min-width: min(100%, 260px);
-}
-
-.ff-settings-summary-grid,
 .ff-nutrition-stats-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.75rem;
 }
 
-.ff-settings-shortcut-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
-.ff-settings-shortcut-grid--compact {
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-}
-
-.ff-settings-shortcut {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  min-width: 0;
-  min-height: 4.25rem;
-  padding: 0.85rem;
-  border: 1px solid var(--ff-border);
-  border-radius: 1.35rem;
-  color: var(--ff-text);
-  text-align: left;
-  background: color-mix(in srgb, var(--ff-card) 88%, transparent);
-  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
-}
-
-.ff-settings-shortcut:hover,
-.ff-settings-shortcut:focus-visible {
-  border-color: var(--ff-accent-border);
-  background: var(--ff-accent-soft);
-  transform: translateY(-1px);
-  outline: none;
-}
-
-.ff-settings-shortcut > span {
-  display: flex;
-  width: 2.5rem;
-  height: 2.5rem;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  border-radius: 1rem;
-  background: var(--ff-accent-soft);
-  color: var(--ff-accent-text);
-}
-
-.ff-settings-shortcut strong,
 .ff-routine-toggle strong {
   display: block;
   overflow: hidden;
@@ -178,7 +109,6 @@
   white-space: nowrap;
 }
 
-.ff-settings-shortcut small,
 .ff-routine-toggle small {
   display: block;
   overflow: hidden;
@@ -716,7 +646,6 @@
 }
 
 @supports not (background: color-mix(in srgb, red, blue)) {
-  .ff-settings-hero-card,
   .ff-nutrition-hero-card,
   .ff-bottom-sheet-overlay,
   .ff-bottom-sheet-panel {
@@ -725,9 +654,7 @@
 }
 
 @media (max-width: 1024px) {
-  .ff-settings-summary-grid,
-  .ff-nutrition-stats-grid,
-  .ff-settings-shortcut-grid {
+  .ff-nutrition-stats-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -738,7 +665,6 @@
     padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
   }
 
-  .ff-settings-hero-card,
   .ff-nutrition-hero-card,
   .ff-nutrition-hero-grid,
   .ff-settings-section-header,
@@ -748,29 +674,9 @@
     align-items: stretch;
   }
 
-  .ff-settings-hero-actions {
-    justify-content: stretch;
-  }
-
-  .ff-settings-hero-actions > * {
-    width: 100%;
-  }
-
-  .ff-settings-summary-grid,
-  .ff-nutrition-stats-grid,
-  .ff-settings-shortcut-grid {
+  .ff-nutrition-stats-grid {
     grid-template-columns: 1fr 1fr;
     gap: 0.6rem;
-  }
-
-  .ff-settings-shortcut {
-    min-height: 4.5rem;
-    padding: 0.75rem;
-  }
-
-  .ff-settings-shortcut > span {
-    width: 2.2rem;
-    height: 2.2rem;
   }
 
   .ff-nutrition-hero-grid {
@@ -826,9 +732,7 @@
 }
 
 @media (max-width: 380px) {
-  .ff-settings-summary-grid,
-  .ff-nutrition-stats-grid,
-  .ff-settings-shortcut-grid {
+  .ff-nutrition-stats-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -940,7 +844,6 @@
 .ff-nutrition-hero-card,
 .ff-nutrition-insights-top,
 .ff-hydration-card,
-.ff-hevy-page-nutrition .ff-card,
 .ff-hevy-page-nutrition .card {
   border-color: color-mix(in srgb, var(--ff-border) 74%, transparent) !important;
 }

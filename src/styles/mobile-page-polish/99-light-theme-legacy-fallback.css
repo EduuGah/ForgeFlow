@@ -30,9 +30,7 @@ html[data-theme='light'] #app-header,
 html[data-theme='light'] #app-header .safe-top,
 html[data-theme='light'] #app-header .safe-top > div,
 html[data-theme='light'] .ff-app-sidebar,
-html[data-theme='light'] .mobile-bottom-nav,
-html[data-theme='light'] .ff-mobile-bottom-nav,
-html[data-theme='light'] .ff-bottom-nav {
+html[data-theme='light'] .mobile-bottom-nav {
   background: color-mix(in srgb, var(--ff-card) 92%, transparent) !important;
   border-color: var(--ff-border) !important;
   color: var(--ff-text) !important;
@@ -41,11 +39,7 @@ html[data-theme='light'] .ff-bottom-nav {
 
 html[data-theme='light'] .ff-native-card,
 html[data-theme='light'] .ff-hevy-page :is(article, section, aside, .ff-card, [class*='rounded-3xl'][class*='border'], [class*='rounded-[2rem]'][class*='border']),
-html[data-theme='light'] .ff-hevy-workout-header,
 html[data-theme='light'] .ff-hevy-active-exercise,
-html[data-theme='light'] .ff-hevy-workout-metrics,
-html[data-theme='light'] .ff-hevy-workout-metrics > *,
-html[data-theme='light'] .ff-hevy-workout-topbar,
 html[data-theme='light'] .ff-active-workout-mini-card-v3.ff-active-workout-mini-floating,
 html[data-theme='light'] .ff-page-start-workout .ff-mobile-workout-action-bar,
 html[data-theme='light'] .ff-mobile-workout-action-bar {
@@ -136,8 +130,6 @@ html[data-theme='light'] nav[aria-label='Navegação inferior'] a[aria-current='
 
 html[data-theme='light'] [class*='bg-[var(--ff-accent)]'],
 html[data-theme='light'] [class*='bg-[var(--ff-accent)]'] *,
-html[data-theme='light'] .ff-accent-button,
-html[data-theme='light'] .ff-accent-button *,
 html[data-theme='light'] .ff-dashboard-v2 :is(.ff-dashboard-v2-start, .ff-dashboard-v2-active__icon, .ff-dashboard-v2-next-action > span),
 html[data-theme='light'] .ff-dashboard-v2 :is(.ff-dashboard-v2-start, .ff-dashboard-v2-active__icon, .ff-dashboard-v2-next-action > span) svg {
   color: #ffffff !important;

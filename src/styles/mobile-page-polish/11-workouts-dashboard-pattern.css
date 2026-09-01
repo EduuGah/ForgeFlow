@@ -216,6 +216,11 @@
 .ff-workout-volume-badge {
   display: inline-flex;
   max-width: 112px;
+  /* Vive numa linha flex ao lado do titulo do treino. Sem isto o badge
+     encolhia junto com o titulo e textos curtos como "Volume ok" apareciam
+     cortados pela metade; quem deve ceder espaco e o titulo, que ja tem
+     min-width: 0 e reticencias. */
+  flex-shrink: 0;
   min-height: 22px;
   align-items: center;
   justify-content: center;

@@ -5,6 +5,9 @@ import App from './App.jsx'
 import './index.css'
 import './styles/apk-mobile-polish.css'
 import './styles/mobile-page-polish.css'
+// Precisa vir por último: reaproveita o espaço de telas grandes por cima das
+// medidas de celular aplicadas sem media query pelos arquivos de polish.
+import './styles/desktop-layout.css'
 import { isNativeApp } from './utils/platformUtils.js'
 import { applyAppSettingsToDocument, getAppSettings, watchSystemThemeChanges } from './utils/settingsUtils.js'
 

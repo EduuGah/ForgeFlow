@@ -8,7 +8,6 @@ function PublicRoute({ children }) {
   if (loadingUser || !authChecked) {
     return (
       <AuthLoadingScreen
-        label="Carregando sessao..."
         progress={authWarmupProgress}
         status={authWarmupStatus}
       />

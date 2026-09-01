@@ -296,11 +296,14 @@ export function useDashboardDerivedData({
       .slice()
       .reverse()
       .slice(-8)
-      .map((session) => {
+      .map((session, index) => {
         const sets = getCompletedSets([session])
         const volume = getTotalVolume(sets)
 
         return {
+          // O nome do treino se repete sempre que a pessoa refaz a mesma
+          // rotina, então ele não serve como chave de lista no React.
+          id: session.id || session._id || `${session.finishedAt || ''}-${index}`,
           name: shortenChartLabel(session.workoutName, 14),
           fullName: session.workoutName,
           volume,

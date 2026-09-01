@@ -13,10 +13,11 @@ function cleanupExpiredKeys(now = Date.now()) {
 
 export function createRateLimiter({ windowMs = 60_000, max = 60, keyPrefix = 'global' } = {}) {
     return (req, res, next) => {
-        const ip =
-            req.headers['x-forwarded-for']?.toString().split(',')[0]?.trim() ||
-            req.socket?.remoteAddress ||
-            'unknown'
+        // req.ip respeita a configuracao `trust proxy` do app. Ler
+        // X-Forwarded-For direto do header deixava qualquer cliente forjar um
+        // IP novo a cada requisicao e ignorar completamente o rate limit,
+        // inclusive o de /auth/login.
+        const ip = req.ip || req.socket?.remoteAddress || 'unknown'
 
         const key = `${keyPrefix}:${ip}`
         const now = Date.now()

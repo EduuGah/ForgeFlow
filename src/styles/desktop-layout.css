@@ -1,0 +1,150 @@
+/*
+ * Camada de layout para telas grandes (notebook, desktop, tablet em paisagem).
+ *
+ * Contexto: todo o polimento visual do ForgeFlow foi feito em cima de arquivos
+ * `mobile-page-polish/*`, que aplicam medidas de celular sem media query. O
+ * resultado é que o Dashboard ficava travado em 680px mesmo num monitor de
+ * 1440px, cortando títulos e deixando metade da tela vazia.
+ *
+ * Este arquivo NÃO altera nada abaixo de 768px: o app mobile/APK continua
+ * exatamente como estava. Ele só reaproveita o espaço extra quando ele existe.
+ *
+ * Breakpoints padronizados (o projeto tinha 18 valores diferentes espalhados):
+ *   768px  -> tablet / notebook pequeno   (2 colunas)
+ *   1024px -> desktop                     (12 colunas)
+ *   1440px -> desktop largo               (respiro maior)
+ */
+
+/* ==========================================================================
+   1. Dashboard — de coluna única de 680px para grid de verdade
+   ========================================================================== */
+
+@media (min-width: 768px) {
+  .ff-dashboard-v2 {
+    display: grid !important;
+    max-width: 100% !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    align-items: start;
+    gap: 14px !important;
+  }
+
+  /* Padrão: cada seção ocupa a linha inteira. As exceções vêm depois. */
+  .ff-dashboard-v2 > * {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  .ff-dashboard-v2 > .ff-dashboard-v2-week,
+  .ff-dashboard-v2 > .ff-dashboard-v2-summary,
+  .ff-dashboard-v2 > .ff-dashboard-v2-today,
+  .ff-dashboard-v2 > .ff-dashboard-v2-metrics,
+  .ff-dashboard-v2 > .ff-dashboard-v2-goals,
+  .ff-dashboard-v2 > .ff-dashboard-v2-routines {
+    grid-column: span 3;
+  }
+}
+
+@media (min-width: 1024px) {
+  .ff-dashboard-v2 {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    max-width: 1440px !important;
+    gap: 16px !important;
+  }
+
+  .ff-dashboard-v2 > .ff-dashboard-v2-week,
+  .ff-dashboard-v2 > .ff-dashboard-v2-summary,
+  .ff-dashboard-v2 > .ff-dashboard-v2-insights {
+    grid-column: span 4;
+  }
+
+  .ff-dashboard-v2 > .ff-dashboard-v2-today,
+  .ff-dashboard-v2 > .ff-dashboard-v2-metrics,
+  .ff-dashboard-v2 > .ff-dashboard-v2-goals,
+  .ff-dashboard-v2 > .ff-dashboard-v2-routines {
+    grid-column: span 6;
+  }
+
+  /* Com 6 colunas de largura sobra espaço para os 4 cards lado a lado. */
+  .ff-dashboard-v2-metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  /* O trilho de rotinas existe para permitir swipe no celular. No desktop
+     não há swipe, então virar grade evita esconder rotinas fora da tela. */
+  .ff-dashboard-v2-routines__rail {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 12px 0 0;
+    padding: 0;
+    overflow-x: visible;
+  }
+
+  .ff-dashboard-v2-routines__rail > * {
+    width: auto;
+    min-width: 0;
+  }
+}
+
+@media (min-width: 1440px) {
+  .ff-dashboard-v2 {
+    gap: 18px !important;
+  }
+}
+
+/* ==========================================================================
+   2. Títulos e textos que só eram cortados por falta de largura
+   ========================================================================== */
+
+@media (min-width: 1024px) {
+  /* Em 680px estes títulos precisavam de reticências. Com o grid acima há
+     espaço de sobra, então o texto volta a aparecer inteiro. */
+  .ff-dashboard-v2-section-title h2,
+  .ff-dashboard-v2-focus__list strong,
+  .ff-dashboard-v2-next-action strong {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+  }
+
+  .ff-dashboard-v2-focus__list small {
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+}
+
+/* ==========================================================================
+   3. Filtros em trilho horizontal viram lista que quebra linha
+   ========================================================================== */
+
+@media (min-width: 768px) {
+  /* No celular estes filtros rolam lateralmente. No desktop não existe gesto
+     de swipe e não havia barra de rolagem visível, então opções como
+     "6 meses", "Ano" e "Tudo" ficavam inalcançáveis fora da tela. */
+  .ff-progress-periods {
+    max-width: none;
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+
+  .ff-progress-periods > * {
+    flex-shrink: 1;
+  }
+}
+
+/* ==========================================================================
+   4. Respiro do container principal em telas largas
+   ========================================================================== */
+
+@media (min-width: 1024px) {
+  .ff-page-scroll-shell {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+@media (min-width: 1600px) {
+  .ff-page-scroll-shell {
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+}

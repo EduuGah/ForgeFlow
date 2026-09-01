@@ -1,6 +1,9 @@
+// Precisa ser o primeiro import: modulos ES sao avaliados antes do corpo
+// deste arquivo, entao qualquer modulo que leia process.env no topo veria
+// variaveis vazias se o dotenv fosse carregado so mais abaixo.
+import 'dotenv/config'
 import express from 'express'
 import mongoose from 'mongoose'
-import dotenv from 'dotenv'
 import cors from 'cors'
 import session from 'express-session'
 import passport from 'passport'
@@ -38,13 +41,17 @@ import {
 } from './utils/workoutValidation.js'
 
 
-dotenv.config()
 
 // Ajuda quando o Windows/rede dá erro com mongodb+srv
 dns.setServers(['1.1.1.1', '8.8.8.8'])
 dns.setDefaultResultOrder?.('ipv4first')
 
 const app = express()
+
+// Render/Vercel colocam exatamente um proxy na frente do app. Sem isso o
+// Express ignora X-Forwarded-For (req.ip vira o IP do proxy) e o
+// express-session se recusa a gravar cookie `secure` em producao.
+app.set('trust proxy', 1)
 
 const upload = multer({
     storage: multer.memoryStorage(),
@@ -86,6 +93,38 @@ const {
 function requiredEnv(name, value) {
     if (!value || value.includes('COLE_')) {
         throw new Error(`Variável ${name} não configurada no arquivo .env`)
+    }
+}
+
+const MIN_SECRET_LENGTH = 32
+const MIN_SECRET_DISTINCT_CHARS = 12
+
+/**
+ * Segredos de assinatura precisam de entropia real, não só comprimento.
+ * "2342342342342342342342342342342342" tem 34 caracteres e só 4 símbolos
+ * distintos: é adivinhável por força bruta em pouco tempo, e quem descobre o
+ * JWT_SECRET consegue forjar token de qualquer usuário, inclusive admin.
+ */
+function requiredSecret(name, value) {
+    requiredEnv(name, value)
+
+    const problemas = []
+
+    if (value.length < MIN_SECRET_LENGTH) {
+        problemas.push(`precisa de pelo menos ${MIN_SECRET_LENGTH} caracteres (tem ${value.length})`)
+    }
+
+    const distintos = new Set(value).size
+
+    if (distintos < MIN_SECRET_DISTINCT_CHARS) {
+        problemas.push(`precisa de pelo menos ${MIN_SECRET_DISTINCT_CHARS} caracteres distintos (tem ${distintos})`)
+    }
+
+    if (problemas.length > 0) {
+        throw new Error(
+            `Variável ${name} é fraca demais: ${problemas.join('; ')}. ` +
+            'Gere um valor novo rodando: npm run gen:secret'
+        )
     }
 }
 
@@ -205,8 +244,8 @@ requiredEnv('BACKEND_URL', BACKEND_URL)
 requiredEnv('MONGODB_URI', MONGODB_URI)
 requiredEnv('GOOGLE_CLIENT_ID', GOOGLE_CLIENT_ID)
 requiredEnv('GOOGLE_CLIENT_SECRET', GOOGLE_CLIENT_SECRET)
-requiredEnv('JWT_SECRET', JWT_SECRET)
-requiredEnv('SESSION_SECRET', SESSION_SECRET)
+requiredSecret('JWT_SECRET', JWT_SECRET)
+requiredSecret('SESSION_SECRET', SESSION_SECRET)
 requiredEnv('CLOUDINARY_CLOUD_NAME', CLOUDINARY_CLOUD_NAME)
 requiredEnv('CLOUDINARY_API_KEY', CLOUDINARY_API_KEY)
 requiredEnv('CLOUDINARY_API_SECRET', CLOUDINARY_API_SECRET)

@@ -79,63 +79,6 @@
     gap: 10px !important;
   }
 
-  .ff-exercise-list-shell {
-    padding: 10px !important;
-    border-radius: 18px !important;
-  }
-
-  .ff-exercise-library-head {
-    gap: 10px !important;
-  }
-
-  .ff-exercise-search {
-    height: 44px !important;
-    margin-top: 10px !important;
-    border-radius: 14px !important;
-    padding-inline: 12px !important;
-  }
-
-  .ff-exercise-list-row-v2 {
-    border-radius: 16px !important;
-    padding: 8px !important;
-  }
-
-  .ff-exercise-row-main {
-    gap: 9px !important;
-  }
-
-  .ff-exercise-row-media {
-    width: 58px !important;
-    height: 58px !important;
-    border-radius: 14px !important;
-  }
-
-  .ff-exercise-row-titleline {
-    gap: 6px !important;
-  }
-
-  .ff-exercise-row-titleline strong,
-  .ff-exercise-row-content strong {
-    font-size: 0.92rem !important;
-    line-height: 1.14 !important;
-  }
-
-  .ff-exercise-row-subtitle,
-  .ff-exercise-row-original {
-    font-size: 0.72rem !important;
-    line-height: 1.2 !important;
-  }
-
-  .ff-exercise-row-tags,
-  .ff-exercise-row-metrics {
-    gap: 5px !important;
-  }
-
-  .ff-exercise-row-tags > :nth-child(n + 4),
-  .ff-exercise-row-metrics > :nth-child(n + 4) {
-    display: none !important;
-  }
-
   .ff-hevy-page-history > section:first-child {
     margin-bottom: 0 !important;
     padding: 12px !important;
@@ -183,23 +126,6 @@
   .ff-hevy-page-nutrition .grid.grid-cols-2,
   .ff-hevy-page-exerciseprogress .grid.grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  }
-
-  .ff-hevy-page-profile .ff-profile-hevy-hero {
-    margin-bottom: 10px !important;
-    padding: 12px !important;
-    border-radius: 20px !important;
-  }
-
-  .ff-hevy-page-profile .ff-profile-hevy-hero .h-24,
-  .ff-hevy-page-profile .ff-profile-hevy-hero .w-24 {
-    width: 76px !important;
-    height: 76px !important;
-  }
-
-  .ff-profile-summary-card {
-    padding: 12px !important;
-    border-radius: 18px !important;
   }
 
   .ff-hevy-page-progress :is(.ff-hevy-progress, section),
@@ -252,35 +178,6 @@
     height: 62px !important;
   }
 
-  .ff-settings-native {
-    margin-bottom: 10px !important;
-  }
-
-  .ff-settings-native-hero,
-  .ff-settings-native-group,
-  .ff-settings-native-list,
-  .ff-settings-native-row {
-    border-radius: 18px !important;
-  }
-
-  .ff-settings-native-hero {
-    padding: 12px !important;
-  }
-
-  .ff-settings-native-title {
-    margin-bottom: 7px !important;
-    font-size: 0.76rem !important;
-  }
-
-  .ff-settings-native-row {
-    min-height: 54px !important;
-    padding: 10px 12px !important;
-  }
-
-  .ff-settings-layout {
-    gap: 10px !important;
-  }
-
   .ff-hevy-page-settings [data-settings-panel] {
     scroll-margin-top: 12px !important;
   }
@@ -308,10 +205,6 @@
   }
 }
 
-.ff-page-legacy-intro {
-  display: none !important;
-}
-
 @media (max-width: 767px) {
   .ff-page-mobile-main-grid {
     margin-top: 0 !important;
@@ -320,7 +213,6 @@
 
   .ff-hevy-page-login,
   .ff-hevy-page-register,
-  .ff-hevy-page-completeprofile,
   .ff-hevy-page-authcallback,
   .ff-hevy-page-forgotpassword,
   .ff-hevy-page-resetpassword {
@@ -329,31 +221,16 @@
       var(--ff-mobile-bg) !important;
   }
 
-  .ff-hevy-page-login :is(.w-full, form),
-  .ff-hevy-page-register :is(.w-full, form),
-  .ff-hevy-page-completeprofile :is(.w-full, form),
-  .ff-hevy-page-forgotpassword :is(main, form),
-  .ff-hevy-page-resetpassword :is(main, form),
-  .ff-hevy-page-authcallback :is(.w-full, main) {
+  .ff-hevy-page-login :is(.w-full, form), .ff-hevy-page-register :is(.w-full, form), .ff-hevy-page-forgotpassword :is(main, form), .ff-hevy-page-resetpassword :is(main, form), .ff-hevy-page-authcallback :is(.w-full, main) {
     max-width: 420px !important;
   }
 
-  .ff-hevy-page-login :is(h1, h2),
-  .ff-hevy-page-register :is(h1, h2),
-  .ff-hevy-page-completeprofile :is(h1, h2),
-  .ff-hevy-page-forgotpassword :is(h1, h2),
-  .ff-hevy-page-resetpassword :is(h1, h2),
-  .ff-hevy-page-authcallback :is(h1, h2) {
+  .ff-hevy-page-login :is(h1, h2), .ff-hevy-page-register :is(h1, h2), .ff-hevy-page-forgotpassword :is(h1, h2), .ff-hevy-page-resetpassword :is(h1, h2), .ff-hevy-page-authcallback :is(h1, h2) {
     font-size: 1.42rem !important;
     line-height: 1.08 !important;
   }
 
-  .ff-hevy-page-login :is(p, label, a),
-  .ff-hevy-page-register :is(p, label, a),
-  .ff-hevy-page-completeprofile :is(p, label, a),
-  .ff-hevy-page-forgotpassword :is(p, label, a),
-  .ff-hevy-page-resetpassword :is(p, label, a),
-  .ff-hevy-page-authcallback :is(p, label, a) {
+  .ff-hevy-page-login :is(p, label, a), .ff-hevy-page-register :is(p, label, a), .ff-hevy-page-forgotpassword :is(p, label, a), .ff-hevy-page-resetpassword :is(p, label, a), .ff-hevy-page-authcallback :is(p, label, a) {
     line-height: 1.38 !important;
   }
 
@@ -393,8 +270,7 @@
 }
 
 /* Mobile page polish v3: direct page wrappers added in src/pages. */
-.ff-page-intro-action-stack,
-.ff-profile-intro-actions {
+.ff-page-intro-action-stack {
   display: flex;
   width: 100%;
   align-items: center;
@@ -414,18 +290,6 @@
   color: var(--ff-accent-text);
   font-size: 0.74rem;
   font-weight: 900;
-}
-
-.ff-profile-intro-actions :is(button, a) {
-  display: inline-flex;
-  width: 42px;
-  height: 42px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--ff-mobile-border);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--ff-text);
 }
 
 @media (max-width: 767px) {
@@ -448,21 +312,9 @@
     flex: 1;
   }
 
-  .ff-profile-intro-actions {
-    justify-content: stretch;
-  }
-
-  .ff-profile-intro-actions :is(button, a) {
-    flex: 1 1 0;
-  }
-
   .ff-profile-body {
     display: grid;
     gap: 10px;
-  }
-
-  .ff-profile-body .ff-profile-hevy-hero > .flex:first-child {
-    display: none !important;
   }
 
   .ff-auth-flow {
@@ -482,9 +334,7 @@
   .ff-progress-photos-body,
   .ff-exercise-progress-body,
   .ff-start-workout-main-grid,
-  .ff-active-workout-exercise-flow,
-  .ff-schedule-primary-flow,
-  .ff-nutrition-primary-flow {
+  .ff-active-workout-exercise-flow {
     display: grid;
     gap: 10px !important;
   }
@@ -498,13 +348,8 @@
   }
 
   .ff-goals-stats-grid,
-  .ff-notifications-stats-grid,
   .ff-recovery-stats-grid,
-  .ff-history-summary-grid,
-  .ff-progress-summary-grid,
-  .ff-progress-insight-grid,
-  .ff-dashboard-metrics-primary,
-  .ff-progress-photos-stats-grid {
+  .ff-history-summary-grid {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 8px !important;
@@ -512,18 +357,9 @@
     padding: 0 !important;
   }
 
-  .ff-progress-photos-stats-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  }
-
   .ff-goals-stats-grid > .ff-native-card,
-  .ff-notifications-stats-grid > .ff-native-card,
   .ff-recovery-stats-grid > .ff-native-card,
-  .ff-history-summary-grid > .ff-native-card,
-  .ff-progress-summary-grid > .ff-native-card,
-  .ff-progress-insight-grid > .ff-native-card,
-  .ff-dashboard-metrics-primary > .ff-native-card,
-  .ff-progress-photos-stats-grid > .ff-native-card {
+  .ff-history-summary-grid > .ff-native-card {
     width: auto !important;
     min-width: 0 !important;
     min-height: 74px !important;
@@ -532,14 +368,8 @@
   }
 
   .ff-goals-stats-grid > .ff-native-card h2,
-  .ff-notifications-stats-grid > .ff-native-card h2,
   .ff-recovery-stats-grid > .ff-native-card h2,
-  .ff-history-summary-grid > .ff-native-card h2,
-  .ff-progress-summary-grid > .ff-native-card h2,
-  .ff-progress-insight-grid > .ff-native-card h2,
-  .ff-progress-insight-grid > .ff-native-card h3,
-  .ff-dashboard-metrics-primary > .ff-native-card h2,
-  .ff-progress-photos-stats-grid > .ff-native-card h2 {
+  .ff-history-summary-grid > .ff-native-card h2 {
     margin-top: 4px !important;
     overflow: hidden !important;
     font-size: 17px !important;
@@ -549,26 +379,16 @@
   }
 
   .ff-goals-stats-grid > .ff-native-card p,
-  .ff-notifications-stats-grid > .ff-native-card p,
   .ff-recovery-stats-grid > .ff-native-card p,
-  .ff-history-summary-grid > .ff-native-card p,
-  .ff-progress-summary-grid > .ff-native-card p,
-  .ff-progress-insight-grid > .ff-native-card p,
-  .ff-dashboard-metrics-primary > .ff-native-card p,
-  .ff-progress-photos-stats-grid > .ff-native-card p {
+  .ff-history-summary-grid > .ff-native-card p {
     margin: 2px 0 0 !important;
     font-size: 11px !important;
     line-height: 1.15 !important;
   }
 
   .ff-goals-stats-grid svg,
-  .ff-notifications-stats-grid svg,
   .ff-recovery-stats-grid svg,
-  .ff-history-summary-grid svg,
-  .ff-progress-summary-grid svg,
-  .ff-progress-insight-grid svg,
-  .ff-dashboard-metrics-primary svg,
-  .ff-progress-photos-stats-grid svg {
+  .ff-history-summary-grid svg {
     width: 17px !important;
     height: 17px !important;
   }
@@ -640,24 +460,6 @@
     font-size: 13px !important;
   }
 
-  .ff-history-session-card {
-    border-radius: 16px !important;
-    padding: 11px !important;
-  }
-
-  .ff-history-session-card__meta {
-    display: flex !important;
-    max-width: 100% !important;
-    flex-wrap: wrap !important;
-    gap: 6px !important;
-  }
-
-  .ff-history-session-card__meta > * {
-    min-width: 0 !important;
-    max-width: 100% !important;
-    white-space: normal !important;
-  }
-
   .ff-hevy-page-exercises > .ff-page-mobile-main-grid,
   .ff-exercises-native-page > .ff-page-mobile-main-grid,
   .ff-exercise-catalog-main,
@@ -716,31 +518,6 @@
     padding: 6px !important;
   }
 
-  .ff-schedule-week-grid {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 8px !important;
-    overflow: visible !important;
-    padding: 0 !important;
-  }
-
-  .ff-schedule-day-card {
-    min-width: 0 !important;
-    border-radius: 15px !important;
-    padding: 9px !important;
-  }
-
-  .ff-schedule-day-card > .mb-3 {
-    margin-bottom: 7px !important;
-  }
-
-  .ff-schedule-day-card select {
-    min-height: 38px !important;
-    border-radius: 12px !important;
-    padding: 0 8px !important;
-    font-size: 12px !important;
-  }
-
   .ff-recovery-body > section.mt-6,
   .ff-recovery-body section.mt-6,
   .ff-recovery-body main > .ff-native-card {
@@ -795,201 +572,6 @@
   .ff-recovery-native-card .mt-5.h-3 {
     height: 6px !important;
     margin-top: 7px !important;
-  }
-
-  .ff-exercise-progress-body > section.ff-exercise-progress-rankings {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 9px !important;
-    overflow: visible !important;
-  }
-
-  .ff-exercise-progress-rankings > .ff-native-card {
-    min-width: 0 !important;
-    padding: 10px !important;
-  }
-
-  .ff-exercise-progress-rankings > .ff-native-card .mt-4 {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 7px !important;
-  }
-
-  .ff-exercise-progress-rankings button {
-    display: grid !important;
-    grid-template-columns: 44px minmax(0, 1fr) !important;
-    min-height: 64px !important;
-    align-items: center !important;
-    gap: 7px !important;
-    padding: 7px !important;
-  }
-
-  .ff-exercise-progress-rankings button > span:first-child {
-    display: contents !important;
-  }
-
-  .ff-exercise-progress-rankings button > span:last-child {
-    grid-column: 2 !important;
-    justify-self: start !important;
-    font-size: 12px !important;
-  }
-
-  .ff-hevy-exercise-progress > .ff-native-card .mt-5.grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 8px !important;
-  }
-
-  .ff-hevy-exercise-progress > .ff-native-card .mt-5.grid > div {
-    min-height: 70px !important;
-    border-radius: 15px !important;
-    padding: 9px !important;
-  }
-
-  .ff-progress-photo-launcher,
-  .ff-progress-photo-compare-card {
-    border-radius: 16px !important;
-    padding: 11px !important;
-  }
-
-  .ff-progress-photo-launcher__copy {
-    display: grid;
-    grid-template-columns: 42px minmax(0, 1fr);
-    gap: 10px;
-    align-items: center;
-    margin-bottom: 11px;
-  }
-
-  .ff-progress-photo-launcher__copy > span {
-    display: grid;
-    width: 42px;
-    height: 42px;
-    place-items: center;
-    border-radius: 15px;
-    background: var(--ff-accent-soft);
-    color: var(--ff-accent-text);
-  }
-
-  .ff-progress-photo-launcher__copy h2 {
-    color: var(--ff-text);
-    font-size: 16px;
-    font-weight: 950;
-    line-height: 1.05;
-  }
-
-  .ff-progress-photo-launcher__copy p {
-    margin-top: 3px;
-    color: var(--ff-muted);
-    font-size: 12px;
-    line-height: 1.2;
-  }
-
-  .ff-progress-photo-sheet {
-    position: fixed;
-    inset: 0;
-    z-index: 2147483600;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    background: var(--ff-overlay);
-    backdrop-filter: blur(12px);
-  }
-
-  .ff-progress-photo-sheet__backdrop {
-    position: absolute;
-    inset: 0;
-  }
-
-  .ff-progress-photo-sheet__panel {
-    position: relative;
-    display: flex;
-    width: 100%;
-    max-height: calc(92dvh - env(safe-area-inset-top));
-    flex-direction: column;
-    overflow: hidden;
-    border: 1px solid var(--ff-mobile-border);
-    border-radius: 22px 22px 0 0;
-    background: var(--ff-input);
-    box-shadow: var(--ff-shadow-floating);
-  }
-
-  .ff-progress-photo-sheet__panel header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
-    border-bottom: 1px solid var(--ff-mobile-border);
-    padding: 14px 14px 12px;
-  }
-
-  .ff-progress-photo-sheet__panel header span {
-    color: var(--ff-accent-text);
-    font-size: 11px;
-    font-weight: 950;
-    text-transform: uppercase;
-  }
-
-  .ff-progress-photo-sheet__panel header h2 {
-    margin-top: 2px;
-    color: var(--ff-text);
-    font-size: 20px;
-    font-weight: 950;
-  }
-
-  .ff-progress-photo-sheet__panel header p {
-    margin-top: 3px;
-    color: var(--ff-muted);
-    font-size: 12px;
-  }
-
-  .ff-progress-photo-sheet__panel header button {
-    display: grid;
-    width: 38px;
-    height: 38px;
-    flex: 0 0 auto;
-    place-items: center;
-    border: 1px solid var(--ff-mobile-border);
-    border-radius: 14px;
-    background: var(--ff-surface-2);
-    color: var(--ff-text);
-  }
-
-  .ff-progress-photo-form {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    overflow-y: auto;
-    padding: 14px 14px calc(14px + env(safe-area-inset-bottom));
-  }
-
-  .ff-progress-photo-picker,
-  .ff-progress-photo-form textarea,
-  .ff-progress-photo-form button[type='submit'] {
-    grid-column: 1 / -1;
-  }
-
-  .ff-progress-photo-picker {
-    display: grid;
-    min-height: 112px;
-    cursor: pointer;
-    place-items: center;
-    border: 1px dashed var(--ff-accent-border);
-    border-radius: 16px;
-    background: var(--ff-accent-soft);
-    padding: 14px;
-    text-align: center;
-    color: var(--ff-accent-text);
-  }
-
-  .ff-progress-photo-picker span {
-    color: var(--ff-text);
-    font-size: 14px;
-    font-weight: 950;
-  }
-
-  .ff-progress-photo-picker small {
-    color: var(--ff-muted);
-    font-size: 11px;
-    font-weight: 800;
   }
 
   .ff-goal-modal {
@@ -1051,174 +633,15 @@
     padding: 0 !important;
   }
 
-  .ff-share-studio__panel {
-    width: 100% !important;
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-    border-radius: 0 !important;
-    background: var(--ff-input) !important;
-  }
-
-  .ff-share-studio__header {
-    padding: calc(12px + env(safe-area-inset-top)) 13px 10px !important;
-  }
-
-  .ff-share-studio__header h2 {
-    font-size: 18px !important;
-  }
-
-  .ff-share-studio__header p {
-    font-size: 11px !important;
-  }
-
-  .ff-share-studio__body {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 10px !important;
-    flex: 1 1 auto !important;
-    overflow-y: auto !important;
-    padding: 10px 13px calc(90px + env(safe-area-inset-bottom)) !important;
-  }
-
-  .ff-share-studio__preview {
-    min-height: 0 !important;
-    border-radius: 16px !important;
-    padding: 9px !important;
-  }
-
-  .ff-share-studio__canvas {
-    width: auto !important;
-    max-width: min(72vw, 288px) !important;
-    max-height: 36dvh !important;
-    border-radius: 16px !important;
-  }
-
-  .ff-share-studio__controls {
-    gap: 10px !important;
-    border-radius: 16px !important;
-    padding: 10px !important;
-  }
-
-  .ff-share-studio__template-grid {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 8px !important;
-    overflow: visible !important;
-  }
-
-  .ff-share-studio__template-grid button {
-    min-width: 0 !important;
-    min-height: 66px !important;
-    border-radius: 15px !important;
-    padding: 9px !important;
-  }
-
-  .ff-share-studio__template-grid button.is-active,
-  .ff-share-studio__phrase-row button.is-active {
-    border-color: var(--ff-accent-border) !important;
-    background: var(--ff-accent-soft) !important;
-    color: var(--ff-accent-text) !important;
-  }
-
-  .ff-share-studio__template-grid small {
-    font-size: 10px !important;
-    line-height: 1.15 !important;
-  }
-
-  .ff-share-studio__phrase-row {
-    gap: 7px !important;
-  }
-
-  .ff-share-studio__phrase-row button {
-    min-height: 35px !important;
-    border-radius: 14px !important;
-    padding: 0 12px !important;
-    font-size: 12px !important;
-  }
-
-  .ff-share-studio__photo-button,
-  .ff-share-studio__caption input {
-    min-height: 41px !important;
-    border-radius: 14px !important;
-  }
-
-  .ff-share-studio__footer {
-    position: fixed !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    z-index: 2147483601 !important;
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 8px !important;
-    border-top: 1px solid var(--ff-mobile-border) !important;
-    background: rgba(12, 12, 14, 0.96) !important;
-    padding: 10px 13px calc(10px + env(safe-area-inset-bottom)) !important;
-  }
-
-  .ff-share-studio__footer .ff-share-studio__primary {
-    grid-column: 1 / -1 !important;
-  }
-
-  .ff-share-studio__footer button {
-    min-height: 39px !important;
-    border-radius: 14px !important;
-    font-size: 12px !important;
-  }
-
   .ff-goals-stats-grid > .ff-native-card h3,
-  .ff-notifications-stats-grid > .ff-native-card h3,
   .ff-recovery-stats-grid > .ff-native-card h3,
-  .ff-history-summary-grid > .ff-native-card h3,
-  .ff-progress-summary-grid > .ff-native-card h3,
-  .ff-progress-insight-grid > .ff-native-card h3,
-  .ff-dashboard-metrics-primary > .ff-native-card h3,
-  .ff-progress-photos-stats-grid > .ff-native-card h3 {
+  .ff-history-summary-grid > .ff-native-card h3 {
     margin-top: 4px !important;
     overflow: hidden !important;
     font-size: 17px !important;
     line-height: 1.05 !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
-  }
-
-  .ff-dashboard-metrics-secondary,
-  .ff-dashboard-metrics-detail {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 8px !important;
-  }
-
-  .ff-dashboard-metrics-detail {
-    grid-template-columns: 1fr !important;
-  }
-
-  .ff-dashboard-metrics-secondary > .ff-native-card {
-    min-width: 0 !important;
-    min-height: 74px !important;
-    border-radius: 15px !important;
-    padding: 9px !important;
-  }
-
-  .ff-dashboard-metrics-secondary h2,
-  .ff-dashboard-metrics-secondary h3 {
-    margin-top: 4px !important;
-    overflow: hidden !important;
-    font-size: 17px !important;
-    line-height: 1.05 !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-  }
-
-  .ff-dashboard-metrics-secondary p {
-    margin-top: 2px !important;
-    font-size: 11px !important;
-    line-height: 1.15 !important;
-  }
-
-  .ff-dashboard-metrics-secondary svg {
-    width: 17px !important;
-    height: 17px !important;
   }
 
   .ff-history-feed-card {
@@ -1341,16 +764,6 @@
     flex-direction: column !important;
     gap: 10px !important;
     margin-top: 10px !important;
-  }
-
-  .ff-progress-photo-form :is(input, select, textarea) {
-    min-height: 42px !important;
-    border-radius: 14px !important;
-    font-size: 13px !important;
-  }
-
-  .ff-progress-photo-form textarea {
-    min-height: 86px !important;
   }
 }
 

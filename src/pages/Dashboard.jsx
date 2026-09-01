@@ -604,7 +604,7 @@ function DashboardMiniChart({ volumeByWorkout }) {
       {chartItems.length > 0 ? (
         <div className="ff-dashboard-v2-chart__bars">
           {chartItems.map((item) => (
-            <div key={`${item.fullName}-${item.name}`}>
+            <div key={item.id}>
               <span>{formatCompactNumber(item.volume)}</span>
               <i style={{ '--ff-chart-height': `${Math.max(16, (toNumber(item.volume) / maxVolume) * 112)}px` }} />
               <small>{item.name}</small>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { API_BASE_URL, apiFetch, saveAuthToken } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import ForgeFlowIcon from '../components/brand/ForgeFlowIcon'
@@ -30,8 +30,14 @@ function GoogleIcon() {
     )
 }
 
+const GOOGLE_LOGIN_ERRORS = {
+    google: 'Não foi possível concluir o login com o Google. Tente novamente.',
+    'google-mobile': 'Não foi possível concluir o login com o Google no app. Tente novamente.',
+}
+
 function Login() {
     const navigate = useNavigate()
+    const [searchParams] = useSearchParams()
     const { setUser } = useAuth()
 
     const [email, setEmail] = useState('')
@@ -45,6 +51,15 @@ function Login() {
 
         return () => unlockGlobalScroll()
     }, [])
+
+    // O backend e o deep link do app redirecionam para /login?error=... quando o
+    // fluxo do Google falha. Antes esse parâmetro era ignorado e a pessoa voltava
+    // para a tela de login sem nenhuma explicação.
+    useEffect(() => {
+        const errorParam = searchParams.get('error')
+
+        if (errorParam) setError(GOOGLE_LOGIN_ERRORS[errorParam] || GOOGLE_LOGIN_ERRORS.google)
+    }, [searchParams])
 
     async function handleGoogleLogin() {
         const googleUrl = getGoogleLoginUrl(API_BASE_URL)

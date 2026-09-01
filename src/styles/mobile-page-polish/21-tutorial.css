@@ -1,94 +1,7 @@
-.ff-tutorial-overlay,
-.ff-tutorial-welcome,
-.ff-tutorial-floating-help {
-  color: var(--ff-text);
-  font-family: inherit;
-}
-
-.ff-tutorial-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 2147483000;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.ff-tutorial-scrim {
-  position: fixed;
-  background: var(--ff-overlay, rgba(0, 0, 0, 0.72));
-  backdrop-filter: blur(1.5px);
-  pointer-events: auto;
-  transition: opacity 180ms ease, transform 180ms ease;
-}
-
-.ff-tutorial-spotlight {
-  position: fixed;
-  z-index: 2147483020;
-  border: 1.5px solid color-mix(in srgb, var(--ff-accent) 78%, transparent);
-  border-radius: 22px;
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--ff-accent-border) 70%, transparent),
-    0 0 24px color-mix(in srgb, var(--ff-accent-soft) 70%, transparent),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-  pointer-events: none;
-  transition: top 180ms ease, left 180ms ease, width 180ms ease, height 180ms ease;
-}
-
-.ff-tutorial-active-target {
-  position: relative !important;
-  z-index: 2147483025 !important;
-  isolation: isolate;
-  scroll-margin-top: calc(7rem + env(safe-area-inset-top));
-  scroll-margin-bottom: calc(9rem + env(safe-area-inset-bottom));
-}
-
 .ff-tutorial-active-layer {
   z-index: 2147483015 !important;
 }
 
-.ff-tutorial-target-label {
-  position: absolute;
-  left: 12px;
-  top: -14px;
-  max-width: min(260px, calc(100vw - 48px));
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  border-radius: 999px;
-  border: 1px solid var(--ff-accent-border);
-  background: color-mix(in srgb, var(--ff-card) 88%, var(--ff-accent) 12%);
-  color: var(--ff-text);
-  padding: 0.28rem 0.62rem;
-  font-size: 0.68rem;
-  font-weight: 900;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  box-shadow: var(--ff-shadow-floating);
-}
-
-.ff-tutorial-tooltip {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 2147483040;
-  width: min(372px, calc(100vw - 24px));
-  max-height: none;
-  overflow: visible;
-  overscroll-behavior: auto;
-  border: 1px solid color-mix(in srgb, var(--ff-border) 76%, transparent);
-  border-radius: 24px;
-  background:
-    linear-gradient(145deg, color-mix(in srgb, var(--ff-accent-soft) 18%, transparent), transparent 46%),
-    var(--ff-card);
-  color: var(--ff-text);
-  box-shadow: var(--ff-shadow-floating), 0 20px 70px rgba(0, 0, 0, 0.34);
-  padding: 0.9rem;
-  pointer-events: auto;
-  outline: none;
-  animation: ff-tutorial-tooltip-in 180ms ease both;
-}
-
-.ff-tutorial-tooltip__header,
 .ff-tutorial-launcher__header {
   display: flex;
   align-items: flex-start;
@@ -96,8 +9,7 @@
   gap: 0.9rem;
 }
 
-.ff-tutorial-tooltip__eyebrow,
-.ff-tutorial-welcome__badge {
+.ff-tutorial-tooltip__eyebrow {
   display: inline-flex;
   align-items: center;
   width: fit-content;
@@ -112,8 +24,6 @@
   text-transform: uppercase;
 }
 
-.ff-tutorial-tooltip h2,
-.ff-tutorial-welcome h2,
 .ff-tutorial-launcher h3 {
   margin: 0.55rem 0 0;
   color: var(--ff-text);
@@ -123,27 +33,6 @@
   line-height: 1.05;
 }
 
-.ff-tutorial-close {
-  display: inline-grid;
-  min-width: 38px;
-  min-height: 38px;
-  place-items: center;
-  border: 1px solid var(--ff-border);
-  border-radius: 999px;
-  background: var(--ff-surface);
-  color: var(--ff-muted);
-  font-size: 1.35rem;
-  font-weight: 800;
-}
-
-.ff-tutorial-progress {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  margin: 0.85rem 0 0;
-}
-
-.ff-tutorial-progress__bar,
 .ff-tutorial-launcher__meter {
   height: 8px;
   flex: 1;
@@ -153,7 +42,6 @@
   box-shadow: inset 0 0 0 1px var(--ff-border);
 }
 
-.ff-tutorial-progress__bar span,
 .ff-tutorial-launcher__meter span {
   display: block;
   height: 100%;
@@ -162,7 +50,6 @@
   transition: width 220ms ease;
 }
 
-.ff-tutorial-step-counter,
 .ff-tutorial-launcher__progress {
   min-width: fit-content;
   color: var(--ff-muted);
@@ -170,12 +57,6 @@
   font-weight: 900;
 }
 
-.ff-tutorial-tooltip__body {
-  margin-top: 0.8rem;
-}
-
-.ff-tutorial-tooltip__body p,
-.ff-tutorial-welcome p,
 .ff-tutorial-launcher p {
   margin: 0;
   color: var(--ff-muted);
@@ -183,48 +64,13 @@
   line-height: 1.52;
 }
 
-.ff-tutorial-tooltip__example {
-  margin-top: 0.72rem !important;
-  border: 1px solid var(--ff-border);
-  border-radius: 18px;
-  background: var(--ff-surface);
-  padding: 0.78rem 0.85rem;
-  color: var(--ff-text) !important;
-  font-weight: 750;
-}
-
-.ff-tutorial-tooltip__warning {
-  margin-top: 0.72rem !important;
-  border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--ff-accent) 45%, var(--ff-border));
-  background: var(--ff-accent-soft);
-  color: var(--ff-text) !important;
-  padding: 0.72rem 0.82rem;
-  font-weight: 800;
-}
-
-.ff-tutorial-tooltip__controls {
-  display: grid;
-  gap: 0.8rem;
-  margin-top: 1rem;
-}
-
-.ff-tutorial-tooltip__primary-actions,
-.ff-tutorial-tooltip__secondary-actions,
-.ff-tutorial-section-picker,
-.ff-tutorial-welcome__actions {
+.ff-tutorial-section-picker {
   display: flex;
   flex-wrap: wrap;
   gap: 0.55rem;
 }
 
-.ff-tutorial-tooltip__primary-actions {
-  display: grid;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-}
-
-.ff-tutorial-btn,
-.ff-tutorial-link-btn {
+.ff-tutorial-btn {
   min-height: 42px;
   border: 0;
   border-radius: 16px;
@@ -241,9 +87,7 @@
   opacity: 0.45;
 }
 
-.ff-tutorial-btn:not(:disabled):active,
-.ff-tutorial-link-btn:not(:disabled):active,
-.ff-tutorial-close:active {
+.ff-tutorial-btn:not(:disabled):active {
   transform: translateY(1px) scale(0.99);
 }
 
@@ -267,38 +111,6 @@
   color: var(--ff-muted);
 }
 
-.ff-tutorial-link-btn {
-  min-height: 34px;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--ff-muted);
-  padding: 0.42rem 0.52rem;
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
-}
-
-.ff-tutorial-link-btn--danger {
-  color: var(--ff-danger, #ef4444);
-}
-
-.ff-tutorial-welcome {
-  position: fixed;
-  inset: 0;
-  z-index: 2147483050;
-  display: grid;
-  place-items: center;
-  padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
-}
-
-.ff-tutorial-welcome__backdrop {
-  position: absolute;
-  inset: 0;
-  background: var(--ff-overlay, rgba(0, 0, 0, 0.72));
-  backdrop-filter: blur(8px);
-}
-
-.ff-tutorial-welcome__card,
 .ff-tutorial-launcher {
   position: relative;
   width: min(440px, 100%);
@@ -309,45 +121,6 @@
     var(--ff-card);
   box-shadow: var(--ff-shadow-floating), 0 28px 70px rgba(0, 0, 0, 0.35);
   padding: 1.1rem;
-}
-
-.ff-tutorial-welcome__grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.55rem;
-  margin: 1rem 0;
-}
-
-.ff-tutorial-welcome__grid span {
-  border: 1px solid var(--ff-border);
-  border-radius: 18px;
-  background: var(--ff-surface);
-  color: var(--ff-text);
-  padding: 0.72rem;
-  font-size: 0.78rem;
-  font-weight: 900;
-}
-
-.ff-tutorial-welcome__actions .ff-tutorial-btn {
-  flex: 1 1 145px;
-}
-
-.ff-tutorial-floating-help {
-  position: fixed;
-  right: max(16px, env(safe-area-inset-right));
-  bottom: calc(86px + env(safe-area-inset-bottom));
-  z-index: 850;
-  display: grid;
-  width: 48px;
-  height: 48px;
-  place-items: center;
-  border: 1px solid var(--ff-accent-border);
-  border-radius: 18px;
-  background: linear-gradient(135deg, var(--ff-accent), color-mix(in srgb, var(--ff-accent) 68%, #fff));
-  color: var(--ff-accent-contrast, #fff);
-  box-shadow: 0 14px 32px var(--ff-accent-soft);
-  font-size: 1.2rem;
-  font-weight: 950;
 }
 
 .ff-tutorial-launcher {
@@ -437,44 +210,15 @@
   }
 }
 
-.ff-tutorial-highlight-pulse {
-  animation: ff-tutorial-pulse 1.8s ease-in-out infinite;
-}
-
-[data-theme='light'] .ff-tutorial-scrim,
-.light .ff-tutorial-scrim,
-:root:not(.dark) .ff-tutorial-scrim {
-  background: rgba(15, 23, 42, 0.46);
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .ff-tutorial-tooltip,
-  .ff-tutorial-scrim,
-  .ff-tutorial-spotlight,
-  .ff-tutorial-highlight-pulse,
-  .ff-tutorial-progress__bar span,
   .ff-tutorial-launcher__meter span {
     animation: none !important;
     transition: none !important;
   }
 }
 
-@media (max-width: 380px) {
-  .ff-tutorial-tooltip {
-    border-radius: 24px;
-    padding: 0.9rem;
-  }
-
-  .ff-tutorial-tooltip__primary-actions {
-    grid-template-columns: 1fr;
-  }
-}
-
 /* Correções de camada para alvos fixos do treino ativo. O alvo fica visível
    pelo recorte do spotlight, mas o tooltip continua sempre acima dele. */
-.ff-tutorial-active-target {
-  z-index: 2147482999 !important;
-}
 
 .ff-tutorial-active-layer {
   z-index: 2147482998 !important;
@@ -490,41 +234,11 @@ body.is-native-app .ff-page-start-workout .ff-mobile-workout-action-bar.ff-tutor
 
 /* O overlay não bloqueia mais o gesto de rolagem do app no Android;
    só o tooltip captura toque/clique. */
-.ff-tutorial-scrim {
-  pointer-events: none !important;
-}
 
 
 @media (max-width: 640px) {
-  .ff-tutorial-tooltip {
-    width: min(342px, calc(100vw - 20px));
-    max-height: min(54vh, calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 148px));
-    border-radius: 22px;
-    padding: 0.82rem;
-  }
 
-  .ff-tutorial-tooltip h2 {
-    font-size: 1.08rem;
-  }
-
-  .ff-tutorial-tooltip__body p,
-  .ff-tutorial-tooltip__example,
-  .ff-tutorial-tooltip__warning {
-    font-size: 0.82rem !important;
-    line-height: 1.42;
-  }
-
-  .ff-tutorial-progress {
-    margin-top: 0.65rem;
-  }
-
-  .ff-tutorial-tooltip__controls {
-    gap: 0.55rem;
-    margin-top: 0.75rem;
-  }
-
-  .ff-tutorial-btn,
-  .ff-tutorial-link-btn {
+  .ff-tutorial-btn {
     min-height: 38px;
     padding: 0.58rem 0.72rem;
     font-size: 0.8rem;
@@ -533,84 +247,14 @@ body.is-native-app .ff-page-start-workout .ff-mobile-workout-action-bar.ff-tutor
 
 /* Tutorial mobile safe-positioning override: keep the tip smaller and away from
    Android status/navigation areas so the highlighted target is easier to see. */
-@media (max-width: 640px) {
-  .ff-tutorial-tooltip {
-    width: min(330px, calc(100vw - 24px)) !important;
-    max-height: min(42vh, calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 196px)) !important;
-    padding: 0.76rem !important;
-  }
-
-  .ff-tutorial-tooltip__example,
-  .ff-tutorial-tooltip__warning {
-    display: none;
-  }
-
-  .ff-tutorial-active-target {
-    scroll-margin-top: calc(9rem + env(safe-area-inset-top)) !important;
-    scroll-margin-bottom: calc(11rem + env(safe-area-inset-bottom)) !important;
-  }
-
-  .ff-tutorial-spotlight {
-    border-width: 1px !important;
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--ff-accent-border) 55%, transparent),
-      0 0 18px color-mix(in srgb, var(--ff-accent-soft) 55%, transparent) !important;
-  }
-}
 
 /* Hotfix: keep the compact mobile tutorial card from covering the highlighted
    target on low-height Android screens. */
 @media (max-width: 640px) {
-  .ff-tutorial-tooltip {
-    width: min(316px, calc(100vw - 28px)) !important;
-    max-height: min(36vh, calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 220px)) !important;
-    padding: 0.68rem !important;
-  }
 
   .ff-tutorial-tooltip__eyebrow {
     padding: 0.2rem 0.48rem !important;
     font-size: 0.62rem !important;
-  }
-
-  .ff-tutorial-tooltip h2 {
-    margin-top: 0.42rem !important;
-    font-size: 1rem !important;
-  }
-
-  .ff-tutorial-tooltip__body {
-    margin-top: 0.58rem !important;
-  }
-
-  .ff-tutorial-tooltip__body p {
-    font-size: 0.78rem !important;
-    line-height: 1.36 !important;
-  }
-
-  .ff-tutorial-progress {
-    gap: 0.52rem !important;
-    margin-top: 0.52rem !important;
-  }
-
-  .ff-tutorial-progress__bar {
-    height: 6px !important;
-  }
-
-  .ff-tutorial-step-counter {
-    font-size: 0.68rem !important;
-  }
-
-  .ff-tutorial-tooltip__controls {
-    margin-top: 0.62rem !important;
-  }
-
-  .ff-tutorial-tooltip__secondary-actions {
-    gap: 0.35rem !important;
-  }
-
-  .ff-tutorial-link-btn {
-    min-height: 30px !important;
-    padding: 0.32rem 0.42rem !important;
-    font-size: 0.7rem !important;
   }
 }
 
@@ -619,82 +263,11 @@ body.is-native-app .ff-page-start-workout .ff-mobile-workout-action-bar.ff-tutor
    A dica fica menor e presa no topo/rodapé oposto ao alvo, reduzindo a chance
    de ficar por cima do spotlight ou de botões fixos do APK. */
 @media (max-width: 640px) {
-  .ff-tutorial-overlay {
-    --ff-tutorial-mobile-card-width: min(292px, calc(100vw - 32px));
-  }
-
-  .ff-tutorial-tooltip {
-    width: var(--ff-tutorial-mobile-card-width) !important;
-    max-height: min(28vh, 190px) !important;
-    border-radius: 18px !important;
-    padding: 0.56rem !important;
-    background:
-      linear-gradient(145deg, color-mix(in srgb, var(--ff-accent-soft) 14%, transparent), transparent 48%),
-      color-mix(in srgb, var(--ff-card) 88%, transparent) !important;
-    backdrop-filter: blur(14px) saturate(1.12) !important;
-    -webkit-backdrop-filter: blur(14px) saturate(1.12) !important;
-    border-color: color-mix(in srgb, var(--ff-border) 54%, transparent) !important;
-    box-shadow: 0 14px 42px rgba(0, 0, 0, 0.24) !important;
-  }
-
-  .ff-tutorial-tooltip__header {
-    gap: 0.5rem !important;
-    align-items: center !important;
-  }
 
   .ff-tutorial-tooltip__eyebrow {
     padding: 0.16rem 0.42rem !important;
     font-size: 0.56rem !important;
     letter-spacing: 0.045em !important;
-  }
-
-  .ff-tutorial-tooltip h2 {
-    margin-top: 0.28rem !important;
-    font-size: 0.9rem !important;
-    line-height: 1.08 !important;
-    letter-spacing: -0.025em !important;
-  }
-
-  .ff-tutorial-close {
-    min-width: 30px !important;
-    min-height: 30px !important;
-    font-size: 1rem !important;
-  }
-
-  .ff-tutorial-progress {
-    margin-top: 0.42rem !important;
-  }
-
-  .ff-tutorial-progress__bar {
-    height: 4px !important;
-  }
-
-  .ff-tutorial-step-counter {
-    font-size: 0.62rem !important;
-  }
-
-  .ff-tutorial-tooltip__body {
-    margin-top: 0.42rem !important;
-  }
-
-  .ff-tutorial-tooltip__body p {
-    display: -webkit-box !important;
-    -webkit-line-clamp: 2 !important;
-    line-clamp: 2 !important;
-    -webkit-box-orient: vertical !important;
-    overflow: hidden !important;
-    font-size: 0.72rem !important;
-    line-height: 1.28 !important;
-  }
-
-  .ff-tutorial-tooltip__controls {
-    gap: 0.42rem !important;
-    margin-top: 0.48rem !important;
-  }
-
-  .ff-tutorial-tooltip__primary-actions {
-    grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr) !important;
-    gap: 0.42rem !important;
   }
 
   .ff-tutorial-btn {
@@ -703,67 +276,14 @@ body.is-native-app .ff-page-start-workout .ff-mobile-workout-action-bar.ff-tutor
     padding: 0.42rem 0.54rem !important;
     font-size: 0.72rem !important;
   }
-
-  .ff-tutorial-tooltip__secondary-actions {
-    justify-content: center !important;
-    gap: 0.38rem !important;
-  }
-
-  .ff-tutorial-link-btn {
-    min-height: 26px !important;
-    border-radius: 999px !important;
-    padding: 0.22rem 0.42rem !important;
-    font-size: 0.62rem !important;
-    background: transparent !important;
-  }
-
-  .ff-tutorial-scrim {
-    background: rgba(0, 0, 0, 0.52) !important;
-    backdrop-filter: blur(0.5px) !important;
-  }
-
-  [data-theme='light'] .ff-tutorial-scrim,
-  .light .ff-tutorial-scrim,
-  :root:not(.dark) .ff-tutorial-scrim {
-    background: rgba(15, 23, 42, 0.34) !important;
-  }
-
-  .ff-tutorial-spotlight {
-    border-radius: 18px !important;
-    border-width: 1px !important;
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--ff-accent-border) 42%, transparent),
-      0 0 14px color-mix(in srgb, var(--ff-accent-soft) 45%, transparent) !important;
-  }
-
-  .ff-tutorial-target-label {
-    display: none !important;
-  }
 }
 
 
 /* Hotfix final: o card do tutorial NÃO deve ter scroll interno no mobile.
    O scroll dentro da própria dica ficou ruim no APK, então o texto é resumido
    e as ações ficam sempre visíveis. A página pode rolar, mas o card não. */
-.ff-tutorial-tooltip {
-  overflow: visible !important;
-  overscroll-behavior: auto !important;
-  -webkit-overflow-scrolling: auto !important;
-}
 
 @media (max-width: 640px) {
-  .ff-tutorial-tooltip {
-    width: min(318px, calc(100vw - 28px)) !important;
-    max-height: none !important;
-    overflow: visible !important;
-    padding: 0.62rem !important;
-    border-radius: 18px !important;
-    touch-action: manipulation !important;
-  }
-
-  .ff-tutorial-tooltip__header {
-    gap: 0.48rem !important;
-  }
 
   .ff-tutorial-tooltip__eyebrow {
     max-width: 178px !important;
@@ -772,66 +292,8 @@ body.is-native-app .ff-page-start-workout .ff-mobile-workout-action-bar.ff-tutor
     white-space: nowrap !important;
   }
 
-  .ff-tutorial-tooltip h2 {
-    display: -webkit-box !important;
-    -webkit-line-clamp: 2 !important;
-    line-clamp: 2 !important;
-    -webkit-box-orient: vertical !important;
-    overflow: hidden !important;
-  }
-
-  .ff-tutorial-progress {
-    margin-top: 0.36rem !important;
-  }
-
-  .ff-tutorial-tooltip__body {
-    margin-top: 0.38rem !important;
-  }
-
-  .ff-tutorial-tooltip__body p {
-    display: -webkit-box !important;
-    -webkit-line-clamp: 2 !important;
-    line-clamp: 2 !important;
-    -webkit-box-orient: vertical !important;
-    overflow: hidden !important;
-    margin: 0 !important;
-  }
-
-  .ff-tutorial-tooltip__example,
-  .ff-tutorial-tooltip__warning {
-    display: none !important;
-  }
-
-  .ff-tutorial-tooltip__controls {
-    margin-top: 0.48rem !important;
-    gap: 0.36rem !important;
-  }
-
-  .ff-tutorial-tooltip__primary-actions {
-    gap: 0.4rem !important;
-  }
-
   .ff-tutorial-btn {
     min-height: 34px !important;
     padding: 0.42rem 0.52rem !important;
-  }
-
-  .ff-tutorial-tooltip__secondary-actions {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 0.3rem !important;
-  }
-
-  .ff-tutorial-link-btn {
-    min-height: 28px !important;
-    padding: 0.26rem 0.34rem !important;
-    font-size: 0.62rem !important;
-    text-decoration: none !important;
-    border: 1px solid color-mix(in srgb, var(--ff-border) 52%, transparent) !important;
-    background: color-mix(in srgb, var(--ff-surface) 72%, transparent) !important;
-  }
-
-  .ff-tutorial-link-btn--danger {
-    display: none !important;
   }
 }

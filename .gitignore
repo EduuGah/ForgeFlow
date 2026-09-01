@@ -43,3 +43,6 @@ android/local.properties
 # Generated APK/AAB
 *.apk
 *.aab
+
+# PID de servidor de desenvolvimento
+*.pid

@@ -1,105 +1,78 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  apiFetch,
   getCurrentUser,
   getToken,
   logout as logoutService,
   logoutFromApi,
+  warmUpApi,
 } from '../services/api'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const navigate = useNavigate()
-  const [user, setUser] = useState(null)
+  const [user, setUserState] = useState(null)
   const [loadingUser, setLoadingUser] = useState(true)
   const [authChecked, setAuthChecked] = useState(false)
-  const [authWarmupProgress, setAuthWarmupProgress] = useState(8)
-  const [authWarmupStatus, setAuthWarmupStatus] = useState('Carregando sessao...')
+  const [authWarmupProgress, setAuthWarmupProgress] = useState(10)
+  const [authWarmupStatus, setAuthWarmupStatus] = useState('Carregando sessão...')
 
-  const warmupAuthServer = useCallback(async () => {
-    let progress = 8
-    let attempt = 0
-    let mounted = true
+  // Toda escrita explícita de usuário (login, cadastro, callback do Google)
+  // invalida qualquer verificação de sessão que ainda esteja em voo. Sem isso,
+  // uma resposta lenta de /auth/session sobrescreve o usuário recém-autenticado
+  // com null e devolve a pessoa para a tela de login já estando logada.
+  const sessionRequestIdRef = useRef(0)
 
-    setAuthWarmupProgress(progress)
-    setAuthWarmupStatus('Carregando sessao...')
-
-    const intervalId = window.setInterval(() => {
-      if (!mounted) return
-
-      progress = Math.min(96, progress + (progress < 64 ? 2 : 1))
-      setAuthWarmupProgress(progress)
-
-      if (progress > 82) {
-        setAuthWarmupStatus('Preparando login seguro...')
-      } else if (progress > 52) {
-        setAuthWarmupStatus('Conectando ao servidor...')
-      }
-    }, 320)
-
-    try {
-      while (mounted) {
-        try {
-          await apiFetch('/auth/csrf')
-          setAuthWarmupStatus('Sessao pronta')
-          setAuthWarmupProgress(100)
-          return true
-        } catch {
-          attempt += 1
-          setAuthWarmupStatus(attempt > 1 ? 'Acordando servidor...' : 'Conectando ao servidor...')
-          await new Promise((resolve) => window.setTimeout(resolve, 900))
-        }
-      }
-
-      return false
-    } finally {
-      mounted = false
-      window.clearInterval(intervalId)
-    }
+  const setUser = useCallback((nextUser) => {
+    sessionRequestIdRef.current += 1
+    setUserState(nextUser)
+    setLoadingUser(false)
+    setAuthChecked(true)
   }, [])
 
   const loadUser = useCallback(async () => {
-    const token = getToken()
+    const requestId = (sessionRequestIdRef.current += 1)
+    const isStale = () => sessionRequestIdRef.current !== requestId
 
-    if (!token) {
-      await warmupAuthServer()
-      setUser(null)
+    // Sem token não há sessão para validar: liberamos a navegação na hora para
+    // que a tela de login apareça mesmo com a API fora do ar ou hibernando.
+    if (!getToken()) {
+      if (!isStale()) setUserState(null)
       setLoadingUser(false)
       setAuthChecked(true)
+      warmUpApi()
       return null
     }
 
     setLoadingUser(true)
-    setAuthWarmupProgress((current) => Math.max(current, 18))
-    setAuthWarmupStatus('Carregando sessao...')
 
     try {
       const data = await getCurrentUser()
-      setUser(data)
-      setAuthWarmupProgress(100)
-      setAuthWarmupStatus('Sessao pronta')
+
+      if (!isStale()) setUserState(data)
+
       return data
     } catch (error) {
-      console.warn('[ForgeFlow] Sessão inválida ou indisponível:', error)
-
+      // 401/403 significam sessão realmente inválida: limpamos o token local.
+      // Falha de rede não desloga ninguém, só mantém a sessão não confirmada.
       if (error?.status === 401 || error?.status === 403) {
         logoutService()
+      } else {
+        console.warn('[ForgeFlow] Não foi possível confirmar a sessão:', error)
       }
 
-      setUser(null)
+      if (!isStale()) setUserState(null)
+
       return null
     } finally {
       setLoadingUser(false)
       setAuthChecked(true)
     }
-  }, [warmupAuthServer])
+  }, [])
 
   const logout = useCallback(({ redirect = true } = {}) => {
     setUser(null)
-    setLoadingUser(false)
-    setAuthChecked(true)
     logoutService()
 
     if (redirect) {
@@ -107,13 +80,39 @@ export function AuthProvider({ children }) {
     }
 
     logoutFromApi().catch((error) => {
-      console.warn('[ForgeFlow] Não foi possível limpar sessão remota:', error)
+      console.warn('[ForgeFlow] Não foi possível limpar a sessão remota:', error)
     })
-  }, [navigate])
+  }, [navigate, setUser])
 
   useEffect(() => {
     loadUser()
   }, [loadUser])
+
+  // Barra de progresso da tela de sessão. É puramente visual e nunca decide se
+  // o app pode navegar — quem decide isso é authChecked.
+  useEffect(() => {
+    if (!loadingUser) {
+      setAuthWarmupProgress(100)
+      setAuthWarmupStatus('Sessão pronta')
+      return undefined
+    }
+
+    setAuthWarmupProgress(10)
+    setAuthWarmupStatus('Carregando sessão...')
+
+    const intervalId = window.setInterval(() => {
+      setAuthWarmupProgress((current) => {
+        const next = Math.min(96, current + (current < 64 ? 3 : 1))
+
+        if (next > 82) setAuthWarmupStatus('Acordando o servidor...')
+        else if (next > 52) setAuthWarmupStatus('Conectando ao servidor...')
+
+        return next
+      })
+    }, 320)
+
+    return () => window.clearInterval(intervalId)
+  }, [loadingUser])
 
   const value = useMemo(
     () => ({
@@ -127,7 +126,7 @@ export function AuthProvider({ children }) {
       loadUser,
       logout,
     }),
-    [user, loadingUser, authChecked, authWarmupProgress, authWarmupStatus, loadUser, logout]
+    [user, setUser, loadingUser, authChecked, authWarmupProgress, authWarmupStatus, loadUser, logout]
   )
 
   return (

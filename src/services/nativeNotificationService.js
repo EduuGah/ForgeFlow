@@ -1,5 +1,4 @@
-import { registerPlugin } from '@capacitor/core'
-
+import { ActiveWorkoutForeground, LocalNotifications } from './capacitorPlugins'
 import { isNativeApp } from '../utils/platformUtils'
 import {
   WEEK_DAYS,
@@ -11,8 +10,6 @@ import {
   subtractMinutesFromTime,
 } from '../utils/workoutScheduleUtils'
 
-const LocalNotifications = registerPlugin('LocalNotifications')
-const ActiveWorkoutForeground = registerPlugin('ActiveWorkoutForeground')
 
 const WEIGHT_REMINDER_ID = 9001
 const WORKOUT_REMINDER_BASE_ID = 9100

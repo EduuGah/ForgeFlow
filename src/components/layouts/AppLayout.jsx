@@ -485,13 +485,13 @@ function AppLayout() {
                 <button
                 type="button"
                 onClick={() => window.dispatchEvent(new CustomEvent('forgeflow:show-install-app'))}
-                className="flex h-11 items-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface)] px-3 text-xs font-black text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)] sm:flex"
+                className="ff-header-install-button flex h-11 items-center gap-2 rounded-2xl border border-[var(--ff-border)] bg-[var(--ff-surface)] px-3 text-xs font-black text-[var(--ff-text-soft)] transition hover:border-[var(--ff-accent-border)] hover:bg-[var(--ff-surface-2)] hover:text-[var(--ff-text)]"
                 aria-label="Instalar APP"
                 data-tutorial="app-install-button"
                 title="Instalar APP"
               >
                 <Download size={16} />
-                App
+                <span className="ff-header-install-label">App</span>
               </button>
               )}
 

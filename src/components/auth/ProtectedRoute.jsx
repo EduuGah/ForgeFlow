@@ -1,24 +1,24 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { getToken } from '../../services/api'
 import AuthLoadingScreen from './AuthLoadingScreen'
 
 function ProtectedRoute({ children }) {
   const location = useLocation()
   const { user, loadingUser, authChecked, authWarmupProgress, authWarmupStatus } = useAuth()
-  const token = getToken()
 
   if (loadingUser || !authChecked) {
     return (
       <AuthLoadingScreen
-        label="Carregando sessao..."
         progress={authWarmupProgress}
         status={authWarmupStatus}
       />
     )
   }
 
-  if (!token || !user) {
+  // `user` só é preenchido com dados validados pelo servidor, então ele é a
+  // fonte de verdade. Exigir também o token do localStorage quebrava o login
+  // por cookie (o app rejeitava uma sessão válida e voltava para /login).
+  if (!user) {
     return (
       <Navigate
         to="/login"

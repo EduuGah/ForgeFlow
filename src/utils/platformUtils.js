@@ -1,7 +1,12 @@
 import { Capacitor } from '@capacitor/core'
 
 function isForcedCapacitorLayout() {
-  return import.meta.env.VITE_FORCE_CAPACITOR_LAYOUT === 'true'
+  // Flag de depuração para conferir o visual do APK no navegador durante o
+  // desenvolvimento (`npm run dev:mobile`). Fica restrita ao modo DEV de
+  // propósito: o Vite também lê .env.local em `vite build`, e sem essa trava
+  // qualquer build feito numa máquina com a flag ligada entregava o layout de
+  // celular para todo mundo no desktop.
+  return import.meta.env.DEV && import.meta.env.VITE_FORCE_CAPACITOR_LAYOUT === 'true'
 }
 
 export function isNativeApp() {

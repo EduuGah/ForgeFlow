@@ -18,11 +18,8 @@ body.is-native-app.ff-complete-profile-scroll-fix #root {
 }
 
 .ff-complete-profile-screen,
-.ff-hevy-page-completeprofile.ff-complete-profile-screen,
 body.ff-complete-profile-scroll-fix .ff-complete-profile-screen,
-body.ff-complete-profile-scroll-fix .ff-hevy-page-completeprofile.ff-complete-profile-screen,
-body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-screen,
-body.is-native-app.ff-complete-profile-scroll-fix .ff-hevy-page-completeprofile.ff-complete-profile-screen {
+body.is-native-app.ff-complete-profile-scroll-fix .ff-complete-profile-screen {
   position: fixed !important;
   inset: 0 !important;
   display: block !important;

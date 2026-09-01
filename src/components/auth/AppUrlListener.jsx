@@ -1,13 +1,11 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { App as CapacitorApp } from '@capacitor/app'
-import { registerPlugin } from '@capacitor/core'
 
 import { getCurrentUser, saveAuthToken } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 import { isNativeApp } from '../../utils/platformUtils'
-
-const LocalNotifications = registerPlugin('LocalNotifications')
+import { LocalNotifications } from '../../services/capacitorPlugins'
 
 function isForgeFlowAuthCallback(url) {
   return (

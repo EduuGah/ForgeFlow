@@ -5,12 +5,8 @@
   }
 
   .ff-goals-stats-grid,
-  .ff-notifications-stats-grid,
   .ff-recovery-stats-grid,
-  .ff-history-summary-grid,
-  .ff-progress-summary-grid,
-  .ff-progress-insight-grid,
-  .ff-dashboard-metrics-primary {
+  .ff-history-summary-grid {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 0.5rem !important;
@@ -19,12 +15,8 @@
   }
 
   .ff-goals-stats-grid > .ff-native-card,
-  .ff-notifications-stats-grid > .ff-native-card,
   .ff-recovery-stats-grid > .ff-native-card,
-  .ff-history-summary-grid > .ff-native-card,
-  .ff-progress-summary-grid > .ff-native-card,
-  .ff-progress-insight-grid > .ff-native-card,
-  .ff-dashboard-metrics-primary > .ff-native-card {
+  .ff-history-summary-grid > .ff-native-card {
     width: auto !important;
     min-width: 0 !important;
     min-height: 4.65rem !important;
@@ -33,25 +25,16 @@
   }
 
   .ff-goals-stats-grid > .ff-native-card p,
-  .ff-notifications-stats-grid > .ff-native-card p,
   .ff-recovery-stats-grid > .ff-native-card p,
-  .ff-history-summary-grid > .ff-native-card p,
-  .ff-progress-summary-grid > .ff-native-card p,
-  .ff-progress-insight-grid > .ff-native-card p,
-  .ff-dashboard-metrics-primary > .ff-native-card p {
+  .ff-history-summary-grid > .ff-native-card p {
     margin: 0.12rem 0 0 !important;
     font-size: 0.64rem !important;
     line-height: 1.15 !important;
   }
 
   .ff-goals-stats-grid > .ff-native-card h2,
-  .ff-notifications-stats-grid > .ff-native-card h2,
   .ff-recovery-stats-grid > .ff-native-card h2,
-  .ff-history-summary-grid > .ff-native-card h2,
-  .ff-progress-summary-grid > .ff-native-card h2,
-  .ff-progress-insight-grid > .ff-native-card h2,
-  .ff-progress-insight-grid > .ff-native-card h3,
-  .ff-dashboard-metrics-primary > .ff-native-card h2 {
+  .ff-history-summary-grid > .ff-native-card h2 {
     margin-top: 0.24rem !important;
     overflow: hidden !important;
     font-size: 1.05rem !important;
@@ -61,12 +44,8 @@
   }
 
   .ff-goals-stats-grid svg,
-  .ff-notifications-stats-grid svg,
   .ff-recovery-stats-grid svg,
-  .ff-history-summary-grid svg,
-  .ff-progress-summary-grid svg,
-  .ff-progress-insight-grid svg,
-  .ff-dashboard-metrics-primary svg {
+  .ff-history-summary-grid svg {
     width: 1rem !important;
     height: 1rem !important;
   }
@@ -193,31 +172,6 @@
     gap: 0.55rem !important;
   }
 
-  .ff-schedule-week-grid {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 0.5rem !important;
-    overflow: visible !important;
-    padding: 0 !important;
-  }
-
-  .ff-schedule-day-card {
-    min-width: 0 !important;
-    border-radius: 0.95rem !important;
-    padding: 0.58rem !important;
-  }
-
-  .ff-schedule-day-card > .mb-3 {
-    margin-bottom: 0.42rem !important;
-  }
-
-  .ff-schedule-day-card select {
-    min-height: 2.35rem !important;
-    border-radius: 0.75rem !important;
-    padding: 0 0.5rem !important;
-    font-size: 0.72rem !important;
-  }
-
   .ff-recovery-body > section.mt-6,
   .ff-recovery-body section.mt-6 {
     display: block !important;
@@ -280,201 +234,6 @@
     margin-top: 0.45rem !important;
   }
 
-  .ff-exercise-progress-body > section.ff-exercise-progress-rankings {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 0.55rem !important;
-    overflow: visible !important;
-  }
-
-  .ff-exercise-progress-rankings > .ff-native-card {
-    min-width: 0 !important;
-    padding: 0.62rem !important;
-  }
-
-  .ff-exercise-progress-rankings > .ff-native-card .mt-4 {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 0.42rem !important;
-  }
-
-  .ff-exercise-progress-rankings button {
-    display: grid !important;
-    grid-template-columns: 2.8rem minmax(0, 1fr) !important;
-    min-height: 4rem !important;
-    align-items: center !important;
-    gap: 0.45rem !important;
-    padding: 0.45rem !important;
-  }
-
-  .ff-exercise-progress-rankings button > span:first-child {
-    display: contents !important;
-  }
-
-  .ff-exercise-progress-rankings button > span:last-child {
-    grid-column: 2 !important;
-    justify-self: start !important;
-    font-size: 0.72rem !important;
-  }
-
-  .ff-hevy-exercise-progress > .ff-native-card .mt-5.grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 0.5rem !important;
-  }
-
-  .ff-hevy-exercise-progress > .ff-native-card .mt-5.grid > div {
-    min-height: 4.35rem !important;
-    border-radius: 0.9rem !important;
-    padding: 0.55rem !important;
-  }
-
-  .ff-progress-photo-launcher,
-  .ff-progress-photo-compare-card {
-    border-radius: 1rem !important;
-    padding: 0.68rem !important;
-  }
-
-  .ff-progress-photo-launcher__copy {
-    display: grid;
-    grid-template-columns: 2.55rem minmax(0, 1fr);
-    gap: 0.65rem;
-    align-items: center;
-    margin-bottom: 0.7rem;
-  }
-
-  .ff-progress-photo-launcher__copy > span {
-    display: grid;
-    width: 2.55rem;
-    height: 2.55rem;
-    place-items: center;
-    border-radius: 0.9rem;
-    background: var(--ff-accent-soft);
-    color: var(--ff-accent-text);
-  }
-
-  .ff-progress-photo-launcher__copy h2 {
-    color: var(--ff-text);
-    font-size: 1rem;
-    font-weight: 950;
-    line-height: 1.05;
-  }
-
-  .ff-progress-photo-launcher__copy p {
-    margin-top: 0.16rem;
-    color: var(--ff-muted);
-    font-size: 0.72rem;
-    line-height: 1.2;
-  }
-
-  .ff-progress-photo-sheet {
-    position: fixed;
-    inset: 0;
-    z-index: 2147483600;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    background: var(--ff-overlay);
-    backdrop-filter: blur(12px);
-  }
-
-  .ff-progress-photo-sheet__backdrop {
-    position: absolute;
-    inset: 0;
-  }
-
-  .ff-progress-photo-sheet__panel {
-    position: relative;
-    display: flex;
-    width: 100%;
-    max-height: calc(92dvh - env(safe-area-inset-top));
-    flex-direction: column;
-    overflow: hidden;
-    border: 1px solid var(--ff-mobile-border);
-    border-radius: 1.35rem 1.35rem 0 0;
-    background: var(--ff-input);
-    box-shadow: var(--ff-shadow-floating);
-  }
-
-  .ff-progress-photo-sheet__panel header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-    border-bottom: 1px solid var(--ff-mobile-border);
-    padding: 0.9rem 0.9rem 0.75rem;
-  }
-
-  .ff-progress-photo-sheet__panel header span {
-    color: var(--ff-accent-text);
-    font-size: 0.68rem;
-    font-weight: 950;
-    text-transform: uppercase;
-  }
-
-  .ff-progress-photo-sheet__panel header h2 {
-    margin-top: 0.12rem;
-    color: var(--ff-text);
-    font-size: 1.25rem;
-    font-weight: 950;
-  }
-
-  .ff-progress-photo-sheet__panel header p {
-    margin-top: 0.18rem;
-    color: var(--ff-muted);
-    font-size: 0.74rem;
-  }
-
-  .ff-progress-photo-sheet__panel header button {
-    display: grid;
-    width: 2.4rem;
-    height: 2.4rem;
-    flex: 0 0 auto;
-    place-items: center;
-    border: 1px solid var(--ff-mobile-border);
-    border-radius: 0.85rem;
-    background: var(--ff-surface-2);
-    color: var(--ff-text);
-  }
-
-  .ff-progress-photo-form {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.65rem;
-    overflow-y: auto;
-    padding: 0.85rem 0.85rem calc(0.9rem + env(safe-area-inset-bottom));
-  }
-
-  .ff-progress-photo-picker,
-  .ff-progress-photo-form textarea,
-  .ff-progress-photo-form button[type='submit'] {
-    grid-column: 1 / -1;
-  }
-
-  .ff-progress-photo-picker {
-    display: grid;
-    min-height: 7rem;
-    cursor: pointer;
-    place-items: center;
-    border: 1px dashed var(--ff-accent-border);
-    border-radius: 1rem;
-    background: var(--ff-accent-soft);
-    padding: 0.9rem;
-    text-align: center;
-    color: var(--ff-accent-text);
-  }
-
-  .ff-progress-photo-picker span {
-    color: var(--ff-text);
-    font-size: 0.9rem;
-    font-weight: 950;
-  }
-
-  .ff-progress-photo-picker small {
-    color: var(--ff-muted);
-    font-size: 0.7rem;
-    font-weight: 800;
-  }
-
   .ff-goal-modal {
     position: fixed !important;
     inset: 0 !important;
@@ -532,121 +291,6 @@
   .ff-share-studio {
     z-index: 2147483600 !important;
     padding: 0 !important;
-  }
-
-  .ff-share-studio__panel {
-    width: 100% !important;
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-    border-radius: 0 !important;
-    background: var(--ff-input) !important;
-  }
-
-  .ff-share-studio__header {
-    padding: calc(0.75rem + env(safe-area-inset-top)) 0.8rem 0.65rem !important;
-  }
-
-  .ff-share-studio__header h2 {
-    font-size: 1.1rem !important;
-  }
-
-  .ff-share-studio__header p {
-    font-size: 0.7rem !important;
-  }
-
-  .ff-share-studio__body {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 0.65rem !important;
-    flex: 1 1 auto !important;
-    overflow-y: auto !important;
-    padding: 0.65rem 0.8rem calc(5.6rem + env(safe-area-inset-bottom)) !important;
-  }
-
-  .ff-share-studio__preview {
-    min-height: 0 !important;
-    border-radius: 1rem !important;
-    padding: 0.55rem !important;
-  }
-
-  .ff-share-studio__canvas {
-    width: auto !important;
-    max-width: min(72vw, 18rem) !important;
-    max-height: 36dvh !important;
-    border-radius: 1rem !important;
-  }
-
-  .ff-share-studio__controls {
-    gap: 0.65rem !important;
-    border-radius: 1rem !important;
-    padding: 0.65rem !important;
-  }
-
-  .ff-share-studio__template-grid {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 0.5rem !important;
-    overflow: visible !important;
-  }
-
-  .ff-share-studio__template-grid button {
-    min-width: 0 !important;
-    min-height: 4.1rem !important;
-    border-radius: 0.9rem !important;
-    padding: 0.55rem !important;
-  }
-
-  .ff-share-studio__template-grid button.is-active,
-  .ff-share-studio__phrase-row button.is-active {
-    border-color: var(--ff-accent-border) !important;
-    background: var(--ff-accent-soft) !important;
-    color: var(--ff-accent-text) !important;
-  }
-
-  .ff-share-studio__template-grid small {
-    font-size: 0.64rem !important;
-    line-height: 1.15 !important;
-  }
-
-  .ff-share-studio__phrase-row {
-    gap: 0.45rem !important;
-  }
-
-  .ff-share-studio__phrase-row button {
-    min-height: 2.2rem !important;
-    border-radius: 0.85rem !important;
-    padding: 0 0.75rem !important;
-    font-size: 0.72rem !important;
-  }
-
-  .ff-share-studio__photo-button,
-  .ff-share-studio__caption input {
-    min-height: 2.55rem !important;
-    border-radius: 0.85rem !important;
-  }
-
-  .ff-share-studio__footer {
-    position: fixed !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    z-index: 2147483601 !important;
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 0.5rem !important;
-    border-top: 1px solid var(--ff-mobile-border) !important;
-    background: rgba(12, 12, 14, 0.96) !important;
-    padding: 0.62rem 0.8rem calc(0.62rem + env(safe-area-inset-bottom)) !important;
-  }
-
-  .ff-share-studio__footer .ff-share-studio__primary {
-    grid-column: 1 / -1 !important;
-  }
-
-  .ff-share-studio__footer button {
-    min-height: 2.45rem !important;
-    border-radius: 0.85rem !important;
-    font-size: 0.74rem !important;
   }
 }
 

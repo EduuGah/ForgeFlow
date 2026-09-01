@@ -9,7 +9,8 @@
     "sanity": "node scripts/sanity-check.mjs",
     "smoke:health": "node scripts/smoke-health.mjs",
     "audit:routes": "node scripts/backend-route-audit.mjs",
-    "check:backend": "npm run check && npm run test && npm run audit:routes"
+    "check:backend": "npm run check && npm run test && npm run audit:routes",
+    "gen:secret": "node -e \"console.log(require('crypto').randomBytes(48).toString('base64url'))\""
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",

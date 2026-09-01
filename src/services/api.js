@@ -32,10 +32,19 @@ function createTimeoutSignal(timeoutMs = DEFAULT_TIMEOUT_MS) {
 async function ensureCsrfToken() {
   if (cachedCsrfToken) return cachedCsrfToken;
 
-  const response = await fetch(`${API_BASE_URL}/auth/csrf`, {
-    method: "GET",
-    credentials: "include",
-  });
+  const timeout = createTimeoutSignal();
+
+  let response;
+
+  try {
+    response = await fetch(`${API_BASE_URL}/auth/csrf`, {
+      method: "GET",
+      credentials: "include",
+      signal: timeout.signal,
+    });
+  } finally {
+    timeout.clear();
+  }
 
   const data = await response.json().catch(() => null);
 
@@ -51,17 +60,13 @@ export function setCsrfToken(token) {
   cachedCsrfToken = token || cachedCsrfToken;
 }
 
-export function clearLegacyAuthToken() {
-  localStorage.removeItem(TOKEN_KEY);
-}
-
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY);
 }
 
 export function saveAuthToken(token) {
   if (!token) {
-    clearLegacyAuthToken();
+    logout();
     return;
   }
 
@@ -70,6 +75,36 @@ export function saveAuthToken(token) {
 
 export function logout() {
   localStorage.removeItem(TOKEN_KEY);
+  // O CSRF em cache pertence à sessão que acabou de terminar; mantê-lo faria a
+  // próxima sessão começar com um token inválido.
+  cachedCsrfToken = "";
+}
+
+const WARM_UP_MAX_ATTEMPTS = 3;
+let warmUpPromise = null;
+
+/**
+ * Acorda a API (o plano free do Render hiberna) e adianta o token CSRF.
+ * É best-effort: nunca lança, nunca bloqueia navegação e roda no máximo uma
+ * vez por carregamento de página.
+ */
+export function warmUpApi() {
+  if (warmUpPromise) return warmUpPromise;
+
+  warmUpPromise = (async () => {
+    for (let attempt = 0; attempt < WARM_UP_MAX_ATTEMPTS; attempt += 1) {
+      try {
+        await ensureCsrfToken();
+        return true;
+      } catch {
+        await new Promise((resolve) => window.setTimeout(resolve, 1200));
+      }
+    }
+
+    return false;
+  })();
+
+  return warmUpPromise;
 }
 
 export async function apiFetch(path, options = {}) {
